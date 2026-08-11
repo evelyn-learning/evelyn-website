@@ -78,7 +78,27 @@ Gates: `npx tsc --noEmit`; no component harness — report carries the seam anal
 
 ---
 
-### Task 3: Battery + repro trace
+### Task 3: ALL-CAPS emphasis words spoken, not spelled
 
-- [ ] Run: test:objective-credit, perception-classifier (109), utterance-answer-match (62), bargein-gate (45), student-jump-intent (36), rail-labels (43), cover-layer, arith-claim (77), simplification-verdict (28), inverse-verdict (10), praise-echo (16), `npx tsc --noEmit`, `npm run build`.
+**Files:**
+- Modify: `src/lib/tutor/voice/tts-pronunciation.ts` (prose pass of `rewriteForTTS`)
+- Modify: `src/lib/tutor/ai/system-prompt-builder.ts` (one emphasis-style sentence near the existing formatting rules; pin it)
+- Tests: TTS pins in the math-coverage harness's curated section (or the tts-pronunciation suite if prose pins live there — follow where existing PROSE pins live, e.g. the vocative/name rules)
+
+Live bug (session portal-1349716e): the brain emphasizes with ALL CAPS ("Whatever ELSE he could've done") and the voice SPELLS the capitalized word ("E-L-S-E") instead of stressing it.
+
+**TTS normalization (prose only — never inside `$…$`/`\(...\)` spans; read the pipeline to place it in the prose pass, after span extraction):** lowercase all-caps tokens that are emphasis-style words, leave genuine initialisms spelled:
+- Rule A: `/\b[A-Z]{4,}\b/` tokens containing ≥1 vowel (AEIOUY) and NOT in a small extendable blocklist (`USDA, NCAA, NAACP, NAEP` — spelled initialisms that happen to carry vowels) → lowercase. (Vowel-bearing ≥4-letter caps are near-always pronounceable words or word-acronyms: ELSE, WHATEVER, NASA, STEM, FAFSA — all correct lowercased.)
+- Rule B: an explicit short-emphasis-word list for 2-3-letter caps (`NOT, ALL, ANY, WHY, HOW, YES, NO, IS, ARE, ONE, TWO, TEN, OFF, ON, UP, NOW, WHO, DID, CAN, MUST, EVERY` — trim to what you can defend) → lowercase. Everything else ≤3 letters (AP, SAT, ACT, FTC, FBI, CED, FRQ, MCQ, GDP) stays untouched → still spelled, today's correct behavior.
+- Sentence-initial capitalized normal words ("ELSE" vs "Else") — the rules above only match FULL caps runs; single-capital words are untouched.
+
+**Pins:** "Whatever ELSE he could've done with that same hour" → contains " else " and no single-letter spell-out; "That's NOT the same thing" → " not "; "AP Calc BC uses the FTC" → "AP" and "FTC" byte-untouched; "NASA launched" → " nasa "; "the USDA says" → USDA untouched; a `$…$` span containing caps (e.g. "$F$") untouched. Follow the harness's exact pin format.
+
+**Prompt:** one sentence in the speech/formatting rule area (find where *emphasis*/italics guidance lives — R38 added inline-emphasis rendering): `For spoken emphasis use *asterisk emphasis*, never ALL CAPS — the voice spells capitalized words letter-by-letter.` Pin a distinctive phrase.
+
+- [ ] TDD pins first; implement; run the FULL math battery (`npm run test:math-coverage` — curated + stress, 0 failures) + physics/chem/subject-notation suites + the prompt-pin harness + `npx tsc --noEmit`. Commit `fix(tts): ALL-CAPS emphasis words are spoken lowercase, not spelled — initialisms preserved`.
+
+### Task 4: Battery + repro trace
+
+- [ ] Run: test:objective-credit, perception-classifier (109), utterance-answer-match (62), bargein-gate (45), student-jump-intent (36), rail-labels (43), cover-layer, arith-claim (77), simplification-verdict (28), inverse-verdict (10), praise-echo (16), full math battery + physics/chem/subject-notation, r33-prompt-rules, `npx tsc --noEmit`, `npm run build`.
 - [ ] No merge/deploy — controller gates.
