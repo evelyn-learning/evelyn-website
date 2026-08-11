@@ -50,7 +50,9 @@ export default function AuthenticationPage() {
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">JWT Session Tokens</h2>
       <p className="mb-4 text-sm text-slate-600">
         Session tokens are JWTs signed with your API Secret using HMAC-SHA256. They contain the
-        session configuration and are passed to the embed URL.
+        session configuration and are passed to the embed URL. The embed forwards the token on its
+        API calls via the <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">x-embed-token</code> header,
+        where the signature is verified.
       </p>
 
       <CodeBlock language="javascript" title="Node.js">{`import jwt from 'jsonwebtoken';
@@ -150,9 +152,9 @@ def handle_webhook():
 
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Token Expiry</h2>
       <p className="text-sm text-slate-600">
-        Session tokens should have a short expiry (1-2 hours). The token is validated when the embed
-        loads. Once a session is active, it continues regardless of token expiry. Generate a fresh
-        token for each session — do not reuse tokens.
+        Session tokens should have a short expiry (1-2 hours). The token is validated on the embed's
+        API calls; expired tokens are honored within a grace window so long sessions can commit at their end.
+        We recommend 1-2 hour expiry and a fresh token for each session — do not reuse tokens.
       </p>
     </div>
   );
