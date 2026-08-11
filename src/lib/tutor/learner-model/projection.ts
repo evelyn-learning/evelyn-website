@@ -11,7 +11,7 @@
 
 import { TUNING } from './estimator';
 import { curveScaled } from '../mock-exam/scoring';
-import type { ScoringSpec } from '../mock-exam/blueprints';
+import type { ScoringSpec, CurveAnchor } from '../mock-exam/blueprints';
 
 export type ProjectionScale = 'sat' | 'act' | 'ap' | 'readiness';
 
@@ -27,6 +27,13 @@ export interface ProjectArgs {
   los: ProjectLo[];
   /** Absent for 'readiness' — there's no exam curve for a generic band. */
   curves?: ScoringSpec;
+  /** sectionId -> whether it counts toward the composite (mirrors
+   *  `BlueprintSection.inComposite`, e.g. ACT science is `false`). A
+   *  section absent from this map is treated as in-composite (`true`),
+   *  matching the blueprint's own `inComposite ?? true` default and real
+   *  `applyCurves`' `s.inComposite !== false` check. Only consulted for
+   *  `curves.kind === 'act-composite'` — see `scaledMasteryCenter`. */
+  sectionInComposite?: Record<string, boolean>;
   mockAnchors?: Array<{ composite: number; at: Date }>;
   now: Date;
 }
@@ -102,15 +109,45 @@ function readinessCenter(los: ProjectLo[]): number {
 }
 
 /**
+ * Curve-set variant selection for one section. Non-adaptive sections (ACT,
+ * AP, HS) only ever have a `'default'` key and that always wins. Adaptive
+ * sections (digital-SAT rw/math) have NO `'default'` — only `'easy'`/`'hard'`
+ * — because the real curve applied depends on which second-stage module the
+ * student was actually routed to. This projection has no in-progress
+ * adaptive-routing signal to read, so it approximates the same call the
+ * router itself would make from the section's aggregated value: >= 0.5 (the
+ * router's own success/fail split, not `adaptive.thresholdFraction` — this
+ * is a projection-side approximation, not a replay of the real routing
+ * rule) selects `'hard'`, otherwise `'easy'`. Any other/unexpected curve-set
+ * shape falls back to its first available variant rather than an empty
+ * curve (which would zero out the section).
+ */
+function pickCurveVariant(curveSet: Record<string, CurveAnchor[]>, sectionMean: number): CurveAnchor[] {
+  if (curveSet.default) return curveSet.default;
+  if (curveSet.easy && curveSet.hard) return sectionMean >= 0.5 ? curveSet.hard : curveSet.easy;
+  return Object.values(curveSet)[0] ?? [];
+}
+
+/**
  * Scaled center: group LOs by section, average each section's per-LO value,
  * multiply by that section's raw ceiling (the curve's last raw anchor —
- * i.e. the raw score at which the curve saturates), curve it, then roll the
- * per-section scaled values up into a composite the same way `applyCurves`
- * (real mock scoring, `mock-exam/scoring.ts`) does per `scoring.kind`. LOs
- * with no `sectionId` are dropped here — callers resolve `sectionId` for
- * every LO first via `mapLoIdsToSections`.
+ * i.e. the raw score at which the curve saturates), curve it (picking the
+ * adaptive variant via `pickCurveVariant` when the section has one), then
+ * roll the per-section scaled values up into a composite the same way
+ * `applyCurves` (real mock scoring, `mock-exam/scoring.ts`) does per
+ * `scoring.kind` — INCLUDING `act-composite`'s `inComposite !== false`
+ * section filter (ACT science is `inComposite: false`: it still gets
+ * curved/aggregated above, just excluded from the composite average here,
+ * exactly like real `applyCurves`). `ap-composite` and `scaled-sections`
+ * don't filter by `inComposite` in the real scorer either, so neither do
+ * we. LOs with no `sectionId` are dropped here — callers resolve
+ * `sectionId` for every LO first via `mapLoIdsToSections`.
  */
-function scaledMasteryCenter(los: ProjectLo[], curves: ScoringSpec): number {
+function scaledMasteryCenter(
+  los: ProjectLo[],
+  curves: ScoringSpec,
+  sectionInComposite: Record<string, boolean> = {},
+): number {
   const bySection = new Map<string, number[]>();
   for (const lo of los) {
     if (!lo.sectionId) continue;
@@ -120,27 +157,29 @@ function scaledMasteryCenter(los: ProjectLo[], curves: ScoringSpec): number {
   }
 
   const roundTo = curves.sectionScaledMax <= 50 ? 1 : 10;
-  const sectionScaled: number[] = [];
+  const sectionScaled: Array<{ sectionId: string; scaled: number }> = [];
   for (const [sectionId, values] of bySection) {
     const curveSet = curves.curves[sectionId];
     if (!curveSet) continue;
-    const anchors = curveSet.default ?? Object.values(curveSet)[0] ?? [];
+    const mean = values.reduce((s, v) => s + v, 0) / values.length;
+    const anchors = pickCurveVariant(curveSet, mean);
     if (anchors.length === 0) continue;
     const rawCeiling = anchors[anchors.length - 1][0];
-    const mean = values.reduce((s, v) => s + v, 0) / values.length;
-    sectionScaled.push(curveScaled(anchors, mean * rawCeiling, roundTo));
+    sectionScaled.push({ sectionId, scaled: curveScaled(anchors, mean * rawCeiling, roundTo) });
   }
 
   if (sectionScaled.length === 0) return (curves.compositeMin + curves.compositeMax) / 2;
 
   if (curves.kind === 'act-composite') {
-    return sectionScaled.reduce((s, v) => s + v, 0) / sectionScaled.length;
+    const counted = sectionScaled.filter((s) => sectionInComposite[s.sectionId] !== false);
+    const pool = counted.length > 0 ? counted : sectionScaled;
+    return pool.reduce((s, x) => s + x.scaled, 0) / pool.length;
   }
   if (curves.kind === 'ap-composite') {
-    return sectionScaled.reduce((s, v) => s + v, 0) / sectionScaled.length;
+    return sectionScaled.reduce((s, x) => s + x.scaled, 0) / sectionScaled.length;
   }
   // 'scaled-sections' (digital SAT, HS full-lengths): composite = section sum.
-  return sectionScaled.reduce((s, v) => s + v, 0);
+  return sectionScaled.reduce((s, x) => s + x.scaled, 0);
 }
 
 /** Fit a line through the (day-offset, composite) points and evaluate it at
@@ -185,7 +224,9 @@ function scaleBounds(scale: ProjectionScale, curves?: ScoringSpec): [number, num
  */
 export function projectScore(a: ProjectArgs): ProjectResult {
   const masteryCenter =
-    a.scale === 'readiness' || !a.curves ? readinessCenter(a.los) : scaledMasteryCenter(a.los, a.curves);
+    a.scale === 'readiness' || !a.curves
+      ? readinessCenter(a.los)
+      : scaledMasteryCenter(a.los, a.curves, a.sectionInComposite);
 
   let center = masteryCenter;
   let basis: ProjectResult['basis'] = 'mastery-only';

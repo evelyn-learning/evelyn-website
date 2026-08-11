@@ -10,6 +10,7 @@
  */
 import { estimateLo, trendOf, nextReviewAt } from '../src/lib/tutor/learner-model/estimator';
 import { projectScore, scaleForTopic, mapLoIdsToSections } from '../src/lib/tutor/learner-model/projection';
+import { getBlueprint } from '../src/lib/tutor/mock-exam/blueprints';
 import type { ScoringSpec } from '../src/lib/tutor/mock-exam/blueprints';
 import type { SessionEmitRequest } from '@evelyn/portal-contract/v1';
 import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
@@ -157,6 +158,69 @@ assert(
   Math.abs(satResult.high - satResult.low - 80) < 0.01,
   'projectScore: scaled band width = bandHalfWidth.sat × 2 × highConfidenceScale (80) at high confidence',
 );
+
+// Fix round (code review) — real DIGITAL_SAT_BLUEPRINT: rw/math curves carry
+// ONLY 'easy'/'hard' (no 'default'). A strong student must select the 'hard'
+// curve (composite can clear ~1300, the easy curve's max), a weak student
+// must stay on 'easy'.
+{
+  const realSat = getBlueprint('digital-sat');
+  const strong = projectScore({
+    scale: 'sat',
+    los: [
+      { loId: 'rw1', estimate: 0.9, confidence: 'high', sectionId: 'rw' },
+      { loId: 'math1', estimate: 0.9, confidence: 'high', sectionId: 'math' },
+    ],
+    curves: realSat.scoring,
+    now,
+  });
+  const strongCenter = (strong.low + strong.high) / 2;
+  assert(
+    strongCenter > 1300,
+    'projectScore: real digital-SAT, strong student (0.9) selects the hard curve — composite center > 1300',
+  );
+
+  const weak = projectScore({
+    scale: 'sat',
+    los: [
+      { loId: 'rw1', estimate: 0.2, confidence: 'high', sectionId: 'rw' },
+      { loId: 'math1', estimate: 0.2, confidence: 'high', sectionId: 'math' },
+    ],
+    curves: realSat.scoring,
+    now,
+  });
+  const weakCenter = (weak.low + weak.high) / 2;
+  assert(
+    weakCenter <= 1300,
+    'projectScore: real digital-SAT, weak student (0.2) stays on the easy curve (well under 1300)',
+  );
+}
+
+// Fix round (code review) — real ACT_BLUEPRINT: science is inComposite:false.
+// A weak science LO must never move the composite center.
+{
+  const realAct = getBlueprint('act');
+  const sectionInComposite = Object.fromEntries(realAct.sections.map((s) => [s.sectionId, s.inComposite !== false]));
+  const coreLos = [
+    { loId: 'e1', estimate: 0.8, confidence: 'high' as const, sectionId: 'english' },
+    { loId: 'm1', estimate: 0.8, confidence: 'high' as const, sectionId: 'math' },
+    { loId: 'r1', estimate: 0.8, confidence: 'high' as const, sectionId: 'reading' },
+  ];
+  const withoutScience = projectScore({ scale: 'act', los: coreLos, curves: realAct.scoring, sectionInComposite, now });
+  const withWeakScience = projectScore({
+    scale: 'act',
+    los: [...coreLos, { loId: 'sci1', estimate: 0.05, confidence: 'high', sectionId: 'science' }],
+    curves: realAct.scoring,
+    sectionInComposite,
+    now,
+  });
+  const centerWithout = (withoutScience.low + withoutScience.high) / 2;
+  const centerWithWeak = (withWeakScience.low + withWeakScience.high) / 2;
+  assert(
+    Math.abs(centerWithout - centerWithWeak) < 0.01,
+    'projectScore: real ACT, a weak science LO never moves the composite (science is inComposite:false)',
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* appendEvidence / deleteLearnerModelData — DB-backed (Task 7)       */
@@ -802,6 +866,45 @@ async function runLearnerStateRouteTests() {
     );
   } finally {
     await deleteLearnerModelData(studentId);
+  }
+
+  // Fix round (code review) — AP-path coverage: courseTopic='ap-statistics'
+  // resolves scale 'ap' via the real AP blueprint (examKey === courseTopic).
+  {
+    const apStudentId = `lmtest:route:ap:${process.pid}`;
+    const apLo = 'lmtest.route.ap-lo';
+    await deleteLearnerModelData(apStudentId);
+    try {
+      await LearnerStateProjectionModel.create({
+        _id: buildLearnerStateProjectionId(apStudentId, apLo),
+        studentId: apStudentId,
+        loId: apLo,
+        estimate: 0.7,
+        confidence: 'medium',
+        trend: 'flat',
+        nEff: 3,
+        lastEvidenceAt: new Date(),
+      });
+      const { status, json } = await call(
+        learnerStateGET,
+        signed('GET', `/api/portal/v1/learner-state?studentId=${apStudentId}&courseTopic=ap-statistics`),
+      );
+      assert(status === 200, 'learner-state GET: AP courseTopic → 200');
+      assert(
+        LearnerStateResponseSchema.safeParse(json).success,
+        'learner-state GET: AP courseTopic → response validates against contract LearnerStateResponseSchema',
+      );
+      assert(
+        !!json.projection && json.projection.scale === 'ap',
+        "learner-state GET: courseTopic 'ap-statistics' resolves projection.scale === 'ap' (examKey === courseTopic)",
+      );
+      assert(
+        json.projection.low >= 1 && json.projection.high <= 5,
+        'learner-state GET: AP projection band clamps to the real AP blueprint compositeMin/Max (1-5)',
+      );
+    } finally {
+      await deleteLearnerModelData(apStudentId);
+    }
   }
 
   {

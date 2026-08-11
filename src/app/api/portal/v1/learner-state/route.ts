@@ -153,8 +153,13 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
     const blueprint = examKey ? (() => { try { return getBlueprint(examKey); } catch { return null; } })() : null;
     if (!blueprint) scale = 'readiness';
 
+    let sectionInComposite: Record<string, boolean> | undefined;
     if (blueprint) {
       curves = blueprint.scoring;
+      // Mirrors BlueprintSection.inComposite's own `?? true` default (real
+      // mock scoring's applyCurves checks `s.inComposite !== false`) — ACT
+      // science is the only current section with this set to false.
+      sectionInComposite = Object.fromEntries(blueprint.sections.map((s) => [s.sectionId, s.inComposite !== false]));
 
       const mockRows = await EvidenceEventModel.find({ studentId, source: 'mock', sectionId: { $exists: true } })
         .select('loId sectionId occurredAt')
@@ -178,7 +183,7 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
       }
     }
 
-    const result = projectScore({ scale, los: losForProjection, curves, mockAnchors, now });
+    const result = projectScore({ scale, los: losForProjection, curves, sectionInComposite, mockAnchors, now });
     projection = { scale, low: result.low, high: result.high, basis: result.basis, asOf: now.toISOString() };
   }
 
