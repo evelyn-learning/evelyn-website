@@ -90,6 +90,12 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // to praise_echo above (tutor denies an answer that matches the verified
   // expected answer). Same triage-gap class.
   'inverse_verdict',
+  // Task 6, verdict-detector round (2026-08-10): echo_carveout — the
+  // perception classifier rescued a would-be self-echo drop because the
+  // utterance matched the verified expected answer and the tutor never
+  // spoke it (perception-classifier.ts, expectedAnswerCarveOut). Same
+  // triage-gap class as the two entries above.
+  'echo_carveout',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

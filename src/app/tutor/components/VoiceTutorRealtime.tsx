@@ -15097,6 +15097,14 @@ export function VoiceTutorRealtime({
           // causes (see speakingWindowsRef).
           onsetDuringTutorSpeech:
             speechStartedAt !== undefined && wasTutorSpeakingAt(speechStartedAt),
+          // Task 6 (verdict-detector round, 2026-08-10): the CURRENT
+          // problem's verified expected answer, when one is active — powers
+          // the self-echo expected-answer carve-out (an answer to
+          // "differentiate X" is often near-identical to the tutor's own
+          // QUESTION, so it can cross the self-voice threshold even though
+          // the tutor never SPOKE that answer). undefined when no problem is
+          // active; the carve-out is a no-op in that case.
+          verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
         });
         const ttsBufLen = recentTtsScripts.length;
         const svScore = heur.selfVoiceScore !== undefined
@@ -15106,6 +15114,9 @@ export function VoiceTutorRealtime({
           `[CLASSIFIER] heuristic=${heur.verdict} (sv=${svScore}, ttsBuf=${ttsBufLen}, prod=${prodState}) — ${heur.reason}`,
         );
         onDebugEvent?.('perception_heuristic', `${heur.verdict}:${heur.reason}`);
+        if (heur.carveOut) {
+          onDebugEvent?.('echo_carveout', `${heur.reason} · "${t.text.slice(0, 60)}"`);
+        }
 
         // ── Stage 2: if a perception cancel fired (checkpoint set),
         // route every NON-escalate heuristic verdict to restore/refire

@@ -23,6 +23,8 @@
  *      cancellation behaviour.
  */
 
+import { matchUtteranceToAnswer, canonicalizeMathExpression } from '@/lib/tutor/voice/utterance-answer-match';
+
 export type PerceptionVerdict =
   /** Matched a recent TTS script line — almost certainly the tutor's own
    *  voice leaking back through the speaker → mic path. Drop. */
@@ -98,6 +100,17 @@ export interface HeuristicInput {
   /** When the perception WS first detected speech for this transcript —
    *  used by the timing-window self-voice check. ms timestamp. */
   speechStartedAt?: number;
+  /** Task 6 (verdict-detector round, 2026-08-10): the CURRENT problem's
+   *  verified expected answer, when one is available. Powers the self-echo
+   *  expected-answer carve-out (`expectedAnswerCarveOut` below) — an answer
+   *  to "differentiate X" is often near-identical TEXT to the tutor's own
+   *  QUESTION, so it can cross the self-voice threshold even though the
+   *  tutor never SPOKE that answer and a matching utterance therefore
+   *  cannot physically be an echo of it. Optional: callers without a
+   *  verified answer in scope (e.g. no active problem) omit it, and the
+   *  carve-out never activates — existing echo-drop behaviour is
+   *  unchanged. */
+  verifiedExpectedAnswer?: string;
 }
 
 export interface HeuristicResult {
@@ -107,6 +120,12 @@ export interface HeuristicResult {
   /** Score for the self-voice match (0..1). Surfaced so the log review can
    *  spot near-misses and tune the threshold. */
   selfVoiceScore?: number;
+  /** Task 6: set to 'expected_answer' when `expectedAnswerCarveOut` rescued
+   *  what would otherwise have been an echo-grounds drop. Lets the call
+   *  site emit telemetry (`echo_carveout`) distinct from an ordinary
+   *  dispatch, for the Stage-1 FP-rate review to track the carve-out's own
+   *  hit rate separately. */
+  carveOut?: 'expected_answer';
 }
 
 // ── Lexicons ──────────────────────────────────────────────────────────
@@ -781,6 +800,91 @@ export function isOfferedOptionEcho(
   return false;
 }
 
+// ── Expected-answer carve-out (Task 6, verdict-detector round, 2026-08-10) ──
+//
+// Live incident (session portal-cb2addf5): the tutor asked "Differentiate
+// -2e^{-2t}...", the student answered PERFECTLY with "-2e^(-2t)" — and it
+// was dropped as self-voice, because a correct answer to "differentiate X"
+// is, almost by construction, text- and phonetically-similar to X itself
+// (the QUESTION the tutor just spoke). Every echo defence above is scoped
+// to catch the tutor's own voice leaking back through the speaker → mic
+// path; none of them can tell "this sounds like something the tutor said"
+// apart from "this sounds like something the tutor is ABOUT to hear as an
+// answer to what it said" — both look identical as text/phonetic overlap
+// against the QUESTION script.
+//
+// The carve-out: admit an utterance that (a) the verified expected answer
+// comparator (`matchUtteranceToAnswer`, Task 1-2) says AGREES with, AND
+// (b) whose expected answer does NOT itself appear anywhere in the tutor's
+// recent spoken scripts. (b) is the safety-critical half — if the tutor DID
+// speak the answer (e.g. it revealed it, or a prior turn already stated
+// it), a matching utterance is once again a plausible genuine acoustic
+// echo, and the carve-out must not rescue it.
+
+/** True when the expected answer's canonical form appears inside any of
+ *  the tutor's recent spoken scripts — if the tutor SAID the answer, a
+ *  matching utterance may be a genuine acoustic echo and must not be
+ *  rescued. Canonical containment, min length 2 to avoid single-char hits.
+ *  FAILS CLOSED: when the expected answer doesn't canonicalize (or
+ *  canonicalizes too short to be meaningful), we can't prove the tutor
+ *  DIDN'T say it, so this returns true — "can't prove absence → no
+ *  carve-out" — rather than risk opening an echo leak on unparseable
+ *  input. */
+export function expectedAnswerSpokenInScripts(
+  expected: string,
+  scripts: Array<{ text: string }>
+): boolean {
+  const canonExpected = canonicalizeMathExpression(expected);
+  if (!canonExpected || canonExpected.length < 2) return true; // can't prove absence → no carve-out
+  for (const s of scripts) {
+    // canonicalize each $span$ in the script; also the whole line as a fallback
+    const dollarSpans: string[] = s.text.match(/\$[^$]+\$/g) ?? [];
+    const spans: string[] = [...dollarSpans, s.text];
+    for (const span of spans) {
+      const c = canonicalizeMathExpression(span);
+      if (c && c.includes(canonExpected)) return true;
+    }
+  }
+  return false;
+}
+
+/** True when the carve-out applies to THIS input: a verified expected
+ *  answer is present, the utterance AGREES with it (the tri-state
+ *  comparator's strictest verdict — `unknown`/`disagree` never rescue),
+ *  and the tutor never spoke that answer in its recent scripts. */
+function expectedAnswerCarveOut(input: HeuristicInput): boolean {
+  const expected = (input.verifiedExpectedAnswer ?? '').trim();
+  if (!expected) return false;
+  if (matchUtteranceToAnswer(input.transcript, expected).verdict !== 'agree') return false;
+  return !expectedAnswerSpokenInScripts(expected, input.recentTtsScripts);
+}
+
+/** The verdict a HEALTHY (non-echo) dispatch would carry for this
+ *  production state — i.e. what "real student speech, proceed to brain"
+ *  means in the state the utterance actually arrived in. Mirrors the
+ *  mapping the state-dependent section of `classifyHeuristic` already
+ *  uses for a genuine substantive utterance: 'speaking' is a substantive
+ *  interrupt (`barge_in`), 'processing' is the student building on an
+ *  in-flight brain turn (`continuation`), 'listening'/'connected' is a
+ *  fresh answer (`new_turn`, see PerceptionVerdict doc). The carve-out
+ *  return sites below all fire BEFORE that state-dependent section runs
+ *  (self-voice scoring is unconditional; the ≤4w/mid-length echo gates
+ *  short-circuit ahead of it too) — falling through to let that section
+ *  decide would re-expose the SAME utterance to ITS OWN thresholds (e.g.
+ *  a ≤3-word non-numeric shape reads as brief filler there), which is
+ *  exactly the failure this carve-out exists to avoid. So the healthy
+ *  verdict is looked up directly from state rather than obtained by
+ *  falling through. Transient states (connecting/disconnected/error/
+ *  recording) have no live session to dispatch a turn into — `escalate`
+ *  defers the decision rather than fabricating a dispatch verdict for a
+ *  state where nothing downstream is listening. */
+function healthyDispatchVerdict(state: ProductionStateForClassifier): PerceptionVerdict {
+  if (state === 'speaking') return 'barge_in';
+  if (state === 'processing') return 'continuation';
+  if (state === 'listening' || state === 'connected') return 'new_turn';
+  return 'escalate';
+}
+
 // ── Heuristic ────────────────────────────────────────────────────────
 
 export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
@@ -788,6 +892,25 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   const norm = normalize(text);
   const tokens = tokenize(text);
   const wordCount = tokens.length;
+
+  // Task 6: wraps every echo-grounds drop return below. If the expected-
+  // answer carve-out applies to THIS input (verified answer, utterance
+  // agrees, tutor never spoke it — see `expectedAnswerCarveOut`), swap the
+  // drop for the healthy dispatch verdict this production state would
+  // carry and tag `carveOut` so the call site can emit telemetry.
+  // Otherwise it's a no-op passthrough — every existing fixture (none of
+  // which set `verifiedExpectedAnswer`) is byte-identical to before this
+  // task, since `expectedAnswerCarveOut` returns false immediately when
+  // the field is absent.
+  const dropAsEcho = (result: HeuristicResult): HeuristicResult =>
+    expectedAnswerCarveOut(input)
+      ? {
+          verdict: healthyDispatchVerdict(input.productionState),
+          reason: `expected-answer carve-out (was: ${result.reason})`,
+          carveOut: 'expected_answer',
+          selfVoiceScore: result.selfVoiceScore,
+        }
+      : result;
 
   // 0. Empty → noise. Catches OpenAI's occasional empty-transcript event.
   if (wordCount === 0) return { verdict: 'noise', reason: 'empty transcript' };
@@ -832,11 +955,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       : containmentOnly
         ? `self-voice containment (${wordCount}w) ${selfVoiceScore.toFixed(2)}`
         : `self-voice score ${selfVoiceScore.toFixed(2)} ≥ ${SELF_VOICE_THRESHOLD}`;
-    return {
+    return dropAsEcho({
       verdict: 'drop_self_voice',
       reason,
       selfVoiceScore,
-    };
+    });
   }
 
   const state = input.productionState;
@@ -883,11 +1006,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       text, input.recentTtsScripts, input.speechStartedAt, input.now,
     );
     if (echoOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
-      return {
+      return dropAsEcho({
         verdict: 'drop_self_voice',
         reason: `speaking-state short-utterance echo overlap ${echoOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
         selfVoiceScore,
-      };
+      });
     }
   }
 
@@ -922,11 +1045,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
   ) {
     const lookbackOverlap = scoreLookbackEchoOverlap(text, input.recentTtsScripts);
     if (lookbackOverlap >= SPEAKING_ECHO_OVERLAP_THRESHOLD) {
-      return {
+      return dropAsEcho({
         verdict: 'drop_self_voice',
         reason: `onset-during-playback echo overlap ${lookbackOverlap.toFixed(2)} ≥ ${SPEAKING_ECHO_OVERLAP_THRESHOLD}`,
         selfVoiceScore,
-      };
+      });
     }
   }
 
@@ -955,11 +1078,11 @@ export function classifyHeuristic(input: HeuristicInput): HeuristicResult {
       const tContentLen = contentTokens(tokenize(text)).length;
       const lookbackOverlap = scoreLookbackEchoOverlap(text, input.recentTtsScripts);
       if (tContentLen >= 3 && lookbackOverlap >= MIDLENGTH_ECHO_OVERLAP_THRESHOLD) {
-        return {
+        return dropAsEcho({
           verdict: 'drop_self_voice',
           reason: `mid-length echo splice overlap ${lookbackOverlap.toFixed(2)} ≥ ${MIDLENGTH_ECHO_OVERLAP_THRESHOLD} (${rawWords}w)`,
           selfVoiceScore,
-        };
+        });
       }
     }
   }
