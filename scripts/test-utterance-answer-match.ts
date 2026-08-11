@@ -2,7 +2,7 @@
  * Unit test for the tri-state utterance-vs-answer comparator.
  * Usage: npx tsx scripts/test-utterance-answer-match.ts
  */
-import { matchUtteranceToAnswer, canonicalizeMathExpression } from '../src/lib/tutor/voice/utterance-answer-match';
+import { matchUtteranceToAnswer, canonicalizeMathExpression, normalizeSpokenMath } from '../src/lib/tutor/voice/utterance-answer-match';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {
@@ -58,6 +58,18 @@ check('regression: exponent parens still agree', matchUtteranceToAnswer('-2e^(-2
 check('sqrt text vs plain number: not agree', matchUtteranceToAnswer('sqrt(4)', '4').verdict !== 'agree');
 check('sqrt text vs plain number: is unknown', matchUtteranceToAnswer('sqrt(4)', '4').verdict === 'unknown');
 check('pi still whitelisted: π/4 vs 0.785 still agrees', matchUtteranceToAnswer('π/4', '0.785').verdict === 'agree');
+
+// — Task 2: spoken-form normalization —
+check('spoken linear form', matchUtteranceToAnswer('three x plus two', '3x+2').verdict === 'agree');
+check('hedged question form', matchUtteranceToAnswer('is it 3x + 2?', '3x+2').verdict === 'agree');
+check('the answer is prefix', matchUtteranceToAnswer("I think the answer is 15", '15').verdict === 'agree');
+check('negative spoken', matchUtteranceToAnswer('negative two e to the negative two t', '-2e^{-2t}').verdict === 'agree');
+check('over as division', matchUtteranceToAnswer('minus 3 over 6', '-3/6').verdict === 'agree');
+check('spoken fraction words', matchUtteranceToAnswer('one half', '1/2').verdict === 'agree');
+check('squared', matchUtteranceToAnswer('x squared plus one', 'x^2+1').verdict === 'agree');
+check('hedge does not flip verdict', matchUtteranceToAnswer('maybe 2x?', '3x').verdict === 'disagree');
+check('pure prose still unknown', matchUtteranceToAnswer('can you walk me through it', '3x+2').verdict === 'unknown');
+check('normalizeSpokenMath direct', normalizeSpokenMath('is it three x plus two?') === '3x+2' || normalizeSpokenMath('is it three x plus two?') === '3 x + 2');
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

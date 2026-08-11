@@ -144,12 +144,79 @@ function isMultiValueUtterance(t: string): boolean {
   return nums.length >= 2 && /\b(and|,)\b|,/.test(t) && /\b(is|are|equals?)\b|=/.test(t);
 }
 
+/** Hedges/fillers a spoken answer opens with ("um, I think it's...",
+ *  "is it 3x + 2?"). Stripped from the FRONT only — never mid-utterance,
+ *  so e.g. "3x maybe with a constant" keeps its residue for the
+ *  prose-rejection check downstream. Looped (bounded) to peel stacked
+ *  hedges like "um, I think the answer is...". */
+const HEDGE_PREFIX_RE = /^(?:um+|uh+|okay|ok|so|well|hmm+|oh|i think|i guess|i'd say|maybe|probably|it'?s|it is|that'?s|the answer is|my answer is|is it|would it be|could it be|i got|i get)\b[\s,]*/i;
+
+/** Spoken math vocabulary → symbolic. Order matters: multi-word phrases
+ *  ("e to the", "square root of", the fraction words) must be listed
+ *  before any shorter phrase/single-word rule they overlap with, and ALL
+ *  of them must run before the single-number-word pass below — otherwise
+ *  "one half" becomes "1 half" before the fraction rule ever sees it. */
+const SPOKEN_REPLACEMENTS: Array<[RegExp, string]> = [
+  [/\bnegative\s+/gi, '-'], [/\bminus\s+/gi, '- '], [/\bplus\s+/gi, '+ '],
+  [/\btimes\b/gi, '*'], [/\bmultiplied by\b/gi, '*'],
+  [/\bdivided by\b/gi, '/'], [/\bover\b/gi, '/'],
+  [/\bequals?\b/gi, '='],
+  [/\bsquared\b/gi, '^2'], [/\bcubed\b/gi, '^3'],
+  [/\be to the\b/gi, 'e^'], [/\bto the power of\b/gi, '^'], [/\bto the\b/gi, '^'],
+  [/\bsquare root of\b/gi, 'sqrt'],
+  [/\bone half\b/gi, '1/2'], [/\bone third\b/gi, '1/3'], [/\bone quarter\b/gi, '1/4'],
+  [/\btwo thirds\b/gi, '2/3'], [/\bthree quarters\b/gi, '3/4'],
+  [/\bpoint\b/gi, '.'], [/\bpi\b/gi, 'pi'],
+];
+const NUMBER_WORDS: Record<string, string> = {
+  zero: '0', one: '1', two: '2', three: '3', four: '4', five: '5',
+  six: '6', seven: '7', eight: '8', nine: '9', ten: '10', eleven: '11', twelve: '12',
+};
+
+/** Spoken-form math → symbolic, for the utterance side of the comparator
+ *  only (the expected side is already symbolic — never run this on it).
+ *  Never throws; unrecognized text just passes through untouched, which
+ *  lets canonicalizeMathExpression's prose-residue check do its job
+ *  downstream rather than this function trying to "clean" prose into
+ *  something that looks parseable. */
+export function normalizeSpokenMath(utterance: string): string {
+  let t = (utterance ?? '').trim().replace(/[?.!]+$/, '');
+  for (let i = 0; i < 4; i++) {           // strip stacked hedges: "um, I think it's..."
+    const next = t.replace(HEDGE_PREFIX_RE, '');
+    if (next === t) break;
+    t = next;
+  }
+  for (const [re, sub] of SPOKEN_REPLACEMENTS) t = t.replace(re, sub);
+  // single spoken number words → digits; deliberately AFTER the fraction-word
+  // replacements above so "one half" resolves as a fraction, not "1 half".
+  t = t.replace(/\b([a-z]+)\b/gi, (w: string) => NUMBER_WORDS[w.toLowerCase()] ?? w);
+  // "3 x" → "3x" (spoken juxtaposition)
+  t = t.replace(/(\d)\s+([a-z])\b/gi, '$1$2');
+  // "e^ -2t" → "e^(-2t)": wrap a bare (parenless) exponent term in parens.
+  // Guarded on a non-empty capture — when the exponent is ALREADY
+  // parenthesized ("e^(-2t)", typed or from a prior step), the group can
+  // only match empty here, and blindly wrapping would inject a stray "()"
+  // right before the real parens (e.g. "-2e^(-2t)" → "-2e^()(-2t)"),
+  // corrupting an already-correct expression.
+  t = t.replace(/\^\s*(-?\s*\d*\.?\d*[a-z]*)/gi, (m: string, p: string) => {
+    const clean = p.replace(/\s+/g, '');
+    return clean ? `^(${clean})` : m;
+  });
+  // Collapse whitespace hugging a bare math operator ("3x + 2" → "3x+2").
+  // Safe this late: every spoken operator word above has already become
+  // its symbol, so remaining spaces next to +-*/^= are just spoken pauses,
+  // not text the multi-value guard's \b(and|is)\b checks depend on (those
+  // key off word text like "and"/"is", never off operator-adjacent spacing).
+  t = t.replace(/\s*([+\-*/^=])\s*/g, '$1');
+  return t.trim();
+}
+
 export function matchUtteranceToAnswer(
   utterance: string,
   expected: string,
   choices?: Array<{ letter: string; text: string }>
 ): AnswerMatchResult {
-  const u = (utterance ?? '').trim(), e = (expected ?? '').trim();
+  const u = normalizeSpokenMath(utterance), e = (expected ?? '').trim();
   if (!u || !e) return { verdict: 'unknown', reason: 'empty side' };
   // 1) MCQ path — only when choices are supplied
   if (choices && choices.length > 0) {
