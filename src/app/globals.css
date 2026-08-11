@@ -249,3 +249,23 @@
   0%, 100% { transform: translateY(-50%) translateX(0); }
   50% { transform: translateY(-50%) translateX(3px); }
 }
+
+/* R46 (d): AgendaRail's horizontal strip (session/AgendaRail.tsx) used class
+   `scrollbar-none`, which was never defined — Tailwind's JIT silently drops
+   unknown utility classes, so the strip showed the browser's fat default
+   scrollbar instead of the intended chrome-free auto-scroll. Scoped to this
+   class only — NOT a global scrollbar reset. The round-8 hscroll-fade rules
+   just above are the deliberate opposite choice for whiteboard cards: those
+   keep the browser/OS scrollbar (thin on iOS) and cue overflow with a mask
+   fade instead, because touch devices hide scrollbars until interaction and
+   those cards need the natural affordance back. This class only hides the
+   scrollbar for a strip that already has its own current-item auto-follow
+   (see AgendaRail.tsx) and a fade mask on its trailing edge — a visible
+   scrollbar there is redundant chrome, not a lost affordance. */
+.scrollbar-none {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/legacy Edge */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/WebKit */
+}
