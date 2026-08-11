@@ -190,6 +190,12 @@ export interface SessionStageProps {
    *  handler. Absent → the orb stays decorative. Called synchronously from
    *  the orb's onClick so the iOS audio unlock keeps its gesture stack. */
   onOrbStart?: () => void;
+  /** R42 (2026-08-10): debug-event sink, same shape as VoiceTutorRealtime's
+   *  onDebugEvent. Used here for `transcript_drawer` — every open/close of
+   *  the transcript drawer with its trigger source, added to diagnose the
+   *  header-icon ghost-second-open bug (the old open-only icon handler let
+   *  the backdrop absorb the second click). Absent ⇒ debug event skipped. */
+  onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
 }
 
 const ORB_STYLE: Record<VoiceState, string> = {
@@ -222,7 +228,7 @@ export default function SessionStage(props: SessionStageProps) {
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
     agendaDrawerOpen, onAgendaDrawerOpenChange,
     practiceOverrideActive = false, onTogglePracticeOverride, practiceModeActive = false,
-    boardPenActive, onToggleBoardPen, onOrbStart,
+    boardPenActive, onToggleBoardPen, onOrbStart, onDebugEvent,
   } = props;
 
   // Round-5: transient full-title reveal (see the header markup below).
@@ -282,6 +288,19 @@ export default function SessionStage(props: SessionStageProps) {
   // session start was disorienting (it dimmed the whole stage). The nudge
   // picker still lives in the transcript, reachable via the Transcript button.
   const [drawerOpen, setDrawerOpen] = useState(false);
+  // R42 (2026-08-10, session portal-cb2addf5): one debug event per
+  // open/close, with the triggering surface — added to diagnose the
+  // header-icon "two taps to open" bug (the icon used to be OPEN-only, so
+  // a second tap while the drawer was open hit the backdrop instead and
+  // closed it, reading live as a ghost re-open). 'icon' covers every
+  // chrome-driven path (header icon, backdrop dismiss, the drawer's own ✕)
+  // since they're all the same control surface; 'caption'/'qpin' are the
+  // two content-embedded openers (identified via the bridging
+  // CustomEvent's detail.source); 'event' is the generic bridge fallback
+  // when no source is attached.
+  const fireTranscriptDrawerEvent = useCallback((action: 'open' | 'close', source: 'icon' | 'caption' | 'qpin' | 'event') => {
+    onDebugEvent?.('transcript_drawer', `${action} · source=${source}`, { action, source });
+  }, [onDebugEvent]);
   // Round-6e: announce every drawer OPEN so TranscriptView can snap to the
   // latest message. Two rounds of transition-detection (ResizeObserver on
   // the hidden→visible flip, immediate then 220ms-delayed) worked in a
@@ -316,10 +335,18 @@ export default function SessionStage(props: SessionStageProps) {
   // state lives here and threading a callback up-and-back-down would tangle
   // the slot composition.
   useEffect(() => {
-    const open = () => setDrawerOpen(true);
+    // R42: the bridging event's `detail.source` (set by the caption dock
+    // and Q-pin dispatch sites in TutorSession) attributes the open; a
+    // bare `Event` (no detail — the caption dock's no-lastTutorEntry
+    // fallback) has no source, so 'event' is the generic catch-all.
+    const open = (e: Event) => {
+      const source = (e as CustomEvent<{ source?: 'caption' | 'qpin' }>).detail?.source ?? 'event';
+      setDrawerOpen(true);
+      fireTranscriptDrawerEvent('open', source);
+    };
     window.addEventListener('evelyn:open-transcript', open);
     return () => window.removeEventListener('evelyn:open-transcript', open);
-  }, []);
+  }, [fireTranscriptDrawerEvent]);
   const [tool, setTool] = useState<null | 'draw' | 'text'>(null);
   // Tools cluster collapse-to-FAB (Task T1, 2026-07-16): the always-expanded
   // icon column occluded board content on phones (IMG_7803). The FAB expands
@@ -722,7 +749,7 @@ export default function SessionStage(props: SessionStageProps) {
             needed (plus clearance for the floating switcher when shown) — the
             bottom is deliberately NOT padded to clear the floating bar: ink
             may run behind it and stay readable through the 40% surface. */}
-        <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : 'pt-2'} pb-2 px-2 sm:px-0 flex justify-center`}>
+        <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center`}>
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
               scrollbar appears (Images 2/3, 2026-06-24). Empty board stays
@@ -1001,9 +1028,18 @@ export default function SessionStage(props: SessionStageProps) {
               )}
               {/* Transcript trigger — header icon at ALL sizes (R1 2026-07-14;
                   the old md+ bottom-left floating chip covered board ink and
-                  is gone). */}
+                  is gone). R42 (2026-08-10): a TRUE toggle, not open-only —
+                  the open-only handler let a second tap (meant to close)
+                  fall through to the backdrop underneath (z-40 over the
+                  z-30 header), which closed the drawer, then the SAME tap
+                  target looked like it needed a THIRD tap to re-open —
+                  live-reported as "two clicks to open the transcript". */}
               <button
-                onClick={() => setDrawerOpen(true)}
+                onClick={() => setDrawerOpen((o) => {
+                  const next = !o;
+                  fireTranscriptDrawerEvent(next ? 'open' : 'close', 'icon');
+                  return next;
+                })}
                 title="Transcript"
                 className="relative grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600"
               >
@@ -1047,7 +1083,7 @@ export default function SessionStage(props: SessionStageProps) {
           outer anchor (top/right) never moves; the FAB toggles whether the
           rest of the column renders below it, so expanding never shifts this
           overlay's position, only grows it downward. */}
-      <div className={`absolute ${showSwitcher ? 'top-28' : 'top-16'} right-2 z-20`}>
+      <div className={`absolute ${agendaRail && !isFullscreen ? (showSwitcher ? 'top-[152px]' : 'top-[104px]') : (showSwitcher ? 'top-28' : 'top-16')} right-2 z-20`}>
         <div ref={toolsClusterRef} className="flex flex-col items-center gap-1 rounded-2xl bg-white border border-slate-200 shadow-md p-1.5">
           <div className="relative">
             <ToolBtn active={toolsOpen} title={toolsOpen ? 'Close tools' : boardPenActive && !toolsOpen ? 'Tools — pen active' : 'Tools'} onClick={() => setToolsOpen((o) => !o)}>
@@ -1120,7 +1156,7 @@ export default function SessionStage(props: SessionStageProps) {
               "n / N" with prev/next; the WhiteboardCanvas's own page bar is
               suppressed (chrome="minimal"). ===== */}
       {showSwitcher && boardPages && (
-        <div ref={switcherRef} className="absolute top-[58px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+        <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto`}>
           {/* FIXED-width pill so it never jitters as titles change on page
               turns. The middle label is a button → opens a jump-to-page list. */}
           <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
@@ -1363,7 +1399,7 @@ export default function SessionStage(props: SessionStageProps) {
       )}
 
       {/* ===== Transcript drawer ===== */}
-      {drawerOpen && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => setDrawerOpen(false)} />}
+      {drawerOpen && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} />}
       {/* On phones the CLOSED drawer is display:none, NOT just translated
           off-canvas. iOS Safari does not reliably clip a translated-off-screen
           child of a `fixed overflow-hidden` ancestor, so a translateY(100%)
@@ -1375,7 +1411,7 @@ export default function SessionStage(props: SessionStageProps) {
         <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> Transcript</h2>
-          <button onClick={() => setDrawerOpen(false)} className="grid place-items-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
+          <button onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} className="grid place-items-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
         </div>
         {/* TranscriptView is `h-full overflow-y-auto`. A flex-1 parent's
             percentage-height doesn't always resolve (flexbox gotcha), which

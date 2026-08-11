@@ -731,31 +731,35 @@ export default function TutorSession(props: TutorSessionProps) {
   const dockCaptionEl = statusOverride ? (
     <span className={`block truncate text-xs font-medium ${statusOverride.cls}`}>{statusOverride.text}</span>
   ) : liveCaption ? (
-    <button
-      type="button"
-      title="Open transcript"
-      // Round-15 Issue 9 (2026-07-16): pass the last tutor entry's id so
-      // TranscriptView scrolls to (and flashes) the message the caption is
-      // showing — the bare event opened the drawer but TranscriptView's
-      // listener early-returns without an entryId, leaving the scroll
-      // wherever it last was. Same event shape as the Q-pill below; falls
-      // back to the bare event when no tutor entry exists yet.
-      onClick={() => window.dispatchEvent(
-        lastTutorEntry?.id
-          ? new CustomEvent('evelyn:open-transcript', { detail: { entryId: lastTutorEntry.id } })
-          : new Event('evelyn:open-transcript'),
-      )}
-      className="w-full min-w-0 flex items-center gap-2 text-left"
-    >
+    // R42 (2026-08-10): click target shrunk to the caption text itself —
+    // the old button wrapped the ENTIRE dock row (chips + meter included),
+    // so any tap near the mic meter or state chip also opened the
+    // transcript, which read as an accidental/unintended open.
+    <div className="w-full min-w-0 flex items-center gap-2">
       {voiceState === 'muted' && (
         <span className="shrink-0 rounded bg-red-50 px-1 py-0.5 text-[10px] font-bold text-red-500">MUTED</span>
       )}
       {voiceState === 'speaking' && (
         <span className="shrink-0 rounded bg-emerald-50 px-1 py-0.5 text-[10px] font-bold text-emerald-600">SPEAKING</span>
       )}
-      <CaptionTicker text={liveCaption} getSpoken={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined} />
+      <button
+        type="button"
+        title="Open transcript"
+        // Round-15 Issue 9 (2026-07-16): pass the last tutor entry's id so
+        // TranscriptView scrolls to (and flashes) the message the caption is
+        // showing — the listener early-returns without an entryId, leaving
+        // the scroll wherever it last was. Same event shape as the Q-pill
+        // below. R42: detail.source='caption' attributes the transcript_drawer
+        // debug event fired by SessionStage's window-event listener.
+        onClick={() => window.dispatchEvent(
+          new CustomEvent('evelyn:open-transcript', { detail: { entryId: lastTutorEntry?.id, source: 'caption' } }),
+        )}
+        className="min-w-0 flex-1 text-left"
+      >
+        <CaptionTicker text={liveCaption} getSpoken={TUTOR_CAPTION_SYNC ? getSpokenCaption : undefined} />
+      </button>
       {voiceState === 'speaking' && <MicMeter level={0} speaking />}
-    </button>
+    </div>
   ) : (
     <span className={`block truncate text-xs font-medium ${dockStatus.cls}`}>{dockStatus.text}</span>
   );
@@ -882,14 +886,11 @@ export default function TutorSession(props: TutorSessionProps) {
     TUTOR_QUESTION_PIN && questionPin && pinShownForTurn === questionPin.turnId ? (
       <div
         role="button"
-        tabIndex={0}
-        onClick={() => window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId } }))}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId } }));
-          }
-        }}
+        // R42 (2026-08-10): tabIndex + the Enter/Space key handler removed —
+        // this pin sat over the board and a stray focus + keypress (tab
+        // order, a scanner, etc.) opened the transcript with no visible
+        // action to explain why. Click stays the only way in.
+        onClick={() => window.dispatchEvent(new CustomEvent('evelyn:open-transcript', { detail: { entryId: questionPin.turnId, source: 'qpin' } }))}
         title="The tutor's question — tap for the full transcript"
         className="ss-cap w-full flex items-center gap-2 rounded-xl bg-amber-50/95 border border-amber-200 shadow-md px-3 py-1.5 text-left cursor-pointer"
       >
@@ -1426,6 +1427,7 @@ export default function TutorSession(props: TutorSessionProps) {
         // handleMicClick's unlockAudio() must run inside this click's gesture
         // stack or iOS never resumes the AudioContext.
         onOrbStart={() => realtimeHandleRef.current?.startSession?.()}
+        onDebugEvent={onDebugEvent}
         transcript={transcriptEl}
         transcriptCount={transcript.length}
         nudgeActive={!!availableLessonPlans && availableLessonPlans.length > 0 && !nudgeDismissed}

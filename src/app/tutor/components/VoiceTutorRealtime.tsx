@@ -86,7 +86,7 @@ import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-ver
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
-import { createTurnLatencyLedger, formatTurnLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
+import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
@@ -100,6 +100,7 @@ import {
   extractIntegrand,
   extractFinalAnswerClaim,
   normalizeRenamedFunction,
+  harvestPreNormalizationDeclarations,
   computeGreetingGuard,
   isRejection,
   isWalkThroughRequest,
@@ -199,8 +200,9 @@ import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/li
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
-import { buildJudgeCorrectionNote, hasMathExpression } from '@/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression, shouldConsumeJudgeCorrectionNote } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
+import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -277,6 +279,26 @@ import {
   type StudentMarkEvent,
   type ResolvedMark,
 } from '@/lib/tutor/whiteboard/student-marks';
+
+// R42 (2026-08-10, session portal-cb2addf5): shared skip-with-debug-note
+// backstop for every turn_latency emit site. `turn_latency
+// end→fetch=-75941ms` was observed live — a stale/shared ledger (see
+// lastVadActivityAtRef-adjacent brainFetch-mark comment inside the
+// component) let a synthetic dispatch's 'brainFetch' mark and a real,
+// chronologically-later turn's 'turnEnd' mark land in the SAME ledger,
+// producing a negative diff. A negative latency is never a genuine
+// measurement — skip the misleading emit and publish a lightweight note
+// instead so the corruption itself stays visible in telemetry.
+const emitTurnLatencyEvent = (
+  onDebugEvent: ((type: string, message: string, data?: Record<string, unknown>) => void) | undefined,
+  lat: ReturnType<TurnLatencyLedger['summarize']>,
+): void => {
+  if (hasNegativeLatency(lat)) {
+    onDebugEvent?.('turn_latency_skipped', `negative anchor (stale ledger), skipped: ${formatTurnLatency(lat)}`);
+    return;
+  }
+  onDebugEvent?.('turn_latency', formatTurnLatency(lat));
+};
 
 const isBoardRenderCommand = (c: unknown): boolean => {
   const a = String((c as { action?: string })?.action ?? '');
@@ -1009,6 +1031,13 @@ export function VoiceTutorRealtime({
   // only the fragment "All right, hold on I think I got this" reached
   // the brain because the corrected answer was lost to the gate).
   const perceptionMidUtteranceRef = useRef<boolean>(false);
+  // R42 (2026-08-10, session portal-cb2addf5): timestamp of the last VAD
+  // edge (speech_started OR speech_stopped) of any kind — stamped on BOTH
+  // events. Feeds decideStage2TimeoutRestore's msSinceLastVadActivity so a
+  // 'speaking'-cancel timeout-resume can defer through an inter-clause
+  // pause, not just the instant perceptionMidUtteranceRef happens to read
+  // true. 0 = no VAD activity observed yet this session.
+  const lastVadActivityAtRef = useRef<number>(0);
   // ── "Being heard" indicator state (2026-06-24) ──────────────────────────
   // Drive an honest, turn-level feedback signal so the student doesn't have to
   // guess whether they were heard. `perceptionHearing` = perception VAD says
@@ -2027,7 +2056,7 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; hasChoices?: boolean } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; hasChoices?: boolean; choiceLetters?: string[] } | null>(null);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -4349,6 +4378,13 @@ export function VoiceTutorRealtime({
       const cmdAny = cmd as any;
       const latex: string = cmdAny.latex || '';
       if (!latex) return cmd;
+      // R42: harvest any genuinely-new (unprimed) declaration from the
+      // PRE-normalization latex before deciding whether to rename this
+      // card. Without this, a fresh declaration like "g(x) = x^2 e^{3x}"
+      // gets rewritten to the sole existing base before it can ever
+      // register — a self-reinforcing lock-in (session portal-cb2addf5,
+      // 2026-08-10: 24 renames, all collapsing to one wrong name).
+      declaredFunctionsRef.current = harvestPreNormalizationDeclarations(latex, declaredFunctionsRef.current);
       const { latex: fixedLatex, changed, oldName, newName } = normalizeRenamedFunction(
         latex,
         declaredFunctionsRef.current,
@@ -4847,6 +4883,10 @@ export function VoiceTutorRealtime({
             // Round-22: MCQ marker so the verification classifier can accept
             // a bare choice letter ("d") as the student's answer.
             hasChoices: Array.isArray(p.answerChoices) && p.answerChoices.length > 0,
+            // R42: choice letters for the MCQ letter-homophone normalizer
+            // ("See." → "C") — must be the ACTUAL letters this problem
+            // offers, not a blind A-E guess.
+            choiceLetters: extractChoiceLetters(p.answerChoices),
             ...(genMatch ? { source: 'generated' as const, expectedAnswer: genMatch.expectedAnswer } : {}),
           };
           if (genMatch) {
@@ -4886,6 +4926,7 @@ export function VoiceTutorRealtime({
             kind: 'generic',
             source: 'card',
             hasChoices: Array.isArray(tyAny.choices) && tyAny.choices.length > 0,
+            choiceLetters: extractChoiceLetters(tyAny.choices),
             ...(declared ? { expectedAnswer: declared } : {}),
           };
           walkThroughInsistenceRef.current = 0;
@@ -7426,6 +7467,7 @@ export function VoiceTutorRealtime({
             kind: 'generic',
             source: 'card',
             hasChoices: Array.isArray(cmd.choices) && cmd.choices.length > 0,
+            choiceLetters: extractChoiceLetters(cmd.choices),
             ...(declared ? { expectedAnswer: declared } : {}),
           };
           servedProblemStatementsRef.current.add(statement.replace(/\s+/g, ' ').trim());
@@ -7438,6 +7480,7 @@ export function VoiceTutorRealtime({
             statement,
             kind: /\\int|Integral_|\bintegral\b/i.test(statement) ? 'integral' : 'generic',
             hasChoices: Array.isArray(cmd.problem.answerChoices) && cmd.problem.answerChoices.length > 0,
+            choiceLetters: extractChoiceLetters(cmd.problem.answerChoices),
           };
           servedProblemStatementsRef.current.add(statement.replace(/\s+/g, ' ').trim());
           console.log('[VoiceTutorRealtime] resume: rehydrated active problem:', statement.slice(0, 80));
@@ -8245,7 +8288,13 @@ export function VoiceTutorRealtime({
         pendingBoardAnchorNoteRef.current = null;
       }
       // Judge correction note (2026-08-07) — same convention, own concern.
-      if (pendingJudgeCorrectionNoteRef.current) {
+      // R42 (2026-08-10, session portal-cb2addf5): synthetic/nudge
+      // dispatches (bracketed transcripts — idle-nudge, cover turns,
+      // [start lesson], etc.) must NOT consume a planted note. They aren't
+      // a response to anything the student said, so the note would be
+      // silently burned with no chance to ever surface the correction —
+      // hold it for the next REAL student-turn response instead.
+      if (pendingJudgeCorrectionNoteRef.current && shouldConsumeJudgeCorrectionNote(transcript)) {
         runTranscript = `${pendingJudgeCorrectionNoteRef.current}\n\n${runTranscript}`;
         pendingJudgeCorrectionNoteRef.current = null;
         onDebugEvent?.('judge_correction_note_consumed', 'delivered with this turn');
@@ -12274,7 +12323,7 @@ export function VoiceTutorRealtime({
             // emit to the sentence-start handler so TOTAL lands non-null.
             turnLatencyAwaitingAudioRef.current = true;
           } else {
-            onDebugEvent?.('turn_latency', formatTurnLatency(lat));
+            emitTurnLatencyEvent(onDebugEvent, lat);
             turnLatencyRef.current = null;
           }
         }
@@ -12776,7 +12825,7 @@ export function VoiceTutorRealtime({
         console.error('[brain-orchestrator] error:', err);
         onDebugEvent?.('brain_turn', `Brain failed: ${err instanceof Error ? err.message : String(err)}`);
         if (turnLatencyRef.current) {
-          onDebugEvent?.('turn_latency', formatTurnLatency(turnLatencyRef.current.summarize()));
+          emitTurnLatencyEvent(onDebugEvent, turnLatencyRef.current.summarize());
           turnLatencyRef.current = null;
           turnLatencyAwaitingAudioRef.current = false;
         }
@@ -13110,6 +13159,26 @@ export function VoiceTutorRealtime({
       injectedHistoryTail?: Array<{ role: 'user' | 'assistant'; content: string }>;
     },
   ) => {
+    // R42 (2026-08-10, session portal-cb2addf5): MCQ letter-homophone
+    // normalization. Done here — the single serialized entry point every
+    // voice/typed dispatch path converges on — so it's applied exactly
+    // once regardless of which upstream branch (direct-dispatch,
+    // perception late-fallback, etc.) fired. Bracketed synthetic
+    // dispatches never match a bare-word form, so this is a no-op for
+    // them; guarded anyway for clarity and to never touch opts.silent
+    // system turns. R42 review round 1: also excludes opts.typed — a
+    // student who TYPED "see" meant the word, not a mishearing of the
+    // letter C (the homophone problem is specific to ASR mishearing
+    // speech; typed text has no such ambiguity).
+    if (!opts?.silent && !opts?.typed && currentProblemRef.current?.hasChoices) {
+      const activeChoiceLetters = currentProblemRef.current.choiceLetters ?? [];
+      const normalized = normalizeMcqLetterUtterance(transcript, activeChoiceLetters);
+      if (normalized) {
+        console.log(`[brain-orchestrator] MCQ letter homophone normalized: ${JSON.stringify(transcript)} → "${normalized}"`);
+        onDebugEvent?.('mcq_letter_normalized', `"${transcript.trim()}" → "${normalized}"`);
+        transcript = normalized;
+      }
+    }
     // Task X10: stamp this turn's input modality for the honest fallback.
     currentTurnTypedRef.current = opts?.typed === true;
     // Round-7g: a real (non-synthetic) student turn ends the silence
@@ -13363,7 +13432,22 @@ export function VoiceTutorRealtime({
       lastBrainCallContextRef.current = { transcript, opts };
       // Typed turns never pass through perception (no eagerEnd/turnEnd) —
       // create the ledger here so brain_first/tts→audio still measure.
-      turnLatencyRef.current ??= createTurnLatencyLedger();
+      //
+      // R42 (2026-08-10, session portal-cb2addf5): a synthetic/nudge
+      // dispatch (bracketed transcript, or opts.silent) has no
+      // eagerEnd/turnEnd pair of its own — it must never REUSE a leftover
+      // ledger, because that ledger could belong to a real turn still
+      // in flight whose 'turnEnd' lands later and, being chronologically
+      // AFTER this synthetic dispatch's 'brainFetch', computes a negative
+      // end→fetch (observed live: `end→fetch=-75941ms`). Always start
+      // fresh for these; a real turn always creates its own ledger anyway
+      // (turnEnd site above), so this never drops real instrumentation.
+      const isSyntheticLatencyAnchor = opts?.silent === true || /^\s*\[/.test(transcript);
+      if (isSyntheticLatencyAnchor) {
+        turnLatencyRef.current = createTurnLatencyLedger();
+      } else {
+        turnLatencyRef.current ??= createTurnLatencyLedger();
+      }
       turnLatencyRef.current.mark('brainFetch', Date.now());
       // R32 Task 6: cover-arm (Task 3) + escalation-poller (Task 4) extracted
       // to armCoverForDispatch above — same call, now shared with the
@@ -13975,7 +14059,7 @@ export function VoiceTutorRealtime({
         turnLatencyRef.current?.mark('firstAudio', Date.now());
         if (turnLatencyAwaitingAudioRef.current && turnLatencyRef.current) {
           turnLatencyAwaitingAudioRef.current = false;
-          onDebugEvent?.('turn_latency', formatTurnLatency(turnLatencyRef.current.summarize()));
+          emitTurnLatencyEvent(onDebugEvent, turnLatencyRef.current.summarize());
           turnLatencyRef.current = null;
         }
       }
@@ -14562,7 +14646,7 @@ export function VoiceTutorRealtime({
       // incomplete and start fresh so stale marks can't inflate this turn.
       if (turnLatencyRef.current?.has('turnEnd')) {
         if (turnLatencyAwaitingAudioRef.current) {
-          onDebugEvent?.('turn_latency', formatTurnLatency(turnLatencyRef.current.summarize()));
+          emitTurnLatencyEvent(onDebugEvent, turnLatencyRef.current.summarize());
         }
         turnLatencyRef.current = null;
       }
@@ -15390,6 +15474,11 @@ export function VoiceTutorRealtime({
               brainWasInFlight: armedCheckpoint!.brainWasInFlight,
               brainTurnAborted: brainTurnAbortedRef.current,
               midUtterance: perceptionMidUtteranceRef.current,
+              // R42: recent-activity window for the 'speaking' branch — see
+              // lastVadActivityAtRef doc comment. 0 (never stamped) yields a
+              // huge ms value, which is always outside the window, so an
+              // untouched ref behaves exactly like "no signal".
+              msSinceLastVadActivity: lastVadActivityAtRef.current ? Date.now() - lastVadActivityAtRef.current : undefined,
               newBrainCallInFlight: inFlightBrainAbortRef.current !== null,
               ageMs: Date.now() - armedCheckpoint!.cancelledAt,
               hasUnplayedSnapshot: (armedCheckpoint!.unplayedSentencesSnapshot?.length ?? 0) > 0,
@@ -15499,6 +15588,9 @@ export function VoiceTutorRealtime({
       onListeningHintRef.current?.(null); // a fresh utterance supersedes any prior "didn't catch" nudge
       // Stage 3 fix #4: track mid-utterance for the state-race retro-cancel.
       perceptionMidUtteranceRef.current = true;
+      // R42: stamp the VAD-activity clock on this edge too (see
+      // lastVadActivityAtRef doc comment).
+      lastVadActivityAtRef.current = Date.now();
       // Stage 3 fix #11: watchdog reset for the mid-utterance flag.
       // Clears any prior watchdog (overlapping speech_started events
       // shouldn't happen, but be idempotent), then schedules a 30s
@@ -15807,6 +15899,12 @@ export function VoiceTutorRealtime({
       }
       // Stage 3 fix #4: clear mid-utterance flag.
       perceptionMidUtteranceRef.current = false;
+      // R42: speech_stopped is a VAD edge too — an inter-clause pause fires
+      // this exact event without the student being genuinely done talking.
+      // Stamping here (not just on speech_started) is what lets a
+      // 'speaking'-cancel timeout-resume defer through that pause instead
+      // of only catching an in-progress utterance.
+      lastVadActivityAtRef.current = Date.now();
       // "Being heard" indicator: student stopped. Enter the "Got that — one
       // sec…" processing state covering the transcribe+dispatch latency. If the
       // utterance was long enough to be real speech (not a cough/blip) and no
