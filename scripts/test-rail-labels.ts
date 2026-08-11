@@ -78,7 +78,7 @@ function mkPlan(opts: {
     ],
     segmentIds: ['intro', 'lo-a-hook', 'lo-a-concept', 'lo-a-try', 'lo-b-hook', 'lo-b-concept', 'recap'],
   });
-  const m1 = buildRailModel(gen, 'lo-a-concept', new Set(['intro', 'lo-a-hook']), null)!;
+  const m1 = buildRailModel(gen, 'lo-a-concept', new Set(['intro', 'lo-a-hook']), null)!.items;
   assert(m1.map(i => i.key).join(',') === 'intro,lo-a,lo-b,recap', 'gen grouping order');
   assert(m1[1].label === 'Photosynthesis inputs', 'gen shortTitle label');
   assert(m1[1].current === true && m1[0].done === true && m1[1].done === false, 'gen flags');
@@ -95,7 +95,7 @@ function mkPlan(opts: {
   });
   const labels = { 'concept-cx': 'Two-way exchange', 'worked-letter': "Columbus's letter",
     'try-saq': 'Practice: SAQ', 'misconception-one-way': 'One-way myth' };
-  const m2 = buildRailModel(curated, 'worked-letter', new Set(['hook', 'concept-cx']), labels)!;
+  const m2 = buildRailModel(curated, 'worked-letter', new Set(['hook', 'concept-cx']), labels)!.items;
   assert(m2.length === 6 && m2[0].label === 'Hook' && m2[5].label === 'Recap', 'curated fixed ends');
   assert(m2[1].label === 'Two-way exchange' && m2[2].current === true, 'curated content labels');
 }
@@ -107,16 +107,31 @@ function mkPlan(opts: {
     los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
     segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
   });
-  const m3 = buildRailModel(curated, 'hook', new Set(), null)!;
+  const m3 = buildRailModel(curated, 'hook', new Set(), null)!.items;
   assert(m3.map(i => i.label).join('|') === 'Hook|Concept|Example|Try|Misconception|Recap', 'stage fallback');
   const twoTries = mkPlan({ los: [], segmentIds: ['hook', 'try-1', 'try-2', 'recap'] });
-  const m4 = buildRailModel(twoTries, 'try-2', new Set(['hook', 'try-1']), null)!;
+  const m4 = buildRailModel(twoTries, 'try-2', new Set(['hook', 'try-1']), null)!.items;
   assert(m4[1].label === 'Try 1' && m4[2].label === 'Try 2', 'occurrence numbering');
 }
 
 // Case 4: suppression — pendingPicker → null
 {
   assert(buildRailModel(mkPlan({ metadata: { pendingPicker: true }, segmentIds: ['hook'] }), 'hook', new Set(), null) === null, 'picker suppressed');
+}
+
+/* ------------------------------------------------------------------ */
+/* buildRailModel — offPlan flag (Task 3, rail-bargein): the client   */
+/* releases the cursor to '' when the tutor goes off-plan (barge-in)  */
+/* ------------------------------------------------------------------ */
+{
+  const curated = mkPlan({
+    title: 'U1.4 The Columbian Exchange',
+    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
+  });
+  assert(buildRailModel(curated, '', new Set(), null)!.offPlan === true, 'empty cursor → offPlan flag set');
+  assert(buildRailModel(curated, '', new Set(), null)!.items.every((i) => !i.current), 'empty cursor → no item current');
+  assert(buildRailModel(curated, 'hook', new Set(), null)!.offPlan === false, 'normal cursor → offPlan false');
 }
 
 /* ------------------------------------------------------------------ */
