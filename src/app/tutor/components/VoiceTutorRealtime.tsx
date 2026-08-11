@@ -2378,6 +2378,33 @@ export function VoiceTutorRealtime({
   // let this turn's state survive into the next turn" pattern) so a signal
   // from a turn that never reaches the pacing block can't bleed forward.
   const objectiveCorrectThisTurnRef = useRef<{ signal: ObjectiveCorrectSignal } | null>(null);
+  // R47 Task 2 (live incident pattern: perception STAGE-3 sometimes
+  // dispatches a garbled FRAGMENT of the student's utterance as its own
+  // turn — the brain answers correctively, streak-incorrect fires — then
+  // STAGE-3 re-cuts/supersedes with the full utterance and the REAL turn
+  // runs. The fragment's wrong streak change must not survive. Snapshot-
+  // and-restore: the post-stream pacing block below stashes the pre-
+  // mutation ref state + this turn's ordinal (pacingTurnCounterRef,
+  // captured as `turnMarker`) here BEFORE applying a 'correct' or
+  // 'incorrect' decision. `turnMarker` is the identity that ties this
+  // record to "the turn currently being discarded" at the
+  // applyPerceptionVerdict supersede seam: the perception checkpoint
+  // object itself carries no turn/segId field (only originalTranscript +
+  // timing), but callBrainOnce is the sole dispatch entry point and is
+  // strictly serialized — the mid-utterance dispatch guard in
+  // handleStudentTranscriptForBrain blocks any OTHER dispatch while a
+  // checkpoint is pending — so pacingTurnCounterRef.current at the moment
+  // a checkpoint resolves is guaranteed to equal the ordinal of the turn
+  // that checkpoint is about. An exact `turnMarker === pacingTurnCounterRef
+  // .current` match at that seam is therefore an exact identity check, not
+  // a heuristic — see applyPerceptionVerdict for the grab-and-clear site.
+  const lastStreakChangeRef = useRef<{
+    segId: string;
+    prevCorrect: { segId: string; count: number };
+    prevIncorrect: { segId: string; count: number };
+    prevPracticeStreak: number;
+    turnMarker: number;
+  } | null>(null);
   // Buffer of [pacing] events fired during the most recent brain turn.
   // Forwarded server-side on the NEXT brain stream request body so the
   // /api/tutor/brain/stream route can write them to the server log
@@ -12868,6 +12895,19 @@ export function VoiceTutorRealtime({
           // same turn, so this only degrades to the signal's own segId
           // when ver itself is null/stale.
           const segId = ver?.segId ?? objectiveSignal?.segId ?? '';
+          // R47 Task 2: snapshot BEFORE mutating any of the three refs
+          // below, on either branch — see lastStreakChangeRef's
+          // declaration for why turnMarker is an exact (not heuristic)
+          // identity for the applyPerceptionVerdict supersede seam.
+          if (decision.credit === 'correct' || decision.credit === 'incorrect') {
+            lastStreakChangeRef.current = {
+              segId,
+              prevCorrect: { ...studentStreakRef.current },
+              prevIncorrect: { ...studentIncorrectStreakRef.current },
+              prevPracticeStreak: practiceStreakRef.current,
+              turnMarker: pacingTurnCounterRef.current,
+            };
+          }
           if (decision.credit === 'correct') {
             const priorCount = studentStreakRef.current.segId === segId
               ? studentStreakRef.current.count : 0;
@@ -14222,6 +14262,41 @@ export function VoiceTutorRealtime({
     const checkpoint = perceptionInterruptCheckpointRef.current;
     if (!checkpoint) return;
     perceptionInterruptCheckpointRef.current = null;
+    // R47 Task 2: grab-and-clear the pending streak record for the turn
+    // this checkpoint is about (exact turnMarker identity — see
+    // lastStreakChangeRef's declaration comment). This checkpoint is the
+    // SINGLE resolution point for whichever brain turn was last
+    // dispatched, so every branch below is a terminal decision for it —
+    // clear the record here regardless of verdict, not only inside
+    // MERGE/FRESH. Otherwise a verdict that CONFIRMS the turn (silent-
+    // accept / RESTORE-drop, no re-dispatch) would leave the record
+    // dangling with a still-current turnMarker, and a LATER, wholly
+    // unrelated checkpoint could then wrongly match it and revert an
+    // already-confirmed streak change. Only actually restore the refs
+    // (revertSupersededStreak, below) on the MERGE/FRESH branches, where
+    // the prior turn's outcome really is being discarded.
+    const supersededStreak = lastStreakChangeRef.current?.turnMarker === pacingTurnCounterRef.current
+      ? lastStreakChangeRef.current
+      : null;
+    if (supersededStreak) lastStreakChangeRef.current = null;
+    const revertSupersededStreak = (reason: string) => {
+      if (!supersededStreak) return;
+      // Guard (c): mark_segment_complete already consumed this segment's
+      // streak this turn (its evidence push / segmentMasteredFlagRef read
+      // studentStreakRef synchronously at tool-call time, mid-stream —
+      // BEFORE this post-stream snapshot was even taken). Rewinding the
+      // refs now would desync them from evidence that already committed,
+      // so leave the streak standing rather than revert it.
+      if (completedSegmentIdsRef.current.has(supersededStreak.segId)) {
+        onDebugEvent?.('pacing_streak_revert_skipped_consumed', `seg="${supersededStreak.segId}" — mark_segment_complete already consumed`);
+        return;
+      }
+      studentStreakRef.current = supersededStreak.prevCorrect;
+      studentIncorrectStreakRef.current = supersededStreak.prevIncorrect;
+      practiceStreakRef.current = supersededStreak.prevPracticeStreak;
+      logPacing(`streak-reverted seg="${supersededStreak.segId}" — superseded fragment turn (${reason})`);
+      onDebugEvent?.('pacing_streak_reverted', `seg="${supersededStreak.segId}" — superseded fragment turn (${reason})`);
+    };
     // Round-28: a real verdict is consuming the checkpoint — the
     // no-verdict timeout-RESTORE is moot.
     if (stage2TimeoutRestoreTimerRef.current) {
@@ -14466,6 +14541,10 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): MERGE — cutTurn=${cutTurn ? `"${cutTurn.content.slice(0, 60)}"` : 'none'}, fresh=${JSON.stringify(freshText).slice(0, 80)}`,
       );
       onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_merge`, `${verdict} after ${elapsedMs}ms`);
+      // R47 Task 2: the prior (fragment) turn's outcome is being
+      // discarded in favor of this merged re-dispatch — revert any streak
+      // change it produced before the real turn runs.
+      revertSupersededStreak('continuation-merge');
       dropRenderBuffer(); // render↔speech sync: new merged turn redraws
       // R32 (H1): queue rather than drop if MERGE lands mid-utterance.
       void handleStudentTranscriptForBrain(freshText, {
@@ -14484,6 +14563,9 @@ export function VoiceTutorRealtime({
       `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): FRESH new turn, cutTurn=${cutTurn ? 'yes' : 'none'}, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
     );
     onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_fresh`, `${verdict} after ${elapsedMs}ms`);
+    // R47 Task 2: same supersede as MERGE above — this is a fresh
+    // re-dispatch discarding the prior (fragment) turn's outcome.
+    revertSupersededStreak('fresh');
     dropRenderBuffer(); // render↔speech sync: fresh turn redraws
     // R32 (H1): queue rather than drop if FRESH lands mid-utterance.
     void handleStudentTranscriptForBrain(fresh, {
@@ -14491,7 +14573,7 @@ export function VoiceTutorRealtime({
       queueOnMidUtterance: true,
       ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
     });
-  }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot]);
+  }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, logPacing]);
   // Publish to the ref so the perception callbacks (defined earlier in
   // render order via useCallback closures) can call it through the ref
   // surface without a hoisting reference issue.
