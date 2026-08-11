@@ -341,6 +341,24 @@ function runCurated(): void {
   tts('So $10C3$ counts them.', 'So 10 choose 3 counts them.', 'ncr');
   disp('\\binom{5}{2}', 'binom-display');
   disp('5!', 'factorial-display');
+  // R45 (live, session portal-d7ec8e42): "$0!, 1!, 2!$" spoke the dollar
+  // signs — a digit-factorial LIST has no ^/_/\/= signal, and the span's
+  // one prose-free comma-list shape passed the currency gate by accident in
+  // isolation, but ANY prose word alongside a digit-factorial ("$5!
+  // outcomes total$") flipped isCurrencyPairingArtifact to "artifact" and
+  // left the dollar signs raw. A digit immediately before "!" is now
+  // itself a strong math signal, checked before the currency-shape
+  // fallback (same tier as MATH_SIGNAL_RE's ^ _ \ =).
+  tts('Does seeing it laid out as $0!, 1!, 2!$ next to $1, 1, 2$ make it click?',
+    'Does seeing it laid out as 0 factorial, 1 factorial, 2 factorial next to 1, 1, 2 make it click?',
+    'factorial-list-span');
+  tts('$3!$', '3 factorial', 'factorial-single-span');
+  tts('So $5! outcomes total$ for the raffle.', 'So 5 factorial outcomes total for the raffle.', 'factorial-with-prose-word');
+  // Negatives: prose "!" with no digit immediately before it must never be
+  // mistaken for factorial notation, and an unpaired currency "$" (no
+  // second "$" to close a span at all) is untouched regardless.
+  tts('That costs $5. Try again!', 'That costs $5. Try again!', 'factorial-guard-currency-exclaim');
+  tts('$0.5$', '0.5', 'factorial-guard-decimal-unchanged');
 
   // ── 13. Stats & probability ──────────────────────────────────────
   tts('The mean $\\bar{x} = 52$ here.', 'The mean x bar equals 52 here.', 'x-bar');

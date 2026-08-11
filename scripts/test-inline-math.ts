@@ -377,6 +377,27 @@ console.log('\n=== Bare comma-separated numeric lists are math (transcript drawe
   check('currency pairing artifact stays literal', m.length === 0, joined('It costs $5 and $10 elsewhere.'));
 }
 
+console.log('\n=== Factorial-list $-spans are math (R45 fix, live session portal-d7ec8e42) ===');
+{
+  // Live: the transcript drawer showed literal "$0!, 1!, 2!$" — the R31
+  // bare-comma-list rule's token charset allowed digits/commas but not "!".
+  const m = mathBodies('Does seeing it laid out as $0!, 1!, 2!$ next to $1, 1, 2$ make it click?');
+  check('$0!, 1!, 2!$ renders as math', m.includes('0!, 1!, 2!'),
+    joined('Does seeing it laid out as $0!, 1!, 2!$ next to $1, 1, 2$ make it click?'));
+}
+{
+  // Guard: a bare exclamation with no comma-list shape at all must never
+  // qualify — "Great!" is prose, not a single-item factorial list.
+  const m = mathBodies('I said $Great!$ before.');
+  check('bare exclamation stays literal', m.length === 0, joined('I said $Great!$ before.'));
+}
+{
+  // Guard: a real word breaks the numeric-item shape even with a comma —
+  // "Hello!, world" is not a factorial list just because it contains "!,".
+  const m = mathBodies('I said $Hello!, world$ before.');
+  check('word-list with exclamation stays literal', m.length === 0, joined('I said $Hello!, world$ before.'));
+}
+
 console.log('\n=== Known 3-letter fn names + comma args are math ===');
 {
   const m = mathBodies('Recall $sin(x)$ oscillates.');

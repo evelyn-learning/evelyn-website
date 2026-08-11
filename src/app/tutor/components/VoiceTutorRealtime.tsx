@@ -2700,33 +2700,6 @@ export function VoiceTutorRealtime({
   // consumed (applied or discarded) at that same turn's completion seam
   // otherwise. Lives for exactly one brain turn — no timers.
   const pendingStudentJumpRef = useRef<{ segId: string; label: string; atMs: number } | null>(null);
-  // R44: did THIS brain turn NAVIGATE the lesson cursor — either an
-  // explicit advance_lesson call (any `to`, resolved or not) OR an
-  // inferred advance from the show_segment_card site (review round 2,
-  // Finding 1 — a same-turn inferred advance is a real navigation too;
-  // without this the off-plan-release check below couldn't see it and
-  // would immediately revert a just-applied correct advance)? Reset
-  // false at the top of callBrainOnce, set true at both navigation
-  // sites. Used by the off-plan cursor-release check at turn-completion
-  // so it doesn't fire on a turn where the brain already navigated.
-  const advanceLessonCalledThisTurnRef = useRef(false);
-  // R44 (review round 3, Finding NF2 fix v2): monotonic counter keyed to
-  // turn COMPLETION, not turn start. Incremented in EXACTLY three places
-  // — all of them a turn ENDING: the turn-completion seam (as its LAST
-  // action), the HTTP-failure early return, and the catch block (thrown
-  // OR aborted). NOT incremented at callBrainOnce entry — an earlier
-  // version of this guard (review round 2) keyed to turn START and was
-  // itself a regression: callBrainOnce's entry runs synchronously in the
-  // SAME tick as the detection call for the very turn responding to the
-  // utterance (no await in between on the voice path), so that version
-  // saw a mismatch almost immediately and dropped its own on-time
-  // signal — embedding-based release was dead code again. Keying to
-  // completion instead means: unchanged since detection ⇒ my own turn
-  // hasn't finished yet ⇒ safe to set the flag for that turn's (not-yet-
-  // run) seam to consume; changed ⇒ some turn (mine or a later one)
-  // already finished ⇒ drop rather than risk leaking into whichever turn
-  // is current now.
-  const turnFinishedSeqRef = useRef(0);
   const nextCommandOrderRef = useRef(0);
   // Running log of every whiteboard command this component has dispatched
   // — used by targetId resolution to walk the history and figure out which
@@ -2745,19 +2718,6 @@ export function VoiceTutorRealtime({
   // mechanism as the "just-solved" trigger above; they coexist safely
   // (first one to fire wins; the other clears on the same batch).
   const topicShiftPendingRef = useRef<{ fromDistance: number } | null>(null);
-  // R44 fix (review round 1, Finding 1): topicShiftPendingRef is consumed
-  // (read + cleared) by the Cross-turn page-grouping block inside
-  // handleWhiteboardCommand on EVERY dispatched tool call — so by the time
-  // the turn-completion seam runs, it has almost always already been
-  // nulled by that unrelated consumer, making the off-plan release check
-  // dead code on any turn that rendered something (the exact off-plan
-  // scenario: brain replies off-plan WITH content). This is a dedicated,
-  // release-owned flag: set at the SAME two sites that set
-  // topicShiftPendingRef (keyword + embedding detection), read AND
-  // cleared ONLY by the turn-completion seam, never touched by
-  // handleWhiteboardCommand. Cleared at the top of every turn-completion
-  // seam pass (fired or not) so it can never leak into a later turn.
-  const topicShiftForReleaseRef = useRef(false);
 
   // Most-recent geometry command — kept around so geometry-numeric can
   // verify spoken distance/angle/area claims against the rendered figure.
@@ -2962,15 +2922,13 @@ export function VoiceTutorRealtime({
         // utterance. Reason: finalize happens BEFORE the busy-queue gate
         // decides whether this utterance dispatches now or gets queued
         // behind an in-flight turn. Every signal detection produces
-        // (pendingStudentJumpRef, topicShiftForReleaseRef, topicShift-
-        // PendingRef, and the async embedding .then) is a live GLOBAL with
-        // no turn identity — so a queued utterance's signals would be
-        // consumed by the UNRELATED turn that happened to be in flight
-        // (spurious off-plan release / premature jump apply), or would be
-        // dropped as "late" when that turn's completion bumped
-        // turnFinishedSeqRef. Born at dispatch, each signal belongs to its
-        // own turn by construction. The 'clean'-only gate that lived here
-        // moved with it (see runStudentTurnDetection's call site).
+        // (pendingStudentJumpRef, topicShiftPendingRef, and the async
+        // embedding .then) is a live GLOBAL with no turn identity — so a
+        // queued utterance's signals would be consumed by the UNRELATED
+        // turn that happened to be in flight (premature jump apply). Born
+        // at dispatch, each signal belongs to its own turn by
+        // construction. The 'clean'-only gate that lived here moved with
+        // it (see runStudentTurnDetection's call site).
         // Add finalized user message to transcript
         const entry: TranscriptEntry = {
           id: `user-${Date.now()}`,
@@ -3202,7 +3160,6 @@ export function VoiceTutorRealtime({
       const intent = detectStudentIntent(text);
       if (intent.newProblem) {
         topicShiftPendingRef.current = { fromDistance: 0 };
-        topicShiftForReleaseRef.current = true;
         console.log(
           `[VoiceTutorRealtime] New-problem keyword (${source}):`,
           intent.matchedPattern,
@@ -3216,9 +3173,9 @@ export function VoiceTutorRealtime({
     // inferred segment-card advance), the pending entry is cleared unused.
     // If the turn completes WITHOUT navigation, we apply the advance the
     // brain forgot — same philosophy as inferAdvanceFromSegmentCard.
-    if (lessonPlanRef.current && currentSegmentIdRef.current) {
+    if (lessonPlanRef.current) {
       const candidates = railJumpCandidates(lessonPlanRef.current, segmentLabelsRef.current);
-      const jump = matchStudentJumpIntent(text, candidates, currentSegmentIdRef.current);
+      const jump = matchStudentJumpIntent(text, candidates, currentSegmentIdRef.current ?? '');
       if (jump) {
         pendingStudentJumpRef.current = { segId: jump.targetSegmentId, label: jump.matchedLabel, atMs: Date.now() };
         onDebugEvent?.('agenda_jump_pending', `${jump.matchedLabel} → ${jump.targetSegmentId}`);
@@ -3227,38 +3184,10 @@ export function VoiceTutorRealtime({
     // Embedding-based topic shift (async) — catches pivots that the
     // keyword list misses (e.g. "What's photosynthesis?" after a physics
     // thread).
-    // R44 (review round 3, Finding NF2 fix v2): stamp the turn-COMPLETION
-    // counter BEFORE kicking off the async check — keyed to completion,
-    // not start (see turnFinishedSeqRef's declaration comment for why a
-    // start-keyed version regressed). checkTopicShift is a real network
-    // round-trip; while it's in flight the turn responding to THIS
-    // utterance may run to completion (its seam reads topicShiftFor-
-    // ReleaseRef as false, since this hasn't resolved yet, then bumps
-    // turnFinishedSeqRef as its last action) — or a later, unrelated
-    // turn may finish. Either way, finishedAtDetection no longer matches
-    // by the time we resolve, and we must not leak the flag forward.
-    const finishedAtDetection = turnFinishedSeqRef.current;
     void checkTopicShift(topicShiftStateRef.current, text).then((result) => {
       topicShiftStateRef.current = result.nextState;
       if (result.shifted) {
-        // topicShiftPendingRef feeds the pre-existing newPage heuristic
-        // (a different consumer, handleWhiteboardCommand, with its own
-        // one-shot clearing) — unconditional, NOT part of this guard.
         topicShiftPendingRef.current = { fromDistance: result.distance ?? 0 };
-        if (turnFinishedSeqRef.current === finishedAtDetection) {
-          // No turn has FINISHED since detection started — either the
-          // turn responding to this utterance is still in flight (the
-          // common case: it hasn't reached its seam yet, so the flag
-          // will be sitting there ready when it does) or hasn't even
-          // been dispatched yet. Safe to set.
-          topicShiftForReleaseRef.current = true;
-        } else {
-          // Late resolution: some turn (mine or a later, unrelated one)
-          // already finished since this check began — misses quietly
-          // rather than leaking the release signal into whatever turn
-          // is current now.
-          onDebugEvent?.('topic_shift_late_drop', 'resolved after turn start — release skipped');
-        }
         console.log(
           '[VoiceTutorRealtime] Topic shift detected (distance=',
           result.distance?.toFixed(3), ')',
@@ -5164,11 +5093,8 @@ export function VoiceTutorRealtime({
         // R44: the brain navigated itself this turn (regardless of where
         // it went, or whether resolution below succeeds) — the pending
         // verbal-jump inference is moot; discard it unused so the
-        // turn-completion seam doesn't double-apply it. Also mark the
-        // turn as having called advance_lesson for the off-plan release
-        // check (sub-step d) further below.
+        // turn-completion seam doesn't double-apply it.
         pendingStudentJumpRef.current = null;
-        advanceLessonCalledThisTurnRef.current = true;
         const plan = lessonPlanRef.current;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const to = (cmd as any).to as string | undefined;
@@ -8121,14 +8047,6 @@ export function VoiceTutorRealtime({
     }
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
-    // R44: fresh per-turn "did the brain navigate" tracker (sub-step d,
-    // off-plan release gate below). This is a genuinely new turn — any
-    // prior turn's navigation is irrelevant now.
-    advanceLessonCalledThisTurnRef.current = false;
-    // NOTE: turnFinishedSeqRef is deliberately NOT touched here — it's
-    // keyed to turn COMPLETION (see its declaration comment), incremented
-    // only at this turn's eventual end (seam / early-return / catch), not
-    // at entry. See runStudentTurnDetection's embedding-shift branch.
     // Advance the page-grouping turn counter (staleness backstop) and mirror
     // it into the catalog so render appends stamp the current turn onto their
     // page's lastRenderTurn.
@@ -9147,18 +9065,11 @@ export function VoiceTutorRealtime({
           }
           // R44 fix (review round 1, Finding 2a): this turn is dying here
           // WITHOUT reaching the turn-completion seam (~line 12465) —
-          // whatever the student asked THIS turn (a pending jump / a
-          // topic-shift-for-release flag) targeted a brain response that
-          // never came. Clear both rather than let them survive into
-          // whatever turn succeeds next, where they'd be applied against
-          // an unrelated response.
+          // whatever the student asked THIS turn (a pending jump) targeted
+          // a brain response that never came. Clear it rather than let it
+          // survive into whatever turn succeeds next, where it'd be
+          // applied against an unrelated response.
           pendingStudentJumpRef.current = null;
-          topicShiftForReleaseRef.current = false;
-          // R44 (review round 3, Finding NF2 fix v2): this turn just
-          // ENDED (via HTTP failure) — bump the completion counter so any
-          // embedding-shift check in flight for this utterance correctly
-          // sees itself as late if it resolves after this point.
-          turnFinishedSeqRef.current += 1;
           return;
         }
 
@@ -11344,19 +11255,6 @@ export function VoiceTutorRealtime({
                           // moot, regardless of whether it targeted this
                           // same segment. Discard unused.
                           pendingStudentJumpRef.current = null;
-                          // R44 fix (review round 2, Finding 1): this IS a
-                          // navigation — mark it so the off-plan-release
-                          // check at turn-completion sees it (that check
-                          // only looked for an explicit advance_lesson
-                          // call before this fix, so a same-turn topic-
-                          // shift signal would release the cursor right
-                          // back to '' immediately after this correct
-                          // advance). Also drop any pending release
-                          // signal outright: the turn navigated inside
-                          // the plan, so there is nothing "off-plan" left
-                          // to release for.
-                          advanceLessonCalledThisTurnRef.current = true;
-                          topicShiftForReleaseRef.current = false;
                         }
                       }
                     } else {
@@ -12718,61 +12616,7 @@ export function VoiceTutorRealtime({
             onDebugEvent?.('agenda_jump_inferred', `${pendingJump.label} → ${pendingJump.segId}`);
           }
         }
-      } else if (
-        // (d) Off-plan release: no pending/applied student jump this turn
-        // (the `else` above), the student's utterance tripped the
-        // topic-shift heuristic THIS turn, and the turn called no
-        // advance_lesson at all (not even {to:"free"}) — release the
-        // cursor exactly as the to==="free" branch does (advanceLesson
-        // handler, ~line 4974), including its side effects, so the
-        // guardrails relax for the off-plan reply that already happened
-        // instead of dragging the brain back to a stale segment next
-        // turn.
-        //
-        // Uses topicShiftForReleaseRef, NOT topicShiftPendingRef (review
-        // round 1, Finding 1): topicShiftPendingRef is unconditionally
-        // read-and-cleared by the Cross-turn page-grouping block inside
-        // handleWhiteboardCommand ("Topic-shift is one-shot — clear it
-        // now that the decision consumed it") on EVERY dispatched tool
-        // call — so on any turn that rendered content (the exact off-plan
-        // scenario: the brain replies off-plan WITH a show_* call),
-        // topicShiftPendingRef is already null long before this seam
-        // runs, making a check against it dead code for the real case.
-        // topicShiftForReleaseRef is a release-owned duplicate: set at
-        // the same two detection sites (runStudentTurnDetection, keyword
-        // + embedding paths) but read AND cleared ONLY here, never by
-        // handleWhiteboardCommand — so it survives content-serving turns
-        // and this branch actually fires for them.
-        topicShiftForReleaseRef.current
-        && !advanceLessonCalledThisTurnRef.current
-        && lessonPlanRef.current
-        && currentSegmentIdRef.current
-      ) {
-        const releasedFrom = currentSegmentIdRef.current;
-        segmentBeforeFreeRef.current = releasedFrom;
-        console.log(`[VoiceTutorRealtime] agenda off-plan release — topic shift without navigation, releasing cursor from "${releasedFrom}" → free-conversation`);
-        currentSegmentIdRef.current = '';
-        setActiveSegmentId('');
-        currentProblemRef.current = null;
-        catalogRef.current.setCurrentSegment('');
-        onDebugEvent?.('agenda_offplan_release', 'topic shift without navigation');
       }
-      // topicShiftForReleaseRef is owned exclusively by this seam (unlike
-      // topicShiftPendingRef, which handleWhiteboardCommand also clears
-      // for its own purpose) — clear it on every completed-turn pass,
-      // fired or not, so a shift that didn't lead to a release this turn
-      // (no active plan, or advance_lesson DID fire) can't leak forward
-      // and fire on some unrelated later turn.
-      topicShiftForReleaseRef.current = false;
-      // R44 (review round 3, Finding NF2 fix v2): this turn just FINISHED
-      // (the seam pass above is its last piece of bookkeeping) — bump the
-      // completion counter as the LAST action of the seam, after the
-      // release/jump logic and the topicShiftForReleaseRef reset above.
-      // Any embedding-shift check still in flight for THIS turn's
-      // utterance (or an earlier one) that resolves after this point is
-      // now provably late and will drop its own signal rather than leak
-      // into whatever turn is current when it finally resolves.
-      turnFinishedSeqRef.current += 1;
 
       // R32: a stream that died AFTER sentences played used to just... stop —
       // indistinguishable from the tutor finishing (silence audit, worst unmarked
@@ -13305,16 +13149,10 @@ export function VoiceTutorRealtime({
     } catch (err) {
       // R44 fix (review round 1, Finding 2a): thrown OR aborted — either
       // way this turn never reached the turn-completion seam. Same
-      // reasoning as the early-return site above: a pending jump / topic-
-      // shift-for-release flag that targeted THIS turn must die with it,
-      // not survive to be misapplied against whatever turn comes next.
+      // reasoning as the early-return site above: a pending jump that
+      // targeted THIS turn must die with it, not survive to be misapplied
+      // against whatever turn comes next.
       pendingStudentJumpRef.current = null;
-      topicShiftForReleaseRef.current = false;
-      // R44 (review round 3, Finding NF2 fix v2): this turn just ENDED
-      // (thrown or aborted) — bump the completion counter so any
-      // embedding-shift check in flight for this utterance correctly
-      // sees itself as late if it resolves after this point.
-      turnFinishedSeqRef.current += 1;
       // Stage 2: a perception-initiated abort surfaces as DOMException
       // name='AbortError' OR a TypeError whose message includes
       // 'aborted'. Treat both as silent — the perception layer will
@@ -13971,10 +13809,8 @@ export function VoiceTutorRealtime({
       // utterance gets its own detection when it drains, below) and AFTER
       // the R42 MCQ-homophone normalization at the top of this function (so
       // detection sees the same normalized text the brain does). Every
-      // signal it sets is therefore born in the same tick as its own turn:
-      // turnFinishedSeqRef's "no turn has finished since detection" guard
-      // now genuinely means "my own turn hasn't finished", and turn A can
-      // never consume turn B's jump/release/newPage signals.
+      // signal it sets is therefore born in the same tick as its own turn
+      // — turn A can never consume turn B's jump/newPage signals.
       //
       // Gates:
       //  - !opts?.silent — silent dispatches (kickoffs, idle nudge,
@@ -13989,11 +13825,11 @@ export function VoiceTutorRealtime({
       //    control-channel picks — arrives here as a NON-silent 'voice'
       //    dispatch that classifies 'clean'. OCR'd homework text like
       //    "Draw a free-body diagram…" matches NEW_PROBLEM_PATTERNS, which
-      //    would set topicShiftForReleaseRef and let a photo upload
-      //    spuriously release the lesson cursor. This function already
-      //    treats a leading '[' as the synthetic-marker signal three times
-      //    over (idle-nudge reset, both queue-push sites, the latency
-      //    anchor) — same test here, in its whitespace-tolerant form.
+      //    would spuriously trigger the newPage heuristic for a photo
+      //    upload. This function already treats a leading '[' as the
+      //    synthetic-marker signal three times over (idle-nudge reset,
+      //    both queue-push sites, the latency anchor) — same test here, in
+      //    its whitespace-tolerant form.
       //  - voice only: classification must be 'clean'. This preserves the
       //    gate that lived at the old voice-finalize site ("we don't want a
       //    garbled transcript to look like a topic pivot"). 'noise' never
@@ -14161,8 +13997,9 @@ export function VoiceTutorRealtime({
         // `startsWith('[')` though, not the whitespace-tolerant `/^\s*\[/`
         // used elsewhere, so a marker with leading whitespace would slip
         // every one of them. No current producer emits one, but the cost of
-        // being wrong is a spurious cursor release, so guard rather than
-        // rely on the producers. Same defensive try/catch as the direct site.
+        // being wrong is a spurious newPage or jump match, so guard rather
+        // than rely on the producers. Same defensive try/catch as the
+        // direct site.
         if (!/^\s*\[/.test(combined) && classifyTranscript(combined) === 'clean') {
           try {
             runStudentTurnDetection(combined, 'queued');

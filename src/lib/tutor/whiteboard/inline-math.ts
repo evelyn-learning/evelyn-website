@@ -52,10 +52,17 @@ function looksLikeMath(inner: string): boolean {
   //      speech like "so, um, yes" is also a 1–4-letter comma list, so a
   //      bare list must additionally contain a digit somewhere OR be made
   //      entirely of single-character operands ("x, y, z").
+  //      R45 (live, session portal-d7ec8e42): each operand may carry a
+  //      trailing "!" — "$0!, 1!, 2!$" showed literal because "!" wasn't in
+  //      the operand charset. The "!" is anchored to the END of an operand
+  //      already capped at 4 word/dot characters, so it can only ever glue
+  //      to a short numeric/single-letter item, never mid-word ("Hello!"
+  //      is 5 letters before the "!" and can't fit the {1,4} cap; "world"
+  //      has no "!" or digit and fails the digit-or-single-char guard).
   if (
     inner.length <= 24 &&
-    /^-?[\w.]{1,4}(?:,\s*-?[\w.]{1,4})+$/.test(inner) &&
-    (/\d/.test(inner) || /^\w(?:,\s*\w)+$/.test(inner))
+    /^-?[\w.]{1,4}!?(?:,\s*-?[\w.]{1,4}!?)+$/.test(inner) &&
+    (/\d/.test(inner) || /^\w!?(?:,\s*\w!?)+$/.test(inner))
   ) return true;
   //   5. Compact operand-operator-operand (Round-21 — live transcript
   //      showed literal "$L + M$"): an arithmetic operator between short

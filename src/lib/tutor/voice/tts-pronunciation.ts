@@ -555,6 +555,20 @@ function verbalizeMathForSpeech(t: string): string {
  *  Runs the full verbalizeMathForSpeech pipeline on the captured content
  *  so the dollar signs disappear along with the symbols they wrapped. */
 const MATH_SIGNAL_RE = /[\^_\\=]/;
+// R45 (live, session portal-d7ec8e42): "$0!, 1!, 2!$ next to $1, 1, 2$"
+// spoke the dollar signs — a digit-factorial LIST has none of ^ _ \ =, so
+// it fell to isCurrencyPairingArtifact's digit-led/prose-word fallback
+// below. That fallback happened to clear a prose-free list ("0!, 1!, 2!")
+// by accident (no 3+ letter run to trip PROSE_WORD_RE), but ANY prose word
+// sharing the span ("$5! ways to win$") flipped it to "artifact" and left
+// the "$" raw. A digit (or a closing paren/brace, for "(n-1)!") immediately
+// before "!" is unambiguous factorial notation in a declared span — prose
+// "Great! 5 points" has no digit/bracket directly abutting its "!" and
+// stays excluded. Checked alongside MATH_SIGNAL_RE (not folded into it):
+// MATH_SIGNAL_RE's name means "the four LaTeX operator/relation glyphs"
+// elsewhere in this file's comments, and factorial is a distinct notation
+// class with its own adjacency requirement.
+const FACTORIAL_SIGNAL_RE = /[\d)}]!/;
 // Round-20 (2026-07-17): in-span letter respelling. Inside a DECLARED math
 // span, ambiguity doesn't exist — a standalone letter is a variable by
 // construction, so the article/prose guards that constrain the Tier-1/2
@@ -1205,9 +1219,15 @@ function chemArrowContext(full: string, offset: number, len: number): boolean {
  *  boundary check was originally the very first gate, which would have
  *  misclassified a genuinely math span like "x = 5. Yes" — anything with
  *  its own strong signal — as a currency artifact and left it as literal
- *  "$" text). */
+ *  "$" text).
+ *
+ *  R45: a digit-factorial signal (FACTORIAL_SIGNAL_RE — "0!", "(n-1)!")
+ *  wins alongside MATH_SIGNAL_RE, for the same reason — it's checked
+ *  before the digit-led/prose-word fallback so a factorial LIST that also
+ *  happens to carry a prose word ("$5! ways to win$") isn't misclassified
+ *  as a currency pairing artifact. */
 function isCurrencyPairingArtifact(inner: string): boolean {
-  if (MATH_SIGNAL_RE.test(inner)) return false;
+  if (MATH_SIGNAL_RE.test(inner) || FACTORIAL_SIGNAL_RE.test(inner)) return false;
   if (SENTENCE_BOUNDARY_RE.test(inner)) return true;
   if (!CURRENCY_ARTIFACT_RE.test(inner) || !PROSE_WORD_RE.test(inner)) return false;
   const masked = inner.replace(/\b[A-Za-z]+-[A-Za-z]{2,}\b|\b[A-Za-z]{2,}-[A-Za-z]+\b/g, ' ');

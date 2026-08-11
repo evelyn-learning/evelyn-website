@@ -4,6 +4,7 @@ import {
   createNoiseNagState, recordNoiseDrop,
   createWarmupState, decideWarmupAction,
   COVER_POOLS, ESCALATION_TIERS, NOISE_NAG_LINE,
+  extractAnswerToken,
   type CoverVerdict,
 } from '../src/lib/tutor/voice/cover-layer';
 
@@ -73,6 +74,17 @@ check('echo-contains-number', e1.text.includes('16'));
 // R36: the echo must speak the WHOLE answer expression, sign and all.
 const eFrac = pickCoverPhrase('numeric-echo', '-3/6.', 3, null);
 check('echo-neg-fraction-whole', eFrac.text.includes('minus 3 over 6'));
+// R45 T7 (live): "i over 1 + x" (ASR for "1/(1+x)") echoed as "1 over 1" —
+// the fraction capture stopped at the "+". A captured fraction phrase
+// followed by MORE math tokens must refuse (null → generic ack) rather
+// than truncate and misquote. "over"/"divided" adjacent to a lone number
+// is itself a fraction cue even when the numerator was ASR-garbled away.
+check('frac-continuation-refused', extractAnswerToken('1 over 1 + x') === null);
+check('frac-continuation-refused-asr-garbled', extractAnswerToken('i over 1 + x') === null);
+// R36 regression pins: literal-slash fractions with no trailing math still
+// echo in full, unaffected by the new continuation guard.
+check('frac-no-continuation-neg', extractAnswerToken('-3/6.') === 'minus 3 over 6');
+check('frac-no-continuation-plain', extractAnswerToken('1/2') === '1 over 2');
 const eNeg = pickCoverPhrase('numeric-echo', "it's -2.", 3, null);
 check('echo-literal-neg-sign', eNeg.text.includes('minus 2'));
 const eDec = pickCoverPhrase('numeric-echo', 'maybe 3.5.', 3, null);

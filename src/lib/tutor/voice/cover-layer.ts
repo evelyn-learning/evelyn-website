@@ -70,14 +70,35 @@ function words(t: string): string[] {
  *  "-3/6" echoed as "ok 6" and "m is 4 and b is -2" as "ok 2". */
 const ANSWER_EXPR_RE = /(?:-|\b(?:minus|negative)\s+)?\d+(?:\.\d+)?(?:\s*\/\s*-?\d+(?:\.\d+)?)?/gi;
 
+/** R45 T7 (live): "i over 1 + x" (ASR for "1/(1+x)") echoed as "1 over 1" —
+ *  the fraction capture stopped at the "+". Per R36's precedent (multi-number
+ *  turns → null → generic ack), a captured fraction followed by MORE math
+ *  tokens must refuse rather than truncate and misquote. */
+const FRACTION_CONTINUATION_RE =
+  /(?:^|\s)(?:plus|minus|times|over|divided(?:\s+by)?|[+\-*/^])\s*\S/i;
+
 /** The transcript's single answer expression, in SPOKEN form ("minus 3 over
  *  6"). Null when there is no number — or MORE than one ("m is 4 and b is
  *  -2"): a lone echoed tail misquotes the student, so multi-number turns
- *  fall back to the generic (non-echo) cover instead. */
+ *  fall back to the generic (non-echo) cover instead. Also null when the
+ *  capture is fraction-shaped (literal "/", or the spoken cue "over"/
+ *  "divided" anywhere in the utterance — the cue survives even when ASR
+ *  garbles the numerator into a non-digit, e.g. "i over 1") AND the text
+ *  past the captured token still carries more math — a truncated fraction
+ *  read ("1 over 1") misquotes the student worse than a generic ack. */
 export function extractAnswerToken(t: string): string | null {
-  const all = t.match(ANSWER_EXPR_RE);
-  if (!all || all.length !== 1) return null;
-  return all[0]
+  const matches = [...t.matchAll(ANSWER_EXPR_RE)];
+  if (matches.length !== 1) return null;
+  const m = matches[0];
+  const raw = m[0];
+
+  const looksLikeFraction = /\//.test(raw) || /\b(over|divided)\b/i.test(t);
+  if (looksLikeFraction) {
+    const remainder = t.slice((m.index ?? 0) + raw.length);
+    if (FRACTION_CONTINUATION_RE.test(remainder)) return null;
+  }
+
+  return raw
     .replace(/\s*\/\s*/, ' over ')
     .replace(/-\s*/g, 'minus ')
     .replace(/\bnegative\b/gi, 'minus')
