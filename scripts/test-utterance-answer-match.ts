@@ -49,5 +49,15 @@ check('nested-paren regrouping is unknown, not disagree', matchUtteranceToAnswer
 check('regression: flat mismatch still disagree', matchUtteranceToAnswer('2x', '3x').verdict === 'disagree');
 check('regression: exponent parens still agree', matchUtteranceToAnswer('-2e^(-2t)', '-2e^{-2t}').verdict === 'agree');
 
+// — round-2 re-review: plain-text sqrt is asymmetric between canonicalization
+// (produces literal "sqrt(...)" text) and extractAnswerNumber (only
+// evaluates LaTeX \sqrt{} and unicode √ — bare "sqrt(4)" digit-greps to 4,
+// not 2). Whitelisting 'sqrt' in the numeric-eval gate reintroduced exactly
+// the false-agree class Finding 1 eliminated: sqrt(4)=2 read as agreeing
+// with 4. Must land on unknown (unresolved grouping), never agree.
+check('sqrt text vs plain number: not agree', matchUtteranceToAnswer('sqrt(4)', '4').verdict !== 'agree');
+check('sqrt text vs plain number: is unknown', matchUtteranceToAnswer('sqrt(4)', '4').verdict === 'unknown');
+check('pi still whitelisted: π/4 vs 0.785 still agrees', matchUtteranceToAnswer('π/4', '0.785').verdict === 'agree');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

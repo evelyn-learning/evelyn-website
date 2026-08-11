@@ -58,16 +58,28 @@ function hasProseResidue(t: string): boolean {
 }
 
 /** Tokens extractAnswerNumber itself normalizes into a numeric value before
- *  grepping for a digit run (pi → its decimal value, sqrt → evaluated). Any
- *  OTHER letter run in a canonical form — a bare variable ('x','a'), or a
- *  function/differential name extractAnswerNumber doesn't evaluate ('theta',
- *  'sin', 'dx') — means the number extractAnswerNumber grabbed is just the
- *  first digit it happened to find, not a real evaluation of the expression.
- *  Gates the numeric-eval fallback below: both sides must be free of that
- *  residue, or the fallback isn't allowed to fire (round-2 review finding —
- *  extractAnswerNumber('5a') / extractAnswerNumber('5b') both "evaluate" to
- *  5 by accident, which must never read as agreement). */
-const NUMERIC_EVAL_ATOMS = new Set(['pi', 'sqrt']);
+ *  grepping for a digit run. Any OTHER letter run in a canonical form — a
+ *  bare variable ('x','a'), or a function/differential name
+ *  extractAnswerNumber doesn't evaluate ('theta', 'sin', 'dx') — means the
+ *  number extractAnswerNumber grabbed is just the first digit it happened to
+ *  find, not a real evaluation of the expression. Gates the numeric-eval
+ *  fallback below: both sides must be free of that residue, or the fallback
+ *  isn't allowed to fire (round-2 review finding — extractAnswerNumber('5a')
+ *  / extractAnswerNumber('5b') both "evaluate" to 5 by accident, which must
+ *  never read as agreement).
+ *
+ *  'sqrt' is deliberately NOT included, even though extractAnswerNumber does
+ *  evaluate SOME sqrt forms: it only handles LaTeX `\sqrt{X}` and unicode
+ *  `√X`, both of which canonicalizeMathExpression already folds down to a
+ *  plain digit before this check ever runs. Bare-text 'sqrt(4)' canonicalizes
+ *  to the literal string 'sqrt(4)' — extractAnswerNumber never recognizes
+ *  that shape, so it just digit-greps the operand and returns 4, not 2. If
+ *  'sqrt' were whitelisted here, 'sqrt(4)' vs '4' would read as agreement
+ *  between 4 and 4 while the real values (2 vs 4) disagree — the exact
+ *  false-agree class this whole gate exists to prevent (round-2 re-review
+ *  finding). Excluding it only costs a conservative `unknown` miss on
+ *  legitimately-equal bare-text sqrt pairs; that's the correct tradeoff. */
+const NUMERIC_EVAL_ATOMS = new Set(['pi']);
 function isNumericEvaluable(canon: string): boolean {
   const runs = canon.match(/[a-z]+/g) ?? [];
   return runs.every(r => NUMERIC_EVAL_ATOMS.has(r));
@@ -174,15 +186,18 @@ export function matchUtteranceToAnswer(
   ) {
     return { verdict: 'agree', reason: 'numeric-eval match' };
   }
-  // Term-multisets disagree, but if either side still has unresolved
-  // grouping (parens beyond the redundant-atomic ones already normalized
-  // away) we can't rule out a regrouped-but-equal expression — e.g.
-  // "3+(2-(1+4))" vs "2-(1+4)+3" are both 0, but this comparator only does
-  // top-level term comparison, not recursive re-association. A false
-  // `disagree` is worse than a missed `agree` here, so fall back to
-  // `unknown` (round-2 review finding).
-  const na = stripAtomicParens(cu), nb = stripAtomicParens(ce);
-  if (na.includes('(') || nb.includes('(')) {
+  // Term-multisets disagree, but if either side still has ANY parens we
+  // can't rule out a regrouped-but-equal expression — e.g. "3+(2-(1+4))" vs
+  // "2-(1+4)+3" are both 0, but this comparator only does top-level term
+  // comparison, not recursive re-association. Deliberately checked against
+  // the RAW canonical forms (cu/ce), not the atomic-paren-stripped ones:
+  // stripAtomicParens would erase "sqrt(4)" down to "sqrt4" (its argument
+  // parens look "atomic" to that stripper), which would hide exactly the
+  // un-evaluated-function-call case this check needs to catch — "sqrt(4)"
+  // vs "4" must land here as unknown, not fall through to a false disagree
+  // (round-2 re-review finding). A false `disagree` is worse than a missed
+  // `agree`, so fall back to `unknown`.
+  if (cu.includes('(') || ce.includes('(')) {
     return { verdict: 'unknown', reason: 'unresolved grouping' };
   }
   return { verdict: 'disagree', reason: `expr ${cu}≠${ce}` };
