@@ -73,6 +73,22 @@ function eloStudentKey(studentId: string, subject: string | undefined): string {
   return `student:${studentId}|${subject ?? 'general'}`;
 }
 
+/** Pure read of a student's Elo rating — no upsert, unlike
+ *  `getOrCreateEloRating` below (that helper exists to fetch-or-seed a row
+ *  mid-write-path so the Elo math always has a rating/count to work from;
+ *  here we only ever want to know what's already there). Returns `null`
+ *  when the student has no rating row yet for this subject (e.g. never
+ *  answered an item-scored evidence event) — callers (Task 11's
+ *  `getLearnerHints`) treat that as "no ability signal yet", not an error. */
+export async function getStudentElo(
+  studentId: string,
+  subject?: string,
+): Promise<{ rating: number; count: number } | null> {
+  await connectDB();
+  const doc = await EloRatingModel.findById(eloStudentKey(studentId, subject));
+  return doc ? { rating: doc.rating, count: doc.count } : null;
+}
+
 /** Fetch-or-create an EloRating row (default rating 1500, count 0) without
  *  applying any delta yet — used to read the pre-update rating/count both
  *  ratings need for the expected-score/K-factor math below. */

@@ -13,6 +13,7 @@
  * Usage: npx tsx scripts/test-learner-model.ts  (npm run test:learner-model)
  */
 import { estimateLo, trendOf, nextReviewAt } from '../src/lib/tutor/learner-model/estimator';
+import { bandForElo } from '../src/lib/tutor/learner-model/hints';
 import { projectScore, scaleForTopic, mapLoIdsToSections } from '../src/lib/tutor/learner-model/projection';
 import { getBlueprint } from '../src/lib/tutor/mock-exam/blueprints';
 import type { ScoringSpec } from '../src/lib/tutor/mock-exam/blueprints';
@@ -224,6 +225,123 @@ assert(
     Math.abs(centerWithout - centerWithWeak) < 0.01,
     'projectScore: real ACT, a weak science LO never moves the composite (science is inComposite:false)',
   );
+}
+
+/* ------------------------------------------------------------------ */
+/* learner-hints — ability band + gap topics (Phase C — Task 11)      */
+/*                                                                      */
+/* NOTE: this file already has an unrelated "(Task 11)" section below   */
+/* (student-profile commit-route segmentOutcomes) from an earlier task  */
+/* numbering scheme that predates the phase-c slice numbering. Labeled  */
+/* "Phase C — Task 11" here to disambiguate.                            */
+/* ------------------------------------------------------------------ */
+
+// bandForElo — pure
+{
+  console.log('\nlearner-hints: bandForElo (Phase C — Task 11):\n');
+  assert(bandForElo(null) === 'steady', 'bandForElo(null) → steady');
+  assert(
+    bandForElo({ rating: 1600, count: 3 }) === 'steady',
+    'bandForElo: count below minEloCount (5) → steady even at a strong rating',
+  );
+  assert(bandForElo({ rating: 1600, count: 10 }) === 'strong', 'bandForElo: rating >= strongRating (1560) → strong');
+  assert(bandForElo({ rating: 1400, count: 10 }) === 'building', 'bandForElo: rating <= buildingRating (1440) → building');
+  assert(bandForElo({ rating: 1500, count: 10 }) === 'steady', 'bandForElo: rating between thresholds → steady');
+}
+
+async function runLearnerHintsTests() {
+  if (!process.env.MONGODB_URI) {
+    console.log('\n(skip Phase C — Task 11 getLearnerHints tests — no MONGODB_URI)');
+    return;
+  }
+
+  const { getLearnerHints } = await import('../src/lib/tutor/learner-model/hints');
+  const { getOrCreateStudentProfile, saveStudentProfile } = await import('../src/lib/tutor/student-profile/store');
+  const { StudentProfileModel } = await import('../src/models/StudentProfile');
+  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { default: connectDB } = await import('../src/lib/db');
+
+  await connectDB();
+
+  console.log('\ngetLearnerHints — DB-backed (Phase C — Task 11):\n');
+
+  const studentId = `lmtest:hints:${process.pid}`;
+
+  async function cleanup() {
+    await deleteLearnerModelData(studentId);
+    await StudentProfileModel.deleteOne({ _id: studentId });
+  }
+
+  await cleanup();
+  try {
+    const nowIso = new Date().toISOString();
+    const longObservation = 'x'.repeat(80); // > 60 chars, exercises the fallback slice
+    const confirmedWithLabel = {
+      id: 'gap_confirmed_label',
+      kind: 'prerequisite' as const,
+      conceptLabel: 'factoring quadratics',
+      status: 'confirmed' as const,
+      evidence: { signals: [], observation: 'student struggled with factoring across sessions', studentQuotes: [] },
+      firstSeenAt: nowIso,
+      lastSeenAt: nowIso,
+    };
+    const confirmedNoLabel = {
+      id: 'gap_confirmed_nolabel',
+      kind: 'lo' as const,
+      loId: 'lmtest.hints.lo-a',
+      status: 'confirmed' as const,
+      evidence: { signals: [], observation: longObservation, studentQuotes: [] },
+      firstSeenAt: nowIso,
+      lastSeenAt: nowIso,
+    };
+    const candidate = {
+      id: 'gap_candidate',
+      kind: 'prerequisite' as const,
+      conceptLabel: 'should not appear',
+      status: 'candidate' as const,
+      evidence: { signals: [], observation: 'single observation, not yet confirmed', studentQuotes: [] },
+      firstSeenAt: nowIso,
+      lastSeenAt: nowIso,
+    };
+    // Two more confirmed gaps so eligible confirmed count (4) exceeds
+    // TUNING.hints.maxGapTopics (3) — exercises the cap.
+    const confirmedExtra1 = { ...confirmedWithLabel, id: 'gap_extra1', conceptLabel: 'extra topic 1' };
+    const confirmedExtra2 = { ...confirmedWithLabel, id: 'gap_extra2', conceptLabel: 'extra topic 2' };
+
+    const profile = await getOrCreateStudentProfile(studentId);
+    await saveStudentProfile({
+      ...profile,
+      gaps: [confirmedWithLabel, confirmedNoLabel, candidate, confirmedExtra1, confirmedExtra2],
+    });
+
+    const hints = await getLearnerHints(studentId);
+    assert(hints.band === 'steady', 'getLearnerHints: no Elo evidence for this student → band defaults to steady');
+    assert(hints.gapTopics.length === 3, 'getLearnerHints: gapTopics capped at TUNING.hints.maxGapTopics (3 of 4 eligible confirmed gaps)');
+    assert(
+      hints.gapTopics.every((t) => t !== 'should not appear'),
+      'getLearnerHints: candidate-status gap is excluded from gapTopics',
+    );
+    assert(
+      hints.gapTopics.includes(longObservation.slice(0, 60)),
+      'getLearnerHints: confirmed gap w/o conceptLabel falls back to observation.slice(0, 60)',
+    );
+    assert(
+      hints.gapTopics.includes('factoring quadratics'),
+      'getLearnerHints: confirmed prerequisite gap uses conceptLabel',
+    );
+  } finally {
+    await cleanup();
+  }
+
+  // trial:-prefixed studentId → immediate default, no DB reads.
+  {
+    const trialStudentId = `trial:lmtest:hints:${process.pid}`;
+    const hints = await getLearnerHints(trialStudentId);
+    assert(
+      hints.band === 'steady' && hints.gapTopics.length === 0,
+      "getLearnerHints: 'trial:'-prefixed studentId → immediate { band: 'steady', gapTopics: [] }, no DB reads",
+    );
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -1921,6 +2039,7 @@ async function runBackfillEvidenceTests() {
 }
 
 runDbTests()
+  .then(() => runLearnerHintsTests())
   .then(() => runServerAppendPointTests())
   .then(() => runLearnerStateRouteTests())
   .then(() => runStudentProfileSegmentOutcomesTests())

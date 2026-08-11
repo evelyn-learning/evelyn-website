@@ -60,6 +60,43 @@ export const TUNING = {
      *  sections (M4 — was a bare `0.5` at the call site). */
     hardVariantThreshold: 0.5,
   },
+  /** hints.ts's `bandForElo` (Task 11) — Elo-rating cutoffs for the
+   *  ability-band hint plan generation reads. `minEloCount` guards against
+   *  banding off a nearly-untested rating (few games played still sit near
+   *  the 1500 default and shouldn't be read as "strong"/"building"); below
+   *  it (or with no rating at all) the band defaults to 'steady'.
+   *  `maxGapTopics` caps how many confirmed-gap labels `getLearnerHints`
+   *  surfaces — plan generation only needs a handful to steer content, not
+   *  every gap on record. */
+  hints: {
+    minEloCount: 5,
+    strongRating: 1560,
+    buildingRating: 1440,
+    maxGapTopics: 3,
+  },
+  /** Runtime lesson generation (Task 12) — how many worked examples to
+   *  seed per ability band (weaker students get more scaffolding) and the
+   *  target success-rate band generated practice should land in (neither
+   *  a confidence-crushing slog nor a rubber-stamp breeze).
+   *
+   *  `workedExamples` is typed with the literal band union inline rather
+   *  than importing `AbilityBand` from `./hints` — that module will import
+   *  `TUNING` from here for its own thresholds, and importing the type
+   *  back would set up a cycle. Keep the two unions (this literal and
+   *  hints.ts's exported `AbilityBand`) in sync by hand if either changes. */
+  generation: {
+    workedExamples: { building: 2, steady: 1, strong: 1 } as Record<'building' | 'steady' | 'strong', number>,
+    successTargetLow: 0.7,
+    successTargetHigh: 0.8,
+  },
+  /** Review-session composer (Task 14) — pacing + scope caps for a
+   *  generated review plan, and the estimate ratio below which a review
+   *  item gets re-taught instead of just drilled. */
+  reviewSession: {
+    minutesPerLo: 5,
+    maxLos: 8,
+    reteachBelowEstimate: 0.5,
+  },
 };
 
 export interface LoEstimate {
