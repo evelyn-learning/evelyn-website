@@ -43,14 +43,23 @@ export function railLoTitle(plan: LessonPlan, loId: string): string {
   return loDisplay(plan, loId);
 }
 
+export interface RailModel { items: RailItem[]; offPlan: boolean }
+
 export function buildRailModel(
   plan: LessonPlan,
   currentSegmentId: string,
   completedSegmentIds: ReadonlySet<string>,
   labels: SegmentLabels | null,
-): RailItem[] | null {
+): RailModel | null {
   if (plan.metadata?.pendingPicker) return null;
   if (!plan.segments.length) return null;
+
+  // Rail-bargein (Task 3): the client releases the cursor to '' when the
+  // tutor goes off-plan (barge-in), which naturally leaves every item's
+  // `current` false below (no segId ever equals ''). Surface that as an
+  // explicit flag so the UI can show an intentional "Off plan" state
+  // instead of a rail that just looks broken.
+  const offPlan = currentSegmentId === '';
 
   const flags = (segIds: string[]) => ({
     done: segIds.every((id) => completedSegmentIds.has(id)),
@@ -75,17 +84,39 @@ export function buildRailModel(
     // 'intro' has no kind-derived word when its kind is hook — force the friendlier label
     for (const it of items) if (it.segIds.length === 1 && it.segIds[0] === 'intro') it.label = 'Intro';
     for (const it of items) Object.assign(it, flags(it.segIds));
-    return items;
+    return { items, offPlan };
   }
 
   // Curated (any LO count): one item per segment.
-  return plan.segments.map((seg) => {
+  const items = plan.segments.map((seg) => {
     const fixed = !LABELABLE_KINDS.has(seg.kind);
     const label = fixed
       ? railStageLabel(plan.segments, seg.id)
       : labels?.[seg.id] ?? railStageLabel(plan.segments, seg.id);
     return { key: seg.id, label, segIds: [seg.id], ...flags([seg.id]) };
   });
+  return { items, offPlan };
+}
+
+/** Task 2 (VTR rail-bargein wiring) — candidate list for the student-
+ *  jump-intent matcher (student-jump-intent.ts), reusing buildRailModel's
+ *  exact grouping (LO-grouped on generated plans, one-item-per-segment on
+ *  curated ones) so the matcher scores the verbal request against the
+ *  SAME labels the rail visually shows the student. currentSegmentId/
+ *  completedSegmentIds are irrelevant to candidate identity (only
+ *  done/current flags depend on them), so this calls buildRailModel with
+ *  neutral values and drops those flags in the mapping. Returns [] when
+ *  buildRailModel itself suppresses (pendingPicker / no segments) — the
+ *  matcher already no-ops on an empty candidate list. Structurally
+ *  compatible with student-jump-intent.ts's `JumpCandidateItem` without
+ *  importing it (lesson-plan module stays independent of orchestrator). */
+export function railJumpCandidates(
+  plan: LessonPlan,
+  labels: SegmentLabels | null,
+): { segmentIds: string[]; label: string }[] {
+  const model = buildRailModel(plan, '', new Set(), labels);
+  if (!model) return [];
+  return model.items.map((it) => ({ segmentIds: it.segIds, label: it.label }));
 }
 
 /** Per-kind salient field for the labeling prompt. */

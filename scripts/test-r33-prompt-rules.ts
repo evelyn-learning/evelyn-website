@@ -83,5 +83,16 @@ test('R40: referencing earlier board content requires a scroll first', () => {
   );
 });
 
+test('Task 4: named agenda-item jump must call advance_lesson before content', () => {
+  assert.ok(
+    prompt.includes('Named agenda-item jump — advance_lesson BEFORE content'),
+    'prompt must include the Task 4 hard-rule heading',
+  );
+  assert.ok(
+    prompt.includes('narrating the move without the tool call freezes the lesson cursor and the agenda display'),
+    'prompt must warn that narrating without the tool call freezes the cursor and agenda display',
+  );
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

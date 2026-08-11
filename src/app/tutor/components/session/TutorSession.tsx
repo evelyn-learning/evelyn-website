@@ -1104,14 +1104,15 @@ export default function TutorSession(props: TutorSessionProps) {
     <LessonPlanProgress plan={lessonProgress.plan} currentSegmentId={lessonProgress.currentSegmentId} completedSegmentIds={completedSegmentIds} />
   ) : null));
 
-  const railItems = TUTOR_AGENDA_RAIL && lessonProgress.plan
+  const railModel = TUTOR_AGENDA_RAIL && lessonProgress.plan
     ? buildRailModel(lessonProgress.plan, lessonProgress.currentSegmentId ?? '',
         new Set(completedSegmentIds), segmentLabels)
     : null;
+  const railItems = railModel?.items ?? null;
   const agendaRailEl = railItems && railItems.length > 0
-    ? <AgendaRail items={railItems} orientation="horizontal" /> : undefined;
+    ? <AgendaRail items={railItems} orientation="horizontal" offPlan={railModel?.offPlan} /> : undefined;
   const agendaRailVerticalEl = railItems && railItems.length > 0
-    ? <AgendaRail items={railItems} orientation="vertical" /> : undefined;
+    ? <AgendaRail items={railItems} orientation="vertical" offPlan={railModel?.offPlan} /> : undefined;
 
   const controlsEl = (
     <SessionControls
