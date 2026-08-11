@@ -391,8 +391,116 @@ async function runSessionUsageRouteDenyTests() {
   resetEnv();
 }
 
+// ---------------------------------------------------------------------------
+// Route-level: POST /api/tutor-portal/demo-token (Task 5)
+//
+// DB-free: the route only signs/encodes, no Mongo. Covers the forced-claim
+// override (client-sent partner_id/student_id in `config` are ignored), the
+// unsigned-fallback degrade when no evelyn-marketing secret is configured,
+// and the 400 body-validation paths.
+// ---------------------------------------------------------------------------
+async function runDemoTokenRouteTests() {
+  console.log('\ndemo-token route — server-minted signed demo tokens (Task 5):\n');
+
+  const { POST: demoTokenPOST } = await import(
+    '../src/app/api/tutor-portal/demo-token/route'
+  );
+
+  function postReq(body: unknown) {
+    return new Request('https://engine.test/api/tutor-portal/demo-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: typeof body === 'string' ? body : JSON.stringify(body),
+    });
+  }
+
+  // (a) With a configured evelyn-marketing secret, a spoofed partner_id /
+  // student_id in the client config must be overridden by the server's
+  // forced claims, while other fields (e.g. subject) pass through.
+  {
+    clearEnv();
+    process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({
+      'evelyn-marketing': 'mkt-secret',
+      academy: 'test-secret',
+    });
+
+    const res = await demoTokenPOST(
+      postReq({
+        config: { subject: 'math', partner_id: 'spoofed', student_id: 'stu-victim' },
+      }) as never,
+    );
+    assert(res.status === 200, 'demo-token: 200 with configured secret');
+    const json = (await res.json()) as { token?: string };
+    assert(typeof json.token === 'string' && json.token.length > 0, 'demo-token: response has a token string');
+
+    const verdict = verifyEmbedToken(json.token ?? null);
+    assert(verdict.ok === true, 'demo-token: signed token verifies via verifyEmbedToken');
+    if (verdict.ok) {
+      assert(verdict.payload.partner_id === 'evelyn-marketing', 'demo-token: partner_id forced to evelyn-marketing');
+      assert(
+        typeof verdict.payload.student_id === 'string' && verdict.payload.student_id.startsWith('demo-'),
+        'demo-token: spoofed student_id overridden, forced id starts with "demo-"',
+      );
+      assert(verdict.payload.subject === 'math', 'demo-token: other config fields (subject) survive');
+    }
+
+    resetEnv();
+  }
+
+  // (b) With no evelyn-marketing secret configured, the route degrades to
+  // the legacy unsigned base64 encoding (matches enforcement-off worlds) —
+  // still carrying the forced partner_id/student_id claims.
+  {
+    clearEnv();
+    process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ academy: 'test-secret' });
+
+    const res = await demoTokenPOST(
+      postReq({ config: { subject: 'science', partner_id: 'spoofed', student_id: 'stu-victim' } }) as never,
+    );
+    assert(res.status === 200, 'demo-token: 200 with no marketing secret configured (degrade path)');
+    const json = (await res.json()) as { token?: string };
+    const token = json.token ?? '';
+    assert(verifyEmbedToken(token).ok === false, 'demo-token: unsigned fallback token fails verifyEmbedToken');
+
+    let decoded: Record<string, unknown> = {};
+    let decodeOk = true;
+    try {
+      decoded = JSON.parse(decodeURIComponent(escape(atob(token))));
+    } catch {
+      decodeOk = false;
+    }
+    assert(decodeOk, 'demo-token: unsigned fallback token base64-decodes to JSON');
+    assert(decoded.partner_id === 'evelyn-marketing', 'demo-token: unsigned fallback still forces partner_id');
+    assert(
+      typeof decoded.student_id === 'string' && (decoded.student_id as string).startsWith('demo-'),
+      'demo-token: unsigned fallback still forces demo- student_id',
+    );
+    assert(decoded.subject === 'science', 'demo-token: unsigned fallback preserves other config fields');
+
+    resetEnv();
+  }
+
+  // (c) Missing/invalid body → 400.
+  {
+    clearEnv();
+    process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ 'evelyn-marketing': 'mkt-secret' });
+
+    const resNoConfig = await demoTokenPOST(postReq({}) as never);
+    assert(resNoConfig.status === 400, 'demo-token: missing config object → 400');
+
+    const resBadJson = await demoTokenPOST(postReq('not json') as never);
+    assert(resBadJson.status === 400, 'demo-token: invalid JSON body → 400');
+
+    const resWrongType = await demoTokenPOST(postReq({ config: 'nope' }) as never);
+    assert(resWrongType.status === 400, 'demo-token: config not an object → 400');
+
+    resetEnv();
+  }
+}
+
 runStudentProfileRouteDenyTests()
   .then(() => runSessionUsageRouteDenyTests())
+  .then(() => runDemoTokenRouteTests())
   .then(() => {
     console.log(`\n${passed} passed, ${failed} failed`);
     process.exit(failed > 0 ? 1 : 0);

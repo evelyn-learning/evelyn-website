@@ -65,13 +65,23 @@ const DEFAULT_TONE_DOT: Record<string, string> = Object.fromEntries(
 );
 const FALLBACK_TONE_DOT = 'bg-blue-500';
 
-/** Token contract: base64 JSON, decoded by parseToken in tutor-portal/embed. */
-function buildEmbedToken(
+/**
+ * Token contract: base64 JSON (legacy) or a signed HS256 JWT (learner-model
+ * Phase C, Task 5) — either way decoded by parseToken/verifyEmbedToken in
+ * tutor-portal/embed. Preferred path: POST the config to the engine's own
+ * mint endpoint so the auth-bearing claims (`partner_id`, `student_id`,
+ * `exp`) get server-forced and HMAC-signed — a browser can't hold the
+ * partner secret to sign itself. That endpoint NEVER hard-fails the demo:
+ * on any network/response error this falls back to the previous client-side
+ * btoa encoding, so a mint outage degrades to "unsigned token" (same as
+ * before Task 1 shipped) rather than a broken demo.
+ */
+async function buildEmbedToken(
   lesson: DemoLessonOption,
   teacher: TeacherPersonaWire,
   source: string,
   studentName?: string,
-): string {
+): Promise<string> {
   const cfg = {
     partner_id: 'evelyn-marketing',
     student_id: `demo-${Math.random().toString(36).slice(2, 10)}`,
@@ -89,9 +99,24 @@ function buildEmbedToken(
     features: { voice_mode: true, text_mode: true, homework_upload: false },
     metadata: { source },
   };
-  // UTF-8-safe btoa (teacher intros contain no exotic chars today, but the
-  // token must never break if one gains an em dash or accent).
-  return btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+  try {
+    const res = await fetch('/api/tutor-portal/demo-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: cfg }),
+    });
+    if (!res.ok) throw new Error(`demo-token mint failed: ${res.status}`);
+    const { token } = (await res.json()) as { token?: string };
+    if (typeof token !== 'string' || !token) throw new Error('demo-token mint returned no token');
+    return token;
+  } catch {
+    // UTF-8-safe btoa fallback (teacher intros contain no exotic chars
+    // today, but the token must never break if one gains an em dash or
+    // accent). Client-forced partner_id/student_id here are exactly what
+    // the mint endpoint would have forced anyway — this is the same demo
+    // identity, just unsigned.
+    return btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+  }
 }
 
 export interface VoiceTutorLiveDemoProps {
@@ -128,6 +153,9 @@ export default function VoiceTutorLiveDemo({
   // R39: set when the embed reports its session ended — surfaces the
   // "Choose another lesson" affordance now that the header links are gone.
   const [sessionEnded, setSessionEnded] = useState(false);
+  // Task 5: buildEmbedToken now awaits a mint fetch — guard against a
+  // double-click firing two concurrent embed sessions during that round trip.
+  const [starting, setStarting] = useState(false);
   const teacherPanelRef = useRef<HTMLDivElement>(null);
 
   // R39: the header's "Change lesson" / "Open full screen" links are removed
@@ -219,15 +247,21 @@ export default function VoiceTutorLiveDemo({
     trackEvent('teacher_changed', { teacher_id: id, surface });
   };
 
-  const start = () => {
+  const start = async () => {
+    if (starting) return;
     trackEvent('demo_start_click', { plan_id: lesson.planId, teacher_id: teacher.id });
     const name = studentName.trim();
     try {
       if (name) window.localStorage.setItem('evelyn:demo:studentName', name);
     } catch {}
-    const token = buildEmbedToken(lesson, teacher, source, name || undefined);
-    setSessionEnded(false);
-    setEmbedSrc(`/tutor-portal/embed?token=${encodeURIComponent(token)}`);
+    setStarting(true);
+    try {
+      const token = await buildEmbedToken(lesson, teacher, source, name || undefined);
+      setSessionEnded(false);
+      setEmbedSrc(`/tutor-portal/embed?token=${encodeURIComponent(token)}`);
+    } finally {
+      setStarting(false);
+    }
   };
 
   const teacherHint = ACCENT_CARD_HINTS[teacher.id]
@@ -315,10 +349,12 @@ export default function VoiceTutorLiveDemo({
             <button
               type="button"
               onClick={start}
-              className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+              disabled={starting}
+              aria-busy={starting}
+              className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-wait"
             >
               <Mic className="w-4 h-4" />
-              Start voice session
+              {starting ? 'Starting…' : 'Start voice session'}
             </button>
             <p className="text-xs text-slate-400">
               Uses your microphone · voice + whiteboard · 10-minute demo · no signup
