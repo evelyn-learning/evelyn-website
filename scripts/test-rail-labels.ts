@@ -86,25 +86,36 @@ function mkPlan(opts: {
   assert(m1[0].label === 'Intro' && m1[3].label === 'Recap', 'standalone fixed labels');
 }
 
-// Case 2: curated plan + content labels → one item per segment, labeled; hook/recap fixed
+// Case 2: curated plan, 2 DISTINCT LOs (boundary — 2 is NOT single-LO) +
+// content labels → one item per segment, labeled; hook/recap fixed.
+// (Task 1: this fixture used to carry only 1 LO, which — post-fix — IS
+// the single-LO signal and would now correctly get stage labels instead;
+// bumped to 2 LOs here so this pin keeps testing genuine multi-LO curated
+// content-label behavior, unchanged from before Task 1.)
 {
   const curated = mkPlan({
     title: 'U1.4 The Columbian Exchange',
-    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    los: [
+      { id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' },
+      { id: 'apush.columbian-exchange.disease', description: 'Explain the disease vector…' },
+    ],
     segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
   });
   const labels = { 'concept-cx': 'Two-way exchange', 'worked-letter': "Columbus's letter",
     'try-saq': 'Practice: SAQ', 'misconception-one-way': 'One-way myth' };
   const m2 = buildRailModel(curated, 'worked-letter', new Set(['hook', 'concept-cx']), labels)!.items;
   assert(m2.length === 6 && m2[0].label === 'Hook' && m2[5].label === 'Recap', 'curated fixed ends');
-  assert(m2[1].label === 'Two-way exchange' && m2[2].current === true, 'curated content labels');
+  assert(m2[1].label === 'Two-way exchange' && m2[2].current === true, 'curated content labels (2-LO, not single-LO)');
 }
 
 // Case 3: curated, NO labels (atomic / labeler failed) → stage-label fallback with occurrence numbering
 {
   const curated = mkPlan({
     title: 'U1.4 The Columbian Exchange',
-    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    los: [
+      { id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' },
+      { id: 'apush.columbian-exchange.disease', description: 'Explain the disease vector…' },
+    ],
     segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
   });
   const m3 = buildRailModel(curated, 'hook', new Set(), null)!.items;
@@ -112,6 +123,68 @@ function mkPlan(opts: {
   const twoTries = mkPlan({ los: [], segmentIds: ['hook', 'try-1', 'try-2', 'recap'] });
   const m4 = buildRailModel(twoTries, 'try-2', new Set(['hook', 'try-1']), null)!.items;
   assert(m4[1].label === 'Try 1' && m4[2].label === 'Try 2', 'occurrence numbering');
+}
+
+/* ------------------------------------------------------------------ */
+/* Task 1 — single-LO curated plans get stage-style rail labels        */
+/* Live failure (session portal-1349716e, evelyn.ap.macro.scarcity.v1):*/
+/* a curated plan with exactly ONE LO in `los` and segment ids that do */
+/* NOT follow the generated-plan "<loId>-hook" suffix convention (they */
+/* carry NO lo id at all — SegmentBase has no such field) rendered     */
+/* per-question CONTENT labels ("Wealth and scarcity", "Scarcity vs.   */
+/* poverty") on every try_yourself pill. Praveen's call: topic/stage-  */
+/* level names only. Fix: ≤1 distinct LO → every rail item uses the    */
+/* kind-derived stage machinery (STAGE_WORD + sameKind numbering),     */
+/* even when a `labels` cache/derivation exists — content labels are   */
+/* ignored entirely for single-LO plans.                               */
+/* ------------------------------------------------------------------ */
+
+// Case 8: the live plan's exact 8-segment shape, single LO, WITH a
+// (fake) content-labels map supplied — proves the labels are IGNORED,
+// not merely absent, for a single-LO curated plan.
+{
+  const scarcity = mkPlan({
+    title: 'U1.1 Scarcity, Choice, and Trade-offs',
+    los: [{ id: 'apmacro.scarcity', description: 'Define scarcity and identify trade-offs and opportunity cost.' }],
+    segmentIds: [
+      'hook', 'concept-scarcity', 'worked-budget', 'try-define', 'try-textbook',
+      'try-billionaire', 'misconception-poverty', 'recap',
+    ],
+  });
+  const contentLabels = {
+    'concept-scarcity': 'Wealth and scarcity',
+    'worked-budget': 'Budgeting trade-offs',
+    'try-define': 'Define scarcity',
+    'try-textbook': 'Town budget',
+    'try-billionaire': 'Billionaire claim',
+    'misconception-poverty': 'Scarcity vs. poverty',
+  };
+  const m8 = buildRailModel(scarcity, 'concept-scarcity', new Set(['hook']), contentLabels)!.items;
+  assert(
+    m8.map(i => i.label).join(',') === 'Hook,Concept,Example,Try 1,Try 2,Try 3,Misconception,Recap',
+    'single-LO curated plan: stage labels for every segment, content labels ignored',
+  );
+}
+
+// Case 9: 1-LO curated plan, NO labels — same stage-label outcome
+// (belt-and-suspenders: single-LO must win whether or not a labels
+// cache exists, not just as a fallback for a missing one).
+{
+  const scarcity = mkPlan({
+    los: [{ id: 'apmacro.scarcity', description: 'Define scarcity.' }],
+    segmentIds: ['hook', 'concept-scarcity', 'try-define', 'recap'],
+  });
+  const m9 = buildRailModel(scarcity, 'hook', new Set(), null)!.items;
+  assert(m9.map(i => i.label).join(',') === 'Hook,Concept,Try,Recap', 'single-LO curated plan, no labels: stage fallback');
+}
+
+// Case 10: 0-LO curated plan (los: []) — "no lo ids at all" also counts
+// as the single-LO signal (0 distinct LOs is <= 1).
+{
+  const noLo = mkPlan({ los: [], segmentIds: ['hook', 'concept-x', 'recap'] });
+  const labels = { 'concept-x': 'Some content label' };
+  const m10 = buildRailModel(noLo, 'hook', new Set(), labels)!.items;
+  assert(m10.map(i => i.label).join(',') === 'Hook,Concept,Recap', '0-LO curated plan: stage labels, content label ignored');
 }
 
 // Case 4: suppression — pendingPicker → null
@@ -156,11 +229,15 @@ function mkPlan(opts: {
   assert(jc1[3].label === 'Recap' && jc1[3].segmentIds.join(',') === 'recap', 'gen: recap candidate standalone');
 }
 
-// Case 6: curated plan + labels — one candidate per segment (matches Case 2's grouping)
+// Case 6: curated plan (2 LOs, matching Case 2's boundary fixture) + labels
+// — one candidate per segment (matches Case 2's grouping)
 {
   const curated = mkPlan({
     title: 'U1.4 The Columbian Exchange',
-    los: [{ id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' }],
+    los: [
+      { id: 'apush.columbian-exchange', description: 'Explain the causes and effects…' },
+      { id: 'apush.columbian-exchange.disease', description: 'Explain the disease vector…' },
+    ],
     segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
   });
   const labels = { 'concept-cx': 'Two-way exchange', 'worked-letter': "Columbus's letter",
@@ -265,11 +342,17 @@ function mkPlan(opts: {
 // loDisplay's 4-word LO-description fallback (no shortTitle) hits the same
 // capWords→dangling-stopword failure mode — verify the strip applies there
 // too (generated-plan rail item + railLoTitle both route through loDisplay).
+// 2 LOs (not 1) — Task 1 made single-LO plans bypass loDisplay entirely in
+// favor of stage labels, so this needs a genuinely multi-LO plan to still
+// exercise the loDisplay grouped-label path.
 {
   const gen = mkPlan({
     metadata: { generatedFromText: true },
-    los: [{ id: 'lo-c', description: 'Explain the process and results in detail' }], // no shortTitle
-    segmentIds: ['intro', 'lo-c-hook', 'lo-c-concept', 'recap'],
+    los: [
+      { id: 'lo-c', description: 'Explain the process and results in detail' }, // no shortTitle
+      { id: 'lo-d', description: 'Summarize the outcome', shortTitle: 'Summarize outcome' },
+    ],
+    segmentIds: ['intro', 'lo-c-hook', 'lo-c-concept', 'lo-d-hook', 'recap'],
   });
   const m5 = buildRailModel(gen, 'lo-c-concept', new Set(), null)!.items;
   assert(m5[1].label === 'Explain the process', 'LO 4-word fallback: dangling "and" stripped');

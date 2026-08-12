@@ -92,7 +92,52 @@ export function buildRailModel(
     current: segIds.includes(currentSegmentId),
   });
 
-  if (isGeneratedPlan(plan) && (plan.los ?? []).length > 0) {
+  const generated = isGeneratedPlan(plan) && (plan.los ?? []).length > 0;
+
+  // Task 1 (single-LO stage labels): count the DISTINCT LOs the plan's
+  // segments actually carry identity for. Generated plans mint segment
+  // ids as "<loId>-hook" / "-concept" / ... (loGroupOf recovers the
+  // loId), so distinct-count = distinct recovered loIds that actually
+  // match a plan.los entry. Curated plans carry NO lo id on segments AT
+  // ALL — SegmentBase (types.ts) has no such field, and curated segment
+  // ids (e.g. "concept-scarcity", "try-billionaire") don't follow the
+  // generated-plan suffix convention — so for them the only LO-identity
+  // signal available is `plan.los` itself, deduplicated by id. Live
+  // failure (session portal-1349716e, evelyn.ap.macro.scarcity.v1): a
+  // curated plan with exactly one `los` entry and segments with no lo
+  // id at all — that absence of any per-segment LO signal IS the
+  // single-LO case here, same as a generated plan whose segments
+  // resolve to one distinct group.
+  const loCount = generated
+    ? new Set(
+        plan.segments
+          .map((seg) => loGroupOf(seg.id))
+          .filter((g) => (plan.los ?? []).some((l) => l.id === g)),
+      ).size
+    : new Set((plan.los ?? []).map((l) => l.id)).size;
+
+  // ≤1 distinct LO (0 or 1) → topic/stage-level names only, one rail
+  // item per segment, via the SAME kind-derived stage machinery used as
+  // the curated no-labels fallback below (STAGE_WORD + sameKind
+  // numbering: Concept / Example / Try 1 / Try 2 / Misconception /
+  // Recap; hook/recap fixed). Praveen's call: a single-LO plan has
+  // nothing distinct to name per question — per-question content labels
+  // ("Wealth and scarcity", "Scarcity vs. poverty") read as noise, not
+  // signal. Bypasses BOTH the LO-grouped generated path and the
+  // content-labeled curated path below (and ignores any `labels` cache
+  // entirely — a single-LO plan never shows content labels, cached or
+  // not).
+  if (loCount <= 1) {
+    const items: RailItem[] = plan.segments.map((seg) => ({
+      key: seg.id,
+      label: railStageLabel(plan.segments, seg.id),
+      segIds: [seg.id],
+      ...flags([seg.id]),
+    }));
+    return { items, offPlan };
+  }
+
+  if (generated) {
     const loIds = new Set((plan.los ?? []).map((l) => l.id));
     const items: RailItem[] = [];
     for (const seg of plan.segments) {
@@ -113,7 +158,8 @@ export function buildRailModel(
     return { items, offPlan };
   }
 
-  // Curated (any LO count): one item per segment.
+  // Curated, multi-LO (>1 distinct LO — the ≤1 case returned above):
+  // one item per segment, content labels where available.
   const items = plan.segments.map((seg) => {
     const fixed = !LABELABLE_KINDS.has(seg.kind);
     const label = fixed
