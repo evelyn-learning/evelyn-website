@@ -1721,7 +1721,32 @@ export function VoiceTutorRealtime({
     // exists at this moment (a pagehide mid-turn releases pre-credit, same
     // as pre-R48) — a held row is never dropped, only ever possibly
     // downgraded to the outcome today's code would have recorded anyway.
-    releaseHeldEvidenceRef.current('flush');
+    //
+    // INVARIANT (whole-branch review): an INTERMEDIATE flush must never race
+    // an ARMED turn. The 20s scheduleProfileFlush debounce is armed by the
+    // PRIOR turn's accumulation and its timer fires from the macrotask queue
+    // — which the current turn's stream yields to constantly (it awaits
+    // network between chunks). Draining there would serialize the held row
+    // mid-stream, PRE-credit, at outcome 0.5; the server's $setOnInsert on
+    // `sess:<sessionId>:<segmentId>` then locks that row forever and the
+    // post-stream release no-ops on the dedup guard — a routine timing
+    // coincidence resurrecting the exact bug this task closes. So: an
+    // intermediate flush arriving while the hold is armed leaves the held
+    // rows alone. They are NOT dropped — the armed turn's own release point
+    // (or, on any error path, its `finally`) emits them into the fresh
+    // accumulator, and that push's scheduleProfileFlush ships them on the
+    // next commit. The exits that CANNOT wait — the pagehide/keepalive
+    // handler and the final End-button commit — drain unconditionally,
+    // because for them there is no "next commit".
+    // (No onDebugEvent call on the skip path: onDebugEvent is NOT in this
+    // callback's dep array, and adding it would re-create
+    // commitSessionToProfile → scheduleProfileFlush → the pagehide effect on
+    // every parent render. The release itself is already telemetered, and
+    // its `at=` tag distinguishes the paths below.)
+    const flushMustDrain = opts?.final === true || opts?.keepalive === true;
+    if (flushMustDrain || !evidenceHoldArmedRef.current) {
+      releaseHeldEvidenceRef.current(flushMustDrain ? 'flush-final' : 'flush-idle');
+    }
     const accum = sessionAccumRef.current;
     const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0
       && accum.segmentOutcomes.length === 0;

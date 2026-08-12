@@ -11,6 +11,19 @@
 import { strict as assert } from 'node:assert';
 import { detectVoiceOnlyExercise, RENDER_TOOLS, isRenderTool } from '../src/lib/tutor/voice/exercise-board-check';
 
+// Whole-branch review ride-along: the drift pin derives its expectation from
+// the REAL tool list instead of a hardcoded count. WHITEBOARD_TOOLS is
+// module-init-time env-sensitive (show_sketch is spread in only when
+// TUTOR_SKETCH === 'true'), so force the flag ON and load it with require()
+// AFTER doing so — a static `import` is hoisted above this assignment and
+// would snapshot the flag-off list, making the pin quietly blind to every
+// flag-gated show_* tool. Forcing it on is the right expectation: RENDER_TOOLS
+// must cover every show_* tool the brain can EVER be handed, not just the
+// ones the current env exposes.
+process.env.TUTOR_SKETCH = 'true';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { WHITEBOARD_TOOLS } = require('../src/app/tutor/hooks/toolDefinitions') as typeof import('../src/app/tutor/hooks/toolDefinitions');
+
 let passed = 0; let failed = 0;
 function test(name: string, fn: () => void) {
   try { fn(); console.log(`  ✓ ${name}`); passed++; }
@@ -153,10 +166,25 @@ test('RENDER_TOOLS: control/meta/silent tools excluded', () => {
   }
 });
 
-test('RENDER_TOOLS: every member is show_-prefixed, 64 total', () => {
-  const names = Array.from(RENDER_TOOLS);
-  assert.equal(names.length, 64, `expected 64 render tools, got ${names.length}`);
-  assert.ok(names.every((n) => n.startsWith('show_')), 'every RENDER_TOOLS member must be show_-prefixed');
+// Whole-branch review ride-along: a bare `size === 64` pin cannot see DRIFT —
+// add a 65th show_* tool to toolDefinitions.ts and this suite stays green
+// while the gate silently stops counting it. Derive the expectation from
+// WHITEBOARD_TOOLS instead and assert SET EQUALITY, so any show_* tool added
+// (or removed, or renamed) fails here until RENDER_TOOLS is updated too.
+// (Loaded with TUTOR_SKETCH forced on — see the require() at the top.)
+test('RENDER_TOOLS: exactly the show_* tools in WHITEBOARD_TOOLS (drift-proof)', () => {
+  const expected = WHITEBOARD_TOOLS
+    .map((t) => t.name)
+    .filter((n) => n.startsWith('show_'))
+    .sort();
+  const actual = Array.from(RENDER_TOOLS).sort();
+  assert.ok(actual.every((n) => n.startsWith('show_')), 'every RENDER_TOOLS member must be show_-prefixed');
+  const missing = expected.filter((n) => !RENDER_TOOLS.has(n));
+  const extra = actual.filter((n) => !expected.includes(n));
+  assert.deepEqual(
+    actual, expected,
+    `RENDER_TOOLS drifted from toolDefinitions.ts — missing: [${missing.join(', ')}], extra: [${extra.join(', ')}]`,
+  );
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
