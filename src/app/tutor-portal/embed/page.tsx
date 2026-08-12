@@ -104,6 +104,13 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // tool calls this turn. No existing prefix covers 'exercise_'; same
   // triage-gap class as the 2026-08-07 brain_/judge_/tool_call_ note above.
   'exercise_',
+  // R48 Task 3 (2026-08-12): evidence_held / evidence_late_fire — the
+  // explicit-complete segment-evidence row is now HELD across the stream and
+  // released at post-stream credit resolution, so the learner-model outcome
+  // reflects the same turn's verified-correct answer. No existing prefix
+  // covers 'evidence_' (the older 'segment_evidence_on_advance' was likewise
+  // uncovered); two short lines per completed evaluative segment.
+  'evidence_',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

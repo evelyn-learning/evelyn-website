@@ -1712,6 +1712,16 @@ export function VoiceTutorRealtime({
   // intermediate flushes send just the deltas (generateNotes: false).
   const commitSessionToProfile = useCallback(async (opts?: { final?: boolean; keepalive?: boolean }) => {
     if (!studentId) return;
+    // R48 Task 3 — FLUSH SAFETY. Drain any HELD evidence row into the
+    // accumulator BEFORE anything reads it. This is the first statement to
+    // touch sessionAccumRef, it is synchronous, and there is no `await`
+    // between it and the `body` construction + the accumulator reset below —
+    // so no flush can serialize a snapshot that misses a held row, and the
+    // reset can't discard one either. Held rows emit with whatever credit
+    // exists at this moment (a pagehide mid-turn releases pre-credit, same
+    // as pre-R48) — a held row is never dropped, only ever possibly
+    // downgraded to the outcome today's code would have recorded anyway.
+    releaseHeldEvidenceRef.current('flush');
     const accum = sessionAccumRef.current;
     const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0
       && accum.segmentOutcomes.length === 0;
@@ -2239,6 +2249,55 @@ export function VoiceTutorRealtime({
   // handler, cleared at turn start in callBrainOnce). Guard (c) checks
   // membership here, not in completedSegmentIdsRef.
   const segmentsCompletedThisTurnRef = useRef<string[]>([]);
+  // R48 Task 3 (evidence late-fire, shape (a)). mark_segment_complete is
+  // handled MID-STREAM, so the evidence row it used to push read
+  // studentStreakRef/demonstratedSegmentsRef BEFORE the POST-STREAM pacing
+  // block credited the SAME turn's verified-correct answer — the row locked
+  // at outcome 0.5 forever (evidence is insert-only idempotent at BOTH
+  // layers: this accumulator dedupes by segmentId, the server $setOnInsert's
+  // on `sess:<sessionId>:<segmentId>` — a 0.5 that flushed can never be
+  // upgraded). Hence HOLD-then-emit-once, never emit-then-fix: the explicit-
+  // complete path stashes everything the resolver needs EXCEPT the credit
+  // inputs here, and the release site re-reads streak/demonstrated live.
+  // Same fix shape as the segmentMasteredFlagRef late-fire in the pacing
+  // block, which solved the identical read-too-early problem for the booster.
+  interface HeldSegmentEvidence {
+    segmentId: string;
+    /** Plan segment kind, resolved at mark time (the plan can't change
+     *  under us mid-turn, and this keeps the released row identical to
+     *  what the mark-time push would have produced). */
+    segmentKind: string;
+    planLoIds: string[];
+    loGroupId: string | null;
+    /** segmentTurnCountRef at mark time — a display/telemetry field, not a
+     *  credit input, so it is captured (not re-read) like everything else
+     *  that isn't streak/demonstrated. */
+    turns: number | undefined;
+    /** pageTurnRef at hold time. TELEMETRY ONLY — a held row is emitted
+     *  unconditionally at release, never dropped for a key mismatch. It
+     *  exists to make the one exotic path visible: a command batch whose
+     *  EARLIER command awaited can resolve its mark branch after this turn's
+     *  finally, and if the next turn has already armed by then the row rides
+     *  out on that turn's release (with values that are, timing-wise, what
+     *  the pre-R48 mid-stream push would have read at that same moment). */
+    turnKey: number;
+  }
+  const heldEvidenceRef = useRef<HeldSegmentEvidence[]>([]);
+  // Only ARMED inside a brain turn that still has a release point ahead of
+  // it (set at callBrainOnce's turn-start block, cleared in its finally).
+  // A mark_segment_complete dispatched from anywhere else — the Rule-8
+  // client repair's fire-and-forget re-dispatch lands AFTER the turn's
+  // finally, and any command batch whose earlier command awaited can resolve
+  // there too — has no post-stream credit coming, so it emits immediately,
+  // byte-identical to pre-R48 behavior.
+  const evidenceHoldArmedRef = useRef(false);
+  // Ref-assigned every render (same pattern as emitPracticeStatsRef) so the
+  // mark handler, the pacing block, callBrainOnce's finally and
+  // commitSessionToProfile can all fire them without dependency plumbing
+  // (commitSessionToProfile is declared ABOVE these refs — a dep-array
+  // reference would be a render-time TDZ crash).
+  const emitSegmentEvidenceRef = useRef<(held: HeldSegmentEvidence, at: string) => void>(() => {});
+  const releaseHeldEvidenceRef = useRef<(at: string) => void>(() => {});
   // 2026-05-15: per-segment requiredPhrases enforcement. Tracks segments
   // whose first non-trivial turn has been checked; the check fires once
   // per segment so we don't re-narrate mid-trace. See the post-stream
@@ -3428,7 +3487,14 @@ export function VoiceTutorRealtime({
         if (!completedSegmentIdsRef.current.has(segId)) {
           completedSegmentIdsRef.current.add(segId);
           mutated = true;
-          if (!sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === segId)) {
+          // R48 Task 3: `|| held` — a segment whose explicit-complete row is
+          // HELD for this turn's post-stream credit is already spoken for.
+          // (Unreachable in practice: mark_segment_complete adds the segId to
+          // completedSegmentIdsRef, and this loop only runs for segments NOT
+          // in that set — so this can only ever suppress a duplicate, never a
+          // first row. Kept structural rather than relying on that coupling.)
+          if (!sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === segId)
+              && !heldEvidenceRef.current.some((h) => h.segmentId === segId)) {
             const skippedSeg = getSegment(plan, segId);
             const signal: SegmentEvidenceSignal = {
               segmentId: segId,
@@ -5611,35 +5677,43 @@ export function VoiceTutorRealtime({
         // logged by the advance-past path) shouldn't double-count. The
         // resolver's own LO-resolution (loGroupId vs. planLoIds, no
         // isGeneratedPlan gate) replaces the old genPlanLoUnresolved guard.
+        // R48 Task 3: this site no longer RESOLVES the row — it HOLDS the
+        // resolver's non-credit inputs and lets the post-stream release site
+        // supply streak/demonstrated (see heldEvidenceRef's declaration).
+        // The two dedup guards below are what keep exactly-one-row-per-
+        // segment semantics across the hold window: the accumulator check is
+        // the pre-existing one (an advance-past row already emitted for this
+        // segment, or a re-fired mark_segment_complete), and the held check
+        // is its in-flight twin (a brain retry marking the same segment twice
+        // within one turn must hold once, not twice — the release loop would
+        // otherwise resolve two records and the SECOND would be dropped only
+        // by the emit helper's own accumulator re-check). The auto-visit path
+        // in applyResolvedAdvance additionally consults heldEvidenceRef, so a
+        // held row can never be shadowed by an 'advance' row for the same
+        // segment (it already couldn't: mark_segment_complete adds the segId
+        // to completedSegmentIdsRef above, and the auto-visit loop only
+        // evaluates segments NOT in that set).
         if (hasSegId && doneSeg
-            && !sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === c.segmentId)) {
-          const masteredFlag = segmentMasteredFlagRef.current;
-          const streakAtComplete = masteredFlag && masteredFlag.segId === c.segmentId
-            ? masteredFlag.streakAtComplete
-            : (studentStreakRef.current.segId === c.segmentId ? studentStreakRef.current.count : undefined);
-          const turns = segmentTurnCountRef.current.segId === c.segmentId
-            ? segmentTurnCountRef.current.count
-            : undefined;
-          const evidence = resolveSegmentEvidence({
+            && !sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === c.segmentId)
+            && !heldEvidenceRef.current.some((h) => h.segmentId === c.segmentId)) {
+          const held: HeldSegmentEvidence = {
             segmentId: c.segmentId,
             segmentKind: doneSeg.kind,
             planLoIds: planNow?.los?.map((lo) => lo.id) ?? [],
             loGroupId: planNow ? loGroupOf(c.segmentId) : null,
-            source: 'complete',
-            streakAtComplete,
-            demonstrated: demonstratedSegmentsRef.current.has(c.segmentId),
-          });
-          if (evidence) {
-            sessionAccumRef.current.segmentOutcomes.push({
-              segmentId: c.segmentId,
-              loId: evidence.loId,
-              kind: doneSeg.kind,
-              completed: true,
-              outcome: evidence.outcome,
-              streakAtComplete: evidence.streakAtComplete,
-              turns,
-            });
-            scheduleProfileFlush();
+            turns: segmentTurnCountRef.current.segId === c.segmentId
+              ? segmentTurnCountRef.current.count
+              : undefined,
+            turnKey: pageTurnRef.current,
+          };
+          if (evidenceHoldArmedRef.current) {
+            heldEvidenceRef.current.push(held);
+            onDebugEvent?.('evidence_held', `seg="${c.segmentId}" — awaiting post-stream credit`);
+          } else {
+            // No post-stream credit is coming for this dispatch (out-of-turn
+            // command batch) — resolve against the live refs exactly as the
+            // pre-R48 code did at this same point.
+            emitSegmentEvidenceRef.current(held, 'mark');
           }
         }
         continue;
@@ -8268,6 +8342,17 @@ export function VoiceTutorRealtime({
     // from a PRIOR turn must not count as "predates this turn" evidence
     // for a guard(c) check happening later, in THIS turn's pacing block.
     segmentsCompletedThisTurnRef.current = [];
+    // R48 Task 3: arm the evidence hold for this turn. From here until this
+    // call's `finally`, a mark_segment_complete stashes its row in
+    // heldEvidenceRef instead of resolving it mid-stream; the post-stream
+    // pacing block releases it with POST-credit streak/demonstrated, and the
+    // finally is the catch-all release for every non-completion exit (throw,
+    // abort, the HTTP-failure early return) — with the then-current,
+    // pre-credit values, which is byte-identical to pre-R48 behavior on
+    // those paths. heldEvidenceRef is NOT cleared here: it is always empty
+    // by construction (the previous turn's finally drained it), and blindly
+    // clearing would be the one way a held row could ever be DROPPED.
+    evidenceHoldArmedRef.current = true;
     // R47 Task 2 (final-review CRITICAL fix, belt-and-suspenders alongside
     // claimSupersededStreakForCheckpoint's silent-ctx check above). A
     // pending streak record is only legitimately claimable by a checkpoint
@@ -13319,6 +13404,21 @@ export function VoiceTutorRealtime({
         console.error('[pacing] post-stream streak update threw:', err);
       }
 
+      // R48 Task 3 — RELEASE POINT. The credit decision above has now
+      // applied (streak incremented / demonstrated added, including R47's
+      // objective-credit branch and the segment-mastered late-fire), so any
+      // row this turn's mark_segment_complete held resolves NOW, against the
+      // post-credit refs. Deliberately OUTSIDE the pacing try/catch: a
+      // resolver-independent failure in the streak update must not swallow
+      // the release (the finally would still catch it, but a turn later and
+      // with the same values — releasing here keeps the "one row, correct
+      // outcome, same turn" contract explicit). Nothing between this line
+      // and the finally mutates studentStreakRef / demonstratedSegmentsRef /
+      // segmentMasteredFlagRef, so the finally's catch-all release is a
+      // no-op on this path (the list is already drained) and would read
+      // identical values if it weren't.
+      releaseHeldEvidenceRef.current('post-credit');
+
       // Round-7+ Fix 9: defensive cleanup of any residual streaming
       // entries from this turn. The for-loop's per-iteration cleanup at
       // line ~4471 removes the PRIOR attempt's killed entry on retry,
@@ -13650,6 +13750,20 @@ export function VoiceTutorRealtime({
         setStreamingEntryActive(false);
       }
     } finally {
+      // R48 Task 3 — CATCH-ALL RELEASE. Disarm first (any later out-of-turn
+      // dispatch must emit immediately, not hold with nobody left to release
+      // it), then drain. On the happy path this is a no-op: the post-credit
+      // release above already emptied the list. It is the ONLY release for
+      // every non-completion exit — the `!res.ok || !res.body` early return
+      // (~9330), the thrown/aborted catch above, and both empty-turn
+      // fallback returns (those run after the release point, so their rows
+      // are already out) — and it emits with the then-current, pre-credit
+      // refs, which is exactly what the pre-R48 mid-stream push recorded on
+      // those same paths. A held row is therefore never dropped by an
+      // errored turn: `finally` runs on throw, on abort, and on every
+      // early return inside the try.
+      evidenceHoldArmedRef.current = false;
+      releaseHeldEvidenceRef.current('turn-exit');
       // Stage 2: clear the perception cancellation surface — this brain
       // call is no longer in flight so a later abort() would be a no-op
       // against a stale controller.
@@ -14578,11 +14692,14 @@ export function VoiceTutorRealtime({
       // including at claim time (see PacingStreakSnapshot's field comment
       // for why a claim-time re-read was tried and reverted). If
       // mark_segment_complete fired for this segId during THIS turn, its
-      // evidence push / segmentMasteredFlagRef read already happened
-      // synchronously at tool-call time — BEFORE this post-stream snapshot
-      // was even taken — so rewinding the streak refs now would desync
-      // them from evidence that already committed. Leave the streak
-      // standing in that case.
+      // evidence row has already committed to the accumulator — rewinding
+      // the streak refs now would desync them from evidence that can never
+      // be revised (insert-only at both layers). Leave the streak standing
+      // in that case. R48 Task 3 note: that row is now pushed at the
+      // POST-STREAM release point rather than synchronously at tool-call
+      // time, which STRENGTHENS this guard rather than weakening it — the
+      // committed row reflects the very credit a revert would undo, so the
+      // "don't rewind" conclusion is unchanged and more load-bearing.
       if (supersededStreak.completedThisTurn.includes(supersededStreak.segId)) {
         onDebugEvent?.('pacing_streak_revert_skipped_consumed', `seg="${supersededStreak.segId}" — mark_segment_complete already consumed this turn`);
         return;
@@ -18187,6 +18304,63 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // pacing streak read as "×11" beside "0 solved" — incoherent).
       streak: practiceStreakRef.current,
     });
+  };
+  // R48 Task 3 (evidence late-fire): resolve ONE held explicit-complete row
+  // against the LIVE credit refs and push it into the session accumulator.
+  // Every input except streak/demonstrated was captured at mark time; those
+  // two are read here, which is the entire point of the hold. Assigned every
+  // render (same pattern as emitPracticeStatsRef above) so it always closes
+  // over the current scheduleProfileFlush/onDebugEvent.
+  emitSegmentEvidenceRef.current = (held, at) => {
+    // Insert-only idempotency, client layer: one row per segmentId per
+    // accumulation window. (The server's $setOnInsert on
+    // `sess:<sessionId>:<segmentId>` is the second layer — which is also why
+    // a row must be right the FIRST time it flushes.)
+    if (sessionAccumRef.current.segmentOutcomes.some((o) => o.segmentId === held.segmentId)) return;
+    // Identical expression to the pre-R48 mark-time read, just evaluated
+    // later: prefer the segment-mastered booster's pinned count (its
+    // post-stream late-fire may have just set it for THIS segment), else the
+    // live streak when it points at this segment.
+    const masteredFlag = segmentMasteredFlagRef.current;
+    const streakAtComplete = masteredFlag && masteredFlag.segId === held.segmentId
+      ? masteredFlag.streakAtComplete
+      : (studentStreakRef.current.segId === held.segmentId ? studentStreakRef.current.count : undefined);
+    const evidence = resolveSegmentEvidence({
+      segmentId: held.segmentId,
+      segmentKind: held.segmentKind,
+      planLoIds: held.planLoIds,
+      loGroupId: held.loGroupId,
+      source: 'complete',
+      streakAtComplete,
+      demonstrated: demonstratedSegmentsRef.current.has(held.segmentId),
+    });
+    // null ⇒ non-evaluative kind or unattributable LO: the resolver declines,
+    // exactly as it did when this ran mid-stream. Nothing to push.
+    if (!evidence) return;
+    sessionAccumRef.current.segmentOutcomes.push({
+      segmentId: held.segmentId,
+      loId: evidence.loId,
+      kind: held.segmentKind,
+      completed: true,
+      outcome: evidence.outcome,
+      streakAtComplete: evidence.streakAtComplete,
+      turns: held.turns,
+    });
+    scheduleProfileFlush();
+    onDebugEvent?.(
+      'evidence_late_fire',
+      `seg="${held.segmentId}" outcome=${evidence.outcome} streakAtComplete=${evidence.streakAtComplete ?? 0}`
+      + ` at=${at}${held.turnKey === pageTurnRef.current ? '' : ` heldTurn=${held.turnKey} nowTurn=${pageTurnRef.current}`}`,
+    );
+  };
+  // Drain the whole held list. Detaches the array FIRST so a re-entrant
+  // release (emit → scheduleProfileFlush → … ) can never double-resolve a
+  // record, and so an exception mid-loop can't leave a half-drained list.
+  releaseHeldEvidenceRef.current = (at) => {
+    if (heldEvidenceRef.current.length === 0) return;
+    const rows = heldEvidenceRef.current;
+    heldEvidenceRef.current = [];
+    for (const row of rows) emitSegmentEvidenceRef.current(row, at);
   };
   // End/Pause teardown, shared by the dock's own button and the handleRef's
   // endSession (header control). Ref-assigned every render (same pattern as
