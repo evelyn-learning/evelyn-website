@@ -91,6 +91,10 @@ export type Step =
   | StepTriangleCenter
   // "Given-shape" steps — explicit objects the brain naturally declares
   // alongside derived constructions, not separately under `given`.
+  // `point` included: live session portal-7f483853 (2026-08-12) declared
+  // raw roof-corner points in `steps` and the silent no-op dropped every
+  // shape built on them — the student saw only the base segment.
+  | StepDeclarePoint
   | StepDeclareSegment
   | StepDeclareLine
   | StepDeclarePolygon
@@ -171,6 +175,7 @@ export const STEP_KINDS = [
   'intersect',
   'polygon_regular',
   'triangle_center',
+  'point',
   'segment',
   'line',
   'polygon',
@@ -430,6 +435,11 @@ export interface StepTriangleCenter extends StepCommon {
 // connect them → derive things from those connections). The data is
 // the same as the corresponding Given variant.
 
+export interface StepDeclarePoint extends StepCommon {
+  kind: 'point';
+  x: number;
+  y: number;
+}
 export interface StepDeclareSegment extends StepCommon {
   kind: 'segment';
   from: PtRef;
@@ -1109,6 +1119,9 @@ function solveStep(step: Step, state: State): void {
     // Given-shape steps: same logic as their `given` counterparts, but
     // declarable inline alongside derived steps. Keeps brain emissions
     // that mix givens and constructions in one array working.
+    case 'point':
+      setObject(state, { kind: 'point', id: step.id, x: step.x, y: step.y, label: step.label });
+      return;
     case 'segment':
       setObject(state, {
         kind: 'segment', id: step.id,
@@ -1173,6 +1186,15 @@ function solveStep(step: Step, state: State): void {
     case 'common_tangent': return solveCommonTangent(step, state);
     case 'tangent_with_slope': return solveTangentWithSlope(step, state);
     case 'angle_marker': return solveAngleMarker(step, state);
+    default: {
+      // Runtime emissions aren't typed: a kind outside the union used to
+      // fall through silently, dropping the step AND everything built on
+      // it while the tutor kept narrating the missing shapes (session
+      // portal-7f483853). Throw so the card shows the Construction error
+      // box and the brain can self-correct.
+      const kind = (step as { kind?: unknown }).kind;
+      throw new Error(`unknown step kind ${JSON.stringify(kind)}.${getGeometryStepKindsDescriptionTail()}`);
+    }
   }
 }
 
