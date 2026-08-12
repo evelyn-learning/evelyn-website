@@ -110,3 +110,72 @@ export function detectVoiceOnlyExercise(turnText: string): VoiceOnlyExerciseResu
 
   return { posed: false };
 }
+
+/**
+ * R48 Task 2 review round (Finding 1): the wiring originally gated
+ * `exercise_no_board` on `isBoardContentTool` (question-anchor.ts), which
+ * counts pointer/annotation tools — `tutor_scribble`, `tutor_link`,
+ * `tutor_handwrite` — as board content. Those tools cannot render NEW
+ * material (`tutor_scribble`'s own description: "Do not use this for new
+ * content or for unlabeled spots. If you need to mark something that was
+ * never drawn, render it first with a show_* tool"), so a turn that poses a
+ * voice-only exercise AND scribbles at an existing board word — the
+ * motivating live shape, "Look at 'study'" — silently suppressed the event
+ * under the old gate. `RENDER_TOOLS` is the narrower, explicit allowlist:
+ * only tools that can paint NEW exercise material count as "reached the
+ * board" for this check.
+ *
+ * Enumerated directly from `WHITEBOARD_TOOLS`
+ * (`src/app/tutor/hooks/toolDefinitions.ts`, R48 review round, 64 `show_*`
+ * tools total) rather than derived by a `startsWith('show_')` predicate —
+ * pinned as a literal set so a membership regression is a diffable code
+ * change, not a silent drift if a future tool is renamed off the `show_`
+ * prefix.
+ *
+ * Included: every `show_*` tool — the entire family renders new content
+ * (problems, equations, tables, diagrams, passages, cards, ...).
+ *
+ * Excluded, and why:
+ *  - Pointer/annotation tools (`tutor_scribble`, `tutor_link`,
+ *    `tutor_handwrite`) — overlay-only, cannot introduce new material.
+ *  - `highlight` / `annotate` — boxed commentary/callout cards, not the
+ *    tools the prompt directs an exercise through (Rule 3e names
+ *    `show_problem` "or the matching card" — a `show_*` card, not a
+ *    highlight box).
+ *  - `draw_vector` — a single annotation arrow on an existing diagram.
+ *  - Control/meta tools (`new_page`, `go_to_page`, `clear`,
+ *    `list_whiteboard_features`, `tutor_scroll_whiteboard`) — navigation,
+ *    not content.
+ *  - Lesson-plan/silent tools (`advance_lesson`, `mark_segment_complete`,
+ *    `generate_problem`, `confirm_plan_los`, `propose_plan_swap`,
+ *    `record_gap`, `flag_prerequisite_gap`, `expand_topic_notes_theory`,
+ *    `add_topic_notes_method`, `add_topic_notes_pointer`) — the notes-*
+ *    tools persist text to the student's notes but never render on the
+ *    whiteboard itself, so they don't satisfy "the student has something
+ *    to look at" either.
+ */
+export const RENDER_TOOLS: ReadonlySet<string> = new Set([
+  'show_equation', 'show_function_graph', 'show_code', 'show_table',
+  'show_molecule', 'show_number_line', 'show_geometry',
+  'show_geometry_constructed', 'show_unit_circle', 'show_fraction_bar',
+  'show_tree', 'show_venn_diagram', 'show_matrix', 'show_try_yourself',
+  'show_segment_card', 'show_problem', 'show_diagram', 'show_sketch',
+  'show_solution', 'show_worked_example', 'show_timeline', 'show_map',
+  'show_circuit', 'show_lewis', 'show_early_math', 'show_phonics',
+  'show_graphic_organizer', 'show_labeled_image', 'show_solved_example',
+  'show_quiz', 'show_writing_frame', 'show_run_code',
+  'show_dimensional_check', 'show_balanced_equation',
+  'show_lewis_constructed', 'show_periodic_table', 'show_annotated_passage',
+  'show_passage', 'show_call_stack', 'show_flowchart', 'show_manipulative',
+  'show_stats', 'show_collision', 'show_reaction_coordinate',
+  'show_energy_bars', 'show_free_body_diagram', 'show_coordinate_plane',
+  'show_scatter_plot', 'show_cycle_diagram', 'show_concept_map',
+  'show_motion_diagram', 'show_projectile_motion', 'show_simple_machine',
+  'show_pendulum', 'show_spring_mass', 'show_ray_diagram', 'show_wave',
+  'show_vector', 'show_orbital_diagram', 'show_pedigree', 'show_punnett',
+  'show_cell_diagram', 'show_dna', 'show_food_web',
+]);
+
+export function isRenderTool(name: string): boolean {
+  return RENDER_TOOLS.has(name);
+}

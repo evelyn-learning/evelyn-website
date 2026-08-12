@@ -9,7 +9,7 @@
  * Run: npx tsx scripts/test-exercise-board-check.ts
  */
 import { strict as assert } from 'node:assert';
-import { detectVoiceOnlyExercise } from '../src/lib/tutor/voice/exercise-board-check';
+import { detectVoiceOnlyExercise, RENDER_TOOLS, isRenderTool } from '../src/lib/tutor/voice/exercise-board-check';
 
 let passed = 0; let failed = 0;
 function test(name: string, fn: () => void) {
@@ -106,6 +106,57 @@ test('contraction apostrophes do not open a false quote span', () => {
 test('empty/whitespace input is safe', () => {
   assert.equal(detectVoiceOnlyExercise('').posed, false);
   assert.equal(detectVoiceOnlyExercise('   ').posed, false);
+});
+
+// MINOR (review round, report-note-only): "Give me two different ways to
+// check that" is a spec-inherited false positive of shape (ii) — "N
+// different <ways>" + the "give" ask verb — even though it can plausibly be
+// a conversational aside rather than a posed exercise. Accepted per the
+// brief's own shape (ii) definition; documented here rather than narrowed,
+// since narrowing the ask-verb/noun set to exclude it would also exclude
+// legitimate asks ("give me two different examples").
+test('accepted FP: "give me two different ways" reads as posed (shape ii, spec-inherited)', () => {
+  const result = detectVoiceOnlyExercise('Give me two different ways to check that.');
+  assert.equal(result.posed, true);
+  assert.equal(result.shape, 'n-different');
+});
+
+// --- RENDER_TOOLS membership (review round Finding 1) -----------------------
+// Pinned literal set enumerated from WHITEBOARD_TOOLS (toolDefinitions.ts,
+// 64 show_* tools, R48 review round) — every show_* tool renders NEW
+// content and counts; pointer/annotation/control/silent tools do not.
+test('RENDER_TOOLS: content renderers included', () => {
+  for (const name of [
+    'show_problem', 'show_equation', 'show_table', 'show_diagram',
+    'show_segment_card', 'show_try_yourself', 'show_passage',
+    'show_annotated_passage', 'show_solution', 'show_worked_example',
+  ]) {
+    assert.equal(isRenderTool(name), true, `${name} must be a render tool`);
+  }
+});
+
+test('RENDER_TOOLS: pointer/annotation tools excluded (cannot paint new material)', () => {
+  for (const name of ['tutor_scribble', 'tutor_link', 'tutor_handwrite', 'highlight', 'annotate', 'draw_vector']) {
+    assert.equal(isRenderTool(name), false, `${name} must NOT be a render tool`);
+  }
+});
+
+test('RENDER_TOOLS: control/meta/silent tools excluded', () => {
+  for (const name of [
+    'new_page', 'go_to_page', 'clear', 'list_whiteboard_features',
+    'tutor_scroll_whiteboard', 'advance_lesson', 'mark_segment_complete',
+    'generate_problem', 'confirm_plan_los', 'propose_plan_swap',
+    'record_gap', 'flag_prerequisite_gap', 'expand_topic_notes_theory',
+    'add_topic_notes_method', 'add_topic_notes_pointer',
+  ]) {
+    assert.equal(isRenderTool(name), false, `${name} must NOT be a render tool`);
+  }
+});
+
+test('RENDER_TOOLS: every member is show_-prefixed, 64 total', () => {
+  const names = Array.from(RENDER_TOOLS);
+  assert.equal(names.length, 64, `expected 64 render tools, got ${names.length}`);
+  assert.ok(names.every((n) => n.startsWith('show_')), 'every RENDER_TOOLS member must be show_-prefixed');
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

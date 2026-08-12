@@ -205,7 +205,7 @@ import {
   resolveBargeInEnergyThreshold,
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
-import { detectVoiceOnlyExercise } from '@/lib/tutor/voice/exercise-board-check';
+import { detectVoiceOnlyExercise, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
@@ -13027,20 +13027,38 @@ export function VoiceTutorRealtime({
       }
       // R48 Task 2: posed exercise (prompt Rule 3e — the prose/multi-part
       // sibling of the board-anchor net above, which only covers a single
-      // substantive question) + zero board-rendering tool calls this turn
-      // → exercise_no_board telemetry. Detector-only (exercise-board-check.ts),
+      // substantive question) + zero board-RENDERING tool calls this turn
+      // + no pre-existing problem card already on the board →
+      // exercise_no_board telemetry. Detector-only (exercise-board-check.ts),
       // conservative shapes, never a kill or a corrective note — the audio
       // already played; this just proves the gap for triage. Live failure
       // (2026-08-12, HS English): a three-sentence exercise with quoted
       // working material was spoken with no show_problem/card ever
-      // rendered. isBoardContentTool already excludes advance_lesson /
-      // mark_segment_complete / other meta-nav tools, so a turn that only
-      // advanced the cursor still counts as zero board renders here.
+      // rendered.
+      //
+      // Review round Finding 1: uses RENDER_TOOLS, NOT isBoardContentTool —
+      // isBoardContentTool counts pointer/annotation tools (tutor_scribble,
+      // tutor_link, tutor_handwrite) as content, but those can't paint NEW
+      // material (scribble's own docs: "render it first with a show_*
+      // tool"). A turn that poses voice-only AND scribbles at an existing
+      // board word — the motivating live shape, "Look at 'study'" — must
+      // still fire; RENDER_TOOLS (show_* only) makes that so.
+      //
+      // Review round Finding 2: suppressed when a problem card is already
+      // live (currentProblemRef.current != null) — a FOLLOW-UP ask about an
+      // exercise already on the board ("Okay, tell me your three different
+      // sentences now") has working material visible even though this
+      // turn's own tool calls render nothing new. Accepted residual: an
+      // exercise rendered via a bare show_equation (no show_problem/
+      // show_try_yourself card) never sets currentProblemRef, so a
+      // follow-up on THAT exercise can still fire — read this event as "a
+      // candidate for triage", not proof the board was actually empty.
       {
         const exerciseCheck = detectVoiceOnlyExercise(fullText);
         if (exerciseCheck.posed) {
-          const boardRendered = totalToolNamesSeen.some((n) => isBoardContentTool(n));
-          if (!boardRendered) {
+          const boardRendered = totalToolNamesSeen.some((n) => RENDER_TOOLS.has(n));
+          const hasActiveProblemCard = currentProblemRef.current != null;
+          if (!boardRendered && !hasActiveProblemCard) {
             onDebugEvent?.(
               'exercise_no_board',
               `shape=${exerciseCheck.shape} · "${fullText.slice(0, 120)}"`,
