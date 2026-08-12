@@ -108,7 +108,15 @@ function mkPlan(opts: {
   assert(m2[1].label === 'Two-way exchange' && m2[2].current === true, 'curated content labels (2-LO, not single-LO)');
 }
 
-// Case 3: curated, NO labels (atomic / labeler failed) → stage-label fallback with occurrence numbering
+// Case 3: curated, NO labels (atomic / labeler failed) → stage-label fallback with occurrence numbering.
+// `curated` (m3) also bumped 1 LO → 2 LOs (R48 review Finding 2 disclosure,
+// same reason as Case 2/6/lo-c below): at 1 LO this fixture would now hit
+// the loCount<=1 BYPASS branch instead of the >1-LO curated-no-labels
+// fallback branch it originally meant to test. Kept at 2 LOs so m3
+// specifically covers the >1-LO branch's stage-fallback path; `twoTries`
+// (m4, 0 LO, unchanged) covers the SAME stage-fallback machinery via the
+// bypass branch — together this one block exercises stage-fallback
+// labeling on both branches without relying on Case 8/9's coverage alone.
 {
   const curated = mkPlan({
     title: 'U1.4 The Columbian Exchange',
@@ -119,10 +127,10 @@ function mkPlan(opts: {
     segmentIds: ['hook', 'concept-cx', 'worked-letter', 'try-saq', 'misconception-one-way', 'recap'],
   });
   const m3 = buildRailModel(curated, 'hook', new Set(), null)!.items;
-  assert(m3.map(i => i.label).join('|') === 'Hook|Concept|Example|Try|Misconception|Recap', 'stage fallback');
+  assert(m3.map(i => i.label).join('|') === 'Hook|Concept|Example|Try|Misconception|Recap', 'stage fallback (>1-LO curated branch)');
   const twoTries = mkPlan({ los: [], segmentIds: ['hook', 'try-1', 'try-2', 'recap'] });
   const m4 = buildRailModel(twoTries, 'try-2', new Set(['hook', 'try-1']), null)!.items;
-  assert(m4[1].label === 'Try 1' && m4[2].label === 'Try 2', 'occurrence numbering');
+  assert(m4[1].label === 'Try 1' && m4[2].label === 'Try 2', 'occurrence numbering (bypass branch, 0-LO)');
 }
 
 /* ------------------------------------------------------------------ */
@@ -185,6 +193,23 @@ function mkPlan(opts: {
   const labels = { 'concept-x': 'Some content label' };
   const m10 = buildRailModel(noLo, 'hook', new Set(), labels)!.items;
   assert(m10.map(i => i.label).join(',') === 'Hook,Concept,Recap', '0-LO curated plan: stage labels, content label ignored');
+}
+
+// Case 11 (R48 review Finding 1): a GENERATED single-LO plan carries an
+// 'intro' segment (kind 'hook') AND the LO's own '<loId>-hook' segment —
+// both kind 'hook'. Reachable: generate-from-text has no minimum-LO
+// enforcement, and every generated LO mints its own -hook. Without the
+// railStageLabel intro special-case, the loCount<=1 bypass branch would
+// number them 'Hook 1, Hook 2', colliding the plan's intro with the
+// lesson's actual hook.
+{
+  const genSingle = mkPlan({
+    metadata: { generatedFromText: true },
+    los: [{ id: 'lo-a', description: 'Explain photosynthesis inputs and outputs', shortTitle: 'Photosynthesis inputs' }],
+    segmentIds: ['intro', 'lo-a-hook', 'lo-a-concept', 'lo-a-try', 'recap'],
+  });
+  const m11 = buildRailModel(genSingle, 'intro', new Set(), null)!.items;
+  assert(m11.map(i => i.label).join(',') === 'Intro,Hook,Concept,Try,Recap', 'generated single-LO plan: Intro/Hook do not collide under sameKind numbering');
 }
 
 // Case 4: suppression — pendingPicker → null

@@ -15,12 +15,28 @@ const STAGE_WORD: Record<string, string> = {
   try_yourself: 'Try', misconception_check: 'Misconception', recap: 'Recap', extension: 'Extension',
 };
 
-/** Stage-name label with occurrence numbering when a kind repeats (Try 1, Try 2). */
+/** Stage-name label with occurrence numbering when a kind repeats (Try 1, Try 2).
+ *
+ *  R48 review Finding 1: the segment id `'intro'` (generated plans only —
+ *  `expand.ts` / `generate-from-text.ts` mint it; curated plans never use
+ *  this id) is minted with kind `'hook'`, same as every generated LO's own
+ *  `<loId>-hook` segment. Left ungated, a single-LO generated plan's rail
+ *  (the loCount<=1 bypass branch in `buildRailModel`, and this same
+ *  function's other call site, the curated multi-LO no-labels fallback)
+ *  would number them `Hook 1, Hook 2` — colliding intro with the lesson's
+ *  actual hook. The pre-existing LO-grouped generated branch below already
+ *  special-cases this (its own `'intro' → 'Intro'` force-override); this
+ *  is the SAME rule, applied once here so every `railStageLabel` caller
+ *  gets it for free instead of re-deriving it. `'intro'` is excluded from
+ *  the `sameKind` pool entirely (not just relabeled) so it doesn't perturb
+ *  the numbering of the OTHER same-kind segments either — a lone
+ *  `<loId>-hook` should read plain "Hook", not "Hook 2". */
 export function railStageLabel(segments: { id: string; kind: string }[], segId: string): string {
   const seg = segments.find((s) => s.id === segId);
   if (!seg) return segId;
+  if (seg.id === 'intro') return 'Intro';
   const word = STAGE_WORD[seg.kind] ?? seg.kind;
-  const sameKind = segments.filter((s) => s.kind === seg.kind);
+  const sameKind = segments.filter((s) => s.kind === seg.kind && s.id !== 'intro');
   if (sameKind.length <= 1) return word;
   return `${word} ${sameKind.findIndex((s) => s.id === segId) + 1}`;
 }
