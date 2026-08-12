@@ -50,6 +50,31 @@ export function latestSubstantiveTutorEntry<T extends { role: string; historyOnl
   return [...transcript].reverse().find((t) => t.role === 'tutor' && !t.historyOnly);
 }
 
+/** R47 Task 3c: a pinned question is scoped to the problem/segment it was
+ *  asked in. R38's persist-until-replaced semantics deliberately keep a pin
+ *  alive across non-question tutor turns WITHIN that segment (idle nudge,
+ *  board-only) — but nothing previously bounded it across a SEGMENT
+ *  advance, so a question pinned against an earlier problem could still be
+ *  showing several turns later at, e.g., the Recap segment (live: session
+ *  portal-1349716e, ~22:37 — "Ready for one with a billionaire in the mix?"
+ *  stuck at Recap). The lesson cursor's segment id (`activeSegmentId` /
+ *  `lessonProgress.currentSegmentId` — the same signal the rail uses) is
+ *  the obsoleting event: once it changes, the pin's problem context is
+ *  gone and it must clear, regardless of whether a new question has
+ *  arrived yet.
+ *
+ *  Design call: clear on ANY segment-id change, including a `to:'free'`
+ *  cursor release (segId → '') and a later resume back into the plan
+ *  ('' → segId). A pin surviving into free-conversation is exactly as
+ *  stale as one surviving into Recap — its problem is off the board
+ *  either way — so there is no case where keeping it "because the
+ *  conversation might still be relevant" beats the student re-asking if
+ *  they actually want it back. Two equal, non-empty ids (no advance) or
+ *  two equal empty ids (never entered a plan) are NOT a change. */
+export function shouldClearQpinOnSegmentChange(prevSegmentId: string, nextSegmentId: string): boolean {
+  return prevSegmentId !== nextSegmentId;
+}
+
 export function clampQpinFraction(
   pos: QpinFraction,
   stage: { width: number; height: number },

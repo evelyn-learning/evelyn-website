@@ -9,6 +9,7 @@ import {
   qpinCollapseDeadline,
   clampQpinFraction,
   latestSubstantiveTutorEntry,
+  shouldClearQpinOnSegmentChange,
   QPIN_POST_SPEECH_MS,
   QPIN_HARD_CAP_MS,
   QPIN_TOP_MIN_PX,
@@ -109,6 +110,22 @@ check(
   latestSubstantiveTutorEntry([e('t1', 'tutor', true), e('t2', 'tutor', true)]),
   undefined,
 );
+
+// --- shouldClearQpinOnSegmentChange (R47 Task 3c: stale pin outlives its
+// problem context across a segment advance) ---
+check('same segment id (no advance) → do not clear', shouldClearQpinOnSegmentChange('recap', 'recap'), false);
+check('advance to a new segment id → clear', shouldClearQpinOnSegmentChange('seg-a', 'seg-b'), true);
+check(
+  'release to free-conversation (to:"free", segId → "") → clear',
+  shouldClearQpinOnSegmentChange('seg-a', ''),
+  true,
+);
+check(
+  'resume from free back into a segment ("" → segId) → clear',
+  shouldClearQpinOnSegmentChange('', 'seg-a'),
+  true,
+);
+check('both empty (never started a plan) → do not clear', shouldClearQpinOnSegmentChange('', ''), false);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

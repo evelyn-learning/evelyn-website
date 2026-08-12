@@ -91,6 +91,7 @@ import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-ver
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
+import { decidePacingCredit, type ObjectiveCorrectSignal } from '@/lib/tutor/voice/objective-credit';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
@@ -714,6 +715,72 @@ const VOICE_MAP: Record<string, OpenAIVoice> = {
   'male-2': 'alloy',      // Energetic
 };
 
+// R47 Task 2 review round: full snapshot of every ref the post-stream
+// pacing block's 'correct'/'incorrect' branch can mutate, taken BEFORE
+// that mutation, so a STAGE-3-superseded fragment turn's credit can be
+// undone completely — not just the two streak refs. Missing any of these
+// leaves a partial revert that's worse than no revert: e.g. reverting only
+// the streak counts while leaving a `practiceSolvedHashesRef` entry behind
+// makes the REAL turn's identical-problem solve dedupe to a silent no-op
+// (the hash is already "seen"), suppressing the legitimate credit that's
+// supposed to follow the revert.
+interface PacingStreakSnapshot {
+  segId: string;
+  prevCorrect: { segId: string; count: number };
+  prevIncorrect: { segId: string; count: number };
+  prevPracticeStreak: number;
+  prevPracticeSolved: number;
+  /** Was segId already in demonstratedSegmentsRef before this decision?
+   *  Only the 'correct' branch ever adds to that set; restoring is a
+   *  delete-if-we-added-it (a no-op for an 'incorrect' record, which
+   *  never touched the set). */
+  prevDemonstrated: boolean;
+  /** segmentMasteredFlagRef's value immediately before this decision —
+   *  restored verbatim on revert (it may belong to a DIFFERENT segId, or
+   *  be null; either way the correct thing is "put back exactly what was
+   *  there", not "clear it"). */
+  prevSegmentMasteredFlag: { segId: string; streakAtComplete: number } | null;
+  /** The practice-solved hash this decision newly added to
+   *  practiceSolvedHashesRef, if any (null when the branch was
+   *  'incorrect', or the hash was already present, or no problem/short
+   *  statement). Deleting it on revert is what lets the REAL turn's
+   *  identical-problem solve register instead of deduping to a no-op. */
+  addedSolvedHash: string | null;
+  /** Guard (c) data: segIds `mark_segment_complete` newly completed during
+   *  THIS turn (mirrors segmentsCompletedThisTurnRef). Captured ONCE, here,
+   *  at pacing-snapshot time — deliberately NEVER re-read from the live ref
+   *  anywhere later (not even at checkpoint-claim time). Turn N is still
+   *  synchronously executing when this snapshot is taken (mark_segment_
+   *  complete's push, if any, happened mid-stream, strictly before this
+   *  post-stream code runs, within the SAME turn) — that makes this the
+   *  ONE moment the live ref is provably turn N's data, no exceptions.
+   *
+   *  A claim-time re-read was tried and reverted (review round 2): most
+   *  checkpoint-construction sites (executeRetroCancel, the eager
+   *  onSpeechStart kill) do run synchronously relative to the interrupt
+   *  that triggers them, but the STAGE-2 LAZY path does not — runPerceptionKill
+   *  is called from resolveStage2LazyVerdict, itself called from inside the
+   *  Haiku classifier fetch's OWN `.then()` (up to ~3s after the original
+   *  onset). A SILENT dispatch (queue-drain, idle-nudge, etc.) landing in
+   *  that window resets segmentsCompletedThisTurnRef via callBrainOnce's
+   *  UNCONDITIONAL turn-start reset — unconditional because silent turns
+   *  don't skip it, only pacingTurnCounterRef's increment is silent-gated.
+   *  So a live re-read at claim time could silently replace turn N's real
+   *  data with a foreign (or empty) array from whatever turn is executing
+   *  NOW. The turnMarker check on `lastStreakChangeRef` itself doesn't have
+   *  this problem — only NON-silent dispatches write a new record AND
+   *  advance pacingTurnCounterRef, in lockstep, so a stale rec can never
+   *  spuriously match — but segmentsCompletedThisTurnRef has no such
+   *  silent-immune counterpart to gate a re-read against. Simplest correct
+   *  fix: don't re-read it, ever, after this one capture. */
+  completedThisTurn: string[];
+  /** This turn's ordinal (pacingTurnCounterRef.current at snapshot time).
+   *  NOT used to gate the revert directly (see the checkpoint-creation
+   *  "claim" sites for why a resolution-time counter comparison is
+   *  racy) — kept only as a diagnostic/debug-log field. */
+  turnMarker: number;
+}
+
 // Coherence pass v1 (problemSimilarity, extractConstants,
 // extractCoefficients) was retired 2026-04-29 in favor of A + B1:
 //   Lever A — show_segment_card resolves segmentId → authored data
@@ -1029,6 +1096,14 @@ export function VoiceTutorRealtime({
          *  (snapshot[0]) already played at cut time — picks which clause to
          *  resume from when TUTOR_RESUME_FROM_CLAUSE is on. */
         cutFraction: number;
+        /** R47 Task 2: the pacing-credit snapshot for the turn THIS
+         *  checkpoint discards, if that turn produced one — claimed
+         *  synchronously at construction time by
+         *  claimSupersededStreakForCheckpoint() (see lastStreakChangeRef's
+         *  declaration for why claim-at-creation, not compare-at-
+         *  resolution). null when this turn had no pacing-credit decision
+         *  (e.g. a pure-ack turn) to discard. */
+        supersededStreak: PacingStreakSnapshot | null;
       }
     | null
   >(null);
@@ -2152,6 +2227,17 @@ export function VoiceTutorRealtime({
   // sometimes ignores it; orchestrator-side enforcement is the
   // safety net.
   const completedSegmentIdsRef = useRef<Set<string>>(new Set());
+  // R47 Task 2 (review round: guard-c over-broad fix). completedSegmentIdsRef
+  // is SESSION-lifetime — a segId completed several turns ago (e.g. a
+  // review-question revisit) stays in it forever, so testing
+  // `completedSegmentIdsRef.current.has(segId)` at revert time would block
+  // a legitimate revert for ANY segment ever completed, not just one
+  // completed by the turn actually being reverted. This ref is the exact,
+  // narrow signal instead: segIds newly added to completedSegmentIdsRef
+  // DURING THE CURRENT TURN ONLY (pushed by the mark_segment_complete
+  // handler, cleared at turn start in callBrainOnce). Guard (c) checks
+  // membership here, not in completedSegmentIdsRef.
+  const segmentsCompletedThisTurnRef = useRef<string[]>([]);
   // 2026-05-15: per-segment requiredPhrases enforcement. Tracks segments
   // whose first non-trivial turn has been checked; the check fires once
   // per segment so we don't re-narrate mid-trace. See the post-stream
@@ -2367,6 +2453,108 @@ export function VoiceTutorRealtime({
   // to even consider streak changes. Pure-ack turns ("ok", "yeah")
   // never update the streak regardless of what the brain says next.
   const lastStudentVerificationRef = useRef<{ turn: number; segId: string; isVerification: boolean; isSessionEndSignal: boolean; activeStatement?: string } | null>(null);
+  // R47 Task 1 (live incident portal-d859df30): stash from a deterministic
+  // false-denial kill (arith/simplification/inverse-verdict) this turn — the
+  // checker already proved the student's answer right, so the post-stream
+  // pacing block below must credit 'correct' regardless of what the
+  // affirm/correction regexes read off the retry's prose. Cleared at turn
+  // start (mirrors the other per-turn refs reset there) and at every early
+  // exit that skips the pacing block (mirrors pendingStudentJumpRef's "don't
+  // let this turn's state survive into the next turn" pattern) so a signal
+  // from a turn that never reaches the pacing block can't bleed forward.
+  const objectiveCorrectThisTurnRef = useRef<{ signal: ObjectiveCorrectSignal } | null>(null);
+  // R47 Task 2 (live incident pattern: perception STAGE-3 sometimes
+  // dispatches a garbled FRAGMENT of the student's utterance as its own
+  // turn — the brain answers correctively, streak-incorrect fires — then
+  // STAGE-3 re-cuts/supersedes with the full utterance and the REAL turn
+  // runs. The fragment's wrong streak change must not survive. Snapshot-
+  // and-restore: the post-stream pacing block below stashes the pre-
+  // mutation ref state (PacingStreakSnapshot, incl. this turn's ordinal as
+  // `turnMarker`) here BEFORE applying a 'correct' or 'incorrect' decision.
+  //
+  // Identity (review-round correction): pacingTurnCounterRef is NOT safe to
+  // compare against at RESOLUTION time (inside applyPerceptionVerdict, once
+  // Haiku's verdict finally arrives) — the mid-utterance dispatch guard
+  // that blocks other dispatches clears at speech_stopped, but a
+  // checkpoint's Haiku classification can still be pending for up to 3s
+  // after that, and the queue-drain poller / 90s busy-watchdog can dispatch
+  // an unrelated intervening turn in that window without ever consulting
+  // perceptionInterruptCheckpointRef. That intervening turn's OWN snapshot
+  // would overwrite this ref at the SAME turnMarker the stale checkpoint is
+  // about to resolve against, causing a resolution-time match to revert
+  // the WRONG (unrelated, legitimate) turn's credit.
+  //
+  // Fix: claim, don't compare-later. Every checkpoint-construction site
+  // (executeRetroCancel, runPerceptionKill, and the dev-only
+  // __tutorForceFalseBargein trigger) calls claimSupersededStreakForCheckpoint()
+  // synchronously in the SAME tick it reads lastBrainCallContextRef.current
+  // to build the checkpoint — i.e. at the one instant `ctx` (the turn the
+  // checkpoint will discard) and pacingTurnCounterRef.current are
+  // guaranteed to describe the same turn, because nothing else can run
+  // between two statements in the same synchronous function body. That
+  // claim reads this ref, checks turnMarker, and — if it matches — MOVES
+  // the record onto the checkpoint's own `supersededStreak` field and
+  // nulls this ref immediately, before returning control to anything that
+  // could dispatch a new turn. From then on the record travels attached to
+  // that specific checkpoint object; applyPerceptionVerdict just reads
+  // `checkpoint.supersededStreak` at resolution time — no comparison, no
+  // race, immune to whatever dispatches during the Haiku-wait window.
+  const lastStreakChangeRef = useRef<PacingStreakSnapshot | null>(null);
+  // R47 Task 2: called synchronously (same statement group as the
+  // checkpoint object literal) by every checkpoint-construction site — see
+  // lastStreakChangeRef's declaration comment for why the turnMarker check
+  // below is safe to run at that moment rather than at verdict-resolution
+  // time. Note (review round 2): "checkpoint construction" itself does NOT
+  // always happen immediately upon the original interrupt — the STAGE-2
+  // LAZY path (runPerceptionKill, called from resolveStage2LazyVerdict
+  // inside the Haiku classifier's OWN async `.then()`) can defer it up to
+  // ~3s. That's fine for the turnMarker check below (only non-silent
+  // dispatches ever WRITE a new lastStreakChangeRef record, and only
+  // non-silent dispatches ever advance pacingTurnCounterRef, so a write
+  // and a counter-advance always happen together — a stale `rec` can never
+  // spuriously re-match no matter how late this runs). It is NOT fine for
+  // segmentsCompletedThisTurnRef, which is why that field is captured
+  // exactly once, at pacing-snapshot time, and never re-read here — see
+  // PacingStreakSnapshot's `completedThisTurn` doc comment.
+  //
+  // Final-review CRITICAL fix: the lockstep argument above proves
+  // lastStreakChangeRef can't be OVERWRITTEN by a silent dispatch — it does
+  // NOT prove a checkpoint built for a silent dispatch's own ctx can't
+  // wrongly CLAIM an older real turn's still-sitting record. Silent
+  // dispatches (idle nudge, cutoff-resume, one-time directive, queue-drain
+  // — every one sets lastBrainCallContextRef.current, same as a real turn)
+  // don't advance pacingTurnCounterRef, so if turn N credits and then an
+  // idle nudge dispatches silently and gets barged in on before ANY real
+  // turn follows, the checkpoint built for cancelling the NUDGE still has
+  // `ctx` pointing at the nudge, while pacingTurnCounterRef is unchanged at
+  // N — the turnMarker check alone would match and hand turn N's fully
+  // legitimate credit to a checkpoint that has nothing to do with turn N,
+  // and a FRESH/MERGE verdict on the nudge's barge-in would then revert it.
+  // `ctx` (threaded in from the caller, which already has it at the exact
+  // point it builds the checkpoint) closes this: a silent/bracketed ctx
+  // never ran the pacing block in the first place (that block is gated on
+  // `!silent && !isBracketed`), so it can't have anything of ITS OWN to
+  // revert — bail without touching lastStreakChangeRef, so a later,
+  // legitimate checkpoint (the one actually built for turn N, if one ever
+  // is) can still claim the record. See also the belt-and-suspenders fix
+  // in callBrainOnce's turn-start block, which clears this ref
+  // unconditionally on every dispatch (silent included) — between the two,
+  // a stale record can survive past the FIRST dispatch of any kind after
+  // it was written, silent or not.
+  // Pure ref read/write, no external deps — stable across renders.
+  const claimSupersededStreakForCheckpoint = useCallback((
+    ctx: { transcript: string; opts?: { silent?: boolean } } | null | undefined,
+  ): PacingStreakSnapshot | null => {
+    const rec = lastStreakChangeRef.current;
+    if (!rec || rec.turnMarker !== pacingTurnCounterRef.current) return null;
+    if (ctx?.opts?.silent === true || /^\s*\[/.test(ctx?.transcript ?? '')) {
+      // Checkpoint is about a silent/bracketed dispatch, not a real turn —
+      // nothing of its own to revert. Leave lastStreakChangeRef untouched.
+      return null;
+    }
+    lastStreakChangeRef.current = null;
+    return rec;
+  }, []);
   // Buffer of [pacing] events fired during the most recent brain turn.
   // Forwarded server-side on the NEXT brain stream request body so the
   // /api/tutor/brain/stream route can write them to the server log
@@ -5322,6 +5510,11 @@ export function VoiceTutorRealtime({
             // Notify parent of the new completion set (truthful basis
             // for the progress strip's per-LO count).
             onCompletedSegmentsChange?.([...completedSegmentIdsRef.current]);
+            // R47 Task 2: this segment was NEWLY completed THIS turn —
+            // see segmentsCompletedThisTurnRef's declaration for why the
+            // streak-revert guard needs this narrower, per-turn signal
+            // instead of the session-lifetime completedSegmentIdsRef.
+            segmentsCompletedThisTurnRef.current.push(c.segmentId);
           }
         }
         // Report pedagogical milestones on GENUINE completion. (Skips
@@ -8065,6 +8258,35 @@ export function VoiceTutorRealtime({
     }
     newPageThisTurnRef.current = false;
     brainEmittedNewPageThisTurnRef.current = false;
+    // R47 Task 1: fresh per-turn objective-credit slot. A kill site below
+    // may set this DURING this turn's retry loop; must not carry a signal
+    // stashed by a PRIOR turn (or a prior turn's attempt) into this one.
+    objectiveCorrectThisTurnRef.current = null;
+    // R47 Task 2: fresh per-turn "completed THIS turn" list — see
+    // segmentsCompletedThisTurnRef's declaration. A mark_segment_complete
+    // from a PRIOR turn must not count as "predates this turn" evidence
+    // for a guard(c) check happening later, in THIS turn's pacing block.
+    segmentsCompletedThisTurnRef.current = [];
+    // R47 Task 2 (final-review CRITICAL fix, belt-and-suspenders alongside
+    // claimSupersededStreakForCheckpoint's silent-ctx check above). A
+    // pending streak record is only legitimately claimable by a checkpoint
+    // that's ACTUALLY about the turn that wrote it — once ANY new dispatch
+    // begins (this line runs unconditionally, silent/bracketed dispatches
+    // included — idle nudges, cutoff-resume, one-time directives,
+    // queue-drain all reach here too), that record is dead: no later
+    // checkpoint, however constructed, has any legitimate claim to it.
+    // Safe to clear unconditionally because a checkpoint that cancels an
+    // IN-FLIGHT (STAGE-2, 'processing') turn always aborts it BEFORE that
+    // turn's own pacing block ever runs (fullText hasn't finalized yet —
+    // see the RESTORE-after-finished guard in applyPerceptionVerdict), so
+    // no legitimate record can exist yet for a turn that's still running;
+    // the only turns that ever produce a record are ones whose pacing
+    // block already completed, and any checkpoint for THOSE is always
+    // built (see executeRetroCancel / runPerceptionKill) before this
+    // dispatch-start point ever runs for a NEXT turn — clearing here can
+    // therefore only ever discard a record that's already unclaimable for
+    // any legitimate reason.
+    lastStreakChangeRef.current = null;
     // Advance the page-grouping turn counter (staleness backstop) and mirror
     // it into the catalog so render appends stamp the current turn onto their
     // page's lastRenderTurn.
@@ -8102,6 +8324,19 @@ export function VoiceTutorRealtime({
     // correctly stays fixed across retries.
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
+    // Number of sentences actually dispatched to TTS this turn. Tracks
+    // a strict subset of totalSentenceCount — sentences buffered in the
+    // gate then dropped on rejection are counted in totalSentenceCount
+    // but NOT here. Used by speakKillBridge to skip the bridge phrase
+    // when no audible speech has happened yet (otherwise the bridge
+    // becomes the first thing the student hears, which sounds wrong).
+    // It's also judge_kill_snapshot's "heard=N" source (below). Declared
+    // here, ABOVE the try, rather than inline with the other per-turn
+    // counters (which live inside the try body) so the catch block
+    // (R47 Task 3d) can read this turn's dispatched-count too — a `let`
+    // declared inside `try { }` is scoped to that block and invisible
+    // from `catch { }` in JS/TS, even though both are one logical turn.
+    let audibleSentenceCount = 0;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -8500,13 +8735,6 @@ export function VoiceTutorRealtime({
       // Incremented at the same site as totalSentenceCount++ (reusing the
       // per-sentence wordCount already computed there for the dedup guard).
       let totalWordCount = 0;
-      // Number of sentences actually dispatched to TTS this turn. Tracks
-      // a strict subset of totalSentenceCount — sentences buffered in the
-      // gate then dropped on rejection are counted in totalSentenceCount
-      // but NOT here. Used by speakKillBridge to skip the bridge phrase
-      // when no audible speech has happened yet (otherwise the bridge
-      // becomes the first thing the student hears, which sounds wrong).
-      let audibleSentenceCount = 0;
       let totalToolNamesSeen: string[] = [];
       // Rule-8 v2: renders that actually landed on the board this turn.
       // Counts assignedIds across attempts, so a killed attempt's rolled-back
@@ -9088,6 +9316,12 @@ export function VoiceTutorRealtime({
           // survive into whatever turn succeeds next, where it'd be
           // applied against an unrelated response.
           pendingStudentJumpRef.current = null;
+          // R47 Task 1: same reasoning — a prior attempt's kill on this
+          // turn may have already stashed an objective signal; this turn
+          // is dying here without reaching the pacing block that would
+          // consume it, so it must not survive to be misapplied against
+          // whatever turn succeeds next.
+          objectiveCorrectThisTurnRef.current = null;
           return;
         }
 
@@ -9834,6 +10068,36 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] deterministic arithmetic check: ${arith.verdict} in "${updatedSentence.slice(0, 80)}" (${arith.correct}) — kill + retry`);
                       onDebugEvent?.('arith_claim_kill', `${arith.verdict}: ${arith.claim ?? '?'} → ${arith.correct ?? '?'}`);
+                      // R47 Task 1: false_denial ONLY — the brain denied
+                      // CORRECT student arithmetic, which is machine proof
+                      // the student was right. false_assertion (the other
+                      // branch, above) is the brain wrong about its OWN
+                      // asserted math and proves nothing about the student —
+                      // must never stash a signal for it.
+                      // Review-round ruling: also gated on
+                      // lastStudentVerificationRef.current?.isVerification
+                      // === true, UNLIKE the simplification/inverse stashes
+                      // below. checkArithmeticClaims sees only the BRAIN's
+                      // sentence — no studentUtterance param — so a
+                      // false_denial can fire on an unprompted misconception
+                      // aside ("Some students think 15 minus 6 isn't 9…")
+                      // with no connection to what the student actually
+                      // said this turn. The other two checkers already
+                      // verify against the student's utterance, so they
+                      // keep the plan's deliberate widening unchanged. The
+                      // live repro still stashes: its streak-incorrect fired
+                      // from inside the isVerification branch, so the flag
+                      // was true when the kill happened.
+                      if (arith.verdict === 'false_denial'
+                          && lastStudentVerificationRef.current?.isVerification === true) {
+                        objectiveCorrectThisTurnRef.current = {
+                          signal: {
+                            source: 'arith_false_denial',
+                            segId: lastStudentVerificationRef.current?.segId ?? currentSegmentIdRef.current,
+                            atMs: Date.now(),
+                          },
+                        };
+                      }
                       continue;
                     }
                   }
@@ -9866,6 +10130,17 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] deterministic simplification check: false denial of "${simp.correct}" in "${updatedSentence.slice(0, 80)}" — kill + retry`);
                       onDebugEvent?.('simplification_verdict_kill', `asked=${simp.asked?.slice(0, 40) ?? '?'} correct=${simp.correct ?? '?'}`);
+                      // R47 Task 1: checkSimplificationVerdict's only kill
+                      // verdict is false_denial (no false-assertion branch
+                      // like arith above) — always machine proof the
+                      // student's simplification was right.
+                      objectiveCorrectThisTurnRef.current = {
+                        signal: {
+                          source: 'simplification_false_denial',
+                          segId: lastStudentVerificationRef.current?.segId ?? currentSegmentIdRef.current,
+                          atMs: Date.now(),
+                        },
+                      };
                       continue;
                     }
                   }
@@ -9965,6 +10240,17 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] inverse-verdict check: false denial of verified "${inv.expected}" — kill + retry`);
                       onDebugEvent?.('inverse_verdict_kill', `expected=${inv.expected?.slice(0, 40)} student=${(transcript ?? '').slice(0, 40)} (${inv.matchReason})`);
+                      // R47 Task 1: this is the KILL tier (verdict ===
+                      // 'false_denial', verified expectedAnswer only) — the
+                      // advisory_false_denial tier (unverified card answer,
+                      // below) never kills and must never stash a signal.
+                      objectiveCorrectThisTurnRef.current = {
+                        signal: {
+                          source: 'inverse_false_denial',
+                          segId: lastStudentVerificationRef.current?.segId ?? currentSegmentIdRef.current,
+                          atMs: Date.now(),
+                        },
+                      };
                       continue;
                     }
                     if (inv.verdict === 'advisory_false_denial') {
@@ -12788,39 +13074,94 @@ export function VoiceTutorRealtime({
       // here against the same segId-pinned streak count.
       try {
         const ver = lastStudentVerificationRef.current;
-        if (ver && ver.isVerification && fullText.length > 0) {
+        // R47 Task 1 (live incident portal-d859df30): a deterministic
+        // false-denial kill THIS turn is machine proof the student's answer
+        // was right — it forces 'correct' credit below regardless of what
+        // the affirm/correction regexes read off the retry's prose, and
+        // even when ver is absent/stale or read this turn as
+        // non-verification. See objective-credit.ts header for why.
+        const objectiveSignal = objectiveCorrectThisTurnRef.current?.signal ?? null;
+        if (ver || objectiveSignal) {
           const head = fullText.slice(0, 200);
           const isAffirm = brainAffirmationRegex.test(head);
           const isCorrect = brainCorrectionRegex.test(fullText);
-          if (isAffirm && !isCorrect) {
-            // Streak ref keyed on the segment the student ANSWERED on
-            // (ver.segId), not whatever segment the brain advanced to.
-            const priorCount = studentStreakRef.current.segId === ver.segId
+          const decision = decidePacingCredit({
+            isVerification: !!(ver?.isVerification && fullText.length > 0),
+            isAffirm,
+            isCorrect,
+            objectiveSignal,
+          });
+          // Streak/segment refs are keyed on the segment the student
+          // ANSWERED on. That's normally ver.segId (turn-start snapshot,
+          // not whatever segment the brain advanced to mid-turn); an
+          // objective kill site stashes its segId off this SAME
+          // lastStudentVerificationRef, read at kill time earlier in this
+          // same turn, so this only degrades to the signal's own segId
+          // when ver itself is null/stale.
+          const segId = ver?.segId ?? objectiveSignal?.segId ?? '';
+          // R47 Task 2 (review round: widened from the streak-only version
+          // — see PacingStreakSnapshot's declaration for why every ref the
+          // branches below can mutate needs a pre-image, not just the two
+          // streak refs). Snapshot BEFORE mutating anything, on either
+          // branch. addedSolvedHash/prevSegmentMasteredFlag get filled in
+          // (mutating this SAME object) further down, at the exact points
+          // the 'correct' branch decides whether to touch those refs.
+          if (decision.credit === 'correct' || decision.credit === 'incorrect') {
+            lastStreakChangeRef.current = {
+              segId,
+              prevCorrect: { ...studentStreakRef.current },
+              prevIncorrect: { ...studentIncorrectStreakRef.current },
+              prevPracticeStreak: practiceStreakRef.current,
+              prevPracticeSolved: practiceSolvedRef.current,
+              prevDemonstrated: demonstratedSegmentsRef.current.has(segId),
+              prevSegmentMasteredFlag: segmentMasteredFlagRef.current
+                ? { ...segmentMasteredFlagRef.current }
+                : null,
+              addedSolvedHash: null,
+              // Seeded here (turn N is still actively executing, so this
+              // already reflects turn N's own completions with no race) —
+              // claimSupersededStreakForCheckpoint() re-captures this same
+              // field at claim time, which is the value that actually gets
+              // read. See PacingStreakSnapshot's declaration.
+              completedThisTurn: [...segmentsCompletedThisTurnRef.current],
+              turnMarker: pacingTurnCounterRef.current,
+            };
+          }
+          if (decision.credit === 'correct') {
+            const priorCount = studentStreakRef.current.segId === segId
               ? studentStreakRef.current.count : 0;
-            studentStreakRef.current = { segId: ver.segId, count: priorCount + 1 };
-            // Task C2 (flag-gated): a brain-affirmed genuine verification
-            // turn IS the "student demonstrated this segment" signal for the
-            // completion gate. Same guard placement as the streak increment
-            // so it inherits every existing exclusion (pure acks, help
-            // requests, too-short turns, judge-kill/restatement retries).
-            if (TUTOR_PEDAGOGY_OPENER && ver.segId) {
-              demonstratedSegmentsRef.current.add(ver.segId);
+            studentStreakRef.current = { segId, count: priorCount + 1 };
+            // Task C2 (flag-gated): a brain-affirmed (or, R47 Task 1,
+            // objectively proven) genuine verification turn IS the
+            // "student demonstrated this segment" signal for the
+            // completion gate. Same guard placement as the streak
+            // increment so it inherits every existing exclusion (pure
+            // acks, help requests, too-short turns, judge-kill/
+            // restatement retries).
+            if (TUTOR_PEDAGOGY_OPENER && segId) {
+              demonstratedSegmentsRef.current.add(segId);
             }
-            if (studentIncorrectStreakRef.current.segId === ver.segId
+            if (studentIncorrectStreakRef.current.segId === segId
                 && studentIncorrectStreakRef.current.count > 0) {
-              studentIncorrectStreakRef.current = { segId: ver.segId, count: 0 };
+              studentIncorrectStreakRef.current = { segId, count: 0 };
             }
-            logPacing(`streak-correct seg="${ver.segId}" count=${studentStreakRef.current.count}`);
+            logPacing(`streak-correct seg="${segId}" count=${studentStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `correct=${studentStreakRef.current.count}`);
-            // Practice meter: a brain-affirmed genuine verification is a
+            if (decision.objective && objectiveSignal) {
+              onDebugEvent?.('pacing_objective_credit', `${objectiveSignal.source} seg="${segId}"`);
+            }
+            // Practice meter: a confirmed genuine verification is a
             // solve — once per PROBLEM (multi-step problems affirm several
             // times), and only when a problem is actually on the board
             // (hook-phase Q&A affirmations don't count).
             {
               // Round-22: use the TURN-START snapshot — a same-turn segment
               // advance clears currentProblemRef before this post-stream
-              // code runs, silently dropping the solve.
-              const solvedStmt = (ver.activeStatement ?? currentProblemRef.current?.statement ?? '').trim();
+              // code runs, silently dropping the solve. ver may be null on
+              // the objective-only path (R47 Task 1); fall straight to
+              // currentProblemRef in that case — the block's own existing
+              // fallback for when the snapshot is empty.
+              const solvedStmt = (ver?.activeStatement ?? currentProblemRef.current?.statement ?? '').trim();
               if (solvedStmt.length >= 10) {
                 let sh = 5381;
                 for (let i = 0; i < solvedStmt.length; i++) sh = (sh * 33) ^ solvedStmt.charCodeAt(i);
@@ -12829,36 +13170,44 @@ export function VoiceTutorRealtime({
                   practiceSolvedHashesRef.current.add(solvedHash);
                   practiceSolvedRef.current++;
                   practiceStreakRef.current++;
+                  // R47 Task 2: record the hash WE added onto the snapshot
+                  // taken above (same object, same segId — this is still
+                  // that snapshot's turn). On revert, deleting exactly this
+                  // hash is what lets the REAL turn's identical-problem
+                  // solve register instead of deduping to a no-op.
+                  if (lastStreakChangeRef.current && lastStreakChangeRef.current.segId === segId) {
+                    lastStreakChangeRef.current.addedSolvedHash = solvedHash;
+                  }
                 }
               }
             }
             emitPracticeStatsRef.current();
             // Late-fire segment-mastered: if completedSegmentIdsRef
-            // contains ver.segId (i.e. brain emitted mark_segment_complete
+            // contains segId (i.e. brain emitted mark_segment_complete
             // earlier in this turn) AND the new streak is >= 2, fire the
             // booster now. The on-mark_segment_complete site reads the
             // streak BEFORE the post-stream increment, so it misses this
             // case.
-            if (completedSegmentIdsRef.current.has(ver.segId)
+            if (completedSegmentIdsRef.current.has(segId)
                 && studentStreakRef.current.count >= 2
                 && (!segmentMasteredFlagRef.current
-                    || segmentMasteredFlagRef.current.segId !== ver.segId)) {
+                    || segmentMasteredFlagRef.current.segId !== segId)) {
               segmentMasteredFlagRef.current = {
-                segId: ver.segId,
+                segId,
                 streakAtComplete: studentStreakRef.current.count,
               };
-              logPacing(`segment-mastered seg="${ver.segId}" streakAtComplete=${studentStreakRef.current.count} (post-stream late-fire)`);
-              onDebugEvent?.('pacing_segment_mastered', `seg="${ver.segId}" streak=${studentStreakRef.current.count}`);
+              logPacing(`segment-mastered seg="${segId}" streakAtComplete=${studentStreakRef.current.count} (post-stream late-fire)`);
+              onDebugEvent?.('pacing_segment_mastered', `seg="${segId}" streak=${studentStreakRef.current.count}`);
             }
-          } else if (isCorrect) {
-            const priorIncCount = studentIncorrectStreakRef.current.segId === ver.segId
+          } else if (decision.credit === 'incorrect') {
+            const priorIncCount = studentIncorrectStreakRef.current.segId === segId
               ? studentIncorrectStreakRef.current.count : 0;
-            studentIncorrectStreakRef.current = { segId: ver.segId, count: priorIncCount + 1 };
-            if (studentStreakRef.current.segId === ver.segId
+            studentIncorrectStreakRef.current = { segId, count: priorIncCount + 1 };
+            if (studentStreakRef.current.segId === segId
                 && studentStreakRef.current.count > 0) {
-              studentStreakRef.current = { segId: ver.segId, count: 0 };
+              studentStreakRef.current = { segId, count: 0 };
             }
-            logPacing(`streak-incorrect seg="${ver.segId}" count=${studentIncorrectStreakRef.current.count}`);
+            logPacing(`streak-incorrect seg="${segId}" count=${studentIncorrectStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `incorrect=${studentIncorrectStreakRef.current.count}`);
             // Practice meter: a wrong answer resets the session solve streak.
             practiceStreakRef.current = 0;
@@ -12897,7 +13246,16 @@ export function VoiceTutorRealtime({
           // above), mirroring the "Session-end signals" trigger-phrase list
           // in system-prompt-builder.ts ~907-913 — that section was
           // prompt-only with no code-side detector before this fix.
-          if (isAffirm && !isCorrect && !ver.isSessionEndSignal) {
+          // R47 Task 1: `ver && ver.isVerification` restored explicitly —
+          // ver can now be null here (objective-only path with a null/stale
+          // lastStudentVerificationRef), AND the outer guard no longer
+          // implies ver.isVerification (it's `ver || objectiveSignal` now,
+          // not `ver && ver.isVerification && ...`). Without ver.isVerification
+          // here, ANY non-verification turn (student "ok" → brain "Great,
+          // ...") with no trailing question/next-move tool call would plant
+          // the "not from the student" advisory claiming a confirmed correct
+          // answer — review-round fix, byte-identical to pre-restructure.
+          if (ver && ver.isVerification && isAffirm && !isCorrect && !ver.isSessionEndSignal) {
             const endsWithQuestion = /\?\s*$/.test(fullText.trim());
             const opensNextMove = totalToolNamesSeen.some(
               (n) => n === 'advance_lesson' || n === 'generate_problem'
@@ -13014,6 +13372,11 @@ export function VoiceTutorRealtime({
             onTranscriptUpdate([...transcriptRef.current]);
             onTrackInteraction?.('message', voiceMsg, undefined, 'tutor');
           }
+          // R47 Task 1 hygiene: the pacing block above already ran (and
+          // consumed any objective signal) before this fallback branch, so
+          // this is a no-op today — but every exit clears the ref so the
+          // guarantee holds structurally, not just by turn-start luck.
+          objectiveCorrectThisTurnRef.current = null;
           return;
         }
         console.warn('[brain-orchestrator] brain returned empty stream — speaking fallback');
@@ -13030,6 +13393,9 @@ export function VoiceTutorRealtime({
         } else {
           speakTextRef.current?.('Sorry, could you say that again?');
         }
+        // R47 Task 1 hygiene: same as the brainUnavailable return above —
+        // the pacing block already ran; clearing here is belt-and-suspenders.
+        objectiveCorrectThisTurnRef.current = null;
         return;
       }
 
@@ -13171,6 +13537,11 @@ export function VoiceTutorRealtime({
       // targeted THIS turn must die with it, not survive to be misapplied
       // against whatever turn comes next.
       pendingStudentJumpRef.current = null;
+      // R47 Task 1: same reasoning — a kill earlier in this turn's retry
+      // loop may have stashed an objective signal, but this turn threw or
+      // aborted before reaching the pacing block that consumes it. Clear it
+      // so it can't bleed into whatever turn runs next.
+      objectiveCorrectThisTurnRef.current = null;
       // Stage 2: a perception-initiated abort surfaces as DOMException
       // name='AbortError' OR a TypeError whose message includes
       // 'aborted'. Treat both as silent — the perception layer will
@@ -13207,6 +13578,19 @@ export function VoiceTutorRealtime({
         // don't double-speak a second "repeat that?" on top of it.
         if (escalationGaveUpRef.current) {
           onDebugEvent?.('cover_giveup_abort_swallowed', `t0=${t0}`);
+        } else if (audibleSentenceCount > 0) {
+          // R47 Task 3d (live incident portal-1349716e, 2:49 PM): the
+          // stream already dispatched ≥1 sentence to TTS this turn (e.g.
+          // a correct answer) before ERR_NETWORK_CHANGED killed the tail
+          // and landed us here. The student already heard real content —
+          // speaking "could you repeat that?" on top of it re-asks a
+          // question that's already answered. audibleSentenceCount is the
+          // same per-turn TTS-dispatch counter judge_kill_snapshot's
+          // "heard=N" reads (declared fresh per callBrainOnce invocation,
+          // so it's THIS turn's count, not a stale cross-turn leftover).
+          // Stay silent; the cleanup below (streaming-entry purge, active
+          // flag) still runs unconditionally.
+          onDebugEvent?.('brain_error_after_partial', `${audibleSentenceCount} sentence(s) delivered — repeat-request suppressed`);
         } else {
           speakTextRef.current?.('Hmm, give me a moment — could you repeat that?');
         }
@@ -14118,6 +14502,68 @@ export function VoiceTutorRealtime({
     const checkpoint = perceptionInterruptCheckpointRef.current;
     if (!checkpoint) return;
     perceptionInterruptCheckpointRef.current = null;
+    // R47 Task 2 (review round: identity-race fix). The pacing-credit
+    // record this checkpoint may discard was already claimed off
+    // lastStreakChangeRef AT CONSTRUCTION TIME (claimSupersededStreakFor
+    // Checkpoint, called synchronously by every checkpoint-construction
+    // site) and travels attached to the checkpoint itself. Reading it here
+    // — rather than re-comparing pacingTurnCounterRef.current against
+    // lastStreakChangeRef.current NOW — is what makes this immune to the
+    // queue-drain-poller / 90s-watchdog race: any turn dispatched during
+    // the (up to ~3s) Haiku-classification wait has already written its
+    // OWN, unrelated record into lastStreakChangeRef by now, and this
+    // checkpoint's supersededStreak is untouched by that overwrite because
+    // it was moved off the shared ref before that dispatch could happen.
+    const supersededStreak = checkpoint.supersededStreak;
+    const revertSupersededStreak = (reason: string) => {
+      if (!supersededStreak) return;
+      // Guard (c) (review round 1: narrowed off session-lifetime
+      // completedSegmentIdsRef; review round 2: fixed the read timing).
+      // completedSegmentIdsRef is SESSION-lifetime, so testing membership
+      // there would block a revert for ANY segment ever completed earlier
+      // in the session (e.g. a review-question revisit), not just one
+      // completed by the turn actually being reverted —
+      // segmentsCompletedThisTurnRef (a per-turn array) fixed that. Reading
+      // THAT ref live here, though, turned out to be its own bug: it's
+      // reset by callBrainOnce's turn-start block on EVERY dispatch —
+      // including SILENT ones, which don't advance pacingTurnCounterRef —
+      // and on the STAGE-2 lazy path the claim itself can happen up to ~3s
+      // after the original onset (see claimSupersededStreakForCheckpoint's
+      // comment), a window a silent dispatch can easily land in. So this
+      // now reads `supersededStreak.completedThisTurn` — captured exactly
+      // ONCE, at pacing-snapshot time (still turn N executing, no gap at
+      // all) — and is never re-read from the live ref anywhere later,
+      // including at claim time (see PacingStreakSnapshot's field comment
+      // for why a claim-time re-read was tried and reverted). If
+      // mark_segment_complete fired for this segId during THIS turn, its
+      // evidence push / segmentMasteredFlagRef read already happened
+      // synchronously at tool-call time — BEFORE this post-stream snapshot
+      // was even taken — so rewinding the streak refs now would desync
+      // them from evidence that already committed. Leave the streak
+      // standing in that case.
+      if (supersededStreak.completedThisTurn.includes(supersededStreak.segId)) {
+        onDebugEvent?.('pacing_streak_revert_skipped_consumed', `seg="${supersededStreak.segId}" — mark_segment_complete already consumed this turn`);
+        return;
+      }
+      studentStreakRef.current = supersededStreak.prevCorrect;
+      studentIncorrectStreakRef.current = supersededStreak.prevIncorrect;
+      practiceStreakRef.current = supersededStreak.prevPracticeStreak;
+      practiceSolvedRef.current = supersededStreak.prevPracticeSolved;
+      // The dedup-suppression fix: an un-deleted hash here would make the
+      // REAL turn's identical-problem solve silently no-op against
+      // practiceSolvedHashesRef.current.has(...), suppressing the very
+      // credit this revert exists to let through.
+      if (supersededStreak.addedSolvedHash) {
+        practiceSolvedHashesRef.current.delete(supersededStreak.addedSolvedHash);
+      }
+      if (!supersededStreak.prevDemonstrated) {
+        demonstratedSegmentsRef.current.delete(supersededStreak.segId);
+      }
+      segmentMasteredFlagRef.current = supersededStreak.prevSegmentMasteredFlag;
+      emitPracticeStatsRef.current();
+      logPacing(`streak-reverted seg="${supersededStreak.segId}" — superseded fragment turn (${reason})`);
+      onDebugEvent?.('pacing_streak_reverted', `seg="${supersededStreak.segId}" — superseded fragment turn (${reason})`);
+    };
     // Round-28: a real verdict is consuming the checkpoint — the
     // no-verdict timeout-RESTORE is moot.
     if (stage2TimeoutRestoreTimerRef.current) {
@@ -14362,6 +14808,10 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): MERGE — cutTurn=${cutTurn ? `"${cutTurn.content.slice(0, 60)}"` : 'none'}, fresh=${JSON.stringify(freshText).slice(0, 80)}`,
       );
       onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_merge`, `${verdict} after ${elapsedMs}ms`);
+      // R47 Task 2: the prior (fragment) turn's outcome is being
+      // discarded in favor of this merged re-dispatch — revert any streak
+      // change it produced before the real turn runs.
+      revertSupersededStreak('continuation-merge');
       dropRenderBuffer(); // render↔speech sync: new merged turn redraws
       // R32 (H1): queue rather than drop if MERGE lands mid-utterance.
       void handleStudentTranscriptForBrain(freshText, {
@@ -14380,6 +14830,9 @@ export function VoiceTutorRealtime({
       `[PERCEPTION] ${stageLabel} verdict=${verdict} (${elapsedMs}ms): FRESH new turn, cutTurn=${cutTurn ? 'yes' : 'none'}, transcript=${JSON.stringify(fresh).slice(0, 80)}`,
     );
     onDebugEvent?.(`perception_${stageLabel.toLowerCase().replace('-', '')}_fresh`, `${verdict} after ${elapsedMs}ms`);
+    // R47 Task 2: same supersede as MERGE above — this is a fresh
+    // re-dispatch discarding the prior (fragment) turn's outcome.
+    revertSupersededStreak('fresh');
     dropRenderBuffer(); // render↔speech sync: fresh turn redraws
     // R32 (H1): queue rather than drop if FRESH lands mid-utterance.
     void handleStudentTranscriptForBrain(fresh, {
@@ -14387,7 +14840,7 @@ export function VoiceTutorRealtime({
       queueOnMidUtterance: true,
       ...(cutTurn ? { injectedHistoryTail: [cutTurn] } : {}),
     });
-  }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot]);
+  }, [handleStudentTranscriptForBrain, onDebugEvent, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, logPacing]);
   // Publish to the ref so the perception callbacks (defined earlier in
   // render order via useCallback closures) can call it through the ref
   // surface without a hoisting reference issue.
@@ -14972,6 +15425,14 @@ export function VoiceTutorRealtime({
         canRetroStage3 ? 'perception_stage3_retro_cancel' : 'perception_stage2_retro_cancel',
         `→${toState}`,
       );
+      // R47 Task 2: claim right here, synchronously, in the same
+      // statement group that builds the checkpoint — see
+      // lastStreakChangeRef's declaration for why this must happen at
+      // construction time, not later when the verdict resolves. Pass
+      // `ctx` (this checkpoint's own dispatch context) so the claim can
+      // reject a silent/bracketed ctx — see the CRITICAL fix note on
+      // claimSupersededStreakForCheckpoint's declaration.
+      const supersededStreak = claimSupersededStreakForCheckpoint(ctx);
       perceptionInterruptCheckpointRef.current = {
         originalTranscript: ctx.transcript,
         originalOpts: ctx.opts,
@@ -14992,6 +15453,7 @@ export function VoiceTutorRealtime({
         // Resume-from-cut (P5): how far into the in-flight sentence the cut landed,
         // captured BEFORE clearSpeechQueue empties the audio queue.
         cutFraction: getCurrentSentenceFractionRef.current?.() ?? 0,
+        supersededStreak,
       };
       // Review-round-1 (finding 2): this checkpoint (a 'speaking' retro
       // cancel) supersedes any dangling 'processing' lazy-arm from an
@@ -15069,7 +15531,7 @@ export function VoiceTutorRealtime({
       return;
     }
     executeRetroCancel();
-  }, [realtime, perceptionStage, onDebugEvent, clearStage2LazyPending]);
+  }, [realtime, perceptionStage, onDebugEvent, clearStage2LazyPending, claimSupersededStreakForCheckpoint]);
 
   // ── STT engine gating (Cartesia migration Phase 2, Task 5) ─────────────
   // TUTOR_STT_ENGINE_INK2 selects useCartesiaInkWS in place of
@@ -16002,6 +16464,24 @@ export function VoiceTutorRealtime({
           cancelStage === 'speaking' ? 'perception_stage3_cancel' : 'perception_stage2_cancel',
           `prev=${productionStateRef.current} stage=${cancelStage}`,
         );
+        // R47 Task 2: claim right here, in the same statement group as
+        // this checkpoint's construction — see executeRetroCancel's
+        // identical claim for the base rationale. Note this function
+        // (runPerceptionKill) is shared: the eager onSpeechStart caller
+        // invokes it immediately upon detecting the interrupt, but the
+        // STAGE-2 lazy caller (resolveStage2LazyVerdict) invokes it from
+        // inside the Haiku classifier's own async `.then()` — up to ~3s
+        // after the original onset. The claim below is correct either way
+        // (see claimSupersededStreakForCheckpoint's comment for why); only
+        // completedThisTurn needed a fix for that timing difference, and
+        // that fix lives entirely in PacingStreakSnapshot's field capture,
+        // not here. Passing `ctx` here matters especially for this shared
+        // function's eager onset-kill caller: an idle nudge (silent
+        // dispatch) that gets barged in on constructs ITS checkpoint via
+        // this exact call, with `ctx` pointing at the nudge — without the
+        // silent-ctx check, that checkpoint could wrongly claim an older
+        // real turn's still-legitimate credit.
+        const supersededStreak = claimSupersededStreakForCheckpoint(ctx);
         perceptionInterruptCheckpointRef.current = {
           originalTranscript: ctx.transcript,
           originalOpts: ctx.opts,
@@ -16019,6 +16499,7 @@ export function VoiceTutorRealtime({
           // Stage 3.1: snapshot the pending speakText queue BEFORE
           // clearSpeechQueue empties it. See retro-cancel useEffect.
           unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
+          supersededStreak,
         };
         // Review-round-1 (finding 2): this checkpoint supersedes any
         // dangling lazy-arm from an earlier, unrelated 'processing' onset
@@ -16137,7 +16618,7 @@ export function VoiceTutorRealtime({
         productionWsTranscriptSuppressRef.current = { text: '', until: Date.now() + 20000 };
         // Q9 (2026-06-16): visible "I heard you" signal. See retro-cancel.
         realtime.markInterrupted();
-  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending]);
+  }, [onDebugEvent, realtime, handleStudentTranscriptForBrain, dropRenderBuffer, flushAllRenderBuffer, applyClauseTailSnapshot, clearStage2LazyPending, claimSupersededStreakForCheckpoint]);
   runPerceptionKillRef.current = runPerceptionKill;
   const perceptionOnSpeechStart = useCallback((e: PerceptionSpeechEvent) => {
       const prodState = productionStateRef.current;
@@ -16631,6 +17112,9 @@ export function VoiceTutorRealtime({
       }
       const cancelStage: 'processing' | 'speaking' = prodState === 'speaking' ? 'speaking' : 'processing';
       console.warn(`[dev] __tutorForceFalseBargein: synthetic ${cancelStage} cancel + ${cancelStage === 'speaking' ? 'silent-accept' : 'restore'}`);
+      // R47 Task 2: parity with the real cancel sites — claim synchronously,
+      // passing ctx so a silent/bracketed dispatch can't wrongly claim.
+      const supersededStreak = claimSupersededStreakForCheckpoint(ctx);
       perceptionInterruptCheckpointRef.current = {
         originalTranscript: ctx.transcript,
         originalOpts: ctx.opts,
@@ -16649,6 +17133,7 @@ export function VoiceTutorRealtime({
         // Stage 3.1: parity with real cancel — snapshot the queue
         // before clearSpeechQueue empties it.
         unplayedSentencesSnapshot: peekSpeechQueueRef.current?.() ?? [],
+        supersededStreak,
       };
       // Render↔speech sync: PAUSE the buffer before the drain (dev trigger
       // parity with the real cancel sites).
@@ -16726,7 +17211,7 @@ export function VoiceTutorRealtime({
       delete w.__tutorRenderBuffer;
       delete w.__tutorFlushRenderBuffer;
     };
-  }, [perceptionStage, flushAllRenderBuffer]);
+  }, [perceptionStage, flushAllRenderBuffer, claimSupersededStreakForCheckpoint]);
 
   // realtime-2: assemble + inject the lesson plan context into the RT-2
   // session. Called once on connect (effect below) and again after every

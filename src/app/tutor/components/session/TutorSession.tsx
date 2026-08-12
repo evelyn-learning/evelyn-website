@@ -46,7 +46,7 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
-import { latestSubstantiveTutorEntry } from '@/lib/tutor/qpin-behavior';
+import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
 
@@ -782,6 +782,41 @@ export default function TutorSession(props: TutorSessionProps) {
   const [questionPin, setQuestionPin] = useState<{ turnId: string; gist: string } | null>(null);
   const [pinShownForTurn, setPinShownForTurn] = useState<string | null>(null);
   const pinFetchedTurnRef = useRef<string | null>(null);
+  // R47 Task 3c: a Q-pin is scoped to the segment it was asked in — R38's
+  // persist-until-replaced semantics has no staleness bound across a
+  // segment ADVANCE, so a question pinned against an earlier problem could
+  // still be showing several turns later at a later segment (live: session
+  // portal-1349716e, ~22:37 — "Ready for one with a billionaire in the
+  // mix?" stuck at Recap). Clear on any change of the lesson cursor's
+  // segment id (the same signal the rail uses — set via onLessonPlanProgress
+  // for both a normal advance AND the to:'free' cursor release, see
+  // shouldClearQpinOnSegmentChange's doc for the "clear on any change,
+  // including to-free" call). Tracked with a ref (not state) purely to
+  // compare against the PREVIOUS id without re-running on every render;
+  // the guard also keeps mount (prev === next, both '') a no-op.
+  const prevQpinSegmentIdRef = useRef(lessonProgress.currentSegmentId);
+  useEffect(() => {
+    const prev = prevQpinSegmentIdRef.current;
+    const next = lessonProgress.currentSegmentId;
+    prevQpinSegmentIdRef.current = next;
+    if (shouldClearQpinOnSegmentChange(prev, next)) setQuestionPin(null);
+  }, [lessonProgress.currentSegmentId]);
+  // R47 Task 3c (review fix): live mirror of the segment id, kept in sync
+  // every time it changes — separate from prevQpinSegmentIdRef above
+  // (which holds a PREVIOUS-value-for-diffing semantic the clear effect
+  // owns). The gist-fetch effect below dispatches a network call and only
+  // applies its result in .then/.catch, ~200ms later. When the SAME turn
+  // that asks the pinned question also advances the segment
+  // (ask-then-advance), the clear effect fires synchronously and empties
+  // questionPin — but the in-flight fetch's callback would otherwise
+  // resurrect it unconditionally once it resolves, reopening the stale-pin
+  // bug this task exists to fix. Mirrors the onLessonPlanProgressRef
+  // prop-mirror idiom used in VoiceTutorRealtime.tsx for the same
+  // "read the live value from inside an async callback" need.
+  const currentSegmentIdLiveRef = useRef(lessonProgress.currentSegmentId);
+  useEffect(() => {
+    currentSegmentIdLiveRef.current = lessonProgress.currentSegmentId;
+  }, [lessonProgress.currentSegmentId]);
   // Round-28b: BOTH voice engines failed a sentence (Cartesia retries +
   // voice-matched ElevenLabs fallback) — show the unspoken text as a
   // transient captions pin at the board bottom. Cleared when the tutor's
@@ -813,6 +848,12 @@ export default function TutorSession(props: TutorSessionProps) {
     if (!entry || !entry.text || !entry.text.includes('?')) return;
     if (pinFetchedTurnRef.current === entry.id) return;
     pinFetchedTurnRef.current = entry.id;
+    // R47 Task 3c (review fix): capture the segment this turn belongs to
+    // BEFORE the async call. If the lesson cursor has moved on by the time
+    // the fetch resolves, the turn's question is no longer scoped to the
+    // student's current segment — resurrecting it would reopen the
+    // ask-then-advance bug class (see currentSegmentIdLiveRef doc above).
+    const segIdAtFetch = currentSegmentIdLiveRef.current;
     void fetch('/api/tutor/question-gist', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -833,9 +874,15 @@ export default function TutorSession(props: TutorSessionProps) {
         const gist = typeof d?.gist === 'string' ? stripMarkdownEmphasis(d.gist.trim()) : '';
         // gist === '' means the model judged the turn's "?" conversational
         // plumbing (a repeat-request / mishear) — deliberately NO pin then.
+        // R47 Task 3c (review fix): segment moved on since this fetch
+        // started — the clear effect already emptied questionPin for the
+        // OLD segment; do not resurrect it for a question that no longer
+        // matches the student's current problem context.
+        if (currentSegmentIdLiveRef.current !== segIdAtFetch) return;
         if (gist) setQuestionPin({ turnId: entry.id, gist });
       })
       .catch(() => {
+        if (currentSegmentIdLiveRef.current !== segIdAtFetch) return;
         const fallback = lastQuestionSentence(entry.text);
         if (fallback) setQuestionPin({ turnId: entry.id, gist: fallback });
       });

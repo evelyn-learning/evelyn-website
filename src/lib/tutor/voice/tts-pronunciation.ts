@@ -1835,19 +1835,149 @@ function rewriteDottedAbbreviations(t: string): string {
  * Order matters within sections (longer matches first — "arcsin"
  * before "sin"); TRIG_REPLACEMENTS is ordered accordingly above.
  */
-/** ALL-CAPS emphasis words Cartesia reads as initialisms ("OUT" → "O U T",
- *  live 2026-07-15 biology session). The brain writes caps for emphasis;
- *  audio carries no visual emphasis, so lowercase them for speech. A
- *  WHITELIST on purpose: blanket lowercasing would break genuine
- *  initialisms, and known collisions (US, IT, NO=nitric oxide, AD/AS,
- *  ERA, SAT/ACT) are deliberately absent. */
-const CAPS_EMPHASIS_WORDS = new RegExp(
-  '\\b(OUT|NOT|ALL|ONE|BOTH|EVERY|NEVER|ALWAYS|ONLY|SAME|EACH|MOST|NONE|VERY' +
-  '|ANY|MUST|WHY|HOW|WHAT|WHERE|WHEN|YES|AND|BUT|ARE|WAS|WILL|CAN|DOES|DID' +
-  '|THE|THIS|THAT|INSIDE|OUTSIDE|BEFORE|AFTER|WITH|WITHOUT|MORE|LESS|SAME' +
-  '|EXACTLY|OPPOSITE|TOGETHER|WITHIN|BECAUSE|INTO|FROM|BOTH|HALF|TWICE)\\b',
-  'g',
+/** ALL-CAPS emphasis words must be SPOKEN, not spelled letter-by-letter.
+ *
+ *  Live bug (session portal-1349716e): the brain writes caps for emphasis
+ *  ("Whatever ELSE he could've done with that same hour") — a visual
+ *  convention with no audio equivalent — and Cartesia reads ANY all-caps
+ *  run as an initialism, spelling "ELSE" as "E L S E". The prior fix (this
+ *  file's now-removed CAPS_EMPHASIS_WORDS) was a closed whitelist of known
+ *  emphasis words; ELSE — and WHATEVER, and whatever else the brain reaches
+ *  for next — was never going to be enumerable that way. Replaced with two
+ *  general SHAPE rules plus a small escape hatch for genuine initialisms
+ *  that collide with the shape:
+ *
+ *  Rule A (≥4 letters, CAPS_HAS_VOWEL_RE + CAPS_INITIALISM_BLOCKLIST +
+ *  CONTEXTUAL_CITATION_KEYWORDS): an all-caps run of 4+ letters containing
+ *  at least one vowel (AEIOUY) is near-always a pronounceable WORD written
+ *  in caps for emphasis (ELSE, WHATEVER, EVERY) or a word-acronym meant to
+ *  be spoken as a word (NASA, STEM, FAFSA) — lowercase it, UNLESS:
+ *    - it's in CAPS_INITIALISM_BLOCKLIST: real letter-by-letter initialisms
+ *      that happen to carry a vowel (USDA, NCAA, NAACP, NAEP), plus ARTICLE
+ *      and AMENDMENT — the two roman-numeral citation keywords that are
+ *      directly pinned bare ("ARTICLE II" → "ARTICLE two",
+ *      "AMENDMENT XIV" → "AMENDMENT fourteen" — rewriteRomanNumerals above
+ *      deliberately preserves an explicit ALL-CAPS keyword's case when it
+ *      converts the numeral, and this rule must not then undo that).
+ *    - it's in CONTEXTUAL_CITATION_KEYWORDS (TITLE, SECTION, CHAPTER, PART,
+ *      WORLD) AND is immediately followed by a citation numeral — these
+ *      four are also roman-numeral keywords, but unlike ARTICLE/AMENDMENT
+ *      they're common as ordinary emphasis too ("a WORLD of difference",
+ *      "read the whole CHAPTER", "my PART of the deal", "every SECTION",
+ *      "pick a TITLE") — REVIEW FIX: an earlier version blanket-blocklisted
+ *      all five bare, which silently un-fixed the target bug for exactly
+ *      those phrases. They now only stay protected when a citation numeral
+ *      actually follows — see CITATION_NUMERAL_FOLLOWS_RE's doc comment for
+ *      why that checks the SPOKEN numeral word, not the roman-numeral
+ *      literal. WORLD gets one more check: a literal "WORLD WAR" bigram,
+ *      since that's the one case (ROMAN_NUMERAL_KEYWORDS_ALLCAPS's "WORLD
+ *      WAR" entry) where the citation keyword is two words and the numeral
+ *      isn't immediately adjacent to the word this rule is looking at.
+ *  A vowel-free 4+ run (no real-content example on hand, but the shape is
+ *  covered) is left alone unconditionally: no vowels means essentially
+ *  never an English word, so it's presumed a genuine initialism.
+ *
+ *  Rule B (2-3 letters, CAPS_EMPHASIS_SHORT_WORDS): too short and too
+ *  acronym-dense a shape to trust a vowel heuristic (SAT, ACT, FTC, GDP, AP
+ *  — all short, all meant to be spelled) — only an explicit, curated list
+ *  of short words genuinely used as ALL-CAPS emphasis converts. This list
+ *  is the union of every short (≤3-letter) word the old CAPS_EMPHASIS_WORDS
+ *  whitelist covered (OUT, NOT, ALL, ONE, ANY, WHY, HOW, YES, AND, BUT, ARE,
+ *  WAS, CAN, DID, THE — its 4+-letter members like BOTH/EVERY/NEVER/ALWAYS
+ *  are now covered by Rule A automatically, so they're deliberately NOT
+ *  re-listed here) plus the brief's requested additions (IS, TWO, TEN, OFF,
+ *  ON, UP, NOW). Two of the brief's suggested entries are deliberately
+ *  DROPPED: NO (nitric oxide — a live chemistry-content collision the old
+ *  whitelist explicitly excluded) and WHO (the World Health Organization —
+ *  a real AP Bio/Gov collision), matching the old whitelist's own
+ *  collision precedent (US, IT, NO, AD/AS, ERA, SAT/ACT all stayed out).
+ *
+ *  Contraction boundary (REVIEW FIX): a bare `\b[A-Z]{2,}\b` treats the
+ *  apostrophe in a contraction as a word boundary, so "DOESN'T" matched
+ *  only "DOESN" — outside either rule's reach (5 letters, but the trailing
+ *  bare "T" was left stranded uppercase: "doesn'T"). CAPS_RUN_RE now
+ *  captures an optional trailing `'[A-Z]{1,2}` suffix so the WHOLE
+ *  contraction is one match ("DOESN'T", "CAN'T", "SHOULDN'T"); the
+ *  length/vowel/blocklist tests run against the apostrophe-STRIPPED letters
+ *  ("DOESN'T" → "DOESNT", "CAN'T" → "CANT" — 4 letters, vowel A, Rule A
+ *  applies) while the actual lowercase output is applied to the WHOLE
+ *  matched string (apostrophe included), so "CAN'T" → "can't", not "cant".
+ *
+ *  Placement: called from rewriteForTTS's PROSE section, AFTER
+ *  stripDollarMathForSpeech has already walked and converted every
+ *  declared $…$/\(...\) span — see the call site below for the mechanics.
+ *  This is a forward-looking safety margin, not something forced by
+ *  today's fixtures: every in-span ALL-CAPS token exercised by the
+ *  physics/chem/subject-notation suites (KE, MR, MC, PV, IR, HA, SO, NH,
+ *  ABC, DEF, MPC) is 2-3 letters, so Rule B's explicit-list requirement
+ *  already keeps all of them safe regardless of placement (none of those
+ *  tokens are in CAPS_EMPHASIS_SHORT_WORDS). Running after extraction means
+ *  a hypothetical future 4+-letter in-span token (which Rule A's vowel
+ *  heuristic WOULD otherwise reach) can never be exposed to this rule in
+ *  the first place. A leftover single capital letter from a span ("$F$" →
+ *  " F ") is separately safe by construction: both rules require a run of
+ *  2+ consecutive caps, so a lone letter never matches either one.
+ *
+ *  studentName carve-out: a name typed/echoed in ALL CAPS (live-tested
+ *  shape: "Ready to keep going, ROKON?") must not be mistaken for emphasis
+ *  — lowercasing a proper noun doesn't read as "emphasis" the way ELSE/NOT
+ *  does, and case-insensitively matching it against the session's known
+ *  name is a precise, cheap guard against exactly that misfire. */
+const CAPS_INITIALISM_BLOCKLIST = new Set([
+  'USDA', 'NCAA', 'NAACP', 'NAEP',
+  // The two roman-numeral citation keywords that are directly pinned bare
+  // (see rewriteRomanNumerals). TITLE/SECTION/CHAPTER/PART/WORLD are
+  // NOT here — see CONTEXTUAL_CITATION_KEYWORDS below for why blanket
+  // protection was wrong for those five.
+  'ARTICLE', 'AMENDMENT',
+]);
+/** Roman-numeral citation keywords that are ALSO common plain-English
+ *  emphasis words — protected only when a citation numeral actually
+ *  follows (see Rule A's doc comment above and CITATION_NUMERAL_FOLLOWS_RE
+ *  below). "ACT" and "WAR" are also members of rewriteRomanNumerals'
+ *  keyword set but are ≤3 letters, so Rule A never reaches them — they
+ *  stay safe simply by being absent from CAPS_EMPHASIS_SHORT_WORDS. */
+const CONTEXTUAL_CITATION_KEYWORDS = new Set(['TITLE', 'SECTION', 'CHAPTER', 'PART', 'WORLD']);
+/** Does a citation numeral immediately follow (after whitespace)? Checked
+ *  against BOTH shapes: the raw roman-numeral literal (I, II, …, XX — a
+ *  defensive fallback for a keyword+numeral pair that for some reason
+ *  never reached rewriteRomanNumerals) and its SPOKEN word form (one,
+ *  two, …, twenty). The spoken form is the one that actually matters in
+ *  practice: rewriteRomanNumerals runs well before this rule (see the
+ *  call order in rewriteForTTS) and, on a genuine citation match, has
+ *  ALREADY replaced the roman numeral with its spoken word by the time
+ *  this rule sees the string ("SECTION IV" → "SECTION four") — so the
+ *  live signal to check for here is "four", not "IV". */
+const ROMAN_NUMERAL_SPOKEN_WORDS_ALTERNATION = Object.values(ROMAN_NUMERAL_WORDS).join('|');
+const CITATION_NUMERAL_FOLLOWS_RE = new RegExp(
+  `^\\s+(?:${ROMAN_NUMERAL_ALL_KEYS_SRC}|${ROMAN_NUMERAL_SPOKEN_WORDS_ALTERNATION})\\b`,
 );
+const CAPS_EMPHASIS_SHORT_WORDS = new Set([
+  'OUT', 'NOT', 'ALL', 'ONE', 'ANY', 'WHY', 'HOW', 'YES', 'AND', 'BUT',
+  'ARE', 'WAS', 'CAN', 'DID', 'THE', 'IS', 'TWO', 'TEN', 'OFF', 'ON',
+  'UP', 'NOW',
+]);
+// Optional trailing `'X` / `'XX` contraction suffix — see the "Contraction
+// boundary" doc comment above (REVIEW FIX).
+const CAPS_RUN_RE = /\b[A-Z]{2,}(?:'[A-Z]{1,2})?\b/g;
+const CAPS_HAS_VOWEL_RE = /[AEIOUY]/;
+function lowercaseCapsEmphasis(t: string, studentName?: string): string {
+  const name = studentName?.trim().toLowerCase();
+  return t.replace(CAPS_RUN_RE, (rawWord: string, offset: number, full: string) => {
+    if (name && rawWord.toLowerCase() === name) return rawWord; // the student's own name, not emphasis
+    const letters = rawWord.replace(/'/g, ''); // apostrophe-stripped, for the shape tests only
+    if (letters.length >= 4) {
+      if (CAPS_INITIALISM_BLOCKLIST.has(letters)) return rawWord;
+      if (CONTEXTUAL_CITATION_KEYWORDS.has(letters)) {
+        const after = full.slice(offset + rawWord.length);
+        if (CITATION_NUMERAL_FOLLOWS_RE.test(after)) return rawWord;
+        if (letters === 'WORLD' && /^\s+WAR\b/.test(after)) return rawWord; // "WORLD WAR two"
+      }
+      return CAPS_HAS_VOWEL_RE.test(letters) ? rawWord.toLowerCase() : rawWord;
+    }
+    return CAPS_EMPHASIS_SHORT_WORDS.has(letters) ? rawWord.toLowerCase() : rawWord;
+  });
+}
 
 export interface RewriteForTTSOptions {
   /** The session's student name. When present, ANY comma directly before
@@ -1895,9 +2025,6 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // quotation marks add nothing audible elsewhere. Apostrophes /
   // single quotes are untouched (contractions).
   t = t.replace(/["“”]/g, '');
-  // Caps-emphasis → lowercase (see CAPS_EMPHASIS_WORDS). Runs early so
-  // later rules see normal-case words.
-  t = t.replace(CAPS_EMPHASIS_WORDS, (m) => m.toLowerCase());
   // Markdown emphasis — MUST run before $-span processing (R36, live SAT
   // session portal-fdee5b34): this strip used to sit in ALL_REPLACEMENTS,
   // which runs AFTER the span pass, so "*one-time*" asterisks were still
@@ -1960,6 +2087,14 @@ export function rewriteForTTS(raw: string, opts?: RewriteForTTSOptions): string 
   // here, which had to duplicate the pair regex and disagreed with the
   // walk on currency artifacts.
   t = stripDollarMathForSpeech(t);
+  // ALL-CAPS emphasis words (Task R47-3, live: "Whatever ELSE he could've
+  // done" spoke "E L S E"). Runs HERE, immediately after the $-span walk
+  // above, so it only ever sees PROSE — every declared span has already
+  // been converted to spoken words by speakMathSpan, so no in-span
+  // ALL-CAPS token (KE, MR, PV, ABC, DEF, HA, …) is still reachable. See
+  // lowercaseCapsEmphasis's doc comment for the two-rule shape, the
+  // blocklist, and the studentName carve-out.
+  t = lowercaseCapsEmphasis(t, studentName);
   t = verbalizeMathForSpeech(t);
   // Bare equals signs: Cartesia voices "=" as "equal sign" ("n=12" →
   // "n equal sign 12", live 2026-07-10). Not touched: ≠/≤/≥ (distinct
