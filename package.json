@@ -29,6 +29,7 @@
     "test:portal-assessment": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-assessment.ts",
     "test:portal": "npm run test:portal-contract && npm run test:portal-auth && npm run test:portal-gap-links && npm run test:portal-practice && npm run test:portal-concept && npm run test:portal-grading && npm run test:portal-ced && npm run test:portal-endpoints && npm run test:portal-assessment && npm run test:embed-token && npm run test:segment-evidence",
     "test:material-extract": "npx tsx scripts/test-material-extract.ts",
+    "test:taxonomy": "tsx scripts/test-taxonomy-generate.ts",
     "test:mock-blueprints": "npx tsx src/lib/tutor/mock-exam/blueprints/blueprints.test.ts",
     "test:mock-scoring": "npx tsx src/lib/tutor/mock-exam/scoring.test.ts",
     "test:mock-service": "npx tsx src/lib/tutor/mock-exam/service.test.ts",
@@ -219,7 +220,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
     "@deepgram/sdk": "^4.11.3",
-    "@evelyn/portal-contract": "github:evelyn-learning/portal-contract#v1.13.0",
+    "@evelyn/portal-contract": "github:evelyn-learning/portal-contract#v1.14.0",
     "@hookform/resolvers": "^3.9.0",
     "@next/swc-wasm-nodejs": "^16.1.6",
     "@rdkit/rdkit": "^2025.3.4-1.0.0",
