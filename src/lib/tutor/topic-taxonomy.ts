@@ -503,6 +503,9 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
   professional: {
     college: [
       { id: 'cphq', label: 'CPHQ (Healthcare Quality)', brainGen: 'live' },
+      // Demo alias: second white-label ingestion of the same NAHQ outline
+      // (client demo runs a fresh CPHQ2 build alongside the seeded CPHQ).
+      { id: 'cphq2', label: 'CPHQ (Healthcare Quality) II', brainGen: 'live' },
     ],
   },
 };
