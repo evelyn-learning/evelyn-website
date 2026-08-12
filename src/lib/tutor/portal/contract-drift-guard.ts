@@ -33,3 +33,11 @@ type _GuardNotes = AssertAssignable<EngineRenderedTopicNotes, RenderedTopicNotes
 type _GuardUnitNotes = AssertAssignable<EngineRenderedUnitNotes, RenderedUnitNotes>;
 
 export type __ContractDriftGuards = [_GuardMastery, _GuardGap, _GuardNotes, _GuardUnitNotes];
+
+// Taxonomy-generate (contract v1.14.0): no guard needed here. Unlike the
+// types above, the engine does NOT re-declare a local Taxonomy/DraftTaxonomy
+// shape — taxonomy-generate.ts and its route import TaxonomyGenerateRequest,
+// TaxonomyGenerateResponse, and DraftTaxonomy directly from
+// @evelyn/portal-contract/v1 and use them as-is. There's no second,
+// engine-owned type that could drift out from under the contract's, so
+// there's nothing for an AssertAssignable pair to check.

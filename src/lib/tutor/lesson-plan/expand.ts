@@ -121,17 +121,36 @@ export async function expandPlanLos(input: ExpandPlanLosInput): Promise<ExpandPl
   // hallucinating ids (lo-1 .. lo-22 when the plan only had 12 LOs). The
   // server is the structural enforcer.
   const losById = new Map<string, LearningObjective>(plan.los.map((lo) => [lo.id, lo]));
+
+  // Shorthand tolerance: generated LO ids are now plan-scoped
+  // ("<planId>.lo-3", see namespaceGeneratedLos). The picker segment shows
+  // the brain the full id, but a model asked to echo a 40-character id back
+  // verbatim sometimes returns only the trailing "lo-3" handle. Accept that
+  // shorthand when — and only when — it resolves to exactly one LO in this
+  // plan; an ambiguous suffix maps to null and is dropped like any other
+  // unmatched id, so the server stays the structural enforcer.
+  const bySuffix = new Map<string, LearningObjective | null>();
+  for (const lo of plan.los) {
+    const dot = lo.id.lastIndexOf('.');
+    if (dot < 0) continue;
+    const suffix = lo.id.slice(dot + 1);
+    if (!suffix || losById.has(suffix)) continue;
+    bySuffix.set(suffix, bySuffix.has(suffix) ? null : lo);
+  }
+
   const seenIds = new Set<string>();
   const droppedIds: string[] = [];
   const pickedLOs: LearningObjective[] = [];
   for (const id of pickedLoIds) {
-    const lo = losById.get(id);
+    const lo = losById.get(id) ?? bySuffix.get(id) ?? undefined;
     if (!lo) {
       droppedIds.push(id);
       continue;
     }
-    if (seenIds.has(id)) continue;
-    seenIds.add(id);
+    // Dedupe on the RESOLVED id so "<planId>.lo-3" and "lo-3" in the same
+    // pick list don't expand the same LO twice.
+    if (seenIds.has(lo.id)) continue;
+    seenIds.add(lo.id);
     pickedLOs.push(lo);
   }
   if (pickedLOs.length === 0) {

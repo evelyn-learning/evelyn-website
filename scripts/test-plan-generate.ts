@@ -632,8 +632,18 @@ async function upsertTestPickerPlan(
     los,
     allowedMaxLOs,
     sessionMinutes: 20,
+    // buildPickerPlan namespaces LO ids under the plan id (see
+    // namespaceGeneratedLos) — hand it the id this plan is stored under so
+    // the ids in `los` match the ones a caller would pick from.
+    planId: id,
   });
   return upsertLessonPlan({ ...built, id, metadata: { ...built.metadata, ...extraMetadata } });
+}
+
+/** The plan-scoped LO ids buildPickerPlan mints for `upsertTestPickerPlan`'s
+ *  3-LO fixture, in order. */
+function pickerLoIds(planId: string): [string, string, string] {
+  return [`${planId}.lo-1`, `${planId}.lo-2`, `${planId}.lo-3`];
 }
 
 async function callPlanExpand(req: NextRequest) {
@@ -676,7 +686,7 @@ async function testPlanExpandCloneLeavesOriginalCacheUntouched() {
   let newPlanId: string | undefined;
   try {
     const { status, json } = await callPlanExpand(
-      signedPlanExpandRequest({ planId, pickedLoIds: ['lo-a', 'lo-b'] }),
+      signedPlanExpandRequest({ planId, pickedLoIds: pickerLoIds(planId).slice(0, 2) }),
     );
     assert.strictEqual(status, 200, `expected 200, got ${status}: ${JSON.stringify(json)}`);
     const body = PlanExpandResponseSchema.parse(json);
@@ -726,7 +736,7 @@ async function testPlanExpandCloneLeavesOriginalCacheUntouched() {
     assert.strictEqual(original?.metadata?.cacheKey, cacheKey, 'original picker plan must keep its cacheKey');
     assert.deepStrictEqual(
       (original?.los ?? []).map((lo) => lo.id).sort(),
-      ['lo-a', 'lo-b', 'lo-c'],
+      [...pickerLoIds(planId)].sort(),
       'original picker plan must keep its full (unpicked) LO list',
     );
 
@@ -746,7 +756,7 @@ async function testPlanExpandCloneLeavesOriginalCacheUntouched() {
  *  expansion. Pure — no LLM call reached. */
 async function testPlanExpandUnknownPlanIdReturns404() {
   const { status } = await callPlanExpand(
-    signedPlanExpandRequest({ planId: 'gen-does-not-exist-plan-expand', pickedLoIds: ['lo-a'] }),
+    signedPlanExpandRequest({ planId: 'gen-does-not-exist-plan-expand', pickedLoIds: ['gen-does-not-exist-plan-expand.lo-1'] }),
   );
   assert.strictEqual(status, 404, `expected 404 for unknown planId, got ${status}`);
 }
@@ -777,7 +787,7 @@ async function testPlanExpandExceedsStoredCapReturns400() {
   await upsertTestPickerPlan(planId, 2);
   try {
     const { status } = await callPlanExpand(
-      signedPlanExpandRequest({ planId, pickedLoIds: ['lo-a', 'lo-b', 'lo-c'] }),
+      signedPlanExpandRequest({ planId, pickedLoIds: pickerLoIds(planId) }),
     );
     assert.strictEqual(status, 400, `expected 400 for a pick exceeding allowedMaxLOs, got ${status}`);
   } finally {

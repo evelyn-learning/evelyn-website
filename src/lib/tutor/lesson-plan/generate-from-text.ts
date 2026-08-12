@@ -36,6 +36,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { randomUUID } from 'node:crypto';
 import type {
   LessonPlan,
   LearningObjective,
@@ -55,6 +56,78 @@ const STAGE2_MAX_TOKENS = 8192; // Per-LO expansion can be larger.
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
+
+/* ------------------------------------------------------------------ */
+/* Plan-id + LO-id identity                                           */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Mint a unique id for a generated plan.
+ *
+ * Was `freestyle-${Date.now()}` — millisecond resolution only, which
+ * collides whenever two generations land in the same millisecond. The
+ * portal's org-console batch runs plan-generate at concurrency 2, so
+ * that is a live collision, not a theoretical one: two plans would be
+ * upserted under one id and the second would silently overwrite the
+ * first. The random suffix removes the concurrency dependency entirely.
+ */
+export function mintGeneratedPlanId(prefix = 'freestyle'): string {
+  return `${prefix}-${Date.now()}-${randomUUID().slice(0, 8)}`;
+}
+
+/**
+ * Rewrite a generated plan's plan-LOCAL LO ids ("lo-1", "lo-2" — what
+ * Stage 1 mints) into plan-SCOPED ids ("<planId>.lo-1"), and carry the
+ * rewrite through every segment id that was derived from them.
+ *
+ * Why: LO ids leave this module. The portal's learner model is keyed
+ * `(studentId, loId)` with no course/plan scope, and the org-console
+ * course build adopts `plan.los[0].id` onto its CourseNode. With
+ * plan-local ids, EVERY generated plan across every course shares the
+ * key "lo-1" — mastery, evidence and node identity from unrelated
+ * courses all collapse onto the same rows. Scoping by plan id makes the
+ * ids globally unique without changing any contract shape (`los[].id`
+ * is a free string) and without touching authored/SEED plans, which
+ * mint their own already-namespaced ids (e.g. "apstats.sampling-...").
+ *
+ * Segment ids follow the "<loId>-hook/-concept/-worked/-worked2/-try/
+ * -recall/-try2" convention that `loGroupOf` (context.ts) reverses to
+ * recover the owning LO, so they must be rewritten in lockstep or the
+ * rail, advance-ordering and per-LO evidence all lose their grouping.
+ * Matching is longest-old-id-first and requires the trailing hyphen, so
+ * "lo-1" never eats "lo-10-hook". Segments whose ids don't follow the
+ * convention (the model occasionally free-styles one) are left alone —
+ * exactly the graceful degradation loGroupOf already documents.
+ */
+export function namespaceGeneratedLos(args: {
+  planId: string;
+  los: ReadonlyArray<LearningObjective>;
+  segments?: ReadonlyArray<Segment>;
+}): { los: LearningObjective[]; segments: Segment[] } {
+  const idMap = new Map<string, string>();
+  const los = args.los.map((lo, i) => {
+    const nextId = `${args.planId}.lo-${i + 1}`;
+    // First occurrence wins: a Stage-1 response with duplicate ids is
+    // already structurally ambiguous, and mapping the later duplicate
+    // would silently re-point the earlier LO's segments.
+    if (lo.id && lo.id !== nextId && !idMap.has(lo.id)) idMap.set(lo.id, nextId);
+    return { ...lo, id: nextId };
+  });
+
+  const oldIds = [...idMap.keys()].sort((a, b) => b.length - a.length);
+  const segments = (args.segments ?? []).map((seg) => {
+    for (const oldId of oldIds) {
+      const nextId = idMap.get(oldId)!;
+      if (seg.id === oldId) return { ...seg, id: nextId } as Segment;
+      if (seg.id.startsWith(`${oldId}-`)) {
+        return { ...seg, id: `${nextId}${seg.id.slice(oldId.length)}` } as Segment;
+      }
+    }
+    return seg;
+  });
+
+  return { los, segments: segments as Segment[] };
+}
 
 export interface GenerateFromTextInput {
   /** The raw student-supplied text. */
@@ -464,12 +537,21 @@ export function buildPickerPlan(args: {
   los: ReadonlyArray<LearningObjective>;
   allowedMaxLOs: number;
   sessionMinutes: number;
+  /** Caller-supplied plan id. The portal's plan-generate route mints its
+   *  own durable `gen-<uuid>` id up front and passes it here so the
+   *  plan's LO namespace and its persisted id agree. Omit to mint one. */
+  planId?: string;
 }): LessonPlan {
-  const planId = `freestyle-${Date.now()}`;
+  const planId = args.planId ?? mintGeneratedPlanId();
+  // Scope the LO ids to this plan BEFORE they reach the picker's
+  // keyIdeas/TSV/metadata — the brain echoes these ids back through
+  // confirm_plan_los and expandPlanLos matches them against plan.los, so
+  // all four surfaces must carry the same namespaced id.
+  const { los } = namespaceGeneratedLos({ planId, los: args.los });
   const introSegment: Segment = {
     id: 'intro',
     kind: 'hook',
-    goal: `Acknowledge that the student supplied ${args.los.length} learning objectives, and that the session has ${args.sessionMinutes} minutes — enough for about ${args.allowedMaxLOs}. Then transition to the picker segment which will present the list and capture the student's pick.`,
+    goal: `Acknowledge that the student supplied ${los.length} learning objectives, and that the session has ${args.sessionMinutes} minutes — enough for about ${args.allowedMaxLOs}. Then transition to the picker segment which will present the list and capture the student's pick.`,
   };
   // Picker segment is a TWO-TURN handshake. The brain's goal text must
   // be strictly phase-gated or the brain fires confirm_plan_los in the
@@ -484,7 +566,7 @@ export function buildPickerPlan(args: {
   // segment's goal explicitly mandates a show_table call in phase 1 so
   // the student sees the list visually even if the brain's spoken
   // ack is brief.
-  const losTsv = args.los
+  const losTsv = los
     .map((lo, i) => `${i + 1}\t${lo.id}\t${lo.description}`)
     .join('\n');
   const pickerSegment: Segment = {
@@ -492,10 +574,10 @@ export function buildPickerPlan(args: {
     kind: 'concept',
     goal: `Two-phase picker segment. Follow the phases STRICTLY — do not collapse them into one turn.
 
-PHASE 1 (THIS turn): You MUST call show_table with the LO list so the student sees the options. Use headers ["#", "Topic"] and one row per item from keyIdeas — the row's "#" cell is the 1-based index, the "Topic" cell is the LO description (the text after "lo-N: "). After emitting show_table, speak briefly: name how many items you see, say the session has time for ${args.allowedMaxLOs} of them, and ask the student which ${args.allowedMaxLOs} they want to focus on. Then STOP and wait. Do NOT call confirm_plan_los in this turn. Do NOT teach any LO content.
+PHASE 1 (THIS turn): You MUST call show_table with the LO list so the student sees the options. Use headers ["#", "Topic"] and one row per item from keyIdeas — the row's "#" cell is the 1-based index, the "Topic" cell is the LO description (each keyIdeas line is "<lo id>: <description>", so the description is everything after the FIRST ": "). Never show the id itself to the student. After emitting show_table, speak briefly: name how many items you see, say the session has time for ${args.allowedMaxLOs} of them, and ask the student which ${args.allowedMaxLOs} they want to focus on. Then STOP and wait. Do NOT call confirm_plan_los in this turn. Do NOT teach any LO content.
 
 PHASE 2 (NEXT turn, after the student responds): When the student names which items they want — by row number, by short phrase, or by saying "all" / "the first N" / etc. — resolve their choices to LO ids by matching against keyIdeas. Call confirm_plan_los with ONLY the LO ids that appear in keyIdeas, and at most ${args.allowedMaxLOs} of them. Do NOT invent ids, do NOT include ids that are not in keyIdeas, do NOT exceed ${args.allowedMaxLOs}. If the student is vague ("just pick the most important"), choose ${args.allowedMaxLOs} ids yourself from keyIdeas — but still pass real keyIdeas-derived ids.`,
-    keyIdeas: args.los.map((lo) => `${lo.id}: ${lo.description}`),
+    keyIdeas: los.map((lo) => `${lo.id}: ${lo.description}`),
     references: [
       {
         kind: 'note',
@@ -511,7 +593,7 @@ PHASE 2 (NEXT turn, after the student responds): When the student names which it
     subject: args.input.subject,
     topic: args.input.topic,
     locale: args.input.locale ?? 'en',
-    los: [...args.los],
+    los,
     estimatedMinutes: args.sessionMinutes,
     segments: [introSegment, pickerSegment],
     prerequisites: [],
@@ -520,7 +602,7 @@ PHASE 2 (NEXT turn, after the student responds): When the student names which it
     metadata: {
       generatedFromText: true,
       pendingPicker: true,
-      availableLOs: args.los.map((lo) => ({ id: lo.id, description: lo.description })),
+      availableLOs: los.map((lo) => ({ id: lo.id, description: lo.description })),
       allowedMaxLOs: args.allowedMaxLOs,
       sessionMinutes: args.sessionMinutes,
     },
@@ -545,15 +627,24 @@ export interface GenerateFromTextResult {
  *  pipeline through `generatePlanFromText` (which would redundantly
  *  retry the stage that just failed, burning an extra live LLM call at
  *  synchronous request time). */
-export function fallbackPlan(input: GenerateFromTextInput, reason: string): LessonPlan {
-  const id = `freestyle-fallback-${Date.now()}`;
+export function fallbackPlan(
+  input: GenerateFromTextInput,
+  reason: string,
+  /** Caller-supplied plan id — see buildPickerPlan's `planId`. */
+  planId?: string,
+): LessonPlan {
+  const id = planId ?? mintGeneratedPlanId('freestyle-fallback');
+  // Plan-scoped, like every other generated plan: a fallback skeleton is
+  // still a real session that emits per-LO evidence, so a shared literal
+  // "lo-1" here would pollute the learner model across every student who
+  // ever hit a generation failure.
   const lo: LearningObjective = {
-    id: 'lo-1',
+    id: `${id}.lo-1`,
     description: 'Cover the material the student supplied.',
   };
   const segments: Segment[] = [
     {
-      id: 'lo1-concept',
+      id: `${lo.id}-concept`,
       kind: 'concept',
       goal: 'Teach the material the student supplied, in their order.',
       keyIdeas: ['The student supplied free text; teach that material directly.'],
@@ -604,7 +695,11 @@ export async function generatePlanFromText(
     return { plan: fallbackPlan(input, stage2.reason), ok: false, reason: stage2.reason };
   }
 
-  const planId = `freestyle-${Date.now()}`;
+  const planId = mintGeneratedPlanId();
+  // Plan-scope the Stage-1 LO ids (and the Stage-2 segment ids derived
+  // from them) before the plan is parsed/persisted — see
+  // namespaceGeneratedLos.
+  const ns = namespaceGeneratedLos({ planId, los: stage1.los, segments: stage2.segments });
   const introSegment: Segment = {
     id: 'intro',
     kind: 'hook',
@@ -619,9 +714,9 @@ export async function generatePlanFromText(
     subject: input.subject,
     topic: input.topic,
     locale: input.locale ?? 'en',
-    los: stage1.los,
-    estimatedMinutes: Math.max(10, stage1.los.length * 5),
-    segments: [introSegment, ...stage2.segments, buildRecapSegment(stage1.los)],
+    los: ns.los,
+    estimatedMinutes: Math.max(10, ns.los.length * 5),
+    segments: [introSegment, ...ns.segments, buildRecapSegment(ns.los)],
     prerequisites: [],
     followUps: [],
     schemaVersion: LESSON_PLAN_SCHEMA_VERSION,

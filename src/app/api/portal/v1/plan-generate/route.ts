@@ -55,6 +55,7 @@ import {
   buildPickerPlan,
   fallbackPlan,
   buildRecapSegment,
+  namespaceGeneratedLos,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { extractMaterials } from '@/lib/tutor/lesson-plan/material-extract';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
@@ -148,6 +149,14 @@ export const POST = withPortalAuth(async (_req, auth) => {
   let plan: LessonPlan;
   let generatorOk: boolean;
 
+  // Mint the durable id BEFORE assembly (it used to be stamped on at the
+  // end, over whatever id the pipeline had minted). Every branch below
+  // now builds under this id, which matters because generated LO ids are
+  // namespaced under their plan id — assembling with a throwaway id and
+  // renaming afterwards would leave the plan's LO ids pointing at a plan
+  // id that never gets persisted.
+  const durablePlanId = `gen-${randomUUID()}`;
+
   const stage1 = await extractLearningObjectives(genInput);
   if (!stage1.ok || stage1.los.length === 0) {
     // Stage 1 failed outright — serve the canonical fallback directly.
@@ -156,7 +165,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // back a mode:'full' plan that was never checked against X — an
     // over-budget plan that breaks parity with plan-from-text. A usable
     // 1-LO skeleton beats a second live call at synchronous request time.
-    plan = fallbackPlan(genInput, stage1.reason);
+    plan = fallbackPlan(genInput, stage1.reason, durablePlanId);
     generatorOk = false;
   } else if (stage1.los.length > X) {
     // Y > X: hand back a picker plan (all discovered LOs, unexpanded).
@@ -167,6 +176,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
       los: stage1.los,
       allowedMaxLOs: X,
       sessionMinutes,
+      planId: durablePlanId,
     });
     generatorOk = true;
   } else {
@@ -176,22 +186,31 @@ export const POST = withPortalAuth(async (_req, auth) => {
     const stage2 = await expandSegmentsForLOs(stage1.los, genInput);
     if (!stage2.ok || stage2.segments.length === 0) {
       // Same no-retry rule as the Stage 1 failure above.
-      plan = fallbackPlan(genInput, stage2.reason);
+      plan = fallbackPlan(genInput, stage2.reason, durablePlanId);
       generatorOk = false;
     } else {
       const introSegment: Segment = { id: 'intro', kind: 'hook', goal: INTRO_SEGMENT_GOAL };
+      // Plan-scope the Stage-1 LO ids + Stage-2 segment ids. The portal
+      // adopts `los[0].id` onto its CourseNode and keys its learner model
+      // on it with no course scope, so plan-local "lo-1" ids would collapse
+      // every generated course onto one set of keys.
+      const ns = namespaceGeneratedLos({
+        planId: durablePlanId,
+        los: stage1.los,
+        segments: stage2.segments,
+      });
       try {
         plan = parseLessonPlan({
-          id: `freestyle-${Date.now()}`,
+          id: durablePlanId,
           title: stage1.titleSuggestion,
           curriculum: 'freestyle',
           grade,
           subject,
           topic,
           locale: locale ?? 'en',
-          los: stage1.los,
+          los: ns.los,
           estimatedMinutes: sessionMinutes,
-          segments: [introSegment, ...stage2.segments, buildRecapSegment(stage1.los)],
+          segments: [introSegment, ...ns.segments, buildRecapSegment(ns.los)],
           prerequisites: [],
           followUps: [],
           schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
@@ -211,7 +230,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
         // enforces for its own catch sites. Constructor name only.
         const errorKind = err instanceof Error ? err.constructor.name || 'Error' : typeof err;
         console.warn(`[plan-generate] full-plan parse failed, serving fallback: errorType=${errorKind}`);
-        plan = fallbackPlan(genInput, `parse failed: ${errorKind}`);
+        plan = fallbackPlan(genInput, `parse failed: ${errorKind}`, durablePlanId);
         generatorOk = false;
       }
     }
@@ -227,9 +246,10 @@ export const POST = withPortalAuth(async (_req, auth) => {
     );
   }
 
-  // Mint the durable id and stamp portal-owned metadata. Overrides the
-  // pipeline's own minted id (freestyle-*, freestyle-fallback-*) — the
-  // portal contract needs a stable "gen-" prefix it can recognize.
+  // Stamp the durable id (already used at assembly — see durablePlanId;
+  // the assignment stays so any future branch that mints its own id still
+  // lands on the "gen-" prefix the portal contract recognizes) and the
+  // portal-owned metadata.
   // generatedPlanMetadata omits cacheKey whenever it's undefined (the
   // materials path never computes one — see the module doc) OR when
   // generatorOk is false, so a fallback skeleton is persisted (inspectable,
@@ -237,7 +257,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // topic/band/bucket.
   plan = {
     ...plan,
-    id: `gen-${randomUUID()}`,
+    id: durablePlanId,
     metadata: generatedPlanMetadata(plan, {
       cacheKey,
       generatorOk,
