@@ -67,11 +67,17 @@ async function main() {
     process.exit(0);
   }
 
-  const plans = await listLessonPlans({ topic });
-  const los = [...new Map(
-    plans.flatMap((p) => p.los ?? []).map((lo) => [lo.id, lo]),
-  ).values()];
-  if (los.length === 0) throw new Error(`no curated LOs found for topic '${topic}'`);
+  // --los "id1,id2,...": seed EXACTLY these LO ids (white-label generated
+  // courses — their plans carry free-text topics, so the topic lookup below
+  // can't find them; the portal's CourseNode.loId list is the source).
+  const losCsv = arg('los');
+  const los = losCsv
+    ? [...new Set(losCsv.split(',').map((s) => s.trim()).filter(Boolean))].map((id) => ({ id, description: '' }))
+    : await (async () => {
+        const plans = await listLessonPlans({ topic });
+        return [...new Map(plans.flatMap((p) => p.los ?? []).map((lo) => [lo.id, lo])).values()];
+      })();
+  if (los.length === 0) throw new Error(losCsv ? '--los list is empty' : `no curated LOs found for topic '${topic}'`);
 
   // Trajectory assignment. mixed: ~30% strong, ~30% improving, ~25% weak,
   // ~15% untouched (renders as 'not started' cells).
