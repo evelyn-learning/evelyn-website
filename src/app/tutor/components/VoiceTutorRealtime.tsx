@@ -205,6 +205,7 @@ import {
   resolveBargeInEnergyThreshold,
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
+import { detectVoiceOnlyExercise } from '@/lib/tutor/voice/exercise-board-check';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
@@ -13022,6 +13023,29 @@ export function VoiceTutorRealtime({
           pendingBoardAnchorNoteRef.current = buildBoardAnchorNote(finalQuestion);
           console.warn('[brain-orchestrator] board-anchor net: substantive question, 0 content tools — note planted');
           onDebugEvent?.('board_anchor_flagged', `question with no board write — note planted for next turn`);
+        }
+      }
+      // R48 Task 2: posed exercise (prompt Rule 3e — the prose/multi-part
+      // sibling of the board-anchor net above, which only covers a single
+      // substantive question) + zero board-rendering tool calls this turn
+      // → exercise_no_board telemetry. Detector-only (exercise-board-check.ts),
+      // conservative shapes, never a kill or a corrective note — the audio
+      // already played; this just proves the gap for triage. Live failure
+      // (2026-08-12, HS English): a three-sentence exercise with quoted
+      // working material was spoken with no show_problem/card ever
+      // rendered. isBoardContentTool already excludes advance_lesson /
+      // mark_segment_complete / other meta-nav tools, so a turn that only
+      // advanced the cursor still counts as zero board renders here.
+      {
+        const exerciseCheck = detectVoiceOnlyExercise(fullText);
+        if (exerciseCheck.posed) {
+          const boardRendered = totalToolNamesSeen.some((n) => isBoardContentTool(n));
+          if (!boardRendered) {
+            onDebugEvent?.(
+              'exercise_no_board',
+              `shape=${exerciseCheck.shape} · "${fullText.slice(0, 120)}"`,
+            );
+          }
         }
       }
       // Opener-recency (part A): capture THIS session's opener record once,

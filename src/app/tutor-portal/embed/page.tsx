@@ -99,6 +99,11 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // spoke it (perception-classifier.ts, expectedAnswerCarveOut). Same
   // triage-gap class as the two entries above.
   'echo_carveout',
+  // R48 Task 2 (2026-08-12): exercise_no_board — a posed voice-only
+  // exercise (Rule 3e, exercise-board-check.ts) with zero board-rendering
+  // tool calls this turn. No existing prefix covers 'exercise_'; same
+  // triage-gap class as the 2026-08-07 brain_/judge_/tool_call_ note above.
+  'exercise_',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

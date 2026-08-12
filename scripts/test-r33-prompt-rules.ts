@@ -120,5 +120,20 @@ test('R47 Task 3b: Rule 3b warns against a stray glued $ standing in for a perio
   );
 });
 
+test('R48 Task 2: Rule 3e — posed exercises with concrete parts land on the board, not just speech', () => {
+  assert.ok(
+    prompt.includes('A posed exercise with concrete parts lands on the board, not just in speech'),
+    'prompt must include the Rule 3e header phrase',
+  );
+  assert.ok(
+    prompt.includes('"three different sentences" / "two separate examples" / "several ways"'),
+    'rule must name the concrete-parts shapes',
+  );
+  assert.ok(
+    prompt.includes("her study of local water quality"),
+    'prompt must cite the live voice-only-exercise failure example',
+  );
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
