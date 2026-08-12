@@ -34,4 +34,54 @@ assert.deepEqual(t2.los[0].prerequisiteLoIds, []);
 assert.equal(normalizeRawTaxonomy({ title: '' }, 'cphq'), null);
 assert.equal(normalizeRawTaxonomy(null, 'cphq'), null);
 
+// 4. Colliding LO titles → distinct loIds (ordinal suffix), with prereq
+//    references still resolving after the rewrite. Two LOs sharing a loId
+//    would give the portal's materialize() two nodes with the same _id
+//    (E11000 on insertMany, after the Course row was already upserted).
+const collide = normalizeRawTaxonomy({
+  title: 'CPHQ Exam',
+  sections: [{ key: 'ps', title: 'Patient Safety', weightPct: 100 }],
+  los: [
+    { loId: 'a', title: 'Risk Management', description: 'd1', sectionKey: 'ps', prerequisiteLoIds: [], suggestedOrder: 1 },
+    { loId: 'b', title: 'risk management!', description: 'd2', sectionKey: 'ps', prerequisiteLoIds: ['a'], suggestedOrder: 2 },
+    { loId: 'c', title: 'RISK MANAGEMENT', description: 'd3', sectionKey: 'ps', prerequisiteLoIds: ['b'], suggestedOrder: 3 },
+  ],
+}, 'cphq');
+assert.ok(collide, 'colliding titles still normalize');
+const collideIds = collide.los.map((l) => l.loId);
+assert.equal(collideIds.length, 3, 'no LO dropped by the dedup');
+assert.equal(new Set(collideIds).size, 3, `loIds must be distinct, got ${collideIds.join(', ')}`);
+assert.equal(collideIds[0], 'cphq.ps.risk-management');
+assert.equal(collideIds[1], 'cphq.ps.risk-management-2');
+assert.equal(collideIds[2], 'cphq.ps.risk-management-3');
+// prereq edges follow each LO to its deduped id:
+assert.deepEqual(collide.los[1].prerequisiteLoIds, [collideIds[0]]);
+assert.deepEqual(collide.los[2].prerequisiteLoIds, [collideIds[1]]);
+
+// 5. Colliding SECTION keys are deduped too (two sections sharing a key made
+//    weightPct edits and LO bucketing ambiguous).
+const dupSections = normalizeRawTaxonomy({
+  title: 'CPHQ Exam',
+  sections: [
+    { key: 'Patient Safety', title: 'Patient Safety', weightPct: 50 },
+    { key: 'patient-safety', title: 'Patient safety (advanced)', weightPct: 50 },
+  ],
+  los: [{ loId: 'a', title: 'Safety culture', description: 'd', sectionKey: 'patient-safety', prerequisiteLoIds: [], suggestedOrder: 1 }],
+}, 'cphq');
+assert.ok(dupSections, 'colliding section keys still normalize');
+assert.deepEqual(dupSections.sections.map((s) => s.key), ['patient-safety', 'patient-safety-2']);
+
+// 6. Over-long titles are truncated to the contract's 200-char cap rather
+//    than failing validation and discarding the whole draft to the fallback.
+const longTitle = 'L'.repeat(260);
+const trunc = normalizeRawTaxonomy({
+  title: 'CPHQ Exam',
+  sections: [{ key: 'ps', title: longTitle, weightPct: 100 }],
+  los: [{ loId: 'a', title: longTitle, description: 'd', sectionKey: 'ps', prerequisiteLoIds: [], suggestedOrder: 1 }],
+}, 'cphq');
+assert.ok(trunc, 'over-long titles do not sink the draft');
+assert.equal(trunc.sections[0].title.length, 200);
+assert.equal(trunc.los[0].title.length, 200);
+assert.ok(trunc.los[0].loId.length <= 120, `loId within contract cap, got ${trunc.los[0].loId.length}`);
+
 console.log('test-taxonomy-generate: all assertions passed');

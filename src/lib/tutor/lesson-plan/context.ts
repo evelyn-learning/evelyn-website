@@ -116,9 +116,16 @@ const LO_SEGMENT_SUFFIX_RE = /-(hook|concept|worked2|worked|recall|try2|try)$/;
  *  'recap' are singleton groups (no suffix, never shared with an LO).
  *  Any id that doesn't match the suffix pattern is its own singleton
  *  group — this degrades gracefully for ids that don't follow the
- *  convention (e.g. fallbackPlan's "lo1-concept" still strips to
- *  "lo1"; a bare custom id like "pick-los" is simply its own
+ *  convention (a bare custom id like "pick-los" is simply its own
  *  group-of-one).
+ *
+ *  Generated LO ids are plan-scoped ("<planId>.lo-1", see
+ *  namespaceGeneratedLos in generate-from-text.ts), so a generated
+ *  segment id looks like "<planId>.lo-1-concept" and strips back to
+ *  "<planId>.lo-1" — the suffix regex is unaffected by the added dot
+ *  and prefix, and the recovered group still matches a plan.los entry
+ *  exactly (fallbackPlan's single segment now does too, where its old
+ *  "lo1-concept" stripped to "lo1" and matched nothing).
  *
  *  `worked2` (Task 12, learner-conditioned generation): the STAGE2_SYSTEM
  *  EXCEPTION rule mints a second worked-example segment "<loId>-worked2"

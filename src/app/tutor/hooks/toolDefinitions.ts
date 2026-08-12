@@ -1959,7 +1959,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
           type: 'array',
           items: { type: 'string' },
           minItems: 1,
-          description: 'Ordered list of LO ids the student picked (from the picker segment\'s keyIdeas — the "lo-1", "lo-2", etc. prefixes).',
+          description: 'Ordered list of LO ids the student picked. Each keyIdeas line of the picker segment reads "<lo id>: <description>" — pass the id EXACTLY as written there (everything before the first ": "), never a paraphrase or a row number.',
         },
       },
       required: ['pickedLoIds'],

@@ -24,6 +24,8 @@ import {
   expandSegmentsForLOs,
   buildPickerPlan,
   buildRecapSegment,
+  mintGeneratedPlanId,
+  namespaceGeneratedLos,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { findCuratedMatches } from '@/lib/tutor/lesson-plan/match-curated';
 import { detectFreestyleText } from '@/lib/tutor/lesson-plan/freestyle-trigger';
@@ -175,7 +177,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const planId = `freestyle-${Date.now()}`;
+  const planId = mintGeneratedPlanId();
+  // Same plan-scoping as the portal's plan-generate route — these two
+  // entry points are kept in lockstep (see the module doc there).
+  const ns = namespaceGeneratedLos({ planId, los: stage1.los, segments: stage2.segments });
   const introSegment: Segment = {
     id: 'intro',
     kind: 'hook',
@@ -193,9 +198,9 @@ export async function POST(request: NextRequest) {
       subject: body.subject,
       topic: body.topic,
       locale: body.locale ?? 'en',
-      los: stage1.los,
+      los: ns.los,
       estimatedMinutes: sessionMinutes,
-      segments: [introSegment, ...stage2.segments, buildRecapSegment(stage1.los)],
+      segments: [introSegment, ...ns.segments, buildRecapSegment(ns.los)],
       prerequisites: [],
       followUps: [],
       schemaVersion: LESSON_PLAN_SCHEMA_VERSION,
