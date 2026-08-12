@@ -1120,6 +1120,9 @@ function solveStep(step: Step, state: State): void {
     // declarable inline alongside derived steps. Keeps brain emissions
     // that mix givens and constructions in one array working.
     case 'point':
+      if (!Number.isFinite(step.x) || !Number.isFinite(step.y)) {
+        throw new Error(`point "${step.id}": x and y must be finite numbers, got x=${JSON.stringify(step.x)} y=${JSON.stringify(step.y)}`);
+      }
       setObject(state, { kind: 'point', id: step.id, x: step.x, y: step.y, label: step.label });
       return;
     case 'segment':
@@ -1193,6 +1196,14 @@ function solveStep(step: Step, state: State): void {
       // portal-7f483853). Throw so the card shows the Construction error
       // box and the brain can self-correct.
       const kind = (step as { kind?: unknown }).kind;
+      // Mirror the given-path tolerance (see solveGeometry's given loop): a
+      // kindless entry carrying numeric x/y is a point declaration — the
+      // brain is inconsistent about including the discriminant.
+      const loose = step as { id?: string; x?: unknown; y?: unknown; label?: string };
+      if (kind === undefined && typeof loose.id === 'string' && Number.isFinite(loose.x) && Number.isFinite(loose.y)) {
+        setObject(state, { kind: 'point', id: loose.id, x: loose.x as number, y: loose.y as number, label: loose.label });
+        return;
+      }
       throw new Error(`unknown step kind ${JSON.stringify(kind)}.${getGeometryStepKindsDescriptionTail()}`);
     }
   }

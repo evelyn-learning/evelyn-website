@@ -115,6 +115,35 @@ function main() {
     assert.equal(m.y, 0);
   });
 
+  test('kindless {id,x,y} step entry is treated as a point (given-path parity)', () => {
+    const spec = {
+      given: [{ id: 'A', kind: 'point', x: 0, y: 0 }],
+      steps: [
+        { id: 'P', x: 2, y: 3 },
+        { id: 'AP', kind: 'segment', from: 'A', to: 'P' },
+      ],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any as ConstructedGeometrySpec;
+    const out = solveGeometry(spec);
+    const p = findPt(out, 'P');
+    assert.equal(p.x, 2);
+    assert.equal(p.y, 3);
+    assert.ok(hasSeg(out, 'A', 'P'), 'segment to kindless point');
+  });
+
+  test('point step with non-finite coords throws instead of registering NaN geometry', () => {
+    const bad = [
+      { id: 'P', kind: 'point' },
+      { id: 'P', kind: 'point', x: '2', y: 3 },
+      { id: 'P', kind: 'point', x: NaN, y: 0 },
+    ];
+    for (const step of bad) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const spec = { given: [], steps: [step] } as any as ConstructedGeometrySpec;
+      assert.throws(() => solveGeometry(spec), /finite/, `should throw for ${JSON.stringify(step)}`);
+    }
+  });
+
   // ── unknown-kind guard ────────────────────────────────────────────────────
   test('unknown step kind throws instead of silently no-opping', () => {
     const spec = {
