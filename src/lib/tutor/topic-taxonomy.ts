@@ -71,6 +71,7 @@ export const SUBJECTS: TutorSubject[] = [
   { id: 'languages', label: 'World Languages', icon: '🗣️' },
   { id: 'arts', label: 'Arts', icon: '🎨' },
   { id: 'test-prep', label: 'Test Prep', icon: '🎯' },
+  { id: 'professional', label: 'Professional Certs', icon: '🏥' },
 ];
 
 // ── Levels ──
@@ -493,6 +494,15 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
     nursing: [
       { id: 'nclex-rn', label: 'NCLEX-RN' },
       { id: 'nclex-pn', label: 'NCLEX-PN' },
+    ],
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // PROFESSIONAL CERTS
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  professional: {
+    college: [
+      { id: 'cphq', label: 'CPHQ (Healthcare Quality)', brainGen: 'live' },
     ],
   },
 };
