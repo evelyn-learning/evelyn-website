@@ -1,0 +1,530 @@
+[
+  {
+    "id": "cphq-gen.culture-of-safety-assessment.01",
+    "loId": "gen-2662897e-0f38-40f2-8901-fccfa45bb173.lo-1",
+    "cedCode": "CPHQ-U4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a new-employee orientation, the quality director explains that a strong culture of safety is more than compliance with policies. She emphasizes that it reflects the collective mindset of the organization toward error prevention and openness. Which of the following best defines an organization's culture of safety?",
+    "choices": [
+      "Shared values, behaviors, and norms among staff that support transparent error reporting and harm prevention",
+      "The technical competence of the risk management and legal departments",
+      "The total number of adverse events reported to external regulatory agencies each year",
+      "A written policy manual describing disciplinary actions for reporting errors"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about beliefs and behaviors shared across the organization, not just documents or departments.",
+      "Focus on the definition taught in the lesson, not on outcomes measurement alone."
+    ]
+  },
+  {
+    "id": "cphq-gen.culture-of-safety-assessment.02",
+    "loId": "gen-2662897e-0f38-40f2-8901-fccfa45bb173.lo-1",
+    "cedCode": "CPHQ-U4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse manager notices that staff on her unit have become reluctant to report near-miss medication events after a colleague was publicly reprimanded in a staff meeting for submitting an incident report. Since that meeting, voluntary reporting on the unit has dropped sharply even though the actual error rate has likely not changed.",
+    "choices": [
+      "Psychological safety, which normally encourages staff to report errors without fear of blame",
+      "Clinical competency, since staff may lack the skills to identify near misses",
+      "Regulatory compliance, since reporting is mandated by external bodies",
+      "Financial performance, since incident reports affect the unit's budget"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider what makes staff feel safe enough to speak up about mistakes.",
+      "The drop in reporting reflects a cultural, not a skills-based, problem."
+    ]
+  },
+  {
+    "id": "cphq-gen.culture-of-safety-assessment.03",
+    "loId": "gen-2662897e-0f38-40f2-8901-fccfa45bb173.lo-1",
+    "cedCode": "CPHQ-U4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team compares two medical-surgical units. Unit A logs 40 incident reports per month, including many minor near misses, and staff say leadership reviews each report in a blame-free huddle to identify system fixes. Unit B logs only 3 incident reports per month, and staff privately admit they avoid reporting because previous reporters faced informal criticism from supervisors. The team must decide which unit demonstrates a stronger culture of safety despite Unit A's higher reported error count.",
+    "choices": [
+      "Unit A, because its higher reporting reflects psychological safety and transparency that support learning, while Unit B's low count likely hides unreported harm",
+      "Unit B, because its lower number of incident reports indicates fewer actual errors and better performance",
+      "Unit A, because more reports automatically mean more errors are occurring on that unit",
+      "Unit B, because supervisors are enforcing accountability by discouraging unnecessary reporting"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that low reported numbers can mask hidden problems rather than reflect true safety.",
+      "Consider what a blame-free review process signals about leadership support and transparency."
+    ]
+  },
+  {
+    "id": "cphq-gen.culture-of-safety-assessment.04",
+    "loId": "gen-2662897e-0f38-40f2-8901-fccfa45bb173.lo-1",
+    "cedCode": "CPHQ-U4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Hospital leadership is under pressure to improve its accreditation dashboard, which displays the raw number of reported safety incidents as a public performance metric. The chief quality officer proposes two competing strategies: one that streamlines and encourages more voluntary error and near-miss reporting through blame-free review sessions, and another that tightens reporting criteria so that only serious, harm-causing events are logged, thereby lowering the visible incident count. Staff surveys already show declining trust in leadership's response to previously reported errors.",
+    "choices": [
+      "Encourage broader voluntary reporting with transparent, blame-free follow-up, even though the dashboard numbers may temporarily rise, because this rebuilds psychological safety and surfaces system issues before harm occurs",
+      "Tighten reporting criteria to lower the visible incident count, since a smaller number will reassure accreditors that the hospital's safety culture is strong",
+      "Maintain current reporting criteria but stop publicly reviewing errors, since public review lowers staff morale",
+      "Report only incidents that result in patient harm, since near misses do not reflect true safety culture problems"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider which choice preserves trust and transparency rather than just improving the appearance of the metric.",
+      "A rising number of reports is not automatically a bad sign if it reflects better psychological safety."
+    ]
+  },
+  {
+    "id": "cphq-gen.failure-mode-and-effects-analysis-fmea.01",
+    "loId": "gen-2e33ba0f-644b-46bf-9eeb-16d32f8a710d.lo-1",
+    "cedCode": "CPHQ-U4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During new-employee orientation, a quality management educator explains the difference between tools used before an error occurs and tools used after one occurs. She describes Failure Mode and Effects Analysis (FMEA) as one such tool used by hospital quality teams. Based on this description, what is the primary purpose of FMEA?",
+    "choices": [
+      "To identify and mitigate potential process failures before they can harm a patient",
+      "To determine the root cause of an adverse event that has already occurred",
+      "To assign disciplinary action to staff members involved in a medical error",
+      "To calculate the financial cost associated with a sentinel event"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about whether FMEA is proactive or reactive.",
+      "Recall the worked example: FMEA's role is to 'catch errors before administration.'"
+    ]
+  },
+  {
+    "id": "cphq-gen.failure-mode-and-effects-analysis-fmea.02",
+    "loId": "gen-2e33ba0f-644b-46bf-9eeb-16d32f8a710d.lo-1",
+    "cedCode": "CPHQ-U4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surgical services director wants to reduce the risk of wrong-site surgery and asks the quality team to conduct an FMEA of the pre-operative site verification process. No adverse event has occurred yet, but the director wants to be proactive. Following the steps taught for conducting an FMEA, what should the team do first?",
+    "choices": [
+      "Map out each step of the current pre-operative verification process to identify where failures could occur",
+      "Wait until a wrong-site surgery event happens so there is real data to analyze",
+      "Survey patients about their overall satisfaction with the surgery scheduling process",
+      "Immediately discard the current verification checklist and replace it with a new one"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the worked example steps: identify the process before analyzing failure points.",
+      "FMEA starts with mapping the process, not reacting to an outcome."
+    ]
+  },
+  {
+    "id": "cphq-gen.failure-mode-and-effects-analysis-fmea.03",
+    "loId": "gen-2e33ba0f-644b-46bf-9eeb-16d32f8a710d.lo-1",
+    "cedCode": "CPHQ-U4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's discharge planning team is redesigning patient discharge instructions after noticing high readmission rates. Some team members push to implement the new process immediately because of time pressure from leadership, while the quality manager insists on conducting an FMEA first, even though it will delay rollout by several weeks. The team must weigh the urgency of implementation against the value of proactive risk identification. Which action best reflects the appropriate use of FMEA in this situation?",
+    "choices": [
+      "Perform the FMEA before implementation to systematically identify failure points that could harm patients, even though it delays the rollout",
+      "Skip the FMEA and implement the new process immediately since it has worked in other units before",
+      "Conduct the FMEA only after implementation, using any adverse events that occur as the basis for analysis",
+      "Rely solely on patient complaint data instead of FMEA to identify weaknesses in the new discharge process"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider FMEA's defining purpose: predicting failures before they cause harm.",
+      "Weigh the cost of a short delay against the benefit of proactively catching risks."
+    ]
+  },
+  {
+    "id": "cphq-gen.failure-mode-and-effects-analysis-fmea.04",
+    "loId": "gen-2e33ba0f-644b-46bf-9eeb-16d32f8a710d.lo-1",
+    "cedCode": "CPHQ-U4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A four-campus health system experiences a wrong-site surgery at Campus A. Leadership convenes a system-wide quality council to prevent similar failures. Campuses B, C, and D use a nearly identical pre-operative verification process but have not yet had a failure. Some council members argue the team should focus its FMEA resources on Campus A, since that is where the problem was revealed, while others argue FMEA should instead be applied to Campuses B, C, and D. Given FMEA's defined purpose as a proactive tool, which approach best reflects appropriate use of FMEA across the system?",
+    "choices": [
+      "Apply FMEA only at Campus A, since the failure there already identified the process weaknesses",
+      "Apply FMEA to the verification processes at Campuses B, C, and D to proactively identify and mitigate similar failure points before harm occurs there, while a separate reactive review addresses Campus A",
+      "Delay any analysis at any campus until all four report an adverse event, to ensure consistent data across the system",
+      "Use FMEA exclusively to investigate why the wrong-site surgery happened at Campus A"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember FMEA is used before a failure occurs, not to investigate one that already happened.",
+      "Consider which campuses still have a chance to have their risks proactively identified and mitigated."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-for-sentinel-events.01",
+    "loId": "gen-eef93bcb-21c0-4258-83c9-514d90238b3c.lo-1",
+    "cedCode": "CPHQ-U4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The quality department is training new staff on how to classify unexpected patient harm events for internal reporting purposes. Which statement best distinguishes a sentinel event from a general adverse event?",
+    "choices": [
+      "Sentinel events involve any patient injury, while adverse events only involve financial harm to the hospital.",
+      "Sentinel events cause serious harm or death and are unexpected and preventable, while adverse events are unintended injuries that may be expected or inevitable.",
+      "Sentinel events occur only in surgical settings, while adverse events occur in any clinical setting.",
+      "Sentinel events are always caused by equipment failure, while adverse events are caused by staff error."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the core definitions taught: severity, expectedness, and preventability distinguish the two categories."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-for-sentinel-events.02",
+    "loId": "gen-eef93bcb-21c0-4258-83c9-514d90238b3c.lo-1",
+    "cedCode": "CPHQ-U4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse administers the correct medication but at double the prescribed dose due to a calculation error, and the patient develops significant, unexpected kidney injury requiring dialysis. The hospital's risk manager must decide whether this event requires mandatory investigation and reporting.",
+    "choices": [
+      "This is an adverse event because it involved only a dosing error, not a wrong-site error.",
+      "This is a sentinel event because the harm was serious, unexpected, and resulted from a preventable process failure.",
+      "This is neither a sentinel nor adverse event because no death occurred.",
+      "This is an adverse event because kidney injury is a common complication of medication use."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the harm was expected/inevitable or unexpected/preventable before deciding if mandatory reporting applies."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-for-sentinel-events.03",
+    "loId": "gen-eef93bcb-21c0-4258-83c9-514d90238b3c.lo-1",
+    "cedCode": "CPHQ-U4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A patient undergoing a routine outpatient procedure develops a known but rare allergic reaction to a properly administered anesthetic, despite documented pre-procedure screening showing no prior allergy history. The reaction was managed promptly, and the patient recovered fully with no lasting harm. The quality committee is debating whether this event warrants a formal root cause analysis as a sentinel event.",
+    "choices": [
+      "This qualifies as a sentinel event because any allergic reaction to anesthesia is inherently unexpected and therefore reportable.",
+      "This is a sentinel event because root cause analysis must be performed whenever an outcome deviates from the plan of care.",
+      "This is an adverse event, not a sentinel event, because the reaction was a known possible complication despite appropriate screening, and no serious harm or death occurred.",
+      "This is a sentinel event because any event involving anesthesia is automatically classified as high-risk and mandatorily reportable."
+    ],
+    "answer": "C",
+    "hints": [
+      "Weigh whether the outcome was truly unexpected and preventable versus a known risk, and whether serious harm or death actually occurred."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-for-sentinel-events.04",
+    "loId": "gen-eef93bcb-21c0-4258-83c9-514d90238b3c.lo-1",
+    "cedCode": "CPHQ-U4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During a root cause analysis, the team discovers that a patient died after receiving a mismatched blood transfusion despite two independent verification checks being completed per protocol. Hospital leadership is under pressure to quickly close the investigation to reassure the board, but the quality director insists that classification must follow defined criteria rather than expedience.",
+    "choices": [
+      "Because verification protocols were followed, this must be classified as an adverse event, since staff cannot be blamed for a system that appeared to work correctly.",
+      "This should be classified as a sentinel event because it resulted in death, was unexpected given that safety checks were completed, and reflects a preventable system failure requiring mandatory investigation.",
+      "Classification should be delayed until legal counsel determines liability, since event classification depends on fault rather than event characteristics.",
+      "This is an adverse event because transfusion reactions are always considered an inherent risk of treatment regardless of cause."
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on the defining criteria—death or serious harm, unexpectedness, and preventability—rather than on process compliance or assigning blame."
+    ]
+  },
+  {
+    "id": "cphq-gen.designing-incident-reporting-systems.01",
+    "loId": "gen-e81940e0-7e5a-4072-904f-ad799f6d9289.lo-1",
+    "cedCode": "CPHQ-U4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality department is designing a new incident reporting system for nursing staff. Which underlying purpose should guide the design of this system?",
+    "choices": [
+      "To identify system failures that contribute to safety events, not just individual blame",
+      "To create a permanent disciplinary record for each staff member involved in an event",
+      "To limit reporting to sentinel events only so the volume stays manageable",
+      "To satisfy accreditation paperwork requirements without changing daily practice"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what incident reports are meant to reveal about how errors happen.",
+      "Consider the difference between blaming individuals and understanding process design."
+    ]
+  },
+  {
+    "id": "cphq-gen.designing-incident-reporting-systems.02",
+    "loId": "gen-e81940e0-7e5a-4072-904f-ad799f6d9289.lo-1",
+    "cedCode": "CPHQ-U4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pharmacy technician nearly dispenses a look-alike medication but catches the error before it reaches the patient. She is unsure whether to report this 'near miss' since no harm actually occurred. What is the best guidance to give her about reporting this event?",
+    "choices": [
+      "She should report it, because analyzing near misses can reveal patterns that allow proactive risk reduction before real harm occurs",
+      "She should not report it, since only events that cause actual patient harm need to be reported",
+      "She should mention it verbally to her supervisor only, keeping it off the official record",
+      "She should wait to see if the same error happens again before deciding to report it"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall that data reveals patterns enabling proactive risk reduction.",
+      "Near misses are still valuable data points, even without harm."
+    ]
+  },
+  {
+    "id": "cphq-gen.designing-incident-reporting-systems.03",
+    "loId": "gen-e81940e0-7e5a-4072-904f-ad799f6d9289.lo-1",
+    "cedCode": "CPHQ-U4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A nurse manager reviews six months of incident reports and finds three separate medication administration errors from three different nurses, all linked to look-alike, sound-alike drug labeling on the same medication cart. She must decide how to respond in a way that both fixes the problem and preserves staff willingness to keep reporting. Which combination of actions best reflects the goals of a non-punitive incident reporting system?",
+    "choices": [
+      "Redesign the labeling system to address the systemic cause, and communicate to staff that the reports were used to drive improvement rather than punish individuals",
+      "Issue written warnings to the three nurses involved to reinforce individual accountability for medication safety",
+      "Discontinue trend analysis since three isolated errors from different staff do not represent a real pattern worth investigating",
+      "Ask staff to stop reporting minor medication errors going forward to reduce the administrative burden on the unit"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider both the systemic root cause and the message this response sends to staff who reported.",
+      "Non-punitive systems rely on trust that reporting leads to improvement, not discipline."
+    ]
+  },
+  {
+    "id": "cphq-gen.designing-incident-reporting-systems.04",
+    "loId": "gen-e81940e0-7e5a-4072-904f-ad799f6d9289.lo-1",
+    "cedCode": "CPHQ-U4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's incident reporting rates have dropped sharply after a highly publicized case in which a reported medication error led to termination of the involved nurse, even though the investigation showed the error stemmed from a flawed double-check protocol rather than negligence. Leadership wants to rebuild staff trust in the reporting system while still maintaining accountability for genuinely reckless behavior. Which approach best balances these competing priorities while staying true to the core purpose of incident reporting?",
+    "choices": [
+      "Publicly reaffirm that reporting exists to uncover system failures like flawed protocols, reserve disciplinary action for reckless or intentional misconduct only, and use aggregated data transparently to drive redesign",
+      "Reinstate the terminated nurse but continue evaluating all future reports on a case-by-case basis without changing how the organization communicates about reporting",
+      "Make reporting mandatory and fully anonymous, and remove all follow-up investigation so staff never fear consequences",
+      "Discontinue aggregated trend analysis of reports and instead address each incident privately and individually to avoid further public scrutiny"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about how transparency and distinguishing system failure from reckless behavior builds a learning culture.",
+      "Consider what rebuilds trust in reporting without abandoning accountability entirely."
+    ]
+  },
+  {
+    "id": "cphq-gen.high-reliability-organization-principles.01",
+    "loId": "gen-45514986-ae79-428f-ae2b-ca5c186b0958.lo-1",
+    "cedCode": "CPHQ-U4.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a quality orientation session, a facilitator explains that high-reliability organizations (HROs) treat every error, near miss, and small deviation as valuable information rather than a rare anomaly to ignore. Staff are taught to actively look for and report even minor lapses so the organization can learn from them before serious harm occurs.",
+    "choices": [
+      "Preoccupation with failure",
+      "Reluctance to simplify",
+      "Deference to expertise",
+      "Commitment to resilience"
+    ],
+    "answer": "A",
+    "hints": [
+      "Focus on the word 'error' and how the organization responds to it.",
+      "This principle is about treating small failures as signals, not noise."
+    ]
+  },
+  {
+    "id": "cphq-gen.high-reliability-organization-principles.02",
+    "loId": "gen-45514986-ae79-428f-ae2b-ca5c186b0958.lo-1",
+    "cedCode": "CPHQ-U4.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After a medication error, a unit manager initially wants to close the case by simply documenting 'nurse distraction' as the cause. However, the quality team insists on digging deeper, examining workflow interruptions, labeling practices, and staffing patterns before accepting any single explanation.",
+    "choices": [
+      "Sensitivity to operations",
+      "Reluctance to simplify",
+      "Commitment to resilience",
+      "Preoccupation with failure"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the team's refusal to accept an easy, one-word explanation.",
+      "This principle resists oversimplified root causes."
+    ]
+  },
+  {
+    "id": "cphq-gen.high-reliability-organization-principles.03",
+    "loId": "gen-45514986-ae79-428f-ae2b-ca5c186b0958.lo-1",
+    "cedCode": "CPHQ-U4.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's rapid response coordinator continuously monitors real-time data on bed occupancy, staffing ratios, and patient acuity across units, adjusting resources before any unit becomes overwhelmed. Separately, the same hospital maintains a well-rehearsed surge plan that allows staff to quickly contain and recover from unexpected events, such as a sudden influx of critical patients, once they occur.",
+    "choices": [
+      "Both actions reflect commitment to resilience because they involve planning ahead",
+      "The real-time monitoring reflects sensitivity to operations, while the surge plan reflects commitment to resilience",
+      "The real-time monitoring reflects deference to expertise, while the surge plan reflects reluctance to simplify",
+      "Both actions reflect sensitivity to operations because they involve frontline awareness"
+    ],
+    "answer": "B",
+    "hints": [
+      "Distinguish between awareness of current conditions versus the ability to bounce back after a disruption already occurs.",
+      "One principle is proactive real-time awareness; another is about recovering once something has already gone wrong."
+    ]
+  },
+  {
+    "id": "cphq-gen.high-reliability-organization-principles.04",
+    "loId": "gen-45514986-ae79-428f-ae2b-ca5c186b0958.lo-1",
+    "cedCode": "CPHQ-U4.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Facing budget cuts, hospital leadership proposes reducing the number of items on a surgical safety checklist to save time in the operating room, arguing that most cases follow a routine pattern and a shorter checklist would be 'close enough' for most patients. The perioperative quality committee is divided: some argue efficiency gains justify the change, while others warn that assuming most cases are routine ignores the variability and complexity of individual patients, and that frontline staff who see unique risks in specific cases should have a say before the checklist is shortened.",
+    "choices": [
+      "Reluctance to simplify, because assuming cases are routine overlooks meaningful variation, and deference to expertise, because frontline input should shape the decision",
+      "Commitment to resilience, because the checklist helps the team recover quickly from any error that occurs during surgery",
+      "Preoccupation with failure, because the checklist is primarily used to track how many errors occur each month",
+      "Sensitivity to operations, because the checklist change is only about saving time in the operating room schedule"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider two separate HRO principles at risk: one about oversimplifying complex situations, another about whose input should guide safety decisions.",
+      "Think about why treating 'most cases' as routine could be risky, and who should weigh in on frontline safety trade-offs."
+    ]
+  },
+  {
+    "id": "cphq-gen.interpreting-patient-safety-indicators.01",
+    "loId": "gen-95b975f2-c8f2-455d-af87-261bc41edb41.lo-1",
+    "cedCode": "CPHQ-U4.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The quality department at a community hospital is orienting new staff to patient safety indicators (PSIs) before rolling out a new dashboard. The educator explains that PSIs are a specific category of metrics tracked in hospital quality and accountability programs, distinct from financial or operational measures.",
+    "choices": [
+      "Rates of preventable adverse events occurring during hospital care",
+      "Overall hospital revenue generated per patient encounter",
+      "Patient satisfaction scores collected on discharge surveys",
+      "Staff-to-patient staffing ratios on each nursing unit"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what the words 'safety' and 'adverse event' point to.",
+      "PSIs are tied to preventable harm, not financial or staffing metrics."
+    ]
+  },
+  {
+    "id": "cphq-gen.interpreting-patient-safety-indicators.02",
+    "loId": "gen-95b975f2-c8f2-455d-af87-261bc41edb41.lo-1",
+    "cedCode": "CPHQ-U4.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surgical unit's infection control nurse is reviewing quarterly data and finds that the unit had 5 surgical site infections per 1000 procedures performed. She needs to determine whether this level of infection represents a safety concern requiring escalation to the quality committee.",
+    "choices": [
+      "The rate converts to 0.5%, which falls within the typical 0.4-0.6% benchmark range",
+      "The rate converts to 5%, which far exceeds the typical benchmark range",
+      "The rate cannot be evaluated without also knowing patient satisfaction scores",
+      "The rate is too small a sample to convert into a meaningful percentage"
+    ],
+    "answer": "A",
+    "hints": [
+      "Convert 'per 1000' into a percentage before comparing it to the benchmark.",
+      "Recall the SSI benchmark range discussed in the lesson."
+    ]
+  },
+  {
+    "id": "cphq-gen.interpreting-patient-safety-indicators.03",
+    "loId": "gen-95b975f2-c8f2-455d-af87-261bc41edb41.lo-1",
+    "cedCode": "CPHQ-U4.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's quality committee is reviewing catheter-associated urinary tract infection (CAUTI) data over three consecutive quarters: 4 per 1000 catheter-days, then 6 per 1000 catheter-days, then 8 per 1000 catheter-days. The typical national benchmark for CAUTI is 3-4 per 1000 catheter-days, and the committee must decide how urgently to respond.",
+    "choices": [
+      "The rate is both worsening over time and now well above benchmark, indicating an urgent need for improvement action",
+      "The upward movement is gradual, so no action is needed until the rate doubles again from its current level",
+      "Because the first quarter's rate was close to benchmark, the overall three-quarter trend can be considered acceptable",
+      "The three data points cannot represent a trend unless compared against patient satisfaction survey results"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at both where the rate stands relative to benchmark and the direction it has moved over time.",
+      "A single quarter near benchmark doesn't erase a worsening pattern in later quarters."
+    ]
+  },
+  {
+    "id": "cphq-gen.interpreting-patient-safety-indicators.04",
+    "loId": "gen-95b975f2-c8f2-455d-af87-261bc41edb41.lo-1",
+    "cedCode": "CPHQ-U4.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital system's quality director is comparing three affiliated facilities to decide where to focus limited surgical infection prevention resources. Hospital A currently has a surgical site infection (SSI) rate of 0.9% (benchmark 0.4-0.6%) but has improved steadily from 1.5% over the past four quarters. Hospital B has an SSI rate of 0.5%, within benchmark, but this rate has been flat for two years with no active improvement work. Hospital C has a CAUTI rate of 3.5 per 1000 catheter-days, within its 3-4 benchmark, but performs very few surgeries, making its SSI data statistically unreliable.",
+    "choices": [
+      "Hospital A, because despite its improvement trend its infection rate still exceeds benchmark and warrants continued targeted intervention",
+      "Hospital B, because a flat rate over time always signals urgent risk regardless of benchmark status",
+      "Hospital C, because its within-benchmark CAUTI performance should take priority over any hospital's SSI concerns",
+      "None of the facilities require further action since two of the three currently sit within their respective benchmarks"
+    ],
+    "answer": "A",
+    "hints": [
+      "Weigh both the current benchmark comparison and the trend direction before deciding priority.",
+      "Being within benchmark but stagnant is different from being above benchmark but improving-consider which poses more ongoing risk."
+    ]
+  },
+  {
+    "id": "cphq-gen.risk-mitigation-strategy-development.01",
+    "loId": "gen-18414c79-5a7e-4d26-9be7-8fb419b020d3.lo-1",
+    "cedCode": "CPHQ-U4.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team is launching a Failure Mode and Effects Analysis (FMEA) on the blood transfusion process to proactively identify risks before an error occurs. According to FMEA methodology, what is the first step the team should take before assigning any risk scores?",
+    "choices": [
+      "Map out each step of the process and identify potential failure modes at each step",
+      "Calculate the RPN for every possible failure mode simultaneously",
+      "Interview only staff involved in the most severe past outcome",
+      "Skip occurrence scoring since detection likelihood is the most important factor"
+    ],
+    "answer": "A",
+    "hints": [
+      "FMEA is a systematic, stepwise tool.",
+      "Think about what must exist before you can rate severity, occurrence, and detection."
+    ]
+  },
+  {
+    "id": "cphq-gen.risk-mitigation-strategy-development.02",
+    "loId": "gen-18414c79-5a7e-4d26-9be7-8fb419b020d3.lo-1",
+    "cedCode": "CPHQ-U4.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During an FMEA of the central line insertion process, the quality team identifies a failure mode of 'incorrect skin site preparation.' The team rates this failure mode with a severity of 7, an occurrence of 4, and a detection score of 6. What is the Risk Priority Number (RPN) for this failure mode?",
+    "choices": [
+      "17",
+      "118",
+      "168",
+      "280"
+    ],
+    "answer": "C",
+    "hints": [
+      "RPN = Severity x Occurrence x Detection.",
+      "Multiply all three numbers together, don't add them."
+    ]
+  },
+  {
+    "id": "cphq-gen.risk-mitigation-strategy-development.03",
+    "loId": "gen-18414c79-5a7e-4d26-9be7-8fb419b020d3.lo-1",
+    "cedCode": "CPHQ-U4.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A medication administration FMEA identifies two failure modes. Failure mode A, wrong-dose transcription, is rated severity 9, occurrence 3, and detection 4. Failure mode B, wrong-patient identification, is rated severity 10, occurrence 2, and detection 5. The team has limited resources this quarter and must decide which failure mode to address first based strictly on the calculated risk scores.",
+    "choices": [
+      "Failure mode A, because its RPN is higher than failure mode B's",
+      "Failure mode B, because its individual severity rating is the highest",
+      "Both failure modes equally, since they occur within the same overall process",
+      "Neither failure mode, since both RPNs fall below a sentinel event threshold"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate the RPN for each failure mode before comparing them.",
+      "The lesson teaches that FMEA prioritizes intervention based on the overall RPN, not a single rating alone."
+    ]
+  },
+  {
+    "id": "cphq-gen.risk-mitigation-strategy-development.04",
+    "loId": "gen-18414c79-5a7e-4d26-9be7-8fb419b020d3.lo-1",
+    "cedCode": "CPHQ-U4.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An FMEA of the surgical site-marking process yields two failure modes. Failure mode A, a missed site mark that could lead to wrong-site surgery, is rated severity 10, occurrence 2, and detection 3. Failure mode B, a delayed instrument count causing a minor procedural delay, is rated severity 3, occurrence 8, and detection 5. The team must decide how to allocate its risk mitigation efforts, since the two failure modes yield different RPN rankings but very different potential consequences.",
+    "choices": [
+      "Focus resources exclusively on failure mode B because its RPN is numerically higher",
+      "Prioritize mitigation for failure mode A despite its lower RPN, given its catastrophic severity, while still addressing failure mode B as resources allow",
+      "Address both failure modes with identical resource allocation since FMEA scores cannot be ranked against one another",
+      "Disregard failure mode A because its low detection score indicates existing controls are already adequate"
+    ],
+    "answer": "B",
+    "hints": [
+      "Calculate each RPN, but also consider what a severity rating of 10 represents for patient safety.",
+      "FMEA prioritization should account for catastrophic potential harm, not RPN alone."
+    ]
+  }
+]

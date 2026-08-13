@@ -1,0 +1,533 @@
+[
+  {
+    "id": "cphq-gen.quality-program-structure-and-governance.01",
+    "loId": "gen-6bbe10b5-be1f-4116-b52c-56b6267064e3.lo-1",
+    "cedCode": "CPHQ-U1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A newly appointed quality director at a community hospital is trying to understand how quality programs are typically organized. She asks her mentor to name a common organizational home for a hospital-wide quality program. Which of the following reflects a standard structural option taught for housing a quality program?",
+    "choices": [
+      "A standalone department reporting directly to C-suite leadership",
+      "A rotating assignment among unit clerks with no defined reporting line",
+      "A temporary task force that dissolves after each accreditation survey",
+      "A function performed only by the hospital's volunteer services office"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the three organizational homes discussed in the lesson.",
+      "Consider which option represents a permanent, leadership-linked structure."
+    ]
+  },
+  {
+    "id": "cphq-gen.quality-program-structure-and-governance.02",
+    "loId": "gen-6bbe10b5-be1f-4116-b52c-56b6267064e3.lo-1",
+    "cedCode": "CPHQ-U1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At Riverside Medical Center, the CEO wants the quality program to be closely tied to physician practice patterns, credentialing concerns, and clinical decision-making so that quality initiatives gain stronger buy-in from the medical staff. She is deciding where to place the quality program organizationally to best support this goal.",
+    "choices": [
+      "Embed the quality program within medical affairs",
+      "Place the quality program under the facilities management department",
+      "Make the quality program a subunit of the finance department",
+      "Assign the quality program to the environmental services team"
+    ],
+    "answer": "A",
+    "hints": [
+      "Which organizational home is described as being embedded within clinical operations or medical affairs?",
+      "Match the stated goal (physician alignment) to the structure most suited for clinical integration."
+    ]
+  },
+  {
+    "id": "cphq-gen.quality-program-structure-and-governance.03",
+    "loId": "gen-6bbe10b5-be1f-4116-b52c-56b6267064e3.lo-1",
+    "cedCode": "CPHQ-U1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 250-bed hospital's quality program currently reports to the Chief Operating Officer, similar to the classic worked example. Over the past year, the hospital has seen a sharp rise in professional liability claims and repeated regulatory citations tied to unresolved patient safety events, prompting leadership to reconsider where quality should be housed. The CEO must weigh both the need for tighter integration with legal/regulatory response and the risk of losing operational efficiency gains built under the COO structure.",
+    "choices": [
+      "Relocate quality to risk/compliance, recognizing this may reduce direct alignment with day-to-day operations",
+      "Keep quality under the COO permanently, since operations reporting cannot be changed once established",
+      "Move quality into environmental services, since safety events often involve facility conditions",
+      "Eliminate the quality program entirely and distribute its functions among frontline staff"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider which organizational home is designed to align quality with liability and regulatory issues.",
+      "Remember the trade-off: centralization/regulatory alignment versus operational alignment."
+    ]
+  },
+  {
+    "id": "cphq-gen.quality-program-structure-and-governance.04",
+    "loId": "gen-6bbe10b5-be1f-4116-b52c-56b6267064e3.lo-1",
+    "cedCode": "CPHQ-U1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A multi-hospital health system is restructuring its quality function. System leaders face competing priorities: they want centralized oversight to standardize metrics across facilities, strong physician engagement at each site to drive clinical practice changes, and reduced duplication with the system's growing compliance/risk reporting requirements. No single existing structure taught in the lesson perfectly satisfies all three goals, and leadership must choose the option that best balances these trade-offs rather than one that ignores any single priority.",
+    "choices": [
+      "Create a standalone system-level quality department with formal liaison roles into medical affairs and risk/compliance at each facility",
+      "Assign quality entirely to each hospital's medical affairs office with no system-level coordination",
+      "House quality solely within system-level risk/compliance with no clinical or standalone presence",
+      "Disperse quality functions to individual departments across the system with no centralized or liaison structure"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall that the lesson frames the choice as centralization vs. clinical alignment, implying trade-offs rather than a single perfect answer.",
+      "Look for the option that attempts to bridge multiple organizational homes rather than relying on just one."
+    ]
+  },
+  {
+    "id": "cphq-gen.integrating-quality-functions-across-departments.01",
+    "loId": "gen-1df5ca57-87e3-401e-98d5-669b28d6ea71.lo-1",
+    "cedCode": "CPHQ-U1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "At Riverside Medical Center, the performance improvement department reviews monthly data comparing infection rates, fall rates, and medication turnaround times against established clinical and operational standards. Which quality function is primarily responsible for this type of ongoing monitoring and reporting?",
+    "choices": [
+      "Quality assurance",
+      "Risk management",
+      "Case management",
+      "Facilities management"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which function is described as monitoring standards and outcomes.",
+      "This function's role is to compare performance to benchmarks, not to coordinate patient care or mitigate hazards."
+    ]
+  },
+  {
+    "id": "cphq-gen.integrating-quality-functions-across-departments.02",
+    "loId": "gen-1df5ca57-87e3-401e-98d5-669b28d6ea71.lo-1",
+    "cedCode": "CPHQ-U1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse manager reports that a patient with complex diabetes and heart failure is being seen by cardiology, endocrinology, and physical therapy, but the departments are not communicating about the discharge plan. The quality director is asked which function should take the lead in coordinating the patient's care across these departments.",
+    "choices": [
+      "Risk management, because the lack of communication could lead to a sentinel event",
+      "Quality assurance, because clinical standards must be monitored",
+      "Case management, because it coordinates patient care across departments",
+      "Utilization review, because it approves length of stay"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall which function's primary role is described as coordinating care across departments.",
+      "The issue here is fragmented coordination, not a standards deviation or a hazard investigation."
+    ]
+  },
+  {
+    "id": "cphq-gen.integrating-quality-functions-across-departments.03",
+    "loId": "gen-1df5ca57-87e3-401e-98d5-669b28d6ea71.lo-1",
+    "cedCode": "CPHQ-U1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During a monthly review, the quality team finds that the surgical site infection rate is 12% above benchmark, and separately, risk management logs show 8 medication administration errors last month on the same surgical unit. The unit director asks the quality council how these two functions should work together to address the unit's overall safety performance.",
+    "choices": [
+      "Risk management should take over monitoring infection rates since it already tracks errors, eliminating the need for quality assurance involvement",
+      "Quality assurance should continue monitoring and reporting the infection rate deviation while risk management investigates and mitigates the medication error hazards, with both findings shared to inform a coordinated unit improvement plan",
+      "Case management should absorb both functions because it coordinates all patient care activities on the unit",
+      "The two findings are unrelated and should be addressed independently with no need for shared reporting"
+    ],
+    "answer": "B",
+    "hints": [
+      "Each function has a distinct primary role: monitoring standards versus mitigating hazards.",
+      "Integration means each function does its own job well and shares findings, not that one function replaces another."
+    ]
+  },
+  {
+    "id": "cphq-gen.integrating-quality-functions-across-departments.04",
+    "loId": "gen-1df5ca57-87e3-401e-98d5-669b28d6ea71.lo-1",
+    "cedCode": "CPHQ-U1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's dashboard shows three concurrent issues on the orthopedic unit: a surgical site infection rate 12% above benchmark, 8 medication errors last month, and multiple patients experiencing delayed discharges due to uncoordinated post-acute care planning. The executive team has limited resources this quarter and asks the quality department to recommend how the three relevant functions should be engaged, given that no single function can resolve all three issues alone.",
+    "choices": [
+      "Assign all three issues solely to risk management since patient safety hazards are the most urgent priority overall",
+      "Have quality assurance monitor and report the infection trend, risk management investigate and mitigate the medication error hazards, and case management coordinate discharge planning across departments, with findings integrated through a shared improvement process",
+      "Wait until next quarter to address any of the issues since resources are limited and functions should not overlap",
+      "Merge all three functions into a single team permanently so that only one report is generated for the executive team"
+    ],
+    "answer": "B",
+    "hints": [
+      "Each issue matches a different function's primary role described in the lesson: monitoring standards, mitigating hazards, and coordinating care.",
+      "Integration across departments means each function addresses what it is designed for, then results are combined to support overall organizational goals."
+    ]
+  },
+  {
+    "id": "cphq-gen.strategic-planning-for-quality-initiatives.01",
+    "loId": "gen-82eb46fc-7127-4b80-acae-a7327119459c.lo-1",
+    "cedCode": "CPHQ-U1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A newly hired quality director is reviewing three draft statements prepared by the department's strategic planning committee. One reads: 'By 2027, every patient in our system will receive care completely free of preventable harm.' The director needs to correctly categorize this statement as part of the mission-vision-goal framework.",
+    "choices": [
+      "It is the vision, because it describes an aspirational future state of care",
+      "It is the mission, because it explains the purpose of the quality department",
+      "It is a goal, because it contains a specific numeric target",
+      "It is a policy, because it directs staff behavior"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which framework element describes an ideal future rather than current purpose.",
+      "Note there is no measurable percentage or rate here, just an aspiration."
+    ]
+  },
+  {
+    "id": "cphq-gen.strategic-planning-for-quality-initiatives.02",
+    "loId": "gen-82eb46fc-7127-4b80-acae-a7327119459c.lo-1",
+    "cedCode": "CPHQ-U1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A community clinic's quality team is launching an initiative to reduce patient wait times and improve the overall visit experience. The team lead asks a staff member to draft the mission statement that will anchor this initiative before any goals or metrics are set.",
+    "choices": [
+      "We are committed to providing timely, accessible care that respects patients' time and improves their overall experience",
+      "By 2026, average patient wait time will decrease from 45 minutes to 15 minutes",
+      "Our clinic will be recognized as the fastest-access clinic in the region within five years",
+      "All front-desk staff must check patients in within 3 minutes of arrival"
+    ],
+    "answer": "A",
+    "hints": [
+      "A mission explains purpose and values, not a numeric target or a future aspiration.",
+      "Look for the option that focuses on why the work matters rather than what will be achieved by when."
+    ]
+  },
+  {
+    "id": "cphq-gen.strategic-planning-for-quality-initiatives.03",
+    "loId": "gen-82eb46fc-7127-4b80-acae-a7327119459c.lo-1",
+    "cedCode": "CPHQ-U1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality department has already written its mission ('to safeguard patient safety and build trust') and vision ('zero preventable harm by 2027'). The team must now select the annual goal statement that best translates this mission and vision into an actionable, measurable component of the strategic plan.",
+    "choices": [
+      "Reduce hospital-acquired infections by 40% within the current fiscal year",
+      "Continue to prioritize patient safety as our top organizational value",
+      "Become known as a national leader in patient safety over the next decade",
+      "Ensure all staff understand the importance of preventing harm to patients"
+    ],
+    "answer": "A",
+    "hints": [
+      "A goal must be measurable and time-bound, unlike a mission or vision.",
+      "Eliminate options that restate purpose or long-range aspiration without a specific metric or deadline."
+    ]
+  },
+  {
+    "id": "cphq-gen.strategic-planning-for-quality-initiatives.04",
+    "loId": "gen-82eb46fc-7127-4b80-acae-a7327119459c.lo-1",
+    "cedCode": "CPHQ-U1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital CEO, under pressure from the board to show rapid results, asks the quality director to set this year's goal as 'eliminate all hospital-acquired infections immediately,' even though the department's stated vision is 'zero preventable harm by 2027' and current infection rates are moderate. The quality director must reconcile the CEO's demand with sound strategic planning principles while keeping the plan credible and aligned with the mission and vision.",
+    "choices": [
+      "Propose a measurable, time-bound interim goal, such as reducing hospital-acquired infections by 40% this year, that advances the long-term vision without overstating what is achievable",
+      "Adopt the CEO's exact wording as the annual goal so leadership feels its urgency is respected",
+      "Replace the vision statement with the CEO's zero-infection demand to keep all documents consistent",
+      "Remove numeric targets from the plan entirely to avoid conflict between leadership expectations and department capacity"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall that goals should be measurable, time-bound, and realistic stepping stones toward the vision, not the vision itself.",
+      "Consider which option keeps the mission, vision, and goal distinct while still addressing urgency."
+    ]
+  },
+  {
+    "id": "cphq-gen.education-and-training-program-design.01",
+    "loId": "gen-135f2a2f-d30f-4f85-8d68-9ee146bc893e.lo-1",
+    "cedCode": "CPHQ-U1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The director of quality education is designing an orientation module for newly hired nurses on infection prevention basics. She wants the module to reflect core adult learning principles from the organization's education framework rather than traditional passive teaching methods. Which of the following best describes how adults retain new clinical knowledge most effectively?",
+    "choices": [
+      "Through a single comprehensive lecture delivered once during orientation",
+      "Through relevance to real clinical problems, active practice, and spaced repetition over time",
+      "Through mandatory annual computer-based test scores alone",
+      "Through distributing printed policy manuals for independent review"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the three key ideas about adult learning: relevance, active practice, and spacing."
+    ]
+  },
+  {
+    "id": "cphq-gen.education-and-training-program-design.02",
+    "loId": "gen-135f2a2f-d30f-4f85-8d68-9ee146bc893e.lo-1",
+    "cedCode": "CPHQ-U1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team just completed a single 90-minute lecture on new fall-prevention protocols for 50 med-surg nurses. Post-training surveys show high satisfaction, but three months later, chart audits reveal inconsistent use of the new bed-alarm protocol. Applying adult learning principles, what should the team prioritize next to improve retention?",
+    "choices": [
+      "Repeat the same lecture format annually to reinforce content",
+      "Add spaced follow-up sessions with active, case-based practice tied to real patient scenarios",
+      "Send a written memo reminding staff of the policy update",
+      "Extend the length of the original lecture to cover more detail"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what was missing in the original one-time lecture format.",
+      "Consider both relevance and spacing, not just repetition of the same method."
+    ]
+  },
+  {
+    "id": "cphq-gen.education-and-training-program-design.03",
+    "loId": "gen-135f2a2f-d30f-4f85-8d68-9ee146bc893e.lo-1",
+    "cedCode": "CPHQ-U1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital previously ran a one-time infection control webinar for 75 nurses; compliance dropped 40% within 8 weeks. Now the quality director must design training for a new sepsis bundle rollout across three units. She has a limited budget and staff time, but leadership wants sustained compliance beyond 90 days. Which combination of elements would best design the plan while weighing both relevance and spacing?",
+    "choices": [
+      "A single high-quality video training followed by a written test at 90 days",
+      "Case-based sessions connected to real patient scenarios plus scheduled refreshers at 2, 6, and 12 weeks",
+      "One extended 4-hour lecture with more detailed content but no follow-up",
+      "Self-paced e-learning modules completed once, with no time-based reinforcement"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the worked example's solution steps: workflow relevance, active practice, and spaced reinforcement.",
+      "Consider which option addresses both clinical relevance and repeated exposure over time."
+    ]
+  },
+  {
+    "id": "cphq-gen.education-and-training-program-design.04",
+    "loId": "gen-135f2a2f-d30f-4f85-8d68-9ee146bc893e.lo-1",
+    "cedCode": "CPHQ-U1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The hospital is rolling out a new cardiac device-monitoring protocol across multiple units. Leadership demands rapid compliance within 30 days due to a regulatory deadline, but also wants long-term retention beyond the audit window. Educators worry that spacing refreshers over 12 weeks will conflict with the tight 30-day deadline, and staff have limited time for repeated sessions due to high patient volume. How should the quality education team balance these competing priorities while still applying core adult learning principles?",
+    "choices": [
+      "Skip spaced follow-up entirely and rely solely on one intensive session to meet the regulatory deadline quickly",
+      "Deliver an initial clinically relevant, case-based session to meet the deadline, then schedule brief active-practice refreshers at set intervals afterward to sustain retention",
+      "Postpone all training until after the deadline so a full 12-week spaced program can be implemented",
+      "Replace all training with a mandatory written policy distributed to staff to save time"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider how to meet the short-term deadline without abandoning the long-term retention principle.",
+      "Think about how spacing can be adapted, not eliminated, when time is limited."
+    ]
+  },
+  {
+    "id": "cphq-gen.ethics-and-codes-of-conduct-in-quality-practice.01",
+    "loId": "gen-9f2e3885-10b4-4430-ba72-e54e88538c43.lo-1",
+    "cedCode": "CPHQ-U1.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a new-hire orientation, a quality educator explains the core ethical principles that guide healthcare quality practice. She describes one principle as the obligation to avoid causing harm to patients and to prioritize safety above all other considerations.",
+    "choices": [
+      "Beneficence",
+      "Non-maleficence",
+      "Autonomy",
+      "Fidelity"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about which principle is specifically about preventing harm rather than promoting welfare.",
+      "The worked example used this principle first when addressing a medication error."
+    ]
+  },
+  {
+    "id": "cphq-gen.ethics-and-codes-of-conduct-in-quality-practice.02",
+    "loId": "gen-9f2e3885-10b4-4430-ba72-e54e88538c43.lo-1",
+    "cedCode": "CPHQ-U1.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cognitively intact patient with a treatable infection refuses a recommended antibiotic after being fully informed of the risks of declining treatment. The care team documents the discussion and honors the patient's decision rather than pursuing the medication against his wishes.",
+    "choices": [
+      "Beneficence, because the team acted in the patient's best interest",
+      "Non-maleficence, because the team avoided causing harm",
+      "Autonomy, because the team respected the patient's choice and dignity",
+      "Justice, because the team treated the patient fairly compared to others"
+    ],
+    "answer": "C",
+    "hints": [
+      "Focus on what the team actually did: did they override the patient's decision or respect it?",
+      "Recall which principle centers on patient choice and dignity."
+    ]
+  },
+  {
+    "id": "cphq-gen.ethics-and-codes-of-conduct-in-quality-practice.03",
+    "loId": "gen-9f2e3885-10b4-4430-ba72-e54e88538c43.lo-1",
+    "cedCode": "CPHQ-U1.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team discovers that a dosing error in the electronic order set caused 8 patients to receive an incorrect medication dose over the past month. No adverse outcomes have occurred yet, but the error could recur. The team debates whether to quietly fix the order set or to also inform patients and families and implement broader safeguards.",
+    "choices": [
+      "Fix the order set only, since disclosure could unnecessarily alarm patients",
+      "Disclose the error to patients and implement system safeguards, since patients deserve transparency and further harm must be prevented",
+      "Delay disclosure until legal counsel confirms no liability exists",
+      "Disclose only if a patient experiences a measurable adverse outcome"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider how non-maleficence, beneficence, and autonomy each point toward the same course of action here.",
+      "The worked example in the lesson followed this same sequence of reasoning."
+    ]
+  },
+  {
+    "id": "cphq-gen.ethics-and-codes-of-conduct-in-quality-practice.04",
+    "loId": "gen-9f2e3885-10b4-4430-ba72-e54e88538c43.lo-1",
+    "cedCode": "CPHQ-U1.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Hospital administration proposes a cost-saving initiative that would reduce nursing staff-to-patient ratios on a busy medical-surgical unit to address a significant budget shortfall. The quality director recognizes the financial pressure is real, but internal data suggest that similar ratio reductions elsewhere have been linked to increased fall rates and missed care events. Several unit leaders argue that patients should be informed and allowed to choose whether they want to be admitted to a lower-staffed unit.",
+    "choices": [
+      "Approve the staffing reduction because financial sustainability ultimately protects patient access to care",
+      "Table the decision until patients can vote on the staffing model to preserve their autonomy",
+      "Oppose the staffing reduction because safety and harm prevention take priority over cost savings when patient risk is credible",
+      "Approve the reduction but require disclosure to patients so they can decide whether to transfer units"
+    ],
+    "answer": "C",
+    "hints": [
+      "When cost pressures and safety risk conflict, which principle was emphasized as taking precedence in the practice example?",
+      "Autonomy applies to informed choice about one's own care, not to overriding safety standards for a whole unit."
+    ]
+  },
+  {
+    "id": "cphq-gen.patient-advocacy-and-health-equity.01",
+    "loId": "gen-8866a917-8d94-4e50-b206-f8654142724e.lo-1",
+    "cedCode": "CPHQ-U1.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A new quality-department employee asks the director to explain the core purpose of patient advocacy within a healthcare quality program. The director wants to give a definition that captures the essence of the concept before discussing specific tools or techniques.",
+    "choices": [
+      "Ensuring that quality metrics are collected and submitted to regulatory agencies on time",
+      "Championing patient needs by amplifying their concerns to providers and the organization",
+      "Reducing hospital costs by standardizing clinical protocols across departments",
+      "Auditing medical records to verify billing accuracy for reimbursement claims"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about whose voice the advocate is representing.",
+      "The definition centers on 'championing' patient needs."
+    ]
+  },
+  {
+    "id": "cphq-gen.patient-advocacy-and-health-equity.02",
+    "loId": "gen-8866a917-8d94-4e50-b206-f8654142724e.lo-1",
+    "cedCode": "CPHQ-U1.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At a busy pediatric clinic, six different parents mention during visits that they feel rushed and unclear about follow-up instructions for their children. The clinic's patient advocate is asked to respond to this emerging concern before deciding on any changes to the visit process.",
+    "choices": [
+      "Immediately rewrite the follow-up instructions without further input",
+      "Gather and document the recurring patient experiences systematically",
+      "Refer the complaints directly to the billing department for review",
+      "Wait until the next formal patient satisfaction survey is released"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the practice prompt about rushed clinic visits and its expected first step.",
+      "Before redesigning anything, advocates need a clear picture of the pattern."
+    ]
+  },
+  {
+    "id": "cphq-gen.patient-advocacy-and-health-equity.03",
+    "loId": "gen-8866a917-8d94-4e50-b206-f8654142724e.lo-1",
+    "cedCode": "CPHQ-U1.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's quality team has received 47 complaints over six months about unclear discharge planning instructions. The team wants to use an advocacy-driven approach, similar to the process taught in class, to both fix the immediate problem and demonstrate long-term quality improvement to leadership.",
+    "choices": [
+      "Revise the discharge instructions using only clinician input, then post them without further review",
+      "Identify the recurring complaint pattern, meet with providers to understand root causes, revise instructions with patient input, then monitor and report outcomes",
+      "Escalate the complaints directly to a state regulatory body without any internal investigation",
+      "Survey providers exclusively, since patients cannot reliably judge clinical processes"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think through each stage from the worked example: pattern, root cause, redesign, monitoring.",
+      "The correct answer should include multiple sequential steps, not a single action."
+    ]
+  },
+  {
+    "id": "cphq-gen.patient-advocacy-and-health-equity.04",
+    "loId": "gen-8866a917-8d94-4e50-b206-f8654142724e.lo-1",
+    "cedCode": "CPHQ-U1.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Hospital leadership is under pressure to quickly show improvement in discharge-related complaints before an upcoming board meeting, and has proposed rolling out a single standardized English-language discharge script to resolve the issue fast. The patient advocacy team has noticed, but not yet fully investigated, that a disproportionate share of the discharge complaints come from non-English-speaking patients. Leadership's timeline creates pressure to act quickly, but doing so without addressing the language gap risks leaving a vulnerable subgroup underserved.",
+    "choices": [
+      "Adopt the standardized English-language script as directed, since it addresses the majority of complaints and meets the board's timeline",
+      "Ensure the discharge redesign incorporates input from non-English-speaking patients and includes translated, culturally appropriate materials before declaring the process improved",
+      "Delay any action on discharge complaints until the hospital's other strategic priorities are completed",
+      "Report only the aggregate complaint reduction to the board, without mentioning the language-access gap"
+    ],
+    "answer": "B",
+    "hints": [
+      "Advocacy involves closing gaps for all patients, not just the majority group.",
+      "Consider what 'patients as active partners' means when a subgroup's needs differ from the whole."
+    ]
+  },
+  {
+    "id": "cphq-gen.communication-and-team-facilitation-skills.01",
+    "loId": "gen-1f8b9363-dfd7-49c2-89fe-b276ca32ecc1.lo-1",
+    "cedCode": "CPHQ-U1.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a quality team meeting, the facilitator reminds members that healthcare communication research identifies three core principles that support clear, safe interactions and reduce errors among team members. Which of the following best represents one of these three principles?",
+    "choices": [
+      "Psychological safety",
+      "Financial accountability",
+      "Regulatory compliance",
+      "Statistical significance"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the three key ideas taught for safe team communication.",
+      "One of them relates to feeling safe to speak up or ask questions."
+    ]
+  },
+  {
+    "id": "cphq-gen.communication-and-team-facilitation-skills.02",
+    "loId": "gen-1f8b9363-dfd7-49c2-89fe-b276ca32ecc1.lo-1",
+    "cedCode": "CPHQ-U1.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A staff nurse notices that a physician's discharge order does not specify the exact dose or timing of a newly prescribed medication. Following the communication principles taught for quality team collaboration, what should the nurse do first?",
+    "choices": [
+      "Administer the medication using the standard dose given to similar patients",
+      "Ask the physician a specific clarifying question about the intended dose and timing",
+      "Document the ambiguity in the patient chart without contacting the physician",
+      "Wait until the next shift change to raise the concern"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about which principle addresses precise, specific information exchange.",
+      "The worked example began with asking clarifying questions."
+    ]
+  },
+  {
+    "id": "cphq-gen.communication-and-team-facilitation-skills.03",
+    "loId": "gen-1f8b9363-dfd7-49c2-89fe-b276ca32ecc1.lo-1",
+    "cedCode": "CPHQ-U1.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A quality improvement team lead reviews a critical-incident report and discovers that several staff members had noticed early warning signs but did not report them, citing fear of being blamed. The team lead wants the next meeting to both encourage staff to voice concerns openly and ensure that follow-up actions are recorded clearly so nothing is misinterpreted later. Which combination of actions best reflects the two communication principles needed to achieve both goals?",
+    "choices": [
+      "Focus solely on assigning corrective action items to the individuals who missed the signs, and skip discussion of blame to save time",
+      "Open the meeting by framing the discussion as a system-focused, non-punitive review, then close with a written summary of agreed action items confirmed by all attendees",
+      "Ask each attendee to submit anonymous written reports after the meeting instead of discussing concerns openly, then finalize action items privately",
+      "Encourage staff to raise concerns verbally only, relying on individual memory to track agreed action items"
+    ],
+    "answer": "B",
+    "hints": [
+      "One principle protects honest reporting; another ensures everyone leaves with the same understanding.",
+      "Look for an option that pairs a non-blaming tone with a documented, confirmed outcome."
+    ]
+  },
+  {
+    "id": "cphq-gen.communication-and-team-facilitation-skills.04",
+    "loId": "gen-1f8b9363-dfd7-49c2-89fe-b276ca32ecc1.lo-1",
+    "cedCode": "CPHQ-U1.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A tele-health quality committee includes physicians, nurses, IT specialists, and administrators with noticeable hierarchical differences. During a meeting on rising medication-reconciliation errors, a junior IT analyst identifies a system glitch causing delayed alerts but hesitates to elaborate after a senior physician dismissively interrupted an earlier comment. The facilitator must keep the meeting productive and timely while still ensuring the analyst's insight is heard and respected across roles.",
+    "choices": [
+      "Ask the analyst to email the concern after the meeting so the discussion pace is not disrupted",
+      "Publicly acknowledge the analyst's expertise, invite the specific clarifying detail about the glitch, and remind the group that all input is valued to solve the shared problem",
+      "Redirect focus back to the physician's original point since clinical seniority carries more authority on this issue",
+      "End the meeting early and address the concern separately with only the physician afterward"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider which action restores safe voice without sacrificing respect for all roles or meeting progress.",
+      "The best response combines encouraging clarity with reinforcing that every role's input matters."
+    ]
+  }
+]

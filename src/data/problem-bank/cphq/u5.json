@@ -1,0 +1,379 @@
+[
+  {
+    "id": "cphq-gen.overview-of-accreditation-and-regulatory-bodies.01",
+    "loId": "gen-62de51c7-6ef1-4a71-8019-32e58721f1ca.lo-1",
+    "cedCode": "CPHQ-U5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A newly hired quality manager is preparing an orientation packet on federal oversight of healthcare organizations. She wants to summarize, in one sentence, the core function CMS plays in the healthcare quality landscape for new staff.",
+    "choices": [
+      "CMS accredits hospitals solely for participation in state Medicaid managed-care networks",
+      "CMS establishes Conditions of Participation and links Medicare/Medicaid reimbursement to quality performance",
+      "CMS conducts voluntary, non-binding hospital rankings used only for consumer marketing purposes",
+      "CMS sets individual clinical licensure requirements for nurses and physicians"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall what CoPs are used for and how they connect to payment.",
+      "Think funding source, not licensure or marketing."
+    ]
+  },
+  {
+    "id": "cphq-gen.overview-of-accreditation-and-regulatory-bodies.02",
+    "loId": "gen-62de51c7-6ef1-4a71-8019-32e58721f1ca.lo-1",
+    "cedCode": "CPHQ-U5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During a routine CMS survey, a hospital is found to have inconsistent medication reconciliation practices that violate one of the Conditions of Participation. The survey team formally documents this as a deficiency in its report.",
+    "choices": [
+      "The hospital immediately loses Medicare certification with no opportunity to respond",
+      "The hospital must submit a Plan of Correction with a specified deadline to remediate the deficiency",
+      "The hospital is automatically enrolled in a CMS quality improvement grant program",
+      "The deficiency is referred to The Joint Commission for a separate, parallel review process"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the sequence of steps after CMS identifies a deficiency in the worked example.",
+      "Decertification isn't the first step — something comes before it."
+    ]
+  },
+  {
+    "id": "cphq-gen.overview-of-accreditation-and-regulatory-bodies.03",
+    "loId": "gen-62de51c7-6ef1-4a71-8019-32e58721f1ca.lo-1",
+    "cedCode": "CPHQ-U5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A skilled nursing facility passed its most recent CMS survey with zero cited deficiencies against the Conditions of Participation. Six months later, however, internal quality data show a rising rate of hospital-acquired pressure injuries and declining scores on CMS quality reporting measures that are tied to reimbursement.",
+    "choices": [
+      "The facility is safe from funding loss because CoP compliance was already verified at the survey",
+      "The facility could still lose federal funding if declining quality metrics persist, since CMS monitors performance beyond the initial survey",
+      "CMS funding decisions rely solely on the initial CoP survey and do not consider ongoing quality metrics",
+      "Only Joint Commission accreditation determines continued Medicare reimbursement eligibility"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider whether CMS oversight is a one-time event or ongoing.",
+      "Think about how payment is tied to performance data over time, not just the survey snapshot."
+    ]
+  },
+  {
+    "id": "cphq-gen.overview-of-accreditation-and-regulatory-bodies.04",
+    "loId": "gen-62de51c7-6ef1-4a71-8019-32e58721f1ca.lo-1",
+    "cedCode": "CPHQ-U5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A multi-hospital health system faces two simultaneous quality issues. Its flagship hospital is operating under a CMS Plan of Correction after failing medication safety standards during a survey. Meanwhile, a sister facility in the same system passed its CoP survey with no cited deficiencies but has since shown declining scores on CMS value-based purchasing quality metrics. System leadership has limited resources before the next reporting cycle and must decide how to prioritize corrective investment.",
+    "choices": [
+      "Only the flagship hospital is at risk of losing Medicare funding, since CoP violations are the sole basis for decertification",
+      "Neither facility faces funding risk until both undergo a brand-new CMS survey cycle",
+      "Both facilities face potential Medicare payment risk: the flagship hospital from unresolved CoP deficiencies, and the sister facility from declining performance-based reimbursement metrics despite CoP compliance",
+      "The sister facility's declining metrics are irrelevant to CMS funding decisions since it already passed its CoP survey"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that CMS ties payment to both CoP compliance AND ongoing quality performance data.",
+      "A facility passing its survey isn't automatically shielded from later reimbursement risk."
+    ]
+  },
+  {
+    "id": "cphq-gen.preparing-for-accreditation-surveys.01",
+    "loId": "gen-01cc4361-8de9-43cc-9d70-1dd73e77ac86.lo-1",
+    "cedCode": "CPHQ-U5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A newly hired quality coordinator is helping her team get ready for an upcoming accreditation visit. She asks her manager what surveyors actually look at when they arrive on-site. Her manager explains the core purpose of the survey process before the team begins gathering documentation.",
+    "choices": [
+      "Compliance of the organization against published accreditation standards and criteria",
+      "The organization's marketing materials and patient satisfaction scores only",
+      "Staff personal opinions about hospital leadership",
+      "Financial statements exclusively, regardless of clinical practices"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what surveyors are trained to measure the organization against.",
+      "The lesson states surveyors evaluate compliance against a specific type of reference document."
+    ]
+  },
+  {
+    "id": "cphq-gen.preparing-for-accreditation-surveys.02",
+    "loId": "gen-01cc4361-8de9-43cc-9d70-1dd73e77ac86.lo-1",
+    "cedCode": "CPHQ-U5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Community Hospital's quality department has identified that its organization must meet 8 accreditation domains spanning governance, safety, clinical, and operational areas. The upcoming survey team has confirmed they will formally assess 5 of these domains during the on-site visit.",
+    "choices": [
+      "3 domains will not be assessed this cycle",
+      "5 domains will not be assessed this cycle",
+      "8 domains will not be assessed this cycle",
+      "13 domains will not be assessed this cycle"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the same subtraction approach shown in the worked example.",
+      "Subtract the number of domains being assessed from the total number of domains."
+    ]
+  },
+  {
+    "id": "cphq-gen.preparing-for-accreditation-surveys.03",
+    "loId": "gen-01cc4361-8de9-43cc-9d70-1dd73e77ac86.lo-1",
+    "cedCode": "CPHQ-U5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 200-bed hospital must meet 12 accreditation standards. During the upcoming survey, reviewers will formally examine 7 standards in depth, while the remaining standards will receive only a brief documentation check. The quality director wants to plan staff training but is unsure whether preparation should be limited to the standards being reviewed in depth.",
+    "choices": [
+      "5 standards will receive less detailed review; staff should still be prepared to demonstrate evidence and understanding for all 12 standards, since surveyors may ask about any standard",
+      "5 standards will receive less detailed review; staff only need readiness for the 7 standards being surveyed in depth",
+      "7 standards will receive less detailed review; staff should focus solely on documentation for those 7",
+      "12 standards will receive less detailed review; staff preparation is unnecessary since all standards are equally weighted"
+    ],
+    "answer": "A",
+    "hints": [
+      "First calculate how many standards fall outside the in-depth review, then consider what the lesson says about staff understanding expectations.",
+      "Remember that accreditation expectations emphasize evidence and staff knowledge, not just which items are formally scored."
+    ]
+  },
+  {
+    "id": "cphq-gen.preparing-for-accreditation-surveys.04",
+    "loId": "gen-01cc4361-8de9-43cc-9d70-1dd73e77ac86.lo-1",
+    "cedCode": "CPHQ-U5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A regional health system with three facilities must satisfy 10 accreditation standards covering governance, safety, clinical, and operational domains. Due to survey scope limitations, surveyors will formally evaluate only 6 standards at each facility this cycle, though all standards remain active parts of the accreditation framework and could be sampled during future or unannounced visits. With a limited training budget, the VP of Quality must decide whether to concentrate all resources on the 6 evaluated standards or also sustain readiness for the rest of the framework.",
+    "choices": [
+      "4 standards will not be formally evaluated this cycle; the VP should still maintain organization-wide readiness for all 10 standards, since accreditation expectations require ongoing compliance and staff understanding beyond a single survey cycle",
+      "4 standards will not be formally evaluated this cycle; the VP should redirect all training resources exclusively to the 6 evaluated standards to maximize survey performance",
+      "6 standards will not be formally evaluated this cycle; training should be evenly split without considering domain importance",
+      "10 standards will not be formally evaluated this cycle; no preparation is needed since evaluation is deferred entirely"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start by finding how many standards fall outside this cycle's formal review, then weigh that against the lesson's point about continuous, evidence-based readiness.",
+      "Consider that accreditation compliance is expected to be sustained, not prepared just-in-time for the surveyed items."
+    ]
+  },
+  {
+    "id": "cphq-gen.ongoing-regulatory-compliance.01",
+    "loId": "gen-e8f00715-be35-4752-a2c6-968ce00f3fbc.lo-1",
+    "cedCode": "CPHQ-U5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The quality director at Riverside Hospital is developing a new-employee orientation module explaining the baseline federal requirements that all Medicare- and Medicaid-participating hospitals must meet in order to remain eligible for reimbursement. She wants staff to understand where these requirements come from before discussing accreditation or state rules.",
+    "choices": [
+      "Conditions of Participation (CoPs)",
+      "State licensure statutes",
+      "Accreditation manual standards",
+      "Internal quality improvement policies"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which set of standards is tied directly to CMS reimbursement eligibility, not to voluntary accreditation."
+    ]
+  },
+  {
+    "id": "cphq-gen.ongoing-regulatory-compliance.02",
+    "loId": "gen-e8f00715-be35-4752-a2c6-968ce00f3fbc.lo-1",
+    "cedCode": "CPHQ-U5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A newly opened outpatient clinic offers primary care visits and occupational health screenings for local employers. Before the clinic opens, the compliance officer needs to identify which regulatory standards apply to its operations.",
+    "choices": [
+      "CMS Conditions of Participation and state medical board regulations",
+      "Joint Commission accreditation standards only",
+      "State medical board regulations only",
+      "CIHC accreditation standards only"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the practice prompt about a clinic offering primary care and occupational health screening—what two types of standards were named as applicable?"
+    ]
+  },
+  {
+    "id": "cphq-gen.ongoing-regulatory-compliance.03",
+    "loId": "gen-e8f00715-be35-4752-a2c6-968ce00f3fbc.lo-1",
+    "cedCode": "CPHQ-U5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A community hospital provides inpatient surgery, emergency department services, and an on-site clinical laboratory. The quality manager is building a compliance matrix to track all applicable regulatory requirements ahead of an accreditation survey. Which approach most completely ensures the matrix captures every necessary standard for all three service lines?",
+    "choices": [
+      "Map each service line to relevant CMS CoPs and state boards, then verify accreditation body survey scope for each service, and document all applicable standards together",
+      "Document only CMS CoPs for surgery and emergency care, because lab services are covered by professional licensure alone",
+      "Rely solely on the accreditation body's standards manual, since it already incorporates all CMS requirements",
+      "List state laws only, then request the accreditation body to identify all CMS-required standards during the survey"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the worked-example steps: identify service lines, map each to CMS and state boards, check accreditation scope, then document everything in one matrix."
+    ]
+  },
+  {
+    "id": "cphq-gen.ongoing-regulatory-compliance.04",
+    "loId": "gen-e8f00715-be35-4752-a2c6-968ce00f3fbc.lo-1",
+    "cedCode": "CPHQ-U5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "During an internal audit, a multi-service hospital's compliance team finds that its emergency department meets CMS Conditions of Participation and state emergency care regulations. However, the hospital's accreditation body has additional emergency services standards that go beyond what CMS or state law require. With limited resources for further review, leadership is debating whether meeting CMS and state requirements alone is sufficient to maintain the hospital's overall regulatory standing.",
+    "choices": [
+      "Recognize that accreditation bodies often add requirements beyond CMS and state law, so all three layers must be addressed to maintain full compliance",
+      "Prioritize only CMS CoPs, since accreditation is voluntary and does not affect regulatory standing",
+      "Prioritize only state law, since it is legally binding regardless of accreditation status",
+      "Assume that meeting CMS CoPs automatically satisfies all accreditation body standards"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider the lesson point that accreditation bodies add requirements on top of CMS and state standards—no single layer covers everything.",
+      "Think about what happens if the hospital ignores the extra accreditation-specific standards."
+    ]
+  },
+  {
+    "id": "cphq-gen.credentialing-and-privileging-coordination.01",
+    "loId": "gen-53093d4a-4f9e-4c04-a8f0-a46b298ce92e.lo-1",
+    "cedCode": "CPHQ-U5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A medical staff coordinator is preparing a checklist for a physician who will start practicing at the hospital next month. The coordinator wants to make sure she understands the two distinct steps required before the physician can treat patients.",
+    "choices": [
+      "Credentialing verifies the provider's education, licensure, and training; privileging authorizes the specific clinical procedures the provider may perform.",
+      "Credentialing authorizes specific clinical procedures; privileging verifies the provider's education and licensure.",
+      "Credentialing and privileging both refer to the same review of a provider's malpractice history.",
+      "Privileging is completed only after a provider has already retired from clinical practice."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which process checks 'who you are' versus 'what you can do'.",
+      "One step confirms qualifications; the other sets boundaries on practice."
+    ]
+  },
+  {
+    "id": "cphq-gen.credentialing-and-privileging-coordination.02",
+    "loId": "gen-53093d4a-4f9e-4c04-a8f0-a46b298ce92e.lo-1",
+    "cedCode": "CPHQ-U5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A newly hired nurse practitioner has submitted proof of licensure, national certification, and a clean malpractice history to the medical staff office, and this documentation has been verified and filed. The quality team must next determine which specific clinical tasks, such as suturing lacerations or independently ordering imaging studies, the nurse practitioner will be authorized to perform at this facility.",
+    "choices": [
+      "The team is completing the privileging process by defining the NP's authorized scope of clinical procedures.",
+      "The team is repeating the credentialing process to re-verify the NP's license.",
+      "The team is conducting a background check unrelated to clinical practice.",
+      "The team is finalizing the NP's employment contract terms."
+    ],
+    "answer": "A",
+    "hints": [
+      "Verification of license and certification already happened.",
+      "The next task is about deciding what the provider is allowed to do clinically."
+    ]
+  },
+  {
+    "id": "cphq-gen.credentialing-and-privileging-coordination.03",
+    "loId": "gen-53093d4a-4f9e-4c04-a8f0-a46b298ce92e.lo-1",
+    "cedCode": "CPHQ-U5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cardiologist already credentialed at Hospital A, with verified board certification and a clean malpractice record on file, requests authorization to perform a new interventional procedure. She recently completed additional specialized training in this procedure after her original credentialing was completed. The quality committee must decide whether her existing credential file alone is sufficient grounds to approve her request.",
+    "choices": [
+      "The committee should verify documentation of her additional training and grant privileges specific to the new procedure, since privileging must match demonstrated competency for that exact scope.",
+      "The committee should automatically approve the request because she is already credentialed at the hospital.",
+      "The committee should deny the request outright because her original credentialing file did not list this procedure.",
+      "The committee should file the new procedure under her personnel record without formal review, since privileging does not require documentation."
+    ],
+    "answer": "A",
+    "hints": [
+      "Credentialing status and privileging scope are reviewed separately.",
+      "New procedures require evidence of specific competency before authorization is granted."
+    ]
+  },
+  {
+    "id": "cphq-gen.credentialing-and-privileging-coordination.04",
+    "loId": "gen-53093d4a-4f9e-4c04-a8f0-a46b298ce92e.lo-1",
+    "cedCode": "CPHQ-U5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's quality department discovers that an orthopedic surgeon has been performing spine surgeries for the past six months, but his medical staff file documents privileges only for general orthopedic procedures, not spine surgery specifically. The surgeon has excellent patient outcomes, and the department is short-staffed, creating pressure from surgical leadership to let him keep operating while the paperwork is updated retroactively.",
+    "choices": [
+      "Suspend the surgeon's spine surgery privileges until documentation verifying his qualifications for that specific procedure is reviewed and formally approved, regardless of outcomes or staffing pressure.",
+      "Allow him to continue performing spine surgeries since his outcomes demonstrate competency, and update the paperwork afterward.",
+      "Revoke all of his privileges, including general orthopedic procedures, until his entire credentialing file is redone from scratch.",
+      "Ask the surgeon to self-certify his spine surgery competency in writing to satisfy the documentation requirement."
+    ],
+    "answer": "A",
+    "hints": [
+      "Good outcomes do not substitute for documented, approved scope of practice.",
+      "Privileging must be formally verified for each specific procedure before it continues, independent of operational pressures."
+    ]
+  },
+  {
+    "id": "cphq-gen.mock-surveys-and-tracer-methodology.01",
+    "loId": "gen-5d0409d2-7482-49b7-99bc-430646663410.lo-1",
+    "cedCode": "CPHQ-U5.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality director is orienting new staff to accreditation preparation activities. She explains that the hospital will hold a mock survey next quarter, simulating an actual accreditation inspection using tracer methodology. When asked what the primary purpose of this activity is, what should she say?",
+    "choices": [
+      "To identify and correct compliance gaps before the official accreditation survey",
+      "To replace the need for an official accreditation survey",
+      "To generate performance scores used in individual staff evaluations",
+      "To satisfy a public reporting requirement mandated by the state"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about why organizations simulate the real survey experience.",
+      "Consider what happens if gaps are found early versus during the actual visit."
+    ]
+  },
+  {
+    "id": "cphq-gen.mock-surveys-and-tracer-methodology.02",
+    "loId": "gen-5d0409d2-7482-49b7-99bc-430646663410.lo-1",
+    "cedCode": "CPHQ-U5.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 400-bed hospital schedules a mock survey using tracer methodology six months before its scheduled triennial accreditation visit. During the mock survey, a surveyor traces one patient's course of care from admission through discharge, reviewing documentation and interviewing staff along the way. What is the main benefit of conducting this mock survey at this point in time?",
+    "choices": [
+      "It allows time to detect compliance issues and implement corrective action plans before the real survey occurs",
+      "It eliminates the need for any further staff education on accreditation standards",
+      "It guarantees the hospital will pass the official survey without any further review",
+      "It shifts accountability for regulatory compliance from leadership to the survey team"
+    ],
+    "answer": "A",
+    "hints": [
+      "Focus on the timing advantage of doing this well in advance.",
+      "Recall the connection between early detection and reduced risk of failure."
+    ]
+  },
+  {
+    "id": "cphq-gen.mock-surveys-and-tracer-methodology.03",
+    "loId": "gen-5d0409d2-7482-49b7-99bc-430646663410.lo-1",
+    "cedCode": "CPHQ-U5.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A quality council is planning a mock survey ahead of an upcoming accreditation visit. One member proposes scheduling it two weeks before the actual survey so findings will be as current as possible. Another member proposes scheduling it four months in advance, noting that several departments have had recent leadership turnover and outdated policies that likely need revision. Considering the purpose of mock surveys and the time needed to address findings, which approach best supports survey readiness?",
+    "choices": [
+      "Four months before, because it allows sufficient time to identify gaps using tracer methodology and implement corrective actions",
+      "Two weeks before, because the findings will be fresher and more directly reflective of current conditions",
+      "Four months before, because it removes the need for staff to review any policies before the actual survey",
+      "Two weeks before, because it minimizes any disruption to daily unit operations"
+    ],
+    "answer": "A",
+    "hints": [
+      "Weigh the value of realistic timing against the time needed to fix identified problems.",
+      "Recall that the goal of a mock survey includes correcting gaps, not just finding them."
+    ]
+  },
+  {
+    "id": "cphq-gen.mock-surveys-and-tracer-methodology.04",
+    "loId": "gen-5d0409d2-7482-49b7-99bc-430646663410.lo-1",
+    "cedCode": "CPHQ-U5.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "With an accreditation survey three months away, hospital leadership wants to limit the mock survey to only the two units that recently had negative patient outcomes, citing limited staff time and budget. The quality director argues instead for a house-wide mock survey using tracer methodology across all departments, even though it will require more resources and coordination. Based on the intended purpose of a mock survey, which approach should the quality team pursue?",
+    "choices": [
+      "Conduct a house-wide mock survey using tracer methodology across all departments to identify compliance gaps organization-wide before the actual survey",
+      "Limit the mock survey to only the two units with recent negative outcomes to conserve time and budget",
+      "Cancel the mock survey altogether since three months is too short a window to make meaningful improvements",
+      "Delegate the entire mock survey to an outside consultant without involving hospital staff, to save internal resources"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider that accreditation standards apply organization-wide, not just to units with known problems.",
+      "Think about what scope of assessment best supports overall organizational readiness."
+    ]
+  }
+]

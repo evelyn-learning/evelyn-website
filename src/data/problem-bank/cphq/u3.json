@@ -1,0 +1,754 @@
+[
+  {
+    "id": "cphq-gen.comparing-performance-improvement-methodologies.01",
+    "loId": "gen-20f9c2a0-c3aa-4016-b196-328c9a2e8099.lo-1",
+    "cedCode": "CPHQ-U3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality manager is orienting new staff to a rapid-cycle improvement approach in which a proposed change is tested on a small scale before being adopted more broadly. The manager describes four sequential steps that make up this method. Which set of steps correctly describes this approach?",
+    "choices": [
+      "Plan, Do, Study, Act",
+      "Define, Measure, Analyze, Improve",
+      "Identify, Prioritize, Implement, Monitor",
+      "Assess, Plan, Implement, Evaluate outcomes only"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think of the four-letter acronym for this rapid test-and-learn cycle taught in the lesson."
+    ]
+  },
+  {
+    "id": "cphq-gen.comparing-performance-improvement-methodologies.02",
+    "loId": "gen-20f9c2a0-c3aa-4016-b196-328c9a2e8099.lo-1",
+    "cedCode": "CPHQ-U3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic team wants to reduce patient wait time at check-in. They predict that a new check-in form will cut wait time by about 6 minutes, and this week they are trying the new form with 15 patients before deciding whether to expand its use. Which step of the PDSA cycle are they currently performing by trying the form with the 15 patients?",
+    "choices": [
+      "Plan",
+      "Do",
+      "Study",
+      "Act"
+    ],
+    "answer": "B",
+    "hints": [
+      "This step involves actually carrying out the small-scale test, not predicting the outcome or analyzing results afterward."
+    ]
+  },
+  {
+    "id": "cphq-gen.comparing-performance-improvement-methodologies.03",
+    "loId": "gen-20f9c2a0-c3aa-4016-b196-328c9a2e8099.lo-1",
+    "cedCode": "CPHQ-U3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital lab aims to shorten specimen processing time. The team predicted that a new labeling system would reduce processing time by 4 minutes per specimen, then tested it on a small batch of specimens. After collecting the data, they found the actual reduction was only 1 minute, far below the prediction. Following the logic of the PDSA cycle, what should the team do next?",
+    "choices": [
+      "Immediately abandon the entire quality improvement initiative and start a completely new project",
+      "Adopt the change lab-wide right away since any improvement, however small, is automatically worth keeping",
+      "Compare the actual results to the original prediction to understand the gap before deciding whether to adapt, expand, or abandon the change",
+      "Repeat the identical test on the same small batch without examining why the results differed from the prediction"
+    ],
+    "answer": "C",
+    "hints": [
+      "Consider which step comes right after Do and directly precedes the decision made in Act."
+    ]
+  },
+  {
+    "id": "cphq-gen.comparing-performance-improvement-methodologies.04",
+    "loId": "gen-20f9c2a0-c3aa-4016-b196-328c9a2e8099.lo-1",
+    "cedCode": "CPHQ-U3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital-wide committee is debating how to respond to rising surgical site infection rates. One group wants to roll out a new sterilization protocol across all ten operating rooms immediately because leadership is pressuring for quick, visible results. A quality improvement specialist instead recommends first piloting the protocol in a single operating room, predicting an expected reduction in infection rate, and then comparing the actual outcome to that prediction. Given the principles of the PDSA test-and-learn approach, which course of action best balances the pressure for quick improvement with sound improvement methodology?",
+    "choices": [
+      "Skip small-scale testing and implement the new protocol in all ten operating rooms immediately to satisfy leadership's demand for speed",
+      "Pilot the protocol in one operating room, predict the expected reduction in infection rate, and compare the actual results to that prediction before deciding on wider rollout",
+      "Delay any action for a full year to gather baseline data with no interim test of the new protocol",
+      "Implement the protocol in all operating rooms at once without making any prediction, so that results cannot be biased by expectations"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall why PDSA calls for a prediction and a small-scale trial rather than a full-scale rollout, even under time pressure."
+    ]
+  },
+  {
+    "id": "cphq-gen.applying-the-pdsa-cycle.01",
+    "loId": "gen-9ae55aa3-449c-4a90-878b-747c68f895f4.lo-1",
+    "cedCode": "CPHQ-U3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality improvement team is beginning a new initiative to reduce medication administration errors on a med-surg unit. Before running any tests, the team needs to articulate the improvement goal, predict expected outcomes, and design how they will test a proposed change. Which PDSA phase involves this initial work?",
+    "choices": [
+      "Plan",
+      "Do",
+      "Study",
+      "Act"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what must happen before any test is actually run.",
+      "This phase sets the aim and predictions."
+    ]
+  },
+  {
+    "id": "cphq-gen.applying-the-pdsa-cycle.02",
+    "loId": "gen-9ae55aa3-449c-4a90-878b-747c68f895f4.lo-1",
+    "cedCode": "CPHQ-U3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic is testing a new automated reminder call system intended to reduce no-show rates, based on an aim and prediction the team set earlier. The QI coordinator instructs staff to place reminder calls for the next two weeks and record attendance outcomes exactly as designed, without making any changes to the process during this time.",
+    "choices": [
+      "Plan",
+      "Do",
+      "Study",
+      "Act"
+    ],
+    "answer": "B",
+    "hints": [
+      "The team is executing the test and collecting data, not yet analyzing it.",
+      "Consider which phase comes right after the aim and design are finalized."
+    ]
+  },
+  {
+    "id": "cphq-gen.applying-the-pdsa-cycle.03",
+    "loId": "gen-9ae55aa3-449c-4a90-878b-747c68f895f4.lo-1",
+    "cedCode": "CPHQ-U3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A clinic completed a 3-week test of automated appointment reminders aimed at reducing no-shows from 18% to 10%. The QI team is now comparing the actual outcome (14% no-show rate) against their original prediction, reviewing staff notes describing outdated phone numbers as a barrier, and discussing why the target was not fully met. Which PDSA phase does this activity represent, and what is the appropriate next step per PDSA logic?",
+    "choices": [
+      "This is the Study phase; the team should analyze the gap between predicted and actual results before deciding whether to adapt, scale, or restart the cycle.",
+      "This is the Act phase; the team should immediately roll out the reminder system organization-wide since some improvement occurred.",
+      "This is the Do phase; the team should continue running the test unchanged for another 3 weeks to gather more data.",
+      "This is the Plan phase; the team should discard the current aim and set a new baseline before testing anything."
+    ],
+    "answer": "A",
+    "hints": [
+      "Comparing actual results to predictions and identifying learning happens in a specific phase before any decision to scale or adapt.",
+      "Notice the team hasn't yet decided what to do next—they're still making sense of the data."
+    ]
+  },
+  {
+    "id": "cphq-gen.applying-the-pdsa-cycle.04",
+    "loId": "gen-9ae55aa3-449c-4a90-878b-747c68f895f4.lo-1",
+    "cedCode": "CPHQ-U3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's QI team tested a new nurse-driven sepsis screening protocol on one unit for one month. Results showed the screening improved early detection during day shift but had inconsistent completion rates on night shift due to staffing gaps, and hospital administration is pressuring the team to implement the protocol hospital-wide immediately to meet an upcoming accreditation deadline. Based on PDSA logic, which action best reflects appropriate use of the Act phase given these mixed results?",
+    "choices": [
+      "Scale the protocol hospital-wide immediately as administration requests, since day-shift results were positive and the deadline is approaching.",
+      "Adapt the protocol to address the night-shift staffing barriers and run another PDSA cycle before considering wider spread.",
+      "Abandon the protocol entirely since night-shift performance did not meet expectations.",
+      "Repeat the exact same test on the same unit for another month without modifying the protocol."
+    ],
+    "answer": "B",
+    "hints": [
+      "The Act phase involves deciding to scale, adapt, or restart based on what was learned—not simply satisfying outside pressure.",
+      "Consider whether the barrier identified (night-shift staffing) should be addressed before spreading the change further."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-tools-fishbone-5-whys.01",
+    "loId": "gen-7922c0d8-fa61-432a-b7f2-86fabc85651b.lo-1",
+    "cedCode": "CPHQ-U3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality manager at a community hospital is explaining to new staff why the organization performs root cause analysis (RCA) after adverse events instead of simply identifying who made the mistake. A new nurse asks what the main purpose of RCA is. Which statement best describes that purpose?",
+    "choices": [
+      "To identify the individual staff member responsible for an error so that person can be disciplined",
+      "To uncover underlying system causes of a problem so that similar events can be prevented in the future",
+      "To document the event quickly so the hospital can close the incident report",
+      "To compare staff performance against a productivity benchmark"
+    ],
+    "answer": "B",
+    "hints": [
+      "RCA looks past the individual act toward the system.",
+      "Think about symptoms versus root causes."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-tools-fishbone-5-whys.02",
+    "loId": "gen-7922c0d8-fa61-432a-b7f2-86fabc85651b.lo-1",
+    "cedCode": "CPHQ-U3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A telemetry unit reports that patient falls have increased over the past two months, and the nurse manager wants to address the issue effectively rather than react quickly. The team decides to use a fishbone diagram to guide their investigation. Which action would best help the team identify root causes rather than jump straight to a fix?",
+    "choices": [
+      "Immediately mandate additional fall-prevention training for all nurses on the unit",
+      "Suspend the nurses who were involved in the most recent fall incidents",
+      "Brainstorm potential contributing factors across categories such as staffing, environment, communication, and equipment",
+      "Increase the number of patients assigned to each nurse to simplify scheduling"
+    ],
+    "answer": "C",
+    "hints": [
+      "Fishbone diagrams organize possible causes into categories.",
+      "Look for the option that explores causes broadly instead of assuming a single fix."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-tools-fishbone-5-whys.03",
+    "loId": "gen-7922c0d8-fa61-432a-b7f2-86fabc85651b.lo-1",
+    "cedCode": "CPHQ-U3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital experienced three medication administration errors last month despite all nursing staff completing annual medication safety training. The quality director recalls that similar errors occurred last year and were addressed at that time with additional retraining alone, yet the errors recurred this year. The director must decide between requiring another round of retraining or convening a team to perform RCA using the 5 Whys technique.",
+    "choices": [
+      "Retraining alone, because staff clearly forgot the training content and need a refresher",
+      "RCA using 5 Whys, because retraining previously failed to prevent recurrence, suggesting deeper system issues such as labeling or interruptions",
+      "Neither approach, because medication errors should be handled through individual disciplinary action instead",
+      "Retraining alone, because it is faster and less resource-intensive than conducting an RCA"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider why retraining failed to prevent recurrence last time.",
+      "RCA digs into system factors like labeling, interruptions, and workload rather than repeating the same fix."
+    ]
+  },
+  {
+    "id": "cphq-gen.root-cause-analysis-tools-fishbone-5-whys.04",
+    "loId": "gen-7922c0d8-fa61-432a-b7f2-86fabc85651b.lo-1",
+    "cedCode": "CPHQ-U3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An outpatient clinic sees only 2 patients per hour, well below the target of 4 per hour, resulting in long wait times and staff overtime costs. Leadership is pressuring the clinic administrator to quickly hire more front-desk staff and schedulers before the next budget cycle deadline, but the quality director urges the team to first conduct an RCA, including 5 Whys, before committing to any staffing decision, even though this will delay the budget submission by two weeks.",
+    "choices": [
+      "Approve the hiring request immediately to meet the budget deadline, since more staff will always reduce wait times",
+      "Delay any staffing decision and perform RCA first to identify the true root causes of low throughput, even though it postpones the budget submission, because hiring staff to address the wrong cause would waste resources and fail to fix the problem",
+      "Split the difference by hiring half the requested staff now and performing RCA later to confirm the decision retrospectively",
+      "Skip RCA entirely and instead retrain the scheduling staff, since retraining is a faster fix than root cause analysis"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the clinic practice example: RCA first before adding staff.",
+      "Weigh the short-term deadline pressure against the risk of fixing the wrong underlying problem."
+    ]
+  },
+  {
+    "id": "cphq-gen.pareto-analysis-for-prioritization.01",
+    "loId": "gen-e0cdab06-8463-46dc-9b9c-5c3aeb3f773f.lo-1",
+    "cedCode": "CPHQ-U3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a quality council orientation, a new analyst asks why the team uses Pareto analysis when reviewing incident reports instead of examining every single cause equally. The facilitator explains the underlying principle behind this tool before applying it to hospital data.",
+    "choices": [
+      "A small number of causes typically account for the majority of quality problems, so those causes should be addressed first",
+      "All causes contribute equally to outcomes, so Pareto analysis ranks them alphabetically",
+      "Pareto analysis is used only to calculate statistical process control limits",
+      "Pareto analysis identifies the least frequent causes so rare events can be ignored"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the 80/20 principle described in the lesson.",
+      "Consider what 'vital few' versus 'trivial many' means."
+    ]
+  },
+  {
+    "id": "cphq-gen.pareto-analysis-for-prioritization.02",
+    "loId": "gen-e0cdab06-8463-46dc-9b9c-5c3aeb3f773f.lo-1",
+    "cedCode": "CPHQ-U3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surgical unit reviews 200 post-operative infections over the past year. Root cause review shows 150 infections are linked to improper wound dressing technique, 30 to delayed antibiotic administration, and 20 to inadequate hand hygiene during dressing changes. The quality team wants to decide where to focus improvement resources first.",
+    "choices": [
+      "Improper wound dressing technique, because it accounts for 75% of infections",
+      "Delayed antibiotic administration, because timing issues are always the root cause",
+      "Inadequate hand hygiene, because hand hygiene is the standard first priority in infection control",
+      "All three causes equally, since Pareto analysis requires addressing every cause simultaneously"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate each cause's share of the 200 total infections.",
+      "Compare each percentage to the 70-80% vital-few threshold from the worked example."
+    ]
+  },
+  {
+    "id": "cphq-gen.pareto-analysis-for-prioritization.03",
+    "loId": "gen-e0cdab06-8463-46dc-9b9c-5c3aeb3f773f.lo-1",
+    "cedCode": "CPHQ-U3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's patient experience team analyzes 400 complaints filed in one quarter. The breakdown is 200 complaints about communication issues, 120 about billing errors, 50 about wait times, and 30 about food service. The team wants to identify which cause or causes make up the vital few, using the 80% cumulative impact threshold discussed in Pareto analysis training.",
+    "choices": [
+      "Communication issues alone, since it is the single largest category",
+      "Communication issues and billing errors combined, since their cumulative percentage reaches 80% of all complaints",
+      "Wait times and food service combined, since they represent the smallest categories",
+      "All four categories, because Pareto analysis requires cumulative totals to reach 100%"
+    ],
+    "answer": "B",
+    "hints": [
+      "Calculate the percentage for each cause, then add them in order from largest to smallest until you reach the 80% threshold.",
+      "Remember that vital few causes are identified by cumulative percentage, not just the single largest cause."
+    ]
+  },
+  {
+    "id": "cphq-gen.pareto-analysis-for-prioritization.04",
+    "loId": "gen-e0cdab06-8463-46dc-9b9c-5c3aeb3f773f.lo-1",
+    "cedCode": "CPHQ-U3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital pharmacy and safety committee reviews 250 adverse drug events from the past year: 175 are linked to dosage calculation errors, 50 to unrecognized drug interactions, and 25 to incomplete patient history documentation. Several physicians argue the committee should prioritize drug interaction oversights first because those events, though less frequent, carry a higher risk of severe patient harm. The quality director must decide how to apply Pareto analysis to set the improvement priority based on the frequency data provided.",
+    "choices": [
+      "Prioritize dosage calculation errors first, since they account for 70% of all adverse drug events and represent the vital few by frequency",
+      "Prioritize drug interaction oversights first, since severity concerns should override frequency data in every Pareto analysis",
+      "Prioritize incomplete patient history documentation first, since it is the least addressed category and therefore overlooked",
+      "Prioritize all three causes equally, since Pareto analysis cannot be applied when severity and frequency data conflict"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson's worked example identified the vital few cause based on the percentage of total events, similar to the 70% illegible handwriting example.",
+      "Pareto analysis as taught here prioritizes based on frequency/impact data, not on separate severity arguments."
+    ]
+  },
+  {
+    "id": "cphq-gen.process-mapping-and-value-stream-mapping.01",
+    "loId": "gen-25589cfd-351a-4831-b7e0-c7d5b9385e98.lo-1",
+    "cedCode": "CPHQ-U3.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality improvement team at a community hospital is preparing to study how a referral moves from primary care to specialist scheduling. Before analyzing cycle time, their manager asks them to first create a simple diagram of the process. What is the primary purpose of this diagram, based on process mapping principles?",
+    "choices": [
+      "To visually display the sequence of steps and decision points in the workflow",
+      "To calculate the exact number of minutes required for each task",
+      "To assign performance ratings to individual staff members",
+      "To create a budget forecast for the referral department"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what a flowchart is designed to show regarding order and connections between steps, not numeric detail."
+    ]
+  },
+  {
+    "id": "cphq-gen.process-mapping-and-value-stream-mapping.02",
+    "loId": "gen-25589cfd-351a-4831-b7e0-c7d5b9385e98.lo-1",
+    "cedCode": "CPHQ-U3.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic team is mapping its patient flow, which includes patient arrival, check-in, vitals, provider exam, and checkout. While drawing the flowchart with boxes and arrows, a team member asks which step must be completed immediately before vitals can be taken. Using the chronological, dependency-based logic taught for process mapping, which step directly precedes vitals in this clinic's workflow?",
+    "choices": [
+      "Check-in",
+      "Checkout",
+      "Provider exam",
+      "Patient arrival, skipping check-in entirely"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the linear order established in the clinic worked example: arrival, check-in, vitals, exam, checkout."
+    ]
+  },
+  {
+    "id": "cphq-gen.process-mapping-and-value-stream-mapping.03",
+    "loId": "gen-25589cfd-351a-4831-b7e0-c7d5b9385e98.lo-1",
+    "cedCode": "CPHQ-U3.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An emergency department team is mapping its triage process: patient arrives, nurse triages, physician sees the patient, then treatment starts. During data collection, the team discovers that on several occasions treatment was initiated before the physician's evaluation was actually completed, leading to errors. Before using the process map to guide improvement work, what should the team check to confirm the map is accurate?",
+    "choices": [
+      "That no step on the map begins before its prerequisite steps are truly complete in real practice",
+      "That every step in the map takes exactly the same amount of time to complete",
+      "That the map only reflects urgent patients and excludes routine cases",
+      "That staffing schedules are written inside each box on the diagram"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the verification step: confirm no step starts before its prerequisite is finished, and compare this to what actually happens on the floor."
+    ]
+  },
+  {
+    "id": "cphq-gen.process-mapping-and-value-stream-mapping.04",
+    "loId": "gen-25589cfd-351a-4831-b7e0-c7d5b9385e98.lo-1",
+    "cedCode": "CPHQ-U3.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital is redesigning its outpatient surgery scheduling process, which includes a decision point separating routine cases from urgent bypass cases. The scheduling department wants to map only the routine pathway because it represents the majority of volume and would let them finish the diagram faster, while surgeons insist the urgent bypass route must also be shown because it frequently causes conflicts and delays elsewhere in the system. Given the goal of using the map to reveal true dependencies and bottlenecks, which approach best follows process mapping principles?",
+    "choices": [
+      "Map both the routine and urgent pathways, including the decision point, even though it takes more time to complete",
+      "Map only the routine pathway since it reflects the majority of cases and can be finished more quickly",
+      "Omit the decision point entirely to simplify the diagram for the scheduling team",
+      "Create two completely separate, unconnected maps that do not link back to the patient arrival step"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider why decision points and dependencies must be captured to reveal bottlenecks, not just the highest-volume path."
+    ]
+  },
+  {
+    "id": "cphq-gen.conducting-a-gap-analysis.01",
+    "loId": "gen-67d947e8-5bae-46b4-8240-a211621e2154.lo-1",
+    "cedCode": "CPHQ-U3.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During new-employee orientation, the quality improvement director at Riverbend Community Hospital explains a foundational quality tool to a newly hired data analyst. She states that this tool systematically compares an organization's actual performance to an established clinical or organizational standard, helping leaders decide where improvement work is most needed.",
+    "choices": [
+      "The difference between current performance and a desired benchmark or standard",
+      "The root cause of a single sentinel event",
+      "The financial cost of noncompliance with accreditation standards",
+      "The list of stakeholders responsible for implementing a policy"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what two values are being compared in this tool.",
+      "This is a definitional question, not about root-cause investigation."
+    ]
+  },
+  {
+    "id": "cphq-gen.conducting-a-gap-analysis.02",
+    "loId": "gen-67d947e8-5bae-46b4-8240-a211621e2154.lo-1",
+    "cedCode": "CPHQ-U3.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An outpatient surgery center reviews its quarterly infection control data. The current surgical site infection rate is 5%, while the national benchmark for similar procedures is 2%. The infection control nurse wants to summarize what this comparison reveals to the quality committee.",
+    "choices": [
+      "A 3 percentage point improvement gap in surgical site infection rates",
+      "A 2.5-fold increase that requires only a root cause analysis, not a gap analysis",
+      "A 7 percentage point gap between current performance and benchmark",
+      "No meaningful gap exists since both values fall within accreditation limits"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract the benchmark from the current rate to find the gap.",
+      "Recall the worked example: subtract desired from actual performance."
+    ]
+  },
+  {
+    "id": "cphq-gen.conducting-a-gap-analysis.03",
+    "loId": "gen-67d947e8-5bae-46b4-8240-a211621e2154.lo-1",
+    "cedCode": "CPHQ-U3.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality committee is reviewing two performance indicators to decide where to focus limited improvement resources. The patient fall rate is currently 3.2 per 1,000 patient days against a benchmark of 2.0, while the medication error rate is 8% against a benchmark of 3%. The committee's risk assessment also notes that medication errors carry a higher potential for serious patient harm than the falls currently being tracked.",
+    "choices": [
+      "Medication error rate, because it has both the larger performance gap and higher associated clinical risk",
+      "Fall rate, because falls are a more visible quality indicator to external accreditors",
+      "Both indicators should be given identical priority, since gap analysis cannot be used to rank improvement areas",
+      "Neither indicator should be prioritized, since both already fall within acceptable statistical variation"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate the size of each gap before comparing them.",
+      "Remember that gap analysis is meant to reveal where improvement efforts should be focused, using all available data."
+    ]
+  },
+  {
+    "id": "cphq-gen.conducting-a-gap-analysis.04",
+    "loId": "gen-67d947e8-5bae-46b4-8240-a211621e2154.lo-1",
+    "cedCode": "CPHQ-U3.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Hospital leadership has limited resources this fiscal year and must choose between two improvement initiatives identified through gap analysis. The 30-day readmission rate is 18% against a 12% benchmark (a 6 percentage point gap) and carries a significant CMS reimbursement penalty risk. The patient satisfaction score is 76% against an 88% benchmark (a 12 percentage point gap) and affects public reputation but has no direct financial penalty attached. A board member argues that the initiative with the larger raw gap should automatically receive all improvement funding.",
+    "choices": [
+      "The larger raw percentage-point gap, patient satisfaction, should always dictate priority regardless of any other factors",
+      "Gap analysis identifies the size of each performance gap, but final prioritization should integrate gap magnitude with organizational impact such as financial and reputational risk",
+      "Only benchmarks set by national accrediting bodies should ever be used when conducting a gap analysis",
+      "Because the readmission gap is numerically smaller, it should be excluded entirely from improvement planning"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall that gap analysis provides a data-driven foundation for resource allocation, not the sole decision rule.",
+      "Consider whether gap size alone should override other organizational consequences discussed in the lesson."
+    ]
+  },
+  {
+    "id": "cphq-gen.developing-a-performance-improvement-action-plan.01",
+    "loId": "gen-cc9e51ee-9703-4948-869a-9fd7510307db.lo-1",
+    "cedCode": "CPHQ-U3.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a new-hire orientation for the quality department, an educator describes a performance improvement (PI) approach in which a team makes a small, planned change, observes the result, studies the data, and then decides whether to adopt, adapt, or abandon the change before repeating the cycle. Which PI methodology is being described?",
+    "choices": [
+      "PDSA cycle",
+      "Lean",
+      "Six Sigma",
+      "Balanced scorecard"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the four steps: Plan, Do, Study, Act.",
+      "This method is iterative and tests changes on a small scale before spreading them."
+    ]
+  },
+  {
+    "id": "cphq-gen.developing-a-performance-improvement-action-plan.02",
+    "loId": "gen-cc9e51ee-9703-4948-869a-9fd7510307db.lo-1",
+    "cedCode": "CPHQ-U3.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A performance improvement team reviews the patient transport process and finds that transporters frequently wait for elevators, backtrack to retrieve missing paperwork, and duplicate documentation already completed by nursing staff. The team wants to redesign the process to remove these non-value-added steps. Which PI framework should the team select as the foundation for its action plan?",
+    "choices": [
+      "Six Sigma",
+      "Lean",
+      "PDSA alone, without any other framework",
+      "Root cause analysis only"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on the type of problem: extra steps, delays, and duplication.",
+      "One framework specifically targets eliminating waste in a process."
+    ]
+  },
+  {
+    "id": "cphq-gen.developing-a-performance-improvement-action-plan.03",
+    "loId": "gen-cc9e51ee-9703-4948-869a-9fd7510307db.lo-1",
+    "cedCode": "CPHQ-U3.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A medication safety committee is drafting an action plan after discovering that a med-surg unit has 8 dosing errors per month. Chart review shows the errors are not caused by a single broken step but by inconsistent calculation methods used by different nurses, resulting in wide variation in dose accuracy. The committee must select a PI framework to guide the analysis phase of its action plan before assigning owners and timelines for corrective actions.",
+    "choices": [
+      "Lean, because the errors are caused by wasted motion in the medication room",
+      "Six Sigma, because the errors reflect variation and defects in the calculation process that need statistical analysis",
+      "PDSA alone, because no data analysis is needed before testing a change",
+      "A generic checklist, since the cause is already obvious and no framework is required"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider whether the problem is about wasted steps or about inconsistent, defect-prone outcomes.",
+      "The lesson links variation-reduction and defect analysis to a specific methodology."
+    ]
+  },
+  {
+    "id": "cphq-gen.developing-a-performance-improvement-action-plan.04",
+    "loId": "gen-cc9e51ee-9703-4948-869a-9fd7510307db.lo-1",
+    "cedCode": "CPHQ-U3.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's quality department must build a single action plan addressing two simultaneous problems: ED wait times averaging 45 minutes due to inefficient patient flow, and a med-surg unit with 8 medication dosing errors per month linked to inconsistent calculation practices. Leadership has limited staff time and wants one integrated plan with goals, owners, and timelines rather than two separate projects, and is asking the team to justify how each problem's root cause should shape the chosen methodology within the plan.",
+    "choices": [
+      "Apply Six Sigma to both problems equally, since all quality issues ultimately involve some form of variation",
+      "Apply Lean plus PDSA cycles to the ED flow issue and Six Sigma to the medication error issue, reflecting each problem's distinct root cause",
+      "Apply PDSA alone to both issues, since testing small changes is sufficient regardless of the underlying cause",
+      "Combine all three frameworks equally on each problem without differentiating root causes, to save planning time"
+    ],
+    "answer": "B",
+    "hints": [
+      "Match each problem to the framework whose core purpose fits its root cause: flow/waste versus variation/defects.",
+      "An action plan can use more than one framework as long as each is matched appropriately to its problem before assigning owners and timelines."
+    ]
+  },
+  {
+    "id": "cphq-gen.change-management-for-pi-initiatives.01",
+    "loId": "gen-c9e154ea-3a55-448a-9998-99dd8b8a4339.lo-1",
+    "cedCode": "CPHQ-U3.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality department is preparing to roll out a new hand hygiene monitoring process across all units. Before the rollout, the PI lead is asked to explain to senior leadership what change management primarily contributes to this type of initiative.",
+    "choices": [
+      "To align people, processes, and technology with improvement goals and reduce resistance",
+      "To design the statistical methodology used to measure improvement",
+      "To eliminate the need for staff training on new processes",
+      "To replace root cause analysis with a faster problem-solving tool"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what change management structures and coordinates, not what it statistically measures.",
+      "Recall the three elements the lesson says change management aligns."
+    ]
+  },
+  {
+    "id": "cphq-gen.change-management-for-pi-initiatives.02",
+    "loId": "gen-c9e154ea-3a55-448a-9998-99dd8b8a4339.lo-1",
+    "cedCode": "CPHQ-U3.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic switches to a new electronic patient scheduling system. Staff are frustrated with the transition and continue quietly using the old paper schedules instead of logging into the new system.",
+    "choices": [
+      "Mandate compliance through disciplinary action for any staff who continue using paper schedules",
+      "Provide training, clarify new roles, and communicate the reasons for the change",
+      "Delay the go-live date indefinitely until resistance disappears on its own",
+      "Remove the scheduling system entirely and revert permanently to the paper-based process"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the medication dispensing worked example — what specifically resolved staff fears there?",
+      "The goal is to guide adoption, not to force or abandon the change."
+    ]
+  },
+  {
+    "id": "cphq-gen.change-management-for-pi-initiatives.03",
+    "loId": "gen-c9e154ea-3a55-448a-9998-99dd8b8a4339.lo-1",
+    "cedCode": "CPHQ-U3.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital automates medication dispensing to improve safety and rolls it out to two units. Unit A's leadership held town halls explaining the change, provided hands-on training, and clarified that no positions would be eliminated. Unit B's leadership only sent a memo announcing the go-live date. Six weeks later, Unit A shows full adoption of the new system, while Unit B nurses continue manual workarounds and report high anxiety about their jobs.",
+    "choices": [
+      "Unit A's staff were inherently more technically skilled with automation systems than Unit B's staff",
+      "Unit B's medication dispensing devices were mechanically defective compared to Unit A's devices",
+      "Unit A applied change management practices such as communication, training, and role clarity that reduced resistance and fear, while Unit B did not",
+      "Unit B's nurses had less overall experience with patient safety practices than Unit A's nurses"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare what leadership actually did in each unit rather than assuming staff differences.",
+      "Link the outcomes back to the steps in the worked example: identifying concerns, then addressing training, role clarity, and communication."
+    ]
+  },
+  {
+    "id": "cphq-gen.change-management-for-pi-initiatives.04",
+    "loId": "gen-c9e154ea-3a55-448a-9998-99dd8b8a4339.lo-1",
+    "cedCode": "CPHQ-U3.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital is implementing a new sepsis alert system in the EHR at the same time it announces a hospital-wide nurse staffing reduction due to budget cuts. The PI director must achieve full adoption within 30 days to meet a regulatory deadline, but nurses are already anxious about potential layoffs and view the new alert workflow as an added burden rather than a safety improvement. Nurse managers propose delaying rollout until staffing concerns settle, while the PI director insists the timeline cannot move.",
+    "choices": [
+      "Proceed with the rollout exactly as planned without addressing staff concerns about layoffs, since the regulatory deadline takes priority over morale",
+      "Cancel the sepsis alert rollout entirely until the staffing situation fully stabilizes, regardless of the regulatory deadline",
+      "Directly address job security concerns through transparent communication, involve nurse managers in planning, and provide targeted training, while still pursuing the required timeline",
+      "Delegate all rollout communication to the IT department, since the sepsis alert is a technology change rather than a workforce issue"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall how the worked example resolved staff fear of job loss during the medication dispensing automation.",
+      "Change management addresses people's concerns even under time pressure; it doesn't require abandoning the improvement goal or ignoring staff fears."
+    ]
+  },
+  {
+    "id": "cphq-gen.evaluating-and-sustaining-improvement-outcomes.01",
+    "loId": "gen-de36663c-ac9f-44aa-871c-79e413176dfd.lo-1",
+    "cedCode": "CPHQ-U3.9",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality improvement team implemented a new hand hygiene protocol and wants to determine whether the resulting decrease in infection rates represents a truly sustained improvement rather than a temporary blip. According to standard post-implementation evaluation methods, what should the team do?",
+    "choices": [
+      "Collect post-implementation data over several months and plot it on a control chart to assess statistical control",
+      "Compare only the single most recent data point to the baseline value",
+      "Rely solely on staff satisfaction survey results to judge success",
+      "Assume the improvement is sustained if the very first post-implementation data point shows any decrease"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what the worked example did after calculating the initial percentage reduction.",
+      "One data point cannot show a trend."
+    ]
+  },
+  {
+    "id": "cphq-gen.evaluating-and-sustaining-improvement-outcomes.02",
+    "loId": "gen-de36663c-ac9f-44aa-871c-79e413176dfd.lo-1",
+    "cedCode": "CPHQ-U3.9",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A medical-surgical unit's pressure ulcer rate was 10% at baseline. After implementing a new turning and repositioning protocol, the unit tracked monthly rates for four consecutive months: 6%, 5%, 4%, and 5%. The quality manager needs to evaluate whether this represents an effective, sustained improvement.",
+    "choices": [
+      "The improvement shows roughly a 50% reduction and appears sustained since rates remain consistently below baseline across multiple months",
+      "The improvement shows roughly a 50% reduction but cannot be considered because only one month of data was collected",
+      "The improvement is negligible because the rate changed by only 5 percentage points",
+      "The data cannot be evaluated at all without a formal randomized controlled trial"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate the percentage reduction from baseline the same way as the medication error example.",
+      "Look at whether the four months of data stay below baseline or drift back up."
+    ]
+  },
+  {
+    "id": "cphq-gen.evaluating-and-sustaining-improvement-outcomes.03",
+    "loId": "gen-de36663c-ac9f-44aa-871c-79e413176dfd.lo-1",
+    "cedCode": "CPHQ-U3.9",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital reduced its catheter-associated urinary tract infection (CAUTI) rate from 12 per 1,000 catheter days at baseline to 5 per 1,000 catheter days three months after implementing a new insertion and maintenance bundle. The team continued monthly monitoring for six months, recording rates of 5, 5, 6, 8, 9, and 10 per 1,000 catheter days. The quality director must decide whether the improvement has been effective and sustained.",
+    "choices": [
+      "The improvement is sustained because the initial percentage reduction calculated at month three (about 58%) proves long-term success",
+      "The improvement is not sustained; although early results were strong, the upward trend in months four through six shows the rate drifting back toward baseline",
+      "The improvement is clinically significant regardless of the later trend, so no further action is needed",
+      "There is not enough information to evaluate effectiveness at any point in the monitoring period"
+    ],
+    "answer": "B",
+    "hints": [
+      "Don't stop your analysis at the initial percentage reduction — check the full trend over all six months.",
+      "Compare the later months' values to the original baseline to see if performance is reverting."
+    ]
+  },
+  {
+    "id": "cphq-gen.evaluating-and-sustaining-improvement-outcomes.04",
+    "loId": "gen-de36663c-ac9f-44aa-871c-79e413176dfd.lo-1",
+    "cedCode": "CPHQ-U3.9",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "After a hospital-wide central line bundle initiative, the hospital-acquired bloodstream infection rate decreased from 3.0 to 2.7 per 1,000 device days, and this modest reduction has remained statistically stable on the control chart for six months. Hospital leadership is debating whether to continue dedicating staff time and resources to sustain the initiative, since the numeric change appears small compared to the effort invested.",
+    "choices": [
+      "Because the reduction is statistically sustained on the control chart, leadership should immediately reallocate resources elsewhere, since statistical significance alone proves the quality goal has been met",
+      "Because the absolute reduction is small, the team should discontinue the intervention regardless of what the control chart shows",
+      "The team should evaluate whether this statistically sustained change also represents a clinically or operationally meaningful improvement before deciding whether to continue investing resources",
+      "Because baseline and post-implementation rates are close in value, the improvement should be treated as a measurement error and the initiative abandoned"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall that evaluating improvement involves checking both statistical sustainment AND clinical/operational significance, not just one.",
+      "A small but stable statistical change may still matter clinically depending on context — consider both angles before deciding on resources."
+    ]
+  },
+  {
+    "id": "cphq-gen.managing-pi-projects.01",
+    "loId": "gen-a6fdbe5f-d748-471e-8f23-1d247c466eb4.lo-1",
+    "cedCode": "CPHQ-U3.10",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality director is preparing to launch a new project aimed at reducing patient falls on a medical-surgical unit. Before any improvement activities begin, she wants to make sure the team establishes the right foundational elements for the project.",
+    "choices": [
+      "Scope, timeline, and resources",
+      "Root cause analysis, control charts, and run charts",
+      "Regulatory citations, sentinel event reports, and peer review findings",
+      "Staff satisfaction survey results, turnover rates, and exit interviews"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the basic PM elements that need to be defined upfront, before improvement work begins.",
+      "These are the three core planning components mentioned in the lesson's key ideas."
+    ]
+  },
+  {
+    "id": "cphq-gen.managing-pi-projects.02",
+    "loId": "gen-a6fdbe5f-d748-471e-8f23-1d247c466eb4.lo-1",
+    "cedCode": "CPHQ-U3.10",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hospital PI team is chartering a medication safety initiative. The team lead reviews the project charter and notices that stakeholders have been identified and goals discussed, but no baseline metrics or success criteria have been documented yet.",
+    "choices": [
+      "Begin implementing process changes immediately to show quick results to leadership",
+      "Establish baseline metrics and success criteria before proceeding further with planning",
+      "Expand the project scope to cover all medication-related processes hospital-wide",
+      "Delay stakeholder engagement until after data collection is complete"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the sequence of foundational PM activities from the worked example.",
+      "Success metrics should be established early, before moving further into project planning."
+    ]
+  },
+  {
+    "id": "cphq-gen.managing-pi-projects.03",
+    "loId": "gen-a6fdbe5f-d748-471e-8f23-1d247c466eb4.lo-1",
+    "cedCode": "CPHQ-U3.10",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Midway through a six-month PI project focused on reducing infections in the ICU, the team sees encouraging downward trends. At the same time, nursing leadership requests that post-operative units be added to the initiative. The original timeline and resource plan were built around ICU only, and the project lead must decide how to respond while keeping the project on track.",
+    "choices": [
+      "Add the post-operative units immediately without adjusting resources, since it supports the same overall infection reduction goal",
+      "Ignore the request and continue with the original scope without engaging stakeholders in a discussion",
+      "Evaluate the impact of expanding scope on the timeline and resources, then communicate the options and risks to stakeholders before deciding",
+      "Postpone all progress monitoring until the scope question is fully resolved"
+    ],
+    "answer": "C",
+    "hints": [
+      "Consider both the need to protect the original plan and the importance of keeping stakeholders informed of changes.",
+      "Adjusting scope without assessing timeline and resource impact risks scope creep."
+    ]
+  },
+  {
+    "id": "cphq-gen.managing-pi-projects.04",
+    "loId": "gen-a6fdbe5f-d748-471e-8f23-1d247c466eb4.lo-1",
+    "cedCode": "CPHQ-U3.10",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A PI team leading a sepsis bundle compliance project is approaching its midpoint review. The executive sponsor wants to expand the project to three additional units to strengthen an upcoming board presentation, but frontline staff report that current resources are already stretched to meet the original timeline. Team members are divided: some want to preserve the original scope to protect data quality and morale, while others believe expanding now will build stronger sponsor support for future PI work.",
+    "choices": [
+      "Immediately expand scope to satisfy the sponsor's request, since maintaining sponsor confidence is the top priority",
+      "Maintain the original scope silently, without communicating the frontline team's resource concerns to the sponsor",
+      "Assess the resource and timeline implications of expanding scope, then transparently communicate the risks and tradeoffs to the sponsor before agreeing to any changes",
+      "Split the team's attention evenly across the original and expanded scope without adjusting the timeline or resource plan"
+    ],
+    "answer": "C",
+    "hints": [
+      "Weigh both the competing pressures (sponsor expectations and resource limits) rather than favoring one side outright.",
+      "The lesson emphasizes monitoring progress against the plan and communicating risks before making scope changes."
+    ]
+  }
+]
