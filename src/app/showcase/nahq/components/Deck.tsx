@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, LayoutGrid, X } from "lucide-react";
 import { SLIDES } from "./slides";
+import { useDeckChannel } from "../lib/deckSync";
 import "./deck-print.css";
 
 export default function Deck() {
@@ -15,6 +16,23 @@ export default function Deck() {
     [total]
   );
   const goPrev = useCallback(() => setIndex((i) => Math.max(i - 1, 0)), []);
+
+  // Presenter-view sync (BroadcastChannel('nahq-deck-sync')). The deck is the
+  // audience-facing tab shared in Meet — it both announces its own slide
+  // changes and obeys navigation driven from the presenter/teleprompter
+  // window, so either window's arrow keys move both.
+  const { postIndex } = useDeckChannel((msg) => {
+    if (msg.type === "hello") {
+      postIndex(index);
+    } else if (msg.type === "index" && msg.index !== index) {
+      setIndex(Math.min(Math.max(msg.index, 0), total - 1));
+    }
+  });
+
+  useEffect(() => {
+    postIndex(index);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -124,6 +142,20 @@ export default function Deck() {
         disabled={index === total - 1}
         className="nahq-deck-chrome group absolute inset-y-0 right-0 z-20 w-1/3 cursor-e-resize disabled:cursor-default"
       />
+
+      {/* Presenter-view hint — first slide only, unobtrusive corner link.
+          Opens in a new tab so a presenter sharing just this tab in Meet can
+          set up their teleprompter window before or during the call. */}
+      {index === 0 && (
+        <a
+          href="/showcase/nahq/presenter"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="nahq-deck-chrome pointer-events-auto absolute right-5 top-5 z-30 text-xs text-slate-600 transition-colors hover:text-slate-400"
+        >
+          Presenter view
+        </a>
+      )}
 
       {/* Chrome: arrows, counter, overview toggle */}
       <div className="nahq-deck-chrome pointer-events-none absolute inset-x-0 bottom-0 z-30 flex items-center justify-between px-6 pb-5">
