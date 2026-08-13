@@ -103,6 +103,16 @@ export default function AccessGate({
         <p className="mt-6 text-center text-xs text-slate-500">
           Prepared for NAHQ &middot; not for general distribution
         </p>
+        <p className="mt-2 text-center text-xs">
+          <a
+            href="/showcase/nahq/presenter"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-slate-600 transition-colors hover:text-slate-400"
+          >
+            Presenter view
+          </a>
+        </p>
       </div>
     </div>
   );

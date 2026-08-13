@@ -5,6 +5,8 @@ const ITEMS = [
   "Hosting and operations",
   "Model / inference costs",
   "Continuous updates as the blueprint and item bank evolve",
+  "AI voice tutoring included under fair use — 300 voice-minutes per candidate per month; text tutoring, lessons, and practice unlimited",
+  "Text-tutor-only tier available for large cohorts (indicative $50–$60 per candidate per year)",
 ];
 
 export default function Ongoing() {
