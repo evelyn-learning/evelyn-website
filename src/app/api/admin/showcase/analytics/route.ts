@@ -89,14 +89,27 @@ export async function GET(request: NextRequest) {
       { $sort: { count: -1 } },
     ]);
 
-    // Recent activity with location
-    const recentActivity = await DemoInteraction.find({
-      productId: { $in: productIds },
-    })
-      .sort({ timestamp: -1 })
-      .limit(50)
-      .select("productId productTitle eventType deviceType timestamp location")
-      .lean();
+    // Recent activity with location — queried PER PRODUCT rather than as one
+    // global top-50 that is then filtered. With a global limit, a single busy
+    // showcase can fill all 50 rows and every other product's card renders
+    // "No activity yet" despite having traffic. RECENT_PER_PRODUCT matches
+    // what the card actually renders (it slices to 15).
+    const RECENT_PER_PRODUCT = 15;
+    const recentByProduct = new Map(
+      await Promise.all(
+        productIds.map(
+          async (productId) =>
+            [
+              productId,
+              await DemoInteraction.find({ productId })
+                .sort({ timestamp: -1 })
+                .limit(RECENT_PER_PRODUCT)
+                .select("productId productTitle eventType deviceType timestamp location")
+                .lean(),
+            ] as const
+        )
+      )
+    );
 
     // Build per-product response
     const products = CLIENT_SHOWCASE_IDS.map((showcase) => {
@@ -120,9 +133,7 @@ export async function GET(request: NextRequest) {
           uniqueCities: l.uniqueCities,
         }));
 
-      const activity = recentActivity.filter(
-        (a) => a.productId === showcase.productId
-      );
+      const activity = recentByProduct.get(showcase.productId) ?? [];
 
       return {
         productId: showcase.productId,

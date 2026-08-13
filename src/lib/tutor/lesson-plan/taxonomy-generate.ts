@@ -9,8 +9,19 @@ import { DraftTaxonomySchema } from '@evelyn/portal-contract/v1';
 import { extractMaterials, condenseForPipeline } from './material-extract';
 
 export const TAXONOMY_MODEL_ID = process.env.TAXONOMY_MODEL || 'claude-sonnet-5';
-const TAXONOMY_MAX_TOKENS = 8192;
+/** The prompt asks for 20-60 LOs, each with a title, a 1-2 sentence
+ *  description, prereq ids and an order — a 60-LO outline can run past 8k
+ *  tokens of JSON, and a response cut off mid-object fails `JSON.parse` and
+ *  surfaces as a bare "taxonomy generation failed". 16k leaves headroom for
+ *  the largest taxonomy the contract accepts while staying under the SDK's
+ *  non-streaming HTTP timeout (streaming is the answer above ~16k). */
+const TAXONOMY_MAX_TOKENS = 16_000;
 const OUTLINE_TARGET_CHARS = 12_000;
+/** One retry. Every observed failure mode here — an overloaded/rate-limited
+ *  API, a truncated response, prose wrapped around the JSON, a section-key
+ *  mismatch — is non-deterministic, so a second sample usually succeeds
+ *  where the first didn't. */
+const TAXONOMY_ATTEMPTS = 2;
 
 export type TaxonomyDraftResult =
   | { ok: true; taxonomy: DraftTaxonomy; generatorOk: boolean }
@@ -76,16 +87,38 @@ export function normalizeRawTaxonomy(raw: unknown, topicKey: string): DraftTaxon
   const sections = r.sections
     .filter((s): s is { key?: string; title?: string; weightPct?: number } => !!s && typeof s === 'object')
     .map((s) => ({
+      rawKey: slug(String(s.key ?? s.title ?? '')),
+      titleKey: slug(String(s.title ?? '')),
       key: slug(String(s.key ?? s.title ?? '')),
       title: String(s.title ?? '').trim().slice(0, MAX_TITLE),
       weightPct: Number(s.weightPct) || 0,
     }))
     .filter((s) => s.title)
+    // Contract cap (DraftTaxonomySchema.sections.max(20)). Clamping beats
+    // failing the whole draft: the operator can delete what they don't want,
+    // but they can't recover a taxonomy that never came back.
+    .slice(0, 20)
     .map((s) => ({ ...s, key: uniqueId(s.key, usedSectionKeys, 40) }));
+  if (sections.length === 0) return null;
   const totalW = sections.reduce((a, s) => a + s.weightPct, 0);
   for (const s of sections) s.weightPct = totalW > 0 ? Math.round((s.weightPct / totalW) * 1000) / 10 : Math.round(1000 / sections.length) / 10;
 
-  const sectionKeys = new Set(sections.map((s) => s.key));
+  // An LO names its section however the model felt like naming it, and it is
+  // NOT reliably the section's own `key`: the same outline re-run can come
+  // back with sectionKey: "Quality Leadership and Integration" (the title)
+  // where the section declared key: "quality-leadership". Matching on the key
+  // alone dropped every such LO at the filter below, leaving `los` empty,
+  // which fails the schema's `.min(1)` and surfaced to the operator as an
+  // unexplained "taxonomy generation failed" — on a PDF that had worked
+  // minutes earlier. Accept the declared key, the raw pre-dedup key, and the
+  // slugified title as aliases for the same section. First alias wins, so a
+  // collision resolves to the earlier section (same rule `uniqueId` documents).
+  const sectionKeyByAlias = new Map<string, string>();
+  for (const s of sections) {
+    for (const alias of [s.key, s.rawKey, s.titleKey]) {
+      if (alias && !sectionKeyByAlias.has(alias)) sectionKeyByAlias.set(alias, s.key);
+    }
+  }
   const idMap = new Map<string, string>(); // raw loId → rewritten loId
   const usedLoIds = new Set<string>();
   const los = r.los
@@ -94,11 +127,14 @@ export function normalizeRawTaxonomy(raw: unknown, topicKey: string): DraftTaxon
       raw: l,
       title: String(l.title ?? '').trim().slice(0, MAX_TITLE),
       description: String(l.description ?? '').trim().slice(0, 1000),
-      sectionKey: slug(String(l.sectionKey ?? '')),
+      sectionKey: sectionKeyByAlias.get(slug(String(l.sectionKey ?? ''))) ?? '',
     }))
     // Drop unusable rows BEFORE ids are allocated, so a discarded LO never
     // burns the un-suffixed id its kept neighbour should get.
-    .filter((l) => l.title && l.description && sectionKeys.has(l.sectionKey))
+    .filter((l) => l.title && l.description && l.sectionKey)
+    // Contract cap (DraftTaxonomySchema.los.max(120)) — clamped, not failed,
+    // for the same reason the section list is.
+    .slice(0, 120)
     .map((l) => {
       const loId = uniqueId(
         clampSlug(`${topicKey}.${l.sectionKey}.${slug(String(l.raw.title ?? l.raw.loId ?? ''))}`, MAX_LO_ID),
@@ -128,8 +164,26 @@ export function normalizeRawTaxonomy(raw: unknown, topicKey: string): DraftTaxon
     suggestedOrder: i + 1,
   }));
 
-  const parsed = DraftTaxonomySchema.safeParse({ title: r.title.trim(), sections, los: normalized });
-  return parsed.success ? parsed.data : null;
+  // A blank title is not worth discarding a whole valid LO graph over — the
+  // operator renames the course in the console anyway.
+  const title = r.title.trim() || topicKey.toUpperCase();
+  const parsed = DraftTaxonomySchema.safeParse({
+    title,
+    // `rawKey`/`titleKey` are alias-resolution scratch, not contract fields.
+    sections: sections.map((s) => ({ key: s.key, title: s.title, weightPct: s.weightPct })),
+    los: normalized,
+  });
+  if (!parsed.success) {
+    // Previously this returned null silently and the operator saw only
+    // "generation failed (generatorOk:false)" with nothing to act on.
+    console.error(
+      `[taxonomy-generate] normalize rejected for topicKey=${topicKey}: ` +
+        `${sections.length} sections, ${normalized.length} LOs — ` +
+        JSON.stringify(parsed.error.issues.slice(0, 5)),
+    );
+    return null;
+  }
+  return parsed.data;
 }
 
 function stripFences(s: string): string {
@@ -138,7 +192,55 @@ function stripFences(s: string): string {
 
 const SYSTEM = `You convert a certification/exam CONTENT OUTLINE into a learning-objective graph for an adaptive tutor.
 Return ONLY JSON: {"title": string, "sections": [{"key","title","weightPct"}], "los": [{"loId","title","description","sectionKey","prerequisiteLoIds","suggestedOrder"}]}.
-Rules: sections mirror the outline's top-level domains and their published weights (percent). Each LO must be ONE teachable lesson objective (~30 min), not a whole domain — split broad outline tasks. 20-60 LOs total. description: 1-2 sentences of what the learner can do afterward. prerequisiteLoIds: only true hard prerequisites within this outline (sparse is correct). suggestedOrder: global teaching order.`;
+Rules: sections mirror the outline's top-level domains and their published weights (percent). Each LO must be ONE teachable lesson objective (~30 min), not a whole domain — split broad outline tasks. 20-60 LOs total. description: 1-2 sentences of what the learner can do afterward. Every LO's sectionKey must be copied verbatim from one of the section "key" values you emitted above — not the section's title. prerequisiteLoIds: only true hard prerequisites within this outline (sparse is correct). suggestedOrder: global teaching order.`;
+
+/** One sample from the model: either a validated taxonomy, or the reason this
+ *  attempt is unusable. The reason is for the server log — it is what tells
+ *  an operator staring at "taxonomy generation failed" whether to retry, trim
+ *  the PDF, or change the guidance. */
+type DraftAttempt = { ok: true; taxonomy: DraftTaxonomy } | { ok: false; reason: string };
+
+async function attemptDraft(
+  anthropic: Anthropic,
+  outlineText: string,
+  guidance: string | undefined,
+  topicKey: string,
+): Promise<DraftAttempt> {
+  let msg: Anthropic.Message;
+  try {
+    msg = await anthropic.messages.create({
+      model: TAXONOMY_MODEL_ID,
+      max_tokens: TAXONOMY_MAX_TOKENS,
+      system: SYSTEM,
+      messages: [{ role: 'user', content: `OUTLINE:\n${outlineText}\n\nOPERATOR GUIDANCE:\n${guidance ?? '(none)'}` }],
+    });
+  } catch (err) {
+    // Transient API conditions land here — 429 rate limit, 529 overloaded,
+    // socket timeouts. This is the branch that made the same PDF succeed on
+    // one click and fail on the next.
+    return { ok: false, reason: `LLM call failed: ${err instanceof Error ? err.message : String(err)}` };
+  }
+
+  if (msg.stop_reason === 'max_tokens') {
+    return {
+      ok: false,
+      reason: `model hit the ${TAXONOMY_MAX_TOKENS}-token output cap; the JSON is truncated mid-object`,
+    };
+  }
+
+  const text = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
+  let raw: unknown;
+  try {
+    raw = JSON.parse(stripFences(text));
+  } catch {
+    return { ok: false, reason: `model output was not valid JSON (${text.length} chars, begins ${JSON.stringify(text.slice(0, 120))})` };
+  }
+
+  const taxonomy = normalizeRawTaxonomy(raw, topicKey);
+  // normalizeRawTaxonomy has already logged the specific schema issues.
+  if (!taxonomy) return { ok: false, reason: 'normalized taxonomy failed contract validation' };
+  return { ok: true, taxonomy };
+}
 
 export async function draftTaxonomyFromOutline(req: TaxonomyGenerateRequest): Promise<TaxonomyDraftResult> {
   const extracted = await extractMaterials(req.materials);
@@ -155,17 +257,36 @@ export async function draftTaxonomyFromOutline(req: TaxonomyGenerateRequest): Pr
     los: [{ loId: `${topicKey}.main.overview`, title: 'Overview', description: 'Placeholder — drafting failed.', sectionKey: 'main', prerequisiteLoIds: [], suggestedOrder: 1 }],
   };
 
-  try {
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    const msg = await anthropic.messages.create({
-      model: TAXONOMY_MODEL_ID, max_tokens: TAXONOMY_MAX_TOKENS, system: SYSTEM,
-      messages: [{ role: 'user', content: `OUTLINE:\n${outlineText}\n\nOPERATOR GUIDANCE:\n${req.guidance ?? '(none)'}` }],
-    });
-    const text = msg.content.filter((b) => b.type === 'text').map((b) => b.text).join('');
-    const taxonomy = normalizeRawTaxonomy(JSON.parse(stripFences(text)), topicKey);
-    if (!taxonomy) return { ok: true, taxonomy: fallback, generatorOk: false };
-    return { ok: true, taxonomy, generatorOk: true };
-  } catch {
-    return { ok: true, taxonomy: fallback, generatorOk: false };
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  let lastReason = 'no attempt ran';
+
+  for (let attempt = 1; attempt <= TAXONOMY_ATTEMPTS; attempt++) {
+    let result: DraftAttempt;
+    try {
+      result = await attemptDraft(anthropic, outlineText, req.guidance, topicKey);
+    } catch (err) {
+      // attemptDraft catches its own expected failures; anything reaching
+      // here is a bug in it, and must still not take the request down.
+      result = { ok: false, reason: `unexpected: ${err instanceof Error ? err.stack ?? err.message : String(err)}` };
+    }
+
+    if (result.ok) {
+      if (attempt > 1) {
+        // eslint-disable-next-line no-console
+        console.warn(`[taxonomy-generate] topicKey=${topicKey} recovered on attempt ${attempt}/${TAXONOMY_ATTEMPTS}`);
+      }
+      return { ok: true, taxonomy: result.taxonomy, generatorOk: true };
+    }
+
+    lastReason = result.reason;
+    // eslint-disable-next-line no-console
+    console.error(
+      `[taxonomy-generate] attempt ${attempt}/${TAXONOMY_ATTEMPTS} failed ` +
+        `(topicKey=${topicKey}, model=${TAXONOMY_MODEL_ID}, outline=${outlineText.length} chars): ${lastReason}`,
+    );
   }
+
+  // eslint-disable-next-line no-console
+  console.error(`[taxonomy-generate] topicKey=${topicKey} exhausted ${TAXONOMY_ATTEMPTS} attempts; last reason: ${lastReason}`);
+  return { ok: true, taxonomy: fallback, generatorOk: false };
 }

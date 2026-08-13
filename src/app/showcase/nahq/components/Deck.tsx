@@ -6,7 +6,11 @@ import { SLIDES } from "./slides";
 import { useDeckChannel } from "../lib/deckSync";
 import "./deck-print.css";
 
-export default function Deck() {
+/** Fired once per slide the viewer actually lands on — including the first,
+ *  and including slides reached via the overview grid or the presenter
+ *  window's arrow keys. The page owns what to do with it (analytics); Deck
+ *  stays a dumb reporter so nothing here depends on tracking being wired. */
+export default function Deck({ onSlideView }: { onSlideView?: (index: number) => void }) {
   const total = SLIDES.length;
   const [index, setIndex] = useState(0);
   const [overview, setOverview] = useState(false);
@@ -31,6 +35,15 @@ export default function Deck() {
 
   useEffect(() => {
     postIndex(index);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+
+  // Report the landed-on slide. Keyed on `index` alone so a re-render from
+  // any other state (the overview toggle) doesn't re-report the same slide;
+  // `onSlideView` is deliberately not a dependency, since a caller passing an
+  // unmemoized callback would otherwise turn every render into an event.
+  useEffect(() => {
+    onSlideView?.(index);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index]);
 

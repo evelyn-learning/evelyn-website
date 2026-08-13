@@ -84,4 +84,64 @@ assert.equal(trunc.sections[0].title.length, 200);
 assert.equal(trunc.los[0].title.length, 200);
 assert.ok(trunc.los[0].loId.length <= 120, `loId within contract cap, got ${trunc.los[0].loId.length}`);
 
+// 7. An LO may name its section by TITLE rather than by key. The model is not
+//    consistent about this across runs of the same PDF, and matching on key
+//    alone dropped every such LO — leaving `los` empty, failing the schema's
+//    .min(1), and surfacing as an unexplained "taxonomy generation failed"
+//    on an outline that had worked minutes earlier.
+const byTitle = normalizeRawTaxonomy({
+  title: 'CPHQ Exam',
+  sections: [
+    { key: 'qli', title: 'Quality Leadership and Integration', weightPct: 40 },
+    { key: 'ppi', title: 'Performance and Process Improvement', weightPct: 60 },
+  ],
+  los: [
+    // sectionKey is the section's TITLE, not its declared key.
+    { loId: 'a', title: 'Program scope', description: 'd', sectionKey: 'Quality Leadership and Integration',
+      prerequisiteLoIds: [], suggestedOrder: 1 },
+    // ...and this one uses the declared key, in the same response.
+    { loId: 'b', title: 'PDSA cycles', description: 'd', sectionKey: 'ppi', prerequisiteLoIds: [], suggestedOrder: 2 },
+  ],
+}, 'cphq');
+assert.ok(byTitle, 'title-named sectionKeys resolve');
+assert.equal(byTitle.los.length, 2, 'neither LO is dropped');
+assert.equal(byTitle.los[0].sectionKey, 'qli');
+assert.equal(byTitle.los[1].sectionKey, 'ppi');
+
+// 8. An LO naming a section that exists under NO alias is still dropped —
+//    the alias map widens matching, it does not turn off validation.
+const unknownSection = normalizeRawTaxonomy({
+  title: 'CPHQ Exam',
+  sections: [{ key: 'ps', title: 'Patient Safety', weightPct: 100 }],
+  los: [
+    { loId: 'a', title: 'Safety culture', description: 'd', sectionKey: 'ps', prerequisiteLoIds: [], suggestedOrder: 1 },
+    { loId: 'b', title: 'Orphan', description: 'd', sectionKey: 'does-not-exist', prerequisiteLoIds: [], suggestedOrder: 2 },
+  ],
+}, 'cphq');
+assert.ok(unknownSection);
+assert.deepEqual(unknownSection.los.map((l) => l.title), ['Safety culture']);
+
+// 9. Over-cap section/LO counts are clamped to the contract's limits rather
+//    than failing the whole draft (sections .max(20), los .max(120)).
+const overCap = normalizeRawTaxonomy({
+  title: 'CPHQ Exam',
+  sections: Array.from({ length: 25 }, (_, i) => ({ key: `s${i}`, title: `Section ${i}`, weightPct: 4 })),
+  los: Array.from({ length: 140 }, (_, i) => ({
+    loId: `lo${i}`, title: `Objective ${i}`, description: 'd', sectionKey: 's0', prerequisiteLoIds: [], suggestedOrder: i + 1,
+  })),
+}, 'cphq');
+assert.ok(overCap, 'over-cap drafts are clamped, not discarded');
+assert.equal(overCap.sections.length, 20);
+assert.equal(overCap.los.length, 120);
+
+// 10. A blank title falls back to the topicKey rather than sinking a
+//     perfectly good LO graph (the operator renames it in the console anyway).
+const noTitle = normalizeRawTaxonomy({
+  title: '   ',
+  sections: [{ key: 'ps', title: 'Patient Safety', weightPct: 100 }],
+  los: [{ loId: 'a', title: 'Safety culture', description: 'd', sectionKey: 'ps', prerequisiteLoIds: [], suggestedOrder: 1 }],
+}, 'cphq');
+assert.ok(noTitle, 'blank title does not sink the draft');
+assert.equal(noTitle.title, 'CPHQ');
+
 console.log('test-taxonomy-generate: all assertions passed');
