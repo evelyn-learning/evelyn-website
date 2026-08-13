@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
-// Passcode-gated slide deck presented live to NAHQ (Sherry — Sr. Director of
-// Professional Development, Frank — leads certification) and left with them
+// Passcode-gated slide deck presented live to NAHQ (their professional-development
+// and certification leadership) and left with them
 // afterward. Not part of the public site — no nav entry, no sitemap entry,
 // no indexing. Replaces the earlier plain page at /nahq (see that route's
 // redirect).
