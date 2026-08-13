@@ -1,0 +1,49 @@
+/* Print stylesheet for the NAHQ deck. Screen: only the active slide is
+   shown (JS-driven slideshow). Print: every slide renders as its own
+   landscape page, in order, so the deck can be saved/printed as a
+   leave-behind PDF that matches what was presented. */
+
+.nahq-slide-page {
+  display: none;
+}
+
+.nahq-slide-page.nahq-slide-active {
+  display: block;
+}
+
+@media print {
+  .nahq-deck-chrome {
+    display: none !important;
+  }
+
+  /* The slideshow root is pinned to one viewport (h-screen/overflow-hidden)
+     for the on-screen slideshow. Printing needs the opposite — natural
+     document flow so every .nahq-slide-page below can paginate — otherwise
+     the fixed height + hidden overflow clips everything to a single page. */
+  .nahq-deck-root {
+    height: auto !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+
+  .nahq-slide-page {
+    display: block !important;
+    height: 100vh;
+    width: 100vw;
+    page-break-after: always;
+    break-after: page;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color-adjust: exact;
+  }
+
+  .nahq-slide-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+}
