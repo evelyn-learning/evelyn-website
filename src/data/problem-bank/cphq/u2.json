@@ -1,0 +1,603 @@
+[
+  {
+    "id": "cphq-gen.designing-data-collection-plans.01",
+    "loId": "gen-6a1074b5-0447-4e8c-a947-40c182ecadbe.lo-1",
+    "cedCode": "CPHQ-U2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality improvement analyst is drafting a data collection plan for a new hospital measure. Her primary goal is to make sure the data gathered truly captures what is actually happening to patients, rather than an artifact of poor measurement design. Which core principle of quality measurement is she primarily addressing?",
+    "choices": [
+      "Validity",
+      "Reliability",
+      "Feasibility",
+      "Sample size"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the principle defined as data accurately reflecting clinical reality.",
+      "This is different from consistency over time."
+    ]
+  },
+  {
+    "id": "cphq-gen.designing-data-collection-plans.02",
+    "loId": "gen-6a1074b5-0447-4e8c-a947-40c182ecadbe.lo-1",
+    "cedCode": "CPHQ-U2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's wound care committee is collecting data on pressure injury rates across five nursing units. Each unit's nurses use their own informal, unwritten criteria to decide whether a pressure injury should be staged and counted, and no staff training on a standard definition has occurred. When the committee compares results across units and over time, findings vary widely even though patient populations are similar. Which principle of the data collection plan has most likely been violated?",
+    "choices": [
+      "Feasibility",
+      "Reliability",
+      "Validity",
+      "Timeliness"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what happens when the same measure is applied inconsistently across settings.",
+      "This mirrors the readmission example where definitions changed each quarter."
+    ]
+  },
+  {
+    "id": "cphq-gen.designing-data-collection-plans.03",
+    "loId": "gen-6a1074b5-0447-4e8c-a947-40c182ecadbe.lo-1",
+    "cedCode": "CPHQ-U2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A quality team is designing a data collection plan for surgical site infection (SSI) rates. One option is to review 100% of surgical charts every month, which would give the most complete picture of true infection occurrence but would require far more staff time than the department has available. A second option is to review a 20% random sample of charts quarterly, which is much easier to sustain but may miss some infections or introduce timing gaps. The team must decide how to balance these options when finalizing the sampling approach and frequency.",
+    "choices": [
+      "Reliability and timeliness",
+      "Validity and feasibility",
+      "Sampling bias and cost",
+      "Feasibility and sample size only"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider both how well the data reflects the true infection rate and whether the plan can realistically be sustained with available resources.",
+      "The lesson describes feasibility as collection that is sustainable within resource constraints."
+    ]
+  },
+  {
+    "id": "cphq-gen.designing-data-collection-plans.04",
+    "loId": "gen-6a1074b5-0447-4e8c-a947-40c182ecadbe.lo-1",
+    "cedCode": "CPHQ-U2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two hospitals are merging their quality departments and must design a single data collection plan to measure antibiotic prescribing appropriateness system-wide. Hospital A has historically used a strict evidence-based criteria set with trained abstractors who check inter-rater agreement, while Hospital B has used a looser, prescriber-judgment-based definition with no formal training. Leadership wants the combined measure launched next month, before staff at Hospital B can be trained on the shared definition or before agreement checks can be established between the two teams' reviewers. Given this time pressure, which principle is most at risk in the short term, and why?",
+    "choices": [
+      "Feasibility, because reviewing charts at two hospitals requires more resources than either hospital used alone",
+      "Validity, because the antibiotic criteria themselves have not been updated to reflect current evidence",
+      "Reliability, because the same definition will not yet be applied consistently across sites and reviewers",
+      "Sampling adequacy, because the combined patient population is now too large for a representative sample"
+    ],
+    "answer": "C",
+    "hints": [
+      "Focus on what happens when the same measure definition is not yet used consistently across settings and staff.",
+      "Recall the steps in the worked example: shared definitions, staff training, and checking reviewer agreement all support one specific principle."
+    ]
+  },
+  {
+    "id": "cphq-gen.selecting-and-defining-quality-measures.01",
+    "loId": "gen-5da8d150-61d6-4514-9985-77ad11efb7d3.lo-1",
+    "cedCode": "CPHQ-U2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality committee is building a dashboard for its cardiac care program and wants to illustrate the three measure domains taught in quality improvement. One data point they note is that the telemetry unit has 6 monitors available for its 20 beds.",
+    "choices": [
+      "Structure measure",
+      "Process measure",
+      "Outcome measure",
+      "Balancing measure"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what resources or equipment exist before any care is delivered."
+    ]
+  },
+  {
+    "id": "cphq-gen.selecting-and-defining-quality-measures.02",
+    "loId": "gen-5da8d150-61d6-4514-9985-77ad11efb7d3.lo-1",
+    "cedCode": "CPHQ-U2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A quality analyst reviewing a hospital's stroke program finds that 92% of eligible stroke patients received clot-busting medication within 60 minutes of arrival, in accordance with the hospital's stroke protocol.",
+    "choices": [
+      "This is a structure measure because it involves hospital protocols",
+      "This is a process measure because it describes a clinical action taken during care",
+      "This is an outcome measure because it reflects patient recovery",
+      "This is not a valid quality measure"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on whether the data describes an action performed, a resource available, or a final health result."
+    ]
+  },
+  {
+    "id": "cphq-gen.selecting-and-defining-quality-measures.03",
+    "loId": "gen-5da8d150-61d6-4514-9985-77ad11efb7d3.lo-1",
+    "cedCode": "CPHQ-U2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A quality improvement team assessing a hospital's diabetes management program collects three data points: (1) the number of certified diabetes educators employed by the hospital, (2) the percentage of patients who received a foot exam at each visit as required by protocol, and (3) the percentage of patients achieving an HbA1c below 7% at 6 months.",
+    "choices": [
+      "Structure, process, outcome, in that order",
+      "Process, structure, outcome, in that order",
+      "Structure, outcome, process, in that order",
+      "Outcome, process, structure, in that order"
+    ],
+    "answer": "A",
+    "hints": [
+      "Match each item to whether it describes an available resource, a clinical action, or a patient health result.",
+      "Work through each data point one at a time before matching them to a domain."
+    ]
+  },
+  {
+    "id": "cphq-gen.selecting-and-defining-quality-measures.04",
+    "loId": "gen-5da8d150-61d6-4514-9985-77ad11efb7d3.lo-1",
+    "cedCode": "CPHQ-U2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Facing budget constraints, hospital leadership tells the quality team to track only the sepsis mortality rate because 'that is the only measure that matters to patients.' The quality director pushes back, wanting to also track ICU nurse-to-patient staffing ratios and adherence to the sepsis bundle protocol, arguing that a single measure will not explain why outcomes are good or poor.",
+    "choices": [
+      "Leadership is correct; tracking only the mortality rate is sufficient because outcome measures directly show whether care has improved",
+      "The quality director's approach is more sound; tracking structure, process, and outcome measures together gives a more complete picture, since resources and actions affect the final result",
+      "Structure measures like staffing ratios should be dropped because they have no bearing on patient outcomes",
+      "Process measures are unnecessary once an outcome measure shows an acceptable result"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider why quality assessment relies on examining all three domains rather than a single measure alone.",
+      "Think about what information is lost if you only know the final result without knowing the resources or actions behind it."
+    ]
+  },
+  {
+    "id": "cphq-gen.basic-statistical-concepts-for-quality-data.01",
+    "loId": "gen-6988d99c-1674-415a-ac05-1a46753acfd9.lo-1",
+    "cedCode": "CPHQ-U2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality manager is preparing a monthly summary report and must decide how to describe the 'typical' value within a data set of nurse-to-patient ratios. Before writing the report, she reviews the basic definitions of mean and median to make sure she applies the correct terminology.",
+    "choices": [
+      "The mean is the middle value when data are ordered from lowest to highest, while the median is calculated by summing all values and dividing by the count.",
+      "The mean is calculated by summing all values and dividing by the count, while the median is the middle value when data are ordered from lowest to highest.",
+      "The mean and median are always equal in any quality data set, regardless of outliers.",
+      "The mean is used only for infection rates, while the median is used only for satisfaction scores."
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the two steps taught: one involves summing values, the other involves ordering values.",
+      "Think about which measure requires arranging the data from lowest to highest."
+    ]
+  },
+  {
+    "id": "cphq-gen.basic-statistical-concepts-for-quality-data.02",
+    "loId": "gen-6988d99c-1674-415a-ac05-1a46753acfd9.lo-1",
+    "cedCode": "CPHQ-U2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse manager tracks the number of medication errors reported per week over 5 consecutive weeks: 2, 4, 3, 3, 8. She wants to include the average weekly error count on a quality dashboard for the unit.",
+    "choices": [
+      "4 errors per week",
+      "3 errors per week",
+      "8 errors per week",
+      "3.5 errors per week"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add all five values together first.",
+      "Divide the total sum by the number of weeks in the data set."
+    ]
+  },
+  {
+    "id": "cphq-gen.basic-statistical-concepts-for-quality-data.03",
+    "loId": "gen-6988d99c-1674-415a-ac05-1a46753acfd9.lo-1",
+    "cedCode": "CPHQ-U2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team recorded the length of stay (in days) for 6 patients on a medical unit this month: 3, 4, 4, 5, 4, and 22. The 22-day stay occurred because of a rare surgical complication unrelated to typical care patterns. The team must choose a single summary statistic to present to the medical staff committee as the 'typical' length of stay for the unit this month.",
+    "choices": [
+      "Mean, 7 days, because it accounts for every patient in the data set.",
+      "Median, 4 days, because it is not skewed by the outlier value of 22 days.",
+      "Mean, 4 days, because outliers do not affect the mean calculation.",
+      "Median, 7 days, because the median always equals the mean when there is an outlier."
+    ],
+    "answer": "B",
+    "hints": [
+      "Calculate both the mean and the median and compare how each is affected by the 22-day stay.",
+      "Recall when the median is preferred over the mean in quality reporting."
+    ]
+  },
+  {
+    "id": "cphq-gen.basic-statistical-concepts-for-quality-data.04",
+    "loId": "gen-6988d99c-1674-415a-ac05-1a46753acfd9.lo-1",
+    "cedCode": "CPHQ-U2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality committee is comparing patient satisfaction scores (0-10 scale) across two units for a board presentation. Unit A's scores over 7 days are 8, 9, 7, 9, 8, 10, 6. Unit B's scores over 7 days are 9, 9, 9, 9, 9, 9, 1, where the single score of 1 reflects an isolated data-entry-related complaint unrelated to actual care quality. Two committee members disagree on approach: one insists on using the mean for both units for consistency, while the other argues the choice of statistic should depend on each unit's data distribution.",
+    "choices": [
+      "Use the mean for both units because consistency in reporting method is more important than accounting for outliers.",
+      "Use the median for both units regardless of distribution shape, since it is always the more accurate measure.",
+      "Use the mean for Unit A since its data lacks a major outlier, and use the median for Unit B since its low outlier score would distort the mean.",
+      "Use the mean for Unit A and the mean for Unit B, since the mean is required for any board-level report."
+    ],
+    "answer": "C",
+    "hints": [
+      "Examine each unit's data set separately to see whether an outlier is present.",
+      "Recall the guidance on choosing median over mean when a value skews the data."
+    ]
+  },
+  {
+    "id": "cphq-gen.control-charts-and-run-charts.01",
+    "loId": "gen-bc80a7e5-3ad2-48c0-a587-3e7b646bf1ae.lo-1",
+    "cedCode": "CPHQ-U2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a quality council meeting, a new data analyst asks the quality director to explain the two general categories of variation seen on control charts used to monitor hospital processes. The director explains that understanding which type of variation is present determines whether the team should investigate a specific incident or instead redesign the underlying process.",
+    "choices": [
+      "Variation caused by a sudden, identifiable event outside the normal operation of the process",
+      "Variation that is predictable and inherent to the process itself, arising from the normal way the system functions",
+      "Variation that can only be detected using run charts, never control charts",
+      "Variation that indicates the process is out of control and must always be reported to leadership"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what remains when no unusual event has occurred.",
+      "Common-cause variation is the 'background noise' of a stable system."
+    ]
+  },
+  {
+    "id": "cphq-gen.control-charts-and-run-charts.02",
+    "loId": "gen-bc80a7e5-3ad2-48c0-a587-3e7b646bf1ae.lo-1",
+    "cedCode": "CPHQ-U2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A quality analyst reviews a control chart tracking the monthly rate of catheter-associated urinary tract infections (CAUTIs) on a medical unit. Over the past six months, the rate has ranged between 2.1 and 3.8 infections per 1,000 catheter-days with no consistent upward or downward trend and no single point falling outside the control limits.",
+    "choices": [
+      "This is special-cause variation, since the rate changes every month",
+      "This is common-cause variation, reflecting the normal variability of a stable process",
+      "This is special-cause variation, because infection rates should never fluctuate",
+      "This cannot be classified without first identifying the exact cause of each month's rate"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for whether any specific event lines up with the fluctuations.",
+      "Random fluctuation within limits, without a pattern, points to one particular variation type."
+    ]
+  },
+  {
+    "id": "cphq-gen.control-charts-and-run-charts.03",
+    "loId": "gen-bc80a7e5-3ad2-48c0-a587-3e7b646bf1ae.lo-1",
+    "cedCode": "CPHQ-U2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's average medication administration turnaround time has stayed steady at approximately 25 minutes per dose for ten weeks. In week 11, the average suddenly jumps to 48 minutes for that week only, then returns to the prior baseline in week 12. Investigation reveals that a pharmacy software vendor pushed an unscheduled system update during week 11 that caused repeated login failures for nursing staff, and the issue was resolved by week 12.",
+    "choices": [
+      "Common-cause variation, because turnaround times naturally fluctuate week to week",
+      "Special-cause variation, because the spike coincides with an identifiable, assignable external event that resolved once the cause was fixed",
+      "Common-cause variation, because the process returned to baseline afterward, proving the system is stable",
+      "Special-cause variation, because any turnaround time above 25 minutes indicates a defect in the process"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider both the timing of the spike and whether a specific cause can be linked to it.",
+      "A one-time spike tied to a known event, followed by a return to baseline, fits a particular pattern taught in the lesson."
+    ]
+  },
+  {
+    "id": "cphq-gen.control-charts-and-run-charts.04",
+    "loId": "gen-bc80a7e5-3ad2-48c0-a587-3e7b646bf1ae.lo-1",
+    "cedCode": "CPHQ-U2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A performance improvement team monitors the percentage of discharge summaries completed within 24 hours. For 15 consecutive reporting periods the rate hovered around 80% with normal day-to-day ups and downs. Starting in week 16, following the hospital's transition to a new electronic health record (EHR) discharge module, the rate has remained consistently between 60% and 65% for eight straight weeks, without any single dramatic spike or drop but with the entire pattern shifted below the previous average. Some team members argue this still looks like common-cause variation because no single outlier point falls dramatically outside the old control limits.",
+    "choices": [
+      "Common-cause variation, since no single week shows an extreme spike beyond the historical range",
+      "Special-cause variation, because a sustained shift in the process level coincides with an identifiable system change (the EHR transition), even though no single point is a dramatic outlier",
+      "Common-cause variation, because the rate has stabilized again at a new, consistent level",
+      "It cannot be classified as either type until at least 20 additional weeks of data are collected"
+    ],
+    "answer": "B",
+    "hints": [
+      "A sustained change in the average level tied to a known event can indicate the same category of variation as a single spike.",
+      "Weigh both the presence of an assignable cause and the persistence of the shift, not just whether one point looks extreme."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-validation-and-integrity.01",
+    "loId": "gen-b7e79af4-01a7-43d6-8f54-40bb136ddbe6.lo-1",
+    "cedCode": "CPHQ-U2.5",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a routine data quality audit, a hospital quality analyst discovers that 12% of glucose monitoring entries in the electronic health record are blank because staff occasionally forgot to log values during busy shifts. The analyst needs to categorize this issue for her report to the quality committee.",
+    "choices": [
+      "Missing values from incomplete data entry",
+      "Selection bias in patient enrollment",
+      "Temporal bias from changing protocols",
+      "Demographic disparity in sampling"
+    ],
+    "answer": "A",
+    "hints": [
+      "Focus on why the data points are simply absent, not on who was excluded.",
+      "This is about gaps in entry, not a skew toward a particular group."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-validation-and-integrity.02",
+    "loId": "gen-b7e79af4-01a7-43d6-8f54-40bb136ddbe6.lo-1",
+    "cedCode": "CPHQ-U2.5",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pediatric clinic wants to estimate average infant weight gain over six months. Data are pulled only from infants who returned for all scheduled follow-up visits; infants who missed visits (often because they were more frequently ill and hospitalized) were excluded from the dataset entirely.",
+    "choices": [
+      "Selection bias, because sicker infants were systematically excluded",
+      "Measurement bias, because the scale was miscalibrated",
+      "Temporal bias, because seasons changed during data collection",
+      "Missing values, because entries were left blank randomly"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which patients were left out of the sample and why.",
+      "The exclusion is tied to illness status, not random blanks in the record."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-validation-and-integrity.03",
+    "loId": "gen-b7e79af4-01a7-43d6-8f54-40bb136ddbe6.lo-1",
+    "cedCode": "CPHQ-U2.5",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team is comparing average blood pressure readings between two clinics to evaluate hypertension control. Clinic A has not recalibrated its automated cuffs in over six months, producing consistently higher readings. Clinic B has 18% of readings missing, and a chart review shows the missing values cluster almost entirely among patients admitted overnight for acute exacerbations. The team must determine what is distorting the comparison before drawing conclusions.",
+    "choices": [
+      "Clinic A shows measurement bias from uncalibrated equipment, and Clinic B shows selection bias from excluding sicker patients",
+      "Clinic A shows temporal bias from seasonal variation, and Clinic B shows demographic bias from age differences",
+      "Both clinics show only random missing values with no systematic effect on the comparison",
+      "Clinic A shows selection bias, and Clinic B shows measurement bias, so the two effects cancel out"
+    ],
+    "answer": "A",
+    "hints": [
+      "Match each clinic's specific data problem to the type of error it represents.",
+      "Consider whether the missing data in Clinic B could be random or tied to patient severity."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-validation-and-integrity.04",
+    "loId": "gen-b7e79af4-01a7-43d6-8f54-40bb136ddbe6.lo-1",
+    "cedCode": "CPHQ-U2.5",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A multi-site quality improvement initiative pools retrospective chart data from four hospitals to benchmark sepsis recognition rates. Two sites still rely heavily on manual data entry with frequent transcription gaps, one site changed its sepsis diagnostic criteria midway through the study period, and enrollment across all sites skewed toward older, insured patients because uninsured patients were less likely to have complete records. The quality director must decide which issues pose the greatest threat to validly comparing rates across sites, since some may only add noise while others could systematically distort conclusions.",
+    "choices": [
+      "The demographic skew toward older, insured patients and the mid-study change in diagnostic criteria pose the greatest threat because they introduce systematic bias, whereas transcription gaps mainly add missing data noise",
+      "The transcription gaps alone invalidate the entire study because manual entry always outweighs other error sources",
+      "The diagnostic criteria change is irrelevant since it occurred at only one site and cannot affect the overall benchmark",
+      "The demographic skew can be ignored because insurance status has no established link to data completeness or bias"
+    ],
+    "answer": "A",
+    "hints": [
+      "Separate error sources that create random gaps from those that create a directional, systematic skew.",
+      "Consider which factors would consistently push results in one direction across the whole comparison versus just adding scattered missing data."
+    ]
+  },
+  {
+    "id": "cphq-gen.benchmarking-performance-data.01",
+    "loId": "gen-59dfed73-9ea0-48d8-843b-bc1cd83aed11.lo-1",
+    "cedCode": "CPHQ-U2.6",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The quality improvement council at Ridgeview Medical Center is training new staff on foundational QI concepts. The educator explains that before internal performance can be judged as 'good' or 'in need of improvement,' it must be compared to something. Which statement best describes the purpose of benchmarking in performance measurement?",
+    "choices": [
+      "Benchmarking compares an organization's data to internal or external standards to identify performance gaps and drive improvement.",
+      "Benchmarking eliminates the need to track internal trends once external data is available.",
+      "Benchmarking is used only to satisfy accreditation reporting requirements.",
+      "Benchmarking replaces root cause analysis when investigating adverse events."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what benchmarking is used for: comparison and gap identification, not replacement of other tools."
+    ]
+  },
+  {
+    "id": "cphq-gen.benchmarking-performance-data.02",
+    "loId": "gen-59dfed73-9ea0-48d8-843b-bc1cd83aed11.lo-1",
+    "cedCode": "CPHQ-U2.6",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The infection prevention team at a community hospital tracks central line-associated bloodstream infection (CLABSI) rates. Their most recent quarterly rate is 3.5 infections per 1,000 line-days, while the national benchmark is 1.5 infections per 1,000 line-days. Using the benchmarking gap approach taught in this lesson, what is the gap between the hospital's performance and the benchmark?",
+    "choices": [
+      "2.0 infections per 1,000 line-days above the benchmark",
+      "1.5 infections per 1,000 line-days below the benchmark",
+      "5.0 infections per 1,000 line-days above the benchmark",
+      "The hospital is performing at the benchmark, so there is no gap"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract the benchmark from your metric, just like in the readmission rate worked example."
+    ]
+  },
+  {
+    "id": "cphq-gen.benchmarking-performance-data.03",
+    "loId": "gen-59dfed73-9ea0-48d8-843b-bc1cd83aed11.lo-1",
+    "cedCode": "CPHQ-U2.6",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's diabetes quality team reviews hemoglobin A1c control rates over the last three years: 62% in year 1, 68% in year 2, and 71% in year 3, showing a steady upward trend in good control. The current national benchmark for good A1c control is 75%. At the quarterly review meeting, one physician argues the program is succeeding simply because scores are rising each year, while the quality director wants to flag the program as not yet meeting target. Considering both the internal trend and the external benchmark, which conclusion is most accurate?",
+    "choices": [
+      "The clinic is improving over time but still falls 4 percentage points short of the national benchmark, so improvement efforts should continue.",
+      "Because the trend is improving, the benchmark comparison is no longer relevant.",
+      "The clinic has met the benchmark since 71% is close enough to 75%.",
+      "Internal trend data should be discarded in favor of external benchmark data only."
+    ],
+    "answer": "A",
+    "hints": [
+      "Benchmarking uses both internal trend and external comparison together, not one instead of the other."
+    ]
+  },
+  {
+    "id": "cphq-gen.benchmarking-performance-data.04",
+    "loId": "gen-59dfed73-9ea0-48d8-843b-bc1cd83aed11.lo-1",
+    "cedCode": "CPHQ-U2.6",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A multi-site hospital system's quality committee must decide where to focus limited improvement resources given competing priorities. Unit A's fall rate has improved from 5.2 to 4.0 falls per 1,000 patient days over two years but remains above the national benchmark of 3.0. Unit B's fall rate has worsened from 2.5 to 3.5 falls per 1,000 patient days over the same period, moving it above the same 3.0 benchmark for the first time. Both units now exceed the benchmark by different margins, and leadership needs a data-driven rationale for choosing one unit for an in-depth improvement initiative. Which analysis best applies the benchmarking approach from this lesson to this decision?",
+    "choices": [
+      "Compare each unit's current gap above the benchmark and its recent trend direction; Unit B shows a smaller 0.5-point gap but a worsening trajectory, while Unit A shows a larger 1.0-point gap but is improving, so both the size of the gap and the direction of change should inform prioritization.",
+      "Choose Unit A automatically because any unit above benchmark requires intervention regardless of trend.",
+      "Choose Unit B automatically because its raw fall count is lower than Unit A's.",
+      "Ignore the national benchmark since both units already have internal trend data, making benchmarking unnecessary."
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate each unit's gap above the benchmark first, then also consider whether performance is trending better or worse over time."
+    ]
+  },
+  {
+    "id": "cphq-gen.using-health-it-and-ehr-data-for-analytics.01",
+    "loId": "gen-a8e634e5-7b46-41b0-bd3b-cc474632d401.lo-1",
+    "cedCode": "CPHQ-U2.7",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality analyst is reviewing an EHR training manual that distinguishes between two data types used in quality reporting. One type consists of coded, discrete fields like blood pressure readings and lab values, while the other consists of free-text physician progress notes describing patient reasoning. The analyst wants to correctly label these two categories for a new staff orientation.",
+    "choices": [
+      "Coded fields are 'structured data' and free-text notes are 'unstructured data'",
+      "Coded fields are 'unstructured data' and free-text notes are 'structured data'",
+      "Both coded fields and free-text notes are considered structured data",
+      "Neither coded fields nor free-text notes can be captured by an EHR"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which format uses discrete, codified values versus narrative language.",
+      "Structured data fits into predefined fields; unstructured data does not."
+    ]
+  },
+  {
+    "id": "cphq-gen.using-health-it-and-ehr-data-for-analytics.02",
+    "loId": "gen-a8e634e5-7b46-41b0-bd3b-cc474632d401.lo-1",
+    "cedCode": "CPHQ-U2.7",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic completes 18 patient encounters in one day. During each visit, the medical assistant enters blood pressure, heart rate, and temperature into designated EHR fields, and the physician enters medication orders that include dose, route, and frequency codes. The quality manager wants to later run a report analyzing medication prescribing patterns across all 18 encounters.",
+    "choices": [
+      "The manager should manually re-read each physician's free-text note to find medication information",
+      "The structured medication order fields with dose, route, and frequency codes allow the data to be queried systematically for the report",
+      "Vital signs and medication data cannot be linked together in the EHR",
+      "The EHR only stores medication data if it is written in the physician's narrative note"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall how the worked example described medication orders being stored.",
+      "Structured fields with codes are what make data queryable for analytics."
+    ]
+  },
+  {
+    "id": "cphq-gen.using-health-it-and-ehr-data-for-analytics.03",
+    "loId": "gen-a8e634e5-7b46-41b0-bd3b-cc474632d401.lo-1",
+    "cedCode": "CPHQ-U2.7",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An EHR system receives 450 lab results daily across multiple departments. The quality department wants to build a trend report showing how a specific lab value has changed over time for each patient, and also wants to ensure the report can be replicated consistently across different hospitals using different EHR vendors. The data analyst must decide which two features of the stored lab data are most essential for this trend analysis to work correctly.",
+    "choices": [
+      "The lab results only need to be stored in the patient's chart with no additional coding",
+      "The results need to be linked to standardized codes like LOINC and tagged with timestamps so trends can be tracked and compared consistently across systems",
+      "The results should be converted into free-text narrative summaries for easier physician reading",
+      "Only the ordering physician's name needs to be attached to each lab result for analysis"
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider both standardization for cross-system comparability and time-based organization for trending.",
+      "LOINC codes and timestamps were both mentioned in the lesson's discussion of lab data organization."
+    ]
+  },
+  {
+    "id": "cphq-gen.using-health-it-and-ehr-data-for-analytics.04",
+    "loId": "gen-a8e634e5-7b46-41b0-bd3b-cc474632d401.lo-1",
+    "cedCode": "CPHQ-U2.7",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A quality director has one week to produce a quarterly report on antibiotic prescribing patterns across 300 encounters. The EHR contains structured medication order data (drug, dose, route, frequency, all coded) as well as unstructured clinician narrative notes explaining the rationale for each antibiotic choice. Given the tight deadline and the need for an automated, reproducible quarterly process, the director must decide how to prioritize these two data sources for the analytics build.",
+    "choices": [
+      "Prioritize the unstructured narrative notes since they contain the clinical reasoning behind each order",
+      "Prioritize the structured, coded medication order fields for automated extraction, since unstructured narrative notes would require extensive manual review to interpret",
+      "Ignore both data sources and rely solely on manual chart audits for the quarterly report",
+      "Combine both sources with equal manual review time, disregarding the deadline"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about which data type is 'queryable' without manual interpretation, as described in the lesson.",
+      "Weigh the time constraint against the extra effort unstructured text requires to analyze."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-visualization-and-reporting.01",
+    "loId": "gen-e11dca12-1deb-4df5-af9d-4f15aa16ca0c.lo-1",
+    "cedCode": "CPHQ-U2.8",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quality analyst is preparing a new dashboard for the infection prevention committee. The committee has emphasized wanting to view key information quickly and without confusion during their monthly meetings. Which principle should primarily guide the analyst's approach to designing this dashboard?",
+    "choices": [
+      "Prioritize clarity by removing unnecessary visual clutter and decorative elements",
+      "Include as many data points as possible to demonstrate thoroughness",
+      "Use varied colors and fonts throughout to make the dashboard visually engaging",
+      "Add 3D effects to charts to make key trends stand out more dramatically"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think back to the core principle of 'clarity over decoration' from the lesson."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-visualization-and-reporting.02",
+    "loId": "gen-e11dca12-1deb-4df5-af9d-4f15aa16ca0c.lo-1",
+    "cedCode": "CPHQ-U2.8",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team wants to show how monthly catheter-associated urinary tract infection (CAUTI) rates have changed over the past 12 months compared to a national benchmark rate. They will present this to the infection control committee to track progress over time. Which visualization would best communicate this information?",
+    "choices": [
+      "A line chart showing monthly rates over time with a benchmark reference line",
+      "A pie chart showing the proportion of infections by department",
+      "An unlabeled scatter plot of infection counts",
+      "A single bar showing only the annual average infection rate"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider whether the primary message is a trend over time or a one-time comparison.",
+      "Recall the worked example distinguishing line charts from bar charts."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-visualization-and-reporting.03",
+    "loId": "gen-e11dca12-1deb-4df5-af9d-4f15aa16ca0c.lo-1",
+    "cedCode": "CPHQ-U2.8",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An infection prevention team has collected data on 15 variables related to hospital-acquired infections, including patient demographics, unit location, device type, and infection rates over time. They must present findings to hospital executive leadership, who need to quickly identify actionable trends to guide resource allocation decisions at an upcoming budget meeting. Which approach best reflects the principles taught for designing this visualization?",
+    "choices": [
+      "Reduce the data to the 3-4 most actionable metrics tailored to leadership's decision-making needs, using clearly labeled charts with benchmark references",
+      "Present all 15 variables in a single complex chart to ensure no data is omitted",
+      "Use a variety of unrelated chart types to add visual interest to the presentation",
+      "Focus the presentation solely on raw data tables without any charts, since executives prefer numbers over visuals"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the worked example about narrowing 15 variables down for a clear message.",
+      "Consider both audience needs and removal of redundant variables together."
+    ]
+  },
+  {
+    "id": "cphq-gen.data-visualization-and-reporting.04",
+    "loId": "gen-e11dca12-1deb-4df5-af9d-4f15aa16ca0c.lo-1",
+    "cedCode": "CPHQ-U2.8",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's data team has a single dataset showing patient wait times across 8 departments, with some departments having wait times ranging from minutes to several hours. The unit managers want a real-time dashboard for daily rounding, while the hospital board wants a single quarterly summary comparing all departments at a glance. Displaying all departments together risks visual misinterpretation because of the vastly different wait-time ranges. Which approach best addresses these competing needs while staying consistent with the principles taught?",
+    "choices": [
+      "Create two separate audience-tailored visualizations: a consistently scaled line chart for real-time unit trends, and a benchmarked bar chart with accurate axis scaling for the board's quarterly comparison",
+      "Combine all departments into one dashboard using a single chart type and scale to save development time, regardless of the wait-time range differences",
+      "Design the dashboard exclusively for the board, since executive priorities outweigh unit-level clinical needs",
+      "Use different, inconsistent scales for each department's chart to visually emphasize the departments with the longest wait times"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about audience-first design and accurate scaling together, since two different audiences may require two different visualizations.",
+      "Consider how misleading scale choices could distort comparisons between departments."
+    ]
+  }
+]

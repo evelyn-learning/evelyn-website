@@ -1,0 +1,657 @@
+[
+  {
+    "id": "cphq-demo-mc-001",
+    "loId": "gen-6bbe10b5-be1f-4116-b52c-56b6267064e3.lo-1",
+    "cedCode": "CPHQ-U1.1",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At Riverside Medical Center, the CEO wants the quality program to be closely tied to physician practice patterns, credentialing concerns, and clinical decision-making so that quality initiatives gain stronger buy-in from the medical staff. She is deciding where to place the quality program organizationally to best support this goal.",
+    "choices": [
+      "Embed the quality program within medical affairs",
+      "Place the quality program under the facilities management department",
+      "Make the quality program a subunit of the finance department",
+      "Assign the quality program to the environmental services team"
+    ],
+    "answer": "A",
+    "hints": [
+      "Which organizational home is described as being embedded within clinical operations or medical affairs?",
+      "Match the stated goal (physician alignment) to the structure most suited for clinical integration."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-002",
+    "loId": "gen-1df5ca57-87e3-401e-98d5-669b28d6ea71.lo-1",
+    "cedCode": "CPHQ-U1.2",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse manager reports that a patient with complex diabetes and heart failure is being seen by cardiology, endocrinology, and physical therapy, but the departments are not communicating about the discharge plan. The quality director is asked which function should take the lead in coordinating the patient's care across these departments.",
+    "choices": [
+      "Risk management, because the lack of communication could lead to a sentinel event",
+      "Quality assurance, because clinical standards must be monitored",
+      "Case management, because it coordinates patient care across departments",
+      "Utilization review, because it approves length of stay"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall which function's primary role is described as coordinating care across departments.",
+      "The issue here is fragmented coordination, not a standards deviation or a hazard investigation."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-003",
+    "loId": "gen-82eb46fc-7127-4b80-acae-a7327119459c.lo-1",
+    "cedCode": "CPHQ-U1.3",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A community clinic's quality team is launching an initiative to reduce patient wait times and improve the overall visit experience. The team lead asks a staff member to draft the mission statement that will anchor this initiative before any goals or metrics are set.",
+    "choices": [
+      "We are committed to providing timely, accessible care that respects patients' time and improves their overall experience",
+      "By 2026, average patient wait time will decrease from 45 minutes to 15 minutes",
+      "Our clinic will be recognized as the fastest-access clinic in the region within five years",
+      "All front-desk staff must check patients in within 3 minutes of arrival"
+    ],
+    "answer": "A",
+    "hints": [
+      "A mission explains purpose and values, not a numeric target or a future aspiration.",
+      "Look for the option that focuses on why the work matters rather than what will be achieved by when."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-004",
+    "loId": "gen-135f2a2f-d30f-4f85-8d68-9ee146bc893e.lo-1",
+    "cedCode": "CPHQ-U1.4",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hospital quality team just completed a single 90-minute lecture on new fall-prevention protocols for 50 med-surg nurses. Post-training surveys show high satisfaction, but three months later, chart audits reveal inconsistent use of the new bed-alarm protocol. Applying adult learning principles, what should the team prioritize next to improve retention?",
+    "choices": [
+      "Repeat the same lecture format annually to reinforce content",
+      "Add spaced follow-up sessions with active, case-based practice tied to real patient scenarios",
+      "Send a written memo reminding staff of the policy update",
+      "Extend the length of the original lecture to cover more detail"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what was missing in the original one-time lecture format.",
+      "Consider both relevance and spacing, not just repetition of the same method."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-005",
+    "loId": "gen-9f2e3885-10b4-4430-ba72-e54e88538c43.lo-1",
+    "cedCode": "CPHQ-U1.5",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cognitively intact patient with a treatable infection refuses a recommended antibiotic after being fully informed of the risks of declining treatment. The care team documents the discussion and honors the patient's decision rather than pursuing the medication against his wishes.",
+    "choices": [
+      "Beneficence, because the team acted in the patient's best interest",
+      "Non-maleficence, because the team avoided causing harm",
+      "Autonomy, because the team respected the patient's choice and dignity",
+      "Justice, because the team treated the patient fairly compared to others"
+    ],
+    "answer": "C",
+    "hints": [
+      "Focus on what the team actually did: did they override the patient's decision or respect it?",
+      "Recall which principle centers on patient choice and dignity."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-006",
+    "loId": "gen-8866a917-8d94-4e50-b206-f8654142724e.lo-1",
+    "cedCode": "CPHQ-U1.6",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At a busy pediatric clinic, six different parents mention during visits that they feel rushed and unclear about follow-up instructions for their children. The clinic's patient advocate is asked to respond to this emerging concern before deciding on any changes to the visit process.",
+    "choices": [
+      "Immediately rewrite the follow-up instructions without further input",
+      "Gather and document the recurring patient experiences systematically",
+      "Refer the complaints directly to the billing department for review",
+      "Wait until the next formal patient satisfaction survey is released"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the practice prompt about rushed clinic visits and its expected first step.",
+      "Before redesigning anything, advocates need a clear picture of the pattern."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-007",
+    "loId": "gen-6a1074b5-0447-4e8c-a947-40c182ecadbe.lo-1",
+    "cedCode": "CPHQ-U2.1",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hospital's wound care committee is collecting data on pressure injury rates across five nursing units. Each unit's nurses use their own informal, unwritten criteria to decide whether a pressure injury should be staged and counted, and no staff training on a standard definition has occurred. When the committee compares results across units and over time, findings vary widely even though patient populations are similar. Which principle of the data collection plan has most likely been violated?",
+    "choices": [
+      "Feasibility",
+      "Reliability",
+      "Validity",
+      "Timeliness"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what happens when the same measure is applied inconsistently across settings.",
+      "This mirrors the readmission example where definitions changed each quarter."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-008",
+    "loId": "gen-5da8d150-61d6-4514-9985-77ad11efb7d3.lo-1",
+    "cedCode": "CPHQ-U2.2",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A quality analyst reviewing a hospital's stroke program finds that 92% of eligible stroke patients received clot-busting medication within 60 minutes of arrival, in accordance with the hospital's stroke protocol.",
+    "choices": [
+      "This is a structure measure because it involves hospital protocols",
+      "This is a process measure because it describes a clinical action taken during care",
+      "This is an outcome measure because it reflects patient recovery",
+      "This is not a valid quality measure"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on whether the data describes an action performed, a resource available, or a final health result."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-009",
+    "loId": "gen-6988d99c-1674-415a-ac05-1a46753acfd9.lo-1",
+    "cedCode": "CPHQ-U2.3",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse manager tracks the number of medication errors reported per week over 5 consecutive weeks: 2, 4, 3, 3, 8. She wants to include the average weekly error count on a quality dashboard for the unit.",
+    "choices": [
+      "4 errors per week",
+      "3 errors per week",
+      "8 errors per week",
+      "3.5 errors per week"
+    ],
+    "answer": "A",
+    "hints": [
+      "Add all five values together first.",
+      "Divide the total sum by the number of weeks in the data set."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-010",
+    "loId": "gen-b7e79af4-01a7-43d6-8f54-40bb136ddbe6.lo-1",
+    "cedCode": "CPHQ-U2.5",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pediatric clinic wants to estimate average infant weight gain over six months. Data are pulled only from infants who returned for all scheduled follow-up visits; infants who missed visits (often because they were more frequently ill and hospitalized) were excluded from the dataset entirely.",
+    "choices": [
+      "Selection bias, because sicker infants were systematically excluded",
+      "Measurement bias, because the scale was miscalibrated",
+      "Temporal bias, because seasons changed during data collection",
+      "Missing values, because entries were left blank randomly"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which patients were left out of the sample and why.",
+      "The exclusion is tied to illness status, not random blanks in the record."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-011",
+    "loId": "gen-59dfed73-9ea0-48d8-843b-bc1cd83aed11.lo-1",
+    "cedCode": "CPHQ-U2.6",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The infection prevention team at a community hospital tracks central line-associated bloodstream infection (CLABSI) rates. Their most recent quarterly rate is 3.5 infections per 1,000 line-days, while the national benchmark is 1.5 infections per 1,000 line-days. Using the benchmarking gap approach taught in this lesson, what is the gap between the hospital's performance and the benchmark?",
+    "choices": [
+      "2.0 infections per 1,000 line-days above the benchmark",
+      "1.5 infections per 1,000 line-days below the benchmark",
+      "5.0 infections per 1,000 line-days above the benchmark",
+      "The hospital is performing at the benchmark, so there is no gap"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract the benchmark from your metric, just like in the readmission rate worked example."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-012",
+    "loId": "gen-a8e634e5-7b46-41b0-bd3b-cc474632d401.lo-1",
+    "cedCode": "CPHQ-U2.7",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic completes 18 patient encounters in one day. During each visit, the medical assistant enters blood pressure, heart rate, and temperature into designated EHR fields, and the physician enters medication orders that include dose, route, and frequency codes. The quality manager wants to later run a report analyzing medication prescribing patterns across all 18 encounters.",
+    "choices": [
+      "The manager should manually re-read each physician's free-text note to find medication information",
+      "The structured medication order fields with dose, route, and frequency codes allow the data to be queried systematically for the report",
+      "Vital signs and medication data cannot be linked together in the EHR",
+      "The EHR only stores medication data if it is written in the physician's narrative note"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall how the worked example described medication orders being stored.",
+      "Structured fields with codes are what make data queryable for analytics."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-013",
+    "loId": "gen-20f9c2a0-c3aa-4016-b196-328c9a2e8099.lo-1",
+    "cedCode": "CPHQ-U3.1",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic team wants to reduce patient wait time at check-in. They predict that a new check-in form will cut wait time by about 6 minutes, and this week they are trying the new form with 15 patients before deciding whether to expand its use. Which step of the PDSA cycle are they currently performing by trying the form with the 15 patients?",
+    "choices": [
+      "Plan",
+      "Do",
+      "Study",
+      "Act"
+    ],
+    "answer": "B",
+    "hints": [
+      "This step involves actually carrying out the small-scale test, not predicting the outcome or analyzing results afterward."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-014",
+    "loId": "gen-9ae55aa3-449c-4a90-878b-747c68f895f4.lo-1",
+    "cedCode": "CPHQ-U3.2",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic is testing a new automated reminder call system intended to reduce no-show rates, based on an aim and prediction the team set earlier. The QI coordinator instructs staff to place reminder calls for the next two weeks and record attendance outcomes exactly as designed, without making any changes to the process during this time.",
+    "choices": [
+      "Plan",
+      "Do",
+      "Study",
+      "Act"
+    ],
+    "answer": "B",
+    "hints": [
+      "The team is executing the test and collecting data, not yet analyzing it.",
+      "Consider which phase comes right after the aim and design are finalized."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-015",
+    "loId": "gen-7922c0d8-fa61-432a-b7f2-86fabc85651b.lo-1",
+    "cedCode": "CPHQ-U3.3",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A telemetry unit reports that patient falls have increased over the past two months, and the nurse manager wants to address the issue effectively rather than react quickly. The team decides to use a fishbone diagram to guide their investigation. Which action would best help the team identify root causes rather than jump straight to a fix?",
+    "choices": [
+      "Immediately mandate additional fall-prevention training for all nurses on the unit",
+      "Suspend the nurses who were involved in the most recent fall incidents",
+      "Brainstorm potential contributing factors across categories such as staffing, environment, communication, and equipment",
+      "Increase the number of patients assigned to each nurse to simplify scheduling"
+    ],
+    "answer": "C",
+    "hints": [
+      "Fishbone diagrams organize possible causes into categories.",
+      "Look for the option that explores causes broadly instead of assuming a single fix."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-016",
+    "loId": "gen-e0cdab06-8463-46dc-9b9c-5c3aeb3f773f.lo-1",
+    "cedCode": "CPHQ-U3.4",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surgical unit reviews 200 post-operative infections over the past year. Root cause review shows 150 infections are linked to improper wound dressing technique, 30 to delayed antibiotic administration, and 20 to inadequate hand hygiene during dressing changes. The quality team wants to decide where to focus improvement resources first.",
+    "choices": [
+      "Improper wound dressing technique, because it accounts for 75% of infections",
+      "Delayed antibiotic administration, because timing issues are always the root cause",
+      "Inadequate hand hygiene, because hand hygiene is the standard first priority in infection control",
+      "All three causes equally, since Pareto analysis requires addressing every cause simultaneously"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate each cause's share of the 200 total infections.",
+      "Compare each percentage to the 70-80% vital-few threshold from the worked example."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-017",
+    "loId": "gen-67d947e8-5bae-46b4-8240-a211621e2154.lo-1",
+    "cedCode": "CPHQ-U3.6",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An outpatient surgery center reviews its quarterly infection control data. The current surgical site infection rate is 5%, while the national benchmark for similar procedures is 2%. The infection control nurse wants to summarize what this comparison reveals to the quality committee.",
+    "choices": [
+      "A 3 percentage point improvement gap in surgical site infection rates",
+      "A 2.5-fold increase that requires only a root cause analysis, not a gap analysis",
+      "A 7 percentage point gap between current performance and benchmark",
+      "No meaningful gap exists since both values fall within accreditation limits"
+    ],
+    "answer": "A",
+    "hints": [
+      "Subtract the benchmark from the current rate to find the gap.",
+      "Recall the worked example: subtract desired from actual performance."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-018",
+    "loId": "gen-cc9e51ee-9703-4948-869a-9fd7510307db.lo-1",
+    "cedCode": "CPHQ-U3.7",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A performance improvement team reviews the patient transport process and finds that transporters frequently wait for elevators, backtrack to retrieve missing paperwork, and duplicate documentation already completed by nursing staff. The team wants to redesign the process to remove these non-value-added steps. Which PI framework should the team select as the foundation for its action plan?",
+    "choices": [
+      "Six Sigma",
+      "Lean",
+      "PDSA alone, without any other framework",
+      "Root cause analysis only"
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on the type of problem: extra steps, delays, and duplication.",
+      "One framework specifically targets eliminating waste in a process."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-019",
+    "loId": "gen-c9e154ea-3a55-448a-9998-99dd8b8a4339.lo-1",
+    "cedCode": "CPHQ-U3.8",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A clinic switches to a new electronic patient scheduling system. Staff are frustrated with the transition and continue quietly using the old paper schedules instead of logging into the new system.",
+    "choices": [
+      "Mandate compliance through disciplinary action for any staff who continue using paper schedules",
+      "Provide training, clarify new roles, and communicate the reasons for the change",
+      "Delay the go-live date indefinitely until resistance disappears on its own",
+      "Remove the scheduling system entirely and revert permanently to the paper-based process"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the medication dispensing worked example — what specifically resolved staff fears there?",
+      "The goal is to guide adoption, not to force or abandon the change."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-020",
+    "loId": "gen-de36663c-ac9f-44aa-871c-79e413176dfd.lo-1",
+    "cedCode": "CPHQ-U3.9",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A medical-surgical unit's pressure ulcer rate was 10% at baseline. After implementing a new turning and repositioning protocol, the unit tracked monthly rates for four consecutive months: 6%, 5%, 4%, and 5%. The quality manager needs to evaluate whether this represents an effective, sustained improvement.",
+    "choices": [
+      "The improvement shows roughly a 50% reduction and appears sustained since rates remain consistently below baseline across multiple months",
+      "The improvement shows roughly a 50% reduction but cannot be considered because only one month of data was collected",
+      "The improvement is negligible because the rate changed by only 5 percentage points",
+      "The data cannot be evaluated at all without a formal randomized controlled trial"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate the percentage reduction from baseline the same way as the medication error example.",
+      "Look at whether the four months of data stay below baseline or drift back up."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-021",
+    "loId": "gen-2662897e-0f38-40f2-8901-fccfa45bb173.lo-1",
+    "cedCode": "CPHQ-U4.1",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse manager notices that staff on her unit have become reluctant to report near-miss medication events after a colleague was publicly reprimanded in a staff meeting for submitting an incident report. Since that meeting, voluntary reporting on the unit has dropped sharply even though the actual error rate has likely not changed.",
+    "choices": [
+      "Psychological safety, which normally encourages staff to report errors without fear of blame",
+      "Clinical competency, since staff may lack the skills to identify near misses",
+      "Regulatory compliance, since reporting is mandated by external bodies",
+      "Financial performance, since incident reports affect the unit's budget"
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider what makes staff feel safe enough to speak up about mistakes.",
+      "The drop in reporting reflects a cultural, not a skills-based, problem."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-022",
+    "loId": "gen-2e33ba0f-644b-46bf-9eeb-16d32f8a710d.lo-1",
+    "cedCode": "CPHQ-U4.2",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surgical services director wants to reduce the risk of wrong-site surgery and asks the quality team to conduct an FMEA of the pre-operative site verification process. No adverse event has occurred yet, but the director wants to be proactive. Following the steps taught for conducting an FMEA, what should the team do first?",
+    "choices": [
+      "Map out each step of the current pre-operative verification process to identify where failures could occur",
+      "Wait until a wrong-site surgery event happens so there is real data to analyze",
+      "Survey patients about their overall satisfaction with the surgery scheduling process",
+      "Immediately discard the current verification checklist and replace it with a new one"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the worked example steps: identify the process before analyzing failure points.",
+      "FMEA starts with mapping the process, not reacting to an outcome."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-023",
+    "loId": "gen-eef93bcb-21c0-4258-83c9-514d90238b3c.lo-1",
+    "cedCode": "CPHQ-U4.3",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A nurse administers the correct medication but at double the prescribed dose due to a calculation error, and the patient develops significant, unexpected kidney injury requiring dialysis. The hospital's risk manager must decide whether this event requires mandatory investigation and reporting.",
+    "choices": [
+      "This is an adverse event because it involved only a dosing error, not a wrong-site error.",
+      "This is a sentinel event because the harm was serious, unexpected, and resulted from a preventable process failure.",
+      "This is neither a sentinel nor adverse event because no death occurred.",
+      "This is an adverse event because kidney injury is a common complication of medication use."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the harm was expected/inevitable or unexpected/preventable before deciding if mandatory reporting applies."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-024",
+    "loId": "gen-e81940e0-7e5a-4072-904f-ad799f6d9289.lo-1",
+    "cedCode": "CPHQ-U4.4",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pharmacy technician nearly dispenses a look-alike medication but catches the error before it reaches the patient. She is unsure whether to report this 'near miss' since no harm actually occurred. What is the best guidance to give her about reporting this event?",
+    "choices": [
+      "She should report it, because analyzing near misses can reveal patterns that allow proactive risk reduction before real harm occurs",
+      "She should not report it, since only events that cause actual patient harm need to be reported",
+      "She should mention it verbally to her supervisor only, keeping it off the official record",
+      "She should wait to see if the same error happens again before deciding to report it"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall that data reveals patterns enabling proactive risk reduction.",
+      "Near misses are still valuable data points, even without harm."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-025",
+    "loId": "gen-45514986-ae79-428f-ae2b-ca5c186b0958.lo-1",
+    "cedCode": "CPHQ-U4.5",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "After a medication error, a unit manager initially wants to close the case by simply documenting 'nurse distraction' as the cause. However, the quality team insists on digging deeper, examining workflow interruptions, labeling practices, and staffing patterns before accepting any single explanation.",
+    "choices": [
+      "Sensitivity to operations",
+      "Reluctance to simplify",
+      "Commitment to resilience",
+      "Preoccupation with failure"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice the team's refusal to accept an easy, one-word explanation.",
+      "This principle resists oversimplified root causes."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-026",
+    "loId": "gen-95b975f2-c8f2-455d-af87-261bc41edb41.lo-1",
+    "cedCode": "CPHQ-U4.6",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surgical unit's infection control nurse is reviewing quarterly data and finds that the unit had 5 surgical site infections per 1000 procedures performed. She needs to determine whether this level of infection represents a safety concern requiring escalation to the quality committee.",
+    "choices": [
+      "The rate converts to 0.5%, which falls within the typical 0.4-0.6% benchmark range",
+      "The rate converts to 5%, which far exceeds the typical benchmark range",
+      "The rate cannot be evaluated without also knowing patient satisfaction scores",
+      "The rate is too small a sample to convert into a meaningful percentage"
+    ],
+    "answer": "A",
+    "hints": [
+      "Convert 'per 1000' into a percentage before comparing it to the benchmark.",
+      "Recall the SSI benchmark range discussed in the lesson."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-027",
+    "loId": "gen-62de51c7-6ef1-4a71-8019-32e58721f1ca.lo-1",
+    "cedCode": "CPHQ-U5.1",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During a routine CMS survey, a hospital is found to have inconsistent medication reconciliation practices that violate one of the Conditions of Participation. The survey team formally documents this as a deficiency in its report.",
+    "choices": [
+      "The hospital immediately loses Medicare certification with no opportunity to respond",
+      "The hospital must submit a Plan of Correction with a specified deadline to remediate the deficiency",
+      "The hospital is automatically enrolled in a CMS quality improvement grant program",
+      "The deficiency is referred to The Joint Commission for a separate, parallel review process"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall the sequence of steps after CMS identifies a deficiency in the worked example.",
+      "Decertification isn't the first step — something comes before it."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-028",
+    "loId": "gen-01cc4361-8de9-43cc-9d70-1dd73e77ac86.lo-1",
+    "cedCode": "CPHQ-U5.2",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Community Hospital's quality department has identified that its organization must meet 8 accreditation domains spanning governance, safety, clinical, and operational areas. The upcoming survey team has confirmed they will formally assess 5 of these domains during the on-site visit.",
+    "choices": [
+      "3 domains will not be assessed this cycle",
+      "5 domains will not be assessed this cycle",
+      "8 domains will not be assessed this cycle",
+      "13 domains will not be assessed this cycle"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the same subtraction approach shown in the worked example.",
+      "Subtract the number of domains being assessed from the total number of domains."
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-029",
+    "loId": "gen-e8f00715-be35-4752-a2c6-968ce00f3fbc.lo-1",
+    "cedCode": "CPHQ-U5.3",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A newly opened outpatient clinic offers primary care visits and occupational health screenings for local employers. Before the clinic opens, the compliance officer needs to identify which regulatory standards apply to its operations.",
+    "choices": [
+      "CMS Conditions of Participation and state medical board regulations",
+      "Joint Commission accreditation standards only",
+      "State medical board regulations only",
+      "CIHC accreditation standards only"
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall the practice prompt about a clinic offering primary care and occupational health screening—what two types of standards were named as applicable?"
+    ],
+    "bankScope": "mock"
+  },
+  {
+    "id": "cphq-demo-mc-030",
+    "loId": "gen-53093d4a-4f9e-4c04-a8f0-a46b298ce92e.lo-1",
+    "cedCode": "CPHQ-U5.4",
+    "topic": "cphq",
+    "topicId": "cphq",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A newly hired nurse practitioner has submitted proof of licensure, national certification, and a clean malpractice history to the medical staff office, and this documentation has been verified and filed. The quality team must next determine which specific clinical tasks, such as suturing lacerations or independently ordering imaging studies, the nurse practitioner will be authorized to perform at this facility.",
+    "choices": [
+      "The team is completing the privileging process by defining the NP's authorized scope of clinical procedures.",
+      "The team is repeating the credentialing process to re-verify the NP's license.",
+      "The team is conducting a background check unrelated to clinical practice.",
+      "The team is finalizing the NP's employment contract terms."
+    ],
+    "answer": "A",
+    "hints": [
+      "Verification of license and certification already happened.",
+      "The next task is about deciding what the provider is allowed to do clinically."
+    ],
+    "bankScope": "mock"
+  }
+]
