@@ -3736,6 +3736,26 @@ export async function getLessonPlan(id: string): Promise<LessonPlan | null> {
   }
 }
 
+/** DB-stored plans (seeds excluded — callers combine SEED_PLANS separately;
+ *  see portal/adapters.ts's `plansForLoId`) whose `los[]` includes this LO
+ *  id. Extends practice/quiz/diagnostic retrieval beyond curated SEED_PLANS
+ *  to runtime-generated plans — white-label taxonomy-built courses adopt
+ *  `gen-<uuid>.lo-N` ids onto their CourseNode (see academy's
+ *  CourseBuildService.materialize()/buildOne()), and those plans only ever
+ *  live in Mongo. Unlike `listLessonPlans`, generated plans are NOT excluded
+ *  here — surfacing them for their own LOs' practice is the entire point.
+ *  Uses the `los.id` index (models/LessonPlan.ts) — a point lookup, not a
+ *  collection scan. Degrades to [] on any DB failure (never throws). */
+export async function findStoredPlansByLoId(loId: string): Promise<LessonPlan[]> {
+  try {
+    await connectDB();
+    const docs = await LessonPlanModel.find({ 'los.id': loId }).limit(20);
+    return docs.map(toLessonPlan);
+  } catch {
+    return [];
+  }
+}
+
 /** Batched title lookup for admin listings: in-code seeds first, then ONE
  *  Mongo query for the rest (freestyle plans). Unknown ids are omitted. */
 export async function getLessonTitles(ids: string[]): Promise<Record<string, string>> {

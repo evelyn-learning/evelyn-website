@@ -87,6 +87,12 @@ const LessonPlanSchema = new Schema<ILessonPlan>(
 
 LessonPlanSchema.index({ subject: 1, grade: 1, curriculum: 1 });
 LessonPlanSchema.index({ los: 1 });
+// Point-lookup index for `{'los.id': loId}` queries (practice/quiz/diagnostic
+// retrieval scoped to a single LO — see lesson-plan/store.ts's
+// findStoredPlansByLoId). The `los: 1` multikey index above indexes whole
+// embedded subdocuments, which does NOT serve a dot-path scalar match on
+// `los.id` — this is a separate, additive index for that access pattern.
+LessonPlanSchema.index({ 'los.id': 1 });
 
 export const LessonPlanModel =
   (mongoose.models.LessonPlan as mongoose.Model<ILessonPlan>) ||
