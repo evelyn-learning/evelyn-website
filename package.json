@@ -216,7 +216,8 @@
     "test:r33-prompt-rules": "npx tsx scripts/test-r33-prompt-rules.ts",
     "test:learner-model": "npx tsx scripts/test-learner-model.ts",
     "test:cell-content": "npx tsx scripts/test-cell-content-normalize.ts",
-    "test:exercise-board": "npx tsx scripts/test-exercise-board-check.ts"
+    "test:exercise-board": "npx tsx scripts/test-exercise-board-check.ts",
+    "test:derived-notes": "MONGODB_URI=mongodb://127.0.0.1:1/unused-stub npx tsx scripts/test-derived-notes.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",

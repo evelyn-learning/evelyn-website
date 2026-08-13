@@ -143,6 +143,13 @@ export interface TopicNotesBaseline {
   /** Top-level provenance for the baseline as a whole. Per-entry
    *  `sources` provides finer-grained citation. */
   sources?: SourceRef[];
+  /** True when this baseline was derived in-memory from a stored/
+   *  generated lesson plan (`derive-baseline.ts`) rather than authored as
+   *  a TS seed file. Additive/optional — absent (falsy) for every
+   *  authored baseline, so existing consumers are unaffected. Informs
+   *  future UI ("auto-generated from your session" framing) without
+   *  requiring one today. */
+  derived?: boolean;
 }
 
 // ---------------------------------------------------------------------------

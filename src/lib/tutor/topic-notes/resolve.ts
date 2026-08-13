@@ -30,6 +30,7 @@
  */
 
 import { getTopicNotesBaseline, listTopicNotesBaselinesForUnit } from './store';
+import { getOrDeriveTopicNotesBaseline } from './derive-baseline';
 import { loadStudentTopicNotes } from './apply-overlay';
 import type {
   RenderedTopicNotes,
@@ -43,7 +44,12 @@ export async function resolveTopicNotes(
   studentId: string,
   baselineId: string,
 ): Promise<RenderedTopicNotes | null> {
-  const baseline = getTopicNotesBaseline(baselineId);
+  // Registry hit -> byte-identical behavior with pre-fallback code (the
+  // sync lookup below is unchanged). Registry miss -> attempt to derive a
+  // baseline from a stored/generated lesson plan (derive-baseline.ts);
+  // that attempt returns null on any failure, matching today's null
+  // exactly, so 404 behavior at every call site is unaffected.
+  const baseline = getTopicNotesBaseline(baselineId) ?? (await getOrDeriveTopicNotesBaseline(baselineId));
   if (!baseline) return null;
   const notes = await loadStudentTopicNotes(studentId, baselineId);
 
