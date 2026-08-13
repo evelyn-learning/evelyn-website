@@ -23,9 +23,10 @@ import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
 import { retrievePractice } from '@/lib/tutor/portal/practice';
 import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 import { LessonPlanModel } from '@/models/LessonPlan';
+import { ProblemBank } from '@/models/ProblemBank';
 import * as dbModule from '@/lib/db';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
-import type { RetrievePracticeRequest } from '@evelyn/portal-contract/v1';
+import { PracticeItemSchema, type RetrievePracticeRequest } from '@evelyn/portal-contract/v1';
 
 let passed = 0;
 let failed = 0;
@@ -163,6 +164,121 @@ const VALID_SIBLING_PLAN: LessonPlan = {
     const ids = r.items.map((i) => i.id);
     assert.ok(ids.some((id) => id.includes('ty-good-1')), 'the valid sibling plan\'s try-yourself is present');
     assert.ok(!ids.some((id) => id.includes('gen-cphq-uuid-bad')), 'the malformed plan contributed nothing');
+  });
+
+  // Prod bug repro (white-label second-practice-request 500): a stored
+  // generated plan's try-yourself segments carry EXPLICIT `null` on
+  // hints/responseFormat/choices — not absent, literal null. This is what a
+  // real Mongo round-trip produces: generate-from-text.ts's Stage 2 never
+  // asks Haiku for these fields on a try_yourself segment, so
+  // parseLessonPlan (lesson-plan/parser.ts:122-124) bakes them onto the
+  // Segment as explicit `undefined` properties, and the Mongo driver's
+  // default BSON serialization (no `ignoreUndefined`) turns those into
+  // literal `null` on the stored document. `doc.toJSON()` here returns the
+  // plan object as-is (mirroring the existing stub convention above), so
+  // these segments simulate exactly what `findStoredPlansByLoId` hands back
+  // in production.
+  const GEN_LO3 = 'gen-cphq-uuid-nulls.lo-1';
+  const BANK_ITEM_ID = 'bank.cphq.risk.0001';
+  const NULL_FIELDS_PLAN: LessonPlan = {
+    id: 'gen-cphq-uuid-nulls',
+    title: 'CPHQ Generated Plan (null fields)',
+    curriculum: 'freestyle',
+    grade: 'college',
+    subject: 'Healthcare Quality',
+    topic: 'Understand Risk Assessment Methodologies',
+    locale: 'en',
+    los: [{ id: GEN_LO3, description: 'Understand risk assessment.' }],
+    estimatedMinutes: 30,
+    segments: [
+      {
+        kind: 'try_yourself',
+        id: 'ty-free',
+        problem: 'Name the first step in risk assessment.',
+        expectedAnswer: 'Identify hazards',
+        hints: null,
+        responseFormat: null,
+        choices: null,
+      },
+      {
+        kind: 'try_yourself',
+        id: 'ty-mcq',
+        problem: 'Which of these is a risk-assessment tool?',
+        expectedAnswer: 'FMEA',
+        hints: null,
+        responseFormat: null, // null despite real choices — must infer 'mcq', not 'free'
+        choices: [
+          { id: 'A', text: 'FMEA', correct: true },
+          { id: 'B', text: 'SWOT' },
+        ],
+      },
+    ] as unknown as LessonPlan['segments'],
+    schemaVersion: 1,
+    metadata: { generatedFromText: true, generatorOk: true },
+  };
+
+  (ProblemBank as unknown as {
+    find: (filter: Record<string, unknown>) => {
+      limit: (n: number) => { lean: () => Promise<Array<Record<string, unknown>>> };
+    };
+  }).find = (filter) => ({
+    limit: () => ({
+      lean: async () => {
+        if (filter.loId !== GEN_LO3) return [];
+        return [
+          {
+            id: BANK_ITEM_ID,
+            problemText: 'What is the purpose of a risk register?',
+            answer: 'Track identified risks and mitigations',
+            hints: ['Think tracking, not scoring'],
+            responseFormat: 'free',
+            difficulty: 2,
+            loId: GEN_LO3,
+          },
+        ];
+      },
+    }),
+  });
+
+  await test('retrievePractice — first request: bank item + generated try-yourselves ALL parse against PracticeItemSchema', async () => {
+    stubbedDocs = [NULL_FIELDS_PLAN];
+    const sources = mongoPracticeSources();
+    const req: RetrievePracticeRequest = { studentId: 's', courseId: 'c', scope: { loId: GEN_LO3 }, count: 10 };
+    const r = await retrievePractice(req, sources);
+    assert.ok(r.items.length >= 3, 'bank item + both try-yourselves present');
+    for (const item of r.items) {
+      const parsed = PracticeItemSchema.safeParse(item);
+      assert.ok(parsed.success, `item "${item.id}" must parse against PracticeItemSchema: ${JSON.stringify(parsed.success ? null : parsed.error.issues)}`);
+    }
+  });
+
+  await test('retrievePractice — second request (excludeIds = bank id already served) tops up from the null-field try-yourselves; every returned item parses, and the nulls are normalized', async () => {
+    stubbedDocs = [NULL_FIELDS_PLAN];
+    const sources = mongoPracticeSources();
+    const req: RetrievePracticeRequest = {
+      studentId: 's',
+      courseId: 'c',
+      scope: { loId: GEN_LO3 },
+      count: 10,
+      excludeIds: [BANK_ITEM_ID],
+    };
+    const r = await retrievePractice(req, sources);
+    const ids = r.items.map((i) => i.id);
+    assert.ok(!ids.includes(BANK_ITEM_ID), 'excluded bank id must not reappear');
+    const freeItem = r.items.find((i) => i.id.includes('ty-free'));
+    const mcqItem = r.items.find((i) => i.id.includes('ty-mcq'));
+    assert.ok(freeItem, 'top-up path served the free-response try-yourself');
+    assert.ok(mcqItem, 'top-up path served the mcq try-yourself');
+    for (const item of r.items) {
+      const parsed = PracticeItemSchema.safeParse(item);
+      assert.ok(parsed.success, `item "${item.id}" must parse against PracticeItemSchema: ${JSON.stringify(parsed.success ? null : parsed.error.issues)}`);
+    }
+    // Null -> contract-valid normalization, not just "didn't crash":
+    assert.deepEqual(freeItem!.hints, [], 'null hints default to []');
+    assert.equal(freeItem!.responseFormat, 'free', 'null responseFormat with no real choices infers free');
+    assert.equal(freeItem!.choices, undefined, 'null choices with no real options is omitted, not []');
+    assert.equal(mcqItem!.responseFormat, 'mcq', 'null responseFormat WITH real choices infers mcq');
+    assert.equal(mcqItem!.choices?.length, 2, 'real choices array survives untouched');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

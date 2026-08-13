@@ -25,16 +25,45 @@ function toPlanLite(plan: LessonPlan): PlanLite {
     topic: plan.topic,
     los: plan.los.map((l) => ({ id: l.id, standard: l.standard })),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    segments: plan.segments.map((s: any) => ({
-      kind: s.kind,
-      id: s.id,
-      problem: s.problem,
-      expectedAnswer: s.expectedAnswer,
-      hints: s.hints,
-      responseFormat: s.responseFormat,
-      choices: s.choices,
-      offTopic: s.offTopic,
-    })),
+    segments: plan.segments.map((s: any) => {
+      // Runtime-generated plans (generate-from-text.ts's Stage 2) never ask
+      // Haiku for hints/responseFormat/choices on a try_yourself segment
+      // (STAGE2_SYSTEM's schema omits them — see the module doc), so
+      // parseLessonPlan (lesson-plan/parser.ts) bakes them onto the Segment
+      // as explicit `undefined` properties. The Mongo driver's default BSON
+      // serialization (no `ignoreUndefined`) then turns those into literal
+      // `null` on the STORED document — so a plan fetched back via
+      // findStoredPlansByLoId can carry `hints: null`, `responseFormat:
+      // null`, `choices: null` on its segments. The contract's
+      // PracticeItemSchema declares these `.optional()` (undefined-or-value),
+      // NOT `.nullable()`, so a raw pass-through fails portal v1 validation
+      // on the SECOND practice request (the first is bank-only; the second
+      // excludes those ids and tops up from these try-yourself segments —
+      // see retrievePractice's shortfall path). Authored SEED_PLANS segments
+      // are in-code TS literals that never round-trip through Mongo, so they
+      // never carry an explicit null here — this normalization is a no-op
+      // for them (a real array/string/undefined passes through unchanged).
+      const choices = Array.isArray(s.choices) && s.choices.length > 0 ? s.choices : undefined;
+      const responseFormat =
+        s.responseFormat === 'mcq' ||
+        s.responseFormat === 'frq' ||
+        s.responseFormat === 'numeric' ||
+        s.responseFormat === 'free'
+          ? s.responseFormat
+          : choices
+            ? 'mcq'
+            : 'free';
+      return {
+        kind: s.kind,
+        id: s.id,
+        problem: s.problem,
+        expectedAnswer: s.expectedAnswer,
+        hints: Array.isArray(s.hints) ? s.hints : [],
+        responseFormat,
+        choices,
+        offTopic: s.offTopic,
+      };
+    }),
   };
 }
 
