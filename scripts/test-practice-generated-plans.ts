@@ -20,10 +20,12 @@
  */
 import { strict as assert } from 'node:assert';
 import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
+import { retrievePractice } from '@/lib/tutor/portal/practice';
 import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 import { LessonPlanModel } from '@/models/LessonPlan';
 import * as dbModule from '@/lib/db';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
+import type { RetrievePracticeRequest } from '@evelyn/portal-contract/v1';
 
 let passed = 0;
 let failed = 0;
@@ -75,6 +77,43 @@ const GEN_PLAN: LessonPlan = {
   metadata: { generatedFromText: true, generatorOk: true },
 };
 
+// Review fix: a stored plan is app-layer-validated only (Mongoose `segments`
+// is Mixed — models/LessonPlan.ts), so a malformed row (bad upsert, partial
+// write, future schema drift) must be skipped, not throw and 500 every
+// student on this LO. `segments: null` reproduces the crash toPlanLite()
+// used to hit unguarded (`plan.segments.map(...)` on a non-array).
+const GEN_LO2 = 'gen-cphq-uuid-9999.lo-1';
+const MALFORMED_PLAN = {
+  id: 'gen-cphq-uuid-bad',
+  title: 'Malformed Generated Plan',
+  curriculum: 'freestyle',
+  grade: 'college',
+  subject: 'Healthcare Quality',
+  topic: 'Bad Topic',
+  locale: 'en',
+  los: [{ id: GEN_LO2, description: 'malformed row' }],
+  estimatedMinutes: 30,
+  segments: null,
+  schemaVersion: 1,
+  metadata: {},
+} as unknown as LessonPlan;
+const VALID_SIBLING_PLAN: LessonPlan = {
+  id: 'gen-cphq-uuid-good',
+  title: 'Valid Generated Plan',
+  curriculum: 'freestyle',
+  grade: 'college',
+  subject: 'Healthcare Quality',
+  topic: 'Good Topic',
+  locale: 'en',
+  los: [{ id: GEN_LO2, description: 'valid sibling' }],
+  estimatedMinutes: 30,
+  segments: [
+    { kind: 'try_yourself', id: 'ty-good-1', problem: 'What is a valid try-yourself?', expectedAnswer: 'This one' },
+  ] as unknown as LessonPlan['segments'],
+  schemaVersion: 1,
+  metadata: { generatedFromText: true, generatorOk: true },
+};
+
 (async () => {
   await test("plansForLoId — a gen-* loId with no SEED_PLANS match surfaces the stored plan's try-yourself", async () => {
     stubbedDocs = [GEN_PLAN];
@@ -106,6 +145,24 @@ const GEN_PLAN: LessonPlan = {
     const sources = mongoPracticeSources();
     const plans = await sources.plansForLoId('no-such-lo');
     assert.deepEqual(plans, []);
+  });
+
+  await test('plansForLoId — a malformed stored plan (null segments) is skipped, not thrown; valid sibling survives', async () => {
+    stubbedDocs = [MALFORMED_PLAN, VALID_SIBLING_PLAN];
+    const sources = mongoPracticeSources();
+    const plans = await sources.plansForLoId(GEN_LO2);
+    assert.equal(plans.length, 1, 'only the valid sibling should survive');
+    assert.equal(plans[0].id, VALID_SIBLING_PLAN.id);
+  });
+
+  await test('retrievePractice — malformed + valid stored plans for the same loId: no throw, valid try-yourself returned', async () => {
+    stubbedDocs = [MALFORMED_PLAN, VALID_SIBLING_PLAN];
+    const sources = mongoPracticeSources();
+    const req: RetrievePracticeRequest = { studentId: 's', courseId: 'c', scope: { loId: GEN_LO2 }, count: 10 };
+    const r = await retrievePractice(req, sources); // must not throw
+    const ids = r.items.map((i) => i.id);
+    assert.ok(ids.some((id) => id.includes('ty-good-1')), 'the valid sibling plan\'s try-yourself is present');
+    assert.ok(!ids.some((id) => id.includes('gen-cphq-uuid-bad')), 'the malformed plan contributed nothing');
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -82,8 +82,25 @@ export function mongoPracticeSources(): PracticeSources {
       const seedMatches = SEED_PLANS.filter((p) => p.los.some((l) => l.id === loId));
       const stored = await findStoredPlansByLoId(loId);
       const seenIds = new Set(seedMatches.map((p) => p.id));
-      const combined = [...seedMatches, ...stored.filter((p) => !seenIds.has(p.id))];
-      return combined.map(toPlanLite);
+      const seedLite = seedMatches.map(toPlanLite);
+      // Stored plans are app-layer-validated only (Mongoose `segments` is
+      // Mixed — see models/LessonPlan.ts), so a single malformed row (bad
+      // upsert, partial write, future schema drift) must never take down
+      // practice/quiz/diagnostic retrieval for every student on this LO.
+      // toPlanLite() is unguarded (assumes well-shaped los[]/segments[]), so
+      // wrap it PER PLAN: skip the bad row, log its id, keep going — degrade
+      // to whatever else matched (seed content + any other valid stored
+      // plans) instead of throwing.
+      const storedLite: PlanLite[] = [];
+      for (const p of stored) {
+        if (seenIds.has(p.id)) continue;
+        try {
+          storedLite.push(toPlanLite(p));
+        } catch (err) {
+          console.warn(`[practice] skipping malformed stored plan "${p?.id ?? '(unknown id)'}" for loId="${loId}":`, err);
+        }
+      }
+      return [...seedLite, ...storedLite];
     },
     async plansForTopic(topicId) {
       return SEED_PLANS.filter((p) => p.topic === topicId).map(toPlanLite);
