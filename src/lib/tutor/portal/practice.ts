@@ -195,6 +195,16 @@ export async function retrievePractice(
     // hand-authored ones. No owning plan (or an owning plan with no topic)
     // → skip generation entirely rather than write an orphan bank row with a
     // bogus tag.
+    //
+    // `loScopePlans` = `sources.plansForLoId(loId)` — SEED_PLANS matches
+    // first, then Mongo-stored plans (Option B: runtime-generated plans,
+    // e.g. white-label taxonomy-built courses). For a generated plan
+    // (CourseBuildService.buildOne() persists it via engine.generatePlan),
+    // `topic` is whatever free-text topic the caller passed at generation
+    // time (academy's materialize() passes the LO's own `title` — a
+    // per-LO string, NOT a shared topic-taxonomy id) — it will rarely if
+    // ever match an existing `bankForTopic` row, but it's still a real,
+    // non-empty tag to write fresh generated items under.
     const derivedTopic = loScopePlans.find((p) => p.topic)?.topic;
     if (derivedTopic) {
       try {

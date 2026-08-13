@@ -8,7 +8,7 @@
 
 import connectDB from '@/lib/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
-import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
+import { SEED_PLANS, findStoredPlansByLoId } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';
 import type { PracticeSources, PlanLite, BankLite } from './practice';
 import type { GradeItem } from './grade-free-response';
@@ -71,7 +71,19 @@ async function safeBankQuery(filter: Record<string, unknown>): Promise<BankLite[
 export function mongoPracticeSources(): PracticeSources {
   return {
     async plansForLoId(loId) {
-      return SEED_PLANS.filter((p) => p.los.some((l) => l.id === loId)).map(toPlanLite);
+      // SEED_PLANS (curated, authored content) first — ordering wins for
+      // dedup below and for the exhaustion path's `.find(p => p.topic)`
+      // owning-plan lookup. Stored plans (Mongo) extend the pool with
+      // runtime-generated plans (Option B — white-label taxonomy-built
+      // courses whose `gen-<uuid>.lo-N` ids never appear in SEED_PLANS, so
+      // for existing authored courses this is always []). Authored loIds
+      // never collide with `gen-*` ids, so the dedup below is
+      // belt-and-suspenders, not load-bearing.
+      const seedMatches = SEED_PLANS.filter((p) => p.los.some((l) => l.id === loId));
+      const stored = await findStoredPlansByLoId(loId);
+      const seenIds = new Set(seedMatches.map((p) => p.id));
+      const combined = [...seedMatches, ...stored.filter((p) => !seenIds.has(p.id))];
+      return combined.map(toPlanLite);
     },
     async plansForTopic(topicId) {
       return SEED_PLANS.filter((p) => p.topic === topicId).map(toPlanLite);
