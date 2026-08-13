@@ -13,7 +13,7 @@
 export const SPEAKER_NOTES: string[][] = [
   // 0 — Hero
   [
-    "Thanks so much for making time today — Sherry, Frank, really appreciate it. Here's how I want to spend our time: show you first, talk structure and pricing after. You asked for both, so we'll get to both — I'd just rather you see something real before we talk numbers.",
+    "Thanks so much for making time today — really appreciate you both being here. Here's how I want to spend our time: show you first, talk structure and pricing after. You asked for both, so we'll get to both — I'd just rather you see something real before we talk numbers.",
     "What you're looking at is adaptive CPHQ preparation, built specifically on NAHQ's blueprint — not a generic test-prep product we tried to fit you into. Custom development like this is our core model, not a side offering, so this is genuinely what we do.",
     "One quick bit of context — Evelyn was just ranked in TIME's Top EdTech list for 2026, #9 in the US and #35 in the world. I mention it only so you know the team behind this call has already been validated at that level.",
   ],
@@ -31,7 +31,7 @@ export const SPEAKER_NOTES: string[][] = [
   ],
   // 3 — Ability + forgetting (under the hood 1/2)
   [
-    "I'll go a level deeper for a minute, mostly because I suspect Frank's going to want to know how the numbers actually work — stop me if this is more than you need right now.",
+    "I'll go a level deeper for a minute, mostly because I suspect your certification team will want to know how the numbers actually work — stop me if this is more than you need right now.",
     "On the left, that's a per-objective ability estimate — it updates with every response using an Elo-family model, weighted by where the evidence came from. A mock exam question moves the needle more than a hint on a practice item, because it's stronger evidence of what someone actually knows.",
     "On the right is the piece people don't usually think about — forgetting. We model a half-life per objective and schedule review before the predicted dip, not after. A candidate who mastered Domain III in week two gets brought back to it in week six, before it decays, instead of relearning it cold in week eleven.",
   ],
@@ -44,7 +44,7 @@ export const SPEAKER_NOTES: string[][] = [
   [
     "This is a stylized mock, not a live screenshot, but it's the real evidence view a candidate or reviewer sees. I want to spend a beat here, because for a credential like CPHQ this matters a lot.",
     "For a high-stakes credential, auditability isn't a nice-to-have — it's a feature. Every number the system produces can show its evidence. This candidate's 78% on performance improvement methods isn't a black box — you can see the mock exam result, the quiz score, the practice pattern, and the tutor session that flagged a partial gap, all feeding that one number.",
-    "That matters for a candidate who wants to trust the number, and it matters for you and Frank if you ever need to explain how the system reached a conclusion about someone's readiness.",
+    "That matters for a candidate who wants to trust the number, and it matters for your team if you ever need to explain how the system reached a conclusion about someone's readiness.",
   ],
   // 6 — Pipeline / SME gate
   [
@@ -84,11 +84,11 @@ export const SPEAKER_NOTES: string[][] = [
   [
     "I want to spend real time here, because I think this is the question underneath all your other questions. This is a managed white-label deployment, not a software transfer, and I want to be explicit about why, and what that means for you.",
     "You own the content — the blueprint course, the item bank, every piece of branded material. Not licensed back to us, not shared with other customers. You own every byte of candidate data — response history, mastery data, all of it — exportable any time in a standard format, so there's no lock-in. Your SMEs stay in the loop on everything that reaches a candidate.",
-    "What we own is the operation — we build it, host it, and run it, so you never have to carry AI infrastructure or per-query billing internally. The continuity guarantees underneath that — escrow, export commitments — live in the contract, and we're glad to walk Frank through those in as much detail as he wants.",
+    "What we own is the operation — we build it, host it, and run it, so you never have to carry AI infrastructure or per-query billing internally. The continuity guarantees underneath that — escrow, export commitments — live in the contract, and we're glad to walk your team through those in as much detail as you want.",
   ],
   // 13 — CTA / close
   [
     "So here's what I'd propose as a next step: let's start the six-week pilot, with success metrics we agree on together up front. If you continue to Phase 2, that pilot fee is credited toward it, so there's no wasted spend either way you decide.",
-    "This deck is yours to keep, and Sherry, Frank — anything that comes up after today, before, during, or after, just reach out directly. We're genuinely excited about what this could look like for CPHQ candidates, and we'd love to get started.",
+    "This deck is yours to keep — anything that comes up after today, before, during, or after, just reach out directly. We're genuinely excited about what this could look like for CPHQ candidates, and we'd love to get started.",
   ],
 ];

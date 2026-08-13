@@ -86,12 +86,18 @@ async function main() {
   const inputs: EvidenceInput[] = [];
   let strong = 0, improving = 0, weak = 0, untouched = 0, reviewBait = 0;
 
+  // --force-touch "id1,id2,...": these LOs never land 'skip' (used to keep the
+  // learner-model map coherent with portal-side structural progress — a node
+  // marked studied in the portal must not render 'not started' on the heatmap).
+  const forceTouch = new Set((arg('force-touch') ?? '').split(',').map((s) => s.trim()).filter(Boolean));
+
   los.forEach((lo, idx) => {
     const r = det(`${studentId}|${lo.id}`);
     let kind: 'strong' | 'improving' | 'weak' | 'skip';
     if (profile === 'improving') kind = r < 0.15 ? 'skip' : 'improving';
     else if (profile === 'struggling') kind = r < 0.15 ? 'skip' : r < 0.75 ? 'weak' : 'improving';
     else kind = r < 0.3 ? 'strong' : r < 0.6 ? 'improving' : r < 0.85 ? 'weak' : 'skip';
+    if (kind === 'skip' && forceTouch.has(lo.id)) kind = r < 0.5 ? 'strong' : 'improving';
 
     if (kind === 'skip') { untouched++; return; }
 
