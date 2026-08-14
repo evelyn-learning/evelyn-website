@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Lead, TOUCH_CHANNELS, type TouchChannel } from "@/models";
 import { createOutreachDraft, getOutreachGmail } from "@/lib/outreach/gmail";
+import { applyDemoLink, demoLinkFor } from "@/lib/outreach/draft-body";
 
 // A googleapis/gaxios error surfaces its HTTP status as either `.status` or
 // `.response.status` depending on where in the stack it was thrown. Duck-type
@@ -47,8 +48,18 @@ export async function POST(
       return NextResponse.json({ error: "body is required" }, { status: 400 });
     }
 
+    // Resolve the [DEMO_LINK] placeholder the research prompts emit. Applied
+    // to every channel, and BEFORE persisting, so the stored body is the one
+    // that actually goes out — the console's copy buttons read the same
+    // field, and previously handed the operator a body still containing the
+    // literal token.
+    const resolvedBody = applyDemoLink(
+      body,
+      demoLinkFor(process.env.NEXT_PUBLIC_SITE_URL || "", lead.demoToken),
+    );
+
     if (channel === "linkedin" || channel === "form") {
-      lead.currentDraft = { channel, body };
+      lead.currentDraft = { channel, body: resolvedBody };
       await lead.save();
       return NextResponse.json({ success: true, lead });
     }
@@ -81,7 +92,7 @@ export async function POST(
       const { draftId, threadId: resultThreadId } = await createOutreachDraft({
         to,
         subject: typeof subject === "string" ? subject : "",
-        body,
+        body: resolvedBody,
         threadId,
       });
 
@@ -106,7 +117,9 @@ export async function POST(
       lead.currentDraft = {
         channel: "email",
         subject: typeof subject === "string" ? subject : "",
-        body,
+        // The RESOLVED body: this field backs the console's copy button as
+        // well as the Gmail draft, and the two must not disagree.
+        body: resolvedBody,
         gmailDraftId: draftId,
         gmailThreadId: resultThreadId,
       };
