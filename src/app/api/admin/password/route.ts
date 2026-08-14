@@ -25,30 +25,22 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     // Find user in database
-    let user = await AdminUser.findOne({ email: session.user.email });
+    const user = await AdminUser.findOne({ email: session.user.email });
 
-    // If user doesn't exist in DB (using fallback), create them first
+    // This branch used to carry a SECOND copy of the hardcoded "admin123"
+    // hash: with no row for the session's email it accepted that password as
+    // "current" and bootstrapped an AdminUser from it. That was the intended
+    // way to create the first admin, and it meant the published credential
+    // stayed live as an account-creation path. Sign-in no longer has a
+    // fallback either (see src/lib/auth.ts), so a session can only exist for
+    // an email that already HAS a row — a missing one now means the account
+    // was deleted mid-session. Seed the first admin with
+    // `npx tsx scripts/seed-admin-user.ts` instead.
     if (!user) {
-      // Verify current password against fallback
-      const fallbackHash = "$2a$10$QXEk.Jl/pUTJEScgf5vwKev6UXxn9JjWU/ytSzm2wRjphM4zfSivu";
-      const isValidFallback = await bcrypt.compare(data.currentPassword, fallbackHash);
-
-      if (!isValidFallback) {
-        return NextResponse.json(
-          { message: "Current password is incorrect" },
-          { status: 400 }
-        );
-      }
-
-      // Create user in database with new password
-      const newPasswordHash = await bcrypt.hash(data.newPassword, 10);
-      user = await AdminUser.create({
-        email: session.user.email,
-        name: session.user.name || "Admin",
-        passwordHash: newPasswordHash,
-      });
-
-      return NextResponse.json({ success: true, message: "Password changed successfully" });
+      return NextResponse.json(
+        { message: "No admin account exists for this session" },
+        { status: 404 }
+      );
     }
 
     // Verify current password
