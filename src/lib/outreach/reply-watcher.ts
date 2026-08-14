@@ -7,7 +7,7 @@ import cron, { ScheduledTask } from "node-cron";
 import { connectDB } from "@/lib/db";
 import { Lead, type ITouch } from "@/models";
 import { getThreadMessages, getOutreachAccount, httpStatusOf } from "./gmail";
-import { findInboundReply } from "./reply-detect";
+import { findInboundMessage } from "./reply-detect";
 
 // Scheduler state lives on globalThis, NOT in module scope.
 //
@@ -47,6 +47,8 @@ function watcherState(): WatcherState {
 export interface ReplyCheckStats {
   checkedThreads: number;
   repliesFound: number;
+  /** Leads closed this run because the outbound email bounced. */
+  bounced: number;
   errors: number;
   /** Thread ids dropped this run because Gmail says they don't exist. */
   prunedThreads: number;
@@ -61,7 +63,7 @@ export interface ReplyCheckStats {
 // reply late to the breakup email.
 export async function runReplyCheck(): Promise<ReplyCheckStats> {
   const stats: ReplyCheckStats = {
-    checkedThreads: 0, repliesFound: 0, errors: 0, prunedThreads: 0, unwatchableLeads: 0,
+    checkedThreads: 0, repliesFound: 0, bounced: 0, errors: 0, prunedThreads: 0, unwatchableLeads: 0,
   };
 
   const st = watcherState();
@@ -93,19 +95,39 @@ export async function runReplyCheck(): Promise<ReplyCheckStats> {
           const known = new Set(
             lead.touches.map((t: ITouch) => t.gmailMessageId).filter(Boolean)
           );
-          const reply = findInboundReply(
+          const found = findInboundMessage(
             messages.filter((m) => !known.has(m.id)),
             self
           );
-          if (reply) {
+          if (found?.kind === "bounce") {
+            // A delivery failure is the OPPOSITE of a reply: the prospect
+            // never received the mail. Close the lead and flag the address
+            // so re-enrichment can pick it up, rather than leaving a dead
+            // address sitting in the pipeline as a positive signal.
+            lead.status = "dead";
+            lead.nextActionAt = null;
+            if (lead.decisionMaker) lead.decisionMaker.emailVerified = false;
+            lead.touches.push({
+              at: new Date(),
+              channel: "email",
+              direction: "inbound",
+              summary: `Delivery failed (${found.from}): ${found.snippet.slice(0, 140)}`,
+              gmailMessageId: found.gmailMessageId,
+            });
+            await lead.save();
+            stats.bounced++;
+            console.warn(`[Reply Watcher] ${lead.company}: delivery bounced — marked dead`);
+            break;
+          }
+          if (found) {
             lead.status = "replied";
             lead.nextActionAt = null;
             lead.touches.push({
               at: new Date(),
               channel: "email",
               direction: "inbound",
-              summary: `Reply from ${reply.from}: ${reply.snippet.slice(0, 140)}`,
-              gmailMessageId: reply.gmailMessageId,
+              summary: `Reply from ${found.from}: ${found.snippet.slice(0, 140)}`,
+              gmailMessageId: found.gmailMessageId,
             });
             await lead.save();
             stats.repliesFound++;
@@ -184,7 +206,7 @@ export function startReplyWatcher(cronExpression: string = "*/15 * * * *"): void
     if (stats.checkedThreads > 0 || stats.errors > 0) {
       console.log(
         `[Reply Watcher] Completed: ${stats.checkedThreads} checked, ${stats.repliesFound} replies found, ` +
-          `${stats.errors} errors, ${stats.prunedThreads} pruned, ${stats.unwatchableLeads} now unwatchable`
+          `${stats.bounced} bounced, ${stats.errors} errors, ${stats.prunedThreads} pruned, ${stats.unwatchableLeads} now unwatchable`
       );
     }
   });
