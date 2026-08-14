@@ -56,31 +56,41 @@ run_remote_command() {
   ssh -o StrictHostKeyChecking=no "$SERVER_USER@$SERVER_IP" "$command"
 }
 
-# Robust file upload. Three reasons this exists (2026-05-18 stall):
-#  -O                  force the legacy SCP protocol. Modern OpenSSH (9.x,
-#                      incl. macOS) defaults scp to the SFTP subsystem; if
-#                      the server's sftp-server subsystem is mis/disabled,
-#                      scp connects then hangs at 0% / 0.0KB/s forever
-#                      (while `ssh host "cmd"` exec still works — which is
-#                      exactly the symptom we saw).
-#  ConnectTimeout +    a genuine stall now ERRORS in ~30s instead of
-#  ServerAlive*        hanging indefinitely (the script was unkillable).
-#  3-attempt retry     rides out transient network drops.
-# The `if scp; then` form keeps an intermediate failure from tripping the
+# Robust file upload, over a plain `ssh 'cat > dest'` pipe rather than scp.
+#
+# History: this used `scp -O` to force the legacy SCP protocol, because modern
+# OpenSSH (9.x, incl. macOS) defaults scp to the SFTP subsystem and the
+# server's sftp-server was mis/disabled — scp would connect then hang at
+# 0% / 0.0KB/s forever, while `ssh host "cmd"` exec still worked (2026-05-18).
+#
+# `-O` fixed the hang but was pathologically SLOW: measured 39 KB/s on
+# 2026-08-14, against 3.4 MB/s for a plain ssh pipe to the same host at the
+# same moment (88x), on a 194 Mbps uplink with server load at 0.58. A 941 MB
+# upload was quoted at 5.2 hours.
+#
+# An ssh pipe sidesteps BOTH scp transports, so the sftp problem that -O
+# worked around is irrelevant here — this is the same `ssh host "cmd"` exec
+# path that kept working throughout. ConnectTimeout/ServerAlive still turn a
+# genuine stall into an error instead of an unkillable hang, and the 3-attempt
+# retry still rides out transient drops.
+#
+# The `if ssh; then` form keeps an intermediate failure from tripping the
 # ERR trap (this script uses `trap ERR`, not `set -e`); the caller handles
 # the final non-zero return via `|| { ... }`.
-scp_with_retry() {
+upload_with_retry() {
   local src=$1
-  local dest=$2
+  local remote_path=$2
   local attempt=1
   local max=3
   while [ "$attempt" -le "$max" ]; do
-    if scp -O \
-         -o StrictHostKeyChecking=no \
-         -o ConnectTimeout=15 \
-         -o ServerAliveInterval=10 \
-         -o ServerAliveCountMax=3 \
-         "$src" "$dest"; then
+    # `cat > tmp && mv` so a partial transfer never lands at the real path.
+    if ssh -o StrictHostKeyChecking=no \
+           -o ConnectTimeout=15 \
+           -o ServerAliveInterval=10 \
+           -o ServerAliveCountMax=3 \
+           "$SERVER_USER@$SERVER_IP" \
+           "cat > '${remote_path}.part' && mv '${remote_path}.part' '${remote_path}'" \
+           < "$src"; then
       return 0
     fi
     log_message "WARNING" "Upload attempt ${attempt}/${max} failed (${src}); retrying in $((attempt * 5))s..."
@@ -182,6 +192,14 @@ if [ -f "$ZIP_FILE" ]; then
 fi
 
 # Zip everything except node_modules, .git, and local env files.
+#
+# .next/cache is excluded: it is the LOCAL build cache (webpack/SWC + the
+# image-optimizer cache) and the server never reads it — the server runs
+# `npm ci` and `next start`, it does not rebuild. It was 715 MB of the
+# 941 MB archive on 2026-08-14, i.e. three quarters of every upload was
+# bytes production had no use for. Note the server-side `rm -rf
+# .next/cache/fetch-cache` in deploy-crimsora.sh is a different concern
+# (a runtime cache on that host), not this build cache.
 # .npmrc is required so `npm ci` on the server picks up legacy-peer-deps=true
 # (next-auth declares an optional peer on nodemailer ^7 that conflicts with
 # our direct nodemailer ^9 — we don't use the email provider, so accepting
@@ -200,7 +218,7 @@ zip -qr "$ZIP_FILE" \
   .deploy-public-manifest \
   .deploy-static-manifest \
   .deploy-server-chunks-manifest \
-  -x "*.log" "*/.DS_Store" || {
+  -x "*.log" "*/.DS_Store" ".next/cache/*" || {
   log_message "ERROR" "Failed to create zip file"
   exit 1
 }
@@ -214,7 +232,7 @@ run_remote_command "mkdir -p $REMOTE_DIR" || {
 }
 
 log_message "STEP" "Uploading to production server..."
-scp_with_retry "$ZIP_FILE" "$SERVER_USER@$SERVER_IP:$REMOTE_DIR/" || {
+upload_with_retry "$ZIP_FILE" "$REMOTE_DIR/$ZIP_FILE" || {
   log_message "ERROR" "Failed to upload zip file to server after 3 attempts"
   exit 1
 }
@@ -223,7 +241,7 @@ log_message "INFO" "Successfully uploaded zip file to server"
 # Step 3.5: Upload production environment file
 log_message "STEP" "Uploading production environment file..."
 if [ -f ".env.local.production" ]; then
-  scp_with_retry ".env.local.production" "$SERVER_USER@$SERVER_IP:$REMOTE_DIR/.env.local" || {
+  upload_with_retry ".env.local.production" "$REMOTE_DIR/.env.local" || {
     log_message "WARNING" "Failed to upload .env.local.production after 3 attempts"
   }
   log_message "INFO" "Successfully uploaded .env.local.production as .env.local"
