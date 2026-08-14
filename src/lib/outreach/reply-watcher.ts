@@ -6,7 +6,7 @@
 import cron, { ScheduledTask } from "node-cron";
 import { connectDB } from "@/lib/db";
 import { Lead, type ITouch } from "@/models";
-import { getThreadMessages, getOutreachAccount } from "./gmail";
+import { getThreadMessages, getOutreachAccount, httpStatusOf } from "./gmail";
 import { findInboundReply } from "./reply-detect";
 
 // Scheduler state lives on globalThis, NOT in module scope.
@@ -48,6 +48,11 @@ export interface ReplyCheckStats {
   checkedThreads: number;
   repliesFound: number;
   errors: number;
+  /** Thread ids dropped this run because Gmail says they don't exist. */
+  prunedThreads: number;
+  /** Leads left with NO watchable thread after pruning — they can no longer
+   *  have a reply detected, and want an operator's attention. */
+  unwatchableLeads: number;
 }
 
 // Check all leads with recorded Gmail threads for inbound replies.
@@ -55,7 +60,9 @@ export interface ReplyCheckStats {
 // searches the wider inbox. "parked" leads are included: a lead can still
 // reply late to the breakup email.
 export async function runReplyCheck(): Promise<ReplyCheckStats> {
-  const stats: ReplyCheckStats = { checkedThreads: 0, repliesFound: 0, errors: 0 };
+  const stats: ReplyCheckStats = {
+    checkedThreads: 0, repliesFound: 0, errors: 0, prunedThreads: 0, unwatchableLeads: 0,
+  };
 
   const st = watcherState();
   if (st.isCheckInProgress) {
@@ -75,6 +82,10 @@ export async function runReplyCheck(): Promise<ReplyCheckStats> {
     const self = getOutreachAccount();
 
     for (const lead of leads) {
+      // Collected during the scan and applied after it — splicing
+      // lead.gmailThreadIds while iterating it would skip entries.
+      const deadThreadIds: string[] = [];
+
       for (const threadId of lead.gmailThreadIds) {
         try {
           stats.checkedThreads++;
@@ -105,8 +116,38 @@ export async function runReplyCheck(): Promise<ReplyCheckStats> {
             console.error("[Reply Watcher] GMAIL_NOT_CONNECTED — skipping remaining threads");
             return stats;
           }
+          // A 404 is PERMANENT: the thread does not exist in this mailbox and
+          // no amount of retrying will change that. Treating it like a
+          // transient error meant 11 dead ids were re-fetched every 15
+          // minutes indefinitely (~1,050 wasted Gmail calls a day) while a
+          // stack trace per thread buried anything real in the log.
+          if (httpStatusOf(e) === 404) {
+            deadThreadIds.push(threadId);
+            continue;
+          }
           stats.errors++;
           console.error(`[Reply Watcher] thread ${threadId} error:`, e);
+        }
+      }
+
+      if (deadThreadIds.length > 0) {
+        lead.gmailThreadIds = lead.gmailThreadIds.filter(
+          (id: string) => !deadThreadIds.includes(id)
+        );
+        stats.prunedThreads += deadThreadIds.length;
+        await lead.save();
+        console.warn(
+          `[Reply Watcher] ${lead.company}: dropped ${deadThreadIds.length} thread id(s) Gmail returned 404 for ` +
+            `(${deadThreadIds.join(", ")})`
+        );
+        // Worth surfacing loudly rather than silently: with no thread left,
+        // a reply from this lead can never be detected. Re-drafting (which
+        // records a fresh thread) or the repair script is the way back.
+        if (lead.gmailThreadIds.length === 0) {
+          stats.unwatchableLeads++;
+          console.warn(
+            `[Reply Watcher] ${lead.company} now has NO watchable thread — replies will not be detected`
+          );
         }
       }
     }
@@ -142,7 +183,8 @@ export function startReplyWatcher(cronExpression: string = "*/15 * * * *"): void
     const stats = await runReplyCheck();
     if (stats.checkedThreads > 0 || stats.errors > 0) {
       console.log(
-        `[Reply Watcher] Completed: ${stats.checkedThreads} checked, ${stats.repliesFound} replies found, ${stats.errors} errors`
+        `[Reply Watcher] Completed: ${stats.checkedThreads} checked, ${stats.repliesFound} replies found, ` +
+          `${stats.errors} errors, ${stats.prunedThreads} pruned, ${stats.unwatchableLeads} now unwatchable`
       );
     }
   });

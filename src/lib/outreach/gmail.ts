@@ -46,6 +46,24 @@ function encodeMimeSubject(subject: string): string {
   return `=?UTF-8?B?${b64}?=`;
 }
 
+/**
+ * A googleapis/gaxios error surfaces its HTTP status as either `.status` or
+ * `.response.status` depending on where in the stack it was thrown.
+ * Duck-typed rather than importing the transitive `gaxios` package.
+ *
+ * Shared because callers have to distinguish a PERMANENT failure (404 — the
+ * thread/draft does not exist in this mailbox and never will) from a
+ * transient one; getting that test wrong in one copy and not the other is
+ * how the reply watcher ended up retrying dead threads every 15 minutes.
+ */
+export function httpStatusOf(err: unknown): number | undefined {
+  if (err && typeof err === "object") {
+    const e = err as { status?: number; response?: { status?: number } };
+    return e.status ?? e.response?.status;
+  }
+  return undefined;
+}
+
 function assertSafeHeaderValue(value: string, field: string): void {
   // `to`/`subject` land straight into raw MIME header lines below. `subject`
   // in particular originates from LLM-generated draft content persisted on

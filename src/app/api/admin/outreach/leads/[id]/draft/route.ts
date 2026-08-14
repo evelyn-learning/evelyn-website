@@ -3,19 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import { Lead, TOUCH_CHANNELS, type TouchChannel } from "@/models";
-import { createOutreachDraft, getOutreachGmail } from "@/lib/outreach/gmail";
+import { createOutreachDraft, getOutreachGmail, httpStatusOf } from "@/lib/outreach/gmail";
 import { applyDemoLink, demoLinkFor } from "@/lib/outreach/draft-body";
-
-// A googleapis/gaxios error surfaces its HTTP status as either `.status` or
-// `.response.status` depending on where in the stack it was thrown. Duck-type
-// rather than importing the transitive `gaxios` package directly.
-function httpStatusOf(err: unknown): number | undefined {
-  if (err && typeof err === "object") {
-    const e = err as { status?: number; response?: { status?: number } };
-    return e.status ?? e.response?.status;
-  }
-  return undefined;
-}
 
 // POST - (re)write the lead's current draft. For email this creates a real
 // Gmail draft (threaded onto the intro by default once one exists); for
