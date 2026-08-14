@@ -258,7 +258,7 @@
     "next-auth": "^4.24.12",
     "next-sitemap": "^4.2.3",
     "node-cron": "^4.2.1",
-    "nodemailer": "^8.0.5",
+    "nodemailer": "^9.0.5",
     "openai": "^4.85.0",
     "pdf-parse": "1.1.4",
     "react": "^18.3.1",
