@@ -4,14 +4,19 @@ import bcrypt from "bcryptjs";
 import { connectDB, isDBConfigured } from "@/lib/db";
 import { AdminUser } from "@/models";
 
-// Fallback admin user (used only if no admin exists in database)
-const FALLBACK_ADMIN = {
-  id: "1",
-  email: "admin@evelynlearning.com",
-  name: "Admin",
-  // Hash of "admin123" - change in production!
-  passwordHash: "$2a$10$QXEk.Jl/pUTJEScgf5vwKev6UXxn9JjWU/ytSzm2wRjphM4zfSivu",
-};
+// There is deliberately NO hardcoded fallback admin here. There used to be
+// one — admin@evelynlearning.com with a bcrypt hash of "admin123" and a
+// "change in production!" comment — reached whenever the AdminUser lookup
+// below didn't return a row. Two ways that fired: no row for the submitted
+// email, and (worse, because it survived setting a real password) ANY thrown
+// error from connectDB/findOne, since the catch logged and fell through to
+// it. A Mongo blip therefore re-enabled a published credential on an /admin
+// surface that has no middleware gate — every page and handler gates itself.
+//
+// Authentication now fails CLOSED: no database, no login. Admin accounts live
+// only in the AdminUser collection. Seed or reset one with
+// `npx tsx scripts/seed-admin-user.ts` (ADMIN_EMAIL + ADMIN_PASSWORD) —
+// that script is the only supported way to create the first admin.
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -26,47 +31,38 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        // Try database first
-        if (isDBConfigured()) {
-          try {
-            await connectDB();
-            const dbUser = await AdminUser.findOne({ email: credentials.email });
-
-            if (dbUser) {
-              const isValid = await bcrypt.compare(
-                credentials.password,
-                dbUser.passwordHash
-              );
-              if (isValid) {
-                return {
-                  id: dbUser._id.toString(),
-                  email: dbUser.email,
-                  name: dbUser.name,
-                };
-              }
-              return null;
-            }
-          } catch (error) {
-            console.error("Database auth error:", error);
-          }
+        // The database is the ONLY credential store. Without it configured
+        // there is nothing to authenticate against, so refuse rather than
+        // reaching for a second, weaker source.
+        if (!isDBConfigured()) {
+          console.error("[auth] MONGODB_URI is not configured — refusing all sign-ins");
+          return null;
         }
 
-        // Fallback to hardcoded admin
-        if (credentials.email === FALLBACK_ADMIN.email) {
-          const isValid = await bcrypt.compare(
-            credentials.password,
-            FALLBACK_ADMIN.passwordHash
-          );
-          if (isValid) {
-            return {
-              id: FALLBACK_ADMIN.id,
-              email: FALLBACK_ADMIN.email,
-              name: FALLBACK_ADMIN.name,
-            };
-          }
-        }
+        try {
+          await connectDB();
+          // Normalized the same way seed-admin-user.ts stores it, so a
+          // capitalized sign-in doesn't miss a lowercase row (findOne is
+          // case-sensitive). Safe for existing rows — the only one on prod
+          // is already lowercase.
+          const dbUser = await AdminUser.findOne({ email: credentials.email.trim().toLowerCase() });
+          if (!dbUser) return null;
 
-        return null;
+          const isValid = await bcrypt.compare(credentials.password, dbUser.passwordHash);
+          if (!isValid) return null;
+
+          return {
+            id: dbUser._id.toString(),
+            email: dbUser.email,
+            name: dbUser.name,
+          };
+        } catch (error) {
+          // Fail CLOSED. This catch used to log and fall through to the
+          // hardcoded fallback, which turned any transient Mongo failure
+          // into a working "admin123" sign-in.
+          console.error("[auth] database error during sign-in — denying:", error);
+          return null;
+        }
       },
     }),
   ],
