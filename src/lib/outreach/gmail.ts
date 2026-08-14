@@ -1,7 +1,9 @@
+import { randomBytes } from "node:crypto";
 import { google, gmail_v1 } from "googleapis";
 import { connectDB } from "@/lib/db";
 import { OutreachToken } from "@/models";
 import { decryptToken } from "@/lib/crypto/token-encryption";
+import { bodyToHtml } from "./draft-body";
 
 export const GMAIL_OUTREACH_SCOPES = [
   "https://www.googleapis.com/auth/gmail.compose",
@@ -87,14 +89,37 @@ export async function createOutreachDraft(args: {
     assertSafeHeaderValue(original, "thread subject");
     subject = /^re:/i.test(original) ? original : `Re: ${original}`;
   }
+  // multipart/alternative (text + HTML), not bare text/plain.
+  //
+  // A text/plain message is rendered by Gmail in a narrow fixed-width column
+  // with its own wrapping. The generated body has no wrapping of its own —
+  // paragraphs run past 400 characters — so drafts arrived looking hard-
+  // wrapped and machine-made next to a hand-composed message, which is
+  // multipart/alternative. Both parts are base64'd with an explicit
+  // Content-Transfer-Encoding: the body is LLM-written and reliably contains
+  // em dashes and curly quotes, and 8-bit content on 400-char lines with no
+  // declared encoding is exactly what mangles in transit.
+  const boundary = `evelyn_${randomBytes(16).toString("hex")}`;
+  const b64Part = (s: string) => Buffer.from(s, "utf8").toString("base64").replace(/(.{76})/g, "$1\r\n");
   const mime = [
     `To: ${args.to}`,
     `Subject: ${encodeMimeSubject(subject)}`,
     "MIME-Version: 1.0",
     ...extraHeaders,
-    'Content-Type: text/plain; charset="UTF-8"',
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
     "",
-    args.body,
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    b64Part(args.body),
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    b64Part(bodyToHtml(args.body)),
+    `--${boundary}--`,
+    "",
   ].join("\r\n");
   const raw = Buffer.from(mime).toString("base64url");
   const res = await gmail.users.drafts.create({
