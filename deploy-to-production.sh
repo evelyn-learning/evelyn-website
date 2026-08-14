@@ -184,7 +184,7 @@ fi
 # Zip everything except node_modules, .git, and local env files.
 # .npmrc is required so `npm ci` on the server picks up legacy-peer-deps=true
 # (next-auth declares an optional peer on nodemailer ^7 that conflicts with
-# our direct nodemailer ^8.0.5 — we don't use the email provider, so accepting
+# our direct nodemailer ^9 — we don't use the email provider, so accepting
 # the optional-peer mismatch is safe).
 zip -qr "$ZIP_FILE" \
   .next \
