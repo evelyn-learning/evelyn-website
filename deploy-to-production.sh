@@ -153,6 +153,26 @@ log_message "STEP" "Generating .next/static manifest (orphan-chunk prune)..."
 find .next/static -type f | LC_ALL=C sort > .deploy-static-manifest
 log_message "INFO" "Static manifest contains $(wc -l < .deploy-static-manifest) entries"
 
+# Step 1.7: Same treatment for .next/server/chunks — the server-side twin of
+# the problem above. `unzip -o` never deletes, so server chunks from every
+# prior build accumulated to 4,570 files / 580 MB (measured 2026-08-14),
+# including .js.map sourcemaps still carrying the retired admin123 hash from
+# the Aug 11/12 builds. Not reachable over HTTP, but retired credentials
+# lingering on disk make any future audit confusing.
+#
+# SCOPE IS DELIBERATELY .next/server/chunks, NOT .next/server:
+#   .next/server/app is written AT RUNTIME — the app-router ISR/segment cache
+#   lands there as .rsc/.html/.meta/.segment.rsc files (3,040 of them were
+#   newer than BUILD_ID on 2026-08-14). A build manifest is NOT an
+#   authoritative keep-set for that directory, and pruning against it would
+#   delete live cache output. `.next/server/chunks` by contrast had ZERO
+#   files newer than BUILD_ID: it is pure, content-hashed build output.
+#   For the same reason `rm -rf .next` on the server is NOT an option — it
+#   would also take out .next/cache (756 MB) and the running process's files.
+log_message "STEP" "Generating .next/server/chunks manifest (orphan-chunk prune)..."
+find .next/server/chunks -type f | LC_ALL=C sort > .deploy-server-chunks-manifest
+log_message "INFO" "Server-chunk manifest contains $(wc -l < .deploy-server-chunks-manifest) entries"
+
 # Step 2: Create deployment package
 log_message "STEP" "Creating deployment package..."
 
@@ -179,6 +199,7 @@ zip -qr "$ZIP_FILE" \
   postcss.config.mjs \
   .deploy-public-manifest \
   .deploy-static-manifest \
+  .deploy-server-chunks-manifest \
   -x "*.log" "*/.DS_Store" || {
   log_message "ERROR" "Failed to create zip file"
   exit 1
@@ -239,6 +260,13 @@ fi
 # Files that were never in the dev's repo (user uploads, google verification
 # HTML) are never in any manifest, so they are never flagged for deletion.
 # First-ever deploy: previous manifest doesn't exist, diff is empty, no-op.
+#
+# Ordering note: the .next/server/chunks prune runs AFTER `pm2 start`, unlike
+# the public/ and .next/static prunes which run before. The orphan set is by
+# definition the chunks the OUTGOING process was running on; deleting them
+# while it is still serving could break a lazy require in flight. Once the new
+# process is up, every chunk it can possibly need is in the keep-set, so the
+# delete is provably safe.
 log_message "STEP" "Running deployment on production server..."
 run_remote_command "cd $REMOTE_DIR && \
   if [ -f .deploy-public-manifest ]; then cp .deploy-public-manifest /tmp/.deploy-public-manifest.prev; else : > /tmp/.deploy-public-manifest.prev; fi && \
@@ -251,7 +279,8 @@ run_remote_command "cd $REMOTE_DIR && \
   npm ci --omit=dev && \
   (pm2 delete evelyn-website 2>/dev/null || true) && \
   pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && \
-  pm2 save" || {
+  pm2 save && \
+  if [ -s .deploy-server-chunks-manifest ]; then find .next/server/chunks -type f | LC_ALL=C sort > /tmp/.srv-have && LC_ALL=C sort .deploy-server-chunks-manifest > /tmp/.srv-keep && comm -23 /tmp/.srv-have /tmp/.srv-keep > /tmp/.srv-orphans && if [ -s /tmp/.srv-orphans ]; then echo \"Pruning \$(wc -l < /tmp/.srv-orphans) orphaned .next/server/chunks file(s) from prior builds\"; xargs -r rm -f < /tmp/.srv-orphans; else echo \"No orphaned .next/server/chunks files to prune.\"; fi && rm -f /tmp/.srv-have /tmp/.srv-keep /tmp/.srv-orphans; else echo \"WARN: .deploy-server-chunks-manifest missing/empty — skipping server-chunk prune (safety)\"; fi" || {
   log_message "ERROR" "Deployment failed on remote server"
   exit 1
 }

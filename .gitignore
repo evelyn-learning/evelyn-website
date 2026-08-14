@@ -47,6 +47,7 @@ public/_e8-harness/
 # Deploy manifest (regenerated on every deploy by deploy-to-production.sh)
 .deploy-public-manifest
 .deploy-static-manifest
+.deploy-server-chunks-manifest
 
 # Script build caches (e.g. Natural Earth GeoJSON for generate-map-backgrounds.ts)
 scripts/.cache/
