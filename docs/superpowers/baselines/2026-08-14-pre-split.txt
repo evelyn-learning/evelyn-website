@@ -1,0 +1,294 @@
+
+> evelyn-website@0.1.0 test:all
+> node scripts/run-all-tests.mjs
+
+test:gaps ... PASS
+test:portal-contract ... PASS
+test:portal-auth ... PASS
+test:portal-gap-links ... PASS
+test:portal-practice ... PASS
+test:portal-concept ... PASS
+test:portal-grading ... PASS
+test:portal-ced ... PASS
+test:portal-endpoints ... PASS
+test:portal-assessment ... PASS
+test:material-extract ... PASS
+test:taxonomy ... PASS
+test:mock-blueprints ... PASS
+test:mock-scoring ... PASS
+test:mock-service ... PASS
+test:mock-report ... PASS
+test:portal-mock ... PASS
+test:embed-token ... PASS
+test:segment-evidence ... PASS
+test:outreach-model ... PASS
+test:outreach-job ... PASS
+test:outreach-import ... PASS
+test:outreach-cadence ... PASS
+test:outreach-reply ... PASS
+test:outreach-lead-edit ... PASS
+test:outreach-research ... PASS
+test:outreach-enrich ... PASS
+test:outreach-guards ... PASS
+test:skip-cap ... PASS
+test:page-model ... PASS
+test:page-grouping ... PASS
+test:energy-bars-scope ... PASS
+test:dedup-scroll ... PASS
+test:show-signature ... PASS
+test:flowchart-layout ... PASS
+test:view-follow ... PASS
+test:prestart ... PASS
+test:stage2-restore ... PASS
+test:stage2-restore-r32 ... PASS
+test:stage2-cancel ... PASS
+test:elevenlabs-voice-map ... PASS
+test:tts-recovery ... PASS
+test:silent-regen-clause ... PASS
+test:board-map ... PASS
+test:board-title ... PASS
+test:replay-scrubber ... PASS
+test:replay-board-fit ... PASS
+test:fit-scale ... PASS
+test:resume-seed ... PASS
+test:tutor-reactions ... PASS
+test:content-variety ... PASS
+test:problem-verify ... PASS
+test:conic ... PASS
+test:graph-consistency ... PASS
+test:secant-tangent ... PASS
+test:equation-guards ... PASS
+test:advance-ordering ... PASS
+test:student-jump-intent ... PASS
+test:graph-js-expr ... PASS
+test:choice-label ... PASS
+test:continuity ... PASS
+test:feature-slug ... PASS
+test:gap-manifest ... PASS
+test:brain-retry ... PASS
+test:turn-latency ... PASS
+test:pcm-stream ... PASS
+test:sonic-ws ... PASS
+test:verdict-guard ... FAIL
+test:judge-prompt ... PASS
+test:rule8-repair ... PASS
+test:nonanswer-praise ... PASS
+test:judge-correction-note ... PASS
+test:marker-student-echo ... PASS
+test:g11-alg2-cells ... PASS
+test:fraction-bar-layout ... PASS
+test:svg-clip ... PASS
+test:manifest-coverage ... PASS
+test:ack-layer ... PASS
+test:cover-layer ... PASS
+test:utterance-hold ... PASS
+test:validate-tool-call ... PASS
+test:draw-on ... PASS
+test:hand-stroke ... PASS
+test:ink-placement ... PASS
+test:inline-math ... PASS
+test:statement-dollars ... PASS
+test:question-gist-text ... PASS
+test:qpin ... PASS
+test:wb-markdown-strip ... PASS
+test:tryyourself-mcq-verdict ... PASS
+test:show-passage ... PASS
+test:process-tool-call ... PASS
+test:timeline ... PASS
+test:board-anchor-assist ... PASS
+test:cartesia-registry ... PASS
+test:geo-accent ... PASS
+test:teacher-roster ... PASS
+test:tts-flag ... PASS
+test:tts-pronunciation ... PASS
+test:math-coverage ... PASS
+test:physics-coverage ... PASS
+test:chem-coverage ... PASS
+test:subject-notation ... PASS
+test:dispatch-dedupe ... PASS
+test:cancel-storm ... PASS
+test:bargein-gate ... PASS
+test:shared-mic ... PASS
+test:math-label ... PASS
+test:practice-session-block ... PASS
+test:practice-gen-plans ... PASS
+test:pace-preference-block ... PASS
+test:active-problem-block ... PASS
+test:verify-answer-match ... PASS
+test:perception-watchdog ... PASS
+test:ws-recovery ... PASS
+test:round7-locale-interests ... PASS
+test:equation-split ... PASS
+test:idle-nudge ... PASS
+test:perception-classifier ... PASS
+test:sentence-buffer ... PASS
+test:sentence-spacing ... PASS
+test:stage-direction-strip ... PASS
+test:ink-reconstruct ... PASS
+test:sketch-validate ... PASS
+test:sketch-render ... PASS
+test:resume-cut ... PASS
+test:arith-claim ... PASS
+test:answer-match ... PASS
+test:simplification-verdict ... PASS
+test:praise-contradiction ... PASS
+test:praise-echo ... PASS
+test:inverse-verdict ... PASS
+test:objective-credit ... PASS
+test:card-narration ... PASS
+test:verdict-charity-rules ... PASS
+test:caps-emphasis-prompt ... PASS
+test:curated-demo ... PASS
+test:solutions-demo ... PASS
+test:figure-evolve ... PASS
+test:conic-primitives ... PASS
+test:geometry-point-step ... PASS
+test:render-sync ... PASS
+test:recordings ... PASS
+test:student-marks ... PASS
+test:orchestrator-helpers ... PASS
+test:caption-sync ... PASS
+test:kill-keep ... PASS
+test:graph-math ... PASS
+test:pedagogy-personas ... PASS
+test:pedagogy-sim ... PASS
+test:pedagogy-driver-unit ... PASS
+test:pedagogy-gates ... PASS
+test:pedagogy-cli ... PASS
+test:pedagogy-b4 ... PASS
+test:pedagogy-b5 ... PASS
+test:pedagogy-b6 ... PASS
+test:pedagogy-b2 ... PASS
+test:pedagogy-b3 ... PASS
+test:pedagogy-posed-problem ... FAIL
+test:pedagogy-board-truth ... PASS
+test:pedagogy-board-anchored ... PASS
+test:question-anchor ... PASS
+test:pedagogy-c1 ... PASS
+test:pedagogy-c2 ... PASS
+test:pedagogy-d2 ... PASS
+test:passages ... PASS
+test:portal-grading-passage ... PASS
+test:adapters-passage ... PASS
+test:practice-gen ... PASS
+test:pedagogy-d1 ... FAIL
+test:pedagogy-d3 ... PASS
+test:pedagogy-e1 ... PASS
+test:pedagogy-e2 ... PASS
+test:pedagogy-e3 ... PASS
+test:pedagogy-resume ... PASS
+test:pedagogy-teacher ... PASS
+test:r33-prompt-rules ... PASS
+test:learner-model ... PASS
+test:cell-content ... PASS
+test:exercise-board ... PASS
+test:derived-notes ... PASS
+
+178/181 passed
+
+=== test:verdict-guard ===
+  ✓ bare number
+  ✓ decimal
+  ✓ number + unit
+  ✓ option letter
+  ✓ option letter punct
+  ✓ two words
+  ✓ yes/no
+  ✓ short with number
+  ✓ question-form answer (the live miss)
+  ✓ hedged maybe
+  ✓ tag question
+  ✓ could-it-be
+  ✓ I-think hedge
+  ✓ full sentence
+  ✓ student question about material
+  ✓ five words no number
+  ✓ bracketed injection
+  ✓ validator feedback
+  ✓ empty
+  ✓ conditional framing (IF it proposes an answer)
+  ✓ names hedged/question-form answers
+  ✓ hedged-correct is still correct
+  ✓ praise branch
+  ✓ wrong branch
+  ✓ closes tag
+  ✓ cont: "Yes." after offer → continuation guard
+  ✓ cont: "Uh, yes." (leading filler) → continuation guard
+  ✓ cont: "Let's go!" after "Want to…?" → continuation guard
+  ✓ cont: continuation guard replaces verdict guard
+  ✓ cont: guard forbids verdict opener
+  ✓ cont: "Yes." after content question → verdict guard
+  ✓ cont: "yes but why…" → no continuation guard
+  ✓ cont: no prior tutor msg → verdict guard as before
+  ✓ cont: bracketed injection → nothing
+  ✗ non-answer branch → respond normally, no verdict word
+
+1 failure(s)
+
+
+=== test:pedagogy-posed-problem ===
+Tutor-posed problem + parametric LHS clauses
+
+  ✓ posed-problem clause present: a problem YOU pose renders the same turn
+  ✓ posed-problem clause covers speaking-without-writing explicitly
+  ✓ parametric LHS clause present and scoped to parametric definitions
+  ✗ arithmetic-grind clause: bulky arithmetic is not the lesson
+      clause header missing
+  ✓ analogy-sketch clause: a sketched analogy must be labelled with what it maps to
+  ✓ companion-artifact clause: render the table/graph/diagram FIRST, same turn, before the card
+  ✓ companion-artifact clause: never reference an off-page artifact
+  ✓ companion-artifact clause: no prose-described tables
+  ✓ graph-points clause: points must accompany a plotted function, not stand alone
+
+8 passed, 1 failed
+
+
+=== test:pedagogy-d1 ===
+ of these kinds, pick ANOTHER this time — do not re-run the same move in new words. The lesson's authored problem may be the same; your way IN must not be. Keep it warm either way — dropping the greeting or jumping in colder is NOT acceptable variation.\n` +
+-   `Use the above naturally for rapport and for theming examples — a brief callback or a themed problem when it genuinely fits. Vary which item you draw on; avoid re-using a thread marked recently used. A returning student's progress can power a warm opener ("X units in — great pace") but NEVER guilt about pace or time away. Never recite this list, and never mention that any of this information is stored or remembered in notes. Open THIS session with a DIFFERENT KIND of opening than the last one above. Opening kinds: a last-session callback ("we nailed X, today Y"), a progress-arc note ("X units in"), a social/interest hook, a cold intriguing puzzle or claim, or a what-if scenario. If the last opener was one of these, pick ANOTHER this time — do not re-run the same move in new words. The lesson's authored problem may be the same; your way IN must not be. Keep it warm either way — dropping the greeting or jumping in colder is NOT acceptable variation.\n` +
+    '</student_context_transient>'
+
+  ✓ all three inputs render in order: progress, threads, lastOpener, instruction
+  ✓ lastOpener absent ⇒ prior output byte-identical (no opener line, no extra sentence)
+  ✓ digest > 200 chars is TRUNCATED with an ellipsis (documented choice: truncate, not reject)
+  ✓ lastOpener with an empty/whitespace digest is treated as absent
+  ✓ no null/undefined leakage in rendered output
+
+renderTransientContextBlock — readinessNote:
+  ✓ readinessNote alone renders the block with the prerequisite-readiness line
+  ✓ note absent + all other inputs absent ⇒ still returns null (unchanged)
+  ✓ whitespace-only note is treated as absent
+  ✓ readinessNote combines with other inputs after lastOpener, before the instruction
+
+19 passed, 2 failed
+
+├ ○ /tutor
+├ ○ /tutor-portal
+├ ○ /tutor-portal/demo
+├ ○ /tutor-portal/docs
+├ ○ /tutor-portal/docs/api
+├ ○ /tutor-portal/docs/authentication
+├ ○ /tutor-portal/docs/embed
+├ ○ /tutor-portal/docs/modules
+├ ○ /tutor-portal/docs/quickstart
+├ ○ /tutor-portal/docs/webhooks
+├ ○ /tutor-portal/docs/whiteboard
+├ ○ /tutor-portal/embed
+├ ○ /tutor-portal/pricing
+├ ƒ /tutor-portal/replay
+├ ○ /tutor-portal/sandbox
+├ ○ /tutor/board-preview
+├ ○ /tutor/dev/gaps
+├ ○ /tutor/dev/notes
+├ ○ /tutor/render-harness
+├ ○ /tutor/settings
+├ ○ /tutor/voice-harness
+└ ○ /webinars
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
