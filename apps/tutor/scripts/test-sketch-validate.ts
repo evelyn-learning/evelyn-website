@@ -1,0 +1,649 @@
+/**
+ * Unit tests for the sketch structural quality gate (validateSketch). The gate
+ * is the in-loop half of the doodle quality decision, so the suite leans on the
+ * NEGATIVE / fail-to-nothing cases (incoherent or mostly-garbage doodler output
+ * must render NOTHING rather than something wrong).
+ *
+ * Usage: npx tsx scripts/test-sketch-validate.ts
+ */
+import { validateSketch } from '../src/lib/tutor/whiteboard/sketch-validate';
+import { SKETCH_BOUNDS } from '../src/lib/tutor/whiteboard/sketch-schema';
+import {
+  BALL_ON_HILL, GLASS_SHATTER,
+  SPRING_MASS, TRANSVERSE_WAVE, SKIER, BEAKER_HALF,
+  TORQUE, TEN_FRAME, WAVELENGTH_BRACE, PENDULUM, GAS_CLOUD, MOLECULES_BOX,
+  PULLEY_LIFT, LEVER_BALANCE, SPEEDOMETER, NUMBER_LINE,
+  PLOT_POINT, PLANET_ORBIT, WATER_MOLECULE, BAR_HEIGHTS,
+  WATER_CYCLE, FOOD_CHAIN, TRADE_OFF_SCALE, SUN_AND_TREE,
+  FRACTION_PIE, ANIMAL_TREE, CONCEPT_MAP, CELL_SAYS, HISTORY_TIMELINE,
+  COMPARE_VENN, EARTH_LAYERS, SWOT_MATRIX,
+  MASLOW_PYRAMID, ICEBERG_METAPHOR, VENN3_TRADEOFF, ENERGY_SANKEY,
+} from '../src/lib/tutor/whiteboard/sketch-examples';
+
+let passed = 0, failed = 0;
+function check(name: string, cond: boolean, detail?: string) {
+  if (cond) { passed++; console.log(`  ✓ ${name}`); }
+  else { failed++; console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); }
+}
+
+// ── reference doodles survive ──
+const ball = validateSketch({ primitives: BALL_ON_HILL });
+check('BALL_ON_HILL validates', !!ball && ball.length === BALL_ON_HILL.length, JSON.stringify(ball?.length));
+const glass = validateSketch({ primitives: GLASS_SHATTER });
+check('GLASS_SHATTER validates', !!glass && glass.length === GLASS_SHATTER.length, JSON.stringify(glass?.length));
+
+// ── accepts a bare array (not wrapped) ──
+check('accepts bare array form', !!validateSketch(BALL_ON_HILL));
+
+// ── fail-to-nothing on structurally broken input ──
+check('null input → null', validateSketch(null) === null);
+check('empty array → null', validateSketch({ primitives: [] }) === null);
+check('non-array primitives → null', validateSketch({ primitives: 'nope' }) === null);
+check('object without primitives → null', validateSketch({ foo: 1 }) === null);
+
+// ── labels-only is not a sketch ──
+check('labels-only → null', validateSketch({ primitives: [
+  { type: 'label', x: 10, y: 10, text: 'hi' },
+  { type: 'label', x: 20, y: 20, text: 'there' },
+] }) === null);
+
+// ── confusion guard: more dropped than kept → null ──
+check('mostly-garbage → null', validateSketch({ primitives: [
+  { type: 'line', x1: 10, y1: 10, x2: 50, y2: 50 }, // 1 good
+  { type: 'bogus' },                                  // dropped
+  { type: 'line' },                                   // dropped (no coords)
+  { type: 'ellipse', cx: 5 },                         // dropped (missing radii)
+] }) === null);
+
+// ── individually-bad primitives are dropped, good ones kept ──
+const mixed = validateSketch({ primitives: [
+  { type: 'line', x1: 10, y1: 10, x2: 50, y2: 50 },
+  { type: 'line', x1: 20, y1: 20, x2: 60, y2: 60 },
+  { type: 'ellipse', cx: 30, cy: 30, rx: 5, ry: 5 },
+  { type: 'line', x1: 5, y1: 5 }, // dropped: incomplete
+] });
+check('drops incomplete, keeps 3 good', !!mixed && mixed.length === 3, JSON.stringify(mixed?.length));
+
+// ── coordinate clamping ──
+const clamped = validateSketch({ primitives: [
+  { type: 'line', x1: -50, y1: 10, x2: 9999, y2: 50 },
+  { type: 'ellipse', cx: 50, cy: 50, rx: 10, ry: 10 },
+] }) as any[];
+check('coords clamp into 0..100', !!clamped && clamped[0].x1 === 0 && clamped[0].x2 === 100, JSON.stringify(clamped?.[0]));
+
+// ── zero-length line dropped ──
+check('zero-length line dropped (with a real prim present)',
+  validateSketch({ primitives: [
+    { type: 'ellipse', cx: 50, cy: 50, rx: 10, ry: 10 },
+    { type: 'line', x1: 30, y1: 30, x2: 30, y2: 30 },
+  ] })!.length === 1);
+
+// ── bad color/strokeWidth coerced, primitive still kept ──
+const coerced = validateSketch({ primitives: [
+  { type: 'line', x1: 10, y1: 10, x2: 50, y2: 50, stroke: 'fuchsia', strokeWidth: 99 },
+] }) as any[];
+check('bad color dropped to default (undefined), kept', !!coerced && coerced[0].stroke === undefined);
+check('strokeWidth clamped to max', !!coerced && coerced[0].strokeWidth === SKETCH_BOUNDS.maxStrokeWidth);
+
+// ── polygon needs ≥3 vertices ──
+check('2-point polygon dropped',
+  validateSketch({ primitives: [
+    { type: 'ellipse', cx: 50, cy: 50, rx: 10, ry: 10 },
+    { type: 'polygon', points: [{ x: 10, y: 10 }, { x: 20, y: 20 }] },
+  ] })!.length === 1);
+
+// ── label text capped ──
+const longLabel = validateSketch({ primitives: [
+  { type: 'line', x1: 10, y1: 10, x2: 50, y2: 50 },
+  { type: 'label', x: 10, y: 10, text: 'x'.repeat(200) },
+] }) as any[];
+check('label text capped to maxLabelLen',
+  !!longLabel && longLabel.find((p) => p.type === 'label')?.text.length === SKETCH_BOUNDS.maxLabelLen);
+
+// ── primitive cap enforced ──
+const many = Array.from({ length: 60 }, (_, i) => ({ type: 'line', x1: i % 90, y1: 10, x2: (i % 90) + 5, y2: 50 }));
+check('primitive count capped at maxPrimitives',
+  validateSketch({ primitives: many })!.length === SKETCH_BOUNDS.maxPrimitives);
+
+// ── concentric primitive (wavefronts) ──
+const conc = validateSketch({ primitives: [
+  { type: 'concentric', cx: 45, cy: 50, count: 4, spacing: 6.5, squeeze: 0.5, angle: 0 },
+] }) as any[];
+check('concentric validates', !!conc && conc.length === 1 && conc[0].type === 'concentric');
+check('concentric count clamped to max',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 99, spacing: 5 }] }) as any[])[0].count
+    === SKETCH_BOUNDS.maxConcentricCount);
+check('concentric count clamped to min',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 1, spacing: 5 }] }) as any[])[0].count
+    === SKETCH_BOUNDS.minConcentricCount);
+check('concentric count rounded',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3.7, spacing: 5 }] }) as any[])[0].count === 4);
+check('concentric squeeze clamped to 0.9',
+  (validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3, spacing: 5, squeeze: 5 }] }) as any[])[0].squeeze === 0.9);
+check('concentric with spacing<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3, spacing: 0 }] }) === null);
+check('concentric missing spacing dropped → null',
+  validateSketch({ primitives: [{ type: 'concentric', cx: 50, cy: 50, count: 3 }] }) === null);
+
+// ── wave primitive ──
+const wave = validateSketch({ primitives: [
+  { type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 14, damping: 0.5 },
+] }) as any[];
+check('wave validates', !!wave && wave.length === 1 && wave[0].type === 'wave');
+check('wave cycles clamped to max',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 99, amplitude: 10 }] }) as any[])[0].cycles
+    === SKETCH_BOUNDS.maxWaveCycles);
+check('wave cycles clamped to min',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 0.01, amplitude: 10 }] }) as any[])[0].cycles
+    === SKETCH_BOUNDS.minWaveCycles);
+check('wave amplitude clamped to max',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 999 }] }) as any[])[0].amplitude
+    === SKETCH_BOUNDS.maxAmplitude);
+check('wave damping clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 10, damping: 5 }] }) as any[])[0].damping === 1);
+check('wave coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'wave', x1: -50, y1: 50, x2: 9999, y2: 50, cycles: 3, amplitude: 10 }] }) as any[])[0].x1 === 0);
+check('wave with amplitude<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, cycles: 3, amplitude: 0 }] }) === null);
+check('wave missing cycles dropped → null',
+  validateSketch({ primitives: [{ type: 'wave', x1: 10, y1: 50, x2: 90, y2: 50, amplitude: 10 }] }) === null);
+check('wave zero-length segment dropped → null',
+  validateSketch({ primitives: [{ type: 'wave', x1: 40, y1: 50, x2: 40, y2: 50, cycles: 3, amplitude: 10 }] }) === null);
+
+// ── spring primitive ──
+const spring = validateSketch({ primitives: [
+  { type: 'spring', x1: 50, y1: 14, x2: 50, y2: 60, coils: 6, width: 6 },
+] }) as any[];
+check('spring validates', !!spring && spring.length === 1 && spring[0].type === 'spring');
+check('spring coils clamped to max',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 99, width: 6 }] }) as any[])[0].coils
+    === SKETCH_BOUNDS.maxCoils);
+check('spring coils clamped to min',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 0, width: 6 }] }) as any[])[0].coils
+    === SKETCH_BOUNDS.minCoils);
+check('spring coils rounded',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 5.6, width: 6 }] }) as any[])[0].coils === 6);
+check('spring width clamped to max',
+  (validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 6, width: 999 }] }) as any[])[0].width
+    === SKETCH_BOUNDS.maxSpringWidth);
+check('spring with width<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, coils: 6, width: 0 }] }) === null);
+check('spring missing coils dropped → null',
+  validateSketch({ primitives: [{ type: 'spring', x1: 50, y1: 10, x2: 50, y2: 60, width: 6 }] }) === null);
+
+// ── stick_figure primitive ──
+const stick = validateSketch({ primitives: [
+  { type: 'stick_figure', x: 50, y: 50, scale: 30, pose: 'run' },
+] }) as any[];
+check('stick_figure validates + keeps pose', !!stick && stick[0].type === 'stick_figure' && stick[0].pose === 'run');
+check('stick_figure scale clamped to max',
+  (validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50, scale: 999 }] }) as any[])[0].scale
+    === SKETCH_BOUNDS.maxStickScale);
+check('stick_figure scale clamped to min',
+  (validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50, scale: 1 }] }) as any[])[0].scale
+    === SKETCH_BOUNDS.minStickScale);
+check('stick_figure bad pose dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50, scale: 30, pose: 'moonwalk' }] }) as any[])[0].pose === undefined);
+check('stick_figure missing scale dropped → null',
+  validateSketch({ primitives: [{ type: 'stick_figure', x: 50, y: 50 }] }) === null);
+
+// ── container_fill primitive ──
+const cont = validateSketch({ primitives: [
+  { type: 'container_fill', x: 36, y: 26, w: 28, h: 46, fillFrac: 0.5, shape: 'beaker', fillColor: 'blue' },
+] }) as any[];
+check('container_fill validates + keeps shape/fillColor',
+  !!cont && cont[0].type === 'container_fill' && cont[0].shape === 'beaker' && cont[0].fillColor === 'blue');
+check('container_fill fillFrac clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40, fillFrac: 5 }] }) as any[])[0].fillFrac === 1);
+check('container_fill negative fillFrac clamped to 0',
+  (validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40, fillFrac: -2 }] }) as any[])[0].fillFrac === 0);
+check('container_fill bad shape dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40, fillFrac: 0.5, shape: 'jug' }] }) as any[])[0].shape === undefined);
+check('container_fill w<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 0, h: 40, fillFrac: 0.5 }] }) === null);
+check('container_fill missing fillFrac dropped → null',
+  validateSketch({ primitives: [{ type: 'container_fill', x: 10, y: 10, w: 30, h: 40 }] }) === null);
+
+// ── vector primitive (Tier 3) ──
+const vec = validateSketch({ primitives: [
+  { type: 'vector', x1: 10, y1: 50, x2: 60, y2: 50, style: 'block', label: 'force' },
+] }) as any[];
+check('vector validates + keeps style/label', !!vec && vec[0].type === 'vector' && vec[0].style === 'block' && vec[0].label === 'force');
+check('vector bad style dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'vector', x1: 10, y1: 50, x2: 60, y2: 50, style: 'zigzag' }] }) as any[])[0].style === undefined);
+check('vector empty label dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'vector', x1: 10, y1: 50, x2: 60, y2: 50, label: '   ' }] }) as any[])[0].label === undefined);
+check('vector coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'vector', x1: -9, y1: 50, x2: 9999, y2: 50 }] }) as any[])[0].x2 === 100);
+check('vector zero-length dropped → null',
+  validateSketch({ primitives: [{ type: 'vector', x1: 40, y1: 50, x2: 40, y2: 50 }] }) === null);
+check('vector missing endpoint dropped → null',
+  validateSketch({ primitives: [{ type: 'vector', x1: 40, y1: 50, x2: 60 }] }) === null);
+
+// ── grid primitive (Tier 3) ──
+const grid = validateSketch({ primitives: [
+  { type: 'grid', x: 20, y: 40, cols: 5, rows: 2, cell: 11, style: 'boxes', fillCount: 7 },
+] }) as any[];
+check('grid validates + keeps style/fillCount', !!grid && grid[0].type === 'grid' && grid[0].style === 'boxes' && grid[0].fillCount === 7);
+check('grid cols clamped to max',
+  (validateSketch({ primitives: [{ type: 'grid', x: 5, y: 5, cols: 99, rows: 2, cell: 3 }] }) as any[])[0].cols === SKETCH_BOUNDS.maxGridDim);
+check('grid rows clamped to min',
+  (validateSketch({ primitives: [{ type: 'grid', x: 5, y: 5, cols: 2, rows: 0, cell: 3 }] }) as any[])[0].rows === SKETCH_BOUNDS.minGridDim);
+check('grid cols rounded',
+  (validateSketch({ primitives: [{ type: 'grid', x: 5, y: 5, cols: 4.6, rows: 2, cell: 3 }] }) as any[])[0].cols === 5);
+check('grid fillCount capped at cell total',
+  (validateSketch({ primitives: [{ type: 'grid', x: 5, y: 5, cols: 5, rows: 2, cell: 3, fillCount: 99 }] }) as any[])[0].fillCount === 10);
+check('grid bad style dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'grid', x: 5, y: 5, cols: 5, rows: 2, cell: 3, style: 'hexes' }] }) as any[])[0].style === undefined);
+check('grid cell<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'grid', x: 5, y: 5, cols: 5, rows: 2, cell: 0 }] }) === null);
+check('grid missing cell dropped → null',
+  validateSketch({ primitives: [{ type: 'grid', x: 5, y: 5, cols: 5, rows: 2 }] }) === null);
+
+// ── brace primitive (Tier 3) ──
+const brace = validateSketch({ primitives: [
+  { type: 'brace', x1: 14, y1: 56, x2: 50, y2: 56, side: 'bottom', label: 'one wavelength' },
+] }) as any[];
+check('brace validates + keeps side/label', !!brace && brace[0].type === 'brace' && brace[0].side === 'bottom' && brace[0].label === 'one wavelength');
+check('brace bad side dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'brace', x1: 10, y1: 50, x2: 60, y2: 50, side: 'north' }] }) as any[])[0].side === undefined);
+check('brace zero-length span dropped → null',
+  validateSketch({ primitives: [{ type: 'brace', x1: 40, y1: 50, x2: 40, y2: 50 }] }) === null);
+check('brace missing endpoint dropped → null',
+  validateSketch({ primitives: [{ type: 'brace', x1: 40, y1: 50, x2: 60 }] }) === null);
+
+// ── arc primitive (Tier 3) ──
+const arc = validateSketch({ primitives: [
+  { type: 'arc', cx: 50, cy: 14, r: 47, startAngle: 70, endAngle: 110 },
+] }) as any[];
+check('arc validates', !!arc && arc[0].type === 'arc' && arc[0].r === 47);
+check('arc r clamped to max',
+  (validateSketch({ primitives: [{ type: 'arc', cx: 50, cy: 50, r: 999, startAngle: 0, endAngle: 90 }] }) as any[])[0].r === SKETCH_BOUNDS.maxArcRadius);
+check('arc coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'arc', cx: -5, cy: 50, r: 20, startAngle: 0, endAngle: 90 }] }) as any[])[0].cx === 0);
+check('arc r<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'arc', cx: 50, cy: 50, r: 0, startAngle: 0, endAngle: 90 }] }) === null);
+check('arc zero sweep dropped → null',
+  validateSketch({ primitives: [{ type: 'arc', cx: 50, cy: 50, r: 20, startAngle: 45, endAngle: 45 }] }) === null);
+check('arc missing angle dropped → null',
+  validateSketch({ primitives: [{ type: 'arc', cx: 50, cy: 50, r: 20, startAngle: 0 }] }) === null);
+
+// ── blob primitive (Tier 3) ──
+const blob = validateSketch({ primitives: [
+  { type: 'blob', cx: 48, cy: 46, rx: 30, ry: 17, wobble: 0.32 },
+] }) as any[];
+check('blob validates + keeps wobble', !!blob && blob[0].type === 'blob' && blob[0].wobble === 0.32);
+check('blob wobble clamped to max',
+  (validateSketch({ primitives: [{ type: 'blob', cx: 50, cy: 50, rx: 20, ry: 20, wobble: 5 }] }) as any[])[0].wobble === SKETCH_BOUNDS.maxBlobWobble);
+check('blob negative wobble clamped to 0',
+  (validateSketch({ primitives: [{ type: 'blob', cx: 50, cy: 50, rx: 20, ry: 20, wobble: -3 }] }) as any[])[0].wobble === 0);
+check('blob rx<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'blob', cx: 50, cy: 50, rx: 0, ry: 20 }] }) === null);
+check('blob missing ry dropped → null',
+  validateSketch({ primitives: [{ type: 'blob', cx: 50, cy: 50, rx: 20 }] }) === null);
+
+// ── dots_cluster primitive (Tier 3) ──
+const dots = validateSketch({ primitives: [
+  { type: 'dots_cluster', cx: 50, cy: 50, count: 26, spread: 22 },
+] }) as any[];
+check('dots_cluster validates', !!dots && dots[0].type === 'dots_cluster' && dots[0].count === 26);
+check('dots_cluster count clamped to max',
+  (validateSketch({ primitives: [{ type: 'dots_cluster', cx: 50, cy: 50, count: 9999, spread: 20 }] }) as any[])[0].count === SKETCH_BOUNDS.maxDotsCount);
+check('dots_cluster count floored at 1',
+  (validateSketch({ primitives: [{ type: 'dots_cluster', cx: 50, cy: 50, count: 0, spread: 20 }] }) as any[])[0].count === 1);
+check('dots_cluster spread clamped to max',
+  (validateSketch({ primitives: [{ type: 'dots_cluster', cx: 50, cy: 50, count: 10, spread: 999 }] }) as any[])[0].spread === SKETCH_BOUNDS.maxSpread);
+check('dots_cluster spread<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'dots_cluster', cx: 50, cy: 50, count: 10, spread: 0 }] }) === null);
+check('dots_cluster missing spread dropped → null',
+  validateSketch({ primitives: [{ type: 'dots_cluster', cx: 50, cy: 50, count: 10 }] }) === null);
+
+// ── pulley primitive (Wave 3) ──
+const pulley = validateSketch({ primitives: [
+  { type: 'pulley', cx: 50, cy: 26, r: 12, ropeDir: 'both' },
+] }) as any[];
+check('pulley validates + keeps ropeDir', !!pulley && pulley[0].type === 'pulley' && pulley[0].ropeDir === 'both');
+check('pulley r clamped to max',
+  (validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50, r: 999 }] }) as any[])[0].r === SKETCH_BOUNDS.maxPulleyRadius);
+check('pulley bad ropeDir dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50, r: 12, ropeDir: 'up' }] }) as any[])[0].ropeDir === undefined);
+check('pulley coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'pulley', cx: -9, cy: 50, r: 12 }] }) as any[])[0].cx === 0);
+check('pulley r<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50, r: 0 }] }) === null);
+check('pulley missing r dropped → null',
+  validateSketch({ primitives: [{ type: 'pulley', cx: 50, cy: 50 }] }) === null);
+
+// ── lever primitive (Wave 3) ──
+const lever = validateSketch({ primitives: [
+  { type: 'lever', x: 50, y: 56, length: 76, pivotFrac: 0.5, tilt: 10 },
+] }) as any[];
+check('lever validates + keeps tilt', !!lever && lever[0].type === 'lever' && lever[0].tilt === 10);
+check('lever length clamped to max',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 999, pivotFrac: 0.5 }] }) as any[])[0].length === SKETCH_BOUNDS.maxLeverLength);
+check('lever pivotFrac clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: 5 }] }) as any[])[0].pivotFrac === 1);
+check('lever negative pivotFrac clamped to 0',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: -3 }] }) as any[])[0].pivotFrac === 0);
+check('lever tilt clamped to +max',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: 0.5, tilt: 999 }] }) as any[])[0].tilt === SKETCH_BOUNDS.maxLeverTilt);
+check('lever tilt clamped to -max',
+  (validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40, pivotFrac: 0.5, tilt: -999 }] }) as any[])[0].tilt === -SKETCH_BOUNDS.maxLeverTilt);
+check('lever length<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 0, pivotFrac: 0.5 }] }) === null);
+check('lever missing pivotFrac dropped → null',
+  validateSketch({ primitives: [{ type: 'lever', x: 50, y: 50, length: 40 }] }) === null);
+
+// ── gauge primitive (Wave 3) ──
+const gauge = validateSketch({ primitives: [
+  { type: 'gauge', cx: 50, cy: 62, r: 34, frac: 0.7, label: 'speed' },
+] }) as any[];
+check('gauge validates + keeps label', !!gauge && gauge[0].type === 'gauge' && gauge[0].frac === 0.7 && gauge[0].label === 'speed');
+check('gauge r clamped to max',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 999, frac: 0.5 }] }) as any[])[0].r === SKETCH_BOUNDS.maxGaugeRadius);
+check('gauge frac clamped to 0..1',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30, frac: 9 }] }) as any[])[0].frac === 1);
+check('gauge negative frac clamped to 0',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30, frac: -2 }] }) as any[])[0].frac === 0);
+check('gauge empty label dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30, frac: 0.5, label: '   ' }] }) as any[])[0].label === undefined);
+check('gauge r<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 0, frac: 0.5 }] }) === null);
+check('gauge missing frac dropped → null',
+  validateSketch({ primitives: [{ type: 'gauge', cx: 50, cy: 50, r: 30 }] }) === null);
+
+// ── axis primitive (Wave 3) ──
+const axis = validateSketch({ primitives: [
+  { type: 'axis', x1: 10, y1: 46, x2: 90, y2: 46, ticks: 11, labels: ['0', '5', '10'] },
+] }) as any[];
+check('axis validates + keeps ticks/labels', !!axis && axis[0].type === 'axis' && axis[0].ticks === 11 && axis[0].labels.length === 3);
+check('axis ticks clamped to max',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, ticks: 99 }] }) as any[])[0].ticks === SKETCH_BOUNDS.maxAxisTicks);
+check('axis ticks clamped to min',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, ticks: 0 }] }) as any[])[0].ticks === SKETCH_BOUNDS.minAxisTicks);
+check('axis ticks rounded',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, ticks: 5.7 }] }) as any[])[0].ticks === 6);
+check('axis labels capped to maxAxisLabels',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, labels: Array.from({ length: 40 }, (_, i) => `${i}`) }] }) as any[])[0].labels.length === SKETCH_BOUNDS.maxAxisLabels);
+check('axis non-string labels filtered out',
+  (validateSketch({ primitives: [{ type: 'axis', x1: 10, y1: 50, x2: 90, y2: 50, labels: ['a', 5, null, 'b'] }] }) as any[])[0].labels.length === 2);
+check('axis coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'axis', x1: -9, y1: 50, x2: 9999, y2: 50 }] }) as any[])[0].x2 === 100);
+check('axis zero-length dropped → null',
+  validateSketch({ primitives: [{ type: 'axis', x1: 40, y1: 50, x2: 40, y2: 50 }] }) === null);
+check('axis missing endpoint dropped → null',
+  validateSketch({ primitives: [{ type: 'axis', x1: 40, y1: 50, x2: 60 }] }) === null);
+
+// ── coordinate_grid primitive (Wave 4) ──
+const cgrid = validateSketch({ primitives: [
+  { type: 'coordinate_grid', x: 20, y: 16, w: 60, h: 60, quadrants: 4, xLabel: 'x', yLabel: 'y' },
+] }) as any[];
+check('coordinate_grid validates + keeps quadrants/labels',
+  !!cgrid && cgrid[0].type === 'coordinate_grid' && cgrid[0].quadrants === 4 && cgrid[0].xLabel === 'x' && cgrid[0].yLabel === 'y');
+check('coordinate_grid defaults quadrants to 4',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40, h: 40 }] }) as any[])[0].quadrants === 4);
+check('coordinate_grid keeps quadrants 1',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40, h: 40, quadrants: 1 }] }) as any[])[0].quadrants === 1);
+check('coordinate_grid bad quadrants coerced to 4',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40, h: 40, quadrants: 3 }] }) as any[])[0].quadrants === 4);
+check('coordinate_grid coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'coordinate_grid', x: -9, y: 10, w: 40, h: 40 }] }) as any[])[0].x === 0);
+check('coordinate_grid w<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 0, h: 40 }] }) === null);
+check('coordinate_grid missing h dropped → null',
+  validateSketch({ primitives: [{ type: 'coordinate_grid', x: 10, y: 10, w: 40 }] }) === null);
+
+// ── orbit primitive (Wave 4) ──
+const orbit = validateSketch({ primitives: [
+  { type: 'orbit', cx: 50, cy: 50, rx: 33, ry: 20, angle: -35, centerLabel: 'sun', satelliteLabel: 'planet' },
+] }) as any[];
+check('orbit validates + keeps angle/labels',
+  !!orbit && orbit[0].type === 'orbit' && orbit[0].angle === -35 && orbit[0].centerLabel === 'sun' && orbit[0].satelliteLabel === 'planet');
+check('orbit rx clamped to max',
+  (validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 999, ry: 20 }] }) as any[])[0].rx === SKETCH_BOUNDS.maxCoord);
+check('orbit empty label dropped to undefined',
+  (validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 30, ry: 20, centerLabel: '   ' }] }) as any[])[0].centerLabel === undefined);
+check('orbit coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'orbit', cx: -9, cy: 50, rx: 30, ry: 20 }] }) as any[])[0].cx === 0);
+check('orbit rx<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 0, ry: 20 }] }) === null);
+check('orbit missing ry dropped → null',
+  validateSketch({ primitives: [{ type: 'orbit', cx: 50, cy: 50, rx: 30 }] }) === null);
+
+// ── molecule primitive (Wave 4) ──
+const mol = validateSketch({ primitives: [
+  { type: 'molecule',
+    atoms: [{ x: 50, y: 46, label: 'O' }, { x: 36, y: 62, label: 'H' }, { x: 64, y: 62, label: 'H' }],
+    bonds: [{ a: 0, b: 1, order: 1 }, { a: 0, b: 2, order: 2 }] },
+] }) as any[];
+check('molecule validates + keeps atoms/bonds',
+  !!mol && mol[0].type === 'molecule' && mol[0].atoms.length === 3 && mol[0].bonds.length === 2 && mol[0].atoms[0].label === 'O');
+check('molecule bond order defaults to 1',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 0, b: 1 }] }] }) as any[])[0].bonds[0].order === 1);
+check('molecule bond order clamped to 3',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 0, b: 1, order: 9 }] }] }) as any[])[0].bonds[0].order === 3);
+check('molecule out-of-range bond dropped',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 0, b: 5 }] }] }) as any[])[0].bonds.length === 0);
+check('molecule self-bond dropped',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }, { x: 40, y: 40 }], bonds: [{ a: 1, b: 1 }] }] }) as any[])[0].bonds.length === 0);
+check('molecule atom coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: -9, y: 20 }, { x: 40, y: 40 }], bonds: [] }] }) as any[])[0].atoms[0].x === 0);
+check('molecule atoms capped at maxMoleculeAtoms',
+  (validateSketch({ primitives: [{ type: 'molecule', atoms: Array.from({ length: 30 }, (_, i) => ({ x: i, y: i })), bonds: [] }] }) as any[])[0].atoms.length === SKETCH_BOUNDS.maxMoleculeAtoms);
+check('molecule with no atoms dropped → null',
+  validateSketch({ primitives: [{ type: 'molecule', atoms: [], bonds: [] }] }) === null);
+check('molecule missing atoms/bonds arrays dropped → null',
+  validateSketch({ primitives: [{ type: 'molecule', atoms: [{ x: 20, y: 20 }] }] }) === null);
+
+// ── bar_compare primitive (Wave 4) ──
+const bars = validateSketch({ primitives: [
+  { type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 7, 5], labels: ['A', 'B', 'C'] },
+] }) as any[];
+check('bar_compare validates + keeps values/labels',
+  !!bars && bars[0].type === 'bar_compare' && bars[0].values.length === 3 && bars[0].labels.length === 3);
+check('bar_compare non-number values filtered out',
+  (validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [3, 'x', null, 5] }] }) as any[])[0].values.length === 2);
+check('bar_compare values capped at maxBars',
+  (validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: Array.from({ length: 30 }, (_, i) => i + 1) }] }) as any[])[0].values.length === SKETCH_BOUNDS.maxBars);
+check('bar_compare coords clamp into 0..100',
+  (validateSketch({ primitives: [{ type: 'bar_compare', x: -9, y: 24, w: 60, h: 50, values: [1, 2] }] }) as any[])[0].x === 0);
+check('bar_compare all-nonpositive values dropped → null',
+  validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [0, -3] }] }) === null);
+check('bar_compare empty values dropped → null',
+  validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 60, h: 50, values: [] }] }) === null);
+check('bar_compare w<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'bar_compare', x: 20, y: 24, w: 0, h: 50, values: [3, 7] }] }) === null);
+
+// ── cycle primitive (Tier 1) ──
+const cyc = validateSketch({ primitives: [
+  { type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['A', 'B', 'C', 'D'], clockwise: true },
+] }) as any[];
+check('cycle validates + keeps stages', !!cyc && cyc[0].type === 'cycle' && cyc[0].stages.length === 4);
+check('cycle r clamps to maxCycleRadius',
+  (validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 999, stages: ['A', 'B'] }] }) as any[])[0].r === SKETCH_BOUNDS.maxCycleRadius);
+check('cycle stages capped at maxCycleStages',
+  (validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 30, stages: Array.from({ length: 20 }, (_, i) => `S${i}`) }] }) as any[])[0].stages.length === SKETCH_BOUNDS.maxCycleStages);
+check('cycle with <2 stages dropped → null',
+  validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['only'] }] }) === null);
+check('cycle clockwise:false preserved',
+  (validateSketch({ primitives: [{ type: 'cycle', cx: 50, cy: 50, r: 30, stages: ['A', 'B'], clockwise: false }] }) as any[])[0].clockwise === false);
+
+// ── flow_chain primitive (Tier 1) ──
+const fc = validateSketch({ primitives: [
+  { type: 'flow_chain', x: 8, y: 44, steps: ['Sun', 'Grass', 'Rabbit', 'Fox'], direction: 'right' },
+] }) as any[];
+check('flow_chain validates + keeps steps', !!fc && fc[0].type === 'flow_chain' && fc[0].steps.length === 4);
+check('flow_chain default direction omitted (right)', fc[0].direction === undefined);
+check('flow_chain direction:down preserved',
+  (validateSketch({ primitives: [{ type: 'flow_chain', x: 8, y: 8, steps: ['A', 'B'], direction: 'down' }] }) as any[])[0].direction === 'down');
+check('flow_chain steps capped at maxFlowSteps',
+  (validateSketch({ primitives: [{ type: 'flow_chain', x: 8, y: 8, steps: Array.from({ length: 12 }, (_, i) => `S${i}`) }] }) as any[])[0].steps.length === SKETCH_BOUNDS.maxFlowSteps);
+check('flow_chain with <2 steps dropped → null',
+  validateSketch({ primitives: [{ type: 'flow_chain', x: 8, y: 8, steps: ['one'] }] }) === null);
+
+// ── balance_scale primitive (Tier 1) ──
+const bs = validateSketch({ primitives: [
+  { type: 'balance_scale', cx: 50, cy: 40, tilt: 10, leftLabel: 'costs', rightLabel: 'benefits' },
+] }) as any[];
+check('balance_scale validates + keeps labels', !!bs && bs[0].type === 'balance_scale' && bs[0].leftLabel === 'costs' && bs[0].rightLabel === 'benefits');
+check('balance_scale tilt clamps to ±maxBalanceTilt',
+  (validateSketch({ primitives: [{ type: 'balance_scale', cx: 50, cy: 40, tilt: 999 }] }) as any[])[0].tilt === SKETCH_BOUNDS.maxBalanceTilt);
+check('balance_scale bare (no labels/tilt) still validates',
+  !!validateSketch({ primitives: [{ type: 'balance_scale', cx: 50, cy: 40 }] }));
+
+// ── icon primitive (Tier 2) ──
+const ic = validateSketch({ primitives: [
+  { type: 'icon', name: 'sun', x: 22, y: 26, size: 26 },
+] }) as any[];
+check('icon validates + keeps name', !!ic && ic[0].type === 'icon' && ic[0].name === 'sun');
+check('icon size clamps into [minIconSize,maxIconSize]',
+  (validateSketch({ primitives: [{ type: 'icon', name: 'tree', x: 50, y: 50, size: 999 }] }) as any[])[0].size === SKETCH_BOUNDS.maxIconSize);
+check('icon with unknown name dropped → null',
+  validateSketch({ primitives: [{ type: 'icon', name: 'dragon', x: 50, y: 50, size: 20 }] }) === null);
+check('icon missing size dropped → null',
+  validateSketch({ primitives: [{ type: 'icon', name: 'sun', x: 50, y: 50 }] }) === null);
+
+// ── part_whole primitive (Wave 5) ──
+const pw = validateSketch({ primitives: [
+  { type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 4, filled: 3, label: '3/4' },
+] }) as any[];
+check('part_whole validates + keeps parts/filled/label', !!pw && pw[0].parts === 4 && pw[0].filled === 3 && pw[0].label === '3/4');
+check('part_whole filled clamps to parts',
+  (validateSketch({ primitives: [{ type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 4, filled: 99 }] }) as any[])[0].filled === 4);
+check('part_whole parts clamps to maxParts',
+  (validateSketch({ primitives: [{ type: 'part_whole', cx: 50, cy: 44, r: 26, parts: 50 }] }) as any[])[0].parts === SKETCH_BOUNDS.maxParts);
+check('part_whole r<=0 dropped → null',
+  validateSketch({ primitives: [{ type: 'part_whole', cx: 50, cy: 44, r: 0, parts: 4 }] }) === null);
+
+// ── tree_diagram primitive (Wave 5) ──
+const td = validateSketch({ primitives: [
+  { type: 'tree_diagram', x: 50, y: 20, root: 'Animals', branches: ['Mammals', 'Birds', 'Fish'] },
+] }) as any[];
+check('tree_diagram validates + keeps root/branches', !!td && td[0].root === 'Animals' && td[0].branches.length === 3);
+check('tree_diagram <2 branches dropped → null',
+  validateSketch({ primitives: [{ type: 'tree_diagram', x: 50, y: 20, root: 'X', branches: ['only'] }] }) === null);
+check('tree_diagram missing root dropped → null',
+  validateSketch({ primitives: [{ type: 'tree_diagram', x: 50, y: 20, branches: ['A', 'B'] }] }) === null);
+
+// ── network primitive (Wave 5) ──
+const nw = validateSketch({ primitives: [
+  { type: 'network', nodes: [{ x: 50, y: 24, label: 'Energy' }, { x: 24, y: 54, label: 'Heat' }, { x: 76, y: 54 }], edges: [{ a: 0, b: 1 }, { a: 0, b: 2 }] },
+] }) as any[];
+check('network validates + keeps nodes/edges', !!nw && nw[0].nodes.length === 3 && nw[0].edges.length === 2);
+check('network drops edges referencing a missing node',
+  (validateSketch({ primitives: [{ type: 'network', nodes: [{ x: 20, y: 20 }, { x: 60, y: 60 }], edges: [{ a: 0, b: 5 }, { a: 0, b: 1 }] }] }) as any[])[0].edges.length === 1);
+check('network <2 valid nodes dropped → null',
+  validateSketch({ primitives: [{ type: 'network', nodes: [{ x: 20, y: 20 }], edges: [] }] }) === null);
+
+// ── speech_bubble primitive (Wave 5) ──
+const sb = validateSketch({ primitives: [
+  { type: 'speech_bubble', x: 26, y: 18, w: 48, h: 24, text: 'I make energy!', tailX: 44, tailY: 58 },
+] }) as any[];
+check('speech_bubble validates + keeps text/tail', !!sb && sb[0].text === 'I make energy!' && sb[0].tailX === 44 && sb[0].tailY === 58);
+check('speech_bubble empty text dropped → null',
+  validateSketch({ primitives: [{ type: 'speech_bubble', x: 26, y: 18, w: 48, h: 24, text: '  ' }] }) === null);
+
+// ── timeline primitive (Wave 5) ──
+const tl = validateSketch({ primitives: [
+  { type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0, label: '1776' }, { at: 0.4, label: '1865' }, { at: 1, label: 'now' }] },
+] }) as any[];
+check('timeline validates + keeps events', !!tl && tl[0].events.length === 3 && tl[0].events[0].label === '1776');
+check('timeline event `at` clamps to 0..1',
+  (validateSketch({ primitives: [{ type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 9, label: 'late' }] }] }) as any[])[0].events[0].at === 1);
+check('timeline events capped at maxEvents',
+  (validateSketch({ primitives: [{ type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: Array.from({ length: 12 }, (_, i) => ({ at: i / 12, label: `e${i}` })) }] }) as any[])[0].events.length === SKETCH_BOUNDS.maxEvents);
+check('timeline no valid events dropped → null',
+  validateSketch({ primitives: [{ type: 'timeline', x1: 12, y1: 50, x2: 90, y2: 50, events: [{ at: 0.5 }] }] }) === null);
+
+// ── venn primitive (Wave 6) ──
+const vn = validateSketch({ primitives: [
+  { type: 'venn', cx: 50, cy: 50, r: 24, leftLabel: 'gills', rightLabel: 'lungs', bothLabel: 'need O2' },
+] }) as any[];
+check('venn validates + keeps region labels', !!vn && vn[0].leftLabel === 'gills' && vn[0].rightLabel === 'lungs' && vn[0].bothLabel === 'need O2');
+check('venn r clamps to maxVennRadius',
+  (validateSketch({ primitives: [{ type: 'venn', cx: 50, cy: 50, r: 999 }] }) as any[])[0].r === SKETCH_BOUNDS.maxVennRadius);
+check('venn bare (no labels) still validates', !!validateSketch({ primitives: [{ type: 'venn', cx: 50, cy: 50, r: 20 }] }));
+
+// ── layers primitive (Wave 6) ──
+const ly = validateSketch({ primitives: [
+  { type: 'layers', x: 24, y: 20, w: 52, h: 60, layers: ['Crust', 'Mantle', 'Outer core', 'Inner core'] },
+] }) as any[];
+check('layers validates + keeps bands', !!ly && ly[0].layers.length === 4);
+check('layers <2 bands dropped → null',
+  validateSketch({ primitives: [{ type: 'layers', x: 24, y: 20, w: 52, h: 60, layers: ['only'] }] }) === null);
+check('layers capped at maxLayers',
+  (validateSketch({ primitives: [{ type: 'layers', x: 10, y: 10, w: 60, h: 80, layers: Array.from({ length: 12 }, (_, i) => `L${i}`) }] }) as any[])[0].layers.length === SKETCH_BOUNDS.maxLayers);
+
+// ── matrix primitive (Wave 6) ──
+const mx = validateSketch({ primitives: [
+  { type: 'matrix', x: 20, y: 24, w: 62, h: 54, rows: 2, cols: 2, cells: ['S', 'W', 'O', 'T'] },
+] }) as any[];
+check('matrix validates + keeps dims/cells', !!mx && mx[0].rows === 2 && mx[0].cols === 2 && mx[0].cells.length === 4);
+check('matrix rows/cols clamp to maxMatrixDim',
+  (() => { const m = validateSketch({ primitives: [{ type: 'matrix', x: 10, y: 10, w: 80, h: 80, rows: 99, cols: 99 }] }) as any[]; return m[0].rows === SKETCH_BOUNDS.maxMatrixDim && m[0].cols === SKETCH_BOUNDS.maxMatrixDim; })());
+check('matrix cells capped at rows*cols',
+  (validateSketch({ primitives: [{ type: 'matrix', x: 10, y: 10, w: 60, h: 60, rows: 2, cols: 2, cells: ['a', 'b', 'c', 'd', 'e', 'f'] }] }) as any[])[0].cells.length === 4);
+check('matrix missing rows/cols dropped → null',
+  validateSketch({ primitives: [{ type: 'matrix', x: 10, y: 10, w: 60, h: 60, rows: 2 }] }) === null);
+
+// ── pyramid primitive (Wave 7) ──
+const py = validateSketch({ primitives: [
+  { type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['A', 'B', 'C'], flip: true },
+] }) as any[];
+check('pyramid validates + keeps tiers/flip', !!py && py[0].tiers.length === 3 && py[0].flip === true);
+check('pyramid <2 tiers dropped → null',
+  validateSketch({ primitives: [{ type: 'pyramid', x: 16, y: 16, w: 68, h: 66, tiers: ['only'] }] }) === null);
+check('pyramid tiers capped at maxTiers',
+  (validateSketch({ primitives: [{ type: 'pyramid', x: 10, y: 10, w: 80, h: 80, tiers: Array.from({ length: 10 }, (_, i) => `T${i}`) }] }) as any[])[0].tiers.length === SKETCH_BOUNDS.maxTiers);
+
+// ── iceberg primitive (Wave 7) ──
+const ib = validateSketch({ primitives: [
+  { type: 'iceberg', cx: 50, cy: 44, size: 62, aboveLabel: 'visible', belowLabel: 'hidden' },
+] }) as any[];
+check('iceberg validates + keeps labels', !!ib && ib[0].aboveLabel === 'visible' && ib[0].belowLabel === 'hidden');
+check('iceberg bare (just cx,cy) still validates', !!validateSketch({ primitives: [{ type: 'iceberg', cx: 50, cy: 44 }] }));
+check('iceberg size clamps to maxIcebergSize',
+  (validateSketch({ primitives: [{ type: 'iceberg', cx: 50, cy: 44, size: 999 }] }) as any[])[0].size === SKETCH_BOUNDS.maxIcebergSize);
+
+// ── venn3 primitive (Wave 7) ──
+const v3 = validateSketch({ primitives: [
+  { type: 'venn3', cx: 50, cy: 46, r: 20, aLabel: 'Fast', bLabel: 'Cheap', cLabel: 'Good', allLabel: 'pick 2' },
+] }) as any[];
+check('venn3 validates + keeps 3 set labels + center', !!v3 && v3[0].aLabel === 'Fast' && v3[0].bLabel === 'Cheap' && v3[0].cLabel === 'Good' && v3[0].allLabel === 'pick 2');
+check('venn3 r clamps to maxVenn3Radius',
+  (validateSketch({ primitives: [{ type: 'venn3', cx: 50, cy: 46, r: 999 }] }) as any[])[0].r === SKETCH_BOUNDS.maxVenn3Radius);
+
+// ── sankey primitive (Wave 7) ──
+const sk = validateSketch({ primitives: [
+  { type: 'sankey', x: 14, y: 26, w: 56, h: 44, inputLabel: 'Energy in', flows: [{ value: 30, label: 'useful' }, { value: 70, label: 'wasted' }] },
+] }) as any[];
+check('sankey validates + keeps flows', !!sk && sk[0].flows.length === 2 && sk[0].inputLabel === 'Energy in');
+check('sankey drops non-positive / unlabelled flows',
+  (validateSketch({ primitives: [{ type: 'sankey', x: 14, y: 26, w: 56, h: 44, flows: [{ value: 30, label: 'ok' }, { value: 0, label: 'zero' }, { value: 10 }, { value: 20, label: 'ok2' }] }] }) as any[])[0].flows.length === 2);
+check('sankey <2 valid flows dropped → null',
+  validateSketch({ primitives: [{ type: 'sankey', x: 14, y: 26, w: 56, h: 44, flows: [{ value: 30, label: 'only' }] }] }) === null);
+
+// ── new exemplars survive validation ──
+for (const [name, prims] of [
+  ['SPRING_MASS', SPRING_MASS], ['TRANSVERSE_WAVE', TRANSVERSE_WAVE],
+  ['SKIER', SKIER], ['BEAKER_HALF', BEAKER_HALF],
+  ['TORQUE', TORQUE], ['TEN_FRAME', TEN_FRAME], ['WAVELENGTH_BRACE', WAVELENGTH_BRACE],
+  ['PENDULUM', PENDULUM], ['GAS_CLOUD', GAS_CLOUD], ['MOLECULES_BOX', MOLECULES_BOX],
+  ['PULLEY_LIFT', PULLEY_LIFT], ['LEVER_BALANCE', LEVER_BALANCE],
+  ['SPEEDOMETER', SPEEDOMETER], ['NUMBER_LINE', NUMBER_LINE],
+  ['PLOT_POINT', PLOT_POINT], ['PLANET_ORBIT', PLANET_ORBIT],
+  ['WATER_MOLECULE', WATER_MOLECULE], ['BAR_HEIGHTS', BAR_HEIGHTS],
+  ['WATER_CYCLE', WATER_CYCLE], ['FOOD_CHAIN', FOOD_CHAIN],
+  ['TRADE_OFF_SCALE', TRADE_OFF_SCALE], ['SUN_AND_TREE', SUN_AND_TREE],
+  ['FRACTION_PIE', FRACTION_PIE], ['ANIMAL_TREE', ANIMAL_TREE],
+  ['CONCEPT_MAP', CONCEPT_MAP], ['CELL_SAYS', CELL_SAYS], ['HISTORY_TIMELINE', HISTORY_TIMELINE],
+  ['COMPARE_VENN', COMPARE_VENN], ['EARTH_LAYERS', EARTH_LAYERS], ['SWOT_MATRIX', SWOT_MATRIX],
+  ['MASLOW_PYRAMID', MASLOW_PYRAMID], ['ICEBERG_METAPHOR', ICEBERG_METAPHOR],
+  ['VENN3_TRADEOFF', VENN3_TRADEOFF], ['ENERGY_SANKEY', ENERGY_SANKEY],
+] as const) {
+  const v = validateSketch({ primitives: prims });
+  check(`${name} validates`, !!v && v.length === prims.length, JSON.stringify(v?.length));
+}
+
+console.log(`\n${passed} passed, ${failed} failed`);
+process.exit(failed > 0 ? 1 : 0);

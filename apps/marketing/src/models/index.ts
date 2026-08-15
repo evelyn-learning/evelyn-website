@@ -5,7 +5,7 @@ export { Webinar, type IWebinar } from "./Webinar";
 export { Interview, type IInterview } from "./Interview";
 export { Speaker, type ISpeaker } from "./Speaker";
 export { ContactSubmission, type IContactSubmission } from "./ContactSubmission";
-export { AdminUser, type IAdminUser } from "./AdminUser";
+export { AdminUser, type IAdminUser } from "@core/models/AdminUser";
 export { Teacher, type ITeacher, type IGoogleAuth } from "@core/models/Teacher";
 export { AnalysisHistory, type IAnalysisHistory } from "./AnalysisHistory";
 export { ChatQA, type IChatQA } from "./ChatQA";
@@ -71,34 +71,9 @@ export {
 } from "./Prospect";
 export { SavedLesson, type ISavedLesson } from "@core/models/SavedLesson";
 export { LessonImage, type ILessonImage } from "@core/models/LessonImage";
-export { ProblemBank, type IProblemBank } from "./ProblemBank";
-export {
-  TutorSession,
-  type ITutorSession,
-  type ITokenUsage,
-} from "./TutorSession";
-export { MockForm, type IMockForm } from "./MockForm";
-export { MockAttempt, type IMockAttempt } from "./MockAttempt";
 export { Lead, LEAD_SEGMENTS, LEAD_STATUSES, TOUCH_CHANNELS } from "./Lead";
 export type { ILead, ITouch, IDemoVisit, ICurrentDraft, LeadSegment, LeadStatus, TouchChannel } from "./Lead";
 export { ResearchJob } from "./ResearchJob";
 export type { IResearchJob, ICandidate } from "./ResearchJob";
 export { OutreachToken, type IOutreachToken } from "./OutreachToken";
 export { ProviderCredit, type IProviderCredit } from "./ProviderCredit";
-export {
-  EvidenceEventModel,
-  type IEvidenceEvent,
-  type IEvidenceEventDoc,
-} from "./EvidenceEvent";
-export {
-  LearnerStateProjectionModel,
-  buildLearnerStateProjectionId,
-  type ILearnerStateProjection,
-  type ILearnerStateProjectionDoc,
-} from "./LearnerStateProjection";
-export {
-  LearnerStateSnapshotModel,
-  type ILearnerStateSnapshot,
-  type ILearnerStateSnapshotLo,
-} from "./LearnerStateSnapshot";
-export { EloRatingModel, type IEloRating, type IEloRatingDoc } from "./EloRating";

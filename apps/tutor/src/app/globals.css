@@ -1,0 +1,271 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-white text-gray-900 antialiased;
+  }
+}
+
+/* Override Mafs dark theme for whiteboard diagrams */
+.MafsView {
+  --mafs-bg: #f8fafc !important;
+  --mafs-fg: #1e293b !important;
+  --mafs-line-color: #cbd5e1 !important;
+  border-radius: 0.5rem;
+}
+
+/* Round 28 (whiteboard density pass): KaTeX ships `.katex-display
+   { margin: 1em 0 }` (~32px per equation at the board's font size) and
+   nothing overrode it — stacked equations sat far apart and read as
+   unrelated. Scoped to the whiteboard equation container; EquationRenderer
+   reads this margin back via getComputedStyle when pinning box heights,
+   so the fit logic self-adjusts. */
+.equation-content .katex-display {
+  margin: 0.4em 0;
+}
+
+@layer components {
+  .container-wide {
+    @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-primary-500 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-primary-500 bg-transparent px-6 py-3 text-sm font-semibold text-primary-500 transition-colors hover:bg-primary-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+  }
+
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+
+  .heading-1 {
+    @apply text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl md:text-6xl;
+  }
+
+  .heading-2 {
+    @apply text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl;
+  }
+
+  .heading-3 {
+    @apply text-2xl font-bold tracking-tight text-gray-900;
+  }
+
+  .prose-custom {
+    @apply prose prose-lg prose-gray max-w-none prose-headings:font-bold prose-a:text-primary-500 prose-a:no-underline hover:prose-a:underline;
+  }
+
+  /* WordPress-migrated posts use <pre> for styled text (not code).
+     Reset these to look like normal content instead of dark code blocks. */
+  .prose-custom pre:not(:has(code)) {
+    @apply bg-transparent text-gray-700 p-0 font-sans text-base whitespace-normal;
+  }
+}
+
+/* Client logos scroll animation */
+@keyframes scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll 30s linear infinite;
+}
+
+.animate-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Fade-in animation for dynamic content */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes progressBar {
+  0% { width: 0%; }
+  20% { width: 25%; }
+  50% { width: 55%; }
+  75% { width: 78%; }
+  90% { width: 88%; }
+  100% { width: 95%; }
+}
+
+.animate-progress-bar {
+  animation: progressBar 8s ease-out forwards;
+}
+
+/* Whiteboard page transitions.
+   Direction-aware slide + fade — when moving forward (next page) the
+   new page slides in from the right; when moving back (previous page)
+   it slides in from the left. ~250ms, small horizontal offset, no
+   book-flip metaphor (whiteboards aren't books). */
+@keyframes wb-page-enter-forward {
+  0%   { opacity: 0; transform: translateX(16px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+@keyframes wb-page-enter-backward {
+  0%   { opacity: 0; transform: translateX(-16px); }
+  100% { opacity: 1; transform: translateX(0); }
+}
+.wb-page-enter-forward {
+  animation: wb-page-enter-forward 280ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.wb-page-enter-backward {
+  animation: wb-page-enter-backward 280ms cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+@keyframes wb-item-enter {
+  0%   { opacity: 0;    transform: translateY(14px) scale(0.97); }
+  60%  { opacity: 0.85; transform: translateY(2px)  scale(0.998); }
+  100% { opacity: 1;    transform: translateY(0)    scale(1); }
+}
+.wb-item-enter {
+  animation: wb-item-enter 480ms cubic-bezier(0.25, 0.1, 0.25, 1);
+  animation-fill-mode: backwards;
+}
+
+@keyframes wb-skeleton-pulse {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.9; }
+}
+.wb-skeleton {
+  animation: wb-skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+/* Student marks (Phase 1): a brief expanding ring at the tapped point,
+   confirming the tap registered without leaving a permanent mark. */
+.wb-student-ping {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  margin-left: -11px;
+  margin-top: -11px;
+  border-radius: 9999px;
+  border: 3px solid #2563eb;
+  pointer-events: none;
+  z-index: 20;
+  animation: wb-student-ping-anim 1.8s ease-out forwards;
+}
+@keyframes wb-student-ping-anim {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  55% { transform: scale(1.15); opacity: 0.75; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Student marks (Phase 2): live/persisted freehand ink strokes drawn in
+   pen mode. Points are outer-host-relative (pageOuterRef) CSS px (no viewBox scaling), so
+   stroke-width is already in real px — vector-effect: non-scaling-stroke
+   is unneeded here (kept off; nothing in this SVG scales). */
+.wb-student-ink {
+  fill: none;
+  stroke: #2563eb;
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+.wb-student-ink-fading {
+  opacity: 0;
+  transition: opacity 4s ease-out;
+}
+
+/* Streaming chat — a subtle caret blink at the end of an in-progress
+   tutor message so the user feels typing momentum. */
+@keyframes typing-caret {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 1; }
+}
+.typing-caret::after {
+  content: '▍';
+  margin-left: 2px;
+  color: #6366f1;
+  animation: typing-caret 1s steps(1) infinite;
+}
+
+/* ── Horizontal-scroll affordance (round-8, IMG_7893/7894) ──────────────
+   iOS hides scrollbars until touch, so overflowing whiteboard cards
+   hard-clip with no cue (a clipped "-4x+1" reads as "-4x"). hscroll-fade.ts
+   stamps data-hscroll-fade on scrollable boxes; the mask fades the clipped
+   edge so content visibly continues. .hscroll-hint adds a nudging chevron
+   for grid cards (tables) until the user scrolls. */
+[data-hscroll-fade='right'] {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+[data-hscroll-fade='left'] {
+  -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent);
+}
+[data-hscroll-fade='both'] {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent);
+}
+.hscroll-hint {
+  position: relative;
+}
+.hscroll-hint:has([data-hscroll-fade='right'])::after,
+.hscroll-hint:has([data-hscroll-fade='both'])::after {
+  content: '›';
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
+  color: rgb(100 116 139 / 0.75);
+  pointer-events: none;
+  animation: hscroll-nudge 1.2s ease-in-out 2;
+}
+@keyframes hscroll-nudge {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(3px); }
+}
+
+/* R46 (d): AgendaRail's horizontal strip (session/AgendaRail.tsx) used class
+   `scrollbar-none`, which was never defined — Tailwind's JIT silently drops
+   unknown utility classes, so the strip showed the browser's fat default
+   scrollbar instead of the intended chrome-free auto-scroll. Scoped to this
+   class only — NOT a global scrollbar reset. The round-8 hscroll-fade rules
+   just above are the deliberate opposite choice for whiteboard cards: those
+   keep the browser/OS scrollbar (thin on iOS) and cue overflow with a mask
+   fade instead, because touch devices hide scrollbars until interaction and
+   those cards need the natural affordance back. This class only hides the
+   scrollbar for a strip that already has its own current-item auto-follow
+   (see AgendaRail.tsx) and a fade mask on its trailing edge — a visible
+   scrollbar there is redundant chrome, not a lost affordance. */
+.scrollbar-none {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/legacy Edge */
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/WebKit */
+}

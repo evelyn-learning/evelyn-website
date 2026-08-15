@@ -2,8 +2,9 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
+import mongoose from "mongoose";
 import { connectDB, isDBConfigured } from "@core/db";
-import { BlogPost, Webinar, Interview, Speaker, ContactSubmission, TutorSession, Lead } from "@/models";
+import { BlogPost, Webinar, Interview, Speaker, ContactSubmission, Lead } from "@/models";
 import {
   FileText,
   Video,
@@ -45,7 +46,10 @@ async function getStats() {
         Interview.countDocuments(),
         Speaker.countDocuments(),
         ContactSubmission.countDocuments({ status: "new" }),
-        TutorSession.countDocuments(),
+        // TutorSession is a tutor-owned model (apps/tutor/src/models/TutorSession.ts)
+        // that this marketing-owned dashboard has no dependency on post-split.
+        // Count the collection directly — same stat, no cross-app model import.
+        mongoose.connection.collection("tutorsessions").countDocuments(),
         Lead.countDocuments({ status: "staged" }),
       ]);
     return { posts, webinars, interviews, speakers, contacts, tutorSessions, outreachStaged };
