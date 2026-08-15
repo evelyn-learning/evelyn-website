@@ -15,8 +15,9 @@
     "build:tutor": "npm run --workspace @evelyn/tutor build",
     "start:tutor": "npm run --workspace @evelyn/tutor start",
     "lint:tutor": "npm run --workspace @evelyn/tutor lint",
-    "test:all": "npm run --workspace @evelyn/tutor test:all",
-    "test:outreach": "npm run --workspace @evelyn/marketing test:outreach"
+    "test:all": "npm run --workspace @evelyn/tutor test:all; t=$?; npm run --workspace @evelyn/marketing test:outreach; m=$?; exit $((t | m))",
+    "test:outreach": "npm run --workspace @evelyn/marketing test:outreach",
+    "check:boundaries": "node scripts/check-workspace-boundaries.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
