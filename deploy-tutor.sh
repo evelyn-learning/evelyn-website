@@ -553,7 +553,6 @@ zip -qr "$ZIP_FILE" \
   package.json \
   package-lock.json \
   .npmrc \
-  tsconfig.json \
   tsconfig.base.json \
   .deploy-public-manifest \
   .deploy-static-manifest \
