@@ -20,7 +20,7 @@
 
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { TutorSession, type ITutorSession } from '@/models/TutorSession';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { buildLessonProgress } from '@/lib/tutor/portal/lesson-progress';

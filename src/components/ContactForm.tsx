@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@core/utils";
 import { FormCaptcha } from "./FormCaptcha";
 
 const contactSchema = z.object({

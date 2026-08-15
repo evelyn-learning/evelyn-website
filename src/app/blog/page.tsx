@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { connectDB, isDBConfigured } from "@/lib/db";
+import { connectDB, isDBConfigured } from "@core/db";
 import { BlogPost } from "@/models";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@core/utils";
 import { ArrowRight, Search } from "lucide-react";
 
 export const metadata: Metadata = {

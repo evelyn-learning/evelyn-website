@@ -3,8 +3,8 @@ import path from 'path';
 
 config({ path: path.resolve(process.cwd(), '.env.local') });
 
-import { connectDB } from '../src/lib/db';
-import { Teacher } from '../src/models/Teacher';
+import { connectDB } from '../packages/core/src/db';
+import { Teacher } from '../packages/core/src/models/Teacher';
 import { encryptToken } from '../src/lib/crypto/token-encryption';
 
 const TEACHER_EMAIL = process.argv[2] || 'praveen@evelynlearning.com';

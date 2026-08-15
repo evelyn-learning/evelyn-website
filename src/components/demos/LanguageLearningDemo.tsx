@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { safeAPICall } from '@core/utils/api-error-handler';
 import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 
 // ── Types ──

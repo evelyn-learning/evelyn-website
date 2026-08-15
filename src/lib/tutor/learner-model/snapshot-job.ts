@@ -6,7 +6,7 @@
 // src/lib/outreach/reply-watcher.ts.
 
 import cron, { ScheduledTask } from 'node-cron';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { LearnerStateProjectionModel, LearnerStateSnapshotModel } from '@/models';
 
 // Scheduler state lives on globalThis, NOT in module scope.

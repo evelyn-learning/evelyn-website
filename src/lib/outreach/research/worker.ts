@@ -4,7 +4,7 @@
 // (instrumentation.ts and route handlers load SEPARATE module instances;
 // see reply-watcher.ts:12-26 for the incident writeup).
 import cron, { ScheduledTask } from "node-cron";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { ResearchJob } from "@/models/ResearchJob";
 import { processJob } from "./pipeline";
 import { realCallModel } from "./claude";

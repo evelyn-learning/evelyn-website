@@ -6,7 +6,7 @@
  * This prevents duplicating ~300 lines of tool definitions across hooks.
  */
 
-import type { WhiteboardCommand, ShadedRegion } from '@/lib/knowledge/types';
+import type { WhiteboardCommand, ShadedRegion } from '@core/knowledge/types';
 import { getGeometryStepKindsDescriptionTail } from '@/lib/tutor/diagrams/geometry-solver';
 import { deepStripWbEmphasis, stripInlineMathForInk } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 

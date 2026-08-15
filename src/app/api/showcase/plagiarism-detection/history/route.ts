@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Types } from 'mongoose';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { AnalysisHistory } from '@/models/AnalysisHistory';
-import { Teacher } from '@/models/Teacher';
+import { Teacher } from '@core/models/Teacher';
 
 const MAX_LIST = 200;
 

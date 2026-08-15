@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { safeAPICall } from '@core/utils/api-error-handler';
 
 const SYSTEM_PROMPT_OVERRIDE = `You are a patient, encouraging math tutor helping a Grade 8 student at
 Panguitch Middle School with a math problem. You teach using a Socratic method

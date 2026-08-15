@@ -26,7 +26,7 @@ import {
   type LearnerLoState,
   type LearnerStateResponse,
 } from '@evelyn/portal-contract/v1';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import {
   EvidenceEventModel,
   LearnerStateProjectionModel,

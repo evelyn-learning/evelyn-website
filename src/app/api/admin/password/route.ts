@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { AdminUser } from "@/models";
 
 const passwordSchema = z.object({

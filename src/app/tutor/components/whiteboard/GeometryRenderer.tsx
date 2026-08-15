@@ -19,7 +19,7 @@ import type {
   GeometryArc,
   GeometryAngle,
   GeometryConic,
-} from '@/lib/knowledge/types';
+} from '@core/knowledge/types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 

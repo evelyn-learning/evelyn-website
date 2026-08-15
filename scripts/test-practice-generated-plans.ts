@@ -24,7 +24,7 @@ import { retrievePractice } from '@/lib/tutor/portal/practice';
 import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 import { LessonPlanModel } from '@/models/LessonPlan';
 import { ProblemBank } from '@/models/ProblemBank';
-import * as dbModule from '@/lib/db';
+import * as dbModule from '@core/db';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import { PracticeItemSchema, type RetrievePracticeRequest } from '@evelyn/portal-contract/v1';
 

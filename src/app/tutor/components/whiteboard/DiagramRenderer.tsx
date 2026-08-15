@@ -11,7 +11,7 @@ import { InlineMathText } from './InlineMathText';
 import { useMemo } from 'react';
 import { Mafs, Vector, Point, Text, Line, useMovablePoint, Polygon } from 'mafs';
 import 'mafs/core.css';
-import type { Point as PointType } from '@/lib/knowledge/types';
+import type { Point as PointType } from '@core/knowledge/types';
 import { deoverlapLabels, type DeoverlapObstacle } from '@/lib/tutor/whiteboard/label-deoverlap';
 import { EquationRenderer } from './EquationRenderer';
 

@@ -1,4 +1,4 @@
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 import { verifyReplayToken } from '@/lib/tutor/portal/replay-token';
 import ReplayPlayer, { TranscriptBubble } from '../../admin/tutor-sessions/components/ReplayPlayer';

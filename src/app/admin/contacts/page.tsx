@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { ContactSubmission } from "@/models";
 import { ArrowLeft, Mail, Trash2, Eye, CheckCircle, Archive } from "lucide-react";
 import { ContactActions } from "./ContactActions";

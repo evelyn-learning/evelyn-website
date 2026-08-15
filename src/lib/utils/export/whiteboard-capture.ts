@@ -21,7 +21,7 @@
  * text-label behavior without breaking the whole export.
  */
 
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import { strokeOutline, tickSpine, highlightBand } from '@/lib/tutor/whiteboard/hand-stroke';
 import { drawOnEnabled } from '@/app/tutor/components/whiteboard/useDrawOn';
 import { placeNote, type Rect } from '@/lib/tutor/whiteboard/ink-placement';

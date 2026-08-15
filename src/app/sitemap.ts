@@ -1,5 +1,5 @@
 import { MetadataRoute } from "next";
-import { connectDB, isDBConfigured } from "@/lib/db";
+import { connectDB, isDBConfigured } from "@core/db";
 import { BlogPost } from "@/models";
 import { services } from "@/data/services";
 import { productCategories } from "@/data/products";

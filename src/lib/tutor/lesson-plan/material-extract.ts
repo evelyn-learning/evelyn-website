@@ -32,7 +32,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
-import { extractDocxText, normalizeExtractedText } from '@/lib/utils/document-extract';
+import { extractDocxText, normalizeExtractedText } from '@core/utils/document-extract';
 
 /* ------------------------------------------------------------------ */
 /* Types                                                               */

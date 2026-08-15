@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { safeAPICall } from '@core/utils/api-error-handler';
 import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
-import type { GeneratedCourse, CourseModule } from '@/lib/utils/export/pdf-course-export';
+import type { GeneratedCourse, CourseModule } from '@core/utils/export/pdf-course-export';
 
 export type { GeneratedCourse, CourseModule };
 
@@ -57,7 +57,7 @@ export default function CourseCreatorStudioDemo() {
 
     try {
       if (label === 'PDF Outline') {
-        const { exportCourseToPDF } = await import('@/lib/utils/export/pdf-course-export');
+        const { exportCourseToPDF } = await import('@core/utils/export/pdf-course-export');
         await exportCourseToPDF(generatedCourse);
       } else if (label === 'SCORM Package') {
         const { exportCourseToSCORM } = await import('@/lib/utils/export/scorm-course-export');

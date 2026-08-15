@@ -128,7 +128,7 @@ const MILESTONE_RANK: Record<SessionMilestone, number> = {
 };
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '@/app/tutor/hooks/useOpenAIRealtime';
 
 type InputMode = 'text' | 'voice';

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Webinar } from "@/models";
-import { slugify } from "@/lib/utils";
+import { slugify } from "@core/utils";
 
 export async function GET() {
   const session = await getServerSession(authOptions);

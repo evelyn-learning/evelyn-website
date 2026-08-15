@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@core/utils";
 
 interface NavChild {
   name: string;

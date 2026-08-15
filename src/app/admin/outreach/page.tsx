@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Lead } from "@/models";
 import OutreachConsole from "./OutreachConsole";
 

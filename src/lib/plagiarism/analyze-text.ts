@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { checkCopyscape, type CopyscapeResult } from '@/lib/utils/copyscape';
+import { checkCopyscape, type CopyscapeResult } from '@core/utils/copyscape';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

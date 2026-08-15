@@ -3,7 +3,7 @@ import {
   extractDocxText,
   extractPdfText,
   normalizeExtractedText,
-} from '@/lib/utils/document-extract';
+} from '@core/utils/document-extract';
 
 export async function POST(request: NextRequest) {
   try {

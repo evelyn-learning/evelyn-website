@@ -8,7 +8,7 @@
  * plans extend the catalog.
  */
 
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { LessonPlanModel, toLessonPlan } from '@/models/LessonPlan';
 import type { LessonPlan } from './types';
 import { parseLessonPlan } from './parser';

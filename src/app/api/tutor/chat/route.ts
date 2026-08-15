@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import { buildSystemPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { parseWhiteboardCommands } from '@/lib/tutor/ai/response-parser';
-import { loadModuleByParams } from '@/lib/knowledge/registry';
+import { loadModuleByParams } from '@core/knowledge/registry';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

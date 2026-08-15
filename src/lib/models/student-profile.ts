@@ -5,7 +5,7 @@
  */
 
 import mongoose, { Schema, Document } from 'mongoose';
-import type { StudentModuleProgress, ConceptMastery } from '../knowledge/types';
+import type { StudentModuleProgress, ConceptMastery } from '@core/knowledge/types';
 
 export interface IStudentProfile extends Document {
   studentId: string;

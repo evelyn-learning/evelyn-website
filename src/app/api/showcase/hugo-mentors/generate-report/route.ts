@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { checkBurstLimit, checkDailyLimit, getIPFromRequest } from '@/lib/utils/rate-limit';
+import { checkBurstLimit, checkDailyLimit, getIPFromRequest } from '@core/utils/rate-limit';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_SHOWCASE_API_KEY || process.env.OPENAI_API_KEY,

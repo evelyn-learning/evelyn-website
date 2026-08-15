@@ -10,7 +10,7 @@
  * Run: npx tsx scripts/test-manifest-coverage.ts
  */
 import { buildManifestForCommand, buildGenericContentManifest } from '../src/lib/tutor/diagrams/manifests';
-import type { WhiteboardCommand } from '../src/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

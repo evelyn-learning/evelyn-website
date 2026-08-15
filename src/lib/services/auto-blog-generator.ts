@@ -2,7 +2,7 @@
 // Intelligently decides all parameters and generates blog posts automatically
 
 import Anthropic from "@anthropic-ai/sdk";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { AutoBlogSettings, IAutoBlogSettings, RecentGeneration } from "@/models/AutoBlogSettings";
 import { BlogPost } from "@/models/BlogPost";
 import { generateBlogPost } from "./blog-generator";

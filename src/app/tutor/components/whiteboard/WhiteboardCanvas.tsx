@@ -14,7 +14,7 @@ import React, { memo, useState, useCallback, useMemo, useEffect, useLayoutEffect
 import 'katex/dist/katex.min.css';
 import { createPortal } from 'react-dom';
 import { Trash2, ChevronLeft, ChevronRight, Maximize2, Minimize2, GripVertical, ChevronDown } from 'lucide-react';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import { EquationRenderer, DerivationRenderer } from './EquationRenderer';
 import { HScrollFade } from './HScrollFade';
 import { SketchRenderer } from './SketchRenderer';

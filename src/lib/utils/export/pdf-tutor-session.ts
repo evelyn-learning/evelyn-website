@@ -1,4 +1,4 @@
-import { sanitize as baseSanitize } from './pdf-course-export';
+import { sanitize as baseSanitize } from '@core/utils/export/pdf-course-export';
 import type jsPDF from 'jspdf';
 // SmoothDraw Phase 3 (task 5): flag gate for baking feature-anchored
 // tutor notes into item captures. Imported from the tutor hooks module
@@ -1210,7 +1210,7 @@ async function drawWhiteboardVisual(
     // when the browser isn't available or capture returns null.
     try {
       const { captureCommandRaster } = await import('./whiteboard-capture');
-      const raster = await captureCommandRaster(cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand);
+      const raster = await captureCommandRaster(cmd as unknown as import('@core/knowledge/types').WhiteboardCommand);
       if (raster && raster.dataUrl) {
         const heightMm = (raster.heightPx / raster.widthPx) * width;
         // Light blue box behind the image to match drawEquationVisual's look.
@@ -1339,7 +1339,7 @@ async function drawWhiteboardVisual(
     // when capture returns null (no DOM, off-screen render failed, etc.).
     try {
       const { captureCommandSvg, captureCommandRaster, drawCapturedSvg, overlayScribbles, svgContainsExoticGlyphs } = await import('./whiteboard-capture');
-      const whiteboardCmd = cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand;
+      const whiteboardCmd = cmd as unknown as import('@core/knowledge/types').WhiteboardCommand;
       let svgString = await captureCommandSvg(whiteboardCmd);
       if (svgString) {
         // Geometry diagrams routinely contain π, √, Greek letters in
@@ -1422,7 +1422,7 @@ async function drawWhiteboardVisual(
       RASTER_PREFERRED_ACTIONS,
       svgContainsExoticGlyphs,
     } = await import('./whiteboard-capture');
-    const whiteboardCmd = cmd as unknown as import('@/lib/knowledge/types').WhiteboardCommand;
+    const whiteboardCmd = cmd as unknown as import('@core/knowledge/types').WhiteboardCommand;
     const prefersRaster = RASTER_PREFERRED_ACTIONS.has(String(cmd.action));
 
     // 2026-07-11 round 3: any raster capture may also bake notes now (the

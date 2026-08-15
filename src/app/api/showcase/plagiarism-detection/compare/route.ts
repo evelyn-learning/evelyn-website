@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { checkDailyLimit } from '@/lib/utils/rate-limit';
-import { checkCopyscape, type CopyscapeResult } from '@/lib/utils/copyscape';
+import { checkDailyLimit } from '@core/utils/rate-limit';
+import { checkCopyscape, type CopyscapeResult } from '@core/utils/copyscape';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

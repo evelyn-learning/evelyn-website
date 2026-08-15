@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { mongoLedger, monthKey, capForProvider } from "@/lib/outreach/enrich/ledger";
 import { apolloProvider } from "@/lib/outreach/enrich/apollo";
 import { hunterProvider } from "@/lib/outreach/enrich/hunter";

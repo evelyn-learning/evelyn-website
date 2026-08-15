@@ -1,4 +1,4 @@
-import type { GeneratedCourse, CourseModule } from './pdf-course-export';
+import type { GeneratedCourse, CourseModule } from '@core/utils/export/pdf-course-export';
 
 export async function exportCourseToSCORM(course: GeneratedCourse): Promise<void> {
   const { default: JSZip } = await import('jszip');

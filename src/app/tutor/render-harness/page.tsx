@@ -19,7 +19,7 @@
 import React from 'react';
 import Script from 'next/script';
 import { CommandRenderer, WhiteboardCallbackContext } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import { processToolCall } from '@/lib/tutor/whiteboard/process-tool-call';
 
 type RenderResult = {

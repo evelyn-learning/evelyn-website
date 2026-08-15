@@ -52,7 +52,7 @@
  * DO NOT run this against production without the controller's go-ahead —
  * see the task brief. Always sanity-check with --dry-run first.
  */
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { loadStudentTopicNotes, saveStudentTopicNotes } from '@/lib/tutor/topic-notes/apply-overlay';
 import type { LearningObjective } from '@/lib/tutor/lesson-plan/types';

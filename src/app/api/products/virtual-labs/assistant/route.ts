@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { checkBurstLimit, checkDailyLimit, getIPFromRequest } from '@/lib/utils/rate-limit';
+import { checkBurstLimit, checkDailyLimit, getIPFromRequest } from '@core/utils/rate-limit';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

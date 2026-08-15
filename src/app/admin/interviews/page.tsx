@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Interview } from "@/models";
 import { Plus, Edit, Trash2, Eye, ArrowLeft, Play } from "lucide-react";
 import { DeleteButton } from "./DeleteButton";

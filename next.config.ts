@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 import path from "path";
 
 const nextConfig: NextConfig = {
+  // Next must compile TS from workspace packages directly (they ship
+  // source, not a prebuilt dist) — see packages/core.
+  transpilePackages: ['@evelyn/core'],
   // Deploy-time override so the prod build can land in a staging dir and be
   // atomically swapped into .next (deploy-update.sh). Unset everywhere else,
   // including `next start`, which must keep reading the default .next.

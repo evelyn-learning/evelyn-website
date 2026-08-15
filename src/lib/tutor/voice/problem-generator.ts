@@ -26,7 +26,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { ProblemBank, type IProblemBank } from '../../../models/ProblemBank';
-import { connectDB } from '../../db';
+import { connectDB } from '@core/db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
 

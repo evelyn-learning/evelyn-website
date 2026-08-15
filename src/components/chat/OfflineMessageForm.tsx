@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@core/utils";
 
 const offlineSchema = z.object({
   name: z.string().min(2, "Name is required"),

@@ -3,8 +3,8 @@ import { google } from 'googleapis';
 import { getOAuthClient } from '@/lib/google/oauth-client';
 import { encryptToken } from '@/lib/crypto/token-encryption';
 import { verifyOAuthState } from '@/lib/google/oauth-state';
-import { connectDB } from '@/lib/db';
-import { Teacher } from '@/models/Teacher';
+import { connectDB } from '@core/db';
+import { Teacher } from '@core/models/Teacher';
 
 const SHOWCASE_PATH = '/showcase/plagiarism-detection';
 

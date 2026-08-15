@@ -42,7 +42,7 @@
  * verify-gate, and anchor logic are unit-testable without either.
  */
 
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { ProblemBank } from '@/models/ProblemBank';
 import { PracticeGenCounter } from '@/models/PracticeGenCounter';
 import {

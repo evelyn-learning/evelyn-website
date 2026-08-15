@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Play, X, Linkedin } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@core/utils";
 
 interface InterviewCardProps {
   interview: {

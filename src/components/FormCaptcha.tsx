@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@core/utils";
 
 interface FormCaptchaProps {
   onVerified: (verified: boolean) => void;

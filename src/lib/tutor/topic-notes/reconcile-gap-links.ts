@@ -23,7 +23,7 @@
  *     non-empty), and a session with no matching pairs leaves notes untouched.
  */
 
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import {
   StudentTopicNotesModel,
   toStudentTopicNotes,

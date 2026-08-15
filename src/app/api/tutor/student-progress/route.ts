@@ -14,7 +14,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 
 const RECENT_SESSIONS_LIMIT = 5;          // How many prior sessions to aggregate

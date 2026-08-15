@@ -261,7 +261,7 @@ async function runLearnerHintsTests() {
   const { getOrCreateStudentProfile, saveStudentProfile } = await import('../src/lib/tutor/student-profile/store');
   const { StudentProfileModel } = await import('../src/models/StudentProfile');
   const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
 
   await connectDB();
 
@@ -364,7 +364,7 @@ async function runDbTests() {
     EloRatingModel,
     buildLearnerStateProjectionId,
   } = await import('../src/models');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
 
   await connectDB();
 
@@ -1042,7 +1042,7 @@ async function runLearnerStateRouteTests() {
     '../src/models'
   );
   const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
   await connectDB();
@@ -1233,7 +1233,7 @@ async function runStudentProfileSegmentOutcomesTests() {
   const { POST: profilePOST } = await import('../src/app/api/tutor/student-profile/[id]/route');
   const { EvidenceEventModel } = await import('../src/models');
   const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
   await connectDB();
@@ -1365,7 +1365,7 @@ async function runStudentProfileEmbedAuthTests() {
   const { EvidenceEventModel } = await import('../src/models');
   const { getOrCreateStudentProfile } = await import('../src/lib/tutor/student-profile/store');
   const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
   await connectDB();
@@ -1512,7 +1512,7 @@ async function runSessionUsageEmbedAuthTests() {
   const { GET: usageGET, POST: usagePOST } = await import('../src/app/api/tutor/session-usage/route');
   const { signEmbedToken } = await import('../src/lib/tutor/portal/embed-token');
   const { TutorSession } = await import('../src/models/TutorSession');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
   await connectDB();
@@ -1637,7 +1637,7 @@ async function runLearnerSnapshotTests() {
     '../src/models'
   );
   const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
 
   await connectDB();
 
@@ -1760,7 +1760,7 @@ async function runStudentEraseRouteTests() {
     '../src/models'
   );
   const { appendEvidence, deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
   await connectDB();
@@ -1876,7 +1876,7 @@ async function runBackfillEvidenceTests() {
 
   const { EvidenceEventModel } = await import('../src/models');
   const { appendEvidence, deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { MockAttempt } = await import('../src/models/MockAttempt');
   const { StudentProfileModel } = await import('../src/models/StudentProfile');
   const {
@@ -2180,7 +2180,7 @@ async function runReviewPlanComposerTests() {
   const { getLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
   const { loGroupOf } = await import('../src/lib/tutor/lesson-plan/context');
   const { LearnerStateProjectionModel, buildLearnerStateProjectionId } = await import('../src/models');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
 
   await connectDB();
 
@@ -2556,7 +2556,7 @@ async function runLearnerContextBlockDbTests() {
   const { StudentProfileModel } = await import('../src/models/StudentProfile');
   const { getOrCreateStudentProfile, saveStudentProfile } = await import('../src/lib/tutor/student-profile/store');
   const { GET: profileGET } = await import('../src/app/api/tutor/student-profile/[id]/route');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
   await connectDB();

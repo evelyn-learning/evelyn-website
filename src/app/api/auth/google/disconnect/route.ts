@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
-import { Teacher } from '@/models/Teacher';
+import { connectDB } from '@core/db';
+import { Teacher } from '@core/models/Teacher';
 import { decryptToken } from '@/lib/crypto/token-encryption';
 
 export async function POST(req: NextRequest) {

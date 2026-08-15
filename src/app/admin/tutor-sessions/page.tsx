@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { TutorSession } from "@/models";
 import { getLessonTitles, findLessonPlanIdsByTitle } from "@/lib/tutor/lesson-plan/store";
 import { ArrowLeft, Play, Clock, MessageSquare, Layers, Search, X } from "lucide-react";

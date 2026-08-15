@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { TutorSession, type ITutorSession } from "@/models/TutorSession";
 import { extractClientIp } from "@/lib/tutor/recordings/client-ip";
 import { lookupGeo } from "@/lib/tutor/recordings/geo";

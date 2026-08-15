@@ -16,7 +16,7 @@
  * actually completed, so it throws on failure like any normal async call.
  */
 
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import {
   EvidenceEventModel,
   LearnerStateProjectionModel,

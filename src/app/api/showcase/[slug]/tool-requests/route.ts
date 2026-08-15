@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { ShowcaseSite } from '@/models';
 
 // GET - Get tool requests for a showcase site

@@ -411,7 +411,7 @@ async function runMongoCases() {
   const { deriveSegmentLabels } = await import('../src/lib/tutor/lesson-plan/derive-rail-labels');
   const { LessonPlanRailLabelsModel, buildRailLabelsId } = await import('../src/models/LessonPlanRailLabels');
   const { RAIL_LABELS_VERSION } = await import('../src/lib/tutor/lesson-plan/rail-labels');
-  const { default: connectDB } = await import('../src/lib/db');
+  const { default: connectDB } = await import('@core/db');
   const { upsertLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
   const { GET: railLabelsGET } = await import('../src/app/api/tutor/lesson-plans/[id]/rail-labels/route');
 

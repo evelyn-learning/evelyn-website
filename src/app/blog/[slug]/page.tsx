@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connectDB, isDBConfigured } from "@/lib/db";
+import { connectDB, isDBConfigured } from "@core/db";
 import { BlogPost } from "@/models";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@core/utils";
 import { marked } from "marked";
 import { Clock, Calendar, Tag } from "lucide-react";
 import BackToBlog from "./BackToBlog";

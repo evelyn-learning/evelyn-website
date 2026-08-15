@@ -27,7 +27,7 @@ import type {
   AdvanceMockAttemptRequest,
 } from '@evelyn/portal-contract/v1';
 import { resolvePassage } from '@/lib/tutor/passages/store';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { MockForm } from '@/models/MockForm';
 import { MockAttempt, type IMockAttempt } from '@/models/MockAttempt';
 import { ProblemBank } from '@/models/ProblemBank';

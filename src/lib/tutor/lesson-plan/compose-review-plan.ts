@@ -48,7 +48,7 @@ import {
 } from './generate-from-text';
 import { clampSessionMinutes } from './session-budget';
 import { LearnerStateProjectionModel, buildLearnerStateProjectionId } from '@/models';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { TUNING } from '../learner-model/estimator';
 import { getLearnerHints } from '../learner-model/hints';
 

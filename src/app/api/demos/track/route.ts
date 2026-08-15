@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { DemoInteraction, DemoSession } from "@/models";
-import type { IGeoLocation } from "@/models/DemoInteraction";
+import type { IGeoLocation } from "@core/models/DemoInteraction";
 import crypto from "crypto";
 
 // Simple in-memory cache for IP geolocation (to avoid hitting rate limits)

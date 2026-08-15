@@ -2,7 +2,7 @@
 // anti-fabrication gate -> insert as staged Lead. All state lives on the
 // job doc so a restart resumes cleanly. Per-candidate errors never kill
 // the job; 3 consecutive errors, the cost cap, or a cancel do.
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Lead } from "@/models/Lead";
 import { ResearchJob, type IResearchJob, type ICandidate } from "@/models/ResearchJob";
 import { callWithToolLoop, extractJson, type CallModel } from "./claude";

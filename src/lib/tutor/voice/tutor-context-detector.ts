@@ -16,7 +16,7 @@
  * otherwise any soft signal wins (strip newPage).
  */
 
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { WhiteboardCatalog } from '@/lib/tutor/whiteboard/catalog';
 
 const TUTOR_ANAPHORA_PATTERN =

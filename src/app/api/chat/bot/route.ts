@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { ChatQA, ChatConversation, SiteSettings } from "@/models";
 import { buildSystemPrompt } from "@/lib/chat/knowledge-base";
 import type { ISiteSettings } from "@/models/SiteSettings";

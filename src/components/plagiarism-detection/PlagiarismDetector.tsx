@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { safeAPICall } from '@core/utils/api-error-handler';
 import { saveAnalysisToHistory } from '@/lib/plagiarism/save-history';
 import { useTrackInteraction } from '@/components/demos/DemoTrackingContext';
 import AssignmentContextInput from './AssignmentContext';

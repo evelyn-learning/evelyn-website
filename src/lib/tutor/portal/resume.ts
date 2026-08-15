@@ -10,7 +10,7 @@
 
 import { RESUME_MAX_AGE_MS } from '@evelyn/portal-contract/v1';
 import type { TranscriptEntry } from '@/lib/tutor/types';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { TutorResumeState } from '@/app/tutor/components/VoiceTutorRealtime';
 
 /** Raw shape returned by GET /api/tutor/session-usage?sessionId=. */

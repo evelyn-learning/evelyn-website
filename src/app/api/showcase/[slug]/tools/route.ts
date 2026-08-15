@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { ShowcaseSite, AITool, DEFAULT_AI_TOOLS } from '@/models';
 
 // GET - Get available and enabled tools for a showcase site

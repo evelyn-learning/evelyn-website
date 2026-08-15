@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { google } from "googleapis";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { OutreachToken } from "@/models";
 import { encryptToken } from "@/lib/crypto/token-encryption";
 import { verifyOAuthState } from "@/lib/google/oauth-state";

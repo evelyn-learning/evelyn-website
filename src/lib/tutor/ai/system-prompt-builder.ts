@@ -7,7 +7,7 @@
  * - Session context (student name, goal, time remaining)
  */
 
-import type { KnowledgeModule } from '../../knowledge/types';
+import type { KnowledgeModule } from '@core/knowledge/types';
 import type { SessionState, SessionGoal } from '../types';
 import { formatPronunciationPrompt } from '@/data/tutor/pronunciation';
 import { getGradeProfile, renderGradeProfileBlock } from '@/lib/tutor/pedagogy/grade-profile';

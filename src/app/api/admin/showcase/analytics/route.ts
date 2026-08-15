@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { DemoInteraction } from "@/models";
 import { CLIENT_SHOWCASE_IDS } from "@/config/showcaseProducts";
 

@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { connectDB, isDBConfigured } from "@/lib/db";
+import { connectDB, isDBConfigured } from "@core/db";
 import { AdminUser } from "@/models";
 
 // There is deliberately NO hardcoded fallback admin here. There used to be

@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { TutorSession } from "@/models";
 import { ArrowLeft, Clock, MessageSquare, Layers, DollarSign, User, BookOpen, Target } from "lucide-react";
 import { formatRelativeTime } from "@/lib/tutor/recordings/relative-time";

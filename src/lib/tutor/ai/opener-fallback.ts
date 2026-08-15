@@ -39,7 +39,7 @@
  * See project_tutor_pedagogy_opener_calibration + .superpowers/sdd/task-B3-brief.md.
  */
 
-import type { WhiteboardCommand } from '../../knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 
 /**
  * True iff the opening turn (openingPhase) produced zero valid whiteboard

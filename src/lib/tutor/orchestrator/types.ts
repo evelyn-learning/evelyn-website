@@ -5,7 +5,7 @@
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import type { TranscriptEntry } from '@/lib/tutor/types';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 
 export interface RealtimeHandle {
   sendTextMessage: (text: string) => void;

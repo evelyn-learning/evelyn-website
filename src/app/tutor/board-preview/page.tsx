@@ -21,7 +21,7 @@
 import React, { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 
 function parseHash(): WhiteboardCommand[] {
   if (typeof window === 'undefined') return [];

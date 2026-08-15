@@ -2,10 +2,10 @@
 // Uses node-cron to automatically publish scheduled blog posts
 
 import cron, { ScheduledTask } from "node-cron";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { BlogQueue, IBlogQueue } from "@/models/BlogQueue";
 import { BlogPost } from "@/models/BlogPost";
-import { slugify } from "@/lib/utils";
+import { slugify } from "@core/utils";
 
 // Track scheduler state
 let isSchedulerRunning = false;

@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { connectDB, isDBConfigured } from "@/lib/db";
+import { connectDB, isDBConfigured } from "@core/db";
 import { Speaker } from "@/models";
 import Link from "next/link";
 import { ExternalLink, Award, Mic, Video } from "lucide-react";

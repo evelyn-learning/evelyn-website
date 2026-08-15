@@ -6,7 +6,7 @@
  * labels) for atomic lessons or any failure along the way.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { LessonPlanRailLabelsModel, buildRailLabelsId } from '@/models/LessonPlanRailLabels';
 import { buildLabelPrompt, parseLabelResponse, RAIL_LABELS_VERSION, type SegmentLabels } from './rail-labels';
 import type { LessonPlan } from './types';

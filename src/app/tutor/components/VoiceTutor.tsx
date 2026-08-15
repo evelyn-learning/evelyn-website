@@ -14,7 +14,7 @@ import { useAudioPlayback } from '../hooks/useAudioPlayback';
 import { getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import type { VoiceId } from '@/lib/tutor/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 import { classifyTranscript, filterTranscriptText, wrapUncertainTranscript, isContextLossGreeting, isDuplicateResponse } from '@/lib/tutor/voice/transcript-filters';
 

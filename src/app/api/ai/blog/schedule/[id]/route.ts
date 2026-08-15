@@ -6,7 +6,7 @@ import {
   deleteScheduledPost,
   retryFailedPost,
 } from "@/lib/services/blog-scheduler";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { BlogQueue } from "@/models/BlogQueue";
 
 // GET - Get a single scheduled post

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageCircle, X, Send, Mail, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@core/utils";
 import { ChatCaptcha } from "./ChatCaptcha";
 import { ChatMessage } from "./ChatMessage";
 import { OfflineMessageForm } from "./OfflineMessageForm";

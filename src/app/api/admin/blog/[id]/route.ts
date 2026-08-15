@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { BlogPost } from "@/models";
-import { getReadingTime } from "@/lib/utils";
+import { getReadingTime } from "@core/utils";
 
 // GET single blog post
 export async function GET(

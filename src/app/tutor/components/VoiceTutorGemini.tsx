@@ -16,10 +16,10 @@ import { Mic, MicOff, Volume2, VolumeX, Loader2, AlertCircle, Square, Wifi, Wifi
 import { useGeminiLive } from '../hooks/useGeminiLive';
 import { buildSystemPrompt, getInitialGreetingPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
-import { loadModuleByParams } from '@/lib/knowledge/registry';
+import { loadModuleByParams } from '@core/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 import type { RealtimeState, RealtimeUsage } from '../hooks/useOpenAIRealtime';
 import type { OpenAIVoice } from '../hooks/useOpenAIRealtime';

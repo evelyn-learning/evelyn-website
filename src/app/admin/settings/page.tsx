@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { getSiteSettings } from "@/models";
 import { ArrowLeft } from "lucide-react";
 import { SettingsForm } from "./SettingsForm";

@@ -17,7 +17,7 @@
  * (lives in the orchestrator) and committed in one shot.
  */
 
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { StudentProfileModel, toStudentProfile, type IStudentProfileDoc } from '@/models/StudentProfile';
 import {
   type StudentProfile,

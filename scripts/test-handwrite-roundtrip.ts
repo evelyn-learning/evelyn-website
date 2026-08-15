@@ -18,7 +18,7 @@
 
 import { mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
 import { buildManifestForCommand } from '../src/lib/tutor/diagrams/manifests';
-import type { WhiteboardCommand } from '../src/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];

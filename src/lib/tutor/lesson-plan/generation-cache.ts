@@ -10,7 +10,7 @@
  * stored under that key (`plan.metadata.cacheKey`) within a TTL window.
  */
 
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { LessonPlanModel } from '@/models/LessonPlan';
 import { getLessonPlan } from './store';
 import type { LessonPlan } from './types';

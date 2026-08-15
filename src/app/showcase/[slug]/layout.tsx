@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { connectDB, isDBConfigured } from '@/lib/db';
+import { connectDB, isDBConfigured } from '@core/db';
 import { ShowcaseSite } from '@/models';
 import { ShowcaseLayoutClient } from './ShowcaseLayoutClient';
 

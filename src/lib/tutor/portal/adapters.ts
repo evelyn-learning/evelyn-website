@@ -6,7 +6,7 @@
  * items. DB failures degrade gracefully (empty bank → plan-only results).
  */
 
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { ProblemBank, type IProblemBank } from '@/models/ProblemBank';
 import { SEED_PLANS, findStoredPlansByLoId } from '@/lib/tutor/lesson-plan/store';
 import type { LessonPlan, SegmentTryYourself } from '@/lib/tutor/lesson-plan/types';

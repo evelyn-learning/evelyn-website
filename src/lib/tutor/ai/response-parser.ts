@@ -7,7 +7,7 @@
  * - Pedagogical intent
  */
 
-import type { WhiteboardCommand } from '../../knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { PedagogicalIntent } from '../types';
 
 export interface ParsedResponse {

@@ -9,7 +9,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback, useImperativeHandle, useMemo, forwardRef } from 'react';
-import type { GraphData, GraphFunction, GraphFunctionOfY } from '@/lib/knowledge/types';
+import type { GraphData, GraphFunction, GraphFunctionOfY } from '@core/knowledge/types';
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';
 

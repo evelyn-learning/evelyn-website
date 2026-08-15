@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { APIUsageWidget } from '@/components/admin/APIUsageWidget';
 import { ToolRequestsWidget } from '@/components/admin/ToolRequestsWidget';
-import { timeAgo } from '@/lib/utils/timeAgo';
+import { timeAgo } from '@core/utils/timeAgo';
 
 interface ShowcaseProduct {
   productId: string;

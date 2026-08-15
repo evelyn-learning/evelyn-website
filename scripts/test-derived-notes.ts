@@ -18,7 +18,7 @@
  * relies on CJS `require()` semantics (that script runs under `ts-node
  * --compiler-options '{"module":"commonjs"}'`). This script runs under
  * `tsx` (ESM), where a default-export reassignment does NOT propagate to
- * other modules' already-bound `import connectDB from '@/lib/db'`
+ * other modules' already-bound `import connectDB from '@core/db'`
  * references — hence the `global.mongooseCache` short-circuit instead,
  * which is a plain object mutation and propagates regardless of ESM/CJS
  * import semantics. `MONGODB_URI` still needs a truthy dummy value (set

@@ -12,7 +12,7 @@ import {
   MessageCircle, FileText, BarChart3, Award,
   Maximize2, Minimize2, Image, Save, FolderOpen, Clock,
 } from 'lucide-react';
-import { sanitize } from '@/lib/utils/export/pdf-course-export';
+import { sanitize } from '@core/utils/export/pdf-course-export';
 
 /* ─────────────── Brand Palette ─────────────── */
 const COLORS = {

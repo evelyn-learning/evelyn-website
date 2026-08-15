@@ -16,7 +16,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import { WHITEBOARD_TOOLS, toGeminiTools, mapFunctionCallToCommand } from './toolDefinitions';
 
 // Re-export shared types so consumers can import from either hook

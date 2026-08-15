@@ -44,7 +44,7 @@ import type { StudentProfile, SessionMemory } from '../../../src/lib/tutor/stude
 // reporting 66 injected vars).
 async function loadDbModules() {
   const [{ connectDB }, { StudentProfileModel }, { saveStudentProfile }, mongoose] = await Promise.all([
-    import('../../../src/lib/db'),
+    import('@core/db'),
     import('../../../src/models/StudentProfile'),
     import('../../../src/lib/tutor/student-profile/store'),
     import('mongoose'),

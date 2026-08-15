@@ -16,7 +16,7 @@ import {
   getTopicSuggestionPrompt,
   LENGTH_TARGETS,
 } from "@/lib/prompts/blog-prompts";
-import { slugify, getReadingTime } from "@/lib/utils";
+import { slugify, getReadingTime } from "@core/utils";
 import { calculateSEOScore } from "./seo-optimizer";
 
 // Initialize AI clients

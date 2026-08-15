@@ -126,7 +126,7 @@ function mongoRegistry(): ConceptRegistry {
   return {
     async findAll() {
       const { CanonicalConceptModel } = await import('@/models/CanonicalConcept');
-      const connectDB = (await import('@/lib/db')).default;
+      const connectDB = (await import('@core/db')).default;
       await connectDB();
       const rows = await CanonicalConceptModel.find({}, { _id: 1, label: 1, embedding: 1 }).lean();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -134,7 +134,7 @@ function mongoRegistry(): ConceptRegistry {
     },
     async create(input) {
       const { CanonicalConceptModel } = await import('@/models/CanonicalConcept');
-      const connectDB = (await import('@/lib/db')).default;
+      const connectDB = (await import('@core/db')).default;
       await connectDB();
       const now = new Date().toISOString();
       await CanonicalConceptModel.findByIdAndUpdate(

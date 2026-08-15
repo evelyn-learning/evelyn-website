@@ -4,7 +4,7 @@
 // Structure mirrors src/lib/services/blog-scheduler.ts.
 
 import cron, { ScheduledTask } from "node-cron";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Lead, type ITouch } from "@/models";
 import { getThreadMessages, getOutreachAccount, httpStatusOf } from "./gmail";
 import { findInboundMessage } from "./reply-detect";

@@ -9,7 +9,7 @@ import { WhiteboardCanvas } from '@/app/tutor/components/whiteboard/WhiteboardCa
 // instead of raw asterisks, matching the live drawer. Math segments still
 // route through InlineMathText internally.
 import { renderBubbleEmphasis } from '@/app/tutor/components/inline-emphasis';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import ReplayTimeline, { type TimelineEvent } from './ReplayTimeline';
 import { buildCompressedTimeline } from '@/lib/tutor/recordings/compressed-timeline';
 import { alignEvenBytes, findSegmentAt, frontierSec, type SegmentSpan } from '@/lib/tutor/recordings/audio-segments';

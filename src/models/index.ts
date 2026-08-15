@@ -6,7 +6,7 @@ export { Interview, type IInterview } from "./Interview";
 export { Speaker, type ISpeaker } from "./Speaker";
 export { ContactSubmission, type IContactSubmission } from "./ContactSubmission";
 export { AdminUser, type IAdminUser } from "./AdminUser";
-export { Teacher, type ITeacher, type IGoogleAuth } from "./Teacher";
+export { Teacher, type ITeacher, type IGoogleAuth } from "@core/models/Teacher";
 export { AnalysisHistory, type IAnalysisHistory } from "./AnalysisHistory";
 export { ChatQA, type IChatQA } from "./ChatQA";
 export {
@@ -19,13 +19,13 @@ export {
   getSiteSettings,
   type ISiteSettings,
 } from "./SiteSettings";
-export { DemoInteraction, type IDemoInteraction } from "./DemoInteraction";
+export { DemoInteraction, type IDemoInteraction } from "@core/models/DemoInteraction";
 export {
   DemoSession,
   type IDemoSession,
   type IDemoSessionInteraction,
   type IDemoSessionSummary,
-} from "./DemoSession";
+} from "@core/models/DemoSession";
 export {
   ShowcaseSite,
   generateAccessCode,
@@ -69,8 +69,8 @@ export {
   type IOutreachLog,
   type ProspectStatus,
 } from "./Prospect";
-export { SavedLesson, type ISavedLesson } from "./SavedLesson";
-export { LessonImage, type ILessonImage } from "./LessonImage";
+export { SavedLesson, type ISavedLesson } from "@core/models/SavedLesson";
+export { LessonImage, type ILessonImage } from "@core/models/LessonImage";
 export { ProblemBank, type IProblemBank } from "./ProblemBank";
 export {
   TutorSession,

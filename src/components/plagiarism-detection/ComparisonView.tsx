@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { safeAPICall } from '@/lib/utils/api-error-handler';
+import { safeAPICall } from '@core/utils/api-error-handler';
 import AnnotatedText from './AnnotatedText';
 import AIDetectionPanel from './AIDetectionPanel';
 import PlagiarismPanel from './PlagiarismPanel';

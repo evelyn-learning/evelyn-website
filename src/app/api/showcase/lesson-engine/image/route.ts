@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { checkDailyLimit } from '@/lib/utils/rate-limit';
+import { checkDailyLimit } from '@core/utils/rate-limit';
 
 // ============================================================================
 // CONFIGURATION

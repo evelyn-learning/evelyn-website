@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { ResearchJob } from "@/models/ResearchJob";
 import { LEAD_SEGMENTS } from "@/lib/outreach/enums";
 import { isResearchWorkerActive } from "@/lib/outreach/research/worker";

@@ -32,7 +32,7 @@
 import { listLessonPlans } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, deleteLearnerModelData, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { LearnerStateProjectionModel, LearnerStateSnapshotModel } from '@/models';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 
 type Profile = 'mixed' | 'improving' | 'struggling';
 

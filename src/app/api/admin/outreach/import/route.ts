@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { validateLeadRows, insertLeads } from "@/lib/outreach/import-leads";
 
 // POST - paste-JSON lead import. { rows, dryRun } -> counts.

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connectDB } from '@/lib/db';
-import { SavedLesson } from '@/models/SavedLesson';
+import { connectDB } from '@core/db';
+import { SavedLesson } from '@core/models/SavedLesson';
 
 // ============================================================================
 // GET — Load a single saved lesson

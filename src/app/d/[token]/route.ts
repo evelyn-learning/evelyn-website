@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Lead, type ILead } from "@/models";
 import { landingPathForSegment } from "@/lib/outreach/segment-landing";
 

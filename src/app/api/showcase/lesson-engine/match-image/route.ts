@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { connectDB } from '@/lib/db';
-import { LessonImage } from '@/models/LessonImage';
-import { checkDailyLimit } from '@/lib/utils/rate-limit';
+import { connectDB } from '@core/db';
+import { LessonImage } from '@core/models/LessonImage';
+import { checkDailyLimit } from '@core/utils/rate-limit';
 
 // ============================================================================
 // CONFIGURATION

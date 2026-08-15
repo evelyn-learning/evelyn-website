@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { ShowcaseSite } from '@/models';
-import { checkDailyLimit, getIPFromRequest } from '@/lib/utils/rate-limit';
+import { checkDailyLimit, getIPFromRequest } from '@core/utils/rate-limit';
 
 // ============================================================================
 // CONFIGURATION

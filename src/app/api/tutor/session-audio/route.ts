@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { connectDB } from '@/lib/db';
+import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 import { verifyReplayToken } from '@/lib/tutor/portal/replay-token';
 

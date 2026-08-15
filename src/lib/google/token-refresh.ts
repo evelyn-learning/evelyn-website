@@ -1,5 +1,5 @@
-import { connectDB } from '@/lib/db';
-import { Teacher } from '@/models/Teacher';
+import { connectDB } from '@core/db';
+import { Teacher } from '@core/models/Teacher';
 import { decryptToken, encryptToken } from '@/lib/crypto/token-encryption';
 import { getOAuthClient } from './oauth-client';
 import type { OAuth2Client } from 'google-auth-library';

@@ -70,7 +70,7 @@ import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
 import { getCommandTypeLabel } from '@/app/tutor/components/whiteboard/WhiteboardCanvas';
 import { LessonPlanProgress } from './LessonPlanProgress';
-import { loadModuleByParams } from '@/lib/knowledge/registry';
+import { loadModuleByParams } from '@core/knowledge/registry';
 import { validateGeometryCommand, type GeometryCommand } from '@/lib/tutor/whiteboard/geometry-validator';
 import { validateConicGraph } from '@/lib/tutor/whiteboard/conic-validator';
 import { validateIntersectionPoints } from '@/lib/tutor/whiteboard/intersection-validator';
@@ -129,7 +129,7 @@ import {
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { MockReviewContext, MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
 import { buildMockReviewAgenda, buildMockReviewDrawer, buildMockReviewCorrectRows } from '@/lib/tutor/mock-exam/review-focus';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';

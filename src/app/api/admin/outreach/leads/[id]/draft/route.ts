@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Lead, TOUCH_CHANNELS, type TouchChannel } from "@/models";
 import { createOutreachDraft, getOutreachGmail, httpStatusOf } from "@/lib/outreach/gmail";
 import { applyDemoLink, demoLinkFor } from "@/lib/outreach/draft-body";

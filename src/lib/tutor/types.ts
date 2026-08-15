@@ -4,7 +4,7 @@
  * Types for the voice tutor session, events, and state management.
  */
 
-import type { WhiteboardCommand, Problem, StudentModuleProgress } from '../knowledge/types';
+import type { WhiteboardCommand, Problem, StudentModuleProgress } from '@core/knowledge/types';
 
 // =============================================================================
 // SESSION TYPES

@@ -23,7 +23,7 @@ import {
   FileText,
   Download,
 } from "lucide-react";
-import { timeAgo } from "@/lib/utils/timeAgo";
+import { timeAgo } from "@core/utils/timeAgo";
 
 interface DemoStats {
   productId: string;

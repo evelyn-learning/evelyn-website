@@ -23,7 +23,7 @@
  */
 
 import { LearnerStateProjectionModel, buildLearnerStateProjectionId } from '@/models';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { getLessonPlan } from '../lesson-plan/store';
 import { getOrCreateStudentProfile, isGapStale } from '../student-profile/store';
 import { TUNING } from './estimator';

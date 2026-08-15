@@ -21,7 +21,7 @@
  */
 
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import { placeNote, applyUserPos, clampIntoPage, type Placement, type Rect } from '@/lib/tutor/whiteboard/ink-placement';
 import { resolveNoteFontFamilies } from '@/lib/tutor/whiteboard/note-font';
 import { arrowSpine, arrowHeads, strokeOutline, type Pt } from '@/lib/tutor/whiteboard/hand-stroke';

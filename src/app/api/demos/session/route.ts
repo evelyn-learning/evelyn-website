@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { DemoSession } from "@/models";
-import type { IGeoLocation } from "@/models/DemoInteraction";
+import type { IGeoLocation } from "@core/models/DemoInteraction";
 import crypto from "crypto";
 
 // Reuse geo cache and helpers from track route pattern

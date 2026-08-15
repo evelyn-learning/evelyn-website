@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { getSiteSettings } from "@/models";
 
 // GET - Get public site settings (contact info only)

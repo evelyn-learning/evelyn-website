@@ -17,7 +17,7 @@
  * per-renderer feature docs in the system prompt.
  */
 
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { FeatureManifestEntry } from './layout';
 
 // Pilots (landed first)

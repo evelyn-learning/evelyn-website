@@ -17,8 +17,8 @@ import {
   VoicePreference,
   SessionMetrics,
 } from '../types';
-import type { WhiteboardCommand, Problem, KnowledgeModule } from '../../knowledge/types';
-import { loadModuleByParams, getModuleId } from '../../knowledge/registry';
+import type { WhiteboardCommand, Problem, KnowledgeModule } from '@core/knowledge/types';
+import { loadModuleByParams, getModuleId } from '@core/knowledge/registry';
 import { buildSystemPrompt } from '../ai/system-prompt-builder';
 import { parseWhiteboardCommands } from '../ai/response-parser';
 

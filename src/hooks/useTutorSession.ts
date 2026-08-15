@@ -19,7 +19,7 @@ import type {
   TranscriptEntry,
   VoiceId,
 } from '@/lib/tutor/types';
-import type { WhiteboardCommand, Problem } from '@/lib/knowledge/types';
+import type { WhiteboardCommand, Problem } from '@core/knowledge/types';
 
 // Session store using Zustand
 interface TutorSessionState {

@@ -57,7 +57,7 @@ import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/lib/tutor/types';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
 import { resolveCartesiaVoice, teachersForAccent } from '@/lib/tutor/voice/cartesia-voice-registry';
 import { accentFromTimezone } from '@/lib/tutor/voice/geo-accent';

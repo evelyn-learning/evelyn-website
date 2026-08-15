@@ -1,4 +1,4 @@
-import { sanitize as baseSanitize } from './pdf-course-export';
+import { sanitize as baseSanitize } from '@core/utils/export/pdf-course-export';
 
 interface SubjectData {
   name: string;

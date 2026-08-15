@@ -52,7 +52,7 @@
  * run OMITS this flag entirely (the point of the backfill is every student).
  */
 import fs from 'node:fs';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import type { EvidenceSource } from '@/lib/tutor/learner-model/estimator';
 import { EvidenceEventModel } from '@/models';

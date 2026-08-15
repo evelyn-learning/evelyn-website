@@ -37,7 +37,7 @@ import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { SessionGoal, TranscriptEntry } from '@/lib/tutor/types';
 import type { MockReviewContext, MockReviewAgendaItem, MockReviewDrawerRow } from '@/lib/tutor/mock-exam/review-focus';
-import type { WhiteboardCommand } from '@/lib/knowledge/types';
+import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from '../../hooks/useOpenAIRealtime';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';

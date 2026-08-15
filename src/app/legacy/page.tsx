@@ -9,7 +9,7 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { BlogPost } from "@/models";
 
 const services = [

@@ -17,7 +17,7 @@ import {
   Line,
 } from 'mafs';
 import 'mafs/core.css';
-import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@/lib/knowledge/types';
+import type { GraphData, GraphType, GraphAnnotation, ShadedRegion } from '@core/knowledge/types';
 import { parseFunctionString, parseFunctionOfYString } from '@/lib/tutor/whiteboard/math-expr';
 import { InlineMathText } from './InlineMathText';
 import { prettyMathLabel } from '@/lib/tutor/whiteboard/math-label';

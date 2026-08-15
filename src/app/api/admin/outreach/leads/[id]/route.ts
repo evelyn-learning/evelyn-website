@@ -2,7 +2,7 @@ import { randomBytes } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { Lead, LEAD_STATUSES, type LeadStatus } from "@/models";
 import { mergeDecisionMakerEdit, type DecisionMakerEditInput } from "@/lib/outreach/lead-edit";
 

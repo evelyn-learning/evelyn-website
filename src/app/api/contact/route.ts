@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import nodemailer from "nodemailer";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { ContactSubmission } from "@/models";
 
 const contactSchema = z.object({

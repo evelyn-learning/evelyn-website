@@ -14,7 +14,7 @@
 import { strict as assert } from 'node:assert';
 import { resolveGradeItem, resolvePassageText, mongoPracticeSources, resolveAssessmentItem } from './adapters';
 import { ProblemBank } from '@/models/ProblemBank';
-import * as dbModule from '@/lib/db';
+import * as dbModule from '@core/db';
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>): Promise<void> {

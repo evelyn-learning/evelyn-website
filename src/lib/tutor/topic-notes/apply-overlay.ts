@@ -26,7 +26,7 @@
  */
 
 import { randomUUID } from 'crypto';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 import {
   StudentTopicNotesModel,
   toStudentTopicNotes,

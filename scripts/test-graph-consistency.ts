@@ -9,7 +9,7 @@ import {
   validateFunctionValuePoints,
   validateFeaturePoints,
 } from '../src/lib/tutor/whiteboard/graph-consistency-validator';
-import type { GraphData } from '../src/lib/knowledge/types';
+import type { GraphData } from '@core/knowledge/types';
 
 let passed = 0;
 let failed = 0;

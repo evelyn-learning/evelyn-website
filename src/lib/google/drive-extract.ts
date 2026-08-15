@@ -5,7 +5,7 @@ import {
   extractDocxText,
   extractPdfText,
   normalizeExtractedText,
-} from '@/lib/utils/document-extract';
+} from '@core/utils/document-extract';
 
 const MIME_GOOGLE_DOC = 'application/vnd.google-apps.document';
 const MIME_DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';

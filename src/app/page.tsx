@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { BlogPost } from "@/models";
 import { ArrowRight } from "lucide-react";
 import { CrimsoraBrowserFrame } from '@/components/showcase/CrimsoraBrowserFrame';

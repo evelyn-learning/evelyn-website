@@ -24,7 +24,7 @@ import { upsertLessonPlan, listLessonPlans, deleteLessonPlan, getLessonPlan } fr
 import { topicCacheKey, findCachedPlan, CACHE_KEY_VERSION } from '@/lib/tutor/lesson-plan/generation-cache';
 import { minutesPerLOForGrade } from '@/lib/tutor/lesson-plan/session-budget';
 import { LessonPlanModel } from '@/models/LessonPlan';
-import connectDB from '@/lib/db';
+import connectDB from '@core/db';
 
 // Task 4 — POST /api/portal/v1/plan-generate. Mirrors test-portal-endpoints.ts's
 // signing/invocation helper pattern to exercise the route handler directly.

@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { google, gmail_v1 } from "googleapis";
-import { connectDB } from "@/lib/db";
+import { connectDB } from "@core/db";
 import { OutreachToken } from "@/models";
 import { decryptToken } from "@/lib/crypto/token-encryption";
 import { bodyToHtml } from "./draft-body";

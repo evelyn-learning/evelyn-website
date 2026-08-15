@@ -31,7 +31,7 @@ import type { GenPayload } from '../voice/problem-generator';
 import type { PracticeItem } from '@evelyn/portal-contract/v1';
 import { ProblemBank } from '@/models/ProblemBank';
 import { PracticeGenCounter } from '@/models/PracticeGenCounter';
-import * as dbModule from '@/lib/db';
+import * as dbModule from '@core/db';
 
 let passed = 0;
 let failed = 0;

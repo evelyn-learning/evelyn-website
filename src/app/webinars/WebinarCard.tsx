@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Calendar, Clock, Play, X, ExternalLink } from "lucide-react";
-import { formatDate } from "@/lib/utils";
+import { formatDate } from "@core/utils";
 
 interface WebinarCardProps {
   webinar: {
