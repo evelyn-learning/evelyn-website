@@ -969,7 +969,9 @@ In `deploy-tutor.sh`, change exactly these:
 | 126 | `rm -f tsconfig.tsbuildinfo` | `rm -f apps/tutor/tsconfig.tsbuildinfo` |
 | 128 | `npm run build` | `npm run --workspace @evelyn/tutor build` |
 | 298 | `pm2 delete evelyn-website` | `pm2 delete evelyn-tutor` |
-| 299 | `pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001` | `pm2 start node_modules/.bin/next --name evelyn-tutor -- start -p 3007 --dir apps/tutor` |
+| 299 | `pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001` | `(cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME -- start -p $PM2_PORT)` |
+
+> **Why the `cd` and not a flag (R19).** `next start` has **no `--dir`** — it takes the app directory as a positional argument. The positional form (`next start apps/tutor`) was rejected too: it leaves `process.cwd()` at the repo root, while four runtime modules resolve paths from cwd — `video-curator/store.ts`, `video-curator/drafts-store.ts`, the `voice-harness` route, and marketing's `image-service.ts`. Starting from inside the app directory is what makes the process see exactly the pre-split layout. Do not "simplify" the `cd` back out. (`$APP_DIR`, `$PM2_NAME` and `$PM2_PORT` are set in each script's Configuration block; the relative `../../node_modules/.bin/next` is deliberate — deps stay hoisted at the workspace root, so there is no `node_modules/.bin` inside the app.)
 
 Then update every path that assumed the app was at the repo root — the three manifest builders (`.deploy-public-manifest`, `.deploy-static-manifest`, `.deploy-server-chunks-manifest`) and the zip's file list all reference `.next/` and `public/`, which are now `apps/tutor/.next/` and `apps/tutor/public/`. Work through the script top to bottom and prefix each.
 
@@ -985,7 +987,9 @@ Same substitutions in `deploy-marketing.sh`, with:
 | 18 | `ZIP_FILE="evelyn-marketing.zip"` |
 | 126 | `rm -f apps/marketing/tsconfig.tsbuildinfo` |
 | 128 | `npm run --workspace @evelyn/marketing build` |
-| 298–299 | `pm2 delete evelyn-marketing` / `pm2 start node_modules/.bin/next --name evelyn-marketing -- start -p 3001 --dir apps/marketing` |
+| 298–299 | `pm2 delete evelyn-marketing` / `(cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME -- start -p $PM2_PORT)` |
+
+> Same `cd`-not-a-flag form as the tutor, for the same reason — see the R19 note under Step 2's table. Marketing's cwd-dependent module is `image-service.ts`, which writes generated blog images to `public/images/blog/generated`; started from the repo root it would write into a `public/` nothing serves.
 
 Marketing keeps port **3001** so `upstream evelyn_upstream` and every non-tutor nginx location need no change at all.
 
