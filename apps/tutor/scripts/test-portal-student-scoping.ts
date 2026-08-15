@@ -23,9 +23,18 @@
  * `resolveProfileId` itself is exercised for real — only its Mongo-facing
  * deps are faked — so this suite tests the actual production call shape,
  * not a re-implementation of it.
+ *
+ * Fix round 1 (MINOR 5) added the STATIC CHECK at the bottom: the
+ * hand-copied `buildHandler` pattern above only proves the WIRING PATTERN
+ * works — it can't catch a real route that forgot to apply it (which is
+ * exactly how CRITICAL 1's two missed call sites hid in round 1). The
+ * static check greps the real source tree for every direct caller of the
+ * profile store and asserts each shows resolution evidence.
  */
 import assert from 'node:assert';
 import { randomBytes } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import path from 'node:path';
 
 // Mirrors scripts/test-portal-auth-registry.ts's setup: some import in the
 // withPortalAuth chain (secret-box.ts, transitively) wants this set before
@@ -185,6 +194,56 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
     assert.strictEqual(a, b);
   });
 
+  await test(
+    'flag ON, MULTI-STORE (fix round 1, CRITICAL 2 / amended acceptance gate §3): ' +
+      'the collision guarantee holds past StudentProfile — resolving ONCE and reusing that id ' +
+      'for a profile store, a projection store, AND an Elo store keeps all three consistent for ' +
+      'one partner and correctly SEPARATE across two partners',
+    async () => {
+      process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
+      const deps = fakeResolverDeps();
+      // Three independent fake stores, standing in for StudentProfile,
+      // LearnerStateProjection, and EloRating — exactly the shape
+      // learner-state/route.ts's single `profileId` now feeds into (spec
+      // §4.1: "one identity space, not two"). A regression that resolved
+      // once for the profile but left another store on the raw external id
+      // (round 1's actual bug, at 6 different sites) would show up here as
+      // an entry present in `profiles` but ABSENT from `projections`/`elo`
+      // under the same key.
+      const profiles = new Map<string, { touched: boolean }>();
+      const projections = new Map<string, { estimate: number }>();
+      const elo = new Map<string, { rating: number }>();
+
+      // Mirrors the real Step-4-plus-§4.1 pattern: resolve ONCE per
+      // request, then use that SAME id for every store.
+      async function handleLikeLearnerState(partnerId: string, studentId: string): Promise<void> {
+        const profileId = await resolveProfileId({ partnerId, externalStudentId: studentId }, deps);
+        profiles.set(profileId, { touched: true });
+        projections.set(profileId, { estimate: 0.5 });
+        elo.set(profileId, { rating: 1500 });
+      }
+
+      await handleLikeLearnerState('crimsora', 'user_1');
+      await handleLikeLearnerState('academy', 'user_1'); // same external id, different partner
+
+      assert.strictEqual(profiles.size, 2, 'two partners sending the same external id must get two profiles');
+      assert.strictEqual(projections.size, 2, 'and two projections — not one shared with the profile split');
+      assert.strictEqual(elo.size, 2, 'and two Elo rows — not one shared with the profile split');
+
+      // Same partner, same student, called twice (e.g. /gaps then
+      // /learner-state in the same session) — must land on the SAME id in
+      // every store, not just the profile.
+      const before = new Map(profiles);
+      await handleLikeLearnerState('crimsora', 'user_1');
+      assert.strictEqual(profiles.size, before.size, 'a repeat resolve for the same pair must not mint a new profile');
+      const [crimsoraId] = [...profiles.keys()].filter((id) => projections.has(id) && elo.has(id) && profiles.has(id));
+      assert.ok(
+        projections.has(crimsoraId) && elo.has(crimsoraId),
+        'the profile, projection, and Elo row for this student must all resolve to the SAME key',
+      );
+    },
+  );
+
   await test('flag OFF (unset): the raw body studentId passes through UNCHANGED — the default-safe path', async () => {
     delete process.env.PORTAL_IDENTITY_RESOLUTION;
     // A resolver that throws on any call — proves the off-branch never even
@@ -213,6 +272,49 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
   });
 
   delete process.env.PORTAL_IDENTITY_RESOLUTION;
+
+  await test(
+    'STATIC CHECK (fix round 1, MINOR 5): every direct caller of the profile store shows resolution evidence',
+    () => {
+      // This is the exact regression class CRITICAL 1 was: the enumeration
+      // grep excluded student-profile/store.ts, hiding that
+      // updateStudentPreferences is a THIRD entry point into the store
+      // whose own getOrCreateStudentProfile call lives inside that excluded
+      // file — so a call site could go completely unresolved while the
+      // grep (and this suite, in round 1) reported "all accounted for".
+      // This check runs the CORRECTED grep (no store.ts exclusion) and
+      // fails if any matched file shows no evidence of resolution — either
+      // a direct `resolveProfileIdOrRaw` call, or the `M1C-IDENTITY:
+      // resolved by caller` marker for the few files that deliberately
+      // receive an already-resolved id from their own caller instead of
+      // resolving themselves (context-block.ts, mock-exam/report.ts — see
+      // each file's own comment for why).
+      const srcDir = path.join(__dirname, '..', 'src');
+      const grepOut = execFileSync(
+        'grep',
+        ['-rlE', 'getOrCreateStudentProfile|getStudentProfile\\(|updateStudentPreferences', srcDir],
+        { encoding: 'utf8' },
+      );
+      const files = grepOut
+        .split('\n')
+        .map((f) => f.trim())
+        .filter((f) => f && !f.endsWith('student-profile/store.ts') && !f.endsWith('.test.ts'));
+      assert.ok(files.length > 0, 'sanity: the grep should match at least the known call sites');
+
+      const unaccounted: string[] = [];
+      for (const f of files) {
+        const contents = require('node:fs').readFileSync(f, 'utf8') as string;
+        const resolved =
+          contents.includes('resolveProfileIdOrRaw') ||
+          contents.includes('M1C-IDENTITY: resolved by caller');
+        if (!resolved) unaccounted.push(f);
+      }
+      assert.deepStrictEqual(
+        unaccounted, [],
+        `these files call the profile store but show no resolution evidence: ${unaccounted.join(', ')}`,
+      );
+    },
+  );
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);

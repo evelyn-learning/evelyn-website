@@ -12,8 +12,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { updateStudentPreferences } from '@/lib/tutor/student-profile/store';
+import {
+  updateStudentPreferences,
+  resolveProfileIdOrRaw,
+} from '@/lib/tutor/student-profile/store';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
+
+/** M1c Task 5 (fix round 1, CRITICAL 1) — this route is internal/retail
+ *  (`/api/tutor/**`, no `withPortalAuth`), so it resolves under the reserved
+ *  'evelyn' partner id. This call site was missed in the first pass — see
+ *  identityResolutionEnabled's doc comment in store.ts. */
+const RETAIL_PARTNER_ID = 'evelyn';
 
 const HUMOR_LEVELS = new Set(['off', 'light', 'medium', 'heavy']);
 const PACING_VALUES = new Set(['slower', 'default', 'faster']);
@@ -70,7 +79,8 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
 
   try {
-    const saved = await updateStudentPreferences(id, v.patch as Partial<Record<keyof StudentPreferences, StudentPreferences[keyof StudentPreferences] | null>>);
+    const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id });
+    const saved = await updateStudentPreferences(profileId, v.patch as Partial<Record<keyof StudentPreferences, StudentPreferences[keyof StudentPreferences] | null>>);
     return NextResponse.json({ preferences: saved.preferences });
   } catch (err) {
     console.error('[student-profile/preferences] update failed:', err);

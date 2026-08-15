@@ -8,8 +8,7 @@ import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import {
   getOrCreateStudentProfile,
-  identityResolutionEnabled,
-  resolveProfileId,
+  resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 
 export const GET = withPortalAuth(async (req, auth) => {
@@ -18,9 +17,7 @@ export const GET = withPortalAuth(async (req, auth) => {
     return NextResponse.json({ error: 'bad_request', reason: 'studentId required' }, { status: 400 });
   }
   // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
-  const profileId = identityResolutionEnabled()
-    ? await resolveProfileId({ partnerId: auth.partnerId, externalStudentId: studentId })
-    : studentId;
+  const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
   const profile = await getOrCreateStudentProfile(profileId);
   return NextResponse.json(profile.mastery);
 });

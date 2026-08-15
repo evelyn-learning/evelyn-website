@@ -21,6 +21,7 @@ import { retrievePractice, type PracticeSources } from './practice';
 import { emitSessionResult } from './session-result';
 import { gradeFreeResponse, type GradeDeps } from './grade-free-response';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 import type { ResolvedAssessmentKey } from './adapters';
 import type {
   AssessmentRequest,
@@ -222,6 +223,17 @@ export async function submitAssessment(
   const evidenceOccurredAt = new Date();
   const evidenceInputs: EvidenceInput[] = [];
 
+  // M1c Task 5 (fix round 1, CRITICAL 2) — resolve once, up front. Used for
+  // the `diag:` evidence rows built below. NOT passed into `emitReq` further
+  // down (that keeps the raw `sub.studentId` unchanged) — emitSessionResult
+  // resolves internally from `opts.partnerId` + `req.studentId`, and since
+  // resolution is idempotent (same (partnerId, externalStudentId) pair ->
+  // same surrogate id, resolveProfileId's whole guarantee), both resolves
+  // land on the identical profile id at the cost of one redundant Mongo
+  // round trip, in exchange for not needing a resolution-bypass parameter
+  // on emitSessionResult itself.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerId ?? '', externalStudentId: sub.studentId });
+
   const perLo = new Map<string, { awarded: number; max: number }>();
   const review: AssessmentReviewItem[] = [];
   for (const r of sub.responses) {
@@ -245,7 +257,7 @@ export async function submitAssessment(
       });
       evidenceInputs.push({
         idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
-        studentId: sub.studentId,
+        studentId: profileId,
         partnerId,
         loId: r.loId,
         source: evidenceSource,
@@ -262,7 +274,7 @@ export async function submitAssessment(
       review.push({ itemId: r.itemId, loId: r.loId, pointsAwarded: 0, maxPoints: 1, correct: false });
       evidenceInputs.push({
         idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
-        studentId: sub.studentId,
+        studentId: profileId,
         partnerId,
         loId: r.loId,
         source: evidenceSource,
@@ -311,6 +323,8 @@ export async function submitAssessment(
 
   const emitReq: SessionEmitRequest = {
     sessionId: sub.sessionId,
+    // RAW, not `profileId` — emitSessionResult resolves this itself (see
+    // its own doc comment) and echoes it back verbatim in the response.
     studentId: sub.studentId,
     courseId: sub.courseId,
     status: 'completed',

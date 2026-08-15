@@ -12,8 +12,9 @@
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { resolveUnitTopicNotes } from '@/lib/tutor/topic-notes/resolve';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 
-export const GET = withPortalAuth(async (req) => {
+export const GET = withPortalAuth(async (req, auth) => {
   const sp = new URL(req.url).searchParams;
   const studentId = sp.get('studentId');
   const course = sp.get('course');
@@ -28,7 +29,9 @@ export const GET = withPortalAuth(async (req) => {
   if (!Number.isInteger(cedUnit)) {
     return NextResponse.json({ error: 'bad_request', reason: 'cedUnit must be an integer' }, { status: 400 });
   }
-  const notes = await resolveUnitTopicNotes(studentId, course, cedUnit);
+  // M1c Task 5 (fix round 1, CRITICAL 2) — see notes/route.ts's comment.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
+  const notes = await resolveUnitTopicNotes(profileId, course, cedUnit);
   if (!notes) return NextResponse.json({ error: 'not_found' }, { status: 404 });
   return NextResponse.json(notes);
 });

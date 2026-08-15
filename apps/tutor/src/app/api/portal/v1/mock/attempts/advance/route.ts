@@ -9,6 +9,7 @@ import { AdvanceMockAttemptRequestSchema } from '@evelyn/portal-contract/v1';
 import { advance, mongoMockStores } from '@/lib/tutor/mock-exam/service';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 import { mapMockError } from '@/lib/tutor/mock-exam/route-errors';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 
 export const POST = withPortalAuth(async (_req, auth) => {
   const parsed = AdvanceMockAttemptRequestSchema.safeParse(auth.body);
@@ -16,7 +17,12 @@ export const POST = withPortalAuth(async (_req, auth) => {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
   try {
-    const state = await advance(mongoMockStores(), parsed.data);
+    // M1c Task 5 (fix round 1) — resolve to the SAME id the attempt was
+    // created under (mock/attempts/route.ts), or `advance`'s ownership
+    // guard (`attempt.studentId !== req.studentId`) would reject every
+    // request once the flag is on.
+    const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: parsed.data.studentId });
+    const state = await advance(mongoMockStores(), { ...parsed.data, studentId: profileId });
     return NextResponse.json(stripNullsDeep(state));
   } catch (e) {
     return mapMockError(e);

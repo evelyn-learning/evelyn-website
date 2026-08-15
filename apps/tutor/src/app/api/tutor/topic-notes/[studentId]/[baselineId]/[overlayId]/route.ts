@@ -8,8 +8,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteOverlay, type OverlayBucket } from '@/lib/tutor/topic-notes/apply-overlay';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 
 const VALID_BUCKETS: OverlayBucket[] = ['theory', 'methods', 'pointers'];
+
+/** M1c Task 5 (fix round 1) — internal/retail, same as the sibling route. */
+const RETAIL_PARTNER_ID = 'evelyn';
 
 export async function DELETE(
   req: NextRequest,
@@ -29,7 +33,8 @@ export async function DELETE(
       { status: 400 },
     );
   }
-  const result = await deleteOverlay({ studentId, baselineId, overlayId, bucket });
+  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: studentId });
+  const result = await deleteOverlay({ studentId: profileId, baselineId, overlayId, bucket });
   if (!result.deleted) {
     return NextResponse.json({ error: 'overlay not found' }, { status: 404 });
   }

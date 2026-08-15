@@ -31,8 +31,7 @@ import {
   resolveSettledGaps,
   appendSessionMemory,
   saveStudentProfile,
-  identityResolutionEnabled,
-  resolveProfileId,
+  resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import { resolveSettledPrereqGaps } from '@/lib/tutor/concept-registry/resolve-prereq-gaps';
 import { canonicalizeConceptLabel } from '@/lib/tutor/concept-registry/normalizer';
@@ -239,12 +238,19 @@ function buildEmitEvidence(
   req: SessionEmitRequest,
   skipFallback: boolean,
   partnerId: string | undefined,
+  /** M1c Task 5 (fix round 1, CRITICAL 2) — the RESOLVED profile id, used as
+   *  the evidence store's `studentId` key. `EvidenceEvent` and
+   *  `StudentProfile` are one identity space (`scripts/backfill-evidence.ts`
+   *  writes `studentId: profile._id` directly) — using `req.studentId` (raw)
+   *  here while the profile store used the resolved id would silently split
+   *  a partner's evidence trail from their profile. */
+  profileId: string,
 ): EvidenceInput[] {
   const occurredAt = new Date();
   if (req.evidence && req.evidence.length > 0) {
     return req.evidence.map((e, i) => ({
       idempotencyKey: `emit:${req.sessionId}:${i}`,
-      studentId: req.studentId,
+      studentId: profileId,
       partnerId,
       loId: e.loId,
       source: e.source,
@@ -261,7 +267,7 @@ function buildEmitEvidence(
   if (skipFallback) return [];
   return req.masteryDeltas.map((m) => ({
     idempotencyKey: `emit:${req.sessionId}:lo:${m.loId}`,
-    studentId: req.studentId,
+    studentId: profileId,
     partnerId,
     loId: m.loId,
     source: 'session',
@@ -276,14 +282,18 @@ export async function emitSessionResult(
   req: SessionEmitRequest,
   opts: EmitOptions = {},
 ): Promise<SessionResult> {
-  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
+  // M1c Task 5 (spec §4.1) — resolve ONCE per request; `profileId` is used
+  // for EVERY student-keyed store touched below (the profile itself,
+  // buildEmitEvidence's rows, reconcileSessionGapLinks' StudentTopicNotes
+  // lookups) — never `req.studentId` again except where the CONTRACT
+  // response must echo back the raw external id the portal sent (`base`
+  // below): the portal has no concept of our internal surrogate id.
   // Both real callers of emitSessionResult (session-result/route.ts,
   // assessment.ts's submitAssessment) are portal-only and thread
   // opts.partnerId from auth.partnerId; direct/test callers may omit it
-  // while the flag is off.
-  const profileId = identityResolutionEnabled()
-    ? await resolveProfileId({ partnerId: opts.partnerId ?? '', externalStudentId: req.studentId })
-    : req.studentId;
+  // while the flag is off — resolveProfileIdOrRaw degrades to the raw id
+  // rather than throwing, so a DB blip here can't 500 a session-end commit.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: opts.partnerId ?? '', externalStudentId: req.studentId });
   const profile = await getOrCreateStudentProfile(profileId);
 
   const artifacts =
@@ -380,7 +390,7 @@ export async function emitSessionResult(
   // Task 8 — learner-model evidence append. Fire-and-forget (this is a
   // latency-sensitive session-end path); appendEvidence is itself
   // best-effort and never throws, so the .catch is belt-and-suspenders.
-  const emitEvidence = buildEmitEvidence(req, opts.skipEvidenceFallback ?? false, opts.partnerId);
+  const emitEvidence = buildEmitEvidence(req, opts.skipEvidenceFallback ?? false, opts.partnerId, profileId);
   if (emitEvidence.length > 0) {
     appendEvidence(emitEvidence).catch((err) =>
       console.error('[learner-model] emit evidence append failed', err),
@@ -391,7 +401,7 @@ export async function emitSessionResult(
   const gapLinkInputs = saved.gaps.map((g) => ({ id: g.id, kind: g.kind, loId: g.loId, conceptLabel: g.conceptLabel }));
   for (const n of req.notesTouched) {
     try {
-      await reconcileSessionGapLinks({ studentId: req.studentId, baselineId: n.baselineId, gaps: gapLinkInputs, sessionId: req.sessionId });
+      await reconcileSessionGapLinks({ studentId: profileId, baselineId: n.baselineId, gaps: gapLinkInputs, sessionId: req.sessionId });
     } catch {
       // non-fatal — linking is best-effort
     }

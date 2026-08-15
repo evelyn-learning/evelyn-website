@@ -7,8 +7,7 @@ import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import {
   getOrCreateStudentProfile,
   isGapStale,
-  identityResolutionEnabled,
-  resolveProfileId,
+  resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 
@@ -18,9 +17,7 @@ export const GET = withPortalAuth(async (req, auth) => {
     return NextResponse.json({ error: 'bad_request', reason: 'studentId required' }, { status: 400 });
   }
   // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
-  const profileId = identityResolutionEnabled()
-    ? await resolveProfileId({ partnerId: auth.partnerId, externalStudentId: studentId })
-    : studentId;
+  const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
   const profile = await getOrCreateStudentProfile(profileId);
   const gaps = profile.gaps.filter((g) => !isGapStale(g));
   // Contract optionals are `.optional()` not `.nullable()` — strip null keys so

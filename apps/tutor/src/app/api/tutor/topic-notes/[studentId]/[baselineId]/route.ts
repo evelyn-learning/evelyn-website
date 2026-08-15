@@ -28,6 +28,13 @@ import {
   type AddMethodInput,
   type AddPointerInput,
 } from '@/lib/tutor/topic-notes/apply-overlay';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
+
+/** M1c Task 5 (fix round 1) — this route is internal/retail (`/api/tutor/**`,
+ *  no `withPortalAuth` — "Add auth when retail launches", per the module
+ *  doc above), so it resolves under the reserved 'evelyn' partner id. Same
+ *  StudentTopicNotes store the portal-facing /notes routes touch. */
+const RETAIL_PARTNER_ID = 'evelyn';
 
 export async function GET(
   _req: NextRequest,
@@ -37,7 +44,8 @@ export async function GET(
   if (!studentId || !baselineId) {
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
-  const rendered = await resolveTopicNotes(studentId, baselineId);
+  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: studentId });
+  const rendered = await resolveTopicNotes(profileId, baselineId);
   if (!rendered) {
     return NextResponse.json({ error: 'baseline not found' }, { status: 404 });
   }
@@ -86,9 +94,11 @@ export async function PATCH(
     return NextResponse.json({ error: 'bucket and input required' }, { status: 400 });
   }
 
+  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: studentId });
+
   if (body.bucket === 'theory') {
     const result = await expandTheoryOverlay({
-      studentId,
+      studentId: profileId,
       baselineId,
       input: { ...body.input, addedInSessionId: body.sessionId },
     });
@@ -96,7 +106,7 @@ export async function PATCH(
   }
   if (body.bucket === 'methods') {
     const result = await addMethodOverlay({
-      studentId,
+      studentId: profileId,
       baselineId,
       input: { ...body.input, addedInSessionId: body.sessionId },
     });
@@ -104,7 +114,7 @@ export async function PATCH(
   }
   if (body.bucket === 'pointers') {
     const result = await addPointerOverlay({
-      studentId,
+      studentId: profileId,
       baselineId,
       input: { ...body.input, addedInSessionId: body.sessionId },
     });

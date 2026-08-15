@@ -21,8 +21,6 @@ import {
   saveStudentProfile,
   applyMasteryDeltas,
   recordGap,
-  identityResolutionEnabled,
-  resolveProfileId,
 } from '@/lib/tutor/student-profile/store';
 import {
   gradeFreeResponse,
@@ -56,12 +54,6 @@ export interface ReportDeps {
   /** Task 8 — optional injection for tests; defaults to the real
    *  learner-model evidence-append service. */
   appendEvidence?: (inputs: EvidenceInput[]) => Promise<void>;
-  /** M1c Task 5 — the calling portal route's verified `auth.partnerId`
-   *  (this module's sole production caller is
-   *  `/api/portal/v1/mock/attempts/report`). Threaded to the profile-store
-   *  read in `feedGapsAndMastery`. Only used (and only required) when
-   *  identityResolutionEnabled() is on; direct/test callers may omit it. */
-  partnerId?: string;
 }
 
 function profileStoreOf(deps: ReportDeps) {
@@ -331,12 +323,14 @@ async function feedGapsAndMastery(
   }
 
   const store = profileStoreOf(deps);
-  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
-  const profileId = identityResolutionEnabled()
-    ? await resolveProfileId({ partnerId: deps.partnerId ?? '', externalStudentId: attempt.studentId })
-    : attempt.studentId;
+  // M1C-IDENTITY: resolved by caller. `attempt.studentId` is already the
+  // resolved profile id by the time it reaches this point:
+  // mock-exam/service.ts's `startOrResume` resolves it once, at attempt
+  // creation, and stamps it onto `AttemptDoc.studentId`; every subsequent
+  // read of this attempt (including this feed) inherits that same id. See
+  // service.ts's module doc for the full identity-resolution note.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let profile: any = await store.getOrCreate(profileId);
+  let profile: any = await store.getOrCreate(attempt.studentId);
   profile = applyMasteryDeltas(profile, deltas);
   for (const g of gapEntries) {
     profile = recordGap(profile, {

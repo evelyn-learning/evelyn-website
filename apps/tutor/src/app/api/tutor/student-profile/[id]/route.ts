@@ -19,8 +19,7 @@ import {
   resolveSettledGaps,
   upsertSessionMemory,
   recordPlanContentSeen,
-  identityResolutionEnabled,
-  resolveProfileId,
+  resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
@@ -47,10 +46,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!auth.allow) {
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
   }
-  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
-  const profileId = identityResolutionEnabled()
-    ? await resolveProfileId({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id })
-    : id;
+  // M1c Task 5 (fix round 1, spec §4.1) — resolve ONCE per request; every
+  // student-keyed read below (the profile, and getLearnerContextBlock's own
+  // LearnerStateProjection read) uses this SAME `profileId`, never the raw
+  // `id` a second time.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id });
   const profile = await getOrCreateStudentProfile(profileId);
   const responseBody: Record<string, unknown> = {
     profile,
@@ -70,7 +70,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   // byte-identical to the pre-Task-17 shape for every existing caller.
   const lessonPlanId = new URL(req.url).searchParams.get('lessonPlanId');
   if (process.env.TUTOR_LEARNER_CONTEXT === 'on' && lessonPlanId) {
-    responseBody.learnerContext = await getLearnerContextBlock(id, lessonPlanId);
+    responseBody.learnerContext = await getLearnerContextBlock(profileId, lessonPlanId);
   }
   return NextResponse.json(responseBody);
 }
@@ -172,6 +172,14 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
   }
 
+  // M1c Task 5 (fix round 1, CRITICAL 2) — resolve ONCE, up front, so both
+  // the segmentOutcomes evidence rows below AND the profile-store commit
+  // use the SAME `profileId`. Round 1 resolved only the profile-store call
+  // (further down) and left this evidence write on the raw `id` — two
+  // partners sending the same external id would then share one Elo/
+  // evidence trail while their profiles correctly split in two.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id });
+
   // Task 11 — per-segment learner-model evidence (append point 1).
   // Fire-and-forget: appendEvidence is itself best-effort and never
   // throws, so the .catch is belt-and-suspenders; NOT awaited so a slow
@@ -192,7 +200,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       if (typeof so.outcome !== 'number' || !(so.outcome >= 0 && so.outcome <= 1)) continue;
       validated.push({
         idempotencyKey: `sess:${body.sessionId}:${so.segmentId}`,
-        studentId: id,
+        studentId: profileId,
         loId: so.loId,
         source: 'session',
         sessionId: body.sessionId,
@@ -211,10 +219,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     }
   }
 
-  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
-  const profileId = identityResolutionEnabled()
-    ? await resolveProfileId({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id })
-    : id;
+  // `profileId` was already resolved above (once per request).
   let profile = await getOrCreateStudentProfile(profileId);
 
   if (Array.isArray(body.masteryDeltas) && body.masteryDeltas.length) {

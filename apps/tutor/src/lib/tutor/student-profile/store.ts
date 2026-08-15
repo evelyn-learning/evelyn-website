@@ -673,6 +673,40 @@ export async function resolveProfileId(
   return existing._id;
 }
 
+/**
+ * M1c Task 5 (fix round 1, IMPORTANT 4) — the flag-gated wrapper every call
+ * site should use, instead of hand-rolling `identityResolutionEnabled() ?
+ * resolveProfileId(...) : raw` at each of the ~15 entry points.
+ *
+ * `getOrCreateStudentProfile` catches every DB error and degrades to an
+ * in-memory ephemeral profile — it never throws. `resolveProfileId` rethrows
+ * anything that isn't a duplicate-key race. Running it in front of
+ * `getOrCreateStudentProfile` (as every call site now must, per spec §4.1)
+ * would otherwise turn a transient Mongo blip on `/gaps`, `/mastery`,
+ * `/learner-state`, etc. from "200 with an empty/ephemeral profile" — the
+ * pre-M1c and still-getOrCreateStudentProfile contract — into a customer-
+ * visible 500. This wrapper preserves that contract: on any resolution
+ * failure (flag on), it logs and degrades to the RAW `externalStudentId`,
+ * exactly what every call site did before M1c and what it does today with
+ * the flag off. A degraded response briefly reads/writes the wrong-keyed
+ * (unresolved) profile until the next successful resolve — judged the
+ * lesser risk against turning infra flakiness into an outage.
+ *
+ * This does NOT mask a missing `partnerId` as a "DB blip": every caller
+ * (hints.ts, compose-review-plan.ts, etc.) declares `partnerId` as a
+ * required, non-optional argument, so a caller that forgot to thread it is a
+ * compile error, not a runtime path that reaches this catch.
+ */
+export async function resolveProfileIdOrRaw(input: ResolveProfileInput): Promise<string> {
+  if (!identityResolutionEnabled()) return input.externalStudentId;
+  try {
+    return await resolveProfileId(input);
+  } catch (err) {
+    console.error('[student-profile] resolveProfileId failed, degrading to the raw id:', err);
+    return input.externalStudentId;
+  }
+}
+
 /** Patch the preferences sub-object on a profile and persist. Only keys
  *  present in `patch` are written; everything else (mastery, gaps,
  *  recentSessions) is preserved. Used by the settings page and any

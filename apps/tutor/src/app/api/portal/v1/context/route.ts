@@ -10,7 +10,10 @@
 import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { StudentContextSchema } from '@evelyn/portal-contract/v1';
-import { updateStudentPreferences } from '@/lib/tutor/student-profile/store';
+import {
+  updateStudentPreferences,
+  resolveProfileIdOrRaw,
+} from '@/lib/tutor/student-profile/store';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 
 export const POST = withPortalAuth(async (_req, auth) => {
@@ -31,10 +34,18 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // socialMemoryLevel has a schema default of 'off'; store it as the ceiling.
   patch.socialMemoryLevel = p.socialMemoryLevel;
 
-  await updateStudentPreferences(ctx.studentId, patch);
+  // M1c Task 5 (fix round 1, CRITICAL 1) — this call site was missed
+  // entirely: the enumeration grep excluded student-profile/store.ts, and
+  // updateStudentPreferences's own getOrCreateStudentProfile call lives
+  // inside that excluded file, so "all accounted for" was wrong. Resolve
+  // with the verified auth.partnerId, never the raw body.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: ctx.studentId });
+  await updateStudentPreferences(profileId, patch);
 
   return NextResponse.json({
     ok: true,
+    // Echoed back exactly as the portal sent it — the portal has no concept
+    // of our internal surrogate profile id.
     studentId: ctx.studentId,
     storedPreferenceKeys: Object.keys(patch),
     // Transient — read for the session, not persisted.

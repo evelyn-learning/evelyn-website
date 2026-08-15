@@ -10,6 +10,17 @@
  *   in_section, blown     → finalize the module (Task 8) then return state
  *   at_break              → report break info (no deadline runs)
  *   in-flight but stale   → lazily expire, then treat as none in-flight
+ *
+ * M1c Task 5 (fix round 1, spec §4.1) — this module does NOT resolve
+ * identity itself and never calls `resolveProfileId`. Every `studentId` it
+ * touches (`req.studentId` on start/advance/save/list, `AttemptDoc.studentId`)
+ * is assumed ALREADY RESOLVED by its callers (the `mock/attempts/**` and
+ * `mock/forms` portal routes), which stamp the resolved profile id onto the
+ * request object before calling in here — the same id `StudentProfile`,
+ * `EvidenceEvent`, etc. use, per spec §4.1's "one identity space, not two."
+ * Keeping this module identity-agnostic (as it always was, pre-M1c) means
+ * its extensive DI-based test suite (report.test.ts, service.test.ts) needs
+ * no changes for M1c at all.
  */
 
 import { randomUUID } from 'node:crypto';

@@ -15,6 +15,7 @@ import { NextResponse } from 'next/server';
 import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { StudentEraseRequestSchema, StudentEraseResponseSchema } from '@evelyn/portal-contract/v1';
 import { deleteLearnerModelData } from '@/lib/tutor/learner-model/store';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 
 export const POST = withPortalAuth(async (_req, auth) => {
   const parsed = StudentEraseRequestSchema.safeParse(auth.body);
@@ -22,7 +23,13 @@ export const POST = withPortalAuth(async (_req, auth) => {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
 
-  const deleted = await deleteLearnerModelData(parsed.data.studentId);
+  // M1c Task 5 (fix round 1, CRITICAL 2) — must resolve to the SAME id the
+  // data was written under, or an erase silently deletes nothing (a
+  // freshly-minted, empty surrogate profile's evidence) while the
+  // partner's actual data survives untouched — the opposite of what this
+  // endpoint promises.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: parsed.data.studentId });
+  const deleted = await deleteLearnerModelData(profileId);
 
   return NextResponse.json(StudentEraseResponseSchema.parse({ ok: true, deleted }));
 });
