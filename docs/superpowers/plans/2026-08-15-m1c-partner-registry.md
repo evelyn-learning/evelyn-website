@@ -1146,8 +1146,15 @@ git commit -m "feat(m1c): resolveProfileId — partner-scoped identity via atomi
 
 ```bash
 cd apps/tutor
-grep -rn "getOrCreateStudentProfile\|getStudentProfile(" src --include=*.ts | grep -v student-profile/store.ts
+grep -rnE "getOrCreateStudentProfile|getStudentProfile\(|updateStudentPreferences" src --include=*.ts
 ```
+
+**Do NOT filter out `student-profile/store.ts`.** An earlier draft of this step did, and it hid two
+call sites: `updateStudentPreferences` is a *third* entry point into the store, and its own
+`getOrCreateStudentProfile` call lives inside the excluded file, so the grep reported "all accounted
+for" while `/api/portal/v1/context` and `/api/tutor/student-profile/[id]/preferences` went unresolved.
+Unresolved writes create fresh **unnamespaced** rows after the backfill has removed them, and the
+partial unique index cannot see them because it filters on `partnerId: {$exists: true}`.
 
 Record the list in the commit message. Every hit is either a **portal** path (must resolve with the verified `auth.partnerId`) or an **internal/retail** path (must resolve with `'evelyn'`).
 
@@ -1202,6 +1209,21 @@ const profileId = await resolveProfileId({
 });
 const profile = await getOrCreateStudentProfile(profileId);
 ```
+
+- [ ] **Step 4a: Pass the resolved id to EVERY student-keyed store, not just the profile**
+
+Per spec §4.1, resolve **once per request** and use that `profileId` for all of:
+`getOrCreateStudentProfile`, `updateStudentPreferences`, `appendEvidence({ studentId })`,
+`LearnerStateProjection`/`LearnerStateSnapshot` queries, `StudentTopicNotes` keys,
+`MockAttempt.studentId`, and `EloRating`'s `student:<id>|<subject>` rows.
+
+**The one exception:** `EloRating`'s `item:<itemId>` and `lo:<loId>:d<n>` rows are item-difficulty
+records, genuinely global and partner-agnostic. Do **not** resolve those.
+
+Resolving only the profile would leave two partners sending `user_1` with two profiles but one shared
+Elo rating, one projection and one set of topic notes — the milestone's premise, half-fixed. It would
+also break `scripts/backfill-evidence.ts`, which writes `studentId: profile._id` and therefore assumes
+the two agree.
 
 - [ ] **Step 5: Change each retail/internal call site**
 
@@ -1278,10 +1300,13 @@ async function test(name: string, fn: () => void | Promise<void>): Promise<void>
 
 (async () => {
 
-await test('splits an already-prefixed id on the FIRST colon', () => {
+await test('uses a prefix as a partner HINT but never strips it from externalStudentId', () => {
   const r = attributeProfile({ _id: 'lmtest:abc:def' }, new Map());
   assert.strictEqual(r.partnerId, 'lmtest');
-  assert.strictEqual(r.externalStudentId, 'abc:def');
+  // Spec 4.2: the partner sends the WHOLE string. Splitting it here would make
+  // resolveProfileId('lmtest', 'abc:def') miss this row after the flip and mint
+  // a blank profile — for 393 of the 495 rows.
+  assert.strictEqual(r.externalStudentId, 'lmtest:abc:def');
   assert.strictEqual(r.signal, 'existing-prefix');
 });
 
@@ -1337,7 +1362,7 @@ Create `apps/tutor/scripts/backfill-partner-namespace.ts`. It must:
 2. Load every `TutorSession` with a `studentId` into a `Map<studentId, {sourcePartnerId?, sourceHost?, source?}[]>`.
 3. For each profile, call `attributeProfile`.
 4. Print a table: `_id` (masked), inferred `partnerId`, signal. Summarise counts by signal.
-5. `--write`: `$set` `partnerId` + `externalStudentId`. **Never touch `_id`.**
+5. `--write`: `$set` `partnerId` + `externalStudentId` (always `= _id`, never a substring — spec 4.2). **Never touch `_id`.**
 6. Ensure a `Partner` row exists for every observed `partnerId` — `kind: 'test'` for `lmtest`/`trial`/`revtest`/`portalA`, `kind: 'first-party'` for `evelyn`, else `kind: 'partner'` with no secrets.
 7. `--build-index`: create the unique index, then verify it exists.
 
@@ -1357,7 +1382,10 @@ export function attributeProfile(
   if (colon > 0) {
     return {
       partnerId: profile._id.slice(0, colon),
-      externalStudentId: profile._id.slice(colon + 1),
+      // NOT sliced. See spec 4.2: `_id` is exactly what the partner transmits,
+      // because pre-M1c the raw request id became the `_id`. Stripping the
+      // prefix here would break resolution after the flip.
+      externalStudentId: profile._id,
       signal: 'existing-prefix',
     };
   }
@@ -1765,7 +1793,11 @@ Each step is independently reversible. **Do not batch them.**
 
 1. `npm run test:all` — 178 prior passes plus the eight new suites; the same 3 known-red; no new failures.
 2. `npm run check:boundaries` exits 0.
-3. The collision test in `test:profile-resolver` passes: two partners sending `user_1` get two profiles.
+3. The collision test passes at the **store** level, not just the profile level: two partners sending
+   `user_1` get two profiles **and** two projections, two topic-note documents and two Elo student rows
+   (spec §4.1). A test asserting only on `StudentProfile` does not satisfy this gate.
+3a. Every backfilled profile round-trips: resolving with the id the partner actually transmits returns
+   that profile's own `_id`, not a new one (spec §4.2).
 4. The dry-run backfill reports **0 ambiguous** attributions against production data.
 5. The unique partial index exists and `db.studentprofiles.getIndexes()` shows `partner_external_student_unique`.
 6. Crimsora runs a full live voice session with **no change to its own config or credentials**.

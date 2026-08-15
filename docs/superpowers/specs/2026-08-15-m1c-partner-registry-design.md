@@ -197,15 +197,57 @@ Two partners sending `user_1` produce two documents, because the index refuses o
 
 ---
 
+## 4.1 Which stores use the resolved id — and which do not
+
+**Every student-keyed write uses the resolved `profileId`, not the raw `externalStudentId`.** That
+means `StudentProfile._id`, `EvidenceEvent.studentId`, `LearnerStateProjection.studentId` (and its
+derived `_id`), `LearnerStateSnapshot.studentId`, `StudentTopicNotes._id` prefix, `MockAttempt.studentId`,
+and `EloRating`'s `student:<id>|<subject>` rows.
+
+This was under-specified in the first draft of this document and Task 5's review caught it. §11's
+"out of scope" clause is about **existing rows**, which genuinely never move; it says nothing about
+**new writes**. Left unstated, the engine would have moved `StudentProfile` onto a surrogate key while
+five other collections kept the raw partner-supplied id — so two partners sending `user_1` would get
+two profiles but still share one Elo rating, one projection and one set of topic notes. That is the
+milestone's own premise, half-fixed.
+
+The collections are one identity space, not two. `scripts/backfill-evidence.ts` writes
+`studentId: profile._id` directly, and before this milestone the profile `_id` and the raw student id
+were the same value, so every collection agreed by construction.
+
+**The one exception:** `EloRating` holds two kinds of row. `item:<itemId>` and `lo:<loId>:d<n>` are
+item-difficulty rows, genuinely global and correctly partner-agnostic — they must **not** be resolved.
+Only the `student:<id>|<subject>` rows are a student key.
+
+## 4.2 `externalStudentId` is the id exactly as the partner sends it
+
+`externalStudentId` is the **full, unmodified** string the partner transmits — never a substring of it.
+
+Before M1c, `getOrCreateStudentProfile(studentId)` used the raw request id as the profile `_id`, so an
+existing `_id` **is** by definition what that partner sends. The backfill therefore sets
+`externalStudentId = _id` unchanged and attributes `partnerId` separately.
+
+An earlier draft of §5 said to split a prefixed `_id` such as `academy:user1` on the first colon into
+`partnerId: 'academy'` / `externalStudentId: 'user1'`. That is wrong: the partner sends
+`academy:user1`, so after the flip `resolveProfileId('academy', 'academy:user1')` would miss the
+backfilled row and mint a blank profile — the precise outcome the flag exists to prevent, for 393 of
+the 495 rows. A prefix may be used as a *hint* for attributing `partnerId`; it is never removed from
+`externalStudentId`.
+
+(Live partners are unaffected either way — `User.engineStudentId` in the portal is "the opaque,
+unguessable UUID minted at signup", so academy and crimsora send bare UUIDs. The prefixed rows are
+test and trial fixtures. The rule is stated because correctness should not rest on that.)
+
 ## 5. Migration
 
 A single idempotent script with a mandatory dry-run mode:
 
 1. For each **unnamespaced** profile: attribute via `TutorSession.sourcePartnerId`, falling back to
-   `sourceHost` then `source`; unattributable → `evelyn`. Set `partnerId` + `externalStudentId`.
-   `_id` is not touched.
+   `sourceHost` then `source`; unattributable → `evelyn`. Set `partnerId`, and set
+   `externalStudentId = _id`. `_id` is not touched.
 2. For each **already-prefixed** profile (`lmtest:`, `trial:`, `revtest:`, `portalA:`, `academy:`):
-   split on the first `:` → `partnerId` + `externalStudentId`. `_id` is not touched.
+   use the prefix as the `partnerId` **hint**, but still set `externalStudentId = _id` in full — see
+   §4.2. Do **not** split the prefix off. `_id` is not touched.
 3. Create registry rows for every `partnerId` observed, including test prefixes, so the index has
    no orphan references.
 4. Build the unique index.
@@ -294,8 +336,11 @@ observes no behavioural change.
 Following the repo's script-based oracle (`npm run test:all`, currently 181 entries):
 
 - `resolveProfileId` find-or-create semantics.
-- **Collision test:** two partners sending `user_1` produce two distinct profiles. This is the test
-  that encodes the whole point of the milestone.
+- **Collision test:** two partners sending `user_1` produce two distinct profiles — **and distinct
+  projections, topic notes and Elo student rows**. Asserting only on `StudentProfile` would pass a
+  design that half-fixes the milestone's premise (§4.1).
+- **Round-trip test:** every backfilled profile resolves, using the id the partner actually
+  transmits, back to its own `_id` and not to a new one (§4.2).
 - Secret rotation with two live secrets; verification succeeds under both; a retired secret fails.
 - First-party rows cannot authenticate.
 - Limiter window boundaries, and explicit tests for **both** failure policies — burst fails open,
