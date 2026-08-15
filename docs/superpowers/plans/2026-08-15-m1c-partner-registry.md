@@ -52,7 +52,7 @@
 | `apps/tutor/src/lib/tutor/student-profile/store.ts` | `resolveProfileId` + the identity fields. |
 | `apps/tutor/src/models/StudentProfile.ts` | `partnerId`, `externalStudentId`, indexes. |
 | `apps/tutor/src/models/index.ts` | Export the two new models. |
-| `apps/tutor/package.json` | Seven new `test:*` entries. |
+| `apps/tutor/package.json` | Eight new `test:*` entries. |
 
 ---
 
@@ -1699,7 +1699,7 @@ Add a "Partner registry (M1c)" section recording: `PORTAL_SECRET_ENC_KEY` must b
 cd apps/tutor && npm run test:all
 ```
 
-Expected: 178 pass plus the seven new suites, the same 3 known-red.
+Expected: 178 pass plus the eight new suites, the same 3 known-red.
 
 - [ ] **Step 5: Commit**
 
@@ -1727,7 +1727,7 @@ Each step is independently reversible. **Do not batch them.**
 
 ## Acceptance gate
 
-1. `npm run test:all` — 178 prior passes plus the seven new suites; the same 3 known-red; no new failures.
+1. `npm run test:all` — 178 prior passes plus the eight new suites; the same 3 known-red; no new failures.
 2. `npm run check:boundaries` exits 0.
 3. The collision test in `test:profile-resolver` passes: two partners sending `user_1` get two profiles.
 4. The dry-run backfill reports **0 ambiguous** attributions against production data.
