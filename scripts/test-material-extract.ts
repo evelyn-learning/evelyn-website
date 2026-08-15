@@ -24,7 +24,7 @@ config({ path: path.resolve(process.cwd(), '.env.local') });
 
 import { strict as assert } from 'node:assert';
 import fs from 'node:fs';
-import { extractMaterials, condenseForPipeline } from '../src/lib/tutor/lesson-plan/material-extract';
+import { extractMaterials, condenseForPipeline } from '../apps/marketing/src/lib/tutor/lesson-plan/material-extract';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 
 const FIXTURES_DIR = path.resolve(__dirname, 'fixtures');

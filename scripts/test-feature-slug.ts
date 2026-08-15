@@ -9,9 +9,9 @@
  *
  * Run: npm run test:feature-slug
  */
-import { featSlug } from '../src/lib/tutor/diagrams/layout';
-import { normalizeToken, WhiteboardCatalog } from '../src/lib/tutor/whiteboard/catalog';
-import { buildGeometryManifest } from '../src/app/tutor/components/whiteboard/GeometryRenderer';
+import { featSlug } from '../apps/marketing/src/lib/tutor/diagrams/layout';
+import { normalizeToken, WhiteboardCatalog } from '../apps/marketing/src/lib/tutor/whiteboard/catalog';
+import { buildGeometryManifest } from '../apps/marketing/src/app/tutor/components/whiteboard/GeometryRenderer';
 
 type GeometryManifestProps = Parameters<typeof buildGeometryManifest>[0];
 

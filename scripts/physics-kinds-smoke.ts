@@ -17,13 +17,13 @@ import {
   solveEMInduction,
   solveMagneticFieldCurrent,
   solveProjectileMotion,
-} from '../src/lib/tutor/diagrams/catalog/kinds/em-nuclear-motion';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/em-nuclear-motion';
 import {
   CatalogNuclearDecayRenderer,
   CatalogEMInductionRenderer,
   CatalogMagneticFieldRenderer,
   CatalogProjectileRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogEMNuclearMotionRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogEMNuclearMotionRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

@@ -13,9 +13,9 @@ import assert from 'node:assert';
 import {
   stripWbEmphasisText,
   deepStripWbEmphasis,
-} from '../src/lib/tutor/whiteboard/wb-emphasis-strip';
-import { mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
-import { decideFallbackCard } from '../src/lib/tutor/whiteboard/process-tool-call';
+} from '../apps/marketing/src/lib/tutor/whiteboard/wb-emphasis-strip';
+import { mapFunctionCallToCommand } from '../apps/marketing/src/app/tutor/hooks/toolDefinitions';
+import { decideFallbackCard } from '../apps/marketing/src/lib/tutor/whiteboard/process-tool-call';
 
 let passed = 0;
 let failed = 0;

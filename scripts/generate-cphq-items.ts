@@ -4,15 +4,15 @@
  * CPHQ (Healthcare Quality) is a generated white-label course: 37 LOs living
  * as `los[]` entries inside runtime-generated LessonPlan documents (ids like
  * `gen-<uuid>`), NOT in the curated seed-plan catalog. There is no existing
- * `src/data/problem-bank/cphq/` corpus to hand-author against, so this script
+ * `apps/marketing/src/data/problem-bank/cphq/` corpus to hand-author against, so this script
  * calls the model to draft 4 original MCQ items per LO, grounded in the LO's
  * own title/description AND the stored plan's actual teaching content (the
  * concept/worked-example/try-yourself segments for that LO) — so items are
  * answerable from the lesson the student just took.
  *
- * Output: `src/data/problem-bank/cphq/u<unit>.json` files in the exact
+ * Output: `apps/marketing/src/data/problem-bank/cphq/u<unit>.json` files in the exact
  * SeedItem[] shape `scripts/seed-problem-bank.ts` expects (see that script's
- * `SeedItem` interface + `src/data/problem-bank/ap-psychology/_AUTHORING.md`
+ * `SeedItem` interface + `apps/marketing/src/data/problem-bank/ap-psychology/_AUTHORING.md`
  * for the schema this mirrors). Run the real ingest afterward with:
  *
  *   npx tsx scripts/seed-problem-bank.ts --course=cphq
@@ -27,8 +27,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import mongoose from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
-import { LessonPlanModel, toLessonPlan } from '../src/models/LessonPlan';
-import type { Segment } from '../src/lib/tutor/lesson-plan/types';
+import { LessonPlanModel, toLessonPlan } from '../apps/marketing/src/models/LessonPlan';
+import type { Segment } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 const MODEL = 'claude-sonnet-5';
 const OUT_DIR = path.join(__dirname, '..', 'src', 'data', 'problem-bank', 'cphq');

@@ -22,7 +22,7 @@ import {
   buildComparisonTableManifest,
   comparisonTableFeatureNames,
   solveComparisonTable,
-} from '../src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -115,7 +115,7 @@ expect(
 
 // ── 5. Renderer DOM wiring (static source check) ──
 const rendererSource = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
   'utf8',
 );
 expect(

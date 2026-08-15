@@ -49,7 +49,7 @@ async function main(): Promise<void> {
   if (!uri) throw new Error('MONGODB_URI is not set');
   await mongoose.connect(uri);
 
-  const { getOutreachGmail } = await import('../src/lib/outreach/gmail');
+  const { getOutreachGmail } = await import('../apps/marketing/src/lib/outreach/gmail');
   const gmail = await getOutreachGmail();
 
   const leads = await mongoose.connection

@@ -2,7 +2,7 @@
  * Test book catalog search
  */
 
-import catalogData from '../src/lib/data/book-catalog.json';
+import catalogData from '../apps/marketing/src/lib/data/book-catalog.json';
 
 interface BookEntry {
   folderId: string;

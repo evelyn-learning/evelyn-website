@@ -2,7 +2,7 @@
  * Form-lint + verify + seed a mock-exam form (blueprint-backed, full-length
  * exam) from version-controlled JSON into Mongo.
  *
- * Content lives in `src/data/mock-forms/<dir>/{form.json,items.json}`
+ * Content lives in `apps/marketing/src/data/mock-forms/<dir>/{form.json,items.json}`
  * (git = source of truth). `form.json` is `{ formId, examKey, topicIds,
  * label, sections[] }` (status is NOT stored in the file — it's controlled
  * by `--go-live` at seed time); `items.json` is a `SeedableItem[]` array
@@ -49,10 +49,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 import mongoose from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
-import { MockForm } from '../src/models/MockForm';
-import { ProblemBank } from '../src/models/ProblemBank';
-import { resolvePassage } from '../src/lib/tutor/passages/store';
-import { getBlueprint, validateBlueprint } from '../src/lib/tutor/mock-exam/blueprints';
+import { MockForm } from '../apps/marketing/src/models/MockForm';
+import { ProblemBank } from '../apps/marketing/src/models/ProblemBank';
+import { resolvePassage } from '../apps/marketing/src/lib/tutor/passages/store';
+import { getBlueprint, validateBlueprint } from '../apps/marketing/src/lib/tutor/mock-exam/blueprints';
 
 const VERIFIER_MODEL = 'claude-sonnet-5';
 const SOURCE = { name: 'Evelyn (original)' };

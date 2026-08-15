@@ -9,8 +9,8 @@
  * guardrail on the marketing pages.
  */
 
-import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
-import { SOLUTION_SEGMENTS } from '../src/data/solutions';
+import { SEED_PLANS } from '../apps/marketing/src/lib/tutor/lesson-plan/store';
+import { SOLUTION_SEGMENTS } from '../apps/marketing/src/data/solutions';
 
 let failures = 0;
 const fail = (msg: string) => {

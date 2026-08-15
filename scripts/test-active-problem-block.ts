@@ -7,7 +7,7 @@
  *
  * Run: npx tsx scripts/test-active-problem-block.ts
  */
-import { formatActiveProblemBlock, formatActiveQuestionBlock } from '../src/lib/tutor/voice/claude-brain';
+import { formatActiveProblemBlock, formatActiveQuestionBlock } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
 
 let passed = 0;
 let failed = 0;

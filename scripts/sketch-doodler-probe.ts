@@ -12,8 +12,8 @@ import * as dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
 
 import { chromium } from 'playwright';
-import { generateDoodle } from '../src/lib/tutor/whiteboard/doodler';
-import { sketchToSvgString } from '../src/lib/tutor/whiteboard/sketch-render-core';
+import { generateDoodle } from '../apps/marketing/src/lib/tutor/whiteboard/doodler';
+import { sketchToSvgString } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-render-core';
 
 const OUT_DIR =
   '/private/tmp/claude-501/-Users-luke-Dev-evelynlearning/eef0f93c-2529-4cf5-a783-e7aa5c6bf075/scratchpad';

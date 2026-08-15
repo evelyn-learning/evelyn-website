@@ -8,7 +8,7 @@
  * segments complete), so it must never fire without BOTH signals.
  * Run: npm run test:student-jump-intent
  */
-import { matchStudentJumpIntent } from '../src/lib/tutor/orchestrator/student-jump-intent';
+import { matchStudentJumpIntent } from '../apps/marketing/src/lib/tutor/orchestrator/student-jump-intent';
 
 let passed = 0;
 let failed = 0;

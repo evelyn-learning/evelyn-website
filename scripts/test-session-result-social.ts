@@ -19,10 +19,10 @@ import {
   emitSessionResult,
   extractSocialCarrier,
   type SocialEmitOptions,
-} from '../src/lib/tutor/portal/session-result';
-import { extractSocialThreads } from '../src/lib/tutor/portal/extract-social-threads';
-import { updateStudentPreferences } from '../src/lib/tutor/student-profile/store';
-import { stripNullsDeep } from '../src/lib/tutor/portal/serialize';
+} from '../apps/marketing/src/lib/tutor/portal/session-result';
+import { extractSocialThreads } from '../apps/marketing/src/lib/tutor/portal/extract-social-threads';
+import { updateStudentPreferences } from '../apps/marketing/src/lib/tutor/student-profile/store';
+import { stripNullsDeep } from '../apps/marketing/src/lib/tutor/portal/serialize';
 import {
   SessionResultSchema,
   SocialMemoryDeltaSchema,

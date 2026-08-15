@@ -18,7 +18,7 @@
 import {
   listTopicNotesBaselinesForCourse,
   listTopicNotesBaselinesForUnit,
-} from '../src/lib/tutor/topic-notes/store';
+} from '../apps/marketing/src/lib/tutor/topic-notes/store';
 
 const course = process.argv[2] || 'Algebra 1';
 const maxUnit = parseInt(process.argv[3] || '10', 10);

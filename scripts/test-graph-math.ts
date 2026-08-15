@@ -4,7 +4,7 @@
  *   npm run test:graph-math
  */
 import assert from 'node:assert';
-import { parseFunctionString } from '../src/lib/tutor/whiteboard/math-expr';
+import { parseFunctionString } from '../apps/marketing/src/lib/tutor/whiteboard/math-expr';
 
 let passed = 0;
 function check(label: string, fn: () => void) {

@@ -27,7 +27,7 @@ import {
   solveBinaryTree,
   solveTruthTable,
   solveLogicGate,
-} from '../src/lib/tutor/diagrams/catalog/kinds/cs';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/cs';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -37,15 +37,15 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const rendererSource = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogCSRenderers.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogCSRenderers.tsx'),
   'utf8',
 );
 const dispatcherSource = readFileSync(
-  join(__dirname, '..', 'src/lib/tutor/diagrams/manifests.ts'),
+  join(__dirname, '..', 'apps/marketing/src/lib/tutor/diagrams/manifests.ts'),
   'utf8',
 );
 const toolDefsSource = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/hooks/toolDefinitions.ts'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/hooks/toolDefinitions.ts'),
   'utf8',
 );
 

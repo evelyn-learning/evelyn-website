@@ -12,7 +12,7 @@
  *
  * Run: npx tsx scripts/test-cancel-storm.ts
  */
-import { CancelStormGovernor } from '../src/lib/tutor/voice/cancel-storm';
+import { CancelStormGovernor } from '../apps/marketing/src/lib/tutor/voice/cancel-storm';
 
 let failures = 0;
 function check(name: string, actual: boolean, expected: boolean) {

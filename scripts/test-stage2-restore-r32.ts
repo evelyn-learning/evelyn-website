@@ -1,4 +1,4 @@
-import { decideStage2TimeoutRestore } from '../src/lib/tutor/voice/stage2-restore';
+import { decideStage2TimeoutRestore } from '../apps/marketing/src/lib/tutor/voice/stage2-restore';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

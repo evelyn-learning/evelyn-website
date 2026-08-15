@@ -15,7 +15,7 @@
  *
  * Usage: npx tsx scripts/test-card-narration.ts
  */
-import { detectCardNarrationMismatch } from '../src/lib/tutor/voice/card-narration-mismatch';
+import { detectCardNarrationMismatch } from '../apps/marketing/src/lib/tutor/voice/card-narration-mismatch';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

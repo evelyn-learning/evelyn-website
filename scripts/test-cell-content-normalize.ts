@@ -15,7 +15,7 @@
  *
  * Usage: npx tsx scripts/test-cell-content-normalize.ts  (npm run test:cell-content)
  */
-import { normalizeCellForKatex } from '../src/app/tutor/components/whiteboard/cellContentNormalize';
+import { normalizeCellForKatex } from '../apps/marketing/src/app/tutor/components/whiteboard/cellContentNormalize';
 
 let passed = 0;
 let failed = 0;

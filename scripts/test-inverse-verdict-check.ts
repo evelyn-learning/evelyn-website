@@ -10,7 +10,7 @@
  * `disagree`/`unknown` from the comparator never fire, either tier.
  * Usage: npx tsx scripts/test-inverse-verdict-check.ts
  */
-import { checkInverseVerdict } from '../src/lib/tutor/voice/inverse-verdict-check';
+import { checkInverseVerdict } from '../apps/marketing/src/lib/tutor/voice/inverse-verdict-check';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

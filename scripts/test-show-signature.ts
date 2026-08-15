@@ -30,7 +30,7 @@
  *
  * Run: npx tsx scripts/test-show-signature.ts
  */
-import { buildShowSignature } from '../src/lib/tutor/whiteboard/catalog';
+import { buildShowSignature } from '../apps/marketing/src/lib/tutor/whiteboard/catalog';
 
 let passed = 0;
 let failed = 0;

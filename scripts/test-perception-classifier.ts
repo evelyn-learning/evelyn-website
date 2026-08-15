@@ -23,11 +23,11 @@ import {
   type HeuristicInput,
   type ProductionStateForClassifier,
   type RecentTtsScript,
-} from '../src/lib/tutor/voice/perception-classifier';
+} from '../apps/marketing/src/lib/tutor/voice/perception-classifier';
 import {
   pushTtsScript,
   applyPlaybackStamp,
-} from '../src/lib/tutor/voice/tts-script-buffer';
+} from '../apps/marketing/src/lib/tutor/voice/tts-script-buffer';
 
 let pass = 0;
 let fail = 0;

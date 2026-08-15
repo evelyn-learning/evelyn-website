@@ -16,13 +16,13 @@ import {
   solveGraphDiagram,
   solveHashTable,
   solveRecursionTree,
-} from '../src/lib/tutor/diagrams/catalog/kinds/cs-structures';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/cs-structures';
 import {
   CatalogDataStructureRenderer,
   CatalogGraphRenderer,
   CatalogHashTableRenderer,
   CatalogRecursionTreeRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogCSStructuresRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogCSStructuresRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

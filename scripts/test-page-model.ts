@@ -24,7 +24,7 @@ import {
   computeFigureCategory,
   anchorsDiverge,
   isPrimaryFigure,
-} from '../src/lib/tutor/whiteboard/catalog';
+} from '../apps/marketing/src/lib/tutor/whiteboard/catalog';
 
 let passed = 0;
 let failed = 0;

@@ -10,7 +10,7 @@
  * Run: npx tsx scripts/test-sentence-buffer.ts
  */
 import { strict as assert } from 'node:assert';
-import { SentenceBuffer } from '../src/lib/tutor/voice/claude-brain';
+import { SentenceBuffer } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
 
 let passed = 0;
 let failed = 0;

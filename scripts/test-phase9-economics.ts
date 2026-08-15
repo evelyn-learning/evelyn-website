@@ -34,7 +34,7 @@ import {
   solveLoanableFunds,
   solvePhillipsCurve,
   solveForeignExchangeMarket,
-} from '../src/lib/tutor/diagrams/catalog/kinds/economics';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/economics';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -43,14 +43,14 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const READ = (rel: string) => readFileSync(join(__dirname, '..', rel), 'utf8');
-const dispatcherSource = READ('src/lib/tutor/diagrams/manifests.ts');
-const ppcSource = READ('src/app/tutor/components/whiteboard/ProductionPossibilitiesRenderer.tsx');
-const bcSource = READ('src/app/tutor/components/whiteboard/BusinessCycleRenderer.tsx');
-const adasSource = READ('src/app/tutor/components/whiteboard/AdAsRenderer.tsx');
-const mmSource = READ('src/app/tutor/components/whiteboard/MoneyMarketRenderer.tsx');
-const lfSource = READ('src/app/tutor/components/whiteboard/LoanableFundsRenderer.tsx');
-const pcSource = READ('src/app/tutor/components/whiteboard/PhillipsCurveRenderer.tsx');
-const fxSource = READ('src/app/tutor/components/whiteboard/ForeignExchangeRenderer.tsx');
+const dispatcherSource = READ('apps/marketing/src/lib/tutor/diagrams/manifests.ts');
+const ppcSource = READ('apps/marketing/src/app/tutor/components/whiteboard/ProductionPossibilitiesRenderer.tsx');
+const bcSource = READ('apps/marketing/src/app/tutor/components/whiteboard/BusinessCycleRenderer.tsx');
+const adasSource = READ('apps/marketing/src/app/tutor/components/whiteboard/AdAsRenderer.tsx');
+const mmSource = READ('apps/marketing/src/app/tutor/components/whiteboard/MoneyMarketRenderer.tsx');
+const lfSource = READ('apps/marketing/src/app/tutor/components/whiteboard/LoanableFundsRenderer.tsx');
+const pcSource = READ('apps/marketing/src/app/tutor/components/whiteboard/PhillipsCurveRenderer.tsx');
+const fxSource = READ('apps/marketing/src/app/tutor/components/whiteboard/ForeignExchangeRenderer.tsx');
 
 // ── 1. production_possibilities ─────────────────────────────────────────────
 {

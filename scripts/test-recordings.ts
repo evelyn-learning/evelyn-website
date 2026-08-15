@@ -3,11 +3,11 @@
  * segments, filters). Run: npm run test:recordings
  * Design: docs/superpowers/specs/2026-07-04-recordings-overhaul-design.md
  */
-import { formatRelativeTime } from '../src/lib/tutor/recordings/relative-time';
-import { categorizeEvent, curateEvents, EVENT_CATEGORIES } from '../src/lib/tutor/recordings/timeline-events';
-import { buildSpeakerSegments } from '../src/lib/tutor/recordings/segments';
-import { buildSessionFilter } from '../src/lib/tutor/recordings/filters';
-import { extractClientIp, isPrivateIp } from '../src/lib/tutor/recordings/client-ip';
+import { formatRelativeTime } from '../apps/marketing/src/lib/tutor/recordings/relative-time';
+import { categorizeEvent, curateEvents, EVENT_CATEGORIES } from '../apps/marketing/src/lib/tutor/recordings/timeline-events';
+import { buildSpeakerSegments } from '../apps/marketing/src/lib/tutor/recordings/segments';
+import { buildSessionFilter } from '../apps/marketing/src/lib/tutor/recordings/filters';
+import { extractClientIp, isPrivateIp } from '../apps/marketing/src/lib/tutor/recordings/client-ip';
 
 let passed = 0;
 let failed = 0;

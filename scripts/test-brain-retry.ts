@@ -16,7 +16,7 @@
 import {
   classifyBrainError,
   decideBrainRetry,
-} from '../src/lib/tutor/voice/brain-retry';
+} from '../apps/marketing/src/lib/tutor/voice/brain-retry';
 
 let passed = 0;
 let failed = 0;

@@ -91,7 +91,7 @@ function getExpiryDate(days: number = 14): Date {
 }
 
 // Path to JSON content files
-const CONTENT_DIR = path.join(__dirname, "../../src/data/showcase-content");
+const CONTENT_DIR = path.join(__dirname, "../../apps/marketing/src/data/showcase-content");
 
 // Load site content from JSON file if available
 function loadSiteContent(slug: string): Record<string, unknown> | null {

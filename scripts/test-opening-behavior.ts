@@ -14,7 +14,7 @@ import {
   OPENING_DIRECTIVE_MAX_BRAIN_TURNS,
   type OpeningInput,
   type OpeningBehavior,
-} from '../src/lib/tutor/ai/opening-behavior';
+} from '../apps/marketing/src/lib/tutor/ai/opening-behavior';
 
 let passed = 0;
 let failed = 0;
@@ -314,7 +314,7 @@ main();
 //    up to 4× in one session and re-introduced to returning enrolled
 //    students. Intro is for first meetings only: demo journeys and
 //    subscribed-new; every resume/returning journey skips it. ────────────
-import { shouldIntroduceTeacher } from '../src/lib/tutor/ai/opening-behavior';
+import { shouldIntroduceTeacher } from '../apps/marketing/src/lib/tutor/ai/opening-behavior';
 
 test('shouldIntroduceTeacher: first-contact journeys introduce', () => {
   assert.equal(shouldIntroduceTeacher('demo-trial'), true);

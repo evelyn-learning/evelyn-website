@@ -13,7 +13,7 @@ import { strict as assert } from 'node:assert';
 import {
   shouldEmitOpenerFallback,
   buildOpenerFallbackCommand,
-} from '../src/lib/tutor/ai/opener-fallback';
+} from '../apps/marketing/src/lib/tutor/ai/opener-fallback';
 
 let passed = 0;
 let failed = 0;

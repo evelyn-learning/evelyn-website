@@ -16,12 +16,12 @@ import {
   solveDopplerEffect,
   solveStandingWave,
   solveInterferencePattern,
-} from '../src/lib/tutor/diagrams/catalog/kinds/waves';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/waves';
 import {
   CatalogDopplerRenderer,
   CatalogStandingWaveRenderer,
   CatalogInterferenceRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogWavesRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogWavesRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

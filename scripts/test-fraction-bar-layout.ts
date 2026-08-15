@@ -13,7 +13,7 @@ import {
   wrapLabel,
   computeFractionLayout,
   LABEL_LINE_HEIGHT,
-} from '../src/app/tutor/components/whiteboard/fraction-bar-layout';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/fraction-bar-layout';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

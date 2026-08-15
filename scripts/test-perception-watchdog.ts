@@ -9,7 +9,7 @@
  *
  * Run: npx tsx scripts/test-perception-watchdog.ts
  */
-import { shouldForceReconnectOnWatchdog } from '../src/lib/tutor/voice/perception-watchdog';
+import { shouldForceReconnectOnWatchdog } from '../apps/marketing/src/lib/tutor/voice/perception-watchdog';
 
 const WS_CONNECTING = 0;
 const WS_OPEN = 1;

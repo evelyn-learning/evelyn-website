@@ -16,9 +16,9 @@ import {
   loBoundaryBeat,
   buildAdvanceBeatNote,
   railJumpCandidates,
-} from '../src/lib/tutor/lesson-plan/rail-labels';
-import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
-import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
+} from '../apps/marketing/src/lib/tutor/lesson-plan/rail-labels';
+import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
+import { LESSON_PLAN_SCHEMA_VERSION } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 let passed = 0;
 let failed = 0;
@@ -408,12 +408,12 @@ async function runMongoCases() {
     return;
   }
 
-  const { deriveSegmentLabels } = await import('../src/lib/tutor/lesson-plan/derive-rail-labels');
-  const { LessonPlanRailLabelsModel, buildRailLabelsId } = await import('../src/models/LessonPlanRailLabels');
-  const { RAIL_LABELS_VERSION } = await import('../src/lib/tutor/lesson-plan/rail-labels');
+  const { deriveSegmentLabels } = await import('../apps/marketing/src/lib/tutor/lesson-plan/derive-rail-labels');
+  const { LessonPlanRailLabelsModel, buildRailLabelsId } = await import('../apps/marketing/src/models/LessonPlanRailLabels');
+  const { RAIL_LABELS_VERSION } = await import('../apps/marketing/src/lib/tutor/lesson-plan/rail-labels');
   const { default: connectDB } = await import('@core/db');
-  const { upsertLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
-  const { GET: railLabelsGET } = await import('../src/app/api/tutor/lesson-plans/[id]/rail-labels/route');
+  const { upsertLessonPlan, deleteLessonPlan } = await import('../apps/marketing/src/lib/tutor/lesson-plan/store');
+  const { GET: railLabelsGET } = await import('../apps/marketing/src/app/api/tutor/lesson-plans/[id]/rail-labels/route');
 
   await connectDB();
 

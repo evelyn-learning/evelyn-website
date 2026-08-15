@@ -15,8 +15,8 @@
  *
  * Run: npx tsx scripts/test-flowchart-layout.ts
  */
-import { layoutFlowchart, classifyFlowchartBackEdges, edgeKey } from '../src/app/tutor/components/whiteboard/flowchart-layout';
-import type { FlowchartNode } from '../src/lib/tutor/diagrams/catalog/kinds/cs';
+import { layoutFlowchart, classifyFlowchartBackEdges, edgeKey } from '../apps/marketing/src/app/tutor/components/whiteboard/flowchart-layout';
+import type { FlowchartNode } from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/cs';
 
 let passed = 0;
 let failed = 0;

@@ -7,12 +7,12 @@
  */
 import React from 'react';
 import type { AuditCase } from '../lib/svg-text-extents';
-import { TapeDiagramRenderer } from '../../src/app/tutor/components/whiteboard/TapeDiagramRenderer';
-import FoodWebRenderer from '../../src/app/tutor/components/whiteboard/FoodWebRenderer';
-import { PieChartRenderer } from '../../src/app/tutor/components/whiteboard/PieChartRenderer';
-import CoordinatePlaneRenderer from '../../src/app/tutor/components/whiteboard/CoordinatePlaneRenderer';
-import { BarChartRenderer } from '../../src/app/tutor/components/whiteboard/BarChartRenderer';
-import { NormalCurveRenderer } from '../../src/app/tutor/components/whiteboard/NormalCurveRenderer';
+import { TapeDiagramRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/TapeDiagramRenderer';
+import FoodWebRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/FoodWebRenderer';
+import { PieChartRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/PieChartRenderer';
+import CoordinatePlaneRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/CoordinatePlaneRenderer';
+import { BarChartRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/BarChartRenderer';
+import { NormalCurveRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/NormalCurveRenderer';
 
 export const CASES: AuditCase[] = [
   {

@@ -10,7 +10,7 @@
  *   npx tsx scripts/test-fit-scale.ts
  */
 import assert from 'node:assert';
-import { computeFitScale } from '../src/app/tutor/components/whiteboard/fit-scale-math';
+import { computeFitScale } from '../apps/marketing/src/app/tutor/components/whiteboard/fit-scale-math';
 
 let passed = 0;
 function check(label: string, fn: () => void) {

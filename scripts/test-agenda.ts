@@ -10,10 +10,10 @@
  *
  * Usage: npx tsx scripts/test-agenda.ts
  */
-import { buildLessonProgress } from '../src/lib/tutor/portal/lesson-progress';
-import { buildAgendaItems } from '../src/lib/tutor/lesson-plan/agenda';
-import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
-import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
+import { buildLessonProgress } from '../apps/marketing/src/lib/tutor/portal/lesson-progress';
+import { buildAgendaItems } from '../apps/marketing/src/lib/tutor/lesson-plan/agenda';
+import type { LessonPlan, LearningObjective, Segment, SegmentRecap } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
+import { LESSON_PLAN_SCHEMA_VERSION } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 let passed = 0;
 let failed = 0;

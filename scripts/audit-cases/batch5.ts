@@ -10,13 +10,13 @@
  */
 import React from 'react';
 import type { AuditCase } from '../lib/svg-text-extents';
-import { CatalogPhaseDiagramRenderer } from '../../src/app/tutor/components/whiteboard/CatalogPhaseDiagramRenderer';
-import { CatalogVectors3DRenderer } from '../../src/app/tutor/components/whiteboard/CatalogVectors3DRenderer';
-import { CatalogNutrientCycleRenderer } from '../../src/app/tutor/components/whiteboard/CatalogNutrientCycleRenderer';
-import { CatalogSimpleCircuitRenderer } from '../../src/app/tutor/components/whiteboard/CatalogSimpleCircuitRenderer';
-import { CatalogPhScaleRenderer } from '../../src/app/tutor/components/whiteboard/CatalogChemistryRenderers';
-import { CatalogCoordinateGridRenderer } from '../../src/app/tutor/components/whiteboard/CatalogElementaryMathRenderers';
-import { CatalogCycleStagesRenderer } from '../../src/app/tutor/components/whiteboard/CatalogCycleStagesRenderer';
+import { CatalogPhaseDiagramRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogPhaseDiagramRenderer';
+import { CatalogVectors3DRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogVectors3DRenderer';
+import { CatalogNutrientCycleRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogNutrientCycleRenderer';
+import { CatalogSimpleCircuitRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogSimpleCircuitRenderer';
+import { CatalogPhScaleRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogChemistryRenderers';
+import { CatalogCoordinateGridRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogElementaryMathRenderers';
+import { CatalogCycleStagesRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogCycleStagesRenderer';
 
 export const CASES: AuditCase[] = [
   {

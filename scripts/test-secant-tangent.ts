@@ -12,9 +12,9 @@
 import {
   parseLinear,
   validateGraphLinearConsistency,
-} from '../src/lib/tutor/whiteboard/graph-consistency-validator';
-import { validateSecantTangentGraph } from '../src/lib/tutor/whiteboard/secant-tangent-validator';
-import { latexToJs } from '../src/lib/tutor/whiteboard/intersection-validator';
+} from '../apps/marketing/src/lib/tutor/whiteboard/graph-consistency-validator';
+import { validateSecantTangentGraph } from '../apps/marketing/src/lib/tutor/whiteboard/secant-tangent-validator';
+import { latexToJs } from '../apps/marketing/src/lib/tutor/whiteboard/intersection-validator';
 
 let passed = 0;
 let failed = 0;

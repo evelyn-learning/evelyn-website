@@ -17,14 +17,14 @@
  */
 import React from 'react';
 import type { AuditCase } from '../lib/svg-text-extents';
-import StatsRenderer from '../../src/app/tutor/components/whiteboard/StatsRenderer';
-import ScatterPlotRenderer from '../../src/app/tutor/components/whiteboard/ScatterPlotRenderer';
-import { ScatterRegressionRenderer } from '../../src/app/tutor/components/whiteboard/ScatterRegressionRenderer';
-import ReactionCoordinateRenderer from '../../src/app/tutor/components/whiteboard/ReactionCoordinateRenderer';
-import { ProductionPossibilitiesRenderer } from '../../src/app/tutor/components/whiteboard/ProductionPossibilitiesRenderer';
-import { ComparativeAdvantageRenderer } from '../../src/app/tutor/components/whiteboard/EconMicroRenderers';
-import { AdAsRenderer } from '../../src/app/tutor/components/whiteboard/AdAsRenderer';
-import { BusinessCycleRenderer } from '../../src/app/tutor/components/whiteboard/BusinessCycleRenderer';
+import StatsRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/StatsRenderer';
+import ScatterPlotRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/ScatterPlotRenderer';
+import { ScatterRegressionRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/ScatterRegressionRenderer';
+import ReactionCoordinateRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/ReactionCoordinateRenderer';
+import { ProductionPossibilitiesRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/ProductionPossibilitiesRenderer';
+import { ComparativeAdvantageRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/EconMicroRenderers';
+import { AdAsRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/AdAsRenderer';
+import { BusinessCycleRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/BusinessCycleRenderer';
 
 export const CASES: AuditCase[] = [
   {

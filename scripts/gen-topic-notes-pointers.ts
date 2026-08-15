@@ -25,7 +25,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import Anthropic from '@anthropic-ai/sdk';
-import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
+import type { LessonPlan, Segment } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 const MODEL = process.env.POINTER_GEN_MODEL || 'claude-opus-5';
 

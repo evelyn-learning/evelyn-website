@@ -13,10 +13,10 @@ import {
   latexProseFiller,
   extractSentence1Normalized,
   deepEqualParams,
-} from '../src/lib/tutor/orchestrator/text-heuristics';
-import { sanitizeInkOcrText } from '../src/lib/tutor/orchestrator/ink-capture';
-import { inferAdvanceFromSegmentCard } from '../src/lib/tutor/orchestrator/segment-advance';
-import { withInactivityTimeout, classifyBrainError } from '../src/lib/tutor/voice/brain-retry';
+} from '../apps/marketing/src/lib/tutor/orchestrator/text-heuristics';
+import { sanitizeInkOcrText } from '../apps/marketing/src/lib/tutor/orchestrator/ink-capture';
+import { inferAdvanceFromSegmentCard } from '../apps/marketing/src/lib/tutor/orchestrator/segment-advance';
+import { withInactivityTimeout, classifyBrainError } from '../apps/marketing/src/lib/tutor/voice/brain-retry';
 
 let passed = 0;
 let failed = 0;

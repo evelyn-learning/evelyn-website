@@ -35,7 +35,7 @@ const {
   MotionDiagram,
   CircularPathDiagram,
   // eslint-disable-next-line @typescript-eslint/no-require-imports
-} = require('../../src/app/tutor/components/whiteboard/DiagramRenderer') as {
+} = require('../../apps/marketing/src/app/tutor/components/whiteboard/DiagramRenderer') as {
   VectorDiagram: React.ComponentType<Record<string, unknown>>;
   FreeBodyDiagram: React.ComponentType<Record<string, unknown>>;
   MotionDiagram: React.ComponentType<Record<string, unknown>>;

@@ -68,7 +68,7 @@ function isTypeOnlyModelsImport(line: string): boolean {
   console.log("outreach guards");
 
   // --- (a) mongoose barrel out of the client bundle ---
-  const outreachDir = "src/app/admin/outreach";
+  const outreachDir = "apps/marketing/src/app/admin/outreach";
   const files = walk(outreachDir).filter((f) => /\.(tsx|ts)$/.test(f));
   let clientFilesChecked = 0;
   for (const file of files) {
@@ -91,7 +91,7 @@ function isTypeOnlyModelsImport(line: string): boolean {
   check("at least one 'use client' file was actually checked (guard isn't vacuous)", clientFilesChecked > 0);
 
   // --- (b) reply watcher never touches the wider inbox ---
-  const libOutreachDir = "src/lib/outreach";
+  const libOutreachDir = "apps/marketing/src/lib/outreach";
   const libFiles = walk(libOutreachDir).filter((f) => /\.ts$/.test(f) && !f.endsWith(".test.ts"));
   const forbidden = ["threads.list", "messages.list", "messages.search"];
   let libFilesChecked = 0;

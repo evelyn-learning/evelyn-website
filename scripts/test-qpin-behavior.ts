@@ -15,7 +15,7 @@ import {
   QPIN_TOP_MIN_PX,
   QPIN_BOTTOM_RESERVED_PX,
   QPIN_SIDE_PX,
-} from '../src/lib/tutor/qpin-behavior';
+} from '../apps/marketing/src/lib/tutor/qpin-behavior';
 
 let pass = 0;
 let fail = 0;

@@ -6,7 +6,7 @@
 // because there are no $ delimiters to trigger it — this is a distinct,
 // title-only normalizer.
 import assert from 'node:assert';
-import { stripLatexForTitle } from '../src/lib/tutor/whiteboard/board-title';
+import { stripLatexForTitle } from '../apps/marketing/src/lib/tutor/whiteboard/board-title';
 
 // --- Subscript notation ---------------------------------------------
 assert.strictEqual(

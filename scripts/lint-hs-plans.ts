@@ -7,9 +7,9 @@
  * read on already-selected plans). No exemption list is needed.
  * Mirrors lint-testprep-plans.ts. Run: npm run lint:hs-plans
  */
-import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
-import type { SegmentTryYourself } from '../src/lib/tutor/lesson-plan/types';
-import { HS_PACING_THRESHOLDS } from '../src/lib/tutor/lesson-plan/seeds/_hs-shared';
+import { SEED_PLANS } from '../apps/marketing/src/lib/tutor/lesson-plan/store';
+import type { SegmentTryYourself } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
+import { HS_PACING_THRESHOLDS } from '../apps/marketing/src/lib/tutor/lesson-plan/seeds/_hs-shared';
 
 // course infix → expected identity; extend as Geometry/Bio/Chem land.
 const COURSES: Record<string, { subject: string; topic: string; loPrefix: string; std: string }> = {

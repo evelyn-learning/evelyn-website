@@ -19,7 +19,7 @@ const win = new Window();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).document = win.document;
 
-import { parseSvgDimensions } from '../src/lib/utils/export/whiteboard-capture';
+import { parseSvgDimensions } from '../apps/marketing/src/lib/utils/export/whiteboard-capture';
 
 type TC = { name: string; svg: string; expected: { width: number; height: number } };
 const cases: TC[] = [
@@ -73,7 +73,7 @@ console.log(`\n${passed}/${cases.length} parseSvgDimensions cases passed` + (fai
 // and the PDF exporter reserves 125mm for their fallback path. The aspect
 // ratio check below catches regressions in DIAGRAM_VIEWBOX that would make
 // the 125mm reservation inadequate.
-import { DIAGRAM_VIEWBOX } from '../src/lib/tutor/diagrams/layout';
+import { DIAGRAM_VIEWBOX } from '../apps/marketing/src/lib/tutor/diagrams/layout';
 const aspectRatio = DIAGRAM_VIEWBOX.height / DIAGRAM_VIEWBOX.width;
 const contentWidthMm = 170; // typical A4 portrait content width after margins
 const impliedHeightMm = aspectRatio * contentWidthMm;

@@ -9,7 +9,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { solveGeometry, type ConstructedGeometrySpec, type SolverOutput } from '../src/lib/tutor/diagrams/geometry-solver';
+import { solveGeometry, type ConstructedGeometrySpec, type SolverOutput } from '../apps/marketing/src/lib/tutor/diagrams/geometry-solver';
 
 let passed = 0;
 let failed = 0;

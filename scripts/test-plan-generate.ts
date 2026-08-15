@@ -2,7 +2,7 @@
  * Runtime lesson generation — engine-side store behavior.
  *
  * Covers the pieces of the "generate a lesson plan from raw text/topic at
- * runtime" workstream that live in `src/lib/tutor/lesson-plan/store.ts` and
+ * runtime" workstream that live in `apps/marketing/src/lib/tutor/lesson-plan/store.ts` and
  * friends. This script is extended by later tasks in the same workstream
  * (topic-plan generation cache, plan-generate / plan-expand routes) — keep
  * new tests as additional named async functions invoked from `main()`.

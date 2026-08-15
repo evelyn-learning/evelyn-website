@@ -21,7 +21,7 @@ import {
   solveUnitCircle,
   solveTransformation,
   solveInequalityGraph,
-} from '../src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -31,15 +31,15 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const rendererSource = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
   'utf8',
 );
 const dispatcherSource = readFileSync(
-  join(__dirname, '..', 'src/lib/tutor/diagrams/manifests.ts'),
+  join(__dirname, '..', 'apps/marketing/src/lib/tutor/diagrams/manifests.ts'),
   'utf8',
 );
 const toolDefsSource = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/hooks/toolDefinitions.ts'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/hooks/toolDefinitions.ts'),
   'utf8',
 );
 

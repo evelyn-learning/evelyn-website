@@ -11,10 +11,10 @@
  *
  * Run: npx tsx scripts/test-g11-alg2-cell-resolution.ts
  */
-import { resolvePlanCell } from '../src/lib/tutor/lesson-plan/resolve-cell';
-import { SEED_G11_ALG2_CONIC_SECTIONS } from '../src/lib/tutor/lesson-plan/seeds/g11-alg2-conic-sections';
-import { SEED_G11_ALG2_COMPLEX_NUMBERS } from '../src/lib/tutor/lesson-plan/seeds/g11-alg2-complex-numbers';
-import { SEED_G11_ALG2_MATRICES_INTRO } from '../src/lib/tutor/lesson-plan/seeds/g11-alg2-matrices-intro';
+import { resolvePlanCell } from '../apps/marketing/src/lib/tutor/lesson-plan/resolve-cell';
+import { SEED_G11_ALG2_CONIC_SECTIONS } from '../apps/marketing/src/lib/tutor/lesson-plan/seeds/g11-alg2-conic-sections';
+import { SEED_G11_ALG2_COMPLEX_NUMBERS } from '../apps/marketing/src/lib/tutor/lesson-plan/seeds/g11-alg2-complex-numbers';
+import { SEED_G11_ALG2_MATRICES_INTRO } from '../apps/marketing/src/lib/tutor/lesson-plan/seeds/g11-alg2-matrices-intro';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

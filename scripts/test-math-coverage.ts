@@ -28,16 +28,16 @@
  *      npx tsx scripts/test-math-coverage.ts --dump   (print actual outputs
  *      for bulk adjudication while authoring pins)
  */
-import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
-import { segment, preprocessKatexBody } from '../src/lib/tutor/whiteboard/inline-math';
+import { rewriteForTTS } from '../apps/marketing/src/lib/tutor/voice/tts-pronunciation';
+import { segment, preprocessKatexBody } from '../apps/marketing/src/lib/tutor/whiteboard/inline-math';
 import {
   captionMeasureProxy,
   tokenizeCaptionMathAtomic,
   holdBackUnbalancedMathTail,
-} from '../src/lib/tutor/whiteboard/caption-fit';
+} from '../apps/marketing/src/lib/tutor/whiteboard/caption-fit';
 import katex from 'katex';
-import { mathifyDollarSpans } from '../src/lib/utils/export/latex-readable';
-import { stripLatexForTitle } from '../src/lib/tutor/whiteboard/board-title';
+import { mathifyDollarSpans } from '../apps/marketing/src/lib/utils/export/latex-readable';
+import { stripLatexForTitle } from '../apps/marketing/src/lib/tutor/whiteboard/board-title';
 
 const DUMP = process.argv.includes('--dump');
 let pass = 0;

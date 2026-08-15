@@ -10,7 +10,7 @@ import {
   resolveSegmentEvidence,
   EVALUATIVE_SEGMENT_KINDS,
   type SegmentEvidenceSignal,
-} from '../src/lib/tutor/orchestrator/segment-evidence';
+} from '../apps/marketing/src/lib/tutor/orchestrator/segment-evidence';
 
 let passed = 0;
 let failed = 0;

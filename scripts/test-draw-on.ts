@@ -10,7 +10,7 @@ import {
   SERIAL_SPACING_MS,
   STROKE_BATCH,
   type Drawable,
-} from '../src/lib/tutor/whiteboard/draw-on';
+} from '../apps/marketing/src/lib/tutor/whiteboard/draw-on';
 
 let passed = 0;
 let failed = 0;

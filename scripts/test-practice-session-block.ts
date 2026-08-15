@@ -21,8 +21,8 @@
  * Run:
  *   npx tsx scripts/test-practice-session-block.ts
  */
-import { formatPracticeSessionBlock } from '../src/lib/tutor/voice/claude-brain';
-import { derivePracticeMode } from '../src/lib/tutor/voice/practice-mode';
+import { formatPracticeSessionBlock } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
+import { derivePracticeMode } from '../apps/marketing/src/lib/tutor/voice/practice-mode';
 
 let failed = false;
 const fail = (msg: string) => { console.error(`FAIL: ${msg}`); failed = true; };

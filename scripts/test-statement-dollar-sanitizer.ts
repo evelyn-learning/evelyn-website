@@ -6,7 +6,7 @@
  *
  * Run: npm run test:statement-dollars
  */
-import { sanitizeStatementDollars } from '../src/lib/tutor/whiteboard/statement-dollar-sanitizer';
+import { sanitizeStatementDollars } from '../apps/marketing/src/lib/tutor/whiteboard/statement-dollar-sanitizer';
 
 let pass = 0;
 let fail = 0;

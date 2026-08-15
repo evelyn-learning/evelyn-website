@@ -3,7 +3,7 @@
  * Run: npm run test:caption-sync
  * Design: docs/superpowers/specs/2026-07-04-caption-tts-word-sync-design.md
  */
-import { CaptionSyncTracker, stripMarkdownEmphasis, type SpokenProgress } from '../src/lib/tutor/voice/caption-sync';
+import { CaptionSyncTracker, stripMarkdownEmphasis, type SpokenProgress } from '../apps/marketing/src/lib/tutor/voice/caption-sync';
 
 let passed = 0;
 let failed = 0;

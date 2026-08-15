@@ -19,7 +19,7 @@ import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
 import { findViolations, type AuditCase } from './lib/svg-text-extents';
-import FractionBarRenderer from '../src/app/tutor/components/whiteboard/FractionBarRenderer';
+import FractionBarRenderer from '../apps/marketing/src/app/tutor/components/whiteboard/FractionBarRenderer';
 import { CASES as BATCH1 } from './audit-cases/batch1';
 import { CASES as BATCH2 } from './audit-cases/batch2';
 import { CASES as BATCH3 } from './audit-cases/batch3';

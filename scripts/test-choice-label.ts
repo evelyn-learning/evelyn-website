@@ -9,7 +9,7 @@
  *
  * Usage: npx tsx scripts/test-choice-label.ts  (npm run test:choice-label)
  */
-import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from '../src/app/tutor/components/whiteboard/choiceLabel';
+import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from '../apps/marketing/src/app/tutor/components/whiteboard/choiceLabel';
 
 let passed = 0;
 let failed = 0;

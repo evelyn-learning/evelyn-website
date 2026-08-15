@@ -18,9 +18,9 @@ import {
   namespaceGeneratedLos,
   buildPickerPlan,
   fallbackPlan,
-} from '../src/lib/tutor/lesson-plan/generate-from-text';
-import { loGroupOf } from '../src/lib/tutor/lesson-plan/context';
-import type { LearningObjective, Segment } from '../src/lib/tutor/lesson-plan/types';
+} from '../apps/marketing/src/lib/tutor/lesson-plan/generate-from-text';
+import { loGroupOf } from '../apps/marketing/src/lib/tutor/lesson-plan/context';
+import type { LearningObjective, Segment } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 /* 1. mintGeneratedPlanId — unique within a single millisecond (M3: the old
       `freestyle-${Date.now()}` collided under the org batch's concurrency 2). */

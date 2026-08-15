@@ -12,7 +12,7 @@
  *
  * Run: npx tsx scripts/test-ws-recovery.ts
  */
-import { shouldSurfaceWsError, shouldReconnectOnForeground } from '../src/lib/tutor/voice/ws-recovery';
+import { shouldSurfaceWsError, shouldReconnectOnForeground } from '../apps/marketing/src/lib/tutor/voice/ws-recovery';
 
 const WS_CONNECTING = 0;
 const WS_OPEN = 1;

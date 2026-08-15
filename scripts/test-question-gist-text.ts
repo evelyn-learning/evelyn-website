@@ -11,7 +11,7 @@
  *
  * Run: npx tsx scripts/test-question-gist-text.ts
  */
-import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply } from '../src/lib/tutor/question-gist-text';
+import { stripMarkdownEmphasis, lastQuestionSentence, parseGistReply } from '../apps/marketing/src/lib/tutor/question-gist-text';
 
 let pass = 0;
 let fail = 0;

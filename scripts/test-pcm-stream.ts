@@ -1,4 +1,4 @@
-import { openPcmChunkStream } from '../src/lib/tutor/voice/pcm-stream';
+import { openPcmChunkStream } from '../apps/marketing/src/lib/tutor/voice/pcm-stream';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

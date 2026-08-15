@@ -27,16 +27,16 @@
  * doesn't. Default 1.
  */
 import { readFileSync } from 'fs';
-import { streamBrainTurn, type BrainToolCall } from '../src/lib/tutor/voice/claude-brain';
-import { WHITEBOARD_TOOLS } from '../src/app/tutor/hooks/toolDefinitions';
-import { validateCircuit } from '../src/lib/tutor/diagrams/circuit-validator';
-import { validateCollision } from '../src/lib/tutor/diagrams/collision-validator';
-import { validateEnergyBars } from '../src/lib/tutor/diagrams/energy-bars-validator';
-import { validateFlowchart } from '../src/lib/tutor/diagrams/flowchart-validator';
-import { validateManipulative } from '../src/lib/tutor/diagrams/manipulative-validator';
-import { validatePedigree } from '../src/lib/tutor/diagrams/pedigree-validator';
-import { validateReactionCoordinate } from '../src/lib/tutor/diagrams/reaction-coordinate-validator';
-import { validateSpringMass } from '../src/lib/tutor/diagrams/spring-mass-validator';
+import { streamBrainTurn, type BrainToolCall } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
+import { WHITEBOARD_TOOLS } from '../apps/marketing/src/app/tutor/hooks/toolDefinitions';
+import { validateCircuit } from '../apps/marketing/src/lib/tutor/diagrams/circuit-validator';
+import { validateCollision } from '../apps/marketing/src/lib/tutor/diagrams/collision-validator';
+import { validateEnergyBars } from '../apps/marketing/src/lib/tutor/diagrams/energy-bars-validator';
+import { validateFlowchart } from '../apps/marketing/src/lib/tutor/diagrams/flowchart-validator';
+import { validateManipulative } from '../apps/marketing/src/lib/tutor/diagrams/manipulative-validator';
+import { validatePedigree } from '../apps/marketing/src/lib/tutor/diagrams/pedigree-validator';
+import { validateReactionCoordinate } from '../apps/marketing/src/lib/tutor/diagrams/reaction-coordinate-validator';
+import { validateSpringMass } from '../apps/marketing/src/lib/tutor/diagrams/spring-mass-validator';
 
 // ── Parse the test-prompts markdown into { tool: prompts[] } ─────────────────
 

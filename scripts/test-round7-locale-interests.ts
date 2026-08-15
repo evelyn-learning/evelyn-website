@@ -16,11 +16,11 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { buildSystemPrompt, type SystemPromptContext } from '../src/lib/tutor/ai/system-prompt-builder';
-import { renderAnalogiesBlock } from '../src/lib/tutor/pedagogy/analogies';
-import { getGradeProfile } from '../src/lib/tutor/pedagogy/grade-profile';
-import { renderStudentProfileBlock } from '../src/lib/tutor/student-profile/render';
-import type { StudentProfile } from '../src/lib/tutor/student-profile/types';
+import { buildSystemPrompt, type SystemPromptContext } from '../apps/marketing/src/lib/tutor/ai/system-prompt-builder';
+import { renderAnalogiesBlock } from '../apps/marketing/src/lib/tutor/pedagogy/analogies';
+import { getGradeProfile } from '../apps/marketing/src/lib/tutor/pedagogy/grade-profile';
+import { renderStudentProfileBlock } from '../apps/marketing/src/lib/tutor/student-profile/render';
+import type { StudentProfile } from '../apps/marketing/src/lib/tutor/student-profile/types';
 
 let passed = 0;
 let failed = 0;

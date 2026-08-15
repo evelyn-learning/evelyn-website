@@ -2,7 +2,7 @@
  * Unit test for the intra-sentence resume-from-cut clause-tail extractor (P5).
  * Usage: npx tsx scripts/test-resume-from-cut.ts
  */
-import { clauseTailFromFraction, preciseSentenceFraction } from '../src/lib/tutor/voice/resume-from-cut';
+import { clauseTailFromFraction, preciseSentenceFraction } from '../apps/marketing/src/lib/tutor/voice/resume-from-cut';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

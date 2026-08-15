@@ -26,8 +26,8 @@
  *   npx tsx scripts/test-replay-scrubber.ts
  */
 import assert from 'node:assert';
-import { buildCompressedTimeline } from '../src/lib/tutor/recordings/compressed-timeline';
-import { alignEvenBytes, findSegmentAt, frontierSec, type SegmentSpan } from '../src/lib/tutor/recordings/audio-segments';
+import { buildCompressedTimeline } from '../apps/marketing/src/lib/tutor/recordings/compressed-timeline';
+import { alignEvenBytes, findSegmentAt, frontierSec, type SegmentSpan } from '../apps/marketing/src/lib/tutor/recordings/audio-segments';
 
 let passed = 0;
 function check(label: string, fn: () => void) {

@@ -12,11 +12,11 @@
  *
  * Usage: npx tsx scripts/test-learner-model.ts  (npm run test:learner-model)
  */
-import { estimateLo, trendOf, nextReviewAt } from '../src/lib/tutor/learner-model/estimator';
-import { bandForElo } from '../src/lib/tutor/learner-model/hints';
-import { projectScore, scaleForTopic, mapLoIdsToSections } from '../src/lib/tutor/learner-model/projection';
-import { getBlueprint } from '../src/lib/tutor/mock-exam/blueprints';
-import type { ScoringSpec } from '../src/lib/tutor/mock-exam/blueprints';
+import { estimateLo, trendOf, nextReviewAt } from '../apps/marketing/src/lib/tutor/learner-model/estimator';
+import { bandForElo } from '../apps/marketing/src/lib/tutor/learner-model/hints';
+import { projectScore, scaleForTopic, mapLoIdsToSections } from '../apps/marketing/src/lib/tutor/learner-model/projection';
+import { getBlueprint } from '../apps/marketing/src/lib/tutor/mock-exam/blueprints';
+import type { ScoringSpec } from '../apps/marketing/src/lib/tutor/mock-exam/blueprints';
 import type { SessionEmitRequest } from '@evelyn/portal-contract/v1';
 import type { GradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import type { LearningObjective, Segment } from '@/lib/tutor/lesson-plan/types';
@@ -257,10 +257,10 @@ async function runLearnerHintsTests() {
     return;
   }
 
-  const { getLearnerHints } = await import('../src/lib/tutor/learner-model/hints');
-  const { getOrCreateStudentProfile, saveStudentProfile } = await import('../src/lib/tutor/student-profile/store');
-  const { StudentProfileModel } = await import('../src/models/StudentProfile');
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { getLearnerHints } = await import('../apps/marketing/src/lib/tutor/learner-model/hints');
+  const { getOrCreateStudentProfile, saveStudentProfile } = await import('../apps/marketing/src/lib/tutor/student-profile/store');
+  const { StudentProfileModel } = await import('../apps/marketing/src/models/StudentProfile');
+  const { deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('@core/db');
 
   await connectDB();
@@ -356,14 +356,14 @@ async function runDbTests() {
     return;
   }
 
-  const { appendEvidence, deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { appendEvidence, deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const {
     EvidenceEventModel,
     LearnerStateProjectionModel,
     LearnerStateSnapshotModel,
     EloRatingModel,
     buildLearnerStateProjectionId,
-  } = await import('../src/models');
+  } = await import('../apps/marketing/src/models');
   const { default: connectDB } = await import('@core/db');
 
   await connectDB();
@@ -492,16 +492,16 @@ async function runServerAppendPointTests() {
     return;
   }
 
-  const { EvidenceEventModel } = await import('../src/models');
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
-  const { emitSessionResult } = await import('../src/lib/tutor/portal/session-result');
-  const { submitAssessment } = await import('../src/lib/tutor/portal/assessment');
-  const { ensureGraded } = await import('../src/lib/tutor/mock-exam/report');
+  const { EvidenceEventModel } = await import('../apps/marketing/src/models');
+  const { deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
+  const { emitSessionResult } = await import('../apps/marketing/src/lib/tutor/portal/session-result');
+  const { submitAssessment } = await import('../apps/marketing/src/lib/tutor/portal/assessment');
+  const { ensureGraded } = await import('../apps/marketing/src/lib/tutor/mock-exam/report');
   const { memoryMockStores, startOrResume, saveResponses, advance, finalizeOpenModule } = await import(
-    '../src/lib/tutor/mock-exam/service'
+    '../apps/marketing/src/lib/tutor/mock-exam/service'
   );
-  const { FIXTURE_FORM, FIXTURE_ITEMS } = await import('../src/lib/tutor/mock-exam/fixtures');
-  const { registerBlueprint } = await import('../src/lib/tutor/mock-exam/blueprints');
+  const { FIXTURE_FORM, FIXTURE_ITEMS } = await import('../apps/marketing/src/lib/tutor/mock-exam/fixtures');
+  const { registerBlueprint } = await import('../apps/marketing/src/lib/tutor/mock-exam/blueprints');
 
   console.log('\nServer append points — emit / assessment / mock (Task 8):\n');
 
@@ -1036,12 +1036,12 @@ async function runLearnerStateRouteTests() {
   const { signPortalRequest } = await import('@evelyn/portal-contract/auth');
   const { LearnerStateResponseSchema } = await import('@evelyn/portal-contract/v1');
   const { GET: learnerStateGET, POST: learnerStatePOST } = await import(
-    '../src/app/api/portal/v1/learner-state/route'
+    '../apps/marketing/src/app/api/portal/v1/learner-state/route'
   );
   const { LearnerStateProjectionModel, LearnerStateSnapshotModel, buildLearnerStateProjectionId } = await import(
-    '../src/models'
+    '../apps/marketing/src/models'
   );
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
@@ -1230,9 +1230,9 @@ async function runStudentProfileSegmentOutcomesTests() {
     return;
   }
 
-  const { POST: profilePOST } = await import('../src/app/api/tutor/student-profile/[id]/route');
-  const { EvidenceEventModel } = await import('../src/models');
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { POST: profilePOST } = await import('../apps/marketing/src/app/api/tutor/student-profile/[id]/route');
+  const { EvidenceEventModel } = await import('../apps/marketing/src/models');
+  const { deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
@@ -1359,12 +1359,12 @@ async function runStudentProfileEmbedAuthTests() {
   }
 
   const { GET: profileGET, POST: profilePOST } = await import(
-    '../src/app/api/tutor/student-profile/[id]/route'
+    '../apps/marketing/src/app/api/tutor/student-profile/[id]/route'
   );
-  const { signEmbedToken } = await import('../src/lib/tutor/portal/embed-token');
-  const { EvidenceEventModel } = await import('../src/models');
-  const { getOrCreateStudentProfile } = await import('../src/lib/tutor/student-profile/store');
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { signEmbedToken } = await import('../apps/marketing/src/lib/tutor/portal/embed-token');
+  const { EvidenceEventModel } = await import('../apps/marketing/src/models');
+  const { getOrCreateStudentProfile } = await import('../apps/marketing/src/lib/tutor/student-profile/store');
+  const { deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
@@ -1509,9 +1509,9 @@ async function runSessionUsageEmbedAuthTests() {
     return;
   }
 
-  const { GET: usageGET, POST: usagePOST } = await import('../src/app/api/tutor/session-usage/route');
-  const { signEmbedToken } = await import('../src/lib/tutor/portal/embed-token');
-  const { TutorSession } = await import('../src/models/TutorSession');
+  const { GET: usageGET, POST: usagePOST } = await import('../apps/marketing/src/app/api/tutor/session-usage/route');
+  const { signEmbedToken } = await import('../apps/marketing/src/lib/tutor/portal/embed-token');
+  const { TutorSession } = await import('../apps/marketing/src/models/TutorSession');
   const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
@@ -1632,11 +1632,11 @@ async function runLearnerSnapshotTests() {
     return;
   }
 
-  const { runLearnerSnapshot } = await import('../src/lib/tutor/learner-model/snapshot-job');
+  const { runLearnerSnapshot } = await import('../apps/marketing/src/lib/tutor/learner-model/snapshot-job');
   const { LearnerStateProjectionModel, LearnerStateSnapshotModel, buildLearnerStateProjectionId } = await import(
-    '../src/models'
+    '../apps/marketing/src/models'
   );
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('@core/db');
 
   await connectDB();
@@ -1755,11 +1755,11 @@ async function runStudentEraseRouteTests() {
   process.env.PORTAL_PARTNER_SECRETS = process.env.PORTAL_PARTNER_SECRETS ?? JSON.stringify({ portalA: 'secret-a' });
   const { signPortalRequest } = await import('@evelyn/portal-contract/auth');
   const { StudentEraseResponseSchema } = await import('@evelyn/portal-contract/v1');
-  const { POST: eraseRoutePOST } = await import('../src/app/api/portal/v1/student-erase/route');
+  const { POST: eraseRoutePOST } = await import('../apps/marketing/src/app/api/portal/v1/student-erase/route');
   const { EvidenceEventModel, LearnerStateProjectionModel, LearnerStateSnapshotModel } = await import(
-    '../src/models'
+    '../apps/marketing/src/models'
   );
-  const { appendEvidence, deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { appendEvidence, deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 
@@ -1874,11 +1874,11 @@ async function runBackfillEvidenceTests() {
     return;
   }
 
-  const { EvidenceEventModel } = await import('../src/models');
-  const { appendEvidence, deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { EvidenceEventModel } = await import('../apps/marketing/src/models');
+  const { appendEvidence, deleteLearnerModelData } = await import('../apps/marketing/src/lib/tutor/learner-model/store');
   const { default: connectDB } = await import('@core/db');
-  const { MockAttempt } = await import('../src/models/MockAttempt');
-  const { StudentProfileModel } = await import('../src/models/StudentProfile');
+  const { MockAttempt } = await import('../apps/marketing/src/models/MockAttempt');
+  const { StudentProfileModel } = await import('../apps/marketing/src/models/StudentProfile');
   const {
     runBackfill,
     parseJsonlEvidence,
@@ -2176,10 +2176,10 @@ async function runReviewPlanComposerTests() {
     return;
   }
 
-  const { composeReviewPlan, REVIEW_STAGE2_SYSTEM } = await import('../src/lib/tutor/lesson-plan/compose-review-plan');
-  const { getLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
-  const { loGroupOf } = await import('../src/lib/tutor/lesson-plan/context');
-  const { LearnerStateProjectionModel, buildLearnerStateProjectionId } = await import('../src/models');
+  const { composeReviewPlan, REVIEW_STAGE2_SYSTEM } = await import('../apps/marketing/src/lib/tutor/lesson-plan/compose-review-plan');
+  const { getLessonPlan, deleteLessonPlan } = await import('../apps/marketing/src/lib/tutor/lesson-plan/store');
+  const { loGroupOf } = await import('../apps/marketing/src/lib/tutor/lesson-plan/context');
+  const { LearnerStateProjectionModel, buildLearnerStateProjectionId } = await import('../apps/marketing/src/models');
   const { default: connectDB } = await import('@core/db');
 
   await connectDB();
@@ -2264,10 +2264,10 @@ async function runReviewPlanComposerTests() {
     // differs (review has no worked_example segment to talk about).
     {
       const { getOrCreateStudentProfile, saveStudentProfile } = await import(
-        '../src/lib/tutor/student-profile/store'
+        '../apps/marketing/src/lib/tutor/student-profile/store'
       );
-      const { StudentProfileModel } = await import('../src/models/StudentProfile');
-      const { buildStage2UserMessage } = await import('../src/lib/tutor/lesson-plan/generate-from-text');
+      const { StudentProfileModel } = await import('../apps/marketing/src/models/StudentProfile');
+      const { buildStage2UserMessage } = await import('../apps/marketing/src/lib/tutor/lesson-plan/generate-from-text');
 
       const hintsStudentId = `revhints:${process.pid}`;
       await StudentProfileModel.deleteOne({ _id: hintsStudentId });
@@ -2474,7 +2474,7 @@ async function runReviewPlanComposerTests() {
  *  tests up top). Covers renderLearnerContextBlock's shape, the
  *  both-empty → null case, and the LO/gap caps. */
 async function runLearnerContextBlockPureTests() {
-  const { renderLearnerContextBlock } = await import('../src/lib/tutor/learner-model/context-block');
+  const { renderLearnerContextBlock } = await import('../apps/marketing/src/lib/tutor/learner-model/context-block');
 
   console.log('\nlearner-context block — pure render (Task 17):\n');
 
@@ -2550,12 +2550,12 @@ async function runLearnerContextBlockDbTests() {
     return;
   }
 
-  const { getLearnerContextBlock } = await import('../src/lib/tutor/learner-model/context-block');
-  const { upsertLessonPlan, deleteLessonPlan } = await import('../src/lib/tutor/lesson-plan/store');
-  const { LearnerStateProjectionModel, buildLearnerStateProjectionId } = await import('../src/models');
-  const { StudentProfileModel } = await import('../src/models/StudentProfile');
-  const { getOrCreateStudentProfile, saveStudentProfile } = await import('../src/lib/tutor/student-profile/store');
-  const { GET: profileGET } = await import('../src/app/api/tutor/student-profile/[id]/route');
+  const { getLearnerContextBlock } = await import('../apps/marketing/src/lib/tutor/learner-model/context-block');
+  const { upsertLessonPlan, deleteLessonPlan } = await import('../apps/marketing/src/lib/tutor/lesson-plan/store');
+  const { LearnerStateProjectionModel, buildLearnerStateProjectionId } = await import('../apps/marketing/src/models');
+  const { StudentProfileModel } = await import('../apps/marketing/src/models/StudentProfile');
+  const { getOrCreateStudentProfile, saveStudentProfile } = await import('../apps/marketing/src/lib/tutor/student-profile/store');
+  const { GET: profileGET } = await import('../apps/marketing/src/app/api/tutor/student-profile/[id]/route');
   const { default: connectDB } = await import('@core/db');
   const { NextRequest } = await import('next/server');
 

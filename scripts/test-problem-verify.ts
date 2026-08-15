@@ -5,7 +5,7 @@
  * generated problem is safe to serve (mismatch ⇒ fall back to authored).
  */
 import { strict as assert } from 'node:assert';
-import { extractAnswerNumber, answersAgree } from '../src/lib/tutor/voice/problem-generator';
+import { extractAnswerNumber, answersAgree } from '../apps/marketing/src/lib/tutor/voice/problem-generator';
 
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void) {

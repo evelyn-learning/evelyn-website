@@ -17,7 +17,7 @@ import {
   wrapUncertainTranscript,
   filterTranscriptText,
   type TranscriptClassification,
-} from "../src/lib/tutor/voice/transcript-filters";
+} from "../apps/marketing/src/lib/tutor/voice/transcript-filters";
 
 type TC = {
   input: string;

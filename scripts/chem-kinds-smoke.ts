@@ -17,13 +17,13 @@ import {
   solveGalvanicCell,
   solveTitrationCurve,
   solveCrystalLattice,
-} from '../src/lib/tutor/diagrams/catalog/kinds/chemistry';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/chemistry';
 import {
   CatalogBohrRenderer,
   CatalogGalvanicRenderer,
   CatalogTitrationRenderer,
   CatalogLatticeRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogChemistryRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogChemistryRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

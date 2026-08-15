@@ -11,7 +11,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { detectDemoIntent } from '../src/lib/tutor/demo-intent';
+import { detectDemoIntent } from '../apps/marketing/src/lib/tutor/demo-intent';
 
 let passed = 0;
 let failed = 0;

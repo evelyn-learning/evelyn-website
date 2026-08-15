@@ -4,7 +4,7 @@
  *   npm run test:process-tool-call
  */
 import assert from 'node:assert';
-import { processToolCall, toAction, toWhiteboardCommand, decideFallbackCard } from '../src/lib/tutor/whiteboard/process-tool-call';
+import { processToolCall, toAction, toWhiteboardCommand, decideFallbackCard } from '../apps/marketing/src/lib/tutor/whiteboard/process-tool-call';
 
 let passed = 0;
 function check(label: string, fn: () => void) {

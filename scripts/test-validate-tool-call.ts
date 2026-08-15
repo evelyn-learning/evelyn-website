@@ -1,4 +1,4 @@
-import { validateToolCall } from '../src/lib/tutor/whiteboard/validate-tool-call';
+import { validateToolCall } from '../apps/marketing/src/lib/tutor/whiteboard/validate-tool-call';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

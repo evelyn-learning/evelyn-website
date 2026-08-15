@@ -9,12 +9,17 @@ const nextConfig: NextConfig = {
   // atomically swapped into .next (deploy-update.sh). Unset everywhere else,
   // including `next start`, which must keep reading the default .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
-  // Pin the Turbopack workspace root to this repo. Without it, builds on the
+  // Pin the Turbopack workspace root to the repo root (two levels up from
+  // this app, which lives at apps/marketing/). Without it, builds on the
   // prod server see stray /root/package-lock.json junk and infer /root as the
   // workspace root ("multiple lockfiles" warning on every deploy), making
   // Turbopack's root-relative resolution span the whole home directory.
+  // It must stay pinned at the repo root — not this app dir — because
+  // deps are hoisted to the workspace root's node_modules (npm workspaces);
+  // pinning to the app dir makes Turbopack treat it as a hermetic
+  // filesystem boundary and it can no longer find next/package.json above it.
   turbopack: {
-    root: path.join(__dirname),
+    root: path.join(__dirname, "..", ".."),
   },
   // Raise the middleware-enforced request body cap. Default is 10MB,
   // which was being exceeded by /api/tutor/session-audio flushes on

@@ -16,7 +16,7 @@
  *
  * Run: npx tsx scripts/test-verdict-guard.ts
  */
-import { formatVerdictGuardBlock } from '../src/lib/tutor/voice/claude-brain';
+import { formatVerdictGuardBlock } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {

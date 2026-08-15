@@ -13,7 +13,7 @@
  *
  * No live DB required: stubs `connectDB` (no-op) and `LessonPlanModel.find`
  * directly, mirroring the existing DB-stub convention in
- * `src/lib/tutor/portal/adapters.test.ts` (captured-filter assertions there;
+ * `apps/marketing/src/lib/tutor/portal/adapters.test.ts` (captured-filter assertions there;
  * here the stub also returns a realistic `doc.toJSON()` so
  * `store.ts`'s `findStoredPlansByLoId` -> `toLessonPlan` round-trips the
  * fields `adapters.ts`'s `toPlanLite` actually reads).

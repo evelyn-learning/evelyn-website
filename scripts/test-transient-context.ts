@@ -10,16 +10,16 @@
 import { strict as assert } from 'node:assert';
 import {
   renderStudentProfileBlock,
-} from '../src/lib/tutor/student-profile/render';
+} from '../apps/marketing/src/lib/tutor/student-profile/render';
 import {
   renderTransientContextBlock,
   LAST_OPENER_DIGEST_MAX_CHARS,
   type LastOpenerRecord,
-} from '../src/lib/tutor/student-profile/transient-context';
+} from '../apps/marketing/src/lib/tutor/student-profile/transient-context';
 import {
   STUDENT_PROFILE_SCHEMA_VERSION,
   type StudentProfile,
-} from '../src/lib/tutor/student-profile/types';
+} from '../apps/marketing/src/lib/tutor/student-profile/types';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 
 let passed = 0;

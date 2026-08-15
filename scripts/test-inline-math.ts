@@ -10,7 +10,7 @@
  *
  * Run: npm run test:inline-math
  */
-import { segment, autoWrapLatex, normalizeSentenceGaps } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapLatex, normalizeSentenceGaps } from '../apps/marketing/src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;

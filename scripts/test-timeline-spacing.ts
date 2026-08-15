@@ -4,7 +4,7 @@
  *   npm run test:timeline
  */
 import assert from 'node:assert';
-import { solveHistoricalTimeline } from '../src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+import { solveHistoricalTimeline } from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 let passed = 0;
 function check(label: string, fn: () => void) {

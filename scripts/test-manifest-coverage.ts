@@ -9,7 +9,7 @@
  *
  * Run: npx tsx scripts/test-manifest-coverage.ts
  */
-import { buildManifestForCommand, buildGenericContentManifest } from '../src/lib/tutor/diagrams/manifests';
+import { buildManifestForCommand, buildGenericContentManifest } from '../apps/marketing/src/lib/tutor/diagrams/manifests';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 
 let passed = 0, failed = 0;

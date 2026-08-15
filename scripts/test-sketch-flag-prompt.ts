@@ -15,7 +15,7 @@ import { execFileSync } from 'node:child_process';
 
 async function assertMode() {
   const { strict: assert } = await import('node:assert');
-  const { buildSystemPrompt } = await import('../src/lib/tutor/ai/system-prompt-builder');
+  const { buildSystemPrompt } = await import('../apps/marketing/src/lib/tutor/ai/system-prompt-builder');
   const prompt = buildSystemPrompt({ module: null, studentName: 'Ravi' });
   const mentions = prompt.includes('show_sketch');
   if (process.env.TUTOR_SKETCH === 'true') {

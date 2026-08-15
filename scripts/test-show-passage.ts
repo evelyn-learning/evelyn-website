@@ -9,8 +9,8 @@
  *
  * Run: npm run test:show-passage
  */
-import { solvePassage } from '../src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
-import { splitHighlights } from '../src/lib/tutor/whiteboard/passage-highlights';
+import { solvePassage } from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+import { splitHighlights } from '../apps/marketing/src/lib/tutor/whiteboard/passage-highlights';
 
 let pass = 0;
 let fail = 0;

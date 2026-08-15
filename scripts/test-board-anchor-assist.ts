@@ -9,7 +9,7 @@ import {
   anchorWordIndex,
   extractAnchorKeywords,
   sentenceIntroducesAnchor,
-} from '../src/lib/tutor/whiteboard/board-anchor-assist';
+} from '../apps/marketing/src/lib/tutor/whiteboard/board-anchor-assist';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

@@ -24,12 +24,12 @@ import {
   NOMINAL_FRAME_MS,
   type BargeInFrame,
   type BargeInGateInput,
-} from '../src/lib/tutor/voice/bargein-gate';
+} from '../apps/marketing/src/lib/tutor/voice/bargein-gate';
 import {
   BARGEIN_SUSTAIN_MS,
   BARGEIN_ENERGY_FLOOR,
   BARGEIN_ECHO_MARGIN,
-} from '../src/lib/tutor/orchestrator/flags';
+} from '../apps/marketing/src/lib/tutor/orchestrator/flags';
 
 let passed = 0;
 let failed = 0;

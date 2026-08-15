@@ -3,7 +3,7 @@
  *
  * Run: npx ts-node -O '{"module":"commonjs","moduleResolution":"node"}' --transpile-only scripts/test-compound-classifier.ts
  */
-import { classifyCompound } from '../src/lib/tutor/chemistry/compound-classifier';
+import { classifyCompound } from '../apps/marketing/src/lib/tutor/chemistry/compound-classifier';
 
 let pass = 0;
 let fail = 0;

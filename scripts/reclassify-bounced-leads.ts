@@ -39,8 +39,8 @@ async function main(): Promise<void> {
 
   // Imported AFTER loadEnv ran: gmail.ts reads its OAuth config at module
   // scope, so a top-of-file import would capture it before the env file was.
-  const { getThreadMessages } = await import('../src/lib/outreach/gmail');
-  const { isBounceSender } = await import('../src/lib/outreach/reply-detect');
+  const { getThreadMessages } = await import('../apps/marketing/src/lib/outreach/gmail');
+  const { isBounceSender } = await import('../apps/marketing/src/lib/outreach/reply-detect');
 
   const leads = await mongoose.connection
     .collection('leads')

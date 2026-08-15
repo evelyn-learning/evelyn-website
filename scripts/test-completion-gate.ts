@@ -27,7 +27,7 @@ import {
   shouldFireRecapMilestone,
   type CompletionSignal,
   type CompletionOutcome,
-} from '../src/lib/tutor/ai/completion-gate';
+} from '../apps/marketing/src/lib/tutor/ai/completion-gate';
 
 let passed = 0;
 let failed = 0;

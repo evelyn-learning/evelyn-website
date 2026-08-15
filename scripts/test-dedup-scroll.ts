@@ -14,7 +14,7 @@
  *
  * Run: npx tsx scripts/test-dedup-scroll.ts
  */
-import { shouldScrollToDedupedItem } from '../src/lib/tutor/whiteboard/dedup-scroll';
+import { shouldScrollToDedupedItem } from '../apps/marketing/src/lib/tutor/whiteboard/dedup-scroll';
 
 let failures = 0;
 function check(name: string, actual: boolean, expected: boolean) {

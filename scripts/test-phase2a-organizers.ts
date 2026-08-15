@@ -38,7 +38,7 @@ import {
   solveOrganizer,
   solveArgumentStructure,
   solveGovernmentBranches,
-} from '../src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -48,7 +48,7 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const rendererSource = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
   'utf8',
 );
 
@@ -213,7 +213,7 @@ function expectInSource(token: string, kindLabel: string): void {
   // Quick check that the dispatcher in manifests.ts handles each kind.
   // Read source and verify the case labels appear.
   const dispatcherSource = readFileSync(
-    join(__dirname, '..', 'src/lib/tutor/diagrams/manifests.ts'),
+    join(__dirname, '..', 'apps/marketing/src/lib/tutor/diagrams/manifests.ts'),
     'utf8',
   );
   expect(dispatcherSource.includes("case 't_chart':"), 'dispatcher: missing case t_chart');

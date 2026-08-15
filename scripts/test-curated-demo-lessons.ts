@@ -7,8 +7,8 @@
  * subject/level/topic cascade via the resolved cell).
  */
 
-import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
-import { resolvePlanCell } from '../src/lib/tutor/lesson-plan/resolve-cell';
+import { SEED_PLANS } from '../apps/marketing/src/lib/tutor/lesson-plan/store';
+import { resolvePlanCell } from '../apps/marketing/src/lib/tutor/lesson-plan/resolve-cell';
 import { CURATED_DEMO_LESSONS } from '@core/demo/curated-demo-lessons';
 
 let failures = 0;

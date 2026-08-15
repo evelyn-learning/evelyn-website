@@ -42,8 +42,8 @@
  * Run: npm run test:subject-notation
  *      npx tsx scripts/test-subject-notation-coverage.ts --dump
  */
-import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
-import { segment } from '../src/lib/tutor/whiteboard/inline-math';
+import { rewriteForTTS } from '../apps/marketing/src/lib/tutor/voice/tts-pronunciation';
+import { segment } from '../apps/marketing/src/lib/tutor/whiteboard/inline-math';
 import katex from 'katex';
 
 const DUMP = process.argv.includes('--dump');

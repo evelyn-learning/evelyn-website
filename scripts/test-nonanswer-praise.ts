@@ -9,7 +9,7 @@ import {
   classifyNonAnswer,
   shouldKillNonAnswerPraise,
   nonAnswerPraiseFeedback,
-} from '../src/lib/tutor/voice/nonanswer-praise';
+} from '../apps/marketing/src/lib/tutor/voice/nonanswer-praise';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {

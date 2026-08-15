@@ -17,13 +17,13 @@ import {
   solveHRDiagram,
   solveVolcanoCrossSection,
   solveAtmosphereLayers,
-} from '../src/lib/tutor/diagrams/catalog/kinds/earth-space';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/earth-space';
 import {
   CatalogGeologicCrossSectionRenderer,
   CatalogHRDiagramRenderer,
   CatalogVolcanoCrossSectionRenderer,
   CatalogAtmosphereLayersRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogEarthSpaceRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogEarthSpaceRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

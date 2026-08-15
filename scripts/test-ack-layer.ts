@@ -1,4 +1,4 @@
-import { shouldSpeakAck, pickAck, ACK_PHRASES, type AckInput } from '../src/lib/tutor/voice/ack-layer';
+import { shouldSpeakAck, pickAck, ACK_PHRASES, type AckInput } from '../apps/marketing/src/lib/tutor/voice/ack-layer';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

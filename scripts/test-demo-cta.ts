@@ -13,7 +13,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { shouldShowDemoCta } from '../src/lib/tutor/demo-cta';
+import { shouldShowDemoCta } from '../apps/marketing/src/lib/tutor/demo-cta';
 
 let passed = 0;
 let failed = 0;

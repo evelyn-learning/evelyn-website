@@ -16,7 +16,7 @@ import {
   base64ToFloat32,
   SonicContextDemux,
   wordIndexAt,
-} from '../src/lib/tutor/voice/sonic-ws';
+} from '../apps/marketing/src/lib/tutor/voice/sonic-ws';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

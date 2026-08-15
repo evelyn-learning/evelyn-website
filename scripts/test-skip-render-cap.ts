@@ -31,8 +31,8 @@ import {
   isSkipTurn,
   isVisualTool,
   SKIP_TURN_RENDER_CAP,
-} from '../src/lib/tutor/engine/turn-pacing';
-import type { BrainStreamEvent } from '../src/lib/tutor/voice/claude-brain';
+} from '../apps/marketing/src/lib/tutor/engine/turn-pacing';
+import type { BrainStreamEvent } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
 
 let passed = 0;
 let failed = 0;

@@ -9,7 +9,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { WhiteboardCatalog, computeAnchorKey } from '../src/lib/tutor/whiteboard/catalog';
+import { WhiteboardCatalog, computeAnchorKey } from '../apps/marketing/src/lib/tutor/whiteboard/catalog';
 
 let passed = 0;
 let failed = 0;

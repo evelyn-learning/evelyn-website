@@ -4,7 +4,7 @@
  *
  * Run: npm run test:math-label
  */
-import { prettyMathLabel } from '../src/lib/tutor/whiteboard/math-label';
+import { prettyMathLabel } from '../apps/marketing/src/lib/tutor/whiteboard/math-label';
 
 let pass = 0;
 let fail = 0;

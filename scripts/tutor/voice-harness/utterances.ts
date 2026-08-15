@@ -2,7 +2,7 @@
 // The 12 authored tutor utterances (spec Phase 1). Raw text is what the
 // brain would emit; `tts` is what every provider actually receives —
 // through the REAL production pronunciation seam.
-import { rewriteForTTS } from '../../../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS } from '../../../apps/marketing/src/lib/tutor/voice/tts-pronunciation';
 
 export interface Utterance { id: string; style: string; raw: string; tts: string }
 

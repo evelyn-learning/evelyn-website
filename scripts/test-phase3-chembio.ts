@@ -24,7 +24,7 @@ import {
   solveOrbitalDiagram,
   solvePeriodicTableHighlight,
   solvePunnettSquare,
-} from '../src/lib/tutor/diagrams/catalog/kinds/chem-bio';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -34,23 +34,23 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const electronRenderer = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogElectronConfigurationRenderer.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogElectronConfigurationRenderer.tsx'),
   'utf8',
 );
 const orbitalRenderer = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogOrbitalDiagramRenderer.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogOrbitalDiagramRenderer.tsx'),
   'utf8',
 );
 const periodicRenderer = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogPeriodicTableHighlightRenderer.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogPeriodicTableHighlightRenderer.tsx'),
   'utf8',
 );
 const punnettRenderer = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogPunnettSquareRenderer.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogPunnettSquareRenderer.tsx'),
   'utf8',
 );
 const dispatcherSource = readFileSync(
-  join(__dirname, '..', 'src/lib/tutor/diagrams/manifests.ts'),
+  join(__dirname, '..', 'apps/marketing/src/lib/tutor/diagrams/manifests.ts'),
   'utf8',
 );
 

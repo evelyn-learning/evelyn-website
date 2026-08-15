@@ -19,8 +19,8 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { applyCrossSessionPromotion, resolveSettledGaps, isGapStale, upsertSessionMemory } from '../src/lib/tutor/student-profile/store';
-import type { StudentProfile, GapEntry, MasteryEntry, SessionMemory } from '../src/lib/tutor/student-profile/types';
+import { applyCrossSessionPromotion, resolveSettledGaps, isGapStale, upsertSessionMemory } from '../apps/marketing/src/lib/tutor/student-profile/store';
+import type { StudentProfile, GapEntry, MasteryEntry, SessionMemory } from '../apps/marketing/src/lib/tutor/student-profile/types';
 
 let passed = 0;
 let failed = 0;

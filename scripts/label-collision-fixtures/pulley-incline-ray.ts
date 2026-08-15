@@ -4,10 +4,10 @@
  */
 import React from 'react';
 import type { LabelFixture } from '../lib/label-collision-harness';
-import { PulleySystemRenderer } from '../../src/app/tutor/components/whiteboard/PulleySystemRenderer';
-import { InclinedPlaneRenderer } from '../../src/app/tutor/components/whiteboard/InclinedPlaneRenderer';
-import RayDiagramRenderer from '../../src/app/tutor/components/whiteboard/RayDiagramRenderer';
-import type { PulleyFigure, InclinedPlaneFigure } from '../../src/lib/tutor/diagrams/catalog/kinds/physics';
+import { PulleySystemRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/PulleySystemRenderer';
+import { InclinedPlaneRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/InclinedPlaneRenderer';
+import RayDiagramRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/RayDiagramRenderer';
+import type { PulleyFigure, InclinedPlaneFigure } from '../../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/physics';
 
 const atwoodLongWeights: PulleyFigure = {
   mode: 'atwood',

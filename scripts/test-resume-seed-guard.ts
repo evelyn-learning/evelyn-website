@@ -12,7 +12,7 @@
  * The guard must live with the buffer it protects: a seed batch is
  * accepted exactly once per guard lifetime; live batches always pass.
  */
-import { acceptWhiteboardBatch, createSeedGuard } from '../src/lib/tutor/whiteboard/resume-seed';
+import { acceptWhiteboardBatch, createSeedGuard } from '../apps/marketing/src/lib/tutor/whiteboard/resume-seed';
 
 let passed = 0;
 let failed = 0;

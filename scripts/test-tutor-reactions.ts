@@ -12,7 +12,7 @@ import {
   recordReactionEvent,
   NOISE_INTERRUPTION_REACTION,
   type TutorReactionRule,
-} from '../src/lib/tutor/voice/tutor-reactions';
+} from '../apps/marketing/src/lib/tutor/voice/tutor-reactions';
 
 let passed = 0;
 let failed = 0;

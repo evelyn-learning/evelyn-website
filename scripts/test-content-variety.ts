@@ -4,9 +4,9 @@
  * Design: docs/superpowers/specs/2026-07-05-teaching-variety-plan-freedom-design.md
  */
 import { strict as assert } from 'node:assert';
-import { recordPlanContentSeen, PLAN_CONTENT_SEEN_CAP } from '../src/lib/tutor/student-profile/store';
-import { buildContentVarietyDirective } from '../src/lib/tutor/voice/claude-brain';
-import type { StudentProfile, PlanContentFillings } from '../src/lib/tutor/student-profile/types';
+import { recordPlanContentSeen, PLAN_CONTENT_SEEN_CAP } from '../apps/marketing/src/lib/tutor/student-profile/store';
+import { buildContentVarietyDirective } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
+import type { StudentProfile, PlanContentFillings } from '../apps/marketing/src/lib/tutor/student-profile/types';
 
 let passed = 0, failed = 0;
 function test(name: string, fn: () => void) {

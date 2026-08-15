@@ -7,7 +7,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { stripStageDirections } from '../src/lib/tutor/voice/sentence-spacing';
+import { stripStageDirections } from '../apps/marketing/src/lib/tutor/voice/sentence-spacing';
 
 let passed = 0;
 let failed = 0;

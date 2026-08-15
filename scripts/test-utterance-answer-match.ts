@@ -2,7 +2,7 @@
  * Unit test for the tri-state utterance-vs-answer comparator.
  * Usage: npx tsx scripts/test-utterance-answer-match.ts
  */
-import { matchUtteranceToAnswer, canonicalizeMathExpression, normalizeSpokenMath } from '../src/lib/tutor/voice/utterance-answer-match';
+import { matchUtteranceToAnswer, canonicalizeMathExpression, normalizeSpokenMath } from '../apps/marketing/src/lib/tutor/voice/utterance-answer-match';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {

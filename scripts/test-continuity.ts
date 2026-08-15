@@ -13,8 +13,8 @@ import {
   normalizeRenamedFunction,
   harvestPreNormalizationDeclarations,
   isTryAloneRequest,
-} from '../src/lib/tutor/validation/continuity';
-import type { DeclaredFunction } from '../src/lib/tutor/validation/continuity';
+} from '../apps/marketing/src/lib/tutor/validation/continuity';
+import type { DeclaredFunction } from '../apps/marketing/src/lib/tutor/validation/continuity';
 
 let passed = 0;
 let failed = 0;

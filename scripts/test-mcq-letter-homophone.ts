@@ -6,7 +6,7 @@
  *
  * Run: npx tsx scripts/test-mcq-letter-homophone.ts
  */
-import { normalizeMcqLetterUtterance, extractChoiceLetters } from '../src/lib/tutor/voice/mcq-letter-homophone';
+import { normalizeMcqLetterUtterance, extractChoiceLetters } from '../apps/marketing/src/lib/tutor/voice/mcq-letter-homophone';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

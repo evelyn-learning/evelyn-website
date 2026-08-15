@@ -9,8 +9,8 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import type { LessonPlan, SegmentTryYourself } from '../src/lib/tutor/lesson-plan/types';
-import { TESTPREP_PACING_THRESHOLDS } from '../src/lib/tutor/lesson-plan/seeds/_testprep-shared';
+import type { LessonPlan, SegmentTryYourself } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
+import { TESTPREP_PACING_THRESHOLDS } from '../apps/marketing/src/lib/tutor/lesson-plan/seeds/_testprep-shared';
 import { SEED_PLANS } from '@/lib/tutor/lesson-plan/store';
 
 const TOPICS = ['digital-sat', 'act'] as const;

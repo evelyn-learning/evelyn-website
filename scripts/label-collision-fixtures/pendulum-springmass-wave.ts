@@ -8,9 +8,9 @@
  */
 import React from 'react';
 import type { LabelFixture } from '../lib/label-collision-harness';
-import PendulumRenderer from '../../src/app/tutor/components/whiteboard/PendulumRenderer';
-import SpringMassRenderer from '../../src/app/tutor/components/whiteboard/SpringMassRenderer';
-import WaveRenderer from '../../src/app/tutor/components/whiteboard/WaveRenderer';
+import PendulumRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/PendulumRenderer';
+import SpringMassRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/SpringMassRenderer';
+import WaveRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/WaveRenderer';
 
 const fixtures: LabelFixture[] = [
   {

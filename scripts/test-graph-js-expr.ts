@@ -9,8 +9,8 @@
  *
  * Usage: npx tsx scripts/test-graph-js-expr.ts  (npm run test:graph-js-expr)
  */
-import { jsExprToLatex, getLatex } from '../src/app/tutor/components/whiteboard/DesmosGraphRenderer';
-import { latexToJs } from '../src/lib/tutor/whiteboard/intersection-validator';
+import { jsExprToLatex, getLatex } from '../apps/marketing/src/app/tutor/components/whiteboard/DesmosGraphRenderer';
+import { latexToJs } from '../apps/marketing/src/lib/tutor/whiteboard/intersection-validator';
 
 let passed = 0;
 let failed = 0;

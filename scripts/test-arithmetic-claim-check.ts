@@ -3,7 +3,7 @@
  * Guards against the live bug: tutor said "$18 - 3$ isn't $15$" — but 18 - 3 IS 15.
  * Usage: npx tsx scripts/test-arithmetic-claim-check.ts
  */
-import { checkArithmeticClaims } from '../src/lib/tutor/voice/arithmetic-claim-check';
+import { checkArithmeticClaims } from '../apps/marketing/src/lib/tutor/voice/arithmetic-claim-check';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

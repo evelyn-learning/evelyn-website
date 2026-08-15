@@ -5,12 +5,12 @@
  *   npx ts-node -r tsconfig-paths/register --compiler-options '{"module":"commonjs","baseUrl":"./"}' scripts/video-curator-smoke.ts
  */
 
-import { listApMacroTopics } from '../src/lib/admin/video-curator/ap-macro-topics';
+import { listApMacroTopics } from '../apps/marketing/src/lib/admin/video-curator/ap-macro-topics';
 import {
   extractYouTubeId,
   validateAndDescribe,
   fetchTranscript,
-} from '../src/lib/admin/video-curator/youtube';
+} from '../apps/marketing/src/lib/admin/video-curator/youtube';
 
 async function main() {
   // --- Topic extraction ---

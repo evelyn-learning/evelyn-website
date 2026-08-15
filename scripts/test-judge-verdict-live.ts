@@ -8,7 +8,7 @@
  * Expected: false denial 3/3 · correct denial 0/3 · correct affirmation 0/3
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
+import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '../apps/marketing/src/lib/tutor/judge-prompt';
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const Q = 'If you divide x^3 by x^2+1 like ordinary long division, what do you think the first term of the quotient is?';
 const CASES = [

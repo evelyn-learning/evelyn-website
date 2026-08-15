@@ -13,7 +13,7 @@ import {
   toToolCallFrames,
   shouldClientRequestRepair,
   parseClientRepairRequest,
-} from '../src/lib/tutor/voice/rule8-repair';
+} from '../apps/marketing/src/lib/tutor/voice/rule8-repair';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {

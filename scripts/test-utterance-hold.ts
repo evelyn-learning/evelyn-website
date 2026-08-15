@@ -1,4 +1,4 @@
-import { endsMidThought, mergeHeldTranscript, HOLD_MS } from '../src/lib/tutor/voice/utterance-hold';
+import { endsMidThought, mergeHeldTranscript, HOLD_MS } from '../apps/marketing/src/lib/tutor/voice/utterance-hold';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

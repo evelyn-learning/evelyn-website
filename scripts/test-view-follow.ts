@@ -9,7 +9,7 @@
  *
  * Run: npx tsx scripts/test-view-follow.ts
  */
-import { shouldFollowNewRender, trailingNavSuppressesFollow } from '../src/lib/tutor/whiteboard/view-follow';
+import { shouldFollowNewRender, trailingNavSuppressesFollow } from '../apps/marketing/src/lib/tutor/whiteboard/view-follow';
 
 let failures = 0;
 function check(name: string, actual: boolean, expected: boolean) {

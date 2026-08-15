@@ -10,7 +10,7 @@
  * must never fire; only a full-parse 'disagree' does.
  * Usage: npx tsx scripts/test-praise-echo-check.ts
  */
-import { checkPraiseEcho } from '../src/lib/tutor/voice/praise-echo-check';
+import { checkPraiseEcho } from '../apps/marketing/src/lib/tutor/voice/praise-echo-check';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

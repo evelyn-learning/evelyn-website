@@ -15,10 +15,10 @@
  *   npx tsx scripts/verify-writeback-live.ts
  */
 import './writeback-env-preload'; // MUST stay first — see that file's header
-import { generateProblem, simpleHash } from '../src/lib/tutor/voice/problem-generator';
-import { ProblemBank } from '../src/models/ProblemBank';
+import { generateProblem, simpleHash } from '../apps/marketing/src/lib/tutor/voice/problem-generator';
+import { ProblemBank } from '../apps/marketing/src/models/ProblemBank';
 import { connectDB } from '@core/db';
-import type { LessonPlan } from '../src/lib/tutor/lesson-plan/types';
+import type { LessonPlan } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 const TOPIC = 'writeback-verify-topic';
 

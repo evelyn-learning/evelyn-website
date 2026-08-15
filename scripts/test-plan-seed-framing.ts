@@ -20,7 +20,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { formatLessonPlanContext, type LessonPlanContext } from '../src/lib/tutor/voice/claude-brain';
+import { formatLessonPlanContext, type LessonPlanContext } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
 
 let passed = 0;
 let failed = 0;

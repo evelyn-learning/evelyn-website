@@ -7,7 +7,7 @@
 import {
   validateIntersectionPoints,
   latexToJs,
-} from "../src/lib/tutor/whiteboard/intersection-validator";
+} from "../apps/marketing/src/lib/tutor/whiteboard/intersection-validator";
 
 type TC = { name: string; ok: boolean; detail?: string };
 const results: TC[] = [];

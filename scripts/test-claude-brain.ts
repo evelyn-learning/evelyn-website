@@ -11,8 +11,8 @@
  *
  * Exit 0 if the brain handles the turn cleanly; exit 1 otherwise.
  */
-import { runBrainTurn, streamBrainTurn } from '../src/lib/tutor/voice/claude-brain';
-import { WHITEBOARD_TOOLS } from '../src/app/tutor/hooks/toolDefinitions';
+import { runBrainTurn, streamBrainTurn } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
+import { WHITEBOARD_TOOLS } from '../apps/marketing/src/app/tutor/hooks/toolDefinitions';
 
 async function main() {
   if (!process.env.ANTHROPIC_API_KEY) {

@@ -9,7 +9,7 @@ import {
   orbIsStartButton,
   preStartDockCaption,
   showsDockMuteButton,
-} from '../src/app/tutor/components/session/prestart-affordances';
+} from '../apps/marketing/src/app/tutor/components/session/prestart-affordances';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {

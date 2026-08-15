@@ -14,7 +14,7 @@
  *   npx tsx scripts/test-replay-board-fit.ts
  */
 import assert from 'node:assert';
-import { computeReplayBoardFit, REPLAY_BOARD_DESIGN_WIDTH_PX } from '../src/lib/tutor/recordings/replay-board-fit';
+import { computeReplayBoardFit, REPLAY_BOARD_DESIGN_WIDTH_PX } from '../apps/marketing/src/lib/tutor/recordings/replay-board-fit';
 
 let passed = 0;
 function check(label: string, fn: () => void) {

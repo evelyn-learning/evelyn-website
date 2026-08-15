@@ -17,13 +17,13 @@ import {
   solveMeiosis,
   solveDnaReplication,
   solveCellMembrane,
-} from '../src/lib/tutor/diagrams/catalog/kinds/cell-biology';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/cell-biology';
 import {
   CatalogMitosisRenderer,
   CatalogMeiosisRenderer,
   CatalogDnaReplicationRenderer,
   CatalogCellMembraneRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogCellBiologyRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogCellBiologyRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

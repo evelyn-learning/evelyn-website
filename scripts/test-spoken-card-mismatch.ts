@@ -7,7 +7,7 @@
  * whiteboard-snapshot feedback loop.
  * Usage: npx tsx scripts/test-spoken-card-mismatch.ts
  */
-import { checkSpokenCardMismatch } from '../src/lib/tutor/voice/spoken-card-mismatch';
+import { checkSpokenCardMismatch } from '../apps/marketing/src/lib/tutor/voice/spoken-card-mismatch';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

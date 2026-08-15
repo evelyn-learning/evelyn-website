@@ -10,7 +10,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { decideKillKeep, type KillRenderDesc } from '../src/lib/tutor/whiteboard/kill-keep';
+import { decideKillKeep, type KillRenderDesc } from '../apps/marketing/src/lib/tutor/whiteboard/kill-keep';
 
 let passed = 0;
 let failed = 0;

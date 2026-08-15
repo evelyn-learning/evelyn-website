@@ -16,7 +16,7 @@ import {
   resolveResumeOutcome,
   isCheckpointResumable,
   type PriorSessionRead,
-} from '../src/lib/tutor/portal/resume';
+} from '../apps/marketing/src/lib/tutor/portal/resume';
 
 let passed = 0;
 let failed = 0;

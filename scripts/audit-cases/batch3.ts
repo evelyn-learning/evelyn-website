@@ -9,12 +9,12 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { AuditCase } from '../lib/svg-text-extents';
-import { FractionComparisonRenderer } from '../../src/app/tutor/components/whiteboard/FractionComparisonRenderer';
-import { TreeRenderer } from '../../src/app/tutor/components/whiteboard/TreeRenderer';
-import { VennDiagramRenderer } from '../../src/app/tutor/components/whiteboard/VennDiagramRenderer';
-import WritingFrameRenderer from '../../src/app/tutor/components/whiteboard/WritingFrameRenderer';
-import GraphicOrganizerRenderer from '../../src/app/tutor/components/whiteboard/GraphicOrganizerRenderer';
-import EarlyMathRenderer from '../../src/app/tutor/components/whiteboard/EarlyMathRenderer';
+import { FractionComparisonRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/FractionComparisonRenderer';
+import { TreeRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/TreeRenderer';
+import { VennDiagramRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/VennDiagramRenderer';
+import WritingFrameRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/WritingFrameRenderer';
+import GraphicOrganizerRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/GraphicOrganizerRenderer';
+import EarlyMathRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/EarlyMathRenderer';
 
 /**
  * The extent checker only sees <text>/<tspan> INSIDE the svg — content the

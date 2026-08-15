@@ -17,7 +17,7 @@ import {
   isPedagogyOpenerFlagValue,
   resolveOpeningBehavior,
   type OpeningSignals,
-} from '../src/lib/tutor/ai/opening-behavior';
+} from '../apps/marketing/src/lib/tutor/ai/opening-behavior';
 
 let passed = 0;
 let failed = 0;

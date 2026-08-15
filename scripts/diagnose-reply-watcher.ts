@@ -37,7 +37,7 @@ async function main(): Promise<void> {
 
   // Imported AFTER loadEnv ran: db.ts caches MONGODB_URI at module scope, so
   // a top-of-file import would capture it before the env file was read.
-  const { getOutreachGmail, getOutreachAccount } = await import('../src/lib/outreach/gmail');
+  const { getOutreachGmail, getOutreachAccount } = await import('../apps/marketing/src/lib/outreach/gmail');
   const gmail = await getOutreachGmail();
 
   // 1. Which mailbox are we really talking to?

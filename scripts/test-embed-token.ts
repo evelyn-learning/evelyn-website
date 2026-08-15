@@ -11,8 +11,8 @@ import {
   checkEmbedAuth,
   signEmbedToken,
   embedEnforceMode,
-} from '../src/lib/tutor/portal/embed-token';
-import { parseEmbedConfig } from '../src/lib/tutor/portal/parse-embed-config';
+} from '../apps/marketing/src/lib/tutor/portal/embed-token';
+import { parseEmbedConfig } from '../apps/marketing/src/lib/tutor/portal/parse-embed-config';
 
 let passed = 0;
 let failed = 0;
@@ -228,7 +228,7 @@ async function runStudentProfileRouteDenyTests() {
   console.log('\nstudent-profile route — embed-token gating (deny paths, Task 2):\n');
 
   const { GET: profileGET, POST: profilePOST } = await import(
-    '../src/app/api/tutor/student-profile/[id]/route'
+    '../apps/marketing/src/app/api/tutor/student-profile/[id]/route'
   );
   const { NextRequest } = await import('next/server');
 
@@ -321,7 +321,7 @@ async function runSessionUsageRouteDenyTests() {
   console.log('\nsession-usage route — embed-token gating (deny paths, Task 3):\n');
 
   const { GET: usageGET, POST: usagePOST } = await import(
-    '../src/app/api/tutor/session-usage/route'
+    '../apps/marketing/src/app/api/tutor/session-usage/route'
   );
   const { NextRequest } = await import('next/server');
 
@@ -431,8 +431,8 @@ async function runSessionUsageRouteDenyTests() {
 async function runSessionUsageDemoTokenAcceptedTest() {
   console.log('\nsession-usage route — demo-token-minted token clears the auth gate (Finding 2 fix):\n');
 
-  const { GET: usageGET } = await import('../src/app/api/tutor/session-usage/route');
-  const { POST: demoTokenPOST } = await import('../src/app/api/tutor-portal/demo-token/route');
+  const { GET: usageGET } = await import('../apps/marketing/src/app/api/tutor/session-usage/route');
+  const { POST: demoTokenPOST } = await import('../apps/marketing/src/app/api/tutor-portal/demo-token/route');
   const { NextRequest } = await import('next/server');
 
   clearEnv();
@@ -481,7 +481,7 @@ async function runDemoTokenRouteTests() {
   console.log('\ndemo-token route — server-minted signed demo tokens (Task 5):\n');
 
   const { POST: demoTokenPOST } = await import(
-    '../src/app/api/tutor-portal/demo-token/route'
+    '../apps/marketing/src/app/api/tutor-portal/demo-token/route'
   );
 
   function postReq(body: unknown) {
@@ -658,7 +658,7 @@ async function runParseEmbedConfigTests() {
   // success path and the embed page's parse path actually agree.
   {
     process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ 'evelyn-marketing': 'mkt-secret' });
-    const { POST: demoTokenPOST } = await import('../src/app/api/tutor-portal/demo-token/route');
+    const { POST: demoTokenPOST } = await import('../apps/marketing/src/app/api/tutor-portal/demo-token/route');
     const req = new Request('https://engine.test/api/tutor-portal/demo-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

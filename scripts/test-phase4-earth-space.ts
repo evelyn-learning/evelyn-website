@@ -30,7 +30,7 @@ import {
   solveEclipseDiagram,
   solveSeasonsDiagram,
   solvePlateTectonics,
-} from '../src/lib/tutor/diagrams/catalog/kinds/earth-space';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/earth-space';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -40,11 +40,11 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const rendererSource = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogEarthSpaceRenderers.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogEarthSpaceRenderers.tsx'),
   'utf8',
 );
 const dispatcherSource = readFileSync(
-  join(__dirname, '..', 'src/lib/tutor/diagrams/manifests.ts'),
+  join(__dirname, '..', 'apps/marketing/src/lib/tutor/diagrams/manifests.ts'),
   'utf8',
 );
 

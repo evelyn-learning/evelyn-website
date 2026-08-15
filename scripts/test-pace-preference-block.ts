@@ -27,8 +27,8 @@
  * Run:
  *   npx tsx scripts/test-pace-preference-block.ts
  */
-import { formatPacePreferenceBlock, formatDifficultyPreferenceBlock } from '../src/lib/tutor/voice/claude-brain';
-import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad } from '../src/lib/tutor/voice/pace-preference';
+import { formatPacePreferenceBlock, formatDifficultyPreferenceBlock } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
+import { DEFAULT_PACE_BIAS, resolvePaceBiasOnLoad } from '../apps/marketing/src/lib/tutor/voice/pace-preference';
 
 const cases: Array<{ label: string; paceBias?: number; paceBiasAppliedSinceTurns?: number }> = [
   { label: 'bias=0 (neutral, block should be empty)', paceBias: 0 },

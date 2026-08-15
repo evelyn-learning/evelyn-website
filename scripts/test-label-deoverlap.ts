@@ -11,9 +11,9 @@
  *
  * Run: npx tsx scripts/test-label-deoverlap.ts
  */
-import { deoverlapLabels, type DeoverlapLabel } from '../src/lib/tutor/whiteboard/label-deoverlap';
-import { buildSketchPaths } from '../src/lib/tutor/whiteboard/sketch-render-core';
-import { SKETCH_VIEWBOX, type SketchPrimitive } from '../src/lib/tutor/whiteboard/sketch-schema';
+import { deoverlapLabels, type DeoverlapLabel } from '../apps/marketing/src/lib/tutor/whiteboard/label-deoverlap';
+import { buildSketchPaths } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-render-core';
+import { SKETCH_VIEWBOX, type SketchPrimitive } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-schema';
 
 let passed = 0;
 let failed = 0;

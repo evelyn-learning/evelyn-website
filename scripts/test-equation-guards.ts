@@ -7,7 +7,7 @@
  *
  * Usage: npx tsx scripts/test-equation-guards.ts  (npm run test:equation-guards)
  */
-import { duplicateFunctionDef, latexProseFiller } from '../src/lib/tutor/orchestrator/text-heuristics';
+import { duplicateFunctionDef, latexProseFiller } from '../apps/marketing/src/lib/tutor/orchestrator/text-heuristics';
 
 let passed = 0;
 let failed = 0;

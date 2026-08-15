@@ -1,4 +1,4 @@
-import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency } from '../src/lib/tutor/voice/turn-latency';
+import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency } from '../apps/marketing/src/lib/tutor/voice/turn-latency';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

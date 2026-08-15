@@ -3,7 +3,7 @@
  * Run: npm run test:hand-stroke
  * Spec: docs/superpowers/specs/2026-07-10-smoothdraw-draw-on-board-design.md §4
  */
-import { strokeOutline, tickSpine, highlightBand, arrowSpine, arrowHeads, type Pt, type Rect4 } from '../src/lib/tutor/whiteboard/hand-stroke';
+import { strokeOutline, tickSpine, highlightBand, arrowSpine, arrowHeads, type Pt, type Rect4 } from '../apps/marketing/src/lib/tutor/whiteboard/hand-stroke';
 
 let passed = 0;
 let failed = 0;

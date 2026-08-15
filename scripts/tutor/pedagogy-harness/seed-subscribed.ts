@@ -34,7 +34,7 @@ import { fileURLToPath } from 'url';
 import { loadPersona, PERSONA_IDS, type Persona } from './fixtures/personas';
 
 // Type-only (erased at runtime — safe to import statically).
-import type { StudentProfile, SessionMemory } from '../../../src/lib/tutor/student-profile/types';
+import type { StudentProfile, SessionMemory } from '../../../apps/marketing/src/lib/tutor/student-profile/types';
 
 // The DB modules are loaded DYNAMICALLY inside main(): src/lib/db captures
 // process.env.MONGODB_URI in a module-level const, and static imports are
@@ -45,8 +45,8 @@ import type { StudentProfile, SessionMemory } from '../../../src/lib/tutor/stude
 async function loadDbModules() {
   const [{ connectDB }, { StudentProfileModel }, { saveStudentProfile }, mongoose] = await Promise.all([
     import('@core/db'),
-    import('../../../src/models/StudentProfile'),
-    import('../../../src/lib/tutor/student-profile/store'),
+    import('../../../apps/marketing/src/models/StudentProfile'),
+    import('../../../apps/marketing/src/lib/tutor/student-profile/store'),
     import('mongoose'),
   ]);
   return { connectDB, StudentProfileModel, saveStudentProfile, mongoose: mongoose.default };

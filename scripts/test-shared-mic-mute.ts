@@ -10,7 +10,7 @@
  *
  * Run: npm run test:shared-mic
  */
-import { resolveSharedMicEnabled } from '../src/lib/tutor/voice/shared-mic';
+import { resolveSharedMicEnabled } from '../apps/marketing/src/lib/tutor/voice/shared-mic';
 
 let pass = 0;
 let fail = 0;

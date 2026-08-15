@@ -44,7 +44,7 @@ import { chromium, type ConsoleMessage } from 'playwright';
 import * as fs from 'fs';
 import * as path from 'path';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
-import { isCheckpointResumable } from '../../../src/lib/tutor/portal/resume';
+import { isCheckpointResumable } from '../../../apps/marketing/src/lib/tutor/portal/resume';
 import { refreshFreshCheckpoint } from './fixtures/personas';
 import type { Persona, ResumeStateFixture } from './fixtures/personas';
 import { simulateStudent, type SimTurn } from './student-simulator';

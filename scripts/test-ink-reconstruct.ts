@@ -21,7 +21,7 @@
  * new-content/duplicate guard — see finalizeTurn's comment.
  */
 import assert from 'node:assert';
-import { reconstructInkFinals, type InkEvent } from '../src/app/tutor/hooks/useCartesiaInkWS';
+import { reconstructInkFinals, type InkEvent } from '../apps/marketing/src/app/tutor/hooks/useCartesiaInkWS';
 
 // Fixture 1 — complete turn, copied verbatim from
 // artifacts/stt/run-2026-07-06T16-21-03-156Z/events/en-us__sample1__ink2.jsonl

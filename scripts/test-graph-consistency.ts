@@ -8,7 +8,7 @@ import {
   validateGraphLinearConsistency,
   validateFunctionValuePoints,
   validateFeaturePoints,
-} from '../src/lib/tutor/whiteboard/graph-consistency-validator';
+} from '../apps/marketing/src/lib/tutor/whiteboard/graph-consistency-validator';
 import type { GraphData } from '@core/knowledge/types';
 
 let passed = 0;

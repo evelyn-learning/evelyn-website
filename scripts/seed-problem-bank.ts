@@ -1,7 +1,7 @@
 /**
  * Seed the ProblemBank Mongo collection from version-controlled JSON seed files.
  *
- * Content lives in `src/data/problem-bank/<course>/*.json` (git = source of
+ * Content lives in `apps/marketing/src/data/problem-bank/<course>/*.json` (git = source of
  * truth). This script validates each item, runs an INDEPENDENT fresh-context
  * Sonnet solve as a verify-at-ingest gate (the ProblemBank contract requires a
  * verifiedAt/verifierModel stamp), and idempotently upserts verified rows by
@@ -29,8 +29,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import mongoose from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
-import { ProblemBank } from '../src/models/ProblemBank';
-import { resolvePassage } from '../src/lib/tutor/passages/store';
+import { ProblemBank } from '../apps/marketing/src/models/ProblemBank';
+import { resolvePassage } from '../apps/marketing/src/lib/tutor/passages/store';
 
 const VERIFIER_MODEL = 'claude-sonnet-5';
 // Display names for the verify prompt (fall back to the dir name if unlisted).

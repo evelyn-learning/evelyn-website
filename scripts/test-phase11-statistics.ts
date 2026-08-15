@@ -20,7 +20,7 @@ import {
   solveHistogram,
   solveNormalCurve,
   solveScatterRegression,
-} from '../src/lib/tutor/diagrams/catalog/kinds/math-statistics';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/math-statistics';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -29,10 +29,10 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const READ = (rel: string) => readFileSync(join(__dirname, '..', rel), 'utf8');
-const dispatcherSource = READ('src/lib/tutor/diagrams/manifests.ts');
-const histSource = READ('src/app/tutor/components/whiteboard/HistogramRenderer.tsx');
-const normSource = READ('src/app/tutor/components/whiteboard/NormalCurveRenderer.tsx');
-const scatSource = READ('src/app/tutor/components/whiteboard/ScatterRegressionRenderer.tsx');
+const dispatcherSource = READ('apps/marketing/src/lib/tutor/diagrams/manifests.ts');
+const histSource = READ('apps/marketing/src/app/tutor/components/whiteboard/HistogramRenderer.tsx');
+const normSource = READ('apps/marketing/src/app/tutor/components/whiteboard/NormalCurveRenderer.tsx');
+const scatSource = READ('apps/marketing/src/app/tutor/components/whiteboard/ScatterRegressionRenderer.tsx');
 
 // ── 1. histogram ────────────────────────────────────────────────────────────
 {

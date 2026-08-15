@@ -6,7 +6,7 @@
  *
  * Run: npx ts-node -O '{"module":"commonjs","moduleResolution":"node"}' --transpile-only scripts/test-pdf-exotic-glyphs.ts
  */
-import { svgContainsExoticGlyphs } from '../src/lib/utils/export/whiteboard-capture';
+import { svgContainsExoticGlyphs } from '../apps/marketing/src/lib/utils/export/whiteboard-capture';
 
 let pass = 0;
 let fail = 0;

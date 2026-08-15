@@ -30,7 +30,7 @@ import {
   isDuplicateTranscript,
   normalizeForDuplicateCheck,
   stripLeadingTrailingFillers,
-} from '../src/lib/tutor/voice/stage2-cancel-policy';
+} from '../apps/marketing/src/lib/tutor/voice/stage2-cancel-policy';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {

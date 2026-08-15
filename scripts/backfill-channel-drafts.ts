@@ -9,10 +9,10 @@
  *   MONGODB_URI=... npx tsx scripts/backfill-channel-drafts.ts --apply     # calls Claude per lead, saves, prints cost
  */
 import mongoose from "mongoose";
-import { Lead } from "../src/models/Lead";
-import { needsBackfill, backfillParams, mergeBackfill, type BackfillParsed } from "../src/lib/outreach/research/backfill-drafts";
-import { realCallModel, callWithToolLoop, extractJson } from "../src/lib/outreach/research/claude";
-import { priceUsageUsd } from "../src/lib/outreach/research/cost";
+import { Lead } from "../apps/marketing/src/models/Lead";
+import { needsBackfill, backfillParams, mergeBackfill, type BackfillParsed } from "../apps/marketing/src/lib/outreach/research/backfill-drafts";
+import { realCallModel, callWithToolLoop, extractJson } from "../apps/marketing/src/lib/outreach/research/claude";
+import { priceUsageUsd } from "../apps/marketing/src/lib/outreach/research/cost";
 
 const APPLY = process.argv.includes("--apply");
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { normalizeRawTaxonomy } from '../src/lib/tutor/lesson-plan/taxonomy-generate';
+import { normalizeRawTaxonomy } from '../apps/marketing/src/lib/tutor/lesson-plan/taxonomy-generate';
 
 // 1. Happy path: slugs coerced, weights normalized to sum 100, orders sequential.
 const raw = {

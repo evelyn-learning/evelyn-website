@@ -5,7 +5,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { normalizeSentenceSpacing } from '../src/lib/tutor/voice/sentence-spacing';
+import { normalizeSentenceSpacing } from '../apps/marketing/src/lib/tutor/voice/sentence-spacing';
 
 let passed = 0;
 let failed = 0;

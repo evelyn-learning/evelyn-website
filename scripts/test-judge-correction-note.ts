@@ -7,7 +7,7 @@
  *
  * Run: npx tsx scripts/test-judge-correction-note.ts
  */
-import { buildJudgeCorrectionNote, hasMathExpression, claimsWithMathExpression, shouldConsumeJudgeCorrectionNote } from '../src/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression, claimsWithMathExpression, shouldConsumeJudgeCorrectionNote } from '../apps/marketing/src/lib/tutor/voice/judge-correction-note';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {

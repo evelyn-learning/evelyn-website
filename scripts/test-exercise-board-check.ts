@@ -9,7 +9,7 @@
  * Run: npx tsx scripts/test-exercise-board-check.ts
  */
 import { strict as assert } from 'node:assert';
-import { detectVoiceOnlyExercise, RENDER_TOOLS, isRenderTool } from '../src/lib/tutor/voice/exercise-board-check';
+import { detectVoiceOnlyExercise, RENDER_TOOLS, isRenderTool } from '../apps/marketing/src/lib/tutor/voice/exercise-board-check';
 
 // Whole-branch review ride-along: the drift pin derives its expectation from
 // the REAL tool list instead of a hardcoded count. WHITEBOARD_TOOLS is
@@ -22,7 +22,7 @@ import { detectVoiceOnlyExercise, RENDER_TOOLS, isRenderTool } from '../src/lib/
 // ones the current env exposes.
 process.env.TUTOR_SKETCH = 'true';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { WHITEBOARD_TOOLS } = require('../src/app/tutor/hooks/toolDefinitions') as typeof import('../src/app/tutor/hooks/toolDefinitions');
+const { WHITEBOARD_TOOLS } = require('../apps/marketing/src/app/tutor/hooks/toolDefinitions') as typeof import('../apps/marketing/src/app/tutor/hooks/toolDefinitions');
 
 let passed = 0; let failed = 0;
 function test(name: string, fn: () => void) {

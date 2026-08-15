@@ -26,7 +26,7 @@
  */
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { AdminUser } from '../src/models';
+import { AdminUser } from '../apps/marketing/src/models';
 
 const BCRYPT_ROUNDS = 10; // matches src/app/api/admin/password/route.ts
 const MIN_PASSWORD_LENGTH = 12;

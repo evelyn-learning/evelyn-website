@@ -18,7 +18,7 @@
  *
  * Run: npx tsx scripts/test-stage2-restore.ts
  */
-import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '../src/lib/tutor/voice/stage2-restore';
+import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '../apps/marketing/src/lib/tutor/voice/stage2-restore';
 
 let failures = 0;
 function check(name: string, actual: string, expected: string) {

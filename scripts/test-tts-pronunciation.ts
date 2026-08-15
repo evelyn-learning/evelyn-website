@@ -2,7 +2,7 @@
 // Unit tests for rewriteForTTS() additions: slash-pair whitelist,
 // em-dash normalization, math-variable letter respelling.
 import assert from 'node:assert';
-import { rewriteForTTS } from '../src/lib/tutor/voice/tts-pronunciation';
+import { rewriteForTTS } from '../apps/marketing/src/lib/tutor/voice/tts-pronunciation';
 
 // --- Slash-pair whitelist -----------------------------------------
 assert.strictEqual(
@@ -130,7 +130,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 
 // contraction guard: y'all must not become why'all
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const out = rewriteForTTS("y'all ready for this?");
   if (out.includes('why')) { console.error('FAIL: contraction guard', out); process.exit(1); }
   console.log('OK — contraction guard');
@@ -139,7 +139,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // Live-session regressions 2026-07-07 (session-1783398163983): italic-markdown
 // blocking anchors, verb-form gap, capital Y-bar.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -156,7 +156,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // derivative notation — "dy" voiced as the word "die", "dy/dx" as
 // "die slash dx" — and double-quoted numbers voiced as inches ("6" → "6 inch").
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -176,7 +176,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // as "equal sign" ("n=12" → "n equal sign 12") and unicode subscripts
 // mangled ("T₁" voiced as "T-jash").
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -195,7 +195,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // them). Openers like "Hey Praveen, I'm Sameer" are untouched: their
 // comma sits after the name, not before a name+terminator.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -243,7 +243,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // "South Dakota" by the Cartesia normalizer. Expand the stats acronym while
 // preserving GENUINE state abbreviations (year-preceded / comma-preceded).
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -263,7 +263,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // Math notation gaps (2026-07-13 audit): comparison/operator glyphs,
 // superscript squared/cubed, degree sign.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -285,7 +285,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // ("OUT" → "O U T"), and inconsistent coefficient respelling ("a, b, c" →
 // "a, bee, c" — our own \bb\b rule).
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -312,7 +312,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // letter emphasis-word list). Pins below are the brief's exact list,
 // including the negatives (AP/FTC/USDA/$F$ must stay untouched).
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -355,7 +355,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // shape tests run against the apostrophe-stripped letters, the lowercase
 // output applies to the whole match.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -388,7 +388,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // a cubed bee circumflex 3 dollar" for $a^3 b^3$); (b) "pi" voiced as
 // "pee"; (c) comma-heavy trailing tails ("let's turn it up, then").
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -484,7 +484,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // and (separately, tested in scripts/test-question-gist-text.ts) the Q-pin
 // markdown-emphasis leak.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -560,7 +560,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // ("part ay"), not the article/schwa. Uses the file's phonetic respelling
 // idiom (a→ay, b→bee, …). Letters a–h only; "partial" and similar never match.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -597,7 +597,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // literal Title-Case spelling (or an explicit ALL-CAPS variant) — no
 // blanket case-insensitivity.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -642,7 +642,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // same list too (II..XX only — a bare continuation "I" is NEVER converted,
 // since it's indistinguishable from the pronoun).
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -672,7 +672,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 // voiced as "a square"/"a two" — X1 only handled caret "^2", not the unicode
 // glyph outside a $-gated span).
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -743,7 +743,7 @@ console.log('OK — tts-pronunciation rewrites validated');
 //  3. Single-letter chains ("A - B - C") read more like an enumerated list
 //     than subtraction.
 {
-  const { rewriteForTTS } = require('../src/lib/tutor/voice/tts-pronunciation');
+  const { rewriteForTTS } = require('../apps/marketing/src/lib/tutor/voice/tts-pronunciation');
   const eq = (inp, want, name) => {
     const got = rewriteForTTS(inp);
     if (got !== want) { console.error(`FAIL ${name}:\n  got:  ${got}\n  want: ${want}`); process.exit(1); }
@@ -1149,7 +1149,7 @@ console.log('OK — tts-pronunciation rewrites validated');
   // Dynamic import keeps claude-brain (client-heavy module) out of the
   // top-level import graph unless this section runs.
   void (async () => {
-    const { SentenceBuffer } = await import('../src/lib/tutor/voice/claude-brain');
+    const { SentenceBuffer } = await import('../apps/marketing/src/lib/tutor/voice/claude-brain');
     const feed = (text: string): string[] => {
       const sb = new SentenceBuffer();
       const out = sb.push(text);

@@ -11,7 +11,7 @@
  *
  * Run: npx tsx scripts/test-equation-split.ts
  */
-import { splitLatexToLines } from '../src/lib/tutor/whiteboard/equation-split';
+import { splitLatexToLines } from '../apps/marketing/src/lib/tutor/whiteboard/equation-split';
 
 let failures = 0;
 function check(name: string, cond: boolean, got?: unknown) {

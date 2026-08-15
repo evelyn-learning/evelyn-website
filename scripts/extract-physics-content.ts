@@ -9,8 +9,8 @@ import * as fs from 'fs';
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
-import { listFolder, searchFiles, getDownloadLink, downloadFile } from '../src/lib/services/dropbox';
-import catalogData from '../src/lib/data/book-catalog.json';
+import { listFolder, searchFiles, getDownloadLink, downloadFile } from '../apps/marketing/src/lib/services/dropbox';
+import catalogData from '../apps/marketing/src/lib/data/book-catalog.json';
 
 interface BookEntry {
   folderId: string;

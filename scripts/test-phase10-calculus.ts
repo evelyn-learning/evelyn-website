@@ -27,7 +27,7 @@ import {
   solveParametricCurve,
   solvePolarGraph,
   solveTaylorPolynomialOverlay,
-} from '../src/lib/tutor/diagrams/catalog/kinds/math-calculus';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/math-calculus';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -36,12 +36,12 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const READ = (rel: string) => readFileSync(join(__dirname, '..', rel), 'utf8');
-const dispatcherSource = READ('src/lib/tutor/diagrams/manifests.ts');
-const riemannSource = READ('src/app/tutor/components/whiteboard/RiemannSumRenderer.tsx');
-const slopeSource = READ('src/app/tutor/components/whiteboard/SlopeFieldRenderer.tsx');
-const paramSource = READ('src/app/tutor/components/whiteboard/ParametricCurveRenderer.tsx');
-const polarSource = READ('src/app/tutor/components/whiteboard/PolarGraphRenderer.tsx');
-const taylorSource = READ('src/app/tutor/components/whiteboard/TaylorOverlayRenderer.tsx');
+const dispatcherSource = READ('apps/marketing/src/lib/tutor/diagrams/manifests.ts');
+const riemannSource = READ('apps/marketing/src/app/tutor/components/whiteboard/RiemannSumRenderer.tsx');
+const slopeSource = READ('apps/marketing/src/app/tutor/components/whiteboard/SlopeFieldRenderer.tsx');
+const paramSource = READ('apps/marketing/src/app/tutor/components/whiteboard/ParametricCurveRenderer.tsx');
+const polarSource = READ('apps/marketing/src/app/tutor/components/whiteboard/PolarGraphRenderer.tsx');
+const taylorSource = READ('apps/marketing/src/app/tutor/components/whiteboard/TaylorOverlayRenderer.tsx');
 
 // ── 1. riemann_sum ──────────────────────────────────────────────────────────
 {

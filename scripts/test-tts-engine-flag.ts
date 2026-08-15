@@ -5,7 +5,7 @@
  * Usage: npx tsx scripts/test-tts-engine-flag.ts
  */
 import assert from 'node:assert';
-import { resolveTtsProvider } from '../src/lib/tutor/voice/resolve-tts-provider';
+import { resolveTtsProvider } from '../apps/marketing/src/lib/tutor/voice/resolve-tts-provider';
 
 let passed = 0;
 function check(name: string, fn: () => void) {

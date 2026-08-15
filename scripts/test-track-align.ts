@@ -11,7 +11,7 @@
  *
  * Run: npx tsx scripts/test-track-align.ts
  */
-import { buildAlignedChunks, type TimedChunk } from '../src/lib/tutor/recordings/track-align';
+import { buildAlignedChunks, type TimedChunk } from '../apps/marketing/src/lib/tutor/recordings/track-align';
 
 const RATE = 24000;
 const STUDENT_MIN_GAP = Math.floor(0.5 * RATE); // mirrors useAudioRecorder

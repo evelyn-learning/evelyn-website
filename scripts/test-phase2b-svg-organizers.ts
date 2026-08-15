@@ -36,7 +36,7 @@ import {
   solveSentenceDiagram,
   solveHistoricalTimeline,
   solveHierarchyPyramid,
-} from '../src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
 import {
   buildCycleStagesManifest,
   buildBodySystemManifest,
@@ -44,7 +44,7 @@ import {
   bodySystemFeatureNames,
   solveCycleStages,
   solveBodySystem,
-} from '../src/lib/tutor/diagrams/catalog/kinds/chem-bio';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/chem-bio';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -54,19 +54,19 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const advancedRenderer = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogAdvancedRenderers.tsx'),
   'utf8',
 );
 const cycleRenderer = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogCycleStagesRenderer.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogCycleStagesRenderer.tsx'),
   'utf8',
 );
 const bodyRenderer = readFileSync(
-  join(__dirname, '..', 'src/app/tutor/components/whiteboard/CatalogBodySystemRenderer.tsx'),
+  join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/CatalogBodySystemRenderer.tsx'),
   'utf8',
 );
 const dispatcherSource = readFileSync(
-  join(__dirname, '..', 'src/lib/tutor/diagrams/manifests.ts'),
+  join(__dirname, '..', 'apps/marketing/src/lib/tutor/diagrams/manifests.ts'),
   'utf8',
 );
 

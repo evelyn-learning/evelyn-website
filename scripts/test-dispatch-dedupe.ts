@@ -11,7 +11,7 @@
  *
  * Run: npx tsx scripts/test-dispatch-dedupe.ts
  */
-import { DispatchDeduper } from '../src/lib/tutor/voice/dispatch-dedupe';
+import { DispatchDeduper } from '../apps/marketing/src/lib/tutor/voice/dispatch-dedupe';
 
 let failures = 0;
 function check(name: string, actual: boolean, expected: boolean) {

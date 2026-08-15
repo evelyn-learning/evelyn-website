@@ -19,11 +19,11 @@
  */
 
 import { strict as assert } from 'node:assert';
-import type { CatalogSnapshotEntry, Page } from '../src/lib/tutor/whiteboard/catalog';
+import type { CatalogSnapshotEntry, Page } from '../apps/marketing/src/lib/tutor/whiteboard/catalog';
 import {
   buildWhiteboardSummary,
   AUTO_EXPAND_OFF_SEGMENT_PAGES,
-} from '../src/lib/tutor/whiteboard/summary';
+} from '../apps/marketing/src/lib/tutor/whiteboard/summary';
 
 let passed = 0;
 let failed = 0;

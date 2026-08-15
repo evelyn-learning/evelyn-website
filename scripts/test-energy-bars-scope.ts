@@ -13,8 +13,8 @@
  * Run: npx tsx scripts/test-energy-bars-scope.ts
  */
 import { strict as assert } from 'node:assert';
-import { WHITEBOARD_TOOLS } from '../src/app/tutor/hooks/toolDefinitions';
-import { LEGEND_ENTRIES } from '../src/app/tutor/components/whiteboard/EnergyBarsRenderer';
+import { WHITEBOARD_TOOLS } from '../apps/marketing/src/app/tutor/hooks/toolDefinitions';
+import { LEGEND_ENTRIES } from '../apps/marketing/src/app/tutor/components/whiteboard/EnergyBarsRenderer';
 
 let passed = 0;
 let failed = 0;

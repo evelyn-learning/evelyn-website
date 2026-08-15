@@ -4,8 +4,8 @@
  */
 import React from 'react';
 import type { LabelFixture } from '../lib/label-collision-harness';
-import FreeBodyDiagramRenderer from '../../src/app/tutor/components/whiteboard/FreeBodyDiagramRenderer';
-import { NumberLineRenderer } from '../../src/app/tutor/components/whiteboard/NumberLineRenderer';
+import FreeBodyDiagramRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/FreeBodyDiagramRenderer';
+import { NumberLineRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/NumberLineRenderer';
 
 const fixtures: LabelFixture[] = [
   {

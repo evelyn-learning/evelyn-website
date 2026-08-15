@@ -6,8 +6,8 @@
  *
  * Usage: npx tsx scripts/test-sketch-render.ts
  */
-import { buildSketchPaths } from '../src/lib/tutor/whiteboard/sketch-render-core';
-import { SKETCH_VIEWBOX, type SketchPrimitive } from '../src/lib/tutor/whiteboard/sketch-schema';
+import { buildSketchPaths } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-render-core';
+import { SKETCH_VIEWBOX, type SketchPrimitive } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-schema';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

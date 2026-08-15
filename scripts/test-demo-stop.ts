@@ -17,8 +17,8 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { formatDemoStopBlock } from '../src/lib/tutor/voice/claude-brain';
-import { selectDemoStopPayload } from '../src/lib/tutor/voice/demo-stop-mode';
+import { formatDemoStopBlock } from '../apps/marketing/src/lib/tutor/voice/claude-brain';
+import { selectDemoStopPayload } from '../apps/marketing/src/lib/tutor/voice/demo-stop-mode';
 
 let passed = 0;
 let failed = 0;

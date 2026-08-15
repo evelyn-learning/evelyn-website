@@ -10,7 +10,7 @@
  *
  * Run: npx tsx scripts/test-judge-question-context.ts
  */
-import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '../src/lib/tutor/judge-prompt';
+import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '../apps/marketing/src/lib/tutor/judge-prompt';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {

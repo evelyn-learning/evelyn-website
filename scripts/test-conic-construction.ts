@@ -16,7 +16,7 @@ import {
   carryForwardConicCurve,
   findPriorConic,
   type GeoConstructionCommand,
-} from '../src/lib/tutor/whiteboard/conic-construction';
+} from '../apps/marketing/src/lib/tutor/whiteboard/conic-construction';
 
 let passed = 0;
 let failed = 0;

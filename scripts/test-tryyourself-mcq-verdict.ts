@@ -16,7 +16,7 @@ import {
   computeTryYourselfVerdict,
   matchesAnswerStrict,
   type Choice,
-} from '../src/app/tutor/components/whiteboard/tryYourselfAnswer';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/tryYourselfAnswer';
 
 let pass = 0;
 let fail = 0;

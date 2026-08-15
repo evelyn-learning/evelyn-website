@@ -6,7 +6,7 @@
  * regression).
  */
 
-import { detectStudentIntent } from '../src/lib/tutor/voice/student-intent';
+import { detectStudentIntent } from '../apps/marketing/src/lib/tutor/voice/student-intent';
 
 interface Case { text: string; expected: boolean; why: string }
 

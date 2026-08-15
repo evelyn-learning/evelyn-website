@@ -3,13 +3,13 @@
  * plans can never have an authored TS-seed baseline, so before this
  * change `resolveTopicNotes` returned null for every one of their topics
  * forever, even after a student session wrote real overlays. See
- * `src/lib/tutor/topic-notes/derive-baseline.ts`.
+ * `apps/marketing/src/lib/tutor/topic-notes/derive-baseline.ts`.
  *
  * Run: `npm run test:derived-notes`
  *
  * No live DB required: `connectDB` is short-circuited by pre-populating
  * the module-level `global.mongooseCache.conn` with a dummy truthy value
- * (see `src/lib/db.ts` — `connectDB` returns `cached.conn` immediately
+ * (see `apps/marketing/src/lib/db.ts` — `connectDB` returns `cached.conn` immediately
  * when set, before ever calling `mongoose.connect`), and both
  * `LessonPlanModel.findById` / `StudentTopicNotesModel.findById` +
  * `findByIdAndUpdate` are stubbed directly, mirroring the DB-stub

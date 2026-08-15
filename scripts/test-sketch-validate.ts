@@ -6,8 +6,8 @@
  *
  * Usage: npx tsx scripts/test-sketch-validate.ts
  */
-import { validateSketch } from '../src/lib/tutor/whiteboard/sketch-validate';
-import { SKETCH_BOUNDS } from '../src/lib/tutor/whiteboard/sketch-schema';
+import { validateSketch } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-validate';
+import { SKETCH_BOUNDS } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-schema';
 import {
   BALL_ON_HILL, GLASS_SHATTER,
   SPRING_MASS, TRANSVERSE_WAVE, SKIER, BEAKER_HALF,
@@ -18,7 +18,7 @@ import {
   FRACTION_PIE, ANIMAL_TREE, CONCEPT_MAP, CELL_SAYS, HISTORY_TIMELINE,
   COMPARE_VENN, EARTH_LAYERS, SWOT_MATRIX,
   MASLOW_PYRAMID, ICEBERG_METAPHOR, VENN3_TRADEOFF, ENERGY_SANKEY,
-} from '../src/lib/tutor/whiteboard/sketch-examples';
+} from '../apps/marketing/src/lib/tutor/whiteboard/sketch-examples';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

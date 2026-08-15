@@ -112,7 +112,7 @@ function main() {
   const courseArg = process.argv.find((a) => a.startsWith('--course='))?.split('=')[1];
   const floor = parseInt(process.argv.find((a) => a.startsWith('--floor='))?.split('=')[1] ?? '4', 10);
   const root = path.join(__dirname, '..');
-  const seedsDir = path.join(root, 'src/lib/tutor/lesson-plan/seeds');
+  const seedsDir = path.join(root, 'apps/marketing/src/lib/tutor/lesson-plan/seeds');
   const outDir = path.join(root, '.gap-manifests');
   fs.mkdirSync(outDir, { recursive: true });
   const courses = courseArg ? [courseArg] : Object.keys(COURSE_PREFIX);
@@ -121,7 +121,7 @@ function main() {
     if (!prefix) throw new Error(`unknown course ${course}`);
     const manifest = computeManifest(
       collectPlanLos(seedsDir, prefix),
-      collectBankCounts(path.join(root, 'src/data/problem-bank', course)),
+      collectBankCounts(path.join(root, 'apps/marketing/src/data/problem-bank', course)),
       floor,
     );
     fs.writeFileSync(path.join(outDir, `${course}.json`), JSON.stringify(manifest, null, 2));

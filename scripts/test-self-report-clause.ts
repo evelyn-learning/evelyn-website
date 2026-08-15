@@ -12,7 +12,7 @@ import {
   buildSelfReportClause,
   buildSystemPrompt,
   type SystemPromptContext,
-} from '../src/lib/tutor/ai/system-prompt-builder';
+} from '../apps/marketing/src/lib/tutor/ai/system-prompt-builder';
 
 let passed = 0;
 let failed = 0;

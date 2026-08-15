@@ -16,7 +16,7 @@ import {
   type StrokeMarkEvent,
   type GestureMarkEvent,
   type ResolvedMark,
-} from '../src/lib/tutor/whiteboard/student-marks';
+} from '../apps/marketing/src/lib/tutor/whiteboard/student-marks';
 
 let passed = 0;
 let failed = 0;

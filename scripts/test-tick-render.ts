@@ -37,7 +37,7 @@
 
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
+import { mapFunctionCallToCommand } from '../apps/marketing/src/app/tutor/hooks/toolDefinitions';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -169,7 +169,7 @@ delete process.env.NEXT_PUBLIC_TUTOR_INK_NOTES;
 // ── 3. WhiteboardCanvas renderer source (static check) ─────────
 
 const wbSource = readFileSync(
-    join(__dirname, '..', 'src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'),
+    join(__dirname, '..', 'apps/marketing/src/app/tutor/components/whiteboard/WhiteboardCanvas.tsx'),
     'utf8',
 );
 
@@ -205,7 +205,7 @@ expect(wbSource.includes("fillOpacity=\"0.25\""), 'highlight uses 0.25 opacity')
 // ── 4. PDF capture source (static check) ───────────────────────
 
 const captureSource = readFileSync(
-    join(__dirname, '..', 'src/lib/utils/export/whiteboard-capture.ts'),
+    join(__dirname, '..', 'apps/marketing/src/lib/utils/export/whiteboard-capture.ts'),
     'utf8',
 );
 
@@ -254,7 +254,7 @@ expect(
 // ── 5. Orchestrator handwrite-field stripping ──────────────────
 
 const orchSource = readFileSync(
-    join(__dirname, '..', 'src/app/tutor/components/VoiceTutorRealtime.tsx'),
+    join(__dirname, '..', 'apps/marketing/src/app/tutor/components/VoiceTutorRealtime.tsx'),
     'utf8',
 );
 expect(
@@ -275,7 +275,7 @@ expect(
 // ── 6. PDF export — link caption line (task 4, static check) ───
 
 const pdfExportSource = readFileSync(
-    join(__dirname, '..', 'src/lib/utils/export/pdf-tutor-session.ts'),
+    join(__dirname, '..', 'apps/marketing/src/lib/utils/export/pdf-tutor-session.ts'),
     'utf8',
 );
 // The two meta-skip sets (Task 2's sweep) both thread linksEnabled() so

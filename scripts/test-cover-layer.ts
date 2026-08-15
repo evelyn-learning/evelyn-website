@@ -6,7 +6,7 @@ import {
   COVER_POOLS, ESCALATION_TIERS, NOISE_NAG_LINE,
   extractAnswerToken,
   type CoverVerdict,
-} from '../src/lib/tutor/voice/cover-layer';
+} from '../apps/marketing/src/lib/tutor/voice/cover-layer';
 
 let failures = 0;
 function check(name: string, cond: boolean) {

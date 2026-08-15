@@ -17,13 +17,13 @@ import {
   solveNephron,
   solveDigestiveSystem,
   solveCirculatorySystem,
-} from '../src/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/bio-anatomy';
 import {
   CatalogLeafCrossSectionRenderer,
   CatalogNephronRenderer,
   CatalogDigestiveSystemRenderer,
   CatalogCirculatorySystemRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogBioAnatomyRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogBioAnatomyRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

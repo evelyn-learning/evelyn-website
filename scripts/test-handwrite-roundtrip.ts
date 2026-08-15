@@ -16,8 +16,8 @@
  *     scripts/test-handwrite-roundtrip.ts
  */
 
-import { mapFunctionCallToCommand } from '../src/app/tutor/hooks/toolDefinitions';
-import { buildManifestForCommand } from '../src/lib/tutor/diagrams/manifests';
+import { mapFunctionCallToCommand } from '../apps/marketing/src/app/tutor/hooks/toolDefinitions';
+import { buildManifestForCommand } from '../apps/marketing/src/lib/tutor/diagrams/manifests';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 
 type Fail = { msg: string };

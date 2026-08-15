@@ -2,14 +2,9 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
     "paths": {
       "@/*": [
-        "./src/*"
+        "./apps/marketing/src/*"
       ],
       "@core/*": [
         "./packages/core/src/*"
@@ -17,14 +12,6 @@
     }
   },
   "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "scripts"
+    "scripts/**/*.ts"
   ]
 }

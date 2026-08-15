@@ -9,7 +9,7 @@
  * sentence 0 alone.
  * Usage: npx tsx scripts/test-praise-contradiction.ts
  */
-import { detectPraiseContradiction, extractPraiseEcho } from '../src/lib/tutor/voice/praise-contradiction';
+import { detectPraiseContradiction, extractPraiseEcho } from '../apps/marketing/src/lib/tutor/voice/praise-contradiction';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

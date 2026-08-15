@@ -5,8 +5,8 @@
  */
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { SEED_PASSAGES, passageById } from '../src/lib/tutor/passages/store';
-import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
+import { SEED_PASSAGES, passageById } from '../apps/marketing/src/lib/tutor/passages/store';
+import { SEED_PLANS } from '../apps/marketing/src/lib/tutor/lesson-plan/store';
 
 const errors: string[] = [];
 

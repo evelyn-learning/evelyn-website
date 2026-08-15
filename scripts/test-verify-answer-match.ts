@@ -10,7 +10,7 @@
  *
  * Run: npx tsx scripts/test-verify-answer-match.ts
  */
-import { mcqAnswersAgree, answersAgree } from '../src/lib/tutor/voice/problem-generator';
+import { mcqAnswersAgree, answersAgree } from '../apps/marketing/src/lib/tutor/voice/problem-generator';
 
 let passed = 0;
 let failed = 0;

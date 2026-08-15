@@ -18,10 +18,10 @@ import {
   isGeneratedPlan,
   filterRecapMustRemember,
   buildLessonPlanContext,
-} from '../src/lib/tutor/lesson-plan/context';
-import { loBoundaryBeat, buildAdvanceBeatNote } from '../src/lib/tutor/lesson-plan/rail-labels';
-import type { LessonPlan, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
-import { LESSON_PLAN_SCHEMA_VERSION } from '../src/lib/tutor/lesson-plan/types';
+} from '../apps/marketing/src/lib/tutor/lesson-plan/context';
+import { loBoundaryBeat, buildAdvanceBeatNote } from '../apps/marketing/src/lib/tutor/lesson-plan/rail-labels';
+import type { LessonPlan, Segment, SegmentRecap } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
+import { LESSON_PLAN_SCHEMA_VERSION } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 let passed = 0;
 let failed = 0;
@@ -514,7 +514,7 @@ check(
 /* ------------------------------------------------------------------ */
 
 async function runAdvanceToolResultProviderChecks(): Promise<void> {
-  const { makeToolResultProvider } = await import('../src/app/api/tutor/brain/stream/route');
+  const { makeToolResultProvider } = await import('../apps/marketing/src/app/api/tutor/brain/stream/route');
 
   const crossingCtx = buildLessonPlanContext(genPlan, 'lo-1-try')!;
   const crossingProvider = makeToolResultProvider(crossingCtx, [], []);

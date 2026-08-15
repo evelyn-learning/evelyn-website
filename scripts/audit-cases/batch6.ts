@@ -8,15 +8,15 @@
  */
 import React from 'react';
 import type { AuditCase } from '../lib/svg-text-extents';
-import PhonicsRenderer from '../../src/app/tutor/components/whiteboard/PhonicsRenderer';
-import { PolarGraphRenderer } from '../../src/app/tutor/components/whiteboard/PolarGraphRenderer';
-import { ParametricCurveRenderer } from '../../src/app/tutor/components/whiteboard/ParametricCurveRenderer';
-import CollisionRenderer from '../../src/app/tutor/components/whiteboard/CollisionRenderer';
-import EnergyBarsRenderer from '../../src/app/tutor/components/whiteboard/EnergyBarsRenderer';
-import CellDiagramRenderer from '../../src/app/tutor/components/whiteboard/CellDiagramRenderer';
-import MapRenderer from '../../src/app/tutor/components/whiteboard/MapRenderer';
-import MotionDiagramRenderer from '../../src/app/tutor/components/whiteboard/MotionDiagramRenderer';
-import GeometryRenderer from '../../src/app/tutor/components/whiteboard/GeometryRenderer';
+import PhonicsRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/PhonicsRenderer';
+import { PolarGraphRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/PolarGraphRenderer';
+import { ParametricCurveRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/ParametricCurveRenderer';
+import CollisionRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/CollisionRenderer';
+import EnergyBarsRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/EnergyBarsRenderer';
+import CellDiagramRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/CellDiagramRenderer';
+import MapRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/MapRenderer';
+import MotionDiagramRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/MotionDiagramRenderer';
+import GeometryRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/GeometryRenderer';
 
 export const CASES: AuditCase[] = [
   {

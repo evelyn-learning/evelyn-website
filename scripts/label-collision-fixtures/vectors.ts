@@ -6,9 +6,9 @@
  */
 import React from 'react';
 import type { LabelFixture } from '../lib/label-collision-harness';
-import VectorRenderer from '../../src/app/tutor/components/whiteboard/VectorRenderer';
-import { CatalogVectorAdditionRenderer } from '../../src/app/tutor/components/whiteboard/CatalogVectorAdditionRenderer';
-import { solveVectorAddition } from '../../src/lib/tutor/diagrams/catalog/kinds/physics';
+import VectorRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/VectorRenderer';
+import { CatalogVectorAdditionRenderer } from '../../apps/marketing/src/app/tutor/components/whiteboard/CatalogVectorAdditionRenderer';
+import { solveVectorAddition } from '../../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/physics';
 
 const fixtures: LabelFixture[] = [
   {

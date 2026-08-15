@@ -9,8 +9,8 @@
  */
 import React from 'react';
 import type { LabelFixture } from '../lib/label-collision-harness';
-import ProjectileMotionRenderer from '../../src/app/tutor/components/whiteboard/ProjectileMotionRenderer';
-import CollisionRenderer from '../../src/app/tutor/components/whiteboard/CollisionRenderer';
+import ProjectileMotionRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/ProjectileMotionRenderer';
+import CollisionRenderer from '../../apps/marketing/src/app/tutor/components/whiteboard/CollisionRenderer';
 
 const fixtures: LabelFixture[] = [
   {

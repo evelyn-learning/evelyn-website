@@ -9,7 +9,7 @@
  */
 import { readFileSync } from "node:fs";
 import mongoose from "mongoose";
-import { validateLeadRows, insertLeads } from "../src/lib/outreach/import-leads";
+import { validateLeadRows, insertLeads } from "../apps/marketing/src/lib/outreach/import-leads";
 
 const APPLY = process.argv.includes("--apply");
 const file = process.argv[2];

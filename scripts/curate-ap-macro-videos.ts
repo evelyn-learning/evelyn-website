@@ -21,12 +21,12 @@ import { config as loadEnv } from 'dotenv';
 loadEnv({ path: '.env.local' });
 loadEnv({ path: '.env' });
 
-import { listApMacroTopics } from '../src/lib/admin/video-curator/ap-macro-topics';
-import { findClipsForTopic } from '../src/lib/admin/video-curator/find-clips';
+import { listApMacroTopics } from '../apps/marketing/src/lib/admin/video-curator/ap-macro-topics';
+import { findClipsForTopic } from '../apps/marketing/src/lib/admin/video-curator/find-clips';
 import {
   readDrafts,
   replaceDraftsForConcept,
-} from '../src/lib/admin/video-curator/drafts-store';
+} from '../apps/marketing/src/lib/admin/video-curator/drafts-store';
 
 interface Args {
   force: boolean;

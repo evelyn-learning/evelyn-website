@@ -12,7 +12,7 @@
  *
  * Run: npx tsx scripts/test-brain-stream-route.ts
  */
-import { POST } from '../src/app/api/tutor/brain/stream/route';
+import { POST } from '../apps/marketing/src/app/api/tutor/brain/stream/route';
 
 // Minimal mock of NextRequest. The route only calls req.json(), so the
 // rest of the NextRequest surface is unused.

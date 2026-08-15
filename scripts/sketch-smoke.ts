@@ -9,8 +9,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { chromium } from 'playwright';
-import { sketchToSvgString } from '../src/lib/tutor/whiteboard/sketch-render-core';
-import { BALL_ON_HILL, GLASS_SHATTER } from '../src/lib/tutor/whiteboard/sketch-examples';
+import { sketchToSvgString } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-render-core';
+import { BALL_ON_HILL, GLASS_SHATTER } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-examples';
 
 const OUT_DIR =
   '/private/tmp/claude-501/-Users-luke-Dev-evelynlearning/eef0f93c-2529-4cf5-a783-e7aa5c6bf075/scratchpad';

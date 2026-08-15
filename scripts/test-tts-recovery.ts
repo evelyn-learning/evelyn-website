@@ -15,7 +15,7 @@ import {
   pickRecoveryLine,
   pcm16ToFloat32,
   RECOVERY_MAX_WORDS,
-} from '../src/lib/tutor/voice/tts-recovery';
+} from '../apps/marketing/src/lib/tutor/voice/tts-recovery';
 
 let failures = 0;
 function check(name: string, cond: boolean, detail?: string) {

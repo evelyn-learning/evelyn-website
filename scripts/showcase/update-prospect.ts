@@ -90,7 +90,7 @@ const ShowcaseSiteSchema = new mongoose.Schema(
 const ShowcaseSite = mongoose.model("ShowcaseSite", ShowcaseSiteSchema);
 
 // Path to JSON content files
-const CONTENT_DIR = path.join(__dirname, "../../src/data/showcase-content");
+const CONTENT_DIR = path.join(__dirname, "../../apps/marketing/src/data/showcase-content");
 
 // Load site content from JSON file
 function loadSiteContent(slug: string): Record<string, unknown> | null {

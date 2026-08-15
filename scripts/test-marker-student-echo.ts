@@ -9,7 +9,7 @@
  *
  * Run: npx tsx scripts/test-marker-student-echo.ts
  */
-import { extractStudentEcho } from '../src/lib/tutor/voice/marker-student-echo';
+import { extractStudentEcho } from '../apps/marketing/src/lib/tutor/voice/marker-student-echo';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean) {

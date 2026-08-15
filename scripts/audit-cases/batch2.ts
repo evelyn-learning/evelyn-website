@@ -19,13 +19,13 @@ import type { AuditCase } from '../lib/svg-text-extents';
 const req = createRequire(__filename);
 req.extensions['.css'] = () => {};
 const { CatalogLogicGateRenderer, CatalogFlowchartSimpleRenderer, CatalogBinaryTreeRenderer } =
-  req('../../src/app/tutor/components/whiteboard/CatalogCSRenderers') as typeof import('../../src/app/tutor/components/whiteboard/CatalogCSRenderers');
+  req('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogCSRenderers') as typeof import('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogCSRenderers');
 const { CatalogDataStructureRenderer } =
-  req('../../src/app/tutor/components/whiteboard/CatalogCSStructuresRenderers') as typeof import('../../src/app/tutor/components/whiteboard/CatalogCSStructuresRenderers');
+  req('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogCSStructuresRenderers') as typeof import('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogCSStructuresRenderers');
 const { CatalogComplexPlaneRenderer } =
-  req('../../src/app/tutor/components/whiteboard/CatalogAdvancedRenderers') as typeof import('../../src/app/tutor/components/whiteboard/CatalogAdvancedRenderers');
+  req('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogAdvancedRenderers') as typeof import('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogAdvancedRenderers');
 const { CatalogEnergyPyramidRenderer } =
-  req('../../src/app/tutor/components/whiteboard/CatalogBioAnatomyRenderers') as typeof import('../../src/app/tutor/components/whiteboard/CatalogBioAnatomyRenderers');
+  req('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogBioAnatomyRenderers') as typeof import('../../apps/marketing/src/app/tutor/components/whiteboard/CatalogBioAnatomyRenderers');
 
 export const CASES: AuditCase[] = [
   {

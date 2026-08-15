@@ -40,8 +40,8 @@ async function main(): Promise<void> {
   if (!process.env.MONGODB_URI) throw new Error('MONGODB_URI is not set');
   await mongoose.connect(process.env.MONGODB_URI);
 
-  const { getOutreachGmail } = await import('../src/lib/outreach/gmail');
-  const { applyDemoLink, demoLinkFor, bodyToHtml } = await import('../src/lib/outreach/draft-body');
+  const { getOutreachGmail } = await import('../apps/marketing/src/lib/outreach/gmail');
+  const { applyDemoLink, demoLinkFor, bodyToHtml } = await import('../apps/marketing/src/lib/outreach/draft-body');
   const gmail = await getOutreachGmail();
 
   // Real generated copy, so the comparison reflects actual output.

@@ -3,8 +3,8 @@
  * Run: npm run test:ink-placement
  * Spec: docs/superpowers/specs/2026-07-10-smoothdraw-draw-on-board-design.md §5
  */
-import { placeNote, applyUserPos, rectsOverlap, type Rect } from '../src/lib/tutor/whiteboard/ink-placement';
-import { arrowSpine } from '../src/lib/tutor/whiteboard/hand-stroke';
+import { placeNote, applyUserPos, rectsOverlap, type Rect } from '../apps/marketing/src/lib/tutor/whiteboard/ink-placement';
+import { arrowSpine } from '../apps/marketing/src/lib/tutor/whiteboard/hand-stroke';
 
 let passed = 0;
 let failed = 0;

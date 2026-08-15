@@ -10,9 +10,9 @@
  */
 import * as fs from 'fs';
 import * as path from 'path';
-import { sketchToSvgString } from '../src/lib/tutor/whiteboard/sketch-render-core';
-import { SKETCH_FEWSHOT } from '../src/lib/tutor/whiteboard/sketch-examples';
-import { ICON_NAMES, SKETCH_PRIMITIVE_TYPES, type SketchPrimitive } from '../src/lib/tutor/whiteboard/sketch-schema';
+import { sketchToSvgString } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-render-core';
+import { SKETCH_FEWSHOT } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-examples';
+import { ICON_NAMES, SKETCH_PRIMITIVE_TYPES, type SketchPrimitive } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-schema';
 
 // An all-icons grid so every glyph is reviewable at a glance.
 const iconGrid: SketchPrimitive[] = [];

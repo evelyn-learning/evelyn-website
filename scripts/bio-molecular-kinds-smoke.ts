@@ -17,13 +17,13 @@ import {
   solveEnzymeAction,
   solveCellCycle,
   solveGeneExpression,
-} from '../src/lib/tutor/diagrams/catalog/kinds/molecular-biology';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/molecular-biology';
 import {
   CatalogProteinSynthesisRenderer,
   CatalogEnzymeActionRenderer,
   CatalogCellCycleRenderer,
   CatalogGeneExpressionRenderer,
-} from '../src/app/tutor/components/whiteboard/CatalogMolecularBiologyRenderers';
+} from '../apps/marketing/src/app/tutor/components/whiteboard/CatalogMolecularBiologyRenderers';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const SOLVE: Record<string, (p: Record<string, unknown>) => any> = {

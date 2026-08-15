@@ -1,5 +1,5 @@
 import { strict as assert } from 'node:assert';
-import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '../src/lib/tutor/voice/question-anchor';
+import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '../apps/marketing/src/lib/tutor/voice/question-anchor';
 
 let passed = 0; let failed = 0;
 function test(name: string, fn: () => void) {

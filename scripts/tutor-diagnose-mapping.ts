@@ -10,8 +10,8 @@
  * Run: npx tsx scripts/tutor-diagnose-mapping.ts
  */
 import { writeFileSync } from 'fs';
-import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
-import { resolvePlanCell } from '../src/lib/tutor/lesson-plan/resolve-cell';
+import { SEED_PLANS } from '../apps/marketing/src/lib/tutor/lesson-plan/store';
+import { resolvePlanCell } from '../apps/marketing/src/lib/tutor/lesson-plan/resolve-cell';
 
 interface Orphan {
   id: string;

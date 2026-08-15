@@ -17,7 +17,7 @@ import {
   climateDiagramFeatureNames,
   solvePopulationPyramid,
   solveClimateDiagram,
-} from '../src/lib/tutor/diagrams/catalog/kinds/environmental';
+} from '../apps/marketing/src/lib/tutor/diagrams/catalog/kinds/environmental';
 
 type Fail = { msg: string };
 const failures: Fail[] = [];
@@ -26,9 +26,9 @@ function expect(cond: boolean, msg: string): void {
 }
 
 const READ = (rel: string) => readFileSync(join(__dirname, '..', rel), 'utf8');
-const dispatcherSource = READ('src/lib/tutor/diagrams/manifests.ts');
-const ppSource = READ('src/app/tutor/components/whiteboard/PopulationPyramidRenderer.tsx');
-const cdSource = READ('src/app/tutor/components/whiteboard/ClimateDiagramRenderer.tsx');
+const dispatcherSource = READ('apps/marketing/src/lib/tutor/diagrams/manifests.ts');
+const ppSource = READ('apps/marketing/src/app/tutor/components/whiteboard/PopulationPyramidRenderer.tsx');
+const cdSource = READ('apps/marketing/src/app/tutor/components/whiteboard/ClimateDiagramRenderer.tsx');
 
 // ── 1. population_pyramid ───────────────────────────────────────────────────
 {

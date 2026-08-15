@@ -13,7 +13,7 @@ import {
   ELEVENLABS_VOICES,
   ELEVENLABS_DEFAULT_VOICE_ID,
   resolveElevenLabsVoice,
-} from '../src/lib/tutor/voice/elevenlabs-voice-map';
+} from '../apps/marketing/src/lib/tutor/voice/elevenlabs-voice-map';
 
 let failures = 0;
 function check(name: string, actual: string, expected: string) {

@@ -9,7 +9,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { flushableCount, type RenderSyncEntry } from '../src/lib/tutor/whiteboard/render-sync';
+import { flushableCount, type RenderSyncEntry } from '../apps/marketing/src/lib/tutor/whiteboard/render-sync';
 
 let passed = 0;
 let failed = 0;

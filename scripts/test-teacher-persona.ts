@@ -20,7 +20,7 @@ import {
   CATCHPHRASE_TURN_INTERVAL,
   type TeacherPersonaWire,
 } from '@core/ai/teacher-persona';
-import { buildSystemPrompt, type SystemPromptContext } from '../src/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, type SystemPromptContext } from '../apps/marketing/src/lib/tutor/ai/system-prompt-builder';
 
 let passed = 0;
 let failed = 0;

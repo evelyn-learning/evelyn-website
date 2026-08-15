@@ -6,7 +6,7 @@
  * "3x - 10", tutor opened "Not quite — check that middle step again."
  * Usage: npx tsx scripts/test-simplification-verdict-check.ts
  */
-import { checkSimplificationVerdict } from '../src/lib/tutor/voice/simplification-verdict-check';
+import { checkSimplificationVerdict } from '../apps/marketing/src/lib/tutor/voice/simplification-verdict-check';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

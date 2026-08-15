@@ -26,7 +26,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
+import type { LessonPlan, Segment } from '../apps/marketing/src/lib/tutor/lesson-plan/types';
 
 // Course slug (from `evelyn.hs.<slug>.` OR `evelyn.testprep.<slug>.`) →
 // exact portal course-title string. Must byte-match the portal's course

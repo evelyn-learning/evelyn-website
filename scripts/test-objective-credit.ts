@@ -10,7 +10,7 @@
  * THIS turn must force 'correct' over whatever the regexes read.
  * Usage: npx tsx scripts/test-objective-credit.ts
  */
-import { decidePacingCredit, type ObjectiveCorrectSignal } from '../src/lib/tutor/voice/objective-credit';
+import { decidePacingCredit, type ObjectiveCorrectSignal } from '../apps/marketing/src/lib/tutor/voice/objective-credit';
 
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) {

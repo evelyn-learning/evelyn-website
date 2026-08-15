@@ -24,7 +24,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { buildSystemPrompt, type SystemPromptContext } from '../src/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, type SystemPromptContext } from '../apps/marketing/src/lib/tutor/ai/system-prompt-builder';
 
 let passed = 0;
 let failed = 0;

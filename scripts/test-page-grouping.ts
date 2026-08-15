@@ -19,7 +19,7 @@ import {
   type PageGroupingInput,
   type PageGroupingCommand,
   type ActivePageView,
-} from '../src/lib/tutor/whiteboard/page-grouping';
+} from '../apps/marketing/src/lib/tutor/whiteboard/page-grouping';
 
 let passed = 0;
 let failed = 0;

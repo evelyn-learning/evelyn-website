@@ -8,11 +8,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { chromium } from 'playwright';
-import { sketchToSvgString } from '../src/lib/tutor/whiteboard/sketch-render-core';
+import { sketchToSvgString } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-render-core';
 import {
   PULLEY_LIFT, LEVER_BALANCE, SPEEDOMETER, NUMBER_LINE,
-} from '../src/lib/tutor/whiteboard/sketch-examples';
-import type { SketchPrimitive } from '../src/lib/tutor/whiteboard/sketch-schema';
+} from '../apps/marketing/src/lib/tutor/whiteboard/sketch-examples';
+import type { SketchPrimitive } from '../apps/marketing/src/lib/tutor/whiteboard/sketch-schema';
 
 const OUT_DIR =
   '/private/tmp/claude-501/-Users-luke-Dev-evelynlearning/d8c1f850-7170-4749-82b2-c44d6bef1efc/scratchpad';

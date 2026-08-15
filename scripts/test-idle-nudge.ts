@@ -19,7 +19,7 @@ import {
   IDLE_NUDGE_MAX_PER_STRETCH,
   IDLE_NUDGE_MAX_PER_SESSION,
   IDLE_NUDGE_DIRECTIVE,
-} from '../src/lib/tutor/voice/idle-nudge';
+} from '../apps/marketing/src/lib/tutor/voice/idle-nudge';
 
 let failures = 0;
 function check(name: string, cond: boolean, got?: unknown) {
