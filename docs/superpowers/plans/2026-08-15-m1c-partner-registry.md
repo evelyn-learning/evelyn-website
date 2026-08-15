@@ -20,6 +20,15 @@
 - Node/Next versions unchanged. Do not add runtime dependencies; `node:crypto` covers encryption.
 - Existing oracle: `npm run test:all` from `apps/tutor` plus marketing's `test:outreach` = 181 entries, 178 passing, 3 known-red (`test:verdict-guard`, `test:pedagogy-posed-problem`, `test:pedagogy-d1`). Do not fix the 3; they were red before this work.
 - New `test:*` entries in `apps/tutor/package.json` are auto-discovered by `run-all-tests.mjs`. Each must exit non-zero on failure.
+- **Identity resolution must ship behind a flag, default OFF.** `resolveProfileId` does **not** adopt a
+  pre-existing row that has no `partnerId`/`externalStudentId` — it mints a new surrogate `_id`.
+  Proven against a real mongod during Task 4's review. So if Task 5's call sites go live before the
+  Task 6 backfill has stamped identities on the 495 existing profiles, **every existing student
+  silently starts from a blank profile** while their mastery, gaps and notes stay attached to the old
+  `_id`. A deploy is atomic, so code ordering cannot solve this — only a flag can. Runtime adoption of
+  legacy rows is NOT an alternative: adopting safely requires knowing which partner a legacy row
+  belongs to, which is exactly what the backfill derives from session data. Guessing it at runtime is
+  the collision bug in a new costume.
 
 ---
 
@@ -1156,6 +1165,26 @@ Create `apps/tutor/scripts/test-portal-student-scoping.ts` asserting, with the `
 "test:portal-student-scoping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-student-scoping.ts"
 ```
 
+- [ ] **Step 3a: Gate resolution behind `PORTAL_IDENTITY_RESOLUTION`**
+
+Every call site changed below must consult a single helper, default **off**:
+
+```ts
+/**
+ * M1c: identity resolution is flag-gated because resolveProfileId does NOT adopt
+ * a pre-existing row lacking partnerId/externalStudentId — it mints a new
+ * surrogate _id. Turning this on before the Task 6 backfill has stamped the 495
+ * existing profiles would hand every existing student a blank profile while
+ * their mastery stayed on the old _id. Flip it at rollout step 5a, after the
+ * backfill and the index build. Default off so a deploy is always safe.
+ */
+export function identityResolutionEnabled(): boolean {
+  return process.env.PORTAL_IDENTITY_RESOLUTION === 'on';
+}
+```
+
+When off, a call site passes the raw id through exactly as today. Test both branches.
+
 - [ ] **Step 4: Change each portal call site**
 
 Replace, at every portal handler that touches a profile:
@@ -1719,7 +1748,14 @@ Each step is independently reversible. **Do not batch them.**
 3. `npm run backfill:partner-namespace` (dry-run) — review the attribution table.
 4. `npm run backfill:partner-namespace -- --write`.
 5. `npm run backfill:partner-namespace -- --build-index` — the build is the verification; it refuses on any duplicate.
+5a. **Only now set `PORTAL_IDENTITY_RESOLUTION=on` and deploy.** Until this flip, call sites keep using
+    the raw id, so existing students keep their profiles. Flipping before step 4 gives every existing
+    student a blank profile — see the Global Constraint. Reversible: unset the flag and redeploy.
 6. Remove `PORTAL_PARTNER_SECRETS` from the env. Deploy.
+   **Precondition, found during Task 3:** `getPartnerSecret` is NOT retired —
+   `src/app/api/tutor-portal/demo-token/route.ts` still calls it directly for `evelyn-marketing`,
+   bypassing the registry entirely. Removing the env before that partner has a working registry row
+   **and** that route is migrated would break the live demo-token path. Verify both before this step.
 7. `PORTAL_LIMITS_MODE=report-only`. Observe for a day.
 8. Remove `PORTAL_LIMITS_MODE`. Limits enforced.
 
