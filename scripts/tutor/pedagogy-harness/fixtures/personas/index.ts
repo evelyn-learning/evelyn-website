@@ -45,6 +45,29 @@ export interface ResumeStateFixture {
   updatedAtISO: string;
 }
 
+const HOUR_MS = 60 * 60 * 1000;
+
+/**
+ * Re-date a "fresh" checkpoint to one hour ago.
+ *
+ * `ravi.json`'s `resumeState.updatedAtISO` is a fixed calendar date, so it
+ * ages: `RESUME_MAX_AGE_MS` is 30 days, and the fixture silently stopped
+ * being "fresh" ~30 days after it was authored. Every consumer that wants a
+ * resumable checkpoint MUST re-date it through here rather than trusting the
+ * literal in the JSON. `staleResumeState` is used raw and deliberately not
+ * refreshed — it has to read as expired against real wall-clock time.
+ *
+ * Lives beside `ResumeStateFixture` (not in run-harness.ts) so the fixture's
+ * tests can apply the same transform the driver does without importing the
+ * Playwright-laden driver module.
+ */
+export function refreshFreshCheckpoint(
+  cp: ResumeStateFixture,
+  now: number = Date.now(),
+): ResumeStateFixture {
+  return { ...cp, updatedAtISO: new Date(now - HOUR_MS).toISOString() };
+}
+
 export interface Persona {
   /** 'maya', 'leo', ... */
   id: string;

@@ -19,7 +19,7 @@
 
 import { strict as assert } from 'node:assert';
 import { StudentContextSchema, RESUME_MAX_AGE_MS } from '@evelyn/portal-contract/v1';
-import { loadPersona, allPersonas } from './index';
+import { loadPersona, allPersonas, refreshFreshCheckpoint } from './index';
 
 let passed = 0;
 let failed = 0;
@@ -139,13 +139,38 @@ test('kai: profile has one LO with score >= 0.8 / exposures >= 2 / confidence "h
 });
 
 // ── ravi: resume-window straddle ────────────────────────────────────────
-test('ravi: resumeState is within RESUME_MAX_AGE_MS, staleResumeState is older than it', () => {
+// The FRESH checkpoint is asserted through refreshFreshCheckpoint — the same
+// transform run-harness applies before feeding it to isCheckpointResumable —
+// NOT against the raw JSON literal. Asserting the literal made this test a
+// time bomb: ravi.json's authored 2026-07-02 date silently fell outside the
+// 30-day RESUME_MAX_AGE_MS window in early August 2026 and the test began
+// failing on a calendar rollover rather than on any code change. The driver
+// was never affected, because it already re-dates the fixture.
+//
+// The STALE checkpoint IS asserted raw, deliberately: run-harness feeds the
+// stale variant through unmodified, so its expiry must hold against real
+// wall-clock time. That direction only gets safer as time passes.
+test('ravi: refreshed resumeState is within RESUME_MAX_AGE_MS, raw staleResumeState is older than it', () => {
   const p = loadPersona('ravi') as any;
   const now = Date.now();
-  const freshAge = now - new Date(p.resumeState.updatedAtISO).getTime();
+  const fresh = refreshFreshCheckpoint(p.resumeState, now);
+  const freshAge = now - new Date(fresh.updatedAtISO).getTime();
   const staleAge = now - new Date(p.staleResumeState.updatedAtISO).getTime();
-  assert.ok(freshAge >= 0 && freshAge < RESUME_MAX_AGE_MS, `resumeState within resume window (age=${freshAge}ms)`);
+  assert.ok(freshAge >= 0 && freshAge < RESUME_MAX_AGE_MS, `refreshed resumeState within resume window (age=${freshAge}ms)`);
   assert.ok(staleAge > RESUME_MAX_AGE_MS, `staleResumeState older than resume window (age=${staleAge}ms)`);
+});
+
+// Guards the property the refresh depends on: the two fixtures must remain
+// distinguishable, i.e. the authored fresh checkpoint is newer than the stale
+// one. This is the ordering invariant the old assertion was really protecting,
+// and unlike an absolute-date check it can never rot.
+test('ravi: authored resumeState is newer than authored staleResumeState', () => {
+  const p = loadPersona('ravi') as any;
+  const freshAt = new Date(p.resumeState.updatedAtISO).getTime();
+  const staleAt = new Date(p.staleResumeState.updatedAtISO).getTime();
+  assert.ok(Number.isFinite(freshAt), 'resumeState.updatedAtISO parses');
+  assert.ok(Number.isFinite(staleAt), 'staleResumeState.updatedAtISO parses');
+  assert.ok(freshAt > staleAt, `resumeState (${p.resumeState.updatedAtISO}) is newer than staleResumeState (${p.staleResumeState.updatedAtISO})`);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);
