@@ -4,7 +4,7 @@ import "./globals.css";
 import {
   GoogleTagManager,
   GoogleTagManagerNoscript,
-} from "@/components/analytics/GoogleTagManager";
+} from "@core/components/analytics/GoogleTagManager";
 import { EducationalOrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/JsonLd";
 import { AppShell } from "@/components/layout/AppShell";
 

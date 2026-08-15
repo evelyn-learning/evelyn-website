@@ -1,4 +1,5 @@
 export { Teacher, type ITeacher, type IGoogleAuth } from "@core/models/Teacher";
+export { AdminUser, type IAdminUser } from "@core/models/AdminUser";
 export { DemoInteraction, type IDemoInteraction } from "@core/models/DemoInteraction";
 export {
   DemoSession,
