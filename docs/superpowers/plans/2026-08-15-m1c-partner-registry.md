@@ -1720,6 +1720,10 @@ Each step is independently reversible. **Do not batch them.**
 4. `npm run backfill:partner-namespace -- --write`.
 5. `npm run backfill:partner-namespace -- --build-index` — the build is the verification; it refuses on any duplicate.
 6. Remove `PORTAL_PARTNER_SECRETS` from the env. Deploy.
+   **Precondition, found during Task 3:** `getPartnerSecret` is NOT retired —
+   `src/app/api/tutor-portal/demo-token/route.ts` still calls it directly for `evelyn-marketing`,
+   bypassing the registry entirely. Removing the env before that partner has a working registry row
+   **and** that route is migrated would break the live demo-token path. Verify both before this step.
 7. `PORTAL_LIMITS_MODE=report-only`. Observe for a day.
 8. Remove `PORTAL_LIMITS_MODE`. Limits enforced.
 
