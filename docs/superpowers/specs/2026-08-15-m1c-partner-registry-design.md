@@ -190,12 +190,46 @@ rejected by the unique index — surfacing as a request failure for a legitimate
 resolver issues one `findOneAndUpdate` with `upsert: true` keyed on `(partnerId,
 externalStudentId)`, and treats a duplicate-key error as "someone else won the race, re-read".
 
-`withPortalAuth` supplies `partnerId` from the verified header — handlers never choose it. The
-internal `/api/tutor/**` and retail paths supply `'evelyn'`.
+`withPortalAuth` supplies `partnerId` from the verified header — handlers never choose it. Internal
+and retail paths follow §4.0: embed token's `partner_id` when one is present, `'evelyn'` only for
+genuinely retail traffic.
 
 Two partners sending `user_1` produce two documents, because the index refuses otherwise.
 
 ---
+
+## 4.0 Where `partnerId` comes from — and why `'evelyn'` is not the internal-route answer
+
+`withPortalAuth` supplies `partnerId` for `/api/portal/v1/**`. An earlier draft of this section said
+the internal `/api/tutor/**` and retail paths "supply `'evelyn'`". **That is wrong, and it would have
+split every partner-embedded student in two.**
+
+The tutor UI a partner's students actually sit in is `tutor-portal/embed`, and it commits in-session
+state through the **internal** routes — `POST /api/tutor/student-profile/{id}` for mastery deltas,
+gaps and segment-outcome evidence, and `PATCH /api/tutor/topic-notes/{id}/{baselineId}` for notes.
+Hardcoding `'evelyn'` there while the partner's own server-to-server reads resolve under
+`auth.partnerId` gives the same student **two** surrogate profiles — `('evelyn', X)` and
+`('academy', X)` — and, since §4.1 extends resolution to six collections, the split spans all of them.
+A full session would write gaps, mastery and notes to the `evelyn` profile while
+`/api/portal/v1/gaps`, `/mastery` and `/learner-state` returned empty for that student, permanently.
+That is the cross-partner split-brain this milestone exists to prevent, arriving through the front
+door.
+
+**The rule:**
+
+1. `/api/portal/v1/**` → the `partnerId` verified by `withPortalAuth`.
+2. An internal `/api/tutor/**` route serving an **embedded** session → the `partner_id` claim of the
+   verified embed token. It is a required claim on `EmbedTokenPayload`, and `checkEmbedAuth` already
+   returns the payload — `student-profile/[id]/route.ts` holds it and currently ignores it.
+3. Genuinely retail traffic, with no embed token → `'evelyn'`.
+
+**Consequence, and it is a gate on the flag flip:** a route that writes student-keyed data with **no
+authentication** cannot be partner-scoped, because it has no trustworthy partner id and the client
+must never be believed about which partner it is. `/api/tutor/topic-notes/**` is in that state today
+("Add auth when retail launches"). Such routes must gain embed-token auth **before**
+`PORTAL_IDENTITY_RESOLUTION` is turned on. Until then they would keep writing under `'evelyn'` and
+silently strand partner students' notes. This was a pre-existing hole in authentication; M1c turns it
+into a correctness problem as well, which is what forces it now.
 
 ## 4.1 Which stores use the resolved id — and which do not
 
