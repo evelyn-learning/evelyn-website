@@ -201,8 +201,10 @@ export interface PartnerPolicy {
 }
 
 export interface StudentProfile {
-  /** Application-controlled id. For retail = userId. For B2B =
-   *  `${partnerId}:${externalStudentId}`. */
+  /** Surrogate id, never rewritten. M1c: identity is the pair
+   *  (partnerId, externalStudentId); this id is opaque
+   *  (`crypto.randomUUID()` for new profiles via `resolveProfileId`), not a
+   *  `${partnerId}:${externalStudentId}` string convention. */
   id: string;
   /** Display name (used in greetings / problem name pools). */
   name?: string;

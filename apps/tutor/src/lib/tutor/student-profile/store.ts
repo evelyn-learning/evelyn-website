@@ -562,13 +562,6 @@ export function recordPlanContentSeen(
   return { ...profile, planContentSeen: { ...(profile.planContentSeen ?? {}), [planId]: next } };
 }
 
-/** Patch the preferences sub-object on a profile and persist. Only keys
- *  present in `patch` are written; everything else (mastery, gaps,
- *  recentSessions) is preserved. Used by the settings page and any
- *  other surface that lets the student/parent change a preference
- *  without committing a full session.
- *
- *  Pass `null` for a key to clear it (revert to grade default). */
 export interface ResolveProfileInput {
   partnerId: string;
   externalStudentId: string;
@@ -582,12 +575,25 @@ export interface ResolverDeps {
   newId(): string;
 }
 
+/**
+ * The Mongo filter that carries the M1c guarantee: identity is the PAIR,
+ * never `externalStudentId` alone. Exported and used by both
+ * `defaultResolverDeps` methods below (not duplicated), and pinned directly
+ * by a hermetic test — the fake-store tests below exercise the fake's own
+ * key, not this line, so this is the only thing standing between "correct"
+ * and "regressed to filtering on externalStudentId alone" reaching prod
+ * undetected.
+ */
+export function identityFilter({ partnerId, externalStudentId }: ResolveProfileInput) {
+  return { partnerId, externalStudentId };
+}
+
 const defaultResolverDeps: ResolverDeps = {
   newId: () => randomUUID(),
-  async findExisting({ partnerId, externalStudentId }) {
+  async findExisting(input) {
     await connectDB();
     return StudentProfileModel
-      .findOne({ partnerId, externalStudentId })
+      .findOne(identityFilter(input))
       .select('_id')
       .lean<{ _id: string }>()
       .exec();
@@ -596,7 +602,7 @@ const defaultResolverDeps: ResolverDeps = {
     await connectDB();
     const now = new Date().toISOString();
     return StudentProfileModel.findOneAndUpdate(
-      { partnerId, externalStudentId },
+      identityFilter({ partnerId, externalStudentId }),
       {
         $setOnInsert: {
           _id: newId,
@@ -623,7 +629,9 @@ const defaultResolverDeps: ResolverDeps = {
  * Find-or-create is ONE atomic upsert, not a read followed by a write: two
  * concurrent first-requests for the same new student would both miss and both
  * insert, and the loser would surface E11000 to a legitimate student. On that
- * error we re-read and adopt whoever won.
+ * error we re-read and adopt whoever won. `findExisting` MUST NOT be called
+ * on the happy path — that's the read-then-write anti-pattern this function
+ * exists to avoid, and the test suite asserts the call count to prove it.
  */
 export async function resolveProfileId(
   input: ResolveProfileInput,
@@ -638,8 +646,11 @@ export async function resolveProfileId(
     const doc = await deps.findOneAndUpsert({ ...input, newId });
     if (doc) return doc._id;
   } catch (err) {
-    const code = (err as { code?: number }).code;
-    if (code !== 11000) throw err;
+    const e = err as { code?: number; codeName?: string };
+    // Accept both shapes: the driver's top-level numeric code, and a
+    // codeName that a wrapper/proxy might surface instead of (or in
+    // addition to) the numeric code.
+    if (e.code !== 11000 && e.codeName !== 'DuplicateKey') throw err;
   }
   const existing = await deps.findExisting(input);
   if (!existing) {
@@ -650,6 +661,13 @@ export async function resolveProfileId(
   return existing._id;
 }
 
+/** Patch the preferences sub-object on a profile and persist. Only keys
+ *  present in `patch` are written; everything else (mastery, gaps,
+ *  recentSessions) is preserved. Used by the settings page and any
+ *  other surface that lets the student/parent change a preference
+ *  without committing a full session.
+ *
+ *  Pass `null` for a key to clear it (revert to grade default). */
 export async function updateStudentPreferences(
   id: string,
   patch: Partial<Record<keyof StudentPreferences, StudentPreferences[keyof StudentPreferences] | null>>,

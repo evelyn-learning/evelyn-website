@@ -1,8 +1,11 @@
 /**
  * MongoDB model for StudentProfile.
  *
- * String _id — application-controlled (retail userId, or
- * `${partnerId}:${externalStudentId}` for B2B).
+ * String _id — a surrogate, never rewritten. M1c: identity is the pair
+ * (partnerId, externalStudentId), resolved to this `_id` via
+ * `resolveProfileId` in store.ts; `_id` itself is opaque
+ * (`crypto.randomUUID()` for new profiles), not a `${partnerId}:${id}`
+ * string convention.
  */
 
 import mongoose, { Schema } from 'mongoose';

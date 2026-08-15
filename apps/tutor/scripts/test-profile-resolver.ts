@@ -7,10 +7,17 @@
  * get two profiles`. That is the defect M1c exists to eliminate.
  *
  * Hermetic: an in-memory fake stands in for the collection, including its
- * unique-index behaviour, so this counts in the oracle.
+ * unique-index behaviour — any write attempt against an already-taken
+ * (partnerId, externalStudentId) key is REJECTED with a real `code: 11000`,
+ * mirroring what the real unique index (Task 6) does — so this counts in
+ * the oracle. A second layer (the mutation-guard test below) additionally
+ * asserts call *shape* — that a fresh resolve is a single atomic upsert,
+ * not a read followed by a write — because a fake that merely rejects
+ * duplicates can still pass against a read-then-write implementation that
+ * happens to produce the same answer.
  */
 import assert from 'node:assert';
-import { resolveProfileId, type ResolverDeps } from '@/lib/tutor/student-profile/store';
+import { resolveProfileId, identityFilter, type ResolverDeps } from '@/lib/tutor/student-profile/store';
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>): Promise<void> {
@@ -18,7 +25,12 @@ async function test(name: string, fn: () => void | Promise<void>): Promise<void>
   catch (e) { failed++; console.log(`  FAIL - ${name}`); console.error(e); }
 }
 
-/** Fake collection enforcing unique (partnerId, externalStudentId). */
+/** Fake collection enforcing unique (partnerId, externalStudentId): any
+ *  write attempt against a key that's already taken throws a real
+ *  `code: 11000`, exactly like an insert colliding with a unique index.
+ *  The resolver is responsible for catching that and re-reading via
+ *  `findExisting` — this fake does NOT quietly resolve duplicates itself,
+ *  because doing so would let a read-then-write implementation pass too. */
 function fakeStore() {
   const rows = new Map<string, string>(); // "partner|ext" -> _id
   let seq = 0;
@@ -30,7 +42,11 @@ function fakeStore() {
     },
     findOneAndUpsert: async ({ partnerId, externalStudentId, newId }) => {
       const k = `${partnerId}|${externalStudentId}`;
-      if (rows.has(k)) return { _id: rows.get(k)! };
+      if (rows.has(k)) {
+        const err = new Error('E11000 duplicate key error') as Error & { code?: number };
+        err.code = 11000;
+        throw err;
+      }
       rows.set(k, newId);
       return { _id: newId };
     },
@@ -103,6 +119,30 @@ await test('rejects an empty externalStudentId', async () => {
   await assert.rejects(
     () => resolveProfileId({ partnerId: 'crimsora', externalStudentId: '' }, deps),
     /externalStudentId/,
+  );
+});
+
+await test('MUTATION GUARD: a fresh resolve is one atomic upsert — findExisting is never called on the happy path', async () => {
+  const { deps } = fakeStore();
+  let existingCalls = 0;
+  const counting: ResolverDeps = {
+    ...deps,
+    findExisting: async (input) => { existingCalls++; return deps.findExisting(input); },
+  };
+  const id = await resolveProfileId({ partnerId: 'crimsora', externalStudentId: 'fresh_1' }, counting);
+  assert.ok(id);
+  assert.strictEqual(
+    existingCalls, 0,
+    'read-then-write (findExisting before findOneAndUpsert) is exactly the race the atomic upsert exists to avoid',
+  );
+});
+
+await test('identityFilter pins the guarantee-bearing Mongo filter shape', () => {
+  const filter = identityFilter({ partnerId: 'crimsora', externalStudentId: 'user_1' });
+  assert.deepStrictEqual(
+    filter,
+    { partnerId: 'crimsora', externalStudentId: 'user_1' },
+    'the production filter MUST key on both partnerId and externalStudentId — filtering on externalStudentId alone is the exact regression M1c exists to prevent',
   );
 });
 
