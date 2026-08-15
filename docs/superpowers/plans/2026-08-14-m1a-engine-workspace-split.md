@@ -1327,3 +1327,65 @@ The plan is done when **all** of these hold:
 - **Dependency splitting.** All 55 deps / 21 devDeps stay hoisted at the workspace root. Splitting them per app would shrink each `npm ci`, but it is a separate change with its own failure modes; doing it here would confound this plan's gate.
 - **Geo-accent on the embed.** `accentFromTimezone` is consumed only by `app/tutor/page.tsx` and the marketing demo — **the embed route never calls it**, because it reads a raw `voiceId` off the persona wire the portal supplies. Task 4 Step 2 passes `timezone` to the demo-token route so marketing keeps its behavior, but making geo pre-select work for portal-minted sessions is **M2** portal-side work (resolve accent → `teachersForAccent()` → pick persona → mint token).
 - **`rate-limit.ts` is in `packages/core` but still guards only marketing/showcase routes.** Per-partner limits for `/api/portal/v1/**` are M1c, and they need a shared durable store — the current in-memory `Map` implementation breaks under the pm2 cluster mode M1b introduces.
+
+---
+
+## AS EXECUTED — shipped to production 2026-08-15
+
+All six acceptance gates met. Tutor = pm2 `evelyn-tutor` on :3007 (`/root/evelyn-tutor`);
+marketing = pm2 `evelyn-marketing` on :3001 (`/root/evelyn-marketing`). **The tutor saw zero
+downtime** — it served 200 throughout, including while `evelyn-website` was deleted. Marketing's
+outage was ~6.5 minutes. Gate 5 (a live Crimsora voice session) and the `/tutor` and
+`tutor.evelynlearning.com` surfaces were confirmed working by the owner post-cutover.
+
+**Where this plan was wrong, and what was done instead.** Steps 5–6 above say to put
+`nginx/evelyn.conf` onto `/etc/nginx/sites-available/evelyn.conf`. On the server:
+
+- **That file does not exist.** Writing it would have created a dead file and reported success
+  while leaving the tutor unrouted.
+- The live config is `/etc/nginx/sites-enabled/evelynlearning`, a **regular file, not a symlink**.
+- It also serves four unrelated production apps that appear nowhere in `nginx/evelyn.conf`:
+  `/fridgecheck` (:3004), `/hummiguard-ai` (:3003), `/racman` (:3012, in both the :443 and :80
+  blocks), `/bartr` (:3014). Overwriting it takes all four offline.
+- It carries the Google Search Console alias, the bare IP in `server_name`, and Certbot's SSL
+  include + dhparam.
+- **Its tutor locations use `proxy_read_timeout 86400`; `nginx/evelyn.conf` says 60s** — which
+  would cut long Crimsora voice sessions off mid-session.
+
+The cutover therefore **edited the live file surgically in place**: 246 lines added, exactly two
+changed (the two `= /tutor-portal/*` blocks' `proxy_pass`, 3001 → 3007), with a timestamped
+backup, an `nginx -t` gate and automatic rollback. `tutor.evelynlearning.com` is served by its own
+file, `/etc/nginx/sites-available/tutor-evelynlearning`, repointed to :3007 in the same reload.
+Both applied files are mirrored in `nginx/` as `evelynlearning-live.conf` and
+`tutor-evelynlearning-live.conf`; `nginx/evelyn.conf` carries a warning banner and is **not** a
+deployable artifact.
+
+The `/_next/static/` marketing→tutor fallback was **verified live, not assumed**: a tutor-only
+chunk 404s on :3001, 200s on :3007, and 200s through nginx. It could not be tested before the
+marketing deploy, because until then :3001 was the old monolith and had every chunk.
+
+### Follow-ups carried out of this plan
+
+- **Ketcher cannot be rebuilt.** `ketcher-react@3.17.2` resolves against `ketcher-core@3.12.0`
+  (ketcher-react declares `"ketcher-core": "*"`; both are `^3.12.0` in the root manifest, so react
+  floated and core did not) → **18 missing-export errors**. Pre-existing: identical on `main` at
+  merge-base `034f151a`, proven by byte-identical lockfile entries and by reproducing the pre-split
+  invocation. The last good build is **2026-03-22**, and `apps/tutor/public/ketcher/bundle.{js,css}`
+  are gitignored, so the only copies are the deploying machine, `/root/evelynlearning/public/ketcher/`
+  and `/root/evelyn-tutor/apps/tutor/public/ketcher/`. `deploy-tutor.sh` hard-aborts before the
+  build if either is missing or empty. Fixing the skew means pinning a dependency — out of scope
+  here, owed later.
+- **`ENABLE_LEARNER_MODEL_SNAPSHOT` is set in no production env file and never was**, so the
+  learner-model snapshot cron has been dormant on prod regardless of the split.
+- **Stale `.bak` files in `/etc/nginx/sites-enabled/`** (`evelynlearning.bak-bartr-*`,
+  `000-soysauce.bak-*`) are loaded as real configs and cause the "conflicting server name" warnings
+  on every `nginx -t`. Pre-existing hygiene, untouched.
+- `location /static/` and `root /var/www/evelyn-website/public;` in `nginx/evelyn.conf` are dead.
+- The unconditional `proxy_set_header Connection 'upgrade'` on static-asset blocks means the
+  `keepalive` pools are never used; the correct idiom is a `map $http_upgrade $connection_upgrade`.
+- `PUBLIC_KETCHER` is never `mkdirSync`'d in `build-ketcher.mjs`; `absWorkingDir` could be
+  `__dirname` for deterministic error paths.
+- `deploy-update.sh` (banned) and `setup-server.sh` still hardcode `/root/evelynlearning` and
+  `evelyn-website`.
+- Retiring `/root/evelynlearning` is safe once the rollback window closes; the GSC alias was
+  already repointed off it.
