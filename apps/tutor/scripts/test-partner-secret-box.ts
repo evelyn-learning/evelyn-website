@@ -71,6 +71,14 @@ await test('a missing PORTAL_SECRET_ENC_KEY throws a clearly-named error', () =>
   }
 });
 
+await test('a wrong-length explicit key throws naming the length problem, on encrypt too', () => {
+  assert.throws(() => encryptSecret('x', randomBytes(16)), /32 bytes/);
+});
+
+await test('round-trips an empty-string secret', () => {
+  assert.strictEqual(decryptSecret(encryptSecret('')), '');
+});
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);
 })();

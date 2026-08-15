@@ -36,16 +36,27 @@ export class SecretDecryptError extends Error {
 }
 
 function resolveKey(explicit?: Buffer): Buffer {
-  if (explicit) return explicit;
-  const raw = process.env.PORTAL_SECRET_ENC_KEY;
-  if (!raw) {
-    throw new Error(
-      'PORTAL_SECRET_ENC_KEY is not set — partner secrets cannot be sealed or opened.',
-    );
+  let key: Buffer;
+  if (explicit) {
+    key = explicit;
+  } else {
+    const raw = process.env.PORTAL_SECRET_ENC_KEY;
+    if (!raw) {
+      throw new Error(
+        'PORTAL_SECRET_ENC_KEY is not set — partner secrets cannot be sealed or opened.',
+      );
+    }
+    key = Buffer.from(raw, 'base64');
   }
-  const key = Buffer.from(raw, 'base64');
+  // Validated regardless of source: an explicit key that's the wrong length
+  // is a programmer error, not a decrypt failure — it must throw here, before
+  // createCipheriv/createDecipheriv would raise a raw, unnamed RangeError.
   if (key.length !== 32) {
-    throw new Error(`PORTAL_SECRET_ENC_KEY must decode to 32 bytes, got ${key.length}`);
+    throw new Error(
+      explicit
+        ? `encryption key must be 32 bytes, got ${key.length}`
+        : `PORTAL_SECRET_ENC_KEY must decode to 32 bytes, got ${key.length}`,
+    );
   }
   return key;
 }
@@ -70,7 +81,7 @@ export function decryptSecret(sealed: SealedSecret, key?: Buffer): string {
   } catch {
     throw new SecretDecryptError('ciphertext is not valid base64');
   }
-  if (buf.length <= IV_BYTES + TAG_BYTES) {
+  if (buf.length < IV_BYTES + TAG_BYTES) {
     throw new SecretDecryptError('ciphertext is too short to contain iv + tag');
   }
   const iv = buf.subarray(0, IV_BYTES);
@@ -81,6 +92,11 @@ export function decryptSecret(sealed: SealedSecret, key?: Buffer): string {
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(enc), decipher.final()]).toString('utf8');
   } catch {
+    // Deliberately generic: "wrong key" and "tampered ciphertext" collapse to
+    // the same message on purpose. Distinguishing them in the error would
+    // hand an attacker a decryption oracle. Do not split this message out
+    // by cause, even though it makes debugging a genuine key-rotation
+    // mistake slightly less direct.
     throw new SecretDecryptError(
       `failed to open sealed secret (keyVersion=${sealed.keyVersion}) — wrong key or tampered value`,
     );
