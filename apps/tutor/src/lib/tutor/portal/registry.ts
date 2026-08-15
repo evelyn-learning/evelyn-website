@@ -9,7 +9,14 @@
  * Why an env fallback: rollout step 1 seeds the collection while
  * PORTAL_PARTNER_SECRETS is still authoritative. The registry row WINS once it
  * exists, so the switchover is per-partner and reversible by deleting a row.
- * Remove the fallback at rollout step 5.
+ * Remove the fallback at rollout step 5 — but note `getPartnerSecret`
+ * (auth.ts) is STILL LIVE production code as of this writing (the
+ * demo-token route calls it directly for evelyn-marketing), so the same
+ * two-mode env precedence now exists in two copies (`resolveEnvSecret`
+ * below, and `getPartnerSecret`) that must be kept in sync until that
+ * caller is migrated too. The duplication is deliberate, not an oversight:
+ * `resolveEnvSecret` takes an injected `env` so the registry stays testable
+ * without touching `process.env`, which `getPartnerSecret` reads directly.
  */
 import connectDB, { isDBConfigured } from '@core/db';
 import { PartnerModel } from '@/models/Partner';
@@ -75,9 +82,10 @@ export function invalidatePartner(partnerId: string): void {
 }
 
 /**
- * Two env configuration modes, checked in order — mirrors the retired
- * `getPartnerSecret` (auth.ts) exactly, so a partner configured either way
- * keeps authenticating through the wrapper when its registry row is absent
+ * Two env configuration modes, checked in order — mirrors the still-live
+ * `getPartnerSecret` (auth.ts; called directly by the demo-token route for
+ * evelyn-marketing) exactly, so a partner configured either way keeps
+ * authenticating through the wrapper when its registry row is absent
  * (rollout step 1):
  *   1. JSON map      — PORTAL_PARTNER_SECRETS='{"portalA":"secret-a"}'
  *   2. Single default — PORTAL_PARTNER_ID + PORTAL_API_SECRET
@@ -160,8 +168,24 @@ export async function getPartner(
       }
       // A rotated-out secret can sit in the array until an operator removes
       // it; expiresAt lets a compromised/retired secret stop authenticating
-      // immediately without waiting on that cleanup.
-      if (s.expiresAt && Date.parse(s.expiresAt) <= deps.now()) continue;
+      // immediately without waiting on that cleanup. Missing expiresAt
+      // means "never expires" — but a PRESENT, unparseable one must fail
+      // CLOSED (drop the secret), not open: `Date.parse('garbage')` is NaN,
+      // and `NaN <= anything` is false, so treating that the same as "not
+      // expired" would silently keep a secret live forever on an operator's
+      // date typo — exactly the kind of mistake this field exists to let
+      // someone recover from quickly. Logged distinctly from "no secrets"
+      // so a typo is diagnosable, not mistaken for an empty partner.
+      if (s.expiresAt) {
+        const expiresAtMs = Date.parse(s.expiresAt);
+        if (Number.isNaN(expiresAtMs)) {
+          console.error(
+            `[portal/registry] secret label=${s.label} for partner=${partnerId} has an unparseable expiresAt="${s.expiresAt}" — dropped (fail closed, not treated as "never expires")`,
+          );
+          continue;
+        }
+        if (expiresAtMs <= deps.now()) continue;
+      }
       secrets.push(plaintext);
     }
     value = {
@@ -177,6 +201,11 @@ export async function getPartner(
     value = fromEnv(partnerId, deps.env);
   }
 
+  // expiresAt is evaluated only here, at cache-fill time — a secret that
+  // expires mid-TTL keeps authenticating until this row is next re-read
+  // (up to CACHE_TTL_MS later), same as any other row change. That is the
+  // existing cache contract, not something new for expiresAt to violate;
+  // `invalidatePartner` is the only way to make a revocation immediate.
   cache.set(partnerId, { at: deps.now(), value });
   return value;
 }

@@ -185,6 +185,20 @@ await test('expiresAt: past is dropped, future and unset stay live', async () =>
   assert.deepStrictEqual(p!.secrets, ['not-yet-expired', 'no-expiry']);
 });
 
+await test('expiresAt: a malformed date fails CLOSED (dropped), not open ("never expires")', async () => {
+  invalidatePartner('crimsora');
+  const mixed = doc({ secrets: [
+    { ...encryptSecret('typo-date'), label: 'a', createdAt: '2026-01-01', expiresAt: 'not-a-real-date' },
+    { ...encryptSecret('fine'), label: 'b', createdAt: '2026-01-01' },
+  ] });
+  const p = await getPartner('crimsora', deps({ findPartner: async () => mixed }));
+  assert.deepStrictEqual(
+    p!.secrets,
+    ['fine'],
+    'Date.parse("not-a-real-date") is NaN and NaN <= anything is false — an unparseable expiresAt must not be treated as "not expired"',
+  );
+});
+
 // --- IMPORTANT-4: exercise the REAL default findPartner (no injected deps),
 // i.e. the isDBConfigured() guard itself, not a stub standing in for it.
 // This whole suite runs with no MONGODB_URI (see the file header), so these

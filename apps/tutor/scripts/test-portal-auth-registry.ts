@@ -235,10 +235,11 @@ function setRegistry(record: PartnerRecord | null): void {
   });
 
   // --- Critical-1 regression: the PORTAL_PARTNER_ID + PORTAL_API_SECRET
-  // pair mode (the *other* env shape the retired getPartnerSecret
-  // supported) must still authenticate through the wrapper, not just when
-  // called directly. Clears the override so this goes through the real
-  // getPartner → registry fromEnv path.
+  // pair mode (the *other* env shape getPartnerSecret supports — still live
+  // production code, called directly by the demo-token route for
+  // evelyn-marketing) must still authenticate through the wrapper, not just
+  // when called directly. Clears the override so this goes through the
+  // real getPartner → registry fromEnv path.
   await test('env pair mode (PORTAL_PARTNER_ID + PORTAL_API_SECRET) authenticates through the wrapper', async () => {
     __setRegistryOverrideForTests(null);
     invalidatePartner('legacyPairPartner');
