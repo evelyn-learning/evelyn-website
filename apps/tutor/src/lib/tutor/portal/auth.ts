@@ -19,31 +19,7 @@ import {
   verifyPortalSignature,
   type SigningParts,
 } from '@evelyn/portal-contract/auth';
-import connectDB, { isDBConfigured } from '@core/db';
-import { PartnerModel } from '@/models/Partner';
-import { getPartner, type PartnerRecord, type RegistryDeps, type RawPartnerDoc } from './registry';
-
-/**
- * Deps for the default (non-test) `getPartner` call: identical to the
- * registry's own default Mongo lookup, except it is skipped entirely — not
- * attempted, not caught — when `MONGODB_URI` is unconfigured. This keeps
- * env-only environments (scripts/test-portal-auth.ts has no DB at all, by
- * design — see its header) resolving purely through the
- * PORTAL_PARTNER_SECRETS fallback, exactly as they did before the registry
- * existed. A real DB outage with MONGODB_URI actually set still throws out
- * of connectDB() uncaught here, same as everywhere else in the app — this
- * only short-circuits the "no DB at all" case, it does not add error
- * swallowing for a misconfigured-but-present DB.
- */
-const authRegistryDeps: RegistryDeps = {
-  async findPartner(id) {
-    if (!isDBConfigured()) return null;
-    await connectDB();
-    return PartnerModel.findById(id).lean<RawPartnerDoc>().exec();
-  },
-  now: () => Date.now(),
-  env: process.env,
-};
+import { getPartner, type PartnerRecord } from './registry';
 
 /**
  * Resolve a partner's shared secret from the environment.
@@ -104,6 +80,17 @@ function denyStatus(reason: string, status: number): NextResponse {
 }
 
 /**
+ * True if `pathname` is `p` itself or a path *segment* under it. Plain
+ * `startsWith` would let an allowlist entry for `/api/portal/v1/context`
+ * also admit `/api/portal/v1/contextzzz` — a different route that merely
+ * shares the string prefix.
+ */
+function endpointAllowed(pathname: string, p: string): boolean {
+  if (pathname === p) return true;
+  return pathname.startsWith(p.endsWith('/') ? p : `${p}/`);
+}
+
+/**
  * Test seam: lets the hermetic auth tests supply a registry without a DB.
  * Production never sets this.
  */
@@ -118,9 +105,9 @@ export function __setRegistryOverrideForTests(
  * Wrap a Next route handler so it runs only for an authenticated partner.
  *
  * Verifies: required headers present → partner known (registry, with an env
- * fallback) → partner kind is 'partner' and status is 'active' → endpoint is
- * on the partner's allowlist → timestamp fresh → body-bound HMAC signature
- * valid against any of the partner's live secrets. On success calls
+ * fallback) → partner kind is 'partner' and status is 'active' → timestamp
+ * fresh and body-bound HMAC signature valid against any of the partner's
+ * live secrets → endpoint is on the partner's allowlist. On success calls
  * `handler` with the verified `partnerId`, full `partner` record and parsed
  * body. The handler is responsible for scoping all data access to the
  * `studentId` in its (validated) request — there is no listing/enumeration
@@ -137,7 +124,7 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
 
     const partner = registryOverride
       ? await registryOverride(partnerId)
-      : await getPartner(partnerId, authRegistryDeps);
+      : await getPartner(partnerId);
 
     // Unknown, or known but with no secret we can open: both are
     // indistinguishable to a caller on purpose — we do not confirm that a
@@ -166,19 +153,19 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
       body: rawBody,
     };
 
-    // Endpoint allowlist is checked BEFORE signature verification is accepted
-    // but AFTER the partner is known, so an allowlist miss is never used as an
-    // id-enumeration oracle by an unsigned caller.
-    const allowed = partner.allowedEndpoints.some((p) => u.pathname.startsWith(p));
-    if (!allowed) return denyStatus('endpoint_not_allowed', 403);
-
-    // Rotation: any live secret may have signed this request. Try each and
-    // accept the first that verifies; report the LAST failure reason (not
-    // the first) so a genuine tamper is judged against the newest/most
-    // trusted candidate, not an already-retired one further back in the
-    // array. `partner.secrets` is non-empty here (checked above), so this
-    // initial value is always overwritten by the loop below — it exists
-    // only as a type-correct placeholder, never as an observed response.
+    // Rotation: any live secret may have signed this request. Try each in
+    // stored order and accept the first that verifies. `partner.secrets` is
+    // non-empty here (checked above), so the loop always runs at least once
+    // and always overwrites `verdict` — the initial value below is never
+    // actually observed as a response, it exists only so `verdict` has a
+    // value before the loop assigns one. The reported reason is whichever
+    // secret was tried LAST, but that is not meaningful variance: a
+    // timestamp-related reason is computed before any secret is used (so
+    // it's identical across every candidate), and a genuine signature
+    // mismatch is always `bad_signature` regardless of which live secret
+    // produced it — the contract's vocabulary has no separate
+    // "wrong-secret-but-it-rotated" reason to lose by picking last over
+    // first.
     let verdict = { ok: false as boolean, reason: 'invalid_signature' as string };
     for (const secret of partner.secrets) {
       const v = verifyPortalSignature(secret, parts, signature);
@@ -186,6 +173,17 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
       verdict = { ok: false, reason: v.reason };
     }
     if (!verdict.ok) return deny(verdict.reason);
+
+    // Endpoint allowlist is checked AFTER the signature verifies, so only a
+    // caller who already holds a valid secret for this partner can learn
+    // which endpoints it may reach. (This was reversed from an earlier
+    // version that checked the allowlist first, on the theory that doing so
+    // avoided an id-enumeration oracle — it did the opposite: a caller who
+    // merely knows a partner id, with no secret at all, could send a
+    // garbage signature and use the 403-vs-401 split to map that partner's
+    // allowlist without ever authenticating.)
+    const allowed = partner.allowedEndpoints.some((p) => endpointAllowed(u.pathname, p));
+    if (!allowed) return denyStatus('endpoint_not_allowed', 403);
 
     let body: unknown;
     if (rawBody) {

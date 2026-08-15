@@ -1,10 +1,14 @@
 /**
- * Partner registry tests (M1c Task 2).
+ * Partner registry tests (M1c Task 2, extended in the Task 3 review round).
  *
  * Run: `npm run test:partner-registry`
  *
- * Hermetic: the registry takes an injected `findPartner` so these tests
- * never touch MongoDB and therefore count in the 181-script oracle.
+ * Hermetic: most cases inject `findPartner` so they never touch MongoDB.
+ * A few near the end deliberately call `getPartner(id)` with NO injected
+ * deps, to exercise the real `defaultDeps.findPartner` — specifically its
+ * `isDBConfigured()` guard — rather than a stand-in for it; those rely on
+ * this whole process having no MONGODB_URI, same as
+ * scripts/test-portal-auth.ts.
  */
 import assert from 'node:assert';
 import { randomBytes } from 'node:crypto';
@@ -122,6 +126,90 @@ await test('the registry row wins over the env fallback', async () => {
     env: { PORTAL_PARTNER_SECRETS: JSON.stringify({ crimsora: 'env-secret' }) } as NodeJS.ProcessEnv,
   }));
   assert.deepStrictEqual(p!.secrets, ['secret-one']);
+});
+
+await test('falls back to PORTAL_PARTNER_ID + PORTAL_API_SECRET pair mode when the row is absent', async () => {
+  invalidatePartner('legacyPair');
+  const p = await getPartner('legacyPair', deps({
+    findPartner: async () => null,
+    env: { PORTAL_PARTNER_ID: 'legacyPair', PORTAL_API_SECRET: 'pair-secret' } as NodeJS.ProcessEnv,
+  }));
+  assert.deepStrictEqual(p!.secrets, ['pair-secret']);
+  assert.strictEqual(p!.kind, 'partner');
+});
+
+await test('PORTAL_PARTNER_SECRETS map mode wins over pair mode when both are set (matches getPartnerSecret order)', async () => {
+  invalidatePartner('bothModes');
+  const p = await getPartner('bothModes', deps({
+    findPartner: async () => null,
+    env: {
+      PORTAL_PARTNER_SECRETS: JSON.stringify({ bothModes: 'map-secret' }),
+      PORTAL_PARTNER_ID: 'bothModes',
+      PORTAL_API_SECRET: 'pair-secret',
+    } as NodeJS.ProcessEnv,
+  }));
+  assert.deepStrictEqual(p!.secrets, ['map-secret']);
+});
+
+await test('an empty-string secret is dropped — it would authenticate anyone', async () => {
+  invalidatePartner('crimsora');
+  const blank = doc({ secrets: [
+    { ...encryptSecret(''), label: 'blank', createdAt: '2026-01-01' },
+    { ...encryptSecret('good'), label: 'v2', createdAt: '2026-02-01' },
+  ] });
+  const p = await getPartner('crimsora', deps({ findPartner: async () => blank }));
+  assert.deepStrictEqual(p!.secrets, ['good'], 'the blank secret must never be returned as live');
+});
+
+await test('every secret unopenable leaves the partner with zero live secrets', async () => {
+  invalidatePartner('crimsora');
+  const allBad = doc({ secrets: [
+    { ciphertext: 'not-openable-1', keyVersion: 1, label: 'bad1', createdAt: '2026-01-01' },
+    { ciphertext: 'not-openable-2', keyVersion: 1, label: 'bad2', createdAt: '2026-01-01' },
+  ] });
+  const p = await getPartner('crimsora', deps({ findPartner: async () => allBad }));
+  assert.deepStrictEqual(p!.secrets, []);
+});
+
+await test('expiresAt: past is dropped, future and unset stay live', async () => {
+  invalidatePartner('crimsora');
+  const mixed = doc({ secrets: [
+    { ...encryptSecret('expired'), label: 'a', createdAt: '2026-01-01', expiresAt: '2026-02-01' },
+    { ...encryptSecret('not-yet-expired'), label: 'b', createdAt: '2026-01-01', expiresAt: '2026-12-01' },
+    { ...encryptSecret('no-expiry'), label: 'c', createdAt: '2026-01-01' },
+  ] });
+  const p = await getPartner('crimsora', deps({
+    findPartner: async () => mixed,
+    now: () => Date.parse('2026-03-01'),
+  }));
+  assert.deepStrictEqual(p!.secrets, ['not-yet-expired', 'no-expiry']);
+});
+
+// --- IMPORTANT-4: exercise the REAL default findPartner (no injected deps),
+// i.e. the isDBConfigured() guard itself, not a stub standing in for it.
+// This whole suite runs with no MONGODB_URI (see the file header), so these
+// two calls go through defaultDeps.findPartner exactly as production would
+// during rollout step 1 / a DB-less environment.
+
+await test('no DB + no env ⇒ null (fail-closed default, real defaultDeps)', async () => {
+  assert.strictEqual(process.env.MONGODB_URI, undefined, 'this suite must run without a DB configured');
+  invalidatePartner('noDbNoEnv');
+  delete process.env.PORTAL_PARTNER_SECRETS;
+  delete process.env.PORTAL_PARTNER_ID;
+  delete process.env.PORTAL_API_SECRET;
+  const p = await getPartner('noDbNoEnv');
+  assert.strictEqual(p, null);
+});
+
+await test('no DB + env ⇒ record, via the real default findPartner (isDBConfigured guard)', async () => {
+  invalidatePartner('noDbEnv');
+  process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ noDbEnv: 'guard-secret' });
+  try {
+    const p = await getPartner('noDbEnv');
+    assert.deepStrictEqual(p?.secrets, ['guard-secret']);
+  } finally {
+    delete process.env.PORTAL_PARTNER_SECRETS;
+  }
 });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);

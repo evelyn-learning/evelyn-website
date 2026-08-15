@@ -4,16 +4,28 @@
  * Run: `npm run test:portal-auth-registry`
  *
  * scripts/test-portal-auth.ts still covers the contract-level signing rules.
- * This file covers ONLY what the registry adds: rotation, status, kind and
- * the endpoint allowlist. Build requests exactly as that file does.
+ * This file covers ONLY what the registry adds: rotation, status, kind, the
+ * endpoint allowlist (including its ordering relative to signature
+ * verification and its segment-boundary matching), and the two env
+ * configuration modes reachable through the wrapper when no registry row
+ * exists. Build requests exactly as that file does.
+ *
+ * MONGODB_URI must be unset for this whole process — several cases below
+ * exercise the real (non-test-override) `getPartner` default path and rely
+ * on its isDBConfigured() guard to fall through to the env fallback, the
+ * same way scripts/test-portal-auth.ts does.
  */
 
 import assert from 'node:assert';
+import { randomBytes } from 'node:crypto';
 
-import { signPortalRequest, type SigningParts } from '@evelyn/portal-contract/auth';
+process.env.PORTAL_SECRET_ENC_KEY = randomBytes(32).toString('base64');
+
+import { signPortalRequest } from '@evelyn/portal-contract/auth';
 
 import { __setRegistryOverrideForTests, withPortalAuth, type PortalAuth } from '@/lib/tutor/portal/auth';
-import type { PartnerRecord } from '@/lib/tutor/portal/registry';
+import { getPartner, invalidatePartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
+import { encryptSecret } from '@/lib/tutor/portal/secret-box';
 import type { NextRequest } from 'next/server';
 
 // ---------------------------------------------------------------------------
@@ -36,10 +48,6 @@ async function test(name: string, fn: () => void | Promise<void>) {
 
 const SECRET = 'secret-x';
 const PARTNER = 'crimsora';
-
-function parts(over: Partial<SigningParts> = {}): SigningParts {
-  return { method: 'POST', path: '/api/portal/v1/x', timestamp: String(Date.now()), body: '', ...over };
-}
 
 /** Build a real Request signed for the given (parts, secret). `deliverBody`
  *  lets a test deliver a DIFFERENT body than was signed (tamper). */
@@ -107,6 +115,12 @@ function setRegistry(record: PartnerRecord | null): void {
 
 // ---------------------------------------------------------------------------
 (async () => {
+  assert.strictEqual(
+    process.env.MONGODB_URI,
+    undefined,
+    'this suite must run with no DB configured — see the file header',
+  );
+
   console.log('\nPortal auth — registry (M1c Task 3):\n');
 
   await test('rotation: old secret still verifies → 200', async () => {
@@ -121,13 +135,12 @@ function setRegistry(record: PartnerRecord | null): void {
     assert.strictEqual(status, 200);
   });
 
-  // NOTE: the brief's case table lists this as `invalid_signature`, but the
-  // brief's own withPortalAuth code (which must stay exactly as given to
-  // preserve test-portal-auth.ts's 'bad_signature'/'stale_timestamp'
-  // passthrough assertions) always overwrites the loop's initial
-  // 'invalid_signature' default with the real per-secret reason before
-  // returning — so 'invalid_signature' is unreachable dead code under that
-  // implementation. Asserting the actual, consistent behavior here.
+  // NOTE: an earlier case table listed this as `invalid_signature`, but
+  // withPortalAuth's loop always overwrites its initial 'invalid_signature'
+  // placeholder with the real per-secret reason once partner.secrets is
+  // non-empty (guaranteed by the earlier length check) — so
+  // 'invalid_signature' is unreachable dead code. Asserting the actual,
+  // contract-vocabulary behavior here.
   await test('retired secret → 401 bad_signature', async () => {
     setRegistry(makePartner({ secrets: ['new-secret'] }));
     const { status, json } = await callEcho(signedRequest({ secret: 'old-secret' }));
@@ -163,10 +176,41 @@ function setRegistry(record: PartnerRecord | null): void {
     assert.strictEqual(json.reason, 'endpoint_not_allowed');
   });
 
-  await test('endpoint allowed by prefix → 200', async () => {
+  await test('endpoint allowed by exact match → 200', async () => {
     setRegistry(makePartner({ allowedEndpoints: ['/api/portal/v1/context'] }));
     const { status } = await callEcho(signedRequest({ path: '/api/portal/v1/context' }));
     assert.strictEqual(status, 200);
+  });
+
+  // Regression: a plain `startsWith` allowlist check would let
+  // '/api/portal/v1/context' also admit '/api/portal/v1/contextzzz' — a
+  // different route that merely shares the string prefix.
+  await test('endpoint allowlist requires a segment boundary, not just a shared prefix', async () => {
+    setRegistry(makePartner({ allowedEndpoints: ['/api/portal/v1/context'] }));
+    const { status, json } = await callEcho(signedRequest({ path: '/api/portal/v1/contextzzz' }));
+    assert.strictEqual(status, 403);
+    assert.strictEqual(json.reason, 'endpoint_not_allowed');
+  });
+
+  // Regression: the allowlist must be checked AFTER signature verification.
+  // Checking it first let a caller with no valid secret at all send a
+  // garbage signature against a disallowed endpoint and read the partner's
+  // allowlist off the 403-vs-401 split, without ever authenticating.
+  await test('garbage signature against a disallowed endpoint → 401 bad_signature, not endpoint_not_allowed', async () => {
+    setRegistry(makePartner({ allowedEndpoints: ['/api/portal/v1/context'] }));
+    const path = '/api/portal/v1/practice';
+    const timestamp = String(Date.now());
+    const req = new Request(`https://engine.test${path}`, {
+      method: 'POST',
+      headers: {
+        'x-evelyn-partner': PARTNER,
+        'x-evelyn-timestamp': timestamp,
+        'x-evelyn-signature': 'deadbeef',
+      },
+    }) as unknown as NextRequest;
+    const { status, json } = await callEcho(req);
+    assert.strictEqual(status, 401);
+    assert.strictEqual(json.reason, 'bad_signature');
   });
 
   await test('unknown partner (registry returns null) → 401 unknown_partner', async () => {
@@ -183,11 +227,58 @@ function setRegistry(record: PartnerRecord | null): void {
     assert.strictEqual(json.reason, 'unknown_partner');
   });
 
-  await test('handler receives the full partner record', async () => {
-    setRegistry(makePartner());
+  await test('handler receives the full partner record (non-derivable field)', async () => {
+    setRegistry(makePartner({ limits: { rpm: 42, burst: 7, dailyQuota: 100 } }));
     const { status, json } = await callEcho(signedRequest({}));
     assert.strictEqual(status, 200);
-    assert.strictEqual(json.partner.partnerId, 'crimsora');
+    assert.strictEqual(json.partner.limits.rpm, 42, 'partnerId alone is derivable from the header; assert something only the record carries');
+  });
+
+  // --- Critical-1 regression: the PORTAL_PARTNER_ID + PORTAL_API_SECRET
+  // pair mode (the *other* env shape the retired getPartnerSecret
+  // supported) must still authenticate through the wrapper, not just when
+  // called directly. Clears the override so this goes through the real
+  // getPartner → registry fromEnv path.
+  await test('env pair mode (PORTAL_PARTNER_ID + PORTAL_API_SECRET) authenticates through the wrapper', async () => {
+    __setRegistryOverrideForTests(null);
+    invalidatePartner('legacyPairPartner');
+    process.env.PORTAL_PARTNER_ID = 'legacyPairPartner';
+    process.env.PORTAL_API_SECRET = 'legacy-pair-secret';
+    try {
+      const { status, json } = await callEcho(
+        signedRequest({ partnerId: 'legacyPairPartner', secret: 'legacy-pair-secret' }),
+      );
+      assert.strictEqual(status, 200);
+      assert.strictEqual(json.partnerId, 'legacyPairPartner');
+    } finally {
+      delete process.env.PORTAL_PARTNER_ID;
+      delete process.env.PORTAL_API_SECRET;
+    }
+  });
+
+  // --- Critical-2 regression: a secret that decrypts to '' must never
+  // authenticate. Routes the override through the REAL getPartner decrypt
+  // path (not a hand-built PartnerRecord) so this actually exercises the
+  // registry's filter, not just the wrapper's `secrets.length === 0` guard.
+  await test('a secret that decrypts to the empty string never authenticates (real registry decrypt path)', async () => {
+    invalidatePartner('emptysec');
+    __setRegistryOverrideForTests(async (id) =>
+      id === 'emptysec'
+        ? getPartner('emptysec', {
+            findPartner: async () => ({
+              kind: 'partner',
+              status: 'active',
+              secrets: [{ ...encryptSecret(''), label: 'blank', createdAt: '2026-01-01' }],
+              allowedEndpoints: ['/api/portal/v1/'],
+            }),
+            now: () => Date.now(),
+            env: {} as NodeJS.ProcessEnv,
+          })
+        : null,
+    );
+    const { status, json } = await callEcho(signedRequest({ partnerId: 'emptysec', secret: '' }));
+    assert.strictEqual(status, 401);
+    assert.strictEqual(json.reason, 'unknown_partner');
   });
 
   __setRegistryOverrideForTests(null);
