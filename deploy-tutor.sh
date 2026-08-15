@@ -23,6 +23,41 @@ YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+###############################################################################
+# !! ONE-TIME PREREQUISITE BEFORE THE FIRST EVER RUN OF THIS SCRIPT !!
+#
+# REMOTE_DIR moved (it used to be /root/evelynlearning), so the first run
+# creates a virgin tree. deploy-marketing.sh carries a long warning about
+# what that strands for marketing — 200+ MB of user uploads and the GSC
+# verification file in public/. The TUTOR's exposure is smaller but not zero:
+#
+#   1. public/ketcher/bundle.js and bundle.css are BUILD-GENERATED and
+#      gitignored. They ship only because the zip takes public/ off the LOCAL
+#      filesystem — so if this checkout has never built them, the archive
+#      contains ketcher/index.html and nothing to load, and every chemistry
+#      whiteboard hangs on "Loading chemistry editor...". They are absent from
+#      a fresh clone (this one included). There is no npm script for it;
+#      before the first deploy run the generator directly, from the app dir
+#      so its relative paths resolve:
+#          (cd apps/tutor && node scripts/build-ketcher.mjs)
+#      and confirm apps/tutor/public/ketcher/bundle.js exists.
+#
+#   2. src/data/curated-videos-ap.json is written AT RUNTIME by
+#      /admin/video-curator when the operator approves a segment. It is also
+#      overwritten by `unzip -o` on every single deploy, so prod approvals
+#      have always been transient — the file's own docstring says the repo is
+#      the storage and the work is meant to be version-controlled. The move
+#      does not create that hazard, it just applies it one deploy early.
+#      Before cutover, capture /root/evelynlearning/src/data/curated-videos-ap*.json
+#      and diff it against the repo copy; commit anything prod has that the
+#      repo does not.
+#
+# Nothing else needs migrating. In particular artifacts/voice-harness is NOT
+# an exposure: its only reader,
+# src/app/api/tutor/voice-harness/[...path]/route.ts, returns 404 unless
+# NODE_ENV === 'development', so it has never served anything in production.
+###############################################################################
+
 # Configuration
 SERVER_IP="84.247.185.169"
 SERVER_USER="root"
@@ -76,6 +111,83 @@ handle_error() {
 
 # Set up trap to catch errors
 trap 'handle_error $LINENO' ERR
+
+# ---------------------------------------------------------------------------
+# Single-deploy lock, shared by deploy-tutor.sh and deploy-marketing.sh.
+#
+# $TMP_TAG (defined above) keeps the two scripts' SERVER-side scratch files apart. The
+# LOCAL side has the same collision and renaming cannot fix all of it:
+#
+#   * The three .deploy-*-manifest files are written to fixed repo-root paths.
+#     Run both deploys at once to save the double build and marketing
+#     overwrites the tutor's .deploy-static-manifest before the tutor zips it.
+#     The tutor then ships a keep-set describing MARKETING's build, and the
+#     server-side prune — which runs AFTER `pm2 start` — computes every file
+#     of the freshly deployed tutor as an orphan and `rm -f`s the entire
+#     static tree out from under the running process.
+#   * Worse, and unfixable by renaming: both scripts swap the ONE repo-root
+#     .env.local out to .env.local.dev.bak and back. Interleave them and
+#     whichever restores first hands the other a dev .env.local to bake
+#     NEXT_PUBLIC_ vars from — a production bundle built against dev config,
+#     with nothing in the output to say so.
+#
+# So: serialise, do not rename. One lock covering BOTH scripts for the whole
+# run. It refuses immediately instead of waiting, so the operator learns what
+# happened rather than watching an unexplained pause.
+#
+# Scope is the machine (/tmp), not the checkout, deliberately: two checkouts
+# on one machine still deploy to the same production host.
+#
+# mkdir is the atomic primitive (macOS ships no flock). The holder's pid goes
+# inside, so a lock abandoned by a SIGKILLed deploy is recognised as stale and
+# reclaimed instead of wedging every future deploy. Release runs from an EXIT
+# trap, which fires on the normal path AND on the `exit 1` inside
+# handle_error, so the existing ERR/trap cleanup keeps working untouched; INT
+# and TERM are wired to `exit 1` so Ctrl-C releases it too. release only ever
+# removes a lock this process actually took (LOCK_HELD), so the refusal path
+# cannot delete the other deploy's lock.
+# ---------------------------------------------------------------------------
+LOCK_DIR="/tmp/evelyn-deploy.lock"
+LOCK_HELD=false
+
+release_local_lock() {
+  if [ "$LOCK_HELD" = true ]; then
+    rm -rf "$LOCK_DIR"
+    LOCK_HELD=false
+  fi
+}
+
+acquire_local_lock() {
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo $$ > "$LOCK_DIR/pid"
+    LOCK_HELD=true
+    return 0
+  fi
+
+  local owner
+  owner=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
+
+  if [ -n "$owner" ] && kill -0 "$owner" 2>/dev/null; then
+    log_message "ERROR" "Another Evelyn deploy is already running (pid $owner, lock $LOCK_DIR)."
+    log_message "ERROR" "Deploys share the repo-root .env.local and the .deploy-*-manifest files; running two at once corrupts both. Wait for it to finish."
+    exit 1
+  fi
+
+  log_message "WARNING" "Clearing stale deploy lock $LOCK_DIR (owner '${owner:-unknown}' is no longer running)"
+  rm -rf "$LOCK_DIR"
+  if mkdir "$LOCK_DIR" 2>/dev/null; then
+    echo $$ > "$LOCK_DIR/pid"
+    LOCK_HELD=true
+    return 0
+  fi
+
+  log_message "ERROR" "Could not take the deploy lock at $LOCK_DIR (another deploy claimed it first). Not proceeding."
+  exit 1
+}
+
+trap release_local_lock EXIT
+trap 'exit 1' INT TERM
+acquire_local_lock
 
 # Function to run remote command via SSH
 run_remote_command() {

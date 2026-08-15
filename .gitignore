@@ -38,11 +38,16 @@ AI Offerings/
 next-env.d.ts
 
 # Ketcher bundle (built from: node scripts/build-ketcher.mjs)
-public/ketcher/bundle.*
+# Re-anchored for the M1a split: these patterns contain a slash, so git
+# anchors them to THIS directory. `public/...` stopped matching anything the
+# moment public/ moved to apps/*/public/, leaving a multi-MB generated
+# bundle.js untracked AND unignored, one `git add -A` away from being
+# committed.
+apps/*/public/ketcher/bundle.*
 
 # Task E8 headless-harness fixture (written at run time by
 # scripts/test-e8-expand-harness.ts, removed on exit — never a deploy asset)
-public/_e8-harness/
+apps/*/public/_e8-harness/
 
 # Deploy manifest (regenerated on every deploy by deploy-tutor.sh /
 # deploy-marketing.sh, which replaced deploy-to-production.sh)
