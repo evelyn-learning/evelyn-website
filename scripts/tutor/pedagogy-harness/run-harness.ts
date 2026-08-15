@@ -45,6 +45,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import { isCheckpointResumable } from '../../../src/lib/tutor/portal/resume';
+import { refreshFreshCheckpoint } from './fixtures/personas';
 import type { Persona, ResumeStateFixture } from './fixtures/personas';
 import { simulateStudent, type SimTurn } from './student-simulator';
 
@@ -208,7 +209,6 @@ export interface TestStartConfig {
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const HOUR_MS = 60 * 60 * 1000;
 
 /** Fixture timestamps age with the calendar, so a thread authored as
  *  "recently used" (priya's Spider-Man `lastReferencedAt`) would silently
@@ -222,13 +222,10 @@ export function refreshThreadRecency(threads: SocialThread[], now: number = Date
   );
 }
 
-/** Same calendar-aging rationale for ravi's FRESH checkpoint fixture: its
- *  authored updatedAtISO drifts out of the RESUME_MAX_AGE_MS window over
- *  time, so the fresh variant refreshes it to ~1h ago. The STALE variant is
+/** Same calendar-aging rationale for ravi's FRESH checkpoint fixture — see
+ *  `refreshFreshCheckpoint` in ./fixtures/personas, which now owns it so
+ *  personas.test.ts can apply the identical transform. The STALE variant is
  *  deliberately NOT refreshed — it only gets older, which is the point. */
-function refreshFreshCheckpoint(cp: ResumeStateFixture, now: number = Date.now()): ResumeStateFixture {
-  return { ...cp, updatedAtISO: new Date(now - HOUR_MS).toISOString() };
-}
 
 /** Minimal typed view of the fixture's `studentContext` (validated in full
  *  against the contract schema by personas.test.ts — this cast just reads
