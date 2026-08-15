@@ -292,3 +292,39 @@ renderTransientContextBlock — readinessNote:
 ●  (SSG)      prerendered as static HTML (uses generateStaticParams)
 ƒ  (Dynamic)  server-rendered on demand
 
+│ ├ ● /speakers/humberto-hernandez
+│ └ ● [+18 more paths]
+├ ƒ /tag/[slug]
+├ ○ /terms
+├ ○ /tutor
+├ ○ /tutor-portal
+├ ○ /tutor-portal/demo
+├ ○ /tutor-portal/docs
+├ ○ /tutor-portal/docs/api
+├ ○ /tutor-portal/docs/authentication
+├ ○ /tutor-portal/docs/embed
+├ ○ /tutor-portal/docs/modules
+├ ○ /tutor-portal/docs/quickstart
+├ ○ /tutor-portal/docs/webhooks
+├ ○ /tutor-portal/docs/whiteboard
+├ ○ /tutor-portal/embed
+├ ○ /tutor-portal/pricing
+├ ƒ /tutor-portal/replay
+├ ○ /tutor-portal/sandbox
+├ ○ /tutor/board-preview
+├ ○ /tutor/dev/gaps
+├ ○ /tutor/dev/notes
+├ ○ /tutor/render-harness
+├ ○ /tutor/settings
+├ ○ /tutor/voice-harness
+└ ○ /webinars
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+
+npm run build  644.14s user 26.28s system 359% cpu 3:06.68 total
+PRE_SPLIT_FULL_BUILD_WALL_CLOCK: 3:06.68 total
