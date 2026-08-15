@@ -21,18 +21,30 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 // specifier resolving into a `lib/tutor` directory. `.tsx` is included so
 // core's components/ subtree is covered too.
 //
-// EVERY `tutor` path segment is followed by a boundary — `(/|['"])`. Without
-// one, `@/lib/tutorial` or `@/lib/tutoring-notes` would be reported as a
-// dependency violation. No such module exists today, so this is prevention,
-// not a fix; both planted-probe directions are covered by the check's own
-// verification (a real violation must trip, a `lib/tutorial` must not).
+// EVERY `tutor` path segment is followed by a boundary — `(/|['"])` — so that
+// `@/lib/tutorial`, `@/lib/tutoring-notes` and `@/app/tutorials` are not
+// reported as dependency violations. No such module exists today; this is
+// prevention, not a fix.
+//
+// AND THE SEGMENT MUST ALSO ADMIT `-portal`, WHICH IS NOT COSMETIC.
+// `apps/tutor/src/app/tutor-portal/` is a real directory containing `embed/`
+// and `replay/`. A boundary of `tutor(/|['"])` alone demands `/` or a quote
+// immediately after `tutor`, so it silently STOPS matching
+// `@/app/tutor-portal/embed/page`, `@/app/tutor-portal`, and
+// `import('@/app/tutor-portal/replay/page')` — all of which the original
+// bare-substring rule 1 caught. That is not hypothetical residue: commit
+// 4971a5bc in this branch cut a `/tutor-portal` branch out of marketing's
+// AppShell, so a re-introduction is exactly the thing this check exists to
+// stop, and it would otherwise ship green. Rule 3 gains nothing from the
+// `-portal` alternative (there is no `lib/tutor-portal`) but loses nothing
+// either, so one shared constant stays honest for all of them.
 //
 // Rules 2 and 4 are mirrors of each other: neither app may reach into the
 // other's directory. Rule 2 is a plain substring grep because a tutor file
 // naming `apps/marketing` at all is worth a look; rule 4 is written in rule
 // 3's specifier style so that prose mentioning the other app stays legal,
 // which is the same allowance core gets.
-const TUTOR_SEG = `tutor(/|['\\"])`;
+const TUTOR_SEG = `tutor(-portal)?(/|['\\"])`;
 const SPECIFIER = `(from|import|require)[[:space:]]*\\(?[[:space:]]*['\\"]`;
 
 const RULES = [

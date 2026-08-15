@@ -949,7 +949,7 @@ And add blocks routing the remaining tutor surfaces. These carry the same direct
 >
 > **`/admin/video-curator` moved to the tutor app** (Task 6) and is not routed here — it will 404 until M1e stands up the engine admin console. That is expected and acceptable: it is an internal curation tool with a single operator. If it is needed sooner, add a `location /admin/video-curator/` block pointing at `evelyn_tutor_upstream` **plus** an auth gate — the current `/admin` tree has no middleware gate, so an unguarded block would expose it publicly.
 
-> **The repo-tracked `nginx/evelyn.conf` is not live.** Applying it to `/etc/nginx/sites-available/evelyn.conf` + `nginx -t && nginx -s reload` is Step 5, on the server.
+> **The repo-tracked `nginx/evelyn.conf` is not live, and it is not a drop-in replacement for the file that is.** The live `/etc/nginx/sites-available/evelyn.conf` has provably drifted from it — production answers `/short-interviews` with a **308**, which only Next's `permanent: true` produces, so the redirect blocks this file used to carry were never in the running config; and `tutor.evelynlearning.com` serves 200 today from a server block this file does not contain at all. Getting it onto the server is therefore **capture → diff → hand-merge → `nginx -t` → reload**, which is Step 5 Phase 2. Never `scp` this file over the live one.
 
 - [ ] **Step 2: Write `deploy-tutor.sh`**
 
@@ -1014,7 +1014,8 @@ performed. Two ordering constraints drive the whole sequence, and neither is opt
 
 ```bash
 # 0.1  Nothing may already hold :3007.
-ssh $S 'ss -lntp | grep -w 3007 || echo "3007 free"'          # expect: 3007 free
+S=root@84.247.185.169                                          # every ssh below uses this
+ssh $S 'ss -lntp | grep -w 3007 || echo "3007 free"'           # expect: 3007 free
 ssh $S 'pm2 list'                                              # expect: evelyn-website only
 
 # 0.2  Deploy-machine prerequisites. RUN THESE IN THE CHECKOUT YOU WILL DEPLOY FROM.
@@ -1040,11 +1041,18 @@ ssh $S 'mkdir -p /root/evelyn-marketing/apps/marketing/public && \
         find /root/evelyn-marketing/apps/marketing/public -type f | wc -l'
 # Prune-safe: files in no manifest are never deleted.
 
-# 0.4  Capture the runtime-written curation file BEFORE /root/evelynlearning is retired.
-#      `unzip -o` overwrites it every deploy, so prod-side approvals are transient.
-ssh $S 'cat /root/evelynlearning/src/data/curated-videos-ap.json' > /tmp/prod-curated.json
-diff /tmp/prod-curated.json apps/tutor/src/data/curated-videos-ap.json || true
-# Commit anything production has that the repo does not.
+# 0.4  Capture BOTH runtime-written curator stores BEFORE /root/evelynlearning is retired.
+#      `unzip -o` overwrites them every deploy, so prod-side state is transient — and once
+#      the old remote dir goes, production's copy is the only copy.
+#        - curated-videos-ap.json        written by store.ts on approve
+#        - curated-videos-ap.drafts.json written by drafts-store.ts via
+#                                        /api/admin/video-curator/drafts; PENDING drafts
+#                                        live only here and are easy to forget
+ssh $S 'cat /root/evelynlearning/src/data/curated-videos-ap.json'        > /tmp/prod-curated.json
+ssh $S 'cat /root/evelynlearning/src/data/curated-videos-ap.drafts.json' > /tmp/prod-curated-drafts.json
+diff /tmp/prod-curated.json        apps/tutor/src/data/curated-videos-ap.json        || true
+diff /tmp/prod-curated-drafts.json apps/tutor/src/data/curated-videos-ap.drafts.json || true
+# Commit anything production has that the repo does not — for BOTH files.
 ```
 
 **Phase 1 — deploy the tutor to its NEW port. Zero tutor downtime: nothing routes to
@@ -1070,7 +1078,13 @@ file: all four are handled by `apps/marketing/next.config.ts` `redirects()`, and
 # 2.1  Capture and diff. Reconcile every difference by hand; do not overwrite.
 ssh $S 'cat /etc/nginx/sites-available/evelyn.conf' > /tmp/live-evelyn.conf
 ssh $S 'ls -l /etc/nginx/sites-enabled/'          # any sibling files are part of the picture
-diff -u /tmp/live-evelyn.conf nginx/evelyn.conf   # merge into a single intended file
+diff -u /tmp/live-evelyn.conf nginx/evelyn.conf
+
+# Hand-merge those two into ONE file at this exact path — 2.3 uploads it by name, and
+# nothing else creates it. Start from nginx/evelyn.conf (it is the intended target state)
+# and fold in every live-only stanza the diff shows, 2.2's hostname block included:
+cp nginx/evelyn.conf /tmp/merged-evelyn.conf
+$EDITOR /tmp/merged-evelyn.conf
 ```
 
 **2.2 — `tutor.evelynlearning.com` must move to `evelyn_tutor_upstream` in this same edit
@@ -1120,7 +1134,13 @@ ssh $S 'curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3001/'   # ex
 also the source for 0.3 and the ketcher bundles:
 
 ```bash
-ssh $S 'cd /root/evelynlearning && pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && pm2 save'
+# The pm2 delete first is not optional: if deploy-marketing.sh failed AFTER its own
+# `pm2 start evelyn-marketing`, that process is already bound to (or restart-looping on)
+# :3001, and the evelyn-website start would race it into EADDRINUSE.
+ssh $S 'pm2 delete evelyn-marketing 2>/dev/null || true && \
+        cd /root/evelynlearning && \
+        pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && \
+        pm2 save'
 ```
 
 > Marketing takes a short outage between 3.2's two commands — with the build already done,
@@ -1159,7 +1179,17 @@ so a plain status check cannot tell a working tutor from a broken one:
 # Pull a real chunk URL out of the served HTML and fetch it back through nginx.
 CHUNK=$(curl -s https://www.evelynlearning.com/tutor \
         | grep -o '/_next/static/chunks/[^"]*\.js' | head -1)
-echo "$CHUNK"
+echo "CHUNK=$CHUNK"
+
+# Assert BEFORE curling. An empty $CHUNK makes the URL collapse to the site root, which
+# answers 200 — so without this guard the check prints a pass in precisely the case it
+# exists to catch: a /tutor page that referenced no chunks at all.
+if [ -z "$CHUNK" ]; then
+  echo "FAIL: /tutor served no /_next/static/chunks/*.js reference at all — the page is"
+  echo "      shipping zero JavaScript. Do NOT read the curl below as a pass."
+  exit 1
+fi
+
 curl -sS -o /dev/null -w "%{http_code}\n" "https://www.evelynlearning.com$CHUNK"  # expect: 200
 ```
 

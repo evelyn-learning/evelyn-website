@@ -96,7 +96,8 @@ NC='\033[0m' # No Color
 #
 #      This script now HARD-ABORTS before zipping if either bundle is missing
 #      or zero-length, so a deploy from a checkout that lacks them cannot
-#      happen — see the guard just before the zip step.
+#      happen — see the Step 0 preflight, further down, which runs before the
+#      build and therefore long before the zip or any manifest.
 #
 #      That guard is not just a convenience, it is what keeps the artifacts
 #      alive. The earlier version of this note claimed the bundles were safe
