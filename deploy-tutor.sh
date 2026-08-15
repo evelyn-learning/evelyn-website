@@ -94,13 +94,29 @@ NC='\033[0m' # No Color
 #      tracked index.html is authoritative and must not be shadowed by an old
 #      copy. (`cp -an <dir>/. <dir>/` would have dragged index.html along.)
 #
-#      Either way confirm bundle.js and bundle.css are present and non-empty
-#      BEFORE the first ./deploy-tutor.sh — the deploy's public/ prune only
-#      ever deletes files listed in a PREVIOUS manifest, so files placed this
-#      way are never touched, exactly like marketing's uploads.
+#      This script now HARD-ABORTS before zipping if either bundle is missing
+#      or zero-length, so a deploy from a checkout that lacks them cannot
+#      happen — see the guard just before the zip step.
+#
+#      That guard is not just a convenience, it is what keeps the artifacts
+#      alive. The earlier version of this note claimed the bundles were safe
+#      from the public/ prune "exactly like marketing's uploads". THAT WAS
+#      WRONG, and dangerously so. Marketing's uploads are safe because they
+#      exist only on the server and appear in NO manifest. The bundles are the
+#      opposite: `.deploy-public-manifest` is a FILESYSTEM walk of
+#      $APP_DIR/public, so a bundle-bearing checkout lists them in every
+#      manifest it produces. Deploy once from such a checkout, then again from
+#      one without them, and `comm -23 prev current` classifies them as
+#      intentionally-deleted and `rm -f`s them off production — destroying the
+#      only copies of an artifact that cannot be rebuilt. The abort closes
+#      that hole permanently: no deploy can ever produce a manifest that
+#      lacks them.
+#
 #      (If NEITHER the deploying machine nor production has them, then
 #      production has been serving a broken molecule editor for a while
-#      already: file that as a bug, do not delay the cutover for it.)
+#      already: file that as a bug, do not delay the cutover for it — but the
+#      abort will still stop this script, so restore them from production
+#      first or the deploy cannot proceed.)
 #
 #      Once the dependency skew is fixed, the generator is the right source
 #      again. Its output always lands in apps/tutor/public/ketcher/ — both the
@@ -406,6 +422,53 @@ upload_with_retry() {
 # Starting deployment
 log_message "INFO" "Starting Evelyn Learning TUTOR deployment to production..."
 
+# Step 0: Preflight. Everything here is a hard abort, checked BEFORE the ~4
+# minute build so a doomed deploy fails in a second instead of at the end —
+# and, for the ketcher guard, before any manifest can be generated without
+# the bundles in it.
+log_message "STEP" "Preflight checks..."
+
+# 0a. Production env must exist.
+#
+# This used to be a silent skip: `if [ -f ".env.local.production" ]` simply
+# fell through, the build ran against the developer's DEV .env.local, and
+# every NEXT_PUBLIC_ value was baked from dev config into a production bundle
+# with nothing in the output saying so. The remote .env.local gate later in
+# this script does NOT catch it — that only fires on a virgin remote tree, so
+# it protects the FIRST deploy and no other. Wrong client config on a live
+# site is not something to discover from a user report, so: abort.
+if [ ! -s ".env.local.production" ]; then
+  log_message "ERROR" ".env.local.production is missing or empty in $(pwd)."
+  log_message "ERROR" "Without it this build would bake NEXT_PUBLIC_* from your DEV .env.local into a PRODUCTION bundle, silently."
+  log_message "ERROR" "Deploy from a checkout that has it (note: the m1a worktree does not), or restore it, then rerun."
+  exit 1
+fi
+
+# 0b. The ketcher bundles must be present and non-empty.
+#
+# Two reasons, and the second is the load-bearing one:
+#   1. Without them the molecule editor iframe loads nothing and every
+#      chemistry whiteboard hangs on "Loading chemistry editor...".
+#   2. .deploy-public-manifest is a filesystem walk of $APP_DIR/public. Deploy
+#      from a checkout that HAS the bundles and they enter the manifest;
+#      deploy later from one that does NOT and the manifest diff classifies
+#      them as intentionally deleted and `rm -f`s them off production. They
+#      are gitignored, cannot currently be rebuilt (ketcher-react 3.17.2 vs
+#      ketcher-core 3.12.0), and production holds the only other copy — so
+#      that prune is irreversible. Refusing to deploy without them makes a
+#      manifest that lacks them impossible to produce.
+# See the prerequisite block at the top of this file for how to obtain them.
+for _ketcher_asset in "$APP_DIR/public/ketcher/bundle.js" "$APP_DIR/public/ketcher/bundle.css"; do
+  if [ ! -s "$_ketcher_asset" ]; then
+    log_message "ERROR" "$_ketcher_asset is missing or zero-length."
+    log_message "ERROR" "These are gitignored build artifacts that CANNOT currently be regenerated, and deploying without them would also prune production's only copies."
+    log_message "ERROR" "Copy them in first (see the ONE-TIME PREREQUISITE block at the top of this script), then rerun."
+    exit 1
+  fi
+done
+unset _ketcher_asset
+log_message "INFO" "Preflight OK (.env.local.production present; ketcher bundles present)"
+
 # Step 1: Build locally using production env (for NEXT_PUBLIC_ vars)
 log_message "STEP" "Building Next.js application locally..."
 
@@ -585,9 +648,16 @@ log_message "INFO" "Successfully uploaded zip file to server"
 # Destination is $APP_DIR/.env.local, NOT the remote root: the pm2 process
 # starts with its cwd inside $APP_DIR (see the start line below), and that is
 # where Next looks for .env.local. The file is gitignored, so it is never in
-# the zip — this upload is the only thing that puts it on the server, and the
-# post-unzip check below is what stops a silent miss from taking every secret
-# out at once.
+# the zip — this upload is the only thing that puts it on the server.
+#
+# The post-unzip check below backstops it, but know its limit rather than
+# trusting it: it tests `[ ! -s $APP_DIR/.env.local ]`, so it only fires
+# against a VIRGIN remote tree. On the first deploy it is a real gate. On
+# every later one the previous deploy's .env.local is already sitting there,
+# non-empty, so a failed upload passes the check and the process restarts on
+# STALE secrets. What actually protects the content of that file is the
+# Step 0 preflight, which refuses to build at all without
+# .env.local.production locally.
 log_message "STEP" "Uploading production environment file..."
 if [ -f ".env.local.production" ]; then
   upload_with_retry ".env.local.production" "$REMOTE_DIR/$APP_DIR/.env.local" || {
@@ -637,11 +707,15 @@ fi
 #
 # Two things the split adds to this chain:
 #
-#   1. A hard .env.local gate right after the unzip. .env.local is gitignored
-#      and therefore never in the archive — it gets there only via the upload
-#      step above. If that upload silently failed, `next start` would come up
-#      with no secrets at all rather than not come up, so this refuses to
-#      restart instead.
+#   1. A .env.local gate right after the unzip. .env.local is gitignored and
+#      therefore never in the archive — it gets there only via the upload step
+#      above. If that upload silently failed on a FIRST deploy, `next start`
+#      would come up with no secrets at all rather than not come up, so this
+#      refuses to restart instead. Scope note, because the shape invites
+#      over-trust: `-s` is false only when the file is absent or empty, so on
+#      any deploy after the first the previous .env.local satisfies it and a
+#      failed upload leaves the process on STALE secrets. It is a
+#      first-deploy gate, not a freshness check.
 #   2. The pm2 process starts with its cwd INSIDE $APP_DIR (note the
 #      subshell), so the app sees exactly the pre-split layout: several
 #      runtime modules resolve paths from process.cwd() — the video

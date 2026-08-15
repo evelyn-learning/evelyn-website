@@ -352,6 +352,28 @@ upload_with_retry() {
 # Starting deployment
 log_message "INFO" "Starting Evelyn Learning MARKETING deployment to production..."
 
+# Step 0: Preflight. A hard abort, checked BEFORE the ~4 minute build so a
+# doomed deploy fails in a second instead of at the end.
+log_message "STEP" "Preflight checks..."
+
+# 0a. Production env must exist.
+#
+# This used to be a silent skip: `if [ -f ".env.local.production" ]` simply
+# fell through, the build ran against the developer's DEV .env.local, and
+# every NEXT_PUBLIC_ value was baked from dev config into a production bundle
+# with nothing in the output saying so. The remote .env.local gate later in
+# this script does NOT catch it — that only fires on a virgin remote tree, so
+# it protects the FIRST deploy and no other. Wrong client config on a live
+# site is not something to discover from a user report, so: abort.
+if [ ! -s ".env.local.production" ]; then
+  log_message "ERROR" ".env.local.production is missing or empty in $(pwd)."
+  log_message "ERROR" "Without it this build would bake NEXT_PUBLIC_* from your DEV .env.local into a PRODUCTION bundle, silently."
+  log_message "ERROR" "Deploy from a checkout that has it (note: the m1a worktree does not), or restore it, then rerun."
+  exit 1
+fi
+
+log_message "INFO" "Preflight OK (.env.local.production present)"
+
 # Step 1: Build locally using production env (for NEXT_PUBLIC_ vars)
 log_message "STEP" "Building Next.js application locally..."
 
@@ -530,9 +552,16 @@ log_message "INFO" "Successfully uploaded zip file to server"
 # Destination is $APP_DIR/.env.local, NOT the remote root: the pm2 process
 # starts with its cwd inside $APP_DIR (see the start line below), and that is
 # where Next looks for .env.local. The file is gitignored, so it is never in
-# the zip — this upload is the only thing that puts it on the server, and the
-# post-unzip check below is what stops a silent miss from taking every secret
-# out at once.
+# the zip — this upload is the only thing that puts it on the server.
+#
+# The post-unzip check below backstops it, but know its limit rather than
+# trusting it: it tests `[ ! -s $APP_DIR/.env.local ]`, so it only fires
+# against a VIRGIN remote tree. On the first deploy it is a real gate. On
+# every later one the previous deploy's .env.local is already sitting there,
+# non-empty, so a failed upload passes the check and the process restarts on
+# STALE secrets. What actually protects the content of that file is the
+# Step 0 preflight, which refuses to build at all without
+# .env.local.production locally.
 log_message "STEP" "Uploading production environment file..."
 if [ -f ".env.local.production" ]; then
   upload_with_retry ".env.local.production" "$REMOTE_DIR/$APP_DIR/.env.local" || {
@@ -582,11 +611,15 @@ fi
 #
 # Two things the split adds to this chain:
 #
-#   1. A hard .env.local gate right after the unzip. .env.local is gitignored
-#      and therefore never in the archive — it gets there only via the upload
-#      step above. If that upload silently failed, `next start` would come up
-#      with no secrets at all rather than not come up, so this refuses to
-#      restart instead.
+#   1. A .env.local gate right after the unzip. .env.local is gitignored and
+#      therefore never in the archive — it gets there only via the upload step
+#      above. If that upload silently failed on a FIRST deploy, `next start`
+#      would come up with no secrets at all rather than not come up, so this
+#      refuses to restart instead. Scope note, because the shape invites
+#      over-trust: `-s` is false only when the file is absent or empty, so on
+#      any deploy after the first the previous .env.local satisfies it and a
+#      failed upload leaves the process on STALE secrets. It is a
+#      first-deploy gate, not a freshness check.
 #   2. The pm2 process starts with its cwd INSIDE $APP_DIR (note the
 #      subshell), so the app sees exactly the pre-split layout: runtime code
 #      resolves paths from process.cwd() — image-service.ts writes generated
