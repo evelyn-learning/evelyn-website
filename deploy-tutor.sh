@@ -48,21 +48,54 @@ NC='\033[0m' # No Color
 #      means pinning or upgrading a dependency, which the M1a constraints
 #      forbid; it is tracked as a separate follow-up.
 #
-#      SO, FOR THE CUTOVER, TREAT THE BUNDLE AS A MIGRATED ARTIFACT, not a
-#      built one — production's copy is the only known-good build. On the
-#      server, once, alongside the marketing cp -an:
+#      SO THESE TWO FILES CANNOT BE REGENERATED TODAY. They are not
+#      disposable build output; they are the last surviving copy of a build
+#      from 2026-03-22, and the only source for the deploy. Do not delete
+#      them as "regenerable".
+#
+#      GOOD NEWS: they were never lost. Task 6 moved this app with `git mv`,
+#      which only moves TRACKED files, and these two are gitignored — so they
+#      stayed behind at the pre-split path instead of coming along:
+#
+#        /Users/luke/Dev/evelynlearning/public/ketcher/bundle.js    26,060,387 bytes
+#        /Users/luke/Dev/evelynlearning/public/ketcher/bundle.css      182,671 bytes
+#
+#      PRIMARY MIGRATION — on the DEPLOYING MACHINE, once, before the first
+#      ./deploy-tutor.sh. This script zips public/ off the local filesystem,
+#      so whatever sits in apps/tutor/public/ketcher/ at zip time is what
+#      ships; nothing on the server can substitute for it. From the repo root
+#      of the checkout you deploy from:
+#
+#        mkdir -p apps/tutor/public/ketcher
+#        cp -n public/ketcher/bundle.js  apps/tutor/public/ketcher/
+#        cp -n public/ketcher/bundle.css apps/tutor/public/ketcher/
+#        ls -l apps/tutor/public/ketcher/     # both non-empty, ~26M and ~183K
+#
+#      (If you deploy from a worktree that has no pre-split public/, point the
+#      source at the checkout that does — the paths above.)
+#
+#      COPY ONLY THOSE TWO FILES. Do NOT copy or overwrite index.html: the
+#      tracked apps/tutor/public/ketcher/index.html is already in place and is
+#      the authoritative copy. `-n` is belt-and-braces against exactly that.
+#      The bundles stay out of git — .gitignore's apps/*/public/ketcher/bundle.*
+#      catches both, verified — and a 26 MB blob in git history is not
+#      practically removable.
+#
+#      FALLBACK, if the deploying machine no longer has them: production has a
+#      copy, because it was deployed from this very file. Pull it down, or on
+#      the server do the equivalent of the marketing cp -an so the OLD remote
+#      dir seeds the new one:
 #
 #        mkdir -p /root/evelyn-tutor/apps/tutor/public/ketcher
 #        cp -an /root/evelynlearning/public/ketcher/. /root/evelyn-tutor/apps/tutor/public/ketcher/
 #
-#      Then confirm bundle.js and bundle.css are both there and non-empty
+#      Either way confirm bundle.js and bundle.css are present and non-empty
 #      BEFORE the first ./deploy-tutor.sh — the deploy's public/ prune only
-#      ever deletes files that were in a PREVIOUS manifest, so files copied
-#      in this way are never touched, exactly like marketing's uploads.
-#      (If /root/evelynlearning/public/ketcher/ turns out not to have them
-#      either, then production has been serving a broken molecule editor
-#      already and this is not a cutover blocker — say so rather than
-#      delaying the deploy.)
+#      ever deletes files listed in a PREVIOUS manifest, so files placed this
+#      way are never touched, exactly like marketing's uploads.
+#      (If NEITHER the deploying machine nor production has them, then
+#      production has been serving a broken molecule editor for a while
+#      already: file that as a bug, do not delay the cutover for it.)
 #
 #      Once the dependency skew is fixed, the generator is the right source
 #      again. It must be run from the app dir, since its output paths are
