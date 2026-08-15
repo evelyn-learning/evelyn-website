@@ -42,9 +42,18 @@ NC='\033[0m' # No Color
 # different route. Nothing in this script can detect it: from its point of
 # view a fresh directory is simply a first deploy.
 #
-# So, ON THE SERVER, ONCE, BEFORE the first ./deploy-marketing.sh:
+# So, ON THE SERVER, ONCE, BEFORE the first ./deploy-marketing.sh — and note
+# the mkdir -p: the deploy is what normally creates that tree, so before the
+# first run the parent does not exist and `cp -a src/. dst/` (which creates
+# only the final path component) would fail:
 #
+#   mkdir -p /root/evelyn-marketing/apps/marketing/public
 #   cp -an /root/evelynlearning/public/. /root/evelyn-marketing/apps/marketing/public/
+#
+# Running it BEFORE is the better order — it means production never serves a
+# public/ that is missing 200+ MB of uploads, not even briefly. (After the
+# first deploy also works, since -n never overwrites what the deploy just
+# unpacked; it just leaves a window where the images 404.)
 #
 # -a preserves timestamps/permissions, -n never overwrites. It is safe
 # against the manifest-diff prune below: files that were never in any
@@ -142,55 +151,107 @@ trap 'handle_error $LINENO' ERR
 # Scope is the machine (/tmp), not the checkout, deliberately: two checkouts
 # on one machine still deploy to the same production host.
 #
-# mkdir is the atomic primitive (macOS ships no flock). The holder's pid goes
-# inside, so a lock abandoned by a SIGKILLed deploy is recognised as stale and
-# reclaimed instead of wedging every future deploy. Release runs from an EXIT
-# trap, which fires on the normal path AND on the `exit 1` inside
-# handle_error, so the existing ERR/trap cleanup keeps working untouched; INT
-# and TERM are wired to `exit 1` so Ctrl-C releases it too. release only ever
+# mkdir is the atomic primitive (macOS ships no flock).
+#
+# ACQUISITION IS EXACTLY ONE STEP — `mkdir "$LOCK_DIR"` — AND NOTHING ON THAT
+# PATH EVER DELETES A LOCK. That is the whole correctness argument, and it is
+# why there is no automatic stale-lock reclaim here. An earlier version had
+# one: read the pid file, decide the owner is gone, `rm -rf`, `mkdir`. `mkdir`
+# is atomic but "read the pid and decide" is not atomic *with* it, and two
+# interleavings then admit TWO SIMULTANEOUS HOLDERS:
+#
+#   * EMPTY-PID RACE. B wins the mkdir. C's mkdir fails, and C reads the pid
+#     file in the window BEFORE B has written it. C sees "", concludes the
+#     lock is stale, `rm -rf`s B's LIVE lock and takes its own. Both deploy.
+#     Reproduced with `./deploy-tutor.sh & ./deploy-marketing.sh &`.
+#   * DOUBLE-RECLAIM RACE. After a SIGKILLed deploy, B and C both read the
+#     same dead pid, both classify it stale, B reclaims, and C's `rm -rf`
+#     then deletes B's *fresh* lock before C mkdirs its own. Both deploy.
+#
+#   And afterwards both hold LOCK_HELD=true, so on release both `rm -rf` the
+#   same path — the second release removing a THIRD deploy's lock.
+#
+# So: no reclaim. A lock left behind by a SIGKILL (or by a deploy killed in
+# the millisecond between the mkdir and the pid write) makes the next deploy
+# REFUSE and print the exact `rm -rf` for a human to run after checking.
+# Deploys are manual and rare; one manual command is a much better trade than
+# a race whose failure mode is deploying both apps at once. LOCK_HELD is set
+# immediately after the mkdir, before the pid write, so a deploy that dies in
+# that window still releases its own lock through the EXIT trap.
+#
+# Release, and the `.env.local` restore, both run from that EXIT trap, which
+# fires on the normal path AND on the `exit 1` inside handle_error, so the
+# script's original ERR cleanup keeps working untouched. INT, TERM and HUP are
+# wired to `exit 1` so Ctrl-C, a `kill`, and closing the terminal all reach it
+# too — without the restore, an interrupted deploy would leave the developer's
+# working checkout holding PRODUCTION config in .env.local. release only ever
 # removes a lock this process actually took (LOCK_HELD), so the refusal path
-# cannot delete the other deploy's lock.
+# cannot touch the other deploy's lock.
+#
+# Residual, accepted knowingly: pid reuse. If the OS has recycled a dead
+# holder's pid onto an unrelated process, the refusal misreports the lock as
+# live ("wait for it") instead of stale ("rm -rf it"). It still REFUSES, so it
+# cannot cause a double deploy — it only sends the operator a less useful
+# message, and the message names $LOCK_DIR either way. A start-time check
+# would close it and is more machinery than the risk warrants.
 # ---------------------------------------------------------------------------
 LOCK_DIR="/tmp/evelyn-deploy.lock"
 LOCK_HELD=false
 
-release_local_lock() {
-  if [ "$LOCK_HELD" = true ]; then
-    rm -rf "$LOCK_DIR"
-    LOCK_HELD=false
+restore_dev_env() {
+  # Idempotent by construction: a no-op when the backup is absent, which is
+  # the case after a normal build (restored inline) and after handle_error
+  # (restored there). Only a signal-interrupted run finds it still present.
+  if [ -f ".env.local.dev.bak" ]; then
+    mv .env.local.dev.bak .env.local 2>/dev/null || true
+    log_message "INFO" "Restored local dev .env.local"
   fi
 }
 
+release_local_lock() {
+  if [ "$LOCK_HELD" = true ]; then
+    LOCK_HELD=false
+    rm -rf "$LOCK_DIR"
+  fi
+}
+
+on_exit() {
+  restore_dev_env
+  release_local_lock
+}
+
 acquire_local_lock() {
+  # The one and only way to become the holder. Atomic, and no delete anywhere
+  # on this path — see the interleavings in the comment above.
   if mkdir "$LOCK_DIR" 2>/dev/null; then
-    echo $$ > "$LOCK_DIR/pid"
     LOCK_HELD=true
+    printf '%s\n' "$$" > "$LOCK_DIR/pid"
+    printf '%s\n' "$0" > "$LOCK_DIR/script"
     return 0
   fi
 
-  local owner
+  local owner script
   owner=$(cat "$LOCK_DIR/pid" 2>/dev/null || true)
+  script=$(cat "$LOCK_DIR/script" 2>/dev/null || true)
 
   if [ -n "$owner" ] && kill -0 "$owner" 2>/dev/null; then
-    log_message "ERROR" "Another Evelyn deploy is already running (pid $owner, lock $LOCK_DIR)."
+    log_message "ERROR" "Another Evelyn deploy is already running: ${script:-unknown script}, pid $owner (lock $LOCK_DIR)."
     log_message "ERROR" "Deploys share the repo-root .env.local and the .deploy-*-manifest files; running two at once corrupts both. Wait for it to finish."
     exit 1
   fi
 
-  log_message "WARNING" "Clearing stale deploy lock $LOCK_DIR (owner '${owner:-unknown}' is no longer running)"
-  rm -rf "$LOCK_DIR"
-  if mkdir "$LOCK_DIR" 2>/dev/null; then
-    echo $$ > "$LOCK_DIR/pid"
-    LOCK_HELD=true
-    return 0
+  if [ -z "$owner" ]; then
+    log_message "ERROR" "Deploy lock $LOCK_DIR exists but records no pid: either another deploy is a few milliseconds into taking it, or one died between creating the lock and recording itself."
+  else
+    log_message "ERROR" "Deploy lock $LOCK_DIR is held by pid $owner (${script:-unknown script}), which is no longer running — a previous deploy was killed."
   fi
-
-  log_message "ERROR" "Could not take the deploy lock at $LOCK_DIR (another deploy claimed it first). Not proceeding."
+  log_message "ERROR" "NOT reclaiming it automatically: judging a lock stale cannot be made atomic with taking it, and getting that wrong runs two deploys at once."
+  log_message "ERROR" "Confirm no deploy is running, then clear it by hand:  rm -rf $LOCK_DIR"
   exit 1
 }
 
-trap release_local_lock EXIT
-trap 'exit 1' INT TERM
+trap on_exit EXIT
+trap 'exit 1' INT TERM HUP
 acquire_local_lock
 
 # Function to run remote command via SSH

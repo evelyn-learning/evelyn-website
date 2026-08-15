@@ -4,11 +4,55 @@
  * Bundles the Ketcher Editor + Standalone + React into a single
  * self-contained HTML file in public/ketcher/
  *
- * Run: node scripts/build-ketcher.mjs
+ * Run from THIS APP'S directory, not the repo root — the output paths below
+ * are relative to the cwd:
+ *
+ *   (cd apps/tutor && node scripts/build-ketcher.mjs)
  */
 
 import { build } from 'esbuild';
-import { writeFileSync, readFileSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// Where esbuild is allowed to look for bare imports (`react`, `ketcher-react`,
+// `ketcher-standalone`).
+//
+// This CANNOT be left to esbuild's normal resolution, and the reason is subtle:
+// the entry point below is written to /tmp/ketcher-entry.jsx, OUTSIDE the repo.
+// esbuild resolves bare imports by walking up from the IMPORTER's directory, so
+// the walk is /tmp/node_modules -> /node_modules and never touches this repo at
+// all. absWorkingDir does not change that. nodePaths is the only thing that has
+// ever made this build resolve.
+//
+// It used to read `process.cwd() + '/node_modules'`, which worked only because
+// the app lived at the repo root and cwd was therefore the root. After the M1a
+// workspace split the cwd is apps/tutor, which has NO node_modules — npm
+// workspaces hoist every dependency to the repo root — so that path pointed at
+// a directory that does not exist and the build died with
+// `Could not resolve "react"`.
+//
+// Walking up from this file instead of hardcoding '..','..' keeps it correct if
+// the script is moved again, and collecting EVERY node_modules on the way up
+// (nearest first) keeps it correct if deps ever stop being fully hoisted.
+const __dirname = dirname(fileURLToPath(import.meta.url));
+function nodeModulesChain(startDir) {
+  const found = [];
+  let dir = startDir;
+  for (;;) {
+    const candidate = join(dir, 'node_modules');
+    if (existsSync(candidate)) found.push(candidate);
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return found;
+}
+const NODE_PATHS = nodeModulesChain(__dirname);
+if (NODE_PATHS.length === 0) {
+  console.error('Build failed: found no node_modules above ' + __dirname + ' — run npm install first.');
+  process.exit(1);
+}
 
 // Bundle the Ketcher entry point
 const entryCode = `
@@ -95,7 +139,7 @@ try {
     external: [],
     jsx: 'automatic',
     absWorkingDir: process.cwd(),
-    nodePaths: [process.cwd() + '/node_modules'],
+    nodePaths: NODE_PATHS,
   });
 
   // Copy JS and CSS to public/ketcher/
