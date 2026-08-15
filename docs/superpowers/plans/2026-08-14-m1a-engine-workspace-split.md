@@ -1146,7 +1146,13 @@ The plan is done when **all** of these hold:
 
 1. `npm run test:all` matches `docs/superpowers/baselines/2026-08-14-pre-split.txt` — same passes, same allowed-failure set, no new failures.
 2. `npm run check:boundaries` exits 0.
-3. Both apps build; the **tutor build is materially faster** than the Task 1 baseline (this is the plan's whole point — if it isn't, something is still cross-linked).
+3. Both apps build, **each alone**, and neither drags the other's code in. Measured cold against the Task 1 baseline of a 3:06.68 full build: `apps/marketing` now builds in **37.4s** and `apps/tutor` in **2:31.77**.
+
+   The win the plan was after is real but it landed on marketing, not the tutor: the app that ships most often now deploys in ~38s instead of 3:07, a **~5×** improvement, while the tutor deploys alone in ~2:32.
+
+   **Amended after measurement.** As originally worded this gate asked for a *materially faster tutor build* and treated any shortfall as proof of a surviving cross-link. The tutor came out only ~17% faster, and that is genuine rather than a symptom: both boundary greps are empty, marketing compiles in ~10s so it demonstrably carries no tutor code, and 152s + 37s ≈ 189s against 187s pre-split — the split is almost exactly additive. The cause is code volume. `apps/tutor/src` is 3,141 files / 488,835 lines against marketing's 562 / 117,556, so the pre-split build was already ~83% tutor; isolating it could never have won big. Do not re-open the tutor's wall clock as a bug.
+
+   The cross-link check the original wording was reaching for is preserved, pointed at signals that actually detect coupling: `npm run check:boundaries` exits 0 (gate 2), and marketing's compile stays in the ~10s range. A marketing compile that creeps toward the tutor's is the symptom to chase, not the tutor's total.
 4. `./deploy-tutor.sh` deploys the engine **without** rebuilding the blog, admin, outreach, prospecting, or showcase.
 5. Crimsora runs a full live voice session — voice in, whiteboard render, clean end, transcript and mastery persisted — with **no** change to its own config or deploy.
 6. `https://www.evelynlearning.com/` and `/blog` return 200 and render unchanged.
