@@ -4,10 +4,18 @@
  * Bundles the Ketcher Editor + Standalone + React into a single
  * self-contained HTML file in public/ketcher/
  *
- * Run from THIS APP'S directory, not the repo root — the output paths below
- * are relative to the cwd:
+ * Output goes to apps/tutor/public/ketcher/ — always. Both the dependency
+ * resolution and the write paths are anchored on this file's own location, so
+ * the cwd no longer decides anything and the script is safe to run from
+ * anywhere. The documented invocation stays:
  *
  *   (cd apps/tutor && node scripts/build-ketcher.mjs)
+ *
+ * NOTE: this build currently FAILS before it writes anything —
+ * ketcher-react@3.17.2 against ketcher-core@3.12.0, 18 missing exports. That
+ * predates the workspace split (identical lockfile entries at merge-base
+ * 034f151a). Until it is fixed, the bundles are a migrated artifact, not a
+ * built one; see the prerequisite block at the top of deploy-tutor.sh.
  */
 
 import { build } from 'esbuild';
@@ -53,6 +61,23 @@ if (NODE_PATHS.length === 0) {
   console.error('Build failed: found no node_modules above ' + __dirname + ' — run npm install first.');
   process.exit(1);
 }
+
+// Output paths, anchored on __dirname for the same reason as the resolution
+// chain above: they must not follow the cwd.
+//
+// These used to be the bare relative strings 'public/ketcher/bundle.js' etc.
+// Run from the repo root, that pointed at the PRE-SPLIT public/ketcher/ — the
+// only surviving copy of the 2026-03-22 bundles, which currently cannot be
+// regenerated (ketcher-react 3.17.2 vs ketcher-core 3.12.0; see the deploy
+// script's prerequisite block). A successful build from the wrong directory
+// would therefore have overwritten the irreplaceable artifact while leaving
+// apps/tutor/public/ketcher/ — the copy the deploy zip actually ships —
+// untouched. Anchoring removes the choice: there is now exactly one output
+// directory no matter where this is invoked from.
+const PUBLIC_KETCHER = join(__dirname, '..', 'public', 'ketcher');
+const BUNDLE_JS = join(PUBLIC_KETCHER, 'bundle.js');
+const BUNDLE_CSS = join(PUBLIC_KETCHER, 'bundle.css');
+const INDEX_HTML = join(PUBLIC_KETCHER, 'index.html');
 
 // Bundle the Ketcher entry point
 const entryCode = `
@@ -142,10 +167,10 @@ try {
     nodePaths: NODE_PATHS,
   });
 
-  // Copy JS and CSS to public/ketcher/
+  // Copy JS and CSS to apps/tutor/public/ketcher/
   const { copyFileSync } = await import('fs');
-  copyFileSync('/tmp/ketcher-bundle.js', 'public/ketcher/bundle.js');
-  copyFileSync('/tmp/ketcher-bundle.css', 'public/ketcher/bundle.css');
+  copyFileSync('/tmp/ketcher-bundle.js', BUNDLE_JS);
+  copyFileSync('/tmp/ketcher-bundle.css', BUNDLE_CSS);
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -178,9 +203,9 @@ html, body, #root { width: 100%; height: 100%; overflow: hidden; }
 </body>
 </html>`;
 
-  writeFileSync('public/ketcher/index.html', html);
+  writeFileSync(INDEX_HTML, html);
   const { statSync } = await import('fs');
-  const jsSize = statSync('public/ketcher/bundle.js').size;
+  const jsSize = statSync(BUNDLE_JS).size;
   console.log('✓ Ketcher bundle built successfully');
   console.log(`  JS bundle: ${(jsSize / 1024 / 1024).toFixed(1)} MB`);
 } catch (err) {

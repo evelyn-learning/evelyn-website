@@ -87,7 +87,12 @@ NC='\033[0m' # No Color
 #      dir seeds the new one:
 #
 #        mkdir -p /root/evelyn-tutor/apps/tutor/public/ketcher
-#        cp -an /root/evelynlearning/public/ketcher/. /root/evelyn-tutor/apps/tutor/public/ketcher/
+#        cp -an /root/evelynlearning/public/ketcher/bundle.js  /root/evelyn-tutor/apps/tutor/public/ketcher/
+#        cp -an /root/evelynlearning/public/ketcher/bundle.css /root/evelyn-tutor/apps/tutor/public/ketcher/
+#
+#      Two named files here too, for the same reason as the primary path: the
+#      tracked index.html is authoritative and must not be shadowed by an old
+#      copy. (`cp -an <dir>/. <dir>/` would have dragged index.html along.)
 #
 #      Either way confirm bundle.js and bundle.css are present and non-empty
 #      BEFORE the first ./deploy-tutor.sh — the deploy's public/ prune only
@@ -231,9 +236,22 @@ trap 'handle_error $LINENO' ERR
 # script's original ERR cleanup keeps working untouched. INT, TERM and HUP are
 # wired to `exit 1` so Ctrl-C, a `kill`, and closing the terminal all reach it
 # too — without the restore, an interrupted deploy would leave the developer's
-# working checkout holding PRODUCTION config in .env.local. release only ever
-# removes a lock this process actually took (LOCK_HELD), so the refusal path
-# cannot touch the other deploy's lock.
+# working checkout holding PRODUCTION config in .env.local.
+#
+# BOTH HALVES OF THAT TRAP ARE OWNERSHIP-GATED, and the second gate was
+# learned the hard way. The EXIT trap is installed BEFORE the lock is taken,
+# so it also fires on the refusal `exit 1` of a deploy that never became the
+# holder. `release_local_lock` was always safe there (LOCK_HELD is false, so
+# it removes nothing). `restore_dev_env` was NOT: its only condition was
+# "does .env.local.dev.bak exist", and that file belongs to whichever deploy
+# is currently mid-build in this same repo. A refused deploy would `mv` the
+# RUNNING deploy's backup over its production .env.local, mid-build, and
+# delete the backup — re-creating, through the restore, the exact
+# wrong-.env.local hazard this lock exists to prevent. It is now gated on
+# $RESTORE_ENV, which this process sets only after making its OWN backup
+# (Step 1 below); a refused run has no backup of its own, so it restores
+# nothing. $RESTORE_ENV rather than $LOCK_HELD deliberately: it tracks the
+# backup itself rather than a proxy for it.
 #
 # Residual, accepted knowingly: pid reuse. If the OS has recycled a dead
 # holder's pid onto an unrelated process, the refusal misreports the lock as
@@ -244,12 +262,21 @@ trap 'handle_error $LINENO' ERR
 # ---------------------------------------------------------------------------
 LOCK_DIR="/tmp/evelyn-deploy.lock"
 LOCK_HELD=false
+# Initialised here, not just at Step 1, because the EXIT trap below can fire
+# long before Step 1 runs (a refused lock, an early error) and must see a
+# definite "this process has made no backup".
+RESTORE_ENV=false
 
 restore_dev_env() {
-  # Idempotent by construction: a no-op when the backup is absent, which is
-  # the case after a normal build (restored inline) and after handle_error
-  # (restored there). Only a signal-interrupted run finds it still present.
-  if [ -f ".env.local.dev.bak" ]; then
+  # Two conditions, and both are load-bearing:
+  #   $RESTORE_ENV  — THIS process made the backup. Without it, a deploy that
+  #                   was refused the lock would restore, and delete, the
+  #                   backup belonging to the deploy that is currently
+  #                   building. See the ownership note in the comment above.
+  #   -f the backup — idempotency. Already absent after a normal build
+  #                   (restored inline) and after handle_error (restored
+  #                   there); only a signal-interrupted run still has it.
+  if [ "$RESTORE_ENV" = true ] && [ -f ".env.local.dev.bak" ]; then
     mv .env.local.dev.bak .env.local 2>/dev/null || true
     log_message "INFO" "Restored local dev .env.local"
   fi
@@ -258,7 +285,9 @@ restore_dev_env() {
 release_local_lock() {
   if [ "$LOCK_HELD" = true ]; then
     LOCK_HELD=false
-    rm -rf "$LOCK_DIR"
+    # `|| true` for the same reason restore_dev_env has it: a failure inside
+    # the EXIT trap would otherwise re-enter handle_error.
+    rm -rf "$LOCK_DIR" || true
   fi
 }
 
