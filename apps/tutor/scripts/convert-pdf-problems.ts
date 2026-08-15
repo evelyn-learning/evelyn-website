@@ -26,7 +26,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const EXTRACTED_DIR = path.join(__dirname, '..', 'src', 'lib', 'knowledge', 'extracted');
+const EXTRACTED_DIR = path.join(__dirname, '..', '..', '..', 'packages', 'core', 'src', 'knowledge', 'extracted');
 
 interface ChapterConfig {
   name: string;

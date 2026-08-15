@@ -100,7 +100,7 @@ const CHAPTERS: Record<string, ChapterConfig> = {
   },
 };
 
-const OUTPUT_DIR = path.join(__dirname, '..', 'src', 'lib', 'knowledge', 'extracted');
+const OUTPUT_DIR = path.join(__dirname, '..', '..', '..', 'packages', 'core', 'src', 'knowledge', 'extracted');
 
 // ============================================================================
 // ANTHROPIC CLIENT

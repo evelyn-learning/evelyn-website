@@ -70,6 +70,30 @@ export const metadata: Metadata = {
   },
   description:
     "Evelyn's AI voice tutor — live 1,700+ lesson voice tutoring sessions across math, science, English, history, test prep, and more.",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://www.evelynlearning.com/tutor",
+    siteName: "Evelyn Learning",
+    title: "Evelyn Tutor - AI Voice Tutor",
+    description:
+      "Evelyn's AI voice tutor — live 1,700+ lesson voice tutoring sessions across math, science, English, history, test prep, and more.",
+    images: [
+      {
+        url: "/images/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Evelyn Tutor",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Evelyn Tutor - AI Voice Tutor",
+    description:
+      "Evelyn's AI voice tutor — live 1,700+ lesson voice tutoring sessions across math, science, English, history, test prep, and more.",
+    images: ["/images/og-image.jpg"],
+  },
   robots: {
     index: true,
     follow: true,

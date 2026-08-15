@@ -67,8 +67,8 @@ const CHAPTER_MAPPINGS: Record<string, ChapterMapping> = {
   },
 };
 
-const EXTRACTED_DIR = path.join(__dirname, '..', 'src', 'lib', 'knowledge', 'extracted');
-const KNOWLEDGE_DIR = path.join(__dirname, '..', 'src', 'lib', 'knowledge');
+const EXTRACTED_DIR = path.join(__dirname, '..', '..', '..', 'packages', 'core', 'src', 'knowledge', 'extracted');
+const KNOWLEDGE_DIR = path.join(__dirname, '..', '..', '..', 'packages', 'core', 'src', 'knowledge');
 
 // ============================================================================
 // LOAD EXTRACTED PROBLEMS

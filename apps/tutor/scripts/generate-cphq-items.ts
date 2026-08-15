@@ -32,7 +32,7 @@ import type { Segment } from '../src/lib/tutor/lesson-plan/types';
 
 const MODEL = 'claude-sonnet-5';
 const OUT_DIR = path.join(__dirname, '..', 'src', 'data', 'problem-bank', 'cphq');
-const LOS_FILE = path.join(__dirname, '..', '.cphq-los.json');
+const LOS_FILE = path.join(__dirname, '..', '..', '..', '.cphq-los.json');
 const DIFFICULTIES: Array<1 | 2 | 3 | 4> = [1, 2, 3, 4];
 
 interface CphqLo {
@@ -206,7 +206,7 @@ async function runPool<T, R>(items: T[], concurrency: number, fn: (t: T, i: numb
 
 async function main() {
   const opts = parseArgs();
-  dotenv.config({ path: path.join(__dirname, '..', '.env.local.production') });
+  dotenv.config({ path: path.join(__dirname, '..', '..', '..', '.env.local.production') });
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error('✗ ANTHROPIC_API_KEY not set.');
     process.exit(1);
