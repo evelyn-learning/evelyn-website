@@ -17,6 +17,7 @@
  * (lives in the orchestrator) and committed in one shot.
  */
 
+import { randomUUID } from 'node:crypto';
 import connectDB from '@core/db';
 import { StudentProfileModel, toStudentProfile, type IStudentProfileDoc } from '@/models/StudentProfile';
 import {
@@ -568,6 +569,87 @@ export function recordPlanContentSeen(
  *  without committing a full session.
  *
  *  Pass `null` for a key to clear it (revert to grade default). */
+export interface ResolveProfileInput {
+  partnerId: string;
+  externalStudentId: string;
+}
+
+export interface ResolverDeps {
+  findExisting(input: ResolveProfileInput): Promise<{ _id: string } | null>;
+  findOneAndUpsert(
+    input: ResolveProfileInput & { newId: string },
+  ): Promise<{ _id: string } | null>;
+  newId(): string;
+}
+
+const defaultResolverDeps: ResolverDeps = {
+  newId: () => randomUUID(),
+  async findExisting({ partnerId, externalStudentId }) {
+    await connectDB();
+    return StudentProfileModel
+      .findOne({ partnerId, externalStudentId })
+      .select('_id')
+      .lean<{ _id: string }>()
+      .exec();
+  },
+  async findOneAndUpsert({ partnerId, externalStudentId, newId }) {
+    await connectDB();
+    const now = new Date().toISOString();
+    return StudentProfileModel.findOneAndUpdate(
+      { partnerId, externalStudentId },
+      {
+        $setOnInsert: {
+          _id: newId,
+          ...emptyProfile(newId),
+          partnerId,
+          externalStudentId,
+          createdAt: now,
+          updatedAt: now,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    ).select('_id').lean<{ _id: string }>().exec();
+  },
+};
+
+/**
+ * Turn a partner-scoped identity into the surrogate profile `_id`.
+ *
+ * This is the M1c choke point. Two partners sending the same
+ * `externalStudentId` get two profiles because the unique index on
+ * (partnerId, externalStudentId) refuses otherwise — the guarantee is the
+ * database's, not a convention every call site must remember.
+ *
+ * Find-or-create is ONE atomic upsert, not a read followed by a write: two
+ * concurrent first-requests for the same new student would both miss and both
+ * insert, and the loser would surface E11000 to a legitimate student. On that
+ * error we re-read and adopt whoever won.
+ */
+export async function resolveProfileId(
+  input: ResolveProfileInput,
+  deps: ResolverDeps = defaultResolverDeps,
+): Promise<string> {
+  if (!input.partnerId) throw new Error('resolveProfileId: partnerId is required');
+  if (!input.externalStudentId) {
+    throw new Error('resolveProfileId: externalStudentId is required');
+  }
+  const newId = deps.newId();
+  try {
+    const doc = await deps.findOneAndUpsert({ ...input, newId });
+    if (doc) return doc._id;
+  } catch (err) {
+    const code = (err as { code?: number }).code;
+    if (code !== 11000) throw err;
+  }
+  const existing = await deps.findExisting(input);
+  if (!existing) {
+    throw new Error(
+      `resolveProfileId: upsert reported a duplicate for ${input.partnerId} but no row was found`,
+    );
+  }
+  return existing._id;
+}
+
 export async function updateStudentPreferences(
   id: string,
   patch: Partial<Record<keyof StudentPreferences, StudentPreferences[keyof StudentPreferences] | null>>,
