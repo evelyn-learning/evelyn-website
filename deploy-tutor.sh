@@ -1,8 +1,20 @@
 #!/bin/bash
 
-# Evelyn Learning - Deploy to Production
+# Evelyn Learning - Deploy the TUTOR app to Production
 # Server: root@84.247.185.169
-# Remote path: /root/evelynlearning
+# Remote path: /root/evelyn-tutor
+#
+# One of the two halves of the M1a workspace split (the other is
+# deploy-marketing.sh); together they replace the single
+# deploy-to-production.sh, which deployed one app from the repo root.
+# Each script owns its own remote directory, its own pm2 process and its
+# own port, so the two apps deploy and restart completely independently.
+#
+#   this script      -> apps/tutor      -> /root/evelyn-tutor      -> pm2 evelyn-tutor      -> :3007
+#   deploy-marketing -> apps/marketing  -> /root/evelyn-marketing  -> pm2 evelyn-marketing  -> :3001
+#
+# Marketing keeps :3001 (the port the old single `evelyn-website` process
+# used) so nginx's default upstream needed no change.
 
 # Colors for output formatting
 GREEN='\033[0;32m'
@@ -14,8 +26,23 @@ NC='\033[0m' # No Color
 # Configuration
 SERVER_IP="84.247.185.169"
 SERVER_USER="root"
-REMOTE_DIR="/root/evelynlearning"
-ZIP_FILE="evelyn-website.zip"
+REMOTE_DIR="/root/evelyn-tutor"
+ZIP_FILE="evelyn-tutor.zip"
+
+# Which workspace this script deploys. Every path below that used to be
+# relative to the repo root (.next/, public/, src/, the config files) is
+# now under $APP_DIR — the app moved, the layout inside it did not.
+APP_DIR="apps/tutor"
+APP_WORKSPACE="@evelyn/tutor"
+PM2_NAME="evelyn-tutor"
+PM2_PORT="3007"
+
+# Suffix for this script's /tmp scratch files on the server. deploy-tutor.sh
+# and deploy-marketing.sh now run against the SAME host, and the prune logic
+# below builds its keep-set in /tmp: with shared filenames, two overlapping
+# deploys would diff one app's on-disk static tree against the OTHER app's
+# manifest and delete every chunk of the running build.
+TMP_TAG="tutor"
 
 # Log function with timestamps
 log_message() {
@@ -101,12 +128,15 @@ upload_with_retry() {
 }
 
 # Starting deployment
-log_message "INFO" "Starting Evelyn Learning deployment to production..."
+log_message "INFO" "Starting Evelyn Learning TUTOR deployment to production..."
 
 # Step 1: Build locally using production env (for NEXT_PUBLIC_ vars)
 log_message "STEP" "Building Next.js application locally..."
 
-# Temporarily swap in production env so NEXT_PUBLIC_ vars are baked in correctly
+# Temporarily swap in production env so NEXT_PUBLIC_ vars are baked in correctly.
+# This still operates on the REPO-ROOT .env.local even though the build now runs
+# with its cwd inside $APP_DIR: apps/*/.env.local are symlinks to ../../.env.local,
+# so swapping the root file is what the app actually reads at build time.
 RESTORE_ENV=false
 if [ -f ".env.local.production" ]; then
   cp .env.local .env.local.dev.bak
@@ -122,10 +152,10 @@ fi
 # code is clean (2026-05-18 build failure — Next 16 only emits
 # cache-life.d.ts when cacheComponents is on, which it isn't here).
 log_message "INFO" "Cleaning up previous build artifacts..."
-rm -rf .next/ 2>/dev/null || true
-rm -f tsconfig.tsbuildinfo 2>/dev/null || true
+rm -rf "$APP_DIR/.next/" 2>/dev/null || true
+rm -f "$APP_DIR/tsconfig.tsbuildinfo" 2>/dev/null || true
 
-npm run build || {
+npm run --workspace "$APP_WORKSPACE" build || {
   # Restore dev env before exiting on error
   if [ "$RESTORE_ENV" = true ]; then
     mv .env.local.dev.bak .env.local
@@ -145,8 +175,11 @@ log_message "INFO" "Application built successfully"
 # The server uses this to detect files that have been deleted from the
 # repo since the last deploy and remove them from production. See the
 # detailed comment near the unzip step below for the full mechanism.
+# Paths in the manifest stay relative to the REPO ROOT (i.e. they start with
+# apps/tutor/), because the server consumes them with its cwd at $REMOTE_DIR,
+# which mirrors the repo root. Do not cd into $APP_DIR to shorten them.
 log_message "STEP" "Generating public/ manifest..."
-find public -type f | LC_ALL=C sort > .deploy-public-manifest
+find "$APP_DIR/public" -type f | LC_ALL=C sort > .deploy-public-manifest
 log_message "INFO" "Manifest contains $(wc -l < .deploy-public-manifest) entries"
 
 # Step 1.6: Generate a .next/static/ manifest for orphan-chunk pruning.
@@ -160,7 +193,7 @@ log_message "INFO" "Manifest contains $(wc -l < .deploy-public-manifest) entries
 # Self-healing: the FIRST deploy after this change wipes all accumulated
 # orphans, and every deploy after keeps the tree clean.
 log_message "STEP" "Generating .next/static manifest (orphan-chunk prune)..."
-find .next/static -type f | LC_ALL=C sort > .deploy-static-manifest
+find "$APP_DIR/.next/static" -type f | LC_ALL=C sort > .deploy-static-manifest
 log_message "INFO" "Static manifest contains $(wc -l < .deploy-static-manifest) entries"
 
 # Step 1.7: Same treatment for .next/server/chunks — the server-side twin of
@@ -180,7 +213,7 @@ log_message "INFO" "Static manifest contains $(wc -l < .deploy-static-manifest) 
 #   For the same reason `rm -rf .next` on the server is NOT an option — it
 #   would also take out .next/cache (756 MB) and the running process's files.
 log_message "STEP" "Generating .next/server/chunks manifest (orphan-chunk prune)..."
-find .next/server/chunks -type f | LC_ALL=C sort > .deploy-server-chunks-manifest
+find "$APP_DIR/.next/server/chunks" -type f | LC_ALL=C sort > .deploy-server-chunks-manifest
 log_message "INFO" "Server-chunk manifest contains $(wc -l < .deploy-server-chunks-manifest) entries"
 
 # Step 2: Create deployment package
@@ -193,7 +226,7 @@ fi
 
 # Zip everything except node_modules, .git, and local env files.
 #
-# .next/cache is excluded: it is the LOCAL build cache (webpack/SWC + the
+# $APP_DIR/.next/cache is excluded: it is the LOCAL build cache (webpack/SWC + the
 # image-optimizer cache) and the server never reads it — the server runs
 # `npm ci` and `next start`, it does not rebuild. It was 715 MB of the
 # 941 MB archive on 2026-08-14, i.e. three quarters of every upload was
@@ -204,21 +237,46 @@ fi
 # (next-auth declares an optional peer on nodemailer ^7 that conflicts with
 # our direct nodemailer ^9 — we don't use the email provider, so accepting
 # the optional-peer mismatch is safe).
+# Two groups of paths now, and the split is load-bearing:
+#   $APP_DIR/*  — this app's build output, public assets, source and config.
+#                 Same file list as before the split, just one level down.
+#                 src/ still ships because runtime code reads files out of it
+#                 relative to cwd (e.g. the video curator's
+#                 src/data/curated-videos-ap.json) and because
+#                 src/instrumentation.ts is what registers this app's crons.
+#                 .env ships too (public NEXT_PUBLIC_ config, safe to commit);
+#                 .env.local does NOT — see the upload + verify steps below.
+#   repo root   — package.json/package-lock.json/.npmrc for `npm ci`, which
+#                 must run at the WORKSPACE ROOT because deps are hoisted
+#                 there, plus tsconfig.base.json that the app's tsconfig
+#                 extends, plus packages/core, which both apps import as
+#                 source (@evelyn/core is main:src/index.ts, transpiled by
+#                 Next rather than prebuilt).
+# The other app's workspace is deliberately absent: `npm ci` tolerates a
+# missing sibling workspace (verified locally — it simply creates one fewer
+# node_modules link), which is what keeps the two deploys independent.
 zip -qr "$ZIP_FILE" \
-  .next \
-  public \
-  src \
+  "$APP_DIR/.next" \
+  "$APP_DIR/public" \
+  "$APP_DIR/src" \
+  "$APP_DIR/.env" \
+  "$APP_DIR/package.json" \
+  "$APP_DIR/next.config.ts" \
+  "$APP_DIR/tsconfig.json" \
+  "$APP_DIR/tailwind.config.ts" \
+  "$APP_DIR/postcss.config.mjs" \
+  packages/core/src \
+  packages/core/package.json \
+  packages/core/tsconfig.json \
   package.json \
   package-lock.json \
   .npmrc \
-  next.config.ts \
   tsconfig.json \
-  tailwind.config.ts \
-  postcss.config.mjs \
+  tsconfig.base.json \
   .deploy-public-manifest \
   .deploy-static-manifest \
   .deploy-server-chunks-manifest \
-  -x "*.log" "*/.DS_Store" ".next/cache/*" || {
+  -x "*.log" "*/.DS_Store" "$APP_DIR/.next/cache/*" || {
   log_message "ERROR" "Failed to create zip file"
   exit 1
 }
@@ -226,7 +284,10 @@ log_message "INFO" "Successfully created $ZIP_FILE"
 
 # Step 3: Ensure remote directory exists and upload
 log_message "STEP" "Setting up remote server..."
-run_remote_command "mkdir -p $REMOTE_DIR" || {
+# $APP_DIR too, not just $REMOTE_DIR: the .env.local upload below targets
+# $REMOTE_DIR/$APP_DIR/.env.local and happens BEFORE the zip is unpacked, so
+# the app directory has to exist first.
+run_remote_command "mkdir -p $REMOTE_DIR/$APP_DIR" || {
   log_message "ERROR" "Failed to create remote directory"
   exit 1
 }
@@ -239,12 +300,19 @@ upload_with_retry "$ZIP_FILE" "$REMOTE_DIR/$ZIP_FILE" || {
 log_message "INFO" "Successfully uploaded zip file to server"
 
 # Step 3.5: Upload production environment file
+#
+# Destination is $APP_DIR/.env.local, NOT the remote root: the pm2 process
+# starts with its cwd inside $APP_DIR (see the start line below), and that is
+# where Next looks for .env.local. The file is gitignored, so it is never in
+# the zip — this upload is the only thing that puts it on the server, and the
+# post-unzip check below is what stops a silent miss from taking every secret
+# out at once.
 log_message "STEP" "Uploading production environment file..."
 if [ -f ".env.local.production" ]; then
-  upload_with_retry ".env.local.production" "$REMOTE_DIR/.env.local" || {
+  upload_with_retry ".env.local.production" "$REMOTE_DIR/$APP_DIR/.env.local" || {
     log_message "WARNING" "Failed to upload .env.local.production after 3 attempts"
   }
-  log_message "INFO" "Successfully uploaded .env.local.production as .env.local"
+  log_message "INFO" "Successfully uploaded .env.local.production as $APP_DIR/.env.local"
 else
   log_message "WARNING" ".env.local.production not found, skipping env file upload"
 fi
@@ -285,20 +353,39 @@ fi
 # while it is still serving could break a lazy require in flight. Once the new
 # process is up, every chunk it can possibly need is in the keep-set, so the
 # delete is provably safe.
+#
+# Two things the split adds to this chain:
+#
+#   1. A hard .env.local gate right after the unzip. .env.local is gitignored
+#      and therefore never in the archive — it gets there only via the upload
+#      step above. If that upload silently failed, `next start` would come up
+#      with no secrets at all rather than not come up, so this refuses to
+#      restart instead.
+#   2. The pm2 process starts with its cwd INSIDE $APP_DIR (note the
+#      subshell), so the app sees exactly the pre-split layout: several
+#      runtime modules resolve paths from process.cwd() — the video
+#      curator's src/data/curated-videos-ap.json store, the voice-harness
+#      artifacts/ route — and they must keep resolving against the app dir,
+#      not the workspace root. `next start` has NO --dir flag (Next 16.1.6:
+#      the app directory is a positional argument), and the positional form
+#      would leave cwd at the repo root, which is exactly the breakage.
+#      The `../../node_modules/.bin/next` path is relative for the same
+#      reason deps are hoisted: there is no node_modules/.bin inside the app.
 log_message "STEP" "Running deployment on production server..."
 run_remote_command "cd $REMOTE_DIR && \
-  if [ -f .deploy-public-manifest ]; then cp .deploy-public-manifest /tmp/.deploy-public-manifest.prev; else : > /tmp/.deploy-public-manifest.prev; fi && \
+  if [ -f .deploy-public-manifest ]; then cp .deploy-public-manifest /tmp/.deploy-public-manifest.$TMP_TAG.prev; else : > /tmp/.deploy-public-manifest.$TMP_TAG.prev; fi && \
   unzip -qo $ZIP_FILE && \
   rm -f $ZIP_FILE && \
-  STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.prev .deploy-public-manifest) && \
+  if [ ! -s $APP_DIR/.env.local ]; then echo \"FATAL: $REMOTE_DIR/$APP_DIR/.env.local is missing or empty. Refusing to restart $PM2_NAME — it would start with none of its secrets.\"; exit 1; fi && \
+  STALE_FILES=\$(comm -23 /tmp/.deploy-public-manifest.$TMP_TAG.prev .deploy-public-manifest) && \
   if [ -n \"\$STALE_FILES\" ]; then echo \"Pruning stale public/ files:\"; echo \"\$STALE_FILES\"; echo \"\$STALE_FILES\" | xargs -r rm -f; else echo \"No stale public/ files to prune.\"; fi && \
-  rm -f /tmp/.deploy-public-manifest.prev && \
-  if [ -s .deploy-static-manifest ]; then find .next/static -type f | LC_ALL=C sort > /tmp/.static-have && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep && comm -23 /tmp/.static-have /tmp/.static-keep > /tmp/.static-orphans && if [ -s /tmp/.static-orphans ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have /tmp/.static-keep /tmp/.static-orphans; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
+  rm -f /tmp/.deploy-public-manifest.$TMP_TAG.prev && \
+  if [ -s .deploy-static-manifest ]; then find $APP_DIR/.next/static -type f | LC_ALL=C sort > /tmp/.static-have.$TMP_TAG && LC_ALL=C sort .deploy-static-manifest > /tmp/.static-keep.$TMP_TAG && comm -23 /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG > /tmp/.static-orphans.$TMP_TAG && if [ -s /tmp/.static-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.static-orphans.$TMP_TAG) orphaned .next/static file(s) from prior builds\"; xargs -r rm -f < /tmp/.static-orphans.$TMP_TAG; else echo \"No orphaned .next/static files to prune.\"; fi && rm -f /tmp/.static-have.$TMP_TAG /tmp/.static-keep.$TMP_TAG /tmp/.static-orphans.$TMP_TAG; else echo \"WARN: .deploy-static-manifest missing/empty — skipping static prune (safety)\"; fi && \
   npm ci --omit=dev && \
-  (pm2 delete evelyn-website 2>/dev/null || true) && \
-  pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && \
+  (pm2 delete $PM2_NAME 2>/dev/null || true) && \
+  (cd $REMOTE_DIR/$APP_DIR && pm2 start ../../node_modules/.bin/next --name $PM2_NAME -- start -p $PM2_PORT) && \
   pm2 save && \
-  if [ -s .deploy-server-chunks-manifest ]; then find .next/server/chunks -type f | LC_ALL=C sort > /tmp/.srv-have && LC_ALL=C sort .deploy-server-chunks-manifest > /tmp/.srv-keep && comm -23 /tmp/.srv-have /tmp/.srv-keep > /tmp/.srv-orphans && if [ -s /tmp/.srv-orphans ]; then echo \"Pruning \$(wc -l < /tmp/.srv-orphans) orphaned .next/server/chunks file(s) from prior builds\"; xargs -r rm -f < /tmp/.srv-orphans; else echo \"No orphaned .next/server/chunks files to prune.\"; fi && rm -f /tmp/.srv-have /tmp/.srv-keep /tmp/.srv-orphans; else echo \"WARN: .deploy-server-chunks-manifest missing/empty — skipping server-chunk prune (safety)\"; fi" || {
+  if [ -s .deploy-server-chunks-manifest ]; then find $APP_DIR/.next/server/chunks -type f | LC_ALL=C sort > /tmp/.srv-have.$TMP_TAG && LC_ALL=C sort .deploy-server-chunks-manifest > /tmp/.srv-keep.$TMP_TAG && comm -23 /tmp/.srv-have.$TMP_TAG /tmp/.srv-keep.$TMP_TAG > /tmp/.srv-orphans.$TMP_TAG && if [ -s /tmp/.srv-orphans.$TMP_TAG ]; then echo \"Pruning \$(wc -l < /tmp/.srv-orphans.$TMP_TAG) orphaned .next/server/chunks file(s) from prior builds\"; xargs -r rm -f < /tmp/.srv-orphans.$TMP_TAG; else echo \"No orphaned .next/server/chunks files to prune.\"; fi && rm -f /tmp/.srv-have.$TMP_TAG /tmp/.srv-keep.$TMP_TAG /tmp/.srv-orphans.$TMP_TAG; else echo \"WARN: .deploy-server-chunks-manifest missing/empty — skipping server-chunk prune (safety)\"; fi" || {
   log_message "ERROR" "Deployment failed on remote server"
   exit 1
 }
@@ -313,7 +400,8 @@ log_message "INFO" "Local zip file cleaned up"
 
 # Deployment complete
 log_message "INFO" "=========================================="
-log_message "INFO" "Deployment to production completed!"
+log_message "INFO" "Tutor deployment to production completed!"
 log_message "INFO" "=========================================="
 log_message "INFO" "Site: http://$SERVER_IP"
-log_message "INFO" "Check logs: ssh root@$SERVER_IP 'pm2 logs evelyn-website'"
+log_message "INFO" "Process: $PM2_NAME on port $PM2_PORT (nginx: evelyn_tutor_upstream)"
+log_message "INFO" "Check logs: ssh root@$SERVER_IP 'pm2 logs $PM2_NAME'"

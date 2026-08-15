@@ -44,7 +44,8 @@ public/ketcher/bundle.*
 # scripts/test-e8-expand-harness.ts, removed on exit — never a deploy asset)
 public/_e8-harness/
 
-# Deploy manifest (regenerated on every deploy by deploy-to-production.sh)
+# Deploy manifest (regenerated on every deploy by deploy-tutor.sh /
+# deploy-marketing.sh, which replaced deploy-to-production.sh)
 .deploy-public-manifest
 .deploy-static-manifest
 .deploy-server-chunks-manifest
