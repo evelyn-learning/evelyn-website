@@ -103,8 +103,10 @@ NC='\033[0m' # No Color
 #      already: file that as a bug, do not delay the cutover for it.)
 #
 #      Once the dependency skew is fixed, the generator is the right source
-#      again. It must be run from the app dir, since its output paths are
-#      relative to the cwd:
+#      again. Its output always lands in apps/tutor/public/ketcher/ — both the
+#      dependency resolution and the write paths are anchored on the script's
+#      own location, so the cwd decides nothing and it is safe to run from
+#      anywhere. This remains the conventional invocation, not a requirement:
 #          (cd apps/tutor && node scripts/build-ketcher.mjs)
 #
 #   2. src/data/curated-videos-ap.json is written AT RUNTIME by
@@ -163,7 +165,16 @@ log_message() {
 # Error handling function
 handle_error() {
   log_message "ERROR" "An error occurred on line $1"
-  if [ -f ".env.local.dev.bak" ]; then
+  # $RESTORE_ENV for the same reason restore_dev_env has it: the bare
+  # "does a backup exist" test is true of a backup made by ANOTHER deploy
+  # running in this same checkout, and acting on it would overwrite that
+  # deploy's production .env.local mid-build. Unreachable cross-process today
+  # — nothing executable runs between the ERR trap install below and
+  # acquire_local_lock — but that is correct by distance, not by
+  # construction, and one inserted command would reopen it. (Before the lock
+  # block initialises it, $RESTORE_ENV is unset and this is a no-op, which is
+  # the right answer: no backup can exist that early.)
+  if [ "$RESTORE_ENV" = true ] && [ -f ".env.local.dev.bak" ]; then
     mv .env.local.dev.bak .env.local
     log_message "INFO" "Restored local dev .env.local"
   fi
@@ -322,6 +333,18 @@ acquire_local_lock() {
     log_message "ERROR" "Deploy lock $LOCK_DIR is held by pid $owner (${script:-unknown script}), which is no longer running — a previous deploy was killed."
   fi
   log_message "ERROR" "NOT reclaiming it automatically: judging a lock stale cannot be made atomic with taking it, and getting that wrong runs two deploys at once."
+  # A killed deploy can leave the env swap half-undone as well as the lock
+  # behind. If it does, clearing the lock and rerunning is DESTRUCTIVE and
+  # silent: Step 1's `cp .env.local .env.local.dev.bak` would overwrite the
+  # good backup with the production config still sitting in .env.local, and
+  # the post-build restore would then write production config back into
+  # .env.local — the developer's real local config gone, with no message.
+  # So say so first. Dev machine only; this file never exists on the server.
+  if [ -f ".env.local.dev.bak" ]; then
+    log_message "ERROR" "ALSO: a leftover .env.local.dev.bak is sitting in this directory, so the killed deploy did not finish restoring your env."
+    log_message "ERROR" "Restore it BEFORE clearing the lock, or rerunning will overwrite the backup with production config and lose your local .env.local:"
+    log_message "ERROR" "    mv .env.local.dev.bak .env.local"
+  fi
   log_message "ERROR" "Confirm no deploy is running, then clear it by hand:  rm -rf $LOCK_DIR"
   exit 1
 }
@@ -393,8 +416,14 @@ log_message "STEP" "Building Next.js application locally..."
 RESTORE_ENV=false
 if [ -f ".env.local.production" ]; then
   cp .env.local .env.local.dev.bak
-  cp .env.local.production .env.local
+  # ARM THE RESTORE THE INSTANT THE BACKUP EXISTS, and before anything is
+  # overwritten. The INT/TERM/HUP trap is already live by now, and if a signal
+  # lands between the two `cp`s with this line still below them, on_exit's
+  # restore is disarmed and the developer's checkout is left holding
+  # PRODUCTION .env.local plus an orphaned .dev.bak. Ordering is the whole fix
+  # — setting it here makes the window empty rather than sub-millisecond.
   RESTORE_ENV=true
+  cp .env.local.production .env.local
   log_message "INFO" "Temporarily using .env.local.production for build"
 fi
 
