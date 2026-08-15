@@ -1001,52 +1001,181 @@ Expected: both scripts parse; both builds succeed.
 
 - [ ] **Step 5: Cut over on the server, tutor first**
 
-The old `evelyn-website` process holds port **3001**, which is exactly the port `evelyn-marketing` will claim. Deploying marketing before retiring `evelyn-website` produces an `EADDRINUSE` crash loop, so the order below is not optional.
+This is the runbook, in order. `S=root@84.247.185.169` throughout. Nothing below has been
+performed. Two ordering constraints drive the whole sequence, and neither is optional:
+
+- The old `evelyn-website` process holds port **3001**, which is exactly the port
+  `evelyn-marketing` will claim. Deploying marketing before retiring `evelyn-website`
+  produces an `EADDRINUSE` crash loop.
+- The tutor must be verified on :3007 **before** marketing is touched, because until
+  `evelyn-website` is deleted the rollback is a single `nginx -s reload` with zero downtime.
+
+**Phase 0 — preparation. No traffic impact; do it ahead of the window.**
 
 ```bash
-S=root@84.247.185.169
+# 0.1  Nothing may already hold :3007.
+ssh $S 'ss -lntp | grep -w 3007 || echo "3007 free"'          # expect: 3007 free
+ssh $S 'pm2 list'                                              # expect: evelyn-website only
 
-# 1. Deploy the tutor to its NEW port 3007. Nothing routes there yet, and
-#    evelyn-website keeps serving 100% of traffic on 3001 throughout.
-./deploy-tutor.sh
-ssh $S 'pm2 list | grep evelyn-tutor'                                               # expect: online
-ssh $S 'curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3007/tutor'       # expect: 200
+# 0.2  Deploy-machine prerequisites. RUN THESE IN THE CHECKOUT YOU WILL DEPLOY FROM.
+#      NOTE: the m1a worktree does NOT have .env.local.production. Deploying from it
+#      aborts at the Step 0 preflight — by design, but know it before the window.
+ls -l .env.local.production                                    # expect: present, non-empty
+ls -l apps/tutor/public/ketcher/                               # expect: bundle.js ~26M,
+                                                               #         bundle.css ~183K,
+                                                               #         index.html ~1.2K
+# If the bundles are absent, seed them from the pre-split path (they are gitignored,
+# were left behind by Task 6's `git mv`, and CANNOT be rebuilt — see the prerequisite
+# block at the top of deploy-tutor.sh). Do NOT copy index.html; the tracked one is
+# authoritative:
+#   mkdir -p apps/tutor/public/ketcher
+#   cp -n public/ketcher/bundle.js  apps/tutor/public/ketcher/
+#   cp -n public/ketcher/bundle.css apps/tutor/public/ketcher/
 
-# 2. Point nginx's tutor locations at 3007. Marketing traffic is untouched
-#    (location / still targets evelyn_upstream → 3001 → evelyn-website).
-scp nginx/evelyn.conf $S:/etc/nginx/sites-available/evelyn.conf
-ssh $S 'nginx -t && nginx -s reload'
+# 0.3  Seed marketing's public/ so production never serves a tree missing 200+ MB of
+#      user uploads and the GSC verification HTML. mkdir -p first: the deploy is what
+#      normally creates that tree, and `cp -a src/. dst/` creates only the last component.
+ssh $S 'mkdir -p /root/evelyn-marketing/apps/marketing/public && \
+        cp -an /root/evelynlearning/public/. /root/evelyn-marketing/apps/marketing/public/ && \
+        find /root/evelyn-marketing/apps/marketing/public -type f | wc -l'
+# Prune-safe: files in no manifest are never deleted.
 
-# --- VERIFY THE TUTOR ON THE NEW PROCESS BEFORE TOUCHING MARKETING ---
-#     Run the Step 6 smoke now. If the tutor is broken, roll back by
-#     reverting nginx alone — evelyn-website is still up and still serves
-#     /tutor, so a revert is a single `nginx -s reload` with zero downtime.
-
-# 3. Only once the tutor is confirmed good: free port 3001, then take it.
-#    These two commands must be adjacent — 3001 is unserved between them.
-ssh $S 'pm2 delete evelyn-website && pm2 save'
-./deploy-marketing.sh
-ssh $S 'pm2 list | grep evelyn-marketing'                                           # expect: online
-ssh $S 'curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3001/'            # expect: 200
+# 0.4  Capture the runtime-written curation file BEFORE /root/evelynlearning is retired.
+#      `unzip -o` overwrites it every deploy, so prod-side approvals are transient.
+ssh $S 'cat /root/evelynlearning/src/data/curated-videos-ap.json' > /tmp/prod-curated.json
+diff /tmp/prod-curated.json apps/tutor/src/data/curated-videos-ap.json || true
+# Commit anything production has that the repo does not.
 ```
 
-> Marketing takes a short outage between steps 3a and 3b — the marketing build is already done locally by then, so it's the upload+unzip+`npm ci` window. The tutor sees **zero** downtime, which is the one that matters: Crimsora sessions are live traffic. If even the marketing gap is unacceptable, start `evelyn-marketing` on a spare port first, flip `evelyn_upstream` to it, then retire `evelyn-website`.
+**Phase 1 — deploy the tutor to its NEW port. Zero tutor downtime: nothing routes to
+:3007 yet and `evelyn-website` keeps serving 100% of traffic on :3001 throughout.**
+
+```bash
+./deploy-tutor.sh
+ssh $S 'pm2 list | grep evelyn-tutor'                                          # expect: online
+ssh $S 'curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3007/tutor'  # expect: 200
+```
+
+**Phase 2 — nginx. NEVER blind-`scp` this file.**
+
+The repo conf is **not** the live conf and the live one has provably drifted: production
+answers `/short-interviews` with **308**, which is Next's `permanent: true` — an nginx
+`return 301` cannot produce it, so the four WordPress redirect blocks that used to sit in
+the repo file were never in the running config. (They have since been deleted from the repo
+file: all four are handled by `apps/marketing/next.config.ts` `redirects()`, and
+`location /webinar`, being a *prefix*, would additionally have turned `/webinars` — a live
+200 — into an infinite redirect loop.) Capture, diff, merge:
+
+```bash
+# 2.1  Capture and diff. Reconcile every difference by hand; do not overwrite.
+ssh $S 'cat /etc/nginx/sites-available/evelyn.conf' > /tmp/live-evelyn.conf
+ssh $S 'ls -l /etc/nginx/sites-enabled/'          # any sibling files are part of the picture
+diff -u /tmp/live-evelyn.conf nginx/evelyn.conf   # merge into a single intended file
+```
+
+**2.2 — `tutor.evelynlearning.com` must move to `evelyn_tutor_upstream` in this same edit
+and this same reload.** `https://tutor.evelynlearning.com/` is live and returns 200 today,
+and the repo conf has **no** server block for it — so it is either drift inside the live
+file or a sibling in `sites-enabled`. After cutover :3001 is marketing, which has no
+`middleware.ts` and no `/tutor-portal` routes, so if that block is missed the white-label
+host goes completely dark. (`tutor-sandbox.evelynlearning.com` does **not** resolve in DNS —
+ignore it.)
+
+```bash
+# 2.3  Upload the MERGED file, syntax-check it, then reload.
+#      This is the first time nginx -t has ever run against this config: there is no
+#      nginx and no container runtime on the dev machine, so it could not be checked
+#      locally. Do not skip it.
+scp /tmp/merged-evelyn.conf $S:/etc/nginx/sites-available/evelyn.conf
+ssh $S 'nginx -t && nginx -s reload'
+```
+
+**VERIFY THE TUTOR NOW, BEFORE TOUCHING MARKETING.** Run the whole of Step 6 except the
+marketing-only rows. If anything is wrong, roll back by reverting nginx alone —
+`evelyn-website` is still up and still serves `/tutor`, so the revert is one
+`nginx -s reload` with zero downtime.
+
+**Phase 3 — marketing. Only once the tutor is confirmed good.**
+
+Build FIRST, then swap. The outage window is bounded by what sits between `pm2 delete` and
+the new process binding :3001, so everything that can fail beforehand should fail beforehand:
+
+```bash
+# 3.1  Build marketing locally and confirm exit 0 BEFORE freeing the port.
+#      (deploy-marketing.sh does its own build at its Step 1; doing it here first means a
+#      build failure costs nothing instead of stranding www.evelynlearning.com with no
+#      process.)
+npm run build:marketing; echo "exit: $?"                       # expect: 0
+
+# 3.2  These two must be adjacent — :3001 is unserved between them.
+ssh $S 'pm2 delete evelyn-website && pm2 save'
+./deploy-marketing.sh
+
+ssh $S 'pm2 list | grep evelyn-marketing'                                  # expect: online
+ssh $S 'curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3001/'   # expect: 200
+```
+
+**ROLLBACK for marketing**, if `deploy-marketing.sh` fails after the port is freed. Keep
+`/root/evelynlearning` in place until BOTH apps are verified — it is the rollback source and
+also the source for 0.3 and the ketcher bundles:
+
+```bash
+ssh $S 'cd /root/evelynlearning && pm2 start node_modules/.bin/next --name evelyn-website -- start -p 3001 && pm2 save'
+```
+
+> Marketing takes a short outage between 3.2's two commands — with the build already done,
+> it is the upload + unzip + `npm ci` window. The tutor sees **zero** downtime, which is the
+> one that matters: Crimsora sessions are live traffic. If even the marketing gap is
+> unacceptable, start `evelyn-marketing` on a spare port first, flip `evelyn_upstream` to
+> it, then retire `evelyn-website`.
 
 - [ ] **Step 6: Production smoke — every surface, both brands**
 
 ```bash
 for u in https://www.evelynlearning.com/ \
          https://www.evelynlearning.com/blog \
+         https://www.evelynlearning.com/webinars \
          https://www.evelynlearning.com/tutor \
          https://www.evelynlearning.com/tutor-portal/embed \
+         https://www.evelynlearning.com/ketcher/index.html \
+         https://www.evelynlearning.com/admin/demos \
+         https://tutor.evelynlearning.com/ \
          https://www.crimsora.com/ ; do
   echo -n "$u "; curl -sS -o /dev/null -w "%{http_code}\n" "$u"
 done
 ```
 
-Expected: `200` on every marketing URL; the embed returns its normal token-gated response (unchanged from before the split — compare against a pre-split capture, do not assume).
+Expected: `200` on every marketing URL and on `/webinars` (a redirect loop there means an
+nginx WordPress-redirect block came back); `/ketcher/index.html` 200; `/admin/demos` reaches
+the tutor and renders its own auth gate rather than 404; `tutor.evelynlearning.com` 200 (the
+2.2 check, live); the embed returns its normal token-gated response — compare against a
+pre-split capture, do not assume.
 
-Then the real gate: **run one live tutor session end to end from the Crimsora student dashboard** — voice in, whiteboard render, session ends, transcript and mastery land. Nothing about a green test suite proves the WebSocket path survived an nginx change.
+**The JavaScript check, which nothing else covers.** `nginx -t` cannot validate the
+`/_next/static/` fallback, and a tutor page that serves HTML with zero JS still returns 200 —
+so a plain status check cannot tell a working tutor from a broken one:
+
+```bash
+# Pull a real chunk URL out of the served HTML and fetch it back through nginx.
+CHUNK=$(curl -s https://www.evelynlearning.com/tutor \
+        | grep -o '/_next/static/chunks/[^"]*\.js' | head -1)
+echo "$CHUNK"
+curl -sS -o /dev/null -w "%{http_code}\n" "https://www.evelynlearning.com$CHUNK"  # expect: 200
+```
+
+A 404 here means the marketing-first / tutor-fallback pair is not working and every tutor
+page is loading no JavaScript at all.
+
+```bash
+# Cross-process calls that no build or test can catch:
+curl -sS -o /dev/null -w "%{http_code}\n" -X POST \
+     https://www.evelynlearning.com/api/tutor-portal/demo-token     # expect: NOT 404
+```
+
+Then the real gate: **run one live tutor session end to end from the Crimsora student
+dashboard** — voice in, whiteboard render, session ends, transcript and mastery land — and
+make one of the problems a **chemistry** one, so the ketcher iframe is exercised. Nothing
+about a green test suite proves the WebSocket path survived an nginx change.
 
 - [ ] **Step 7: Remove the old deploy script**
 

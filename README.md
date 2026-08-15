@@ -29,9 +29,11 @@ Each script builds and ships **only its own app**; nothing else is rebuilt.
 was replaced by the two scripts above. `deploy-update.sh` is **banned**: it builds on the
 server, which takes ~30 minutes.
 
-nginx sends `/tutor`, `/tutor-portal/*`, `/api/tutor/*`, `/api/portal/v1/*` and the
-tutor-owned admin routes to :3007; everything else falls through to :3001
-(see `nginx/evelyn.conf`).
+nginx sends `/tutor`, `/tutor-portal/*`, `/api/tutor/*`, `/api/portal/v1/*`, `/ketcher/*`
+and the tutor-owned admin routes to :3007; everything else falls through to :3001
+(see `nginx/evelyn.conf`). `/ketcher/*` is the one to remember: it is a plain static
+tree, it lives only in the tutor's `public/`, and if it is ever unrouted the molecule
+editor fails **silently** — no build, typecheck or test notices.
 
 ## Tests
 
