@@ -21,7 +21,7 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import WebSocket from 'ws';
-import { CARTESIA_DEFAULT_VOICE_ID } from '../src/lib/tutor/voice/cartesia-voice-registry';
+import { CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 
 const CARTESIA_VERSION = '2026-03-01';
 const TRANSCRIPT =

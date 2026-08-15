@@ -27,7 +27,7 @@
 
 import { NextRequest } from 'next/server';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
-import { CARTESIA_DEFAULT_VOICE_ID, substituteCartesiaVoiceId } from '@/lib/tutor/voice/cartesia-voice-registry';
+import { CARTESIA_DEFAULT_VOICE_ID, substituteCartesiaVoiceId } from '@core/voice/cartesia-voice-registry';
 
 const CARTESIA_TTS_URL = 'https://api.cartesia.ai/tts/bytes';
 const CARTESIA_VERSION = '2026-03-01';

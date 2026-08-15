@@ -6,8 +6,8 @@
  * Usage: npx tsx scripts/test-geo-accent.ts
  */
 import assert from 'node:assert';
-import { accentFromTimezone } from '../src/lib/tutor/voice/geo-accent';
-import { hasAccentPool } from '../src/lib/tutor/voice/cartesia-voice-registry';
+import { accentFromTimezone } from '@core/voice/geo-accent';
+import { hasAccentPool } from '@core/voice/cartesia-voice-registry';
 
 let passed = 0;
 function check(name: string, fn: () => void) {

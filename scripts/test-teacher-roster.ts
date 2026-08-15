@@ -6,11 +6,11 @@
  * Usage: npx tsx scripts/test-teacher-roster.ts
  */
 import assert from 'node:assert';
-import { DEMO_TEACHERS } from '../src/lib/tutor/ai/teacher-persona';
+import { DEMO_TEACHERS } from '@core/ai/teacher-persona';
 import {
   resolveCartesiaVoice,
   teachersForAccent,
-} from '../src/lib/tutor/voice/cartesia-voice-registry';
+} from '@core/voice/cartesia-voice-registry';
 
 let passed = 0;
 function check(name: string, fn: () => void) {

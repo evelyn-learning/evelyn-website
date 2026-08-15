@@ -32,8 +32,8 @@ import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { usePlanIndex } from './hooks/usePlanIndex';
 import type { PlanIndexEntry } from '@/lib/tutor/lesson-plan/plan-index-types';
 import { Header } from '@/components/layout/Header';
-import { CURATED_DEMO_LESSONS } from '@/lib/tutor/demo/curated-demo-lessons';
-import { ACCENT_CARD_HINTS } from '@/lib/tutor/demo/teacher-display';
+import { CURATED_DEMO_LESSONS } from '@core/demo/curated-demo-lessons';
+import { ACCENT_CARD_HINTS } from '@core/demo/teacher-display';
 import { trackEvent } from '@/lib/analytics/events';
 import type { LessonPlan as LessonPlanType } from '@/lib/tutor/lesson-plan/types';
 import { VoiceTutorGemini } from './components/VoiceTutorGemini';
@@ -51,7 +51,7 @@ import {
 } from '@/lib/tutor/ai/opening-behavior';
 import { shouldShowDemoCta } from '@/lib/tutor/demo-cta';
 import { detectDemoIntent } from '@/lib/tutor/demo-intent';
-import { DEMO_TEACHERS, resolveInitialTeacherId } from '@/lib/tutor/ai/teacher-persona';
+import { DEMO_TEACHERS, resolveInitialTeacherId } from '@core/ai/teacher-persona';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
 import type { LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
@@ -59,8 +59,8 @@ import type { SessionGoal, TranscriptEntry, VoiceId, AVAILABLE_VOICES } from '@/
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
 import type { WhiteboardCommand } from '@core/knowledge/types';
 import type { OpenAIVoice } from './hooks/useOpenAIRealtime';
-import { resolveCartesiaVoice, teachersForAccent } from '@/lib/tutor/voice/cartesia-voice-registry';
-import { accentFromTimezone } from '@/lib/tutor/voice/geo-accent';
+import { resolveCartesiaVoice, teachersForAccent } from '@core/voice/cartesia-voice-registry';
+import { accentFromTimezone } from '@core/voice/geo-accent';
 import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 

@@ -45,7 +45,7 @@ import {
 import {
   CARTESIA_DEFAULT_VOICE_ID,
   applyCartesiaVoiceSubstitutions,
-} from '@/lib/tutor/voice/cartesia-voice-registry';
+} from '@core/voice/cartesia-voice-registry';
 
 const CARTESIA_VERSION = '2026-03-01';
 const SONIC_WS_URL = 'wss://api.cartesia.ai/tts/websocket';

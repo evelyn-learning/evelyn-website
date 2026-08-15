@@ -19,7 +19,7 @@ import {
   renderTeacherStyleReminder,
   CATCHPHRASE_TURN_INTERVAL,
   type TeacherPersonaWire,
-} from '../src/lib/tutor/ai/teacher-persona';
+} from '@core/ai/teacher-persona';
 import { buildSystemPrompt, type SystemPromptContext } from '../src/lib/tutor/ai/system-prompt-builder';
 
 let passed = 0;

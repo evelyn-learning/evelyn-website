@@ -14,17 +14,17 @@ import { Mic, ChevronDown, ExternalLink, RotateCcw } from 'lucide-react';
 import {
   CURATED_DEMO_LESSONS,
   type CuratedDemoLesson,
-} from '@/lib/tutor/demo/curated-demo-lessons';
+} from '@core/demo/curated-demo-lessons';
 import {
   ACCENT_CARD_HINTS,
-} from '@/lib/tutor/demo/teacher-display';
+} from '@core/demo/teacher-display';
 import {
   DEMO_TEACHERS,
   resolveInitialTeacherId,
   type TeacherPersonaWire,
-} from '@/lib/tutor/ai/teacher-persona';
-import { accentFromTimezone } from '@/lib/tutor/voice/geo-accent';
-import { teachersForAccent } from '@/lib/tutor/voice/cartesia-voice-registry';
+} from '@core/ai/teacher-persona';
+import { accentFromTimezone } from '@core/voice/geo-accent';
+import { teachersForAccent } from '@core/voice/cartesia-voice-registry';
 import { trackEvent } from '@/lib/analytics/events';
 
 // Same key as /tutor so a choice made here carries into the full app.

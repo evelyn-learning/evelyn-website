@@ -17,7 +17,7 @@
 import { strict as assert } from 'node:assert';
 import { PERSONA_IDS } from './fixtures/personas';
 import { DEMO_PICKER_START, SUBSCRIBED_PICKER_START } from './run-harness';
-import { DEMO_TEACHERS } from '../../../src/lib/tutor/ai/teacher-persona';
+import { DEMO_TEACHERS } from '@core/ai/teacher-persona';
 import {
   SCENARIO_MAP,
   REPLAY_TASK_IDS,

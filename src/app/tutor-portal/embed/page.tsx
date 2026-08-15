@@ -26,8 +26,8 @@ import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import type { TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
-import { cartesiaSpeedForVoiceId } from '@/lib/tutor/voice/cartesia-voice-registry';
+import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
+import { cartesiaSpeedForVoiceId } from '@core/voice/cartesia-voice-registry';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).

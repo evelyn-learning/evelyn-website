@@ -27,7 +27,7 @@ import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
-import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@/lib/tutor/ai/teacher-persona';
+import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
   assembleOpeningInput,

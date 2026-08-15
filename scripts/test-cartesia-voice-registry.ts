@@ -10,7 +10,7 @@ import {
   cartesiaSpeedForVoiceId,
   resolveCartesiaVoice,
   teachersForAccent,
-} from '../src/lib/tutor/voice/cartesia-voice-registry';
+} from '@core/voice/cartesia-voice-registry';
 
 let passed = 0;
 function check(name: string, fn: () => void) {

@@ -20,7 +20,7 @@ import { resolveToolSubjects, type CatalogSubject } from './tool-subject-taxonom
 import type { TutorBranding } from './branding/types';
 import { EVELYN_BRANDING } from './branding/evelyn';
 import { renderBrandingBlock } from './branding/render';
-import { renderTeacherPersonaBlock, type TeacherPersonaWire } from './teacher-persona';
+import { renderTeacherPersonaBlock, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 
 /** Map a level/grade string ("3", "K", "high-school", "6-8") to the
  *  numeric grade used by the catalog filter. Defaults to mid-K-12 when

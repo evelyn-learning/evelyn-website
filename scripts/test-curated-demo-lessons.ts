@@ -9,7 +9,7 @@
 
 import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
 import { resolvePlanCell } from '../src/lib/tutor/lesson-plan/resolve-cell';
-import { CURATED_DEMO_LESSONS } from '../src/lib/tutor/demo/curated-demo-lessons';
+import { CURATED_DEMO_LESSONS } from '@core/demo/curated-demo-lessons';
 
 let failures = 0;
 const fail = (msg: string) => {
