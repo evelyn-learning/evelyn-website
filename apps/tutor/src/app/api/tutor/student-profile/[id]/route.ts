@@ -19,6 +19,8 @@ import {
   resolveSettledGaps,
   upsertSessionMemory,
   recordPlanContentSeen,
+  identityResolutionEnabled,
+  resolveProfileId,
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
@@ -28,6 +30,12 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { checkEmbedAuth } from '@/lib/tutor/portal/embed-token';
 import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
+
+/** M1c Task 5 — this route is internal/retail (`/api/tutor/**`, embed-token
+ *  auth, not `withPortalAuth`), so it resolves under the reserved 'evelyn'
+ *  partner id rather than a verified partner. Flag-gated; see
+ *  identityResolutionEnabled. */
+const RETAIL_PARTNER_ID = 'evelyn';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -39,7 +47,11 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!auth.allow) {
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
   }
-  const profile = await getOrCreateStudentProfile(id);
+  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
+  const profileId = identityResolutionEnabled()
+    ? await resolveProfileId({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id })
+    : id;
+  const profile = await getOrCreateStudentProfile(profileId);
   const responseBody: Record<string, unknown> = {
     profile,
     // Task D1: interests ride the preferences line only behind the pedagogy
@@ -199,7 +211,11 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     }
   }
 
-  let profile = await getOrCreateStudentProfile(id);
+  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
+  const profileId = identityResolutionEnabled()
+    ? await resolveProfileId({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id })
+    : id;
+  let profile = await getOrCreateStudentProfile(profileId);
 
   if (Array.isArray(body.masteryDeltas) && body.masteryDeltas.length) {
     profile = applyMasteryDeltas(profile, body.masteryDeltas);

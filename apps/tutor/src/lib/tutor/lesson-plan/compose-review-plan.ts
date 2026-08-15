@@ -87,6 +87,10 @@ export interface ComposeReviewInput {
   los: Array<{ loId: string; title: string }>;
   sessionMinutes?: number;
   subject?: string;
+  /** M1c Task 5 — the calling portal route's verified `auth.partnerId`,
+   *  threaded through to getLearnerHints for identity resolution. Only
+   *  used (and only required) when identityResolutionEnabled() is on. */
+  partnerId?: string;
   /** DI seam for tests: stage-2 expander; defaults to the real
    *  LLM-backed one (generate-from-text.ts's expandSegmentsForLOs). */
   expandFn?: typeof expandSegmentsForLOs;
@@ -148,7 +152,7 @@ export async function composeReviewPlan(input: ComposeReviewInput): Promise<Less
   // getLearnerHints never throws (falls back to the neutral steady/no-gaps
   // default on any error) — same conditioning Task 12 applies to fresh
   // lesson generation, per spec §6.2.
-  const learner = await getLearnerHints(input.studentId, input.subject);
+  const learner = await getLearnerHints(input.studentId, input.subject, input.partnerId);
 
   const expandFn = input.expandFn ?? expandSegmentsForLOs;
   const genInput: GenerateFromTextInput = {

@@ -562,6 +562,18 @@ export function recordPlanContentSeen(
   return { ...profile, planContentSeen: { ...(profile.planContentSeen ?? {}), [planId]: next } };
 }
 
+/**
+ * M1c: identity resolution is flag-gated because resolveProfileId does NOT adopt
+ * a pre-existing row lacking partnerId/externalStudentId — it mints a new
+ * surrogate _id. Turning this on before the Task 6 backfill has stamped the 495
+ * existing profiles would hand every existing student a blank profile while
+ * their mastery stayed on the old _id. Flip it at rollout step 5a, after the
+ * backfill and the index build. Default off so a deploy is always safe.
+ */
+export function identityResolutionEnabled(): boolean {
+  return process.env.PORTAL_IDENTITY_RESOLUTION === 'on';
+}
+
 export interface ResolveProfileInput {
   partnerId: string;
   externalStudentId: string;

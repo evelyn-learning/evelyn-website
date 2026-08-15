@@ -25,7 +25,18 @@
 import { LearnerStateProjectionModel, buildLearnerStateProjectionId } from '@/models';
 import connectDB from '@core/db';
 import { getLessonPlan } from '../lesson-plan/store';
-import { getOrCreateStudentProfile, isGapStale } from '../student-profile/store';
+import {
+  getOrCreateStudentProfile,
+  isGapStale,
+  identityResolutionEnabled,
+  resolveProfileId,
+} from '../student-profile/store';
+
+/** M1c Task 5 — this module's sole caller is the internal/retail
+ *  `/api/tutor/student-profile/[id]` route (embed-token auth, not
+ *  `withPortalAuth`), so the profile-store read below resolves under the
+ *  reserved 'evelyn' partner id. Flag-gated; see identityResolutionEnabled. */
+const RETAIL_PARTNER_ID = 'evelyn';
 import { TUNING } from './estimator';
 
 /** How many of the lesson's LOs / the student's active gaps this block will
@@ -154,7 +165,14 @@ export async function getLearnerContextBlock(
       };
     });
 
-    const profile = await getOrCreateStudentProfile(studentId);
+    // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
+    // Only the profile-store read resolves — the projections query above
+    // stays keyed on the raw `studentId` (learner-model identity space,
+    // untouched by this task).
+    const profileId = identityResolutionEnabled()
+      ? await resolveProfileId({ partnerId: RETAIL_PARTNER_ID, externalStudentId: studentId })
+      : studentId;
+    const profile = await getOrCreateStudentProfile(profileId);
     const gaps: LearnerContextGap[] = profile.gaps
       .filter((g) => (g.status === 'confirmed' || g.status === 'open') && !isGapStale(g, now))
       .sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt))

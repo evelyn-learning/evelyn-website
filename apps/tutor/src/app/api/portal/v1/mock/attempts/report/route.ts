@@ -14,7 +14,7 @@ import { defaultGradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 import { mapMockError } from '@/lib/tutor/mock-exam/route-errors';
 
-export const GET = withPortalAuth(async (req) => {
+export const GET = withPortalAuth(async (req, auth) => {
   const u = new URL(req.url);
   const studentId = u.searchParams.get('studentId');
   const attemptId = u.searchParams.get('attemptId');
@@ -22,7 +22,10 @@ export const GET = withPortalAuth(async (req) => {
     return NextResponse.json({ error: 'bad_request', reason: 'studentId and attemptId required' }, { status: 400 });
   }
   try {
-    const report = await getReport(mongoMockStores(), studentId, attemptId, { gradeDeps: defaultGradeDeps() });
+    const report = await getReport(mongoMockStores(), studentId, attemptId, {
+      gradeDeps: defaultGradeDeps(),
+      partnerId: auth.partnerId,
+    });
     if (report.status === 'grading') {
       return NextResponse.json({ state: 'grading' }, { status: 202 });
     }

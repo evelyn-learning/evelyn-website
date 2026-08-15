@@ -14,7 +14,11 @@
  */
 
 import { getStudentElo } from './store';
-import { getOrCreateStudentProfile } from '@/lib/tutor/student-profile/store';
+import {
+  getOrCreateStudentProfile,
+  identityResolutionEnabled,
+  resolveProfileId,
+} from '@/lib/tutor/student-profile/store';
 import { TUNING } from './estimator';
 
 export type AbilityBand = 'building' | 'steady' | 'strong';
@@ -48,13 +52,26 @@ export function bandForElo(elo: { rating: number; count: number } | null): Abili
  *  Any failure along the way — DB unreachable, whatever — falls back to
  *  the same default a fresh student gets; hints must never fail the
  *  caller. */
-export async function getLearnerHints(studentId: string, subject?: string): Promise<LearnerHints> {
+export async function getLearnerHints(
+  studentId: string,
+  subject?: string,
+  /** M1c Task 5 — the calling portal route's verified `auth.partnerId`.
+   *  Only used (and only required) when identityResolutionEnabled() is on;
+   *  direct/test callers may omit it while the flag is off. */
+  partnerId?: string,
+): Promise<LearnerHints> {
   if (studentId.startsWith('trial:')) return DEFAULT_HINTS;
 
   try {
+    // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
+    // Only the profile-store read resolves — getStudentElo stays keyed on
+    // the raw `studentId` (learner-model identity space, untouched here).
+    const profileId = identityResolutionEnabled()
+      ? await resolveProfileId({ partnerId: partnerId ?? '', externalStudentId: studentId })
+      : studentId;
     const [elo, profile] = await Promise.all([
       getStudentElo(studentId, subject),
-      getOrCreateStudentProfile(studentId),
+      getOrCreateStudentProfile(profileId),
     ]);
 
     const gapTopics = profile.gaps

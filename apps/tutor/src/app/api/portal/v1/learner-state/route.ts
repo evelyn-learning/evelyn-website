@@ -33,7 +33,12 @@ import {
   LearnerStateSnapshotModel,
   MockAttempt,
 } from '@/models';
-import { getOrCreateStudentProfile, isGapStale } from '@/lib/tutor/student-profile/store';
+import {
+  getOrCreateStudentProfile,
+  isGapStale,
+  identityResolutionEnabled,
+  resolveProfileId,
+} from '@/lib/tutor/student-profile/store';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 import { trendOf, TUNING } from '@/lib/tutor/learner-model/estimator';
 import { getBlueprint, type ScoringSpec } from '@/lib/tutor/mock-exam/blueprints';
@@ -70,7 +75,7 @@ function examKeyForScale(scale: ReturnType<typeof scaleForTopic>, courseTopic: s
   return null;
 }
 
-async function handle(req: NextRequest, auth: { body: unknown }): Promise<Response> {
+async function handle(req: NextRequest, auth: { body: unknown; partnerId: string }): Promise<Response> {
   const parsed = LearnerStateRequestSchema.safeParse(readRawRequest(req, auth.body));
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
@@ -85,7 +90,14 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
   // parse) — it must NOT touch `los`, whose `estimate` is nullable-but-
   // required: stripping a null estimate would make the field go missing and
   // fail the contract parse below instead of passing it.
-  const profile = await getOrCreateStudentProfile(studentId);
+  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
+  // Only the student-profile store's key resolves — the learner-model reads
+  // below (projections/evidence/snapshots/mock attempts) stay keyed on the
+  // raw `studentId`, an unrelated identity space this task does not touch.
+  const profileId = identityResolutionEnabled()
+    ? await resolveProfileId({ partnerId: auth.partnerId, externalStudentId: studentId })
+    : studentId;
+  const profile = await getOrCreateStudentProfile(profileId);
   const gaps = stripNullsDeep(profile.gaps.filter((g) => !isGapStale(g)));
 
   if (studentId.startsWith('trial:')) {

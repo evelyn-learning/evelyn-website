@@ -101,7 +101,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // cache at all. getLearnerHints never throws — no studentId means no
   // lookup at all (`learner` stays undefined, generation is unconditioned,
   // byte-identical to pre-Task-12 behavior).
-  const learner = studentId ? await getLearnerHints(studentId, subject) : undefined;
+  const learner = studentId ? await getLearnerHints(studentId, subject, auth.partnerId) : undefined;
 
   let text = requestText;
   let topic = requestTopic;

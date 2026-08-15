@@ -31,7 +31,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
     return NextResponse.json({ error: 'invalid_request', issues: parsed.error.issues }, { status: 400 });
   }
   try {
-    const plan = await composeReviewPlan({ ...parsed.data });
+    const plan = await composeReviewPlan({ ...parsed.data, partnerId: auth.partnerId });
     return NextResponse.json(
       ReviewPlanResponseSchema.parse({
         planId: plan.id,

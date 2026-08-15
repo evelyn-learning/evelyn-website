@@ -31,6 +31,8 @@ import {
   resolveSettledGaps,
   appendSessionMemory,
   saveStudentProfile,
+  identityResolutionEnabled,
+  resolveProfileId,
 } from '@/lib/tutor/student-profile/store';
 import { resolveSettledPrereqGaps } from '@/lib/tutor/concept-registry/resolve-prereq-gaps';
 import { canonicalizeConceptLabel } from '@/lib/tutor/concept-registry/normalizer';
@@ -274,7 +276,15 @@ export async function emitSessionResult(
   req: SessionEmitRequest,
   opts: EmitOptions = {},
 ): Promise<SessionResult> {
-  const profile = await getOrCreateStudentProfile(req.studentId);
+  // M1c Task 5 — flag-gated identity resolution; see identityResolutionEnabled.
+  // Both real callers of emitSessionResult (session-result/route.ts,
+  // assessment.ts's submitAssessment) are portal-only and thread
+  // opts.partnerId from auth.partnerId; direct/test callers may omit it
+  // while the flag is off.
+  const profileId = identityResolutionEnabled()
+    ? await resolveProfileId({ partnerId: opts.partnerId ?? '', externalStudentId: req.studentId })
+    : req.studentId;
+  const profile = await getOrCreateStudentProfile(profileId);
 
   const artifacts =
     req.renderedArtifacts ??
