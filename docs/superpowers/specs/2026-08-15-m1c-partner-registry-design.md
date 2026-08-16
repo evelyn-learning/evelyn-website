@@ -223,13 +223,32 @@ door.
    returns the payload — `student-profile/[id]/route.ts` holds it and currently ignores it.
 3. Genuinely retail traffic, with no embed token → `'evelyn'`.
 
-**Consequence, and it is a gate on the flag flip:** a route that writes student-keyed data with **no
-authentication** cannot be partner-scoped, because it has no trustworthy partner id and the client
-must never be believed about which partner it is. `/api/tutor/topic-notes/**` is in that state today
-("Add auth when retail launches"). Such routes must gain embed-token auth **before**
-`PORTAL_IDENTITY_RESOLUTION` is turned on. Until then they would keep writing under `'evelyn'` and
-silently strand partner students' notes. This was a pre-existing hole in authentication; M1c turns it
-into a correctness problem as well, which is what forces it now.
+**The token is optional on internal routes, and that is deliberate.** An earlier draft of this section
+said these routes "must gain embed-token auth" before the flip. That over-reached, and Task 5's second
+review caught it: `/tutor` and `/tutor/settings` are **retail** surfaces that legitimately have no
+embed token, so making one mandatory returns 401 to real users the moment the code deploys — before
+any flag is flipped, defeating the point of gating.
+
+The correct rule for an internal route is therefore:
+
+- **Token absent** → retail. Use `'evelyn'`. Do **not** 401; this is the pre-existing behaviour and
+  must not regress.
+- **Token present** → it must be *valid and student-bound*. Derive `partner_id` from it. A token that
+  fails verification, or whose `student_id` does not bind to the path's student, must **not**
+  contribute a partner id — otherwise a caller who obtained any signed token could choose whose
+  namespace to write into. Note `checkEmbedAuth` currently returns its payload alongside a
+  `student_mismatch` reason, and in `log` mode allows the request: the payload must not be trusted for
+  partner derivation in that case.
+
+This keeps the partner-embedded split closed (embed clients do send tokens) without breaking retail.
+It leaves the pre-existing unauthenticated-write exposure on `/api/tutor/topic-notes/**` exactly as it
+was — that is a separate security item, not something M1c should fix by breaking retail.
+
+**Known asymmetry, recorded not fixed:** `verifyEmbedToken` resolves secrets from the environment via
+`getPartnerSecret` and applies none of the registry checks `withPortalAuth` enforces — `kind ===
+'partner'`, `status !== 'suspended'`. Now that an embed token picks a write namespace, a suspended
+partner whose secret is still in `PORTAL_PARTNER_SECRETS` keeps that ability after the portal API has
+cut it off. Routing embed verification through the registry is the fix; it is out of M1c's scope.
 
 ## 4.1 Which stores use the resolved id — and which do not
 

@@ -1776,6 +1776,13 @@ Each step is independently reversible. **Do not batch them.**
 3. `npm run backfill:partner-namespace` (dry-run) — review the attribution table.
 4. `npm run backfill:partner-namespace -- --write`.
 5. `npm run backfill:partner-namespace -- --build-index` — the build is the verification; it refuses on any duplicate.
+5a. **Preconditions, both of which must hold before the flip:**
+    (i) `EMBED_TOKEN_ENFORCE=on` in the target environment. With it `off`, `checkEmbedAuth` allows a
+    request with no token, `partner_id` is undefined, and internal routes fall back to `'evelyn'` —
+    which is exactly the split spec §4.0 exists to prevent. **Verified 2026-08-15: production already
+    has `EMBED_TOKEN_ENFORCE=on`**, so this is a guard for other environments and for any new node.
+    (ii) `/api/tutor/topic-notes/**` has embed-token auth (done in Task 5 round 2).
+
 5a. **Only now set `PORTAL_IDENTITY_RESOLUTION=on` and deploy.** Until this flip, call sites keep using
     the raw id, so existing students keep their profiles. Flipping before step 4 gives every existing
     student a blank profile — see the Global Constraint. Reversible: unset the flag and redeploy.
