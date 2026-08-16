@@ -542,7 +542,10 @@ note after step 7.
    `.env.local.production` and redeploy — the whole file is uploaded, so a removed line really is
    removed on the server. What this turns on: `min(rpm, burst)` per **(partner, endpoint)** per
    minute — `60/min` for any partner still on the env fallback — and `dailyQuota`, which is also per
-   (partner, endpoint), so a partner's real daily ceiling is `dailyQuota × N` allowed endpoints.
+   (partner, endpoint). Note what "endpoint" means in that key: `withPortalAuth` counts by
+   `u.pathname`, the actual request path, while `allowedEndpoints` holds path *prefixes*. A
+   single-prefix row covers 23 route files today, so the real daily ceiling is `dailyQuota` times the
+   number of distinct paths the partner calls — not `dailyQuota × allowlist entries`.
 
 **Step 6 is only reversible until the first new student resolves under it.** For a backfilled
 student the resolve is an identity function (`externalStudentId == _id`), so turning the flag back

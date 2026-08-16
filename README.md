@@ -126,11 +126,17 @@ Two limits facts that read the opposite of how the field names sound, and
 that anyone planning a billing run needs before they plan it:
 
 - **`dailyQuota` is per `(partner, endpoint)`, not per partner**
-  (`portal/limits.ts`, and the `PartnerCounter` key shape). A partner's real
-  daily ceiling is `dailyQuota × N` allowed endpoints; there is no
-  partner-wide counter. The same applies to the burst cap that step 7 turns
-  on: `min(rpm, burst)` per `(partner, endpoint)` per minute — `60/min` for
-  any partner still on the `{rpm 600, burst 60}` env fallback.
+  (`portal/limits.ts`, and the `PartnerCounter` key shape), and "endpoint"
+  here is the **request path**, not the allowlist entry: `withPortalAuth`
+  keys the counter by `u.pathname`, while `allowedEndpoints` holds path
+  *prefixes*. The standard single-prefix row (`/api/portal/v1/`) covers 23
+  route files today, so a partner's real daily ceiling is `dailyQuota` times
+  the number of distinct paths it actually calls — **not** `dailyQuota ×
+  allowlist entries`, which is the reading that made an earlier version of
+  this note roughly 23× low. There is no partner-wide counter.
+  The same keying applies to the burst cap that step 7 turns on:
+  `min(rpm, burst)` per `(partner, path)` per minute — `60/min` for any
+  partner still on the `{rpm 600, burst 60}` env fallback.
 - **The 48h TTL on `PartnerCounter` covers the `day` documents too**
   (`models/PartnerCounter.ts`), not just the minute ones. The day counter is
   the billing substrate and it survives **two days**; no export job exists
