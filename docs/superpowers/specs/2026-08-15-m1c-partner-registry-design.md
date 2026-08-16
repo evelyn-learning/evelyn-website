@@ -434,13 +434,31 @@ Following the repo's script-based oracle (`npm run test:all`, currently 181 entr
 
 Each step is independently reversible:
 
-1. Ship the `Partner` collection and seed it from `PORTAL_PARTNER_SECRETS`; env still wins.
-2. Backfill dry-run; review the attribution table.
-3. Backfill write pass.
-4. Build the unique index — the migration's own verification.
-5. Flip the secret source to the registry; keep env as fallback for one deploy.
-6. Enable limits in **report-only** mode; observe.
-7. Enforce.
+1. **Deploy with `PORTAL_LIMITS_MODE=report-only` set in the same deploy.** Unset means *enforce* —
+   the mode is only consulted to downgrade a block — and `checkPartnerLimits` runs inside
+   `withPortalAuth` for every portal call the moment this code is live. An earlier draft scheduled the
+   observation window last, which would have meant enforcement ran for the entire rollout with the env
+   fallback's `{rpm 600, burst 60}` and the window observed nothing. Open it with the deploy.
+2. Run the seed (`npm run seed:partner-registry`). Registry rows now win per-partner; env remains the
+   fallback for partners without a row.
+3. Backfill dry-run; review the attribution table. Confirm `already-migrated: 0` and `ambiguous: 0` —
+   these, not the index build, are the real gate (§5).
+4. Backfill write pass.
+5. Build the unique partial index.
+6. Set `PORTAL_IDENTITY_RESOLUTION=on` and deploy. **Preconditions:** `EMBED_TOKEN_ENFORCE=on` in the
+   target environment, and steps 4–5 complete. Until this flip, call sites use the raw id, so existing
+   students keep their profiles.
+7. Observe, then remove `PORTAL_LIMITS_MODE` to enforce limits.
+
+**NOT a step: removing `PORTAL_PARTNER_SECRETS`.** An earlier draft scheduled it, and a later fix
+softened it to "once every real partner has a registry row". Both are wrong, and the second teaches
+the wrong model — **a registry row does not cover these paths at all.** Three call sites resolve the
+secret through `getPartnerSecret`, which reads `process.env` **only** and never consults the registry:
+`embed-token.ts`, `replay-token.ts`, and the demo-token route. `verifyEmbedToken` gates the
+`tutor-portal/embed` page that academy and Crimsora iframe, plus six `/api/tutor/**` routes. Removing
+the env var returns `unknown partner` for **every** partner regardless of registry state — an
+immediate outage of every embedded session. Unblocking it means migrating those three call sites off
+`getPartnerSecret`, which is not M1c.
 
 ---
 
