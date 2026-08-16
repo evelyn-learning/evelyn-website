@@ -80,7 +80,10 @@ recording this now rather than leaving it to be discovered mid-incident.
 
 Two ops commands (run from `apps/tutor`; neither is a `test:*` entry, so
 neither runs in CI or `npm run test:all`). **Both default to a dry run** —
-pass `--write` to apply either one:
+pass `--write` to apply the profile/partner-row writes. The backfill's index
+build is a **separate** flag: `--build-index` builds the index whether or
+not `--write` is passed, so it is never implied by a dry run and never
+gated by one:
 
 - `npm run seed:partner-registry` — creates/refreshes `Partner` rows from
   `PORTAL_PARTNER_SECRETS`, plus a `kind: 'first-party'` `evelyn` row with no
@@ -93,9 +96,12 @@ pass `--write` to apply either one:
   `metering` and `kind` are never touched once a row exists, because each is
   either operator state (e.g. `status: 'suspended'` — the incident-response
   lever) or fixed at creation (`kind`, so a `kind: 'test'` fixture like
-  `portalA` can never be silently reclassified as `'partner'`). **Undo:**
-  delete the row from the `partners` collection; the `PORTAL_PARTNER_SECRETS`
-  env fallback resumes automatically within 60s (`registry.ts`'s cache TTL).
+  `portalA` can never be silently reclassified as `'partner'`). A running
+  server picks up a newly seeded row **within 60s**, not immediately: the
+  seed's `invalidatePartner` call clears the cache of its own `ts-node`
+  process, not the Next server's. **Undo:** delete the row from the
+  `partners` collection; the `PORTAL_PARTNER_SECRETS` env fallback resumes
+  automatically within 60s (`registry.ts`'s cache TTL).
 - `npm run backfill:partner-namespace` — stamps `(partnerId,
   externalStudentId)` onto existing `StudentProfile` rows and (with
   `--build-index`) builds the unique index that makes cross-partner
@@ -116,9 +122,25 @@ Two flags gate the rollout:
   backfill has run and the unique index is built — flipping earlier gives
   every existing student a blank profile.
 
+Two limits facts that read the opposite of how the field names sound, and
+that anyone planning a billing run needs before they plan it:
+
+- **`dailyQuota` is per `(partner, endpoint)`, not per partner**
+  (`portal/limits.ts`, and the `PartnerCounter` key shape). A partner's real
+  daily ceiling is `dailyQuota × N` allowed endpoints; there is no
+  partner-wide counter. The same applies to the burst cap that step 7 turns
+  on: `min(rpm, burst)` per `(partner, endpoint)` per minute — `60/min` for
+  any partner still on the `{rpm 600, burst 60}` env fallback.
+- **The 48h TTL on `PartnerCounter` covers the `day` documents too**
+  (`models/PartnerCounter.ts`), not just the minute ones. The day counter is
+  the billing substrate and it survives **two days**; no export job exists
+  in M1c. Anything billing needs must be read out of Mongo inside that
+  window, or the TTL must be lengthened first.
+
 ### Rollout order (production)
 
-Each step is independently reversible; do not batch them. Two hard
+Steps 1–5 are reversible; step 6 is only reversible until the first new
+student resolves under it (see below). Do not batch them. Two hard
 preconditions before any of this starts:
 
 1. **`EMBED_TOKEN_ENFORCE=on`** in the target environment (production
@@ -127,23 +149,75 @@ preconditions before any of this starts:
 2. **The seed script must run before the backfill.** The backfill aborts
    otherwise (see above).
 
+**Steps 2–5 do not run on the server.** They are `ts-node` scripts and the
+production server has no TS tooling (`--omit=dev`); nothing loads
+`.env.local` for `ts-node`, so every variable is supplied inline
+(`@core/db` reads `MONGODB_URI` at module load and throws if it is unset).
+Production Mongo is on the server's loopback, so tunnel to it and force
+`directConnection=true` — replica-set discovery otherwise resolves the
+server's internal hostnames. Verify `MONGODB_URI` is the tunnelled
+production URI before every step: a dev URI here seals dev secrets into rows
+that then win over the env fallback.
+
+```bash
+ssh -L 2710:127.0.0.1:2710 <prod-host>      # leave open in a second shell
+cd apps/tutor
+export MONGODB_URI='mongodb://<user>:<pass>@127.0.0.1:2710/<db>?replicaSet=rs0&directConnection=true'
+export PORTAL_PARTNER_SECRETS='<the value from .env.local.production>'
+export PORTAL_SECRET_ENC_KEY='<the key from step 1>'
+```
+
 Ordered steps:
 
-1. Set and back up `PORTAL_SECRET_ENC_KEY`, and **deploy with
-   `PORTAL_LIMITS_MODE=report-only` set in that same deploy** — not later.
-2. `npm run seed:partner-registry` dry run, review; then `-- --write`.
-   Registry rows now win per-partner; env remains the fallback for any
-   partner without a row.
+1. Generate `PORTAL_SECRET_ENC_KEY`
+   (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`),
+   put it in `.env.local.production`, back it up with the other production
+   secrets, and **deploy with `PORTAL_LIMITS_MODE=report-only` set in that
+   same deploy** — not later. The key does not exist in any environment yet.
+2. `npm run seed:partner-registry` — this is a **dry run**; it writes
+   nothing. It aborts before connecting if `PORTAL_SECRET_ENC_KEY` is unset
+   or unusable, and prints that key's fingerprint (sha256 of the base64 env
+   value, first 8 hex chars). Review the plan and **check the fingerprint
+   equals the deployed key's** —
+   `printf %s "$PORTAL_SECRET_ENC_KEY" | shasum -a 256 | cut -c1-8` on the
+   server. Then `npm run seed:partner-registry -- --write`. Registry rows now win
+   per-partner; env remains the fallback for any partner without a row, and
+   the running server picks the rows up within 60s.
+   **Step 2b — verify before continuing:** make one signed request per
+   seeded `kind: 'partner'` row (not the `evelyn` first-party row — it has
+   no secret and 401s by design) against an endpoint on its allowlist, and
+   confirm `200`, not `401 unknown_partner` (sign with `signPortalRequest` from
+   `@evelyn/portal-contract/auth`). A wrong-but-valid 32-byte key seals
+   cleanly, writes rows and exits 0 — the server then cannot open those
+   secrets, the partner resolves with `secrets: []`, and because a registry
+   row wins over the env fallback every live partner 401s within one 60s
+   cache TTL. Reviewing the seed's output cannot detect this; the undo
+   (delete the rows, env fallback resumes within 60s) only helps if somebody
+   is watching.
 3. `npm run backfill:partner-namespace` dry run; review the attribution
    table. `already-migrated: 0` and `ambiguous: 0` are the real gate — the
    index build below succeeds regardless of attribution correctness, because
    `externalStudentId` is stamped equal to the already-unique `_id`.
 4. `npm run backfill:partner-namespace -- --write`.
-5. `npm run backfill:partner-namespace -- --build-index`.
+5. `npm run backfill:partner-namespace -- --build-index`. This flag is
+   independent of `--write` — it builds the index either way, so do not pass
+   it before step 4's output has been reviewed.
 6. Set `PORTAL_IDENTITY_RESOLUTION=on` and deploy. Preconditions:
    `EMBED_TOKEN_ENFORCE=on` (already confirmed above) and steps 3–5 complete.
 7. Observe the report-only window, then remove `PORTAL_LIMITS_MODE` — limits
-   enforced.
+   enforced at `min(rpm, burst)` per `(partner, endpoint)` per minute (see
+   the two limits facts above).
+
+**Step 6's revert is not free.** For a backfilled student the resolve is an
+identity function (`externalStudentId == _id`), so turning the flag back off
+is a genuine no-op. But a student **first seen while the flag was on** got a
+surrogate `_id`, and every store is keyed on it — turning the flag off sends
+the call sites back to the raw id and mints a *second, blank* profile, so
+that cohort's mastery, gaps and notes go invisible. That blank profile also
+carries no `partnerId`, so a later `backfill --write` will stamp it with a
+`(partnerId, externalStudentId)` pair the surrogate row already holds and
+die on **E11000 mid-loop**. After an off/on cycle, reconcile those
+duplicates by hand before running the backfill again.
 
 **Not a rollout step, and blocked in M1c: removing `PORTAL_PARTNER_SECRETS`
 from the env.** A registry row does **not** cover this. Three call sites
