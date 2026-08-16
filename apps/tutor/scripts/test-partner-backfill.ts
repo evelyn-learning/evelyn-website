@@ -7,14 +7,17 @@
  * DB is involved and this counts in the oracle.
  */
 import assert from 'node:assert';
+import mongoose from 'mongoose';
 import {
   attributeProfile,
   findUnexpectedPartners,
   planPartnerRows,
   decideBackfill,
   executeBackfill,
+  main as backfillMain,
   type AttributionResult,
 } from './backfill-partner-namespace';
+import { opsMongooseConfigured } from './ops-mongoose';
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>): Promise<void> {
@@ -208,6 +211,42 @@ await test('write gate: a clean decision with write=true calls each dep exactly 
   await executeBackfill(decision, sampleApply, true, deps);
   assert.strictEqual(calls.createPartnerRow, 1, 'exactly one Partner row (evelyn) should be created');
   assert.strictEqual(calls.writeProfile, 1, 'exactly one profile (sampleApply has one entry) should be written');
+});
+
+// --- main(): the autoIndex/autoCreate guards ------------------------------
+// M1c final review, reviewer B finding 7 / mutation M32: deleting
+// `mongoose.set('autoIndex', false)` / `mongoose.set('autoCreate', false)`
+// from main() left every suite green — and that guard is the only thing
+// stopping even a DRY RUN from building TutorSession's TTL index, which
+// DELETES sessions older than 180 days, and from creating collections (an
+// empty `partners` collection was observed appearing from a plain dry run
+// against real prod before the guard existed).
+//
+// Hermetic: this process has no MONGODB_URI, so `connectDB()` throws
+// "MONGODB_URI not configured" synchronously. main() therefore runs its
+// guards and dies at the connection attempt without ever reaching a
+// database — and the guards' effect is observable on Mongoose's global
+// state afterwards.
+
+await test('main(): M32 — autoIndex and autoCreate are BOTH off by the time main() attempts to connect', async () => {
+  mongoose.set('autoIndex', true);
+  mongoose.set('autoCreate', true);
+  assert.strictEqual(opsMongooseConfigured(), false, 'sanity: the guard is genuinely re-armed before the run');
+
+  let error: Error | undefined;
+  try {
+    await backfillMain();
+  } catch (e) {
+    error = e as Error;
+  }
+  assert.match(
+    error?.message ?? '', /MONGODB_URI not configured/,
+    'sanity: main() must have reached the connection attempt (otherwise this asserts nothing)',
+  );
+  assert.strictEqual(
+    opsMongooseConfigured(), true,
+    'main() must disable autoIndex AND autoCreate BEFORE connectDB — a dry run must never build a row-deleting TTL index or create a collection',
+  );
 });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);

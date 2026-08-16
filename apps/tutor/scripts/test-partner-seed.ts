@@ -4,24 +4,39 @@
  * Run: `npm run test:partner-seed`
  *
  * Pure function tests — planSeed/buildSeedEntries/parsePartnerSecretsEnv/
- * checkSecretsEnv and executeSeed (with injected deps + a fake sealer) take
- * everything they need as arguments, so no DB and no PORTAL_SECRET_ENC_KEY
- * are involved. This counts in the hermetic oracle.
+ * checkSecretsEnv/checkSecretKeyEnv and executeSeed (with injected deps + a
+ * fake sealer) take everything they need as arguments, so no DB is involved.
+ * This counts in the hermetic oracle.
+ *
+ * The `main()` section at the bottom (M1c final review, A-C1 + reviewer B
+ * finding 7) is the exception: it calls the script's REAL `main()` in-process
+ * with `process.exit` and the console stubbed and no `MONGODB_URI`. It is
+ * hermetic for the same reason — `connectDB()` throws "MONGODB_URI not
+ * configured" synchronously with nothing configured, so `main()` either
+ * aborts at one of its own gates first (which is the thing under test) or
+ * dies at the connection attempt, and never reaches a database either way.
+ * `checkSecretsEnv` being a well-tested pure function proved nothing about
+ * whether `main()` acts on it; three mutations shipped green because of that.
  */
 import assert from 'node:assert';
+import { createHash, randomBytes } from 'node:crypto';
+import mongoose from 'mongoose';
 import {
   parsePartnerSecretsEnv,
   checkSecretsEnv,
+  checkSecretKeyEnv,
   buildSeedEntries,
   planSeed,
   buildCreateDoc,
   buildUpdateSet,
   executeSeed,
+  main as seedMain,
   ALLOWED_ENDPOINTS,
   DEFAULT_LIMITS,
   EVELYN_PARTNER_ID,
   type SeedPlanRow,
 } from './seed-partner-registry';
+import { opsMongooseConfigured } from './ops-mongoose';
 import {
   ENV_FALLBACK_ALLOWED_ENDPOINTS,
   ENV_FALLBACK_LIMITS,
@@ -312,6 +327,220 @@ await test('executeSeed: invalidate fires exactly once per row, for both create 
   await executeSeed(plan, { crimsora: 'secret-a' }, fakeSeal, true, deps);
   const invalidated = calls.filter((c) => c.op === 'invalidate').map((c) => c.partnerId);
   assert.deepStrictEqual(invalidated, ['crimsora', 'academy', EVELYN_PARTNER_ID]);
+});
+
+// --- checkSecretKeyEnv: the A-C1 gate ------------------------------------
+// A MISSING PORTAL_SECRET_ENC_KEY already failed safely by accident (the
+// seal throws before the first write). A WRONG-BUT-VALID 32-byte key did
+// not: it seals cleanly, writes the rows, exits 0 — and the server, holding
+// a different key, then resolves every partner with secrets:[] and 401s all
+// of them within one 60s cache TTL. Nothing in the code or the runbook
+// caught that before traffic did.
+
+const VALID_KEY = randomBytes(32).toString('base64');
+
+await test('checkSecretKeyEnv: an unset key is rejected as "missing"', () => {
+  assert.deepStrictEqual(checkSecretKeyEnv(undefined), { ok: false, reason: 'missing' });
+});
+
+await test('checkSecretKeyEnv: a usable key returns a fingerprint = sha256(env value).slice(0,8), and never the key itself', () => {
+  const status = checkSecretKeyEnv(VALID_KEY);
+  assert.strictEqual(status.ok, true);
+  if (!status.ok) return;
+  assert.strictEqual(status.fingerprint, createHash('sha256').update(VALID_KEY).digest('hex').slice(0, 8));
+  assert.strictEqual(status.fingerprint.length, 8);
+  assert.ok(!VALID_KEY.includes(status.fingerprint), 'the fingerprint must not be a substring of the key');
+});
+
+await test('checkSecretKeyEnv: two different keys have different fingerprints — this is the whole point of printing it', () => {
+  const a = checkSecretKeyEnv(VALID_KEY);
+  const b = checkSecretKeyEnv(randomBytes(32).toString('base64'));
+  assert.strictEqual(a.ok && b.ok, true);
+  if (a.ok && b.ok) assert.notStrictEqual(a.fingerprint, b.fingerprint);
+});
+
+await test('checkSecretKeyEnv: a key whose seal/open round-trip THROWS is rejected as "unusable" (a wrong-length key)', () => {
+  const status = checkSecretKeyEnv(randomBytes(16).toString('base64'), () => {
+    throw new Error('PORTAL_SECRET_ENC_KEY must decode to 32 bytes, got 16');
+  });
+  assert.strictEqual(status.ok, false);
+  if (status.ok) return;
+  assert.strictEqual(status.reason, 'unusable');
+  assert.match(status.detail ?? '', /32 bytes/);
+});
+
+await test('checkSecretKeyEnv: a key whose round-trip returns a DIFFERENT value is rejected as "unusable"', () => {
+  const status = checkSecretKeyEnv(VALID_KEY, () => 'something-else');
+  assert.strictEqual(status.ok, false);
+  if (status.ok) return;
+  assert.strictEqual(status.reason, 'unusable');
+});
+
+await test('checkSecretKeyEnv: the real (uninjected) round-trip validates the ARGUMENT, not process.env — 32 bytes passes, 16 fails', () => {
+  // Deliberately run with PORTAL_SECRET_ENC_KEY absent from the environment:
+  // the key being checked is the one passed in, so main() can never
+  // fingerprint one value while validating another.
+  const saved = process.env.PORTAL_SECRET_ENC_KEY;
+  delete process.env.PORTAL_SECRET_ENC_KEY;
+  try {
+    assert.strictEqual(checkSecretKeyEnv(VALID_KEY).ok, true);
+    const status = checkSecretKeyEnv(randomBytes(16).toString('base64'));
+    assert.strictEqual(status.ok, false, 'a 16-byte key must not pass the real seal/open round-trip');
+    if (!status.ok) assert.match(status.detail ?? '', /32 bytes/);
+  } finally {
+    if (saved !== undefined) process.env.PORTAL_SECRET_ENC_KEY = saved;
+  }
+});
+
+// --- main(): does it ACT on the gates? -----------------------------------
+// Reviewer B finding 7 / mutations M33 + M34: deleting the checkSecretsEnv
+// abort, or the autoIndex/autoCreate guards, from main() left every suite
+// green. A detector returning the right value proves nothing about whether
+// the code that consumes it acts on it — the standing lesson of this
+// milestone, applied to the one function that had escaped it.
+
+class ExitCalled extends Error {
+  constructor(public readonly code: number) {
+    super(`process.exit(${code})`);
+  }
+}
+
+interface MainRun {
+  /** The code main() passed to process.exit, or null if it never exited. */
+  exitCode: number | null;
+  stdout: string;
+  stderr: string;
+  /** The error main() threw instead of exiting (in this env, connectDB's). */
+  error?: Error;
+}
+
+/** Run the REAL main() with a controlled env, process.exit and console. */
+async function runSeedMain(env: Record<string, string | undefined>): Promise<MainRun> {
+  const savedEnv: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(env)) {
+    savedEnv[k] = process.env[k];
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
+  const realExit = process.exit;
+  const realLog = console.log;
+  const realError = console.error;
+  let stdout = '';
+  let stderr = '';
+  console.log = (...a: unknown[]) => { stdout += `${a.map(String).join(' ')}\n`; };
+  console.error = (...a: unknown[]) => { stderr += `${a.map(String).join(' ')}\n`; };
+  process.exit = ((code?: number) => { throw new ExitCalled(code ?? 0); }) as unknown as typeof process.exit;
+
+  let exitCode: number | null = null;
+  let error: Error | undefined;
+  try {
+    await seedMain();
+  } catch (e) {
+    if (e instanceof ExitCalled) exitCode = e.code;
+    else error = e as Error;
+  } finally {
+    process.exit = realExit;
+    console.log = realLog;
+    console.error = realError;
+    for (const [k, v] of Object.entries(savedEnv)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+  return { exitCode, stdout, stderr, error };
+}
+
+const GOOD_SECRETS = JSON.stringify({ crimsora: 'plaintext-crimsora-secret' });
+
+await test('main(): sanity — with both envs good, main() gets past every gate and dies at connectDB (no MONGODB_URI here)', async () => {
+  const run = await runSeedMain({ PORTAL_PARTNER_SECRETS: GOOD_SECRETS, PORTAL_SECRET_ENC_KEY: VALID_KEY });
+  assert.strictEqual(run.exitCode, null, `main() must not abort on a good env; stderr was: ${run.stderr}`);
+  assert.match(
+    run.error?.message ?? '', /MONGODB_URI not configured/,
+    'reaching connectDB is the proof that both gates PASSED rather than being skipped',
+  );
+});
+
+await test('main(): M33 — a missing PORTAL_PARTNER_SECRETS aborts with exit 1, before any DB connection', async () => {
+  const run = await runSeedMain({ PORTAL_PARTNER_SECRETS: undefined, PORTAL_SECRET_ENC_KEY: VALID_KEY });
+  assert.strictEqual(run.exitCode, 1, 'main() must exit non-zero, not seed only evelyn and exit 0');
+  assert.strictEqual(run.error, undefined, 'it must abort BEFORE connectDB — reaching it would throw MONGODB_URI instead');
+  assert.match(run.stderr, /PORTAL_PARTNER_SECRETS is not set/);
+});
+
+await test('main(): a malformed PORTAL_PARTNER_SECRETS aborts with exit 1 and its OWN message', async () => {
+  const run = await runSeedMain({ PORTAL_PARTNER_SECRETS: '{not json', PORTAL_SECRET_ENC_KEY: VALID_KEY });
+  assert.strictEqual(run.exitCode, 1);
+  assert.match(run.stderr, /not a valid JSON object/);
+});
+
+await test('main(): A-C1 — a missing PORTAL_SECRET_ENC_KEY aborts with exit 1, before any DB connection', async () => {
+  const run = await runSeedMain({ PORTAL_PARTNER_SECRETS: GOOD_SECRETS, PORTAL_SECRET_ENC_KEY: undefined });
+  assert.strictEqual(run.exitCode, 1);
+  assert.strictEqual(run.error, undefined, 'the key gate must precede connectDB, exactly like the secrets gate');
+  assert.match(run.stderr, /PORTAL_SECRET_ENC_KEY is not set/);
+  assert.ok(!/fingerprint/i.test(run.stdout), 'no fingerprint can be printed for a key that does not exist');
+});
+
+await test('main(): A-C1 — a present but UNUSABLE key (16 bytes) aborts with exit 1 before any DB connection', async () => {
+  const run = await runSeedMain({
+    PORTAL_PARTNER_SECRETS: GOOD_SECRETS,
+    PORTAL_SECRET_ENC_KEY: randomBytes(16).toString('base64'),
+  });
+  assert.strictEqual(run.exitCode, 1);
+  assert.strictEqual(run.error, undefined);
+  assert.match(run.stderr, /PORTAL_SECRET_ENC_KEY is set but unusable/);
+});
+
+await test('main(): A-C1 — the key FINGERPRINT is printed in DRY RUN (this is what makes a dry run useful for C1)', async () => {
+  // No --write in this process's argv, so WRITE is false: this IS the dry
+  // run. A wrong-but-valid key is invisible to every other check in the
+  // script, so the dry run's only possible defence is showing the operator
+  // a fingerprint to compare against the deployed server's — before any row
+  // exists to be unopenable.
+  const run = await runSeedMain({ PORTAL_PARTNER_SECRETS: GOOD_SECRETS, PORTAL_SECRET_ENC_KEY: VALID_KEY });
+  const expected = createHash('sha256').update(VALID_KEY).digest('hex').slice(0, 8);
+  assert.ok(
+    run.stdout.includes(`PORTAL_SECRET_ENC_KEY fingerprint: ${expected}`),
+    `dry-run stdout must carry the key fingerprint; got:\n${run.stdout}`,
+  );
+});
+
+await test('main(): no path prints the key or a plaintext secret — only the fingerprint', async () => {
+  for (const env of [
+    { PORTAL_PARTNER_SECRETS: GOOD_SECRETS, PORTAL_SECRET_ENC_KEY: VALID_KEY },
+    { PORTAL_PARTNER_SECRETS: GOOD_SECRETS, PORTAL_SECRET_ENC_KEY: undefined },
+    { PORTAL_PARTNER_SECRETS: undefined, PORTAL_SECRET_ENC_KEY: VALID_KEY },
+  ]) {
+    const run = await runSeedMain(env);
+    const all = run.stdout + run.stderr + (run.error?.message ?? '');
+    assert.ok(!all.includes('plaintext-crimsora-secret'), `a plaintext secret reached the console: ${all}`);
+    assert.ok(!all.includes(VALID_KEY), `the encryption key reached the console: ${all}`);
+  }
+});
+
+await test('main(): M34 — autoIndex and autoCreate are BOTH off before connectDB is attempted', async () => {
+  // The guard that stops even a dry run from building TutorSession's TTL
+  // index, which DELETES rows. Deleting the two mongoose.set lines left
+  // every suite green. Re-armed here, then asserted on the observable
+  // global Mongoose state main() left behind.
+  mongoose.set('autoIndex', true);
+  mongoose.set('autoCreate', true);
+  assert.strictEqual(opsMongooseConfigured(), false, 'sanity: the guard is genuinely re-armed before the run');
+  const run = await runSeedMain({ PORTAL_PARTNER_SECRETS: GOOD_SECRETS, PORTAL_SECRET_ENC_KEY: VALID_KEY });
+  assert.match(run.error?.message ?? '', /MONGODB_URI not configured/, 'sanity: main() did reach the connection attempt');
+  assert.strictEqual(
+    opsMongooseConfigured(), true,
+    'main() must disable autoIndex AND autoCreate before connecting — a dry run must never build an index or create a collection',
+  );
+});
+
+await test('main(): M34 — the guard runs even on the abort paths, which also open no connection', async () => {
+  mongoose.set('autoIndex', true);
+  mongoose.set('autoCreate', true);
+  const run = await runSeedMain({ PORTAL_PARTNER_SECRETS: undefined, PORTAL_SECRET_ENC_KEY: VALID_KEY });
+  assert.strictEqual(run.exitCode, 1);
+  assert.strictEqual(opsMongooseConfigured(), true);
 });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);

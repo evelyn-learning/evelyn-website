@@ -40,7 +40,7 @@
  * `unknown_partner` (auth.ts) for that partner's live traffic within one
  * 60s cache TTL, and the documented rollback (drop index, unset two fields)
  * does not undo it. Real partner rows are the seed script's job (Task 9,
- * spec §10 step 1) — if one is missing here, this script aborts and tells
+ * `npm run seed:partner-registry -- --write`) — if one is missing here, this script aborts and tells
  * the operator to seed first, rather than write a credential-less stand-in.
  * Also: `mongoose.set('autoIndex', false)` runs before `connectDB()` so a
  * plain dry run cannot silently trigger every schema's auto-built indexes —
@@ -77,6 +77,7 @@ import connectDB from '@core/db';
 import { StudentProfileModel } from '@/models/StudentProfile';
 import { TutorSession } from '@/models/TutorSession';
 import { PartnerModel } from '@/models/Partner';
+import { configureMongooseForOpsScript } from './ops-mongoose';
 
 const WRITE = process.argv.includes('--write');
 const BUILD_INDEX = process.argv.includes('--build-index');
@@ -203,7 +204,7 @@ export interface PartnerRowPlan {
    * Real ('partner'-kind) ids observed with no existing registry row. The
    * caller MUST abort before any write when this is non-empty — creating
    * one here would mint a credential-less row that 401s that partner's live
-   * traffic. Seeding is the seed script's job (spec §10 step 1).
+   * traffic. Seeding is the seed script's job (`npm run seed:partner-registry -- --write`).
    */
   missingReal: string[];
 }
@@ -308,16 +309,17 @@ function mask(id: string): string {
   return `${id.slice(0, 4)}...${id.slice(-4)}`;
 }
 
-async function main() {
-  // Must run before connectDB(): Mongoose 8 defaults autoIndex/autoCreate to
-  // true, so merely opening the connection builds every schema-declared
-  // index for every compiled model — including TutorSession's TTL index,
-  // which DELETES sessions older than 180 days — and creates any collection
-  // that doesn't exist yet (observed against real prod: an empty `partners`
-  // collection appeared from a plain dry run before this fix). A "dry run"
-  // must not do either.
-  mongoose.set('autoIndex', false);
-  mongoose.set('autoCreate', false);
+/**
+ * M1c final review (reviewer B finding 7): exported so the suite can call it
+ * and assert on the observable state it leaves behind. Deleting the
+ * autoIndex/autoCreate guards below previously left every suite green.
+ */
+export async function main() {
+  // Must run before connectDB() — see ops-mongoose.ts for the full reason
+  // (TutorSession's TTL index DELETES sessions older than 180 days; an empty
+  // `partners` collection was observed appearing from a plain dry run before
+  // this guard existed). A "dry run" must do neither.
+  configureMongooseForOpsScript();
   await connectDB();
 
   const profiles = await StudentProfileModel.find(
@@ -447,7 +449,7 @@ async function main() {
       `\nMissing Partner row(s) for real partner id(s): ${decision.detail.join(', ')}. ` +
         "This script never creates 'kind: partner' rows — a credential-less row would win over the " +
         "env fallback (registry.ts: \"the registry row WINS once it exists\") and 401 unknown_partner " +
-        "for that partner's live traffic. Run the seed script (spec §10 step 1) to create these with " +
+        "for that partner's live traffic. Run the seed script (`npm run seed:partner-registry -- --write`) to create these with " +
         'real secrets first, then re-run. Aborting before any write.',
     );
     await mongooseDisconnectSafely();

@@ -24,6 +24,12 @@
  * anything else — no DB connection is even opened — when the env is
  * missing, unparseable, or parses to zero usable secrets.
  *
+ * `checkSecretKeyEnv` is the same gate for `PORTAL_SECRET_ENC_KEY` (M1c
+ * final review, A-C1): abort if it is unset or cannot seal-then-open a
+ * probe value, and print a FINGERPRINT of it — in DRY RUN too — so the
+ * operator can confirm it is the same key the running server holds before
+ * writing rows that server could never open.
+ *
  * Idempotent, and safe to re-run:
  *  - A NEW partner is created with `allowedEndpoints: ['/api/portal/v1/']`
  *    (== `registry.ts`'s exported `ENV_FALLBACK_ALLOWED_ENDPOINTS`, so a row
@@ -96,15 +102,17 @@
  *     scripts/seed-partner-registry.ts                # dry run, report only
  *   ... scripts/seed-partner-registry.ts --write         # apply
  */
+import { createHash } from 'node:crypto';
 import mongoose from 'mongoose';
 import connectDB from '@core/db';
 import { PartnerModel } from '@/models/Partner';
-import { encryptSecret, type SealedSecret } from '@/lib/tutor/portal/secret-box';
+import { encryptSecret, decryptSecret, type SealedSecret } from '@/lib/tutor/portal/secret-box';
 import {
   invalidatePartner,
   ENV_FALLBACK_ALLOWED_ENDPOINTS,
   ENV_FALLBACK_LIMITS,
 } from '@/lib/tutor/portal/registry';
+import { configureMongooseForOpsScript } from './ops-mongoose';
 
 const WRITE = process.argv.includes('--write');
 
@@ -189,6 +197,58 @@ export function checkSecretsEnv(raw: string | undefined): SecretsEnvStatus {
     return { ok: false, reason: 'empty' };
   }
   return { ok: true };
+}
+
+export type SecretKeyStatus =
+  | { ok: true; fingerprint: string }
+  | { ok: false; reason: 'missing' | 'unusable'; detail?: string };
+
+/**
+ * Pure — no DB. The SECOND operator-mistake gate (M1c final review, A-C1),
+ * and the one that can take the live portal API down.
+ *
+ * A *missing* `PORTAL_SECRET_ENC_KEY` already failed safely by accident:
+ * `executeSeed` seals before it writes, so `resolveKey`'s throw preceded the
+ * first write. A *wrong but valid* 32-byte key did not. It seals cleanly,
+ * writes the rows, exits 0 — and then the SERVER, holding a different key,
+ * gets `SecretDecryptError` per secret, which `registry.ts` swallows by
+ * design, so the partner resolves with `secrets: []` and `auth.ts` returns
+ * 401 unknown_partner. The registry row WINS over the env fallback, so
+ * every live partner stops authenticating within one 60s cache TTL.
+ *
+ * Two defences, neither of which can print a plaintext secret or the key:
+ *  - `fingerprint` — sha256 of the base64 env VALUE, first 8 hex chars. The
+ *    operator compares it against the deployed server's. This is the only
+ *    thing that can catch "right shape, wrong key", so `main()` prints it
+ *    in DRY RUN too: catching the mix-up on the dry run, before any row
+ *    exists, is the entire point.
+ *  - `roundTrip` — seal-then-open a probe value with THIS key (passed
+ *    explicitly, not read back out of `process.env`, so the value that gets
+ *    fingerprinted is provably the value that gets validated). Catches an
+ *    internally inconsistent key — wrong length, not base64, cipher and
+ *    decipher disagreeing — before a single row is written. Injectable so
+ *    the test suite can drive the failure branch without a real key.
+ */
+export function checkSecretKeyEnv(
+  raw: string | undefined,
+  roundTrip: (probe: string, key: Buffer) => string = (probe, key) =>
+    decryptSecret(encryptSecret(probe, key), key),
+): SecretKeyStatus {
+  if (!raw) return { ok: false, reason: 'missing' };
+  const fingerprint = createHash('sha256').update(raw).digest('hex').slice(0, 8);
+  const probe = `seed-roundtrip-probe-${fingerprint}`;
+  try {
+    if (roundTrip(probe, Buffer.from(raw, 'base64')) !== probe) {
+      return {
+        ok: false,
+        reason: 'unusable',
+        detail: 'sealing a probe value and opening it again did not return it unchanged',
+      };
+    }
+  } catch (err) {
+    return { ok: false, reason: 'unusable', detail: (err as Error).message };
+  }
+  return { ok: true, fingerprint };
 }
 
 /**
@@ -356,18 +416,36 @@ function describeSecretsEnvError(reason: 'missing' | 'malformed' | 'empty'): str
   }
 }
 
-async function main() {
-  // Must run before connectDB(): see Task 6's identical fix in
-  // backfill-partner-namespace.ts — Mongoose 8 defaults autoIndex/autoCreate
-  // to true, so merely opening the connection builds every schema-declared
-  // index for every compiled model (including TutorSession's TTL index,
-  // which deletes sessions older than 180 days) and creates any collection
-  // that doesn't exist yet. Only PartnerModel is imported by this file today
-  // so this is harmless right now, but it re-arms the moment anything in
-  // this file's import graph pulls in TutorSession — and a dry run must
-  // never have side effects regardless of what else gets imported later.
-  mongoose.set('autoIndex', false);
-  mongoose.set('autoCreate', false);
+export function describeSecretKeyError(reason: 'missing' | 'unusable', detail?: string): string {
+  if (reason === 'missing') {
+    return (
+      'PORTAL_SECRET_ENC_KEY is not set. Partner secrets cannot be sealed without it, and once ' +
+      'sealed rows exist the RUNNING SERVER needs the SAME key on every request. Aborting before ' +
+      'any DB connection. Generate one with `openssl rand -base64 32`, put it in the server env ' +
+      'FIRST, then export the identical value here and re-run the dry run to compare fingerprints.'
+    );
+  }
+  return (
+    'PORTAL_SECRET_ENC_KEY is set but unusable: ' +
+    `${detail ?? 'unknown error'}. It must decode from base64 to exactly 32 bytes. Aborting before ` +
+    'any DB connection — a key that cannot round-trip here would seal rows the server can never open.'
+  );
+}
+
+/**
+ * M1c final review (reviewer B finding 7): exported so the suite can drive
+ * it directly and assert that main() ACTS on the gates, rather than trusting
+ * that a well-tested pure detector is wired up. Deleting either abort, or
+ * the `configureMongooseForOpsScript()` call, previously left every suite
+ * green.
+ */
+export async function main() {
+  // Must run before connectDB() — see ops-mongoose.ts for the full reason
+  // (TutorSession's TTL index deletes rows; a dry run must have no side
+  // effects). Only PartnerModel is imported by this file today, so this is
+  // harmless right now, but it re-arms the moment anything in this file's
+  // import graph pulls in TutorSession.
+  configureMongooseForOpsScript();
 
   const raw = process.env.PORTAL_PARTNER_SECRETS;
   const envStatus = checkSecretsEnv(raw);
@@ -375,6 +453,21 @@ async function main() {
     console.error(describeSecretsEnvError(envStatus.reason));
     process.exit(1);
   }
+
+  // A-C1: before any DB connection, and BEFORE the dry-run report, so the
+  // fingerprint is the first thing the operator sees on a dry run.
+  const keyStatus = checkSecretKeyEnv(process.env.PORTAL_SECRET_ENC_KEY);
+  if (!keyStatus.ok) {
+    console.error(describeSecretKeyError(keyStatus.reason, keyStatus.detail));
+    process.exit(1);
+  }
+  console.log(
+    `PORTAL_SECRET_ENC_KEY fingerprint: ${keyStatus.fingerprint} ` +
+      '(sha256 of the base64 env value, first 8 hex chars — NOT the key). ' +
+      'This MUST equal the fingerprint of the key the running engine has. If it does not, every ' +
+      'row this script writes becomes unopenable and every partner 401s within 60s (registry.ts ' +
+      'cache TTL). Verify BEFORE passing --write.',
+  );
 
   await connectDB();
 
