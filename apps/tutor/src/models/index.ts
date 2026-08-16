@@ -10,6 +10,7 @@ export {
 export { SavedLesson, type ISavedLesson } from "@core/models/SavedLesson";
 export { LessonImage, type ILessonImage } from "@core/models/LessonImage";
 export { ProblemBank, type IProblemBank } from "./ProblemBank";
+export { PartnerModel, type IPartner } from "./Partner";
 export {
   TutorSession,
   type ITutorSession,

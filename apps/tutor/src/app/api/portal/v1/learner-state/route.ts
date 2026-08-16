@@ -33,7 +33,11 @@ import {
   LearnerStateSnapshotModel,
   MockAttempt,
 } from '@/models';
-import { getOrCreateStudentProfile, isGapStale } from '@/lib/tutor/student-profile/store';
+import {
+  getOrCreateStudentProfile,
+  isGapStale,
+  resolveProfileIdOrRaw,
+} from '@/lib/tutor/student-profile/store';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 import { trendOf, TUNING } from '@/lib/tutor/learner-model/estimator';
 import { getBlueprint, type ScoringSpec } from '@/lib/tutor/mock-exam/blueprints';
@@ -70,7 +74,7 @@ function examKeyForScale(scale: ReturnType<typeof scaleForTopic>, courseTopic: s
   return null;
 }
 
-async function handle(req: NextRequest, auth: { body: unknown }): Promise<Response> {
+async function handle(req: NextRequest, auth: { body: unknown; partnerId: string }): Promise<Response> {
   const parsed = LearnerStateRequestSchema.safeParse(readRawRequest(req, auth.body));
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
@@ -85,20 +89,36 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
   // parse) — it must NOT touch `los`, whose `estimate` is nullable-but-
   // required: stripping a null estimate would make the field go missing and
   // fail the contract parse below instead of passing it.
-  const profile = await getOrCreateStudentProfile(studentId);
+  // M1c Task 5 (spec §4.1, fix round 1) — resolve ONCE per request and use
+  // `profileId` for EVERY student-keyed store below: the profile itself,
+  // LearnerStateProjection, LearnerStateSnapshot, and the mock-evidence /
+  // MockAttempt reads. These collections are one identity space, not two —
+  // `scripts/backfill-evidence.ts` writes `studentId: profile._id` directly,
+  // so a resolved profile and an unresolved learner-model row would silently
+  // stop agreeing. `studentId` (raw) is kept only for the `trial:` prefix
+  // check below, which is about the wire format the portal sends, not the
+  // storage key. (fix round 2, IMPORTANT E) `resolveProfileIdOrRaw` never
+  // resolves a `trial:`-prefixed id in the first place — `profileId` equals
+  // `studentId` unchanged for one, so this line does NOT mint a surrogate
+  // profile for a trial student; getOrCreateStudentProfile below touches
+  // the same bare `trial:...` id it always has.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
+  const profile = await getOrCreateStudentProfile(profileId);
   const gaps = stripNullsDeep(profile.gaps.filter((g) => !isGapStale(g)));
 
   if (studentId.startsWith('trial:')) {
     // Trial sessions never write learner-model rows (appendEvidence drops
-    // trial: ids before any write) — los/reviewDueCount are explicitly empty
-    // rather than an incidental empty-query result.
+    // trial: ids before any write — a guarantee that still holds post-M1c
+    // because they're never resolved; see resolveProfileIdOrRaw's doc
+    // comment) — los/reviewDueCount are explicitly empty rather than an
+    // incidental empty-query result.
     const body: LearnerStateResponse = { los: [], gaps, reviewDueCount: 0 };
     return NextResponse.json(LearnerStateResponseSchema.parse(body));
   }
 
   await connectDB();
 
-  const projQuery: Record<string, unknown> = { studentId };
+  const projQuery: Record<string, unknown> = { studentId: profileId };
   if (loIds && loIds.length > 0) projQuery.loId = { $in: loIds };
   const projections = await LearnerStateProjectionModel.find(projQuery).lean();
   const projByLoId = new Map(projections.map((p) => [p.loId, p]));
@@ -111,7 +131,7 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
   // trend: against the snapshot dated >= TUNING.trendWindowDays ago (most
   // recent such row); none → 'flat' (trendOf's own null-handling).
   const cutoffDate = new Date(now.getTime() - TUNING.trendWindowDays * MS_PER_DAY).toISOString().slice(0, 10);
-  const priorSnapshot = await LearnerStateSnapshotModel.findOne({ studentId, date: { $lte: cutoffDate } })
+  const priorSnapshot = await LearnerStateSnapshotModel.findOne({ studentId: profileId, date: { $lte: cutoffDate } })
     .sort({ date: -1 })
     .lean();
   const priorByLoId = new Map((priorSnapshot?.los ?? []).map((l) => [l.loId, l.estimate]));
@@ -161,7 +181,7 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
       // science is the only current section with this set to false.
       sectionInComposite = Object.fromEntries(blueprint.sections.map((s) => [s.sectionId, s.inComposite !== false]));
 
-      const mockRows = await EvidenceEventModel.find({ studentId, source: 'mock', sectionId: { $exists: true } })
+      const mockRows = await EvidenceEventModel.find({ studentId: profileId, source: 'mock', sectionId: { $exists: true } })
         .select('loId sectionId occurredAt')
         .lean();
       const sectionMap = mapLoIdsToSections(
@@ -171,7 +191,7 @@ async function handle(req: NextRequest, auth: { body: unknown }): Promise<Respon
       );
       losForProjection = losForProjection.map((l) => ({ ...l, sectionId: sectionMap.get(l.loId) }));
 
-      const attempts = await MockAttempt.find({ studentId, examKey, status: 'completed', scaled: { $exists: true } })
+      const attempts = await MockAttempt.find({ studentId: profileId, examKey, status: 'completed', scaled: { $exists: true } })
         .sort({ completedAt: -1 })
         .limit(5)
         .lean();

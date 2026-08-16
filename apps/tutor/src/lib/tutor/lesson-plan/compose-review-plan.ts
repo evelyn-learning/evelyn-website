@@ -51,6 +51,7 @@ import { LearnerStateProjectionModel, buildLearnerStateProjectionId } from '@/mo
 import connectDB from '@core/db';
 import { TUNING } from '../learner-model/estimator';
 import { getLearnerHints } from '../learner-model/hints';
+import { resolveProfileIdOrRaw } from '../student-profile/store';
 
 /** Review-shaped twin of STAGE2_SYSTEM (generate-from-text.ts:232). Same
  *  JSON-only contract and terseness/number-collision discipline; the
@@ -87,6 +88,12 @@ export interface ComposeReviewInput {
   los: Array<{ loId: string; title: string }>;
   sessionMinutes?: number;
   subject?: string;
+  /** M1c Task 5 (fix round 1, IMPORTANT 3) — the calling portal route's
+   *  verified `auth.partnerId`. REQUIRED (not optional) so a caller that
+   *  forgot to thread it is a compile error, not a silent runtime
+   *  degradation — see the matching comment on getLearnerHints's own
+   *  `partnerId` param. */
+  partnerId: string;
   /** DI seam for tests: stage-2 expander; defaults to the real
    *  LLM-backed one (generate-from-text.ts's expandSegmentsForLOs). */
   expandFn?: typeof expandSegmentsForLOs;
@@ -119,8 +126,16 @@ export async function composeReviewPlan(input: ComposeReviewInput): Promise<Less
     ),
   );
 
+  // M1c Task 5 (fix round 1, CRITICAL 2) — resolve once; the projection
+  // query below MUST use the same identity space getLearnerHints resolves
+  // to further down, or two partners sending the same externalStudentId
+  // would review two different profiles' weakest LOs off one shared
+  // projection collection. See resolveProfileIdOrRaw's doc comment for the
+  // DB-down degrade behavior.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: input.partnerId, externalStudentId: input.studentId });
+
   await connectDB();
-  const ids = input.los.map((lo) => buildLearnerStateProjectionId(input.studentId, lo.loId));
+  const ids = input.los.map((lo) => buildLearnerStateProjectionId(profileId, lo.loId));
   const projections = await LearnerStateProjectionModel.find({ _id: { $in: ids } }).lean();
   const estimateByLoId = new Map(projections.map((p) => [p.loId, p.estimate]));
 
@@ -148,7 +163,18 @@ export async function composeReviewPlan(input: ComposeReviewInput): Promise<Less
   // getLearnerHints never throws (falls back to the neutral steady/no-gaps
   // default on any error) — same conditioning Task 12 applies to fresh
   // lesson generation, per spec §6.2.
-  const learner = await getLearnerHints(input.studentId, input.subject);
+  //
+  // Passed the RAW `input.studentId` (not the `profileId` resolved above),
+  // not `profileId` twice: getLearnerHints owns its own trial: short-circuit,
+  // which must inspect the id the partner actually sent — a resolved
+  // surrogate id no longer carries a 'trial:' prefix once the flag is on.
+  // getLearnerHints then resolves AGAIN internally with the same
+  // (partnerId, studentId) pair, which is idempotent (same pair -> same
+  // surrogate id — resolveProfileId's whole guarantee), so this lands on the
+  // identical `profileId` as the projection query above; the cost is one
+  // redundant Mongo round trip per review-plan request, traded for not
+  // needing a second, resolution-bypassing entry point into hints.ts.
+  const learner = await getLearnerHints(input.studentId, input.subject, input.partnerId);
 
   const expandFn = input.expandFn ?? expandSegmentsForLOs;
   const genInput: GenerateFromTextInput = {

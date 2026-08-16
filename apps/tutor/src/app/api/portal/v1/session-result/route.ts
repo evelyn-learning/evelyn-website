@@ -16,6 +16,13 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
+  // M1c Task 5 (fix round 2, IMPORTANT D) — SessionEmitRequestSchema
+  // declares `studentId: z.string()` with no `.min(1)`; reject `""` here
+  // with a clean 400 rather than letting it reach emitSessionResult's
+  // resolveProfileIdOrRaw, whose ProfileIdentityError now stays loud.
+  if (!parsed.data.studentId) {
+    return NextResponse.json({ error: 'bad_request', reason: 'studentId required' }, { status: 400 });
+  }
   // Task D3 — ADDITIVE loose carrier (transcript + inbound socialMemory
   // threads) read off the raw body; not yet in SessionEmitRequestSchema
   // (zod strips unknown keys). Absent/malformed ⇒ undefined ⇒ no social

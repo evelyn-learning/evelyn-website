@@ -13,8 +13,9 @@ import { mongoMockStores } from '@/lib/tutor/mock-exam/service';
 import { defaultGradeDeps } from '@/lib/tutor/portal/grade-free-response';
 import { stripNullsDeep } from '@/lib/tutor/portal/serialize';
 import { mapMockError } from '@/lib/tutor/mock-exam/route-errors';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 
-export const GET = withPortalAuth(async (req) => {
+export const GET = withPortalAuth(async (req, auth) => {
   const u = new URL(req.url);
   const studentId = u.searchParams.get('studentId');
   const attemptId = u.searchParams.get('attemptId');
@@ -22,7 +23,17 @@ export const GET = withPortalAuth(async (req) => {
     return NextResponse.json({ error: 'bad_request', reason: 'studentId and attemptId required' }, { status: 400 });
   }
   try {
-    const report = await getReport(mongoMockStores(), studentId, attemptId, { gradeDeps: defaultGradeDeps() });
+    // M1c Task 5 (fix round 1) — `getReport`'s ownership check compares
+    // this against `attempt.studentId`, which is the RESOLVED id (stamped
+    // at attempt creation, mock/attempts/route.ts) — so this must resolve
+    // to the same id or every report request gets `forbidden` once the
+    // flag is on. `feedGapsAndMastery`'s own profile-store write (inside
+    // `getReport`) then inherits this same resolved `attempt.studentId`
+    // with no further resolution needed — see report.ts's comment there.
+    const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
+    const report = await getReport(mongoMockStores(), profileId, attemptId, {
+      gradeDeps: defaultGradeDeps(),
+    });
     if (report.status === 'grading') {
       return NextResponse.json({ state: 'grading' }, { status: 202 });
     }

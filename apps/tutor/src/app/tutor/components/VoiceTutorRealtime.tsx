@@ -242,6 +242,13 @@ async function dispatchTopicNotesOverlay(
   sessionId: string,
   bucket: 'theory' | 'methods' | 'pointers',
   input: Record<string, unknown>,
+  /** M1c Task 5 (fix round 2, CRITICAL A) — same header the student-profile
+   *  commit fetch already attaches (above): without it, the engine route
+   *  has no verified partner_id claim to resolve identity under and falls
+   *  back to 'evelyn' for every embedded session, splitting a partner
+   *  student's topic notes from the rest of their profile. This call was
+   *  the one place that forgot to attach it. */
+  embedToken?: string,
 ): Promise<void> {
   if (!studentId) return; // demo flow without studentId — drop silently
   try {
@@ -249,7 +256,7 @@ async function dispatchTopicNotesOverlay(
       `/api/tutor/topic-notes/${encodeURIComponent(studentId)}/${encodeURIComponent(baselineId)}`,
       {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body: JSON.stringify({ bucket, sessionId, input }),
       },
     );
@@ -973,7 +980,12 @@ export function VoiceTutorRealtime({
   // localStorage synchronously, then synced from /api/tutor/student-profile
   // when studentId is present. Used to drive the humor block in the
   // system prompt so the brain reflects the student's chosen level.
-  const { preferences: studentPreferences } = useStudentPreferences({ studentId });
+  // M1c final review (A-I6): the embed token rides along, exactly like every
+  // other embed-originated fetch in this file — the hook's two
+  // /api/tutor/student-profile calls were the last pair that never attached
+  // it, which post-flip would attribute a partner student's profile read and
+  // preference write to 'evelyn'.
+  const { preferences: studentPreferences } = useStudentPreferences({ studentId, embedToken });
   // Mirror the active humor level in a ref so the brain turn-start log can show
   // it every turn (the prompt-build log only fires at mount/pref-change, which a
   // late log capture can miss). Diagnostic only.
@@ -5940,6 +5952,7 @@ export function VoiceTutorRealtime({
           sessionIdRef.current,
           bucket,
           input,
+          embedToken,
         );
         console.log(
           `[VoiceTutorRealtime] topic-notes ${bucket} dispatched (count ${counts[bucket]}/${limit}): action=${cmd.action}`,

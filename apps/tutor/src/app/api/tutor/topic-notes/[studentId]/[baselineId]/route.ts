@@ -10,8 +10,16 @@
  *
  * DELETE handler is at .../[overlayId]/route.ts.
  *
- * No auth in v1 — matches the existing student-profile commit endpoint
- * pattern. Add auth when retail launches.
+ * M1c Task 5 (fix round 2, CRITICAL A / spec §4.0; corrected fix round 3,
+ * CRITICAL A1; corrected fix round 4, spec §4.0 refinement) — gained
+ * embed-token verification. This route previously had no auth at all ("Add
+ * auth when retail launches" — the old text of this comment), and
+ * `/tutor/dev/notes` is a genuinely retail/dev surface with no embed
+ * token, so an ABSENT token never gates the request — see
+ * `partnerIdForInternalRoute`'s doc comment. But a token that WAS sent and
+ * fails verification (or fails the student-binding check) is not retail;
+ * that case rejects (401) rather than silently resolving under `'evelyn'`
+ * — see `embedTokenRejectionReason`'s doc comment for why.
  *
  * `baselineId` matches the corresponding lesson plan id (e.g.
  * `evelyn.ap.macro.loanable-funds-market.v1`). Next.js URL-decodes the
@@ -28,16 +36,30 @@ import {
   type AddMethodInput,
   type AddPointerInput,
 } from '@/lib/tutor/topic-notes/apply-overlay';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
+import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: { params: Promise<{ studentId: string; baselineId: string }> },
 ) {
   const { studentId, baselineId } = await ctx.params;
   if (!studentId || !baselineId) {
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
-  const rendered = await resolveTopicNotes(studentId, baselineId);
+  const token = req.headers.get('x-embed-token');
+  const auth = checkEmbedAuth({
+    token,
+    expectedStudentId: studentId,
+    route: 'topic-notes:GET',
+  });
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[topic-notes:GET] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
+  }
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: studentId });
+  const rendered = await resolveTopicNotes(profileId, baselineId);
   if (!rendered) {
     return NextResponse.json({ error: 'baseline not found' }, { status: 404 });
   }
@@ -70,6 +92,18 @@ export async function PATCH(
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
 
+  const token = req.headers.get('x-embed-token');
+  const auth = checkEmbedAuth({
+    token,
+    expectedStudentId: studentId,
+    route: 'topic-notes:PATCH',
+  });
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[topic-notes:PATCH] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
+  }
+
   let body: PatchBody;
   try {
     body = (await req.json()) as PatchBody;
@@ -86,9 +120,11 @@ export async function PATCH(
     return NextResponse.json({ error: 'bucket and input required' }, { status: 400 });
   }
 
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: studentId });
+
   if (body.bucket === 'theory') {
     const result = await expandTheoryOverlay({
-      studentId,
+      studentId: profileId,
       baselineId,
       input: { ...body.input, addedInSessionId: body.sessionId },
     });
@@ -96,7 +132,7 @@ export async function PATCH(
   }
   if (body.bucket === 'methods') {
     const result = await addMethodOverlay({
-      studentId,
+      studentId: profileId,
       baselineId,
       input: { ...body.input, addedInSessionId: body.sessionId },
     });
@@ -104,7 +140,7 @@ export async function PATCH(
   }
   if (body.bucket === 'pointers') {
     const result = await addPointerOverlay({
-      studentId,
+      studentId: profileId,
       baselineId,
       input: { ...body.input, addedInSessionId: body.sessionId },
     });

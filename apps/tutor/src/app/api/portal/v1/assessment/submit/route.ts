@@ -18,6 +18,13 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) {
     return NextResponse.json({ error: 'bad_request', issues: parsed.error.issues }, { status: 400 });
   }
+  // M1c Task 5 (fix round 2, IMPORTANT D) — AssessmentSubmissionSchema
+  // declares `studentId: z.string()` with no `.min(1)`; reject `""` here
+  // with a clean 400 rather than letting it reach submitAssessment's
+  // resolveProfileIdOrRaw, whose ProfileIdentityError now stays loud.
+  if (!parsed.data.studentId) {
+    return NextResponse.json({ error: 'bad_request', reason: 'studentId required' }, { status: 400 });
+  }
   const result = await submitAssessment(parsed.data, defaultGradeDeps(), resolveAssessmentItem, auth.partnerId);
   return NextResponse.json(stripNullsDeep(result));
 });

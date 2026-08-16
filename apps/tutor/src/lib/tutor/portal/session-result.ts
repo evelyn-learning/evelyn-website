@@ -31,6 +31,7 @@ import {
   resolveSettledGaps,
   appendSessionMemory,
   saveStudentProfile,
+  resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import { resolveSettledPrereqGaps } from '@/lib/tutor/concept-registry/resolve-prereq-gaps';
 import { canonicalizeConceptLabel } from '@/lib/tutor/concept-registry/normalizer';
@@ -118,11 +119,17 @@ export interface EmitOptions {
    *  `req.evidence[]` (contract-level callers) is never affected. NOT part
    *  of the portal contract — internal engine option only. */
   skipEvidenceFallback?: boolean;
-  /** Final-review fix (M3, spec §4.1) — the authenticated partner id
-   *  (`auth.partnerId` from `withPortalAuth`), stamped onto every evidence
-   *  row this call produces. Route handlers pass it through; direct/test
-   *  callers may omit it. */
-  partnerId?: string;
+  /** Final-review fix (M3, spec §4.1); REQUIRED as of M1c Task 5 (fix round
+   *  2, IMPORTANT C) — the authenticated partner id (`auth.partnerId` from
+   *  `withPortalAuth`, or an internal route's `partnerIdForInternalRoute`),
+   *  stamped onto every evidence row this call produces AND used to resolve
+   *  the profile-store identity below. Was optional with a `?? ''`
+   *  fallback; that made the doc comment on `resolveProfileIdOrRaw`'s "every
+   *  caller declares partnerId as required" claim false for this function's
+   *  own option bag. Required (not just documented) so a caller that forgot
+   *  to thread it is a compile error, not a silent runtime path into that
+   *  function's catch. */
+  partnerId: string;
 }
 
 /**
@@ -237,12 +244,19 @@ function buildEmitEvidence(
   req: SessionEmitRequest,
   skipFallback: boolean,
   partnerId: string | undefined,
+  /** M1c Task 5 (fix round 1, CRITICAL 2) — the RESOLVED profile id, used as
+   *  the evidence store's `studentId` key. `EvidenceEvent` and
+   *  `StudentProfile` are one identity space (`scripts/backfill-evidence.ts`
+   *  writes `studentId: profile._id` directly) — using `req.studentId` (raw)
+   *  here while the profile store used the resolved id would silently split
+   *  a partner's evidence trail from their profile. */
+  profileId: string,
 ): EvidenceInput[] {
   const occurredAt = new Date();
   if (req.evidence && req.evidence.length > 0) {
     return req.evidence.map((e, i) => ({
       idempotencyKey: `emit:${req.sessionId}:${i}`,
-      studentId: req.studentId,
+      studentId: profileId,
       partnerId,
       loId: e.loId,
       source: e.source,
@@ -259,7 +273,7 @@ function buildEmitEvidence(
   if (skipFallback) return [];
   return req.masteryDeltas.map((m) => ({
     idempotencyKey: `emit:${req.sessionId}:lo:${m.loId}`,
-    studentId: req.studentId,
+    studentId: profileId,
     partnerId,
     loId: m.loId,
     source: 'session',
@@ -272,9 +286,26 @@ function buildEmitEvidence(
 
 export async function emitSessionResult(
   req: SessionEmitRequest,
-  opts: EmitOptions = {},
+  /** M1c Task 5 (fix round 2, IMPORTANT C) — no default: `partnerId` is a
+   *  required field of `EmitOptions`, so an omitted `opts` object could
+   *  never satisfy the type anyway. Every real and test call site passes
+   *  an explicit options object (see EmitOptions.partnerId's doc comment). */
+  opts: EmitOptions,
 ): Promise<SessionResult> {
-  const profile = await getOrCreateStudentProfile(req.studentId);
+  // M1c Task 5 (spec §4.1) — resolve ONCE per request; `profileId` is used
+  // for EVERY student-keyed store touched below (the profile itself,
+  // buildEmitEvidence's rows, reconcileSessionGapLinks' StudentTopicNotes
+  // lookups) — never `req.studentId` again except where the CONTRACT
+  // response must echo back the raw external id the portal sent (`base`
+  // below): the portal has no concept of our internal surrogate id.
+  // Both real callers (session-result/route.ts, assessment.ts's
+  // submitAssessment) are portal-only and thread opts.partnerId from
+  // auth.partnerId. resolveProfileIdOrRaw still degrades to the raw id on
+  // a genuine resolution FAILURE (DB blip) rather than throwing, so a DB
+  // blip here can't 500 a session-end commit — but a missing partnerId is
+  // now a compile error, not a path that reaches that degrade.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: opts.partnerId, externalStudentId: req.studentId });
+  const profile = await getOrCreateStudentProfile(profileId);
 
   const artifacts =
     req.renderedArtifacts ??
@@ -370,7 +401,7 @@ export async function emitSessionResult(
   // Task 8 — learner-model evidence append. Fire-and-forget (this is a
   // latency-sensitive session-end path); appendEvidence is itself
   // best-effort and never throws, so the .catch is belt-and-suspenders.
-  const emitEvidence = buildEmitEvidence(req, opts.skipEvidenceFallback ?? false, opts.partnerId);
+  const emitEvidence = buildEmitEvidence(req, opts.skipEvidenceFallback ?? false, opts.partnerId, profileId);
   if (emitEvidence.length > 0) {
     appendEvidence(emitEvidence).catch((err) =>
       console.error('[learner-model] emit evidence append failed', err),
@@ -381,7 +412,7 @@ export async function emitSessionResult(
   const gapLinkInputs = saved.gaps.map((g) => ({ id: g.id, kind: g.kind, loId: g.loId, conceptLabel: g.conceptLabel }));
   for (const n of req.notesTouched) {
     try {
-      await reconcileSessionGapLinks({ studentId: req.studentId, baselineId: n.baselineId, gaps: gapLinkInputs, sessionId: req.sessionId });
+      await reconcileSessionGapLinks({ studentId: profileId, baselineId: n.baselineId, gaps: gapLinkInputs, sessionId: req.sessionId });
     } catch {
       // non-fatal — linking is best-effort
     }

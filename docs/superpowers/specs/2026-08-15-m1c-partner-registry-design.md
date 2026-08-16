@@ -159,8 +159,12 @@ authenticate.
 variable — free. A registry lookup on every authenticated request would put a database read on the
 hot path of a live voice session. The resolver caches partner rows in-process with a short TTL
 (60s) and an explicit invalidation hook used by the admin write path. A cache miss falls through to
-a read; a read failure is treated as `unknown_partner` (`401`) rather than failing open, because
-authentication is the one place where failing open is never acceptable.
+a read; a read failure is caught in `withPortalAuth` and treated as `unknown_partner` (`401`) rather
+than failing open, because authentication is the one place where failing open is never acceptable.
+It is logged distinctly (`registry_unavailable`) so an infrastructure fault is not misdiagnosed as a
+partner integration bug, and it deliberately does **not** fall through to the env fallback — that
+would resurrect a suspended partner during an outage. This is a widening of blast radius, not a
+narrowing: see §8.
 
 If a stored secret fails to decrypt — wrong or rotated `PORTAL_SECRET_ENC_KEY` — the partner is
 treated as unauthenticated (`401`) and the condition is logged distinctly from a genuine signature
@@ -390,9 +394,10 @@ marketing and showcase routes, has a different threat model, and unifying the tw
 Existing partners are provisioned with all 23 `/api/portal/v1/**` routes, so behaviour is unchanged
 on day one; new partners are provisioned narrowly.
 
-`flagOverrides` rides on the auth context. The orchestrator reads flags through a resolver that
-falls back to today's build-time `NEXT_PUBLIC_*` constants when a partner specifies no override.
-M1c builds only this channel — per-brand CNAME and token-carried overrides remain D12.
+`flagOverrides` rides on the auth context. `resolveFlag` (`portal/flags.ts`) falls back to today's
+build-time `NEXT_PUBLIC_*` constants when a partner specifies no override. M1c builds **only this
+channel**: nothing in the orchestrator reads through it yet — wiring the call sites, per-brand CNAME
+and token-carried overrides all remain D12.
 
 ---
 
@@ -406,8 +411,18 @@ M1c builds only this channel — per-brand CNAME and token-carried overrides rem
 | Burst limit exceeded | `429` + `Retry-After` |
 | Daily quota exhausted | `402 quota_exceeded` |
 
-Every new code is additive. The frozen contract's existing `401` path is untouched, so Crimsora
-observes no behavioural change.
+Every new *status code* is additive: the frozen contract's existing `401` path is untouched, and no
+existing success response changes shape. **That is not the same as "no behavioural change".** Portal
+auth had zero database dependency before M1c (`getPartnerSecret` reads `process.env`); it now does a
+registry read (60s-cached, so roughly one read per partner per minute) plus two counter writes —
+minute and day — on every authenticated request. Two consequences a partner can observe:
+
+- A registry read failure denies with `401 unknown_partner` (§3) rather than failing open. Pre-M1c
+  the same Mongo blip could not reach the auth layer at all, and degraded per-route instead —
+  `/gaps` and `/mastery` returned `200` with an ephemeral profile. Post-M1c it is a `401` across
+  every `/api/portal/v1/**` route at once.
+- Once `PORTAL_LIMITS_MODE` is removed (rollout step 7), `429`/`402` become reachable for traffic
+  that previously never saw them.
 
 ---
 
@@ -432,23 +447,117 @@ Following the repo's script-based oracle (`npm run test:all`, currently 181 entr
 
 ## 10. Rollout
 
-Each step is independently reversible:
+**Where steps 2–5 run.** They are `ts-node` ops scripts, and they run **from a workstation, from
+`apps/tutor`, over an SSH tunnel to the production Mongo** — the production server has no TS tooling
+(deployed with `--omit=dev`), and nothing in the repo loads `.env.local` for `ts-node`, so every
+variable must be supplied on the command line (`@core/db` reads `process.env.MONGODB_URI` at module
+load and throws `MONGODB_URI not configured` if it is unset). Production Mongo listens on the
+server's loopback (`127.0.0.1:2710`, replicaSet `rs0`), so forward the port and force
+`directConnection=true` — replica-set discovery otherwise hands the driver the server's internal
+hostnames. This is exactly how the 2026-08-16 dry run was executed.
 
-1. **Deploy with `PORTAL_LIMITS_MODE=report-only` set in the same deploy.** Unset means *enforce* —
-   the mode is only consulted to downgrade a block — and `checkPartnerLimits` runs inside
-   `withPortalAuth` for every portal call the moment this code is live. An earlier draft scheduled the
-   observation window last, which would have meant enforcement ran for the entire rollout with the env
-   fallback's `{rpm 600, burst 60}` and the window observed nothing. Open it with the deploy.
-2. Run the seed (`npm run seed:partner-registry`). Registry rows now win per-partner; env remains the
-   fallback for partners without a row.
-3. Backfill dry-run; review the attribution table. Confirm `already-migrated: 0` and `ambiguous: 0` —
-   these, not the index build, are the real gate (§5).
-4. Backfill write pass.
-5. Build the unique partial index.
+```
+ssh -L 2710:127.0.0.1:2710 <prod-host>          # leave open in a second shell
+cd apps/tutor
+export MONGODB_URI='mongodb://<user>:<pass>@127.0.0.1:2710/<db>?replicaSet=rs0&directConnection=true'
+export PORTAL_PARTNER_SECRETS='<the value from .env.local.production>'
+export PORTAL_SECRET_ENC_KEY='<the key generated in step 1>'
+```
+
+Check `MONGODB_URI` is the tunnelled production URI before **every** step. A dev URI here seals dev
+secrets into rows that then win over the env fallback.
+
+Steps 1–5 are reversible. **Step 6 is not, once any new student has resolved under it** — see the
+note after step 7.
+
+1. **Generate `PORTAL_SECRET_ENC_KEY`, add it to the deployed env, and back it up — and deploy with
+   `PORTAL_LIMITS_MODE=report-only` set in that same deploy.** Both are env lines in
+   `.env.local.production`, which `deploy-tutor.sh` uploads whole as the server's `.env.local`. The
+   key does not exist in any environment yet; generate it with
+   `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"` (base64, 32 bytes),
+   and back it up alongside the other production secrets — it is the only key that can open a sealed
+   partner secret, and once sealed rows exist a server missing it cannot open any partner's secrets.
+   `PORTAL_LIMITS_MODE` unset means *enforce* — the mode is only consulted to downgrade a block —
+   and `checkPartnerLimits` runs inside `withPortalAuth` for every portal call the moment this code
+   is live. An earlier draft scheduled the observation window last, which would have meant
+   enforcement ran for the entire rollout with the env fallback's `{rpm 600, burst 60}` and the
+   window observed nothing. Open it with the deploy.
+2. **Seed the registry.** The bare command is a **dry run** — it writes nothing and no row wins
+   anything; `-- --write` is what applies it:
+
+   ```
+   npm run seed:partner-registry               # dry run: report + key fingerprint
+   npm run seed:partner-registry -- --write    # apply
+   ```
+
+   Before it opens a DB connection the seed aborts non-zero if `PORTAL_SECRET_ENC_KEY` is unset or
+   fails a seal-then-open probe, and — in dry run too — prints its **fingerprint**: `sha256` of the
+   base64 env value, first 8 hex chars. **Confirm it equals the fingerprint of the key deployed in
+   step 1 before running the write pass**, taken from the deployed `.env.local` on the server —
+   that file, not the server's shell environment, is where the key lives (`deploy-tutor.sh` uploads
+   `.env.local.production` to `$REMOTE_DIR/apps/tutor/.env.local`, and Next reads it from there), and
+   hashing the `PORTAL_SECRET_ENC_KEY` you exported in the tunnel shell compares the value against
+   itself and matches tautologically:
+
+   ```
+   ssh <prod-host> 'sed -n "s/^PORTAL_SECRET_ENC_KEY=//p" /root/evelyn-tutor/apps/tutor/.env.local | tr -dc "A-Za-z0-9+/=" | sha256sum | cut -c1-8'
+   ```
+
+   `tr -dc` keeps only base64 characters, so surrounding quotes and the trailing newline drop out and
+   what is hashed is exactly the string the seed fingerprints; the command prints 8 hex characters
+   and can never print the key. Empty output means the line is not in the deployed file at all —
+   step 1 has not landed. A wrong-but-valid 32-byte key
+   seals cleanly, writes rows and exits 0; the server then cannot open those secrets, the partner
+   resolves with `secrets: []`, and because a registry row wins over the env fallback, every live
+   partner starts returning `401 unknown_partner` within one 60s cache TTL.
+   After `--write`: registry rows win per-partner; env remains the fallback for partners without a
+   row. A running server picks up a seeded row **within 60s**, not immediately — the seed's
+   `invalidatePartner` call clears the cache of its own `ts-node` process, not the Next server's.
+   **Step 2b — verify the seal before continuing.** Make one signed request per seeded
+   `kind: 'partner'` row — not the `evelyn` first-party row, which has no secret and 401s by design —
+   against an endpoint on its allowlist, and confirm `200`, not `401 unknown_partner`. (Sign with
+   `signPortalRequest` from `@evelyn/portal-contract/auth`: the three `x-evelyn-*` headers over
+   method + path-with-query + timestamp + body.) **Wait at least 60s after the `--write` pass before
+   making that request, or restart the tutor process first.** `getPartner` caches the *env-fallback*
+   record as well as registry rows (`registry.ts`, `CACHE_TTL_MS = 60_000`), and live traffic keeps
+   that entry warm, so a request inside the window can be served `200` from the pre-seed env fallback
+   while the row just written is unopenable — this step would then report healthy for precisely the
+   failure it exists to catch, and the 401s would begin up to 60s later with the operator already on
+   step 3. This is an explicit step, not something "review the
+   output" covers: reviewing the seed's output cannot detect a key mismatch, and 60s of cache TTL is
+   the entire margin between a wrong key and every partner failing. **If a partner 401s:** delete
+   its row from the `partners` collection — the `PORTAL_PARTNER_SECRETS` env fallback resumes
+   automatically within 60s — then fix the key and re-seed.
+3. **Backfill dry run** — `npm run backfill:partner-namespace` (writes nothing). Review the
+   attribution table. Confirm `already-migrated: 0` and `ambiguous: 0` — these, not the index build,
+   are the real gate (§5).
+4. **Backfill write pass** — `npm run backfill:partner-namespace -- --write`.
+5. **Build the unique partial index** — `npm run backfill:partner-namespace -- --build-index`.
+   `--build-index` is independent of `--write`: it builds the index whether or not `--write` is
+   passed, so never pass it until step 4's output has been reviewed.
 6. Set `PORTAL_IDENTITY_RESOLUTION=on` and deploy. **Preconditions:** `EMBED_TOKEN_ENFORCE=on` in the
    target environment, and steps 4–5 complete. Until this flip, call sites use the raw id, so existing
    students keep their profiles.
-7. Observe, then remove `PORTAL_LIMITS_MODE` to enforce limits.
+7. Observe the report-only window, then delete the `PORTAL_LIMITS_MODE` line from
+   `.env.local.production` and redeploy — the whole file is uploaded, so a removed line really is
+   removed on the server. What this turns on: `min(rpm, burst)` per **(partner, endpoint)** per
+   minute — `60/min` for any partner still on the env fallback — and `dailyQuota`, which is also per
+   (partner, endpoint), so a partner's real daily ceiling is `dailyQuota × N` allowed endpoints.
+
+**Step 6 is only reversible until the first new student resolves under it.** For a backfilled
+student the resolve is an identity function (`externalStudentId == _id`), so turning the flag back
+off is a genuine no-op — that is the case the step is safe for. For a student **first seen while the
+flag was on**, `resolveProfileId` minted a surrogate `_id = randomUUID()` and every store
+(`StudentProfile`, `EvidenceEvent`, `LearnerStateProjection`, `LearnerStateSnapshot`,
+`StudentTopicNotes`, `MockAttempt`, `EloRating`) is keyed on it. Turning the flag off sends every
+call site back to the raw id, so `getOrCreateStudentProfile(rawId)` creates a **second, blank**
+profile: nothing is corrupted, but that cohort's mastery, gaps and notes go invisible. The second
+profile also carries no `partnerId`/`externalStudentId`, so it sits outside the partial unique index
+— and a later `backfill --write` would stamp it with the same `(partnerId, rawId)` pair the
+surrogate row already holds. `writeProfile` is a bare `updateOne` with no per-row error handling, so
+that run dies on **E11000 mid-loop** and leaves a partial migration. Recovery after an off/on cycle:
+find profiles whose `_id` equals another profile's `externalStudentId` under the same `partnerId`,
+merge or delete the blank duplicate by hand, and only then re-run the backfill.
 
 **NOT a step: removing `PORTAL_PARTNER_SECRETS`.** An earlier draft scheduled it, and a later fix
 softened it to "once every real partner has a registry row". Both are wrong, and the second teaches
@@ -477,7 +586,8 @@ immediate outage of every embedded session. Unblocking it means migrating those 
 | Risk | Mitigation |
 |---|---|
 | Mis-attribution of the 29 orphans | They go to `evelyn`, which is where retail users belong anyway; the dry-run table is reviewed before any write. |
-| `PORTAL_SECRET_ENC_KEY` lost | Secrets become unrecoverable and every partner must re-key. Key must be backed up alongside other production secrets before **step 1** — it is needed the first time the seed seals a secret. (An earlier draft said 'before step 5', referring to a pre-rewrite numbering in which step 5 was 'flip the secret source to the registry'; that step no longer exists.) |
+| `PORTAL_SECRET_ENC_KEY` lost | Secrets become unrecoverable and every partner must re-key. Key must be generated, deployed and backed up alongside the other production secrets at step 1 — the seed seals with it at step 2, and once sealed rows exist a server without it cannot open any partner's secrets. |
+| `PORTAL_SECRET_ENC_KEY` wrong (valid 32 bytes, but not the deployed one) | Seals cleanly and exits 0; the server then resolves every seeded partner with `secrets: []` and 401s it within 60s. Caught by step 2's fingerprint check and step 2b's signed request; undo is deleting the rows. |
 | Index build fails on unexpected duplicates | This is the desired behaviour — it blocks the migration rather than corrupting silently. Resolve the duplicate, re-run. |
 | A new write path forgets to resolve | The unique index catches a genuine duplicate; a code-review rule plus the single choke point in `store.ts` is the primary guard. |
 | Report-only mode left on indefinitely | Step 7 is an explicit gate with its own verification. |

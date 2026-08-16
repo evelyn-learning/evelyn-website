@@ -14,7 +14,10 @@
  */
 
 import { getStudentElo } from './store';
-import { getOrCreateStudentProfile } from '@/lib/tutor/student-profile/store';
+import {
+  getOrCreateStudentProfile,
+  resolveProfileIdOrRaw,
+} from '@/lib/tutor/student-profile/store';
 import { TUNING } from './estimator';
 
 export type AbilityBand = 'building' | 'steady' | 'strong';
@@ -48,13 +51,31 @@ export function bandForElo(elo: { rating: number; count: number } | null): Abili
  *  Any failure along the way — DB unreachable, whatever — falls back to
  *  the same default a fresh student gets; hints must never fail the
  *  caller. */
-export async function getLearnerHints(studentId: string, subject?: string): Promise<LearnerHints> {
+export async function getLearnerHints(
+  studentId: string,
+  subject: string | undefined,
+  /** M1c Task 5 (fix round 1, IMPORTANT 3) — the calling portal route's
+   *  verified `auth.partnerId`. REQUIRED (not optional): an earlier draft
+   *  made this optional with a `?? ''` fallback, and because the resolve
+   *  call sat INSIDE the try/catch below, a caller that forgot to pass it
+   *  didn't fail loud — it silently degraded every student to
+   *  `{band:'steady', gapTopics:[]}`, indistinguishable from a normal DB
+   *  hiccup. Making it required turns that into a compile error at every
+   *  call site instead of a silent runtime degradation. */
+  partnerId: string,
+): Promise<LearnerHints> {
   if (studentId.startsWith('trial:')) return DEFAULT_HINTS;
 
   try {
+    // M1c Task 5 (spec §4.1) — resolve ONCE; `getStudentElo` and the
+    // profile-store read are one identity space (both keyed by the
+    // resolved surrogate id, not the raw external one) — see
+    // resolveProfileIdOrRaw's doc comment for why a resolution failure
+    // degrades to the raw id here rather than throwing.
+    const profileId = await resolveProfileIdOrRaw({ partnerId, externalStudentId: studentId });
     const [elo, profile] = await Promise.all([
-      getStudentElo(studentId, subject),
-      getOrCreateStudentProfile(studentId),
+      getStudentElo(profileId, subject),
+      getOrCreateStudentProfile(profileId),
     ]);
 
     const gapTopics = profile.gaps

@@ -11,6 +11,8 @@ import {
   checkEmbedAuth,
   signEmbedToken,
   embedEnforceMode,
+  partnerIdForInternalRoute,
+  embedTokenRejectionReason,
 } from '../src/lib/tutor/portal/embed-token';
 import { parseEmbedConfig } from '../src/lib/tutor/portal/parse-embed-config';
 
@@ -210,6 +212,100 @@ assert(
   checkEmbedAuth({ token: anon, route: 't' }).allow === true,
   'on mode allows a verified anonymous (no student_id) token when no expectedStudentId is given',
 );
+
+// ---------------------------------------------------------------------------
+// partnerIdForInternalRoute() — M1c Task 5 fix round 3, CRITICAL A2.
+//
+// `checkEmbedAuth` returns `payload` even when verification only PARTIALLY
+// succeeded (a `student_mismatch`), and in 'log' mode still ALLOWS the
+// request. If `partnerIdForInternalRoute` trusted that payload, any
+// validly-signed token — e.g. the marketing demo-token route hands out a
+// signed `evelyn-marketing` token to anyone — could pick which partner's
+// namespace an unrelated student's data gets written into. It must fall
+// back to 'evelyn' whenever verification didn't FULLY succeed (`reason`
+// set), never just whenever `allow` is true.
+// ---------------------------------------------------------------------------
+assert(
+  partnerIdForInternalRoute({ allow: true }) === 'evelyn',
+  'partnerIdForInternalRoute: no payload at all (e.g. enforce=off) -> evelyn',
+);
+assert(
+  partnerIdForInternalRoute({ allow: true, payload: { partner_id: 'academy', student_id: 'stu-1' } }) === 'academy',
+  'partnerIdForInternalRoute: full verification success -> the token\'s own partner_id',
+);
+assert(
+  partnerIdForInternalRoute(mismatch) === 'evelyn',
+  'partnerIdForInternalRoute: student_mismatch (mode=on, blocked) -> evelyn, NOT the token\'s partner_id',
+);
+const logModeMismatch = (() => {
+  process.env.EMBED_TOKEN_ENFORCE = 'log';
+  const decision = checkEmbedAuth({ token: good, expectedStudentId: 'stu-2', route: 't' });
+  process.env.EMBED_TOKEN_ENFORCE = 'on';
+  return decision;
+})();
+assert(logModeMismatch.allow === true, 'sanity: log mode allows the mismatched request through');
+assert(logModeMismatch.payload?.partner_id === 'academy', 'sanity: log mode still returns the payload');
+assert(
+  partnerIdForInternalRoute(logModeMismatch) === 'evelyn',
+  'partnerIdForInternalRoute: student_mismatch in LOG mode (allowed through) -> evelyn, not the exploit path CRITICAL A2 closed',
+);
+assert(
+  partnerIdForInternalRoute({ allow: false, reason: 'missing token' }) === 'evelyn',
+  'partnerIdForInternalRoute: no token at all -> evelyn (retail), never a 401 concern for this function',
+);
+
+// ---------------------------------------------------------------------------
+// embedTokenRejectionReason() — M1c Task 5 fix round 4, spec §4.0 refinement.
+//
+// Round 3's `partnerIdForInternalRoute` treated "no token" and "token
+// present but invalid" identically (both -> 'evelyn', never reject). That
+// was wrong for the second case: a PRESENT token is by definition not
+// retail, so falling back to 'evelyn' for one that fails verification
+// (expired past the grace window, tampered, unknown partner) or fails
+// student-binding (student_mismatch) silently misattributes a partner
+// student's write into the retail namespace instead of erroring. This
+// function is the route-level reject/proceed decision that closes that:
+// only a genuinely ABSENT token may proceed as retail; a present-but-bad
+// one must reject.
+// ---------------------------------------------------------------------------
+assert(
+  embedTokenRejectionReason(null, { allow: true }) === null,
+  'embedTokenRejectionReason: no token at all -> proceed (retail), never reject',
+);
+assert(
+  embedTokenRejectionReason(null, { allow: false, reason: 'missing token' }) === null,
+  'embedTokenRejectionReason: no token, enforce=on (checkEmbedAuth still reports allow:false) -> proceed anyway, token itself was absent',
+);
+assert(
+  embedTokenRejectionReason(good, { allow: true, payload: { partner_id: 'academy', student_id: 'stu-1' } }) === null,
+  'embedTokenRejectionReason: token present and fully verified -> proceed',
+);
+const garbage = 'not-a-valid-jwt';
+const garbageDecision = checkEmbedAuth({ token: garbage, expectedStudentId: 'stu-1', route: 't' });
+assert(garbageDecision.reason !== undefined, 'sanity: a garbage token fails verification with a reason');
+assert(
+  embedTokenRejectionReason(garbage, garbageDecision) === garbageDecision.reason,
+  'embedTokenRejectionReason: token present but malformed -> reject with the verification reason',
+);
+assert(
+  embedTokenRejectionReason(good, mismatch) === 'student_mismatch',
+  'embedTokenRejectionReason: token present but student_mismatch (mode=on) -> reject, not evelyn',
+);
+assert(
+  embedTokenRejectionReason(good, logModeMismatch) === 'student_mismatch',
+  'embedTokenRejectionReason: student_mismatch in LOG mode (checkEmbedAuth itself allows it through) -> STILL reject — ' +
+    'this route-level check deliberately overrides log mode\'s usual "warn but allow" for identity-deriving routes',
+);
+// 'off' mode never attempts verification, so `reason` is never set even
+// for a token that would otherwise be garbage — this function must not
+// reject there (checkEmbedAuth's OWN contract: off means "don't even try").
+process.env.EMBED_TOKEN_ENFORCE = 'off';
+const offModeGarbage = checkEmbedAuth({ token: garbage, expectedStudentId: 'stu-1', route: 't' });
+assert(
+  embedTokenRejectionReason(garbage, offModeGarbage) === null,
+  'embedTokenRejectionReason: enforce=off never rejects, even with a garbage token present (off means "do not verify")',
+);
+process.env.EMBED_TOKEN_ENFORCE = 'on';
 
 resetEnv();
 

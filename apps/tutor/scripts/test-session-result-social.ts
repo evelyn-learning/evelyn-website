@@ -95,6 +95,7 @@ async function main() {
     const { stub, calls } = makeStub(ONE_SUGGESTION);
     const result = await emitSessionResult(req, {
       social: { transcript: TRANSCRIPT, existingThreads: EXISTING, extract: stub },
+      partnerId: 'test-partner-d3',
     });
 
     assert.ok(result.socialMemoryDelta, 'socialMemoryDelta must be present');
@@ -125,6 +126,7 @@ async function main() {
       const { stub, calls } = makeStub(ONE_SUGGESTION);
       const result = await emitSessionResult(req, {
         social: { transcript: TRANSCRIPT, existingThreads: EXISTING, extract: stub },
+        partnerId: 'test-partner-d3',
       });
       assert.ok(!('socialMemoryDelta' in result), 'field must be absent');
       assert.equal(calls.length, 0, 'extractor must not run when the flag is off');
@@ -140,6 +142,7 @@ async function main() {
     const { stub, calls } = makeStub(ONE_SUGGESTION);
     const result = await emitSessionResult(req, {
       social: { transcript: TRANSCRIPT, extract: stub },
+      partnerId: 'test-partner-d3',
     });
     assert.ok(!('socialMemoryDelta' in result));
     assert.equal(calls.length, 0);
@@ -150,6 +153,7 @@ async function main() {
     const { stub, calls } = makeStub(ONE_SUGGESTION);
     const result = await emitSessionResult(req, {
       social: { transcript: TRANSCRIPT, extract: stub },
+      partnerId: 'test-partner-d3',
     });
     assert.ok(!('socialMemoryDelta' in result));
     assert.equal(calls.length, 0);
@@ -158,7 +162,7 @@ async function main() {
   await test('no social carrier (demo/trial analog: caller sends no transcript) → no delta', async () => {
     const req = freshReq();
     await subscribe(req.studentId);
-    const result = await emitSessionResult(req, {});
+    const result = await emitSessionResult(req, { partnerId: 'test-partner-d3' });
     assert.ok(!('socialMemoryDelta' in result));
     SessionResultSchema.parse(result);
   });
@@ -169,6 +173,7 @@ async function main() {
     const { stub, calls } = makeStub(EMPTY_EXTRACTION);
     const result = await emitSessionResult(req, {
       social: { transcript: TRANSCRIPT, extract: stub },
+      partnerId: 'test-partner-d3',
     });
     assert.equal(calls.length, 1, 'extractor DID run');
     assert.ok(!('socialMemoryDelta' in result), 'empty delta must be omitted, not sent');
@@ -180,6 +185,7 @@ async function main() {
     const { stub, calls } = makeStub(ONE_SUGGESTION);
     const result = await emitSessionResult(req, {
       social: { transcript: TRANSCRIPT, extract: stub },
+      partnerId: 'test-partner-d3',
     });
     assert.ok(!('socialMemoryDelta' in result));
     assert.equal(calls.length, 0);
@@ -196,9 +202,9 @@ async function main() {
     await subscribe(req.studentId);
     const { stub, calls } = makeStub(ONE_SUGGESTION);
     const social: SocialEmitOptions = { transcript: TRANSCRIPT, existingThreads: EXISTING, extract: stub };
-    const first = await emitSessionResult(req, { social });
+    const first = await emitSessionResult(req, { social, partnerId: 'test-partner-d3' });
     assert.ok(first.socialMemoryDelta, 'first emit carries the delta');
-    const replay = await emitSessionResult(req, { social });
+    const replay = await emitSessionResult(req, { social, partnerId: 'test-partner-d3' });
     assert.ok(replay.socialMemoryDelta, 'replay emit ALSO carries the delta (ordering fix)');
     assert.deepEqual(replay.learningStateDelta.gaps, { new: [], promoted: [], resolved: [] }, 'pedagogical deltas stay a no-op snapshot on replay');
     assert.equal(calls.length, 2, 'extractor ran on both emits');
@@ -210,6 +216,7 @@ async function main() {
     const throwing: typeof extractSocialThreads = async () => { throw new Error('boom'); };
     const result = await emitSessionResult(req, {
       social: { transcript: TRANSCRIPT, extract: throwing },
+      partnerId: 'test-partner-d3',
     });
     assert.ok(!('socialMemoryDelta' in result));
     SessionResultSchema.parse(result);

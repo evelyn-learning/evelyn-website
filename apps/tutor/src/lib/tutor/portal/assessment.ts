@@ -21,6 +21,7 @@ import { retrievePractice, type PracticeSources } from './practice';
 import { emitSessionResult } from './session-result';
 import { gradeFreeResponse, type GradeDeps } from './grade-free-response';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
+import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
 import type { ResolvedAssessmentKey } from './adapters';
 import type {
   AssessmentRequest,
@@ -198,11 +199,19 @@ export async function submitAssessment(
   sub: AssessmentSubmission,
   deps: GradeDeps,
   resolveItem: AssessmentItemResolver,
-  /** Final-review fix (M3, spec §4.1) — the authenticated partner id
-   *  (`auth.partnerId` from `withPortalAuth`), stamped onto every evidence
-   *  row this submission produces. The route passes it through; direct/test
-   *  callers may omit it. */
-  partnerId?: string,
+  /** Final-review fix (M3, spec §4.1); REQUIRED as of M1c Task 5 (fix
+   *  round 2, IMPORTANT C) — the authenticated partner id (`auth.partnerId`
+   *  from `withPortalAuth`), stamped onto every evidence row this
+   *  submission produces AND used to resolve the profile-store identity
+   *  below. Was optional with a `?? ''` fallback; required now so a caller
+   *  that forgot to thread it is a compile error, not a silent runtime
+   *  path into resolveProfileIdOrRaw's degrade. (This parameter is
+   *  positional, not part of an options object with a JS-level default —
+   *  a caller that already omits it at the call site keeps working
+   *  identically at runtime, since the flag-off short-circuit in
+   *  resolveProfileIdOrRaw never inspects it; only `src/`'s two real
+   *  callers, which already supply it, get the compile-time guarantee.) */
+  partnerId: string,
 ): Promise<AssessmentResult> {
   // Task 8 — quiz vs silent-diagnostic discriminator: `notesTouched` is the
   // submission's existing signal (v1.4.0 comment on AssessmentSubmissionSchema:
@@ -221,6 +230,17 @@ export async function submitAssessment(
           : 'diagnostic';
   const evidenceOccurredAt = new Date();
   const evidenceInputs: EvidenceInput[] = [];
+
+  // M1c Task 5 (fix round 1, CRITICAL 2) — resolve once, up front. Used for
+  // the `diag:` evidence rows built below. NOT passed into `emitReq` further
+  // down (that keeps the raw `sub.studentId` unchanged) — emitSessionResult
+  // resolves internally from `opts.partnerId` + `req.studentId`, and since
+  // resolution is idempotent (same (partnerId, externalStudentId) pair ->
+  // same surrogate id, resolveProfileId's whole guarantee), both resolves
+  // land on the identical profile id at the cost of one redundant Mongo
+  // round trip, in exchange for not needing a resolution-bypass parameter
+  // on emitSessionResult itself.
+  const profileId = await resolveProfileIdOrRaw({ partnerId, externalStudentId: sub.studentId });
 
   const perLo = new Map<string, { awarded: number; max: number }>();
   const review: AssessmentReviewItem[] = [];
@@ -245,7 +265,7 @@ export async function submitAssessment(
       });
       evidenceInputs.push({
         idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
-        studentId: sub.studentId,
+        studentId: profileId,
         partnerId,
         loId: r.loId,
         source: evidenceSource,
@@ -262,7 +282,7 @@ export async function submitAssessment(
       review.push({ itemId: r.itemId, loId: r.loId, pointsAwarded: 0, maxPoints: 1, correct: false });
       evidenceInputs.push({
         idempotencyKey: `diag:${sub.sessionId}:${r.itemId}`,
-        studentId: sub.studentId,
+        studentId: profileId,
         partnerId,
         loId: r.loId,
         source: evidenceSource,
@@ -311,6 +331,8 @@ export async function submitAssessment(
 
   const emitReq: SessionEmitRequest = {
     sessionId: sub.sessionId,
+    // RAW, not `profileId` — emitSessionResult resolves this itself (see
+    // its own doc comment) and echoes it back verbatim in the response.
     studentId: sub.studentId,
     courseId: sub.courseId,
     status: 'completed',

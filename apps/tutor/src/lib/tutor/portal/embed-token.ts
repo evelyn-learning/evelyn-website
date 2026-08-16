@@ -128,6 +128,108 @@ export interface EmbedAuthDecision {
 }
 
 /**
+ * M1c Task 5 (fix round 2, spec §4.0; corrected fix round 3, CRITICAL A1 +
+ * A2) — the partner id an internal `/api/tutor/**` route resolves student
+ * identity under, given the `checkEmbedAuth` decision for that request.
+ *
+ * The tutor UI a partner's students actually sit in is `tutor-portal/embed`,
+ * and it commits session state through these internal routes — hardcoding
+ * `'evelyn'` there while the SAME partner's server-to-server portal reads
+ * resolve under their verified `auth.partnerId` gives one student two
+ * surrogate profiles (round-1 CRITICAL A). The verified embed token's
+ * `partner_id` claim is the correct answer for an embedded session;
+ * `'evelyn'` is reserved for genuinely retail traffic that carries none.
+ *
+ * CRITICAL A1 (fix round 3): callers of this function must NOT gate the
+ * request on `auth.allow`. `/tutor` and `/tutor/settings` are retail
+ * surfaces that legitimately send no embed token, and an earlier version of
+ * spec §4.0 said internal routes "must gain embed-token auth" — requiring
+ * one 401s real retail users the moment the code ships, independent of
+ * `PORTAL_IDENTITY_RESOLUTION` (this auth check isn't gated by that flag at
+ * all). Token absent → this function returns `'evelyn'` and the route must
+ * still serve the request. Token present → it must be valid and
+ * student-bound to contribute a partner id; otherwise this ALSO falls back
+ * to `'evelyn'` (never a 401) — see CRITICAL A2 below for why a token can
+ * be present yet still not trusted.
+ *
+ * CRITICAL A2 (fix round 3): `checkEmbedAuth` returns `payload` even when
+ * verification only PARTIALLY succeeded — a token whose `student_id` claim
+ * doesn't bind to the request's student comes back as `{reason:
+ * 'student_mismatch', payload}`, and in `'log'` enforcement mode the
+ * request is still allowed through. Trusting `payload.partner_id` in that
+ * case would let ANY validly-signed token choose a write namespace
+ * regardless of which student it names — e.g. the marketing demo-token
+ * route hands out a validly-signed `evelyn-marketing` token to anyone, so
+ * in `'log'` mode an anonymous caller could write into
+ * `('evelyn-marketing', <any studentId>)`. Only `auth.reason === undefined`
+ * (full verification success — no missing/bad/expired/mismatched token)
+ * makes the payload trustworthy for partner derivation.
+ *
+ * `auth.payload` is also undefined whenever nothing was actually VERIFIED
+ * in the first place — `EMBED_TOKEN_ENFORCE` is `'off'` (still the current
+ * default: `checkEmbedAuth` returns `{allow:true}` with no payload,
+ * without even attempting verification) or the token was missing
+ * entirely. Falling back to `'evelyn'` in that case is correct for a
+ * request that carried no verifiable token — but it means partner
+ * attribution here is only as good as `EMBED_TOKEN_ENFORCE`'s own rollout.
+ * `PORTAL_IDENTITY_RESOLUTION` must not flip to `'on'` in an environment
+ * where embed sessions are still running with enforcement `'off'`, or every
+ * embedded partner student would resolve under `'evelyn'` instead of their
+ * real partner — the exact split this function exists to prevent. That is
+ * a rollout-ordering precondition (same shape as the Task 6 backfill gate),
+ * not something this function can enforce by itself.
+ */
+export function partnerIdForInternalRoute(auth: EmbedAuthDecision): string {
+  if (auth.reason !== undefined) return 'evelyn';
+  return auth.payload?.partner_id ?? 'evelyn';
+}
+
+/**
+ * M1c Task 5 (fix round 4, spec §4.0 refinement) — the reject/proceed
+ * decision an internal identity-deriving route must make BEFORE calling
+ * `partnerIdForInternalRoute`, given the raw token string and the
+ * `checkEmbedAuth` decision for it. Returns the failure `reason` to 401
+ * with, or `null` to proceed.
+ *
+ * Round 3 made `partnerIdForInternalRoute` fall back to `'evelyn'` for ANY
+ * decision with a `reason` set — that conflated two different situations:
+ *
+ *   - No token at all. This IS retail (`/tutor`, `/tutor/settings` send
+ *     none) and must resolve to `'evelyn'` and be SERVED, never 401 — the
+ *     round-3 CRITICAL A1 fix, and it stands.
+ *   - A token that WAS sent but failed verification (bad signature,
+ *     expired past the grace window, unknown partner) or failed the
+ *     student-binding check (`student_mismatch`). This is NOT retail — a
+ *     present token is by definition someone claiming to be a specific
+ *     partner's student. Falling back to `'evelyn'` here is silently
+ *     WRONG, not safely conservative: a partner's tutoring session running
+ *     past the token's grace window would have every subsequent write land
+ *     under `('evelyn', rawStudentId)` — colliding with any retail user
+ *     sharing that external id, the exact split-brain this milestone
+ *     exists to prevent, reached through a degraded token instead of a
+ *     missing one. And in `'on'` enforcement mode `checkEmbedAuth` returns
+ *     `{allow:false}` with NO log line, so the misattribution left no
+ *     trace. This function's whole job is to make that case reject (401)
+ *     and log instead, at every enforcement mode where verification
+ *     actually ran (`'off'` never attempts verification at all — `reason`
+ *     is never set there regardless of what the client sent — so this
+ *     never rejects in `'off'` mode; `'log'` mode's traditional "warn but
+ *     allow" is deliberately overridden here, because for THESE routes an
+ *     allowed-through bad token is a correctness bug, not an
+ *     observability nicety).
+ *
+ * `token` must be the SAME raw string passed into `checkEmbedAuth` — this
+ * function cannot infer "was a token sent" from `auth` alone, because in
+ * `'off'` mode `checkEmbedAuth` returns `{allow:true}` with no payload or
+ * reason regardless of whether the caller sent one.
+ */
+export function embedTokenRejectionReason(token: string | null, auth: EmbedAuthDecision): string | null {
+  if (token === null) return null; // no token sent at all -> retail, never reject
+  if (auth.reason === undefined) return null; // absent, or fully verified -> proceed
+  return auth.reason; // present but invalid/mismatched -> reject with this reason
+}
+
+/**
  * Verify a token and apply the current enforce mode. Never throws.
  *
  * - 'off': allow unconditionally, without attempting verification.

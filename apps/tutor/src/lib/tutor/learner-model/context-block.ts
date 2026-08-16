@@ -126,9 +126,20 @@ export function renderLearnerContextBlock(
  * resolve to `null` (logged via console.error for the DB-error case) so a
  * learner-context failure never takes down the boot-context fetch that
  * also carries the student profile.
+ *
+ * M1C-IDENTITY: resolved by caller. `profileId` must already be RESOLVED
+ * by the caller (its sole caller, the internal
+ * `/api/tutor/student-profile/[id]` route, resolves once per request and
+ * passes the same id here it used for the profile-store read). This
+ * function does not resolve identity itself: `LearnerStateProjection` and
+ * `StudentProfile` are one identity space (`scripts/backfill-evidence.ts`
+ * writes `studentId: profile._id` directly), so calling
+ * `resolveProfileId` a second time here — even with the same inputs, which
+ * would be idempotent — would just be a redundant DB round trip for no
+ * correctness gain.
  */
 export async function getLearnerContextBlock(
-  studentId: string,
+  profileId: string,
   lessonPlanId: string,
 ): Promise<string | null> {
   try {
@@ -138,7 +149,7 @@ export async function getLearnerContextBlock(
     const cappedPlanLos = plan.los.slice(0, MAX_LOS);
 
     await connectDB();
-    const ids = cappedPlanLos.map((lo) => buildLearnerStateProjectionId(studentId, lo.id));
+    const ids = cappedPlanLos.map((lo) => buildLearnerStateProjectionId(profileId, lo.id));
     const projections = await LearnerStateProjectionModel.find({ _id: { $in: ids } }).lean();
     const byLoId = new Map(projections.map((p) => [p.loId, p]));
 
@@ -154,7 +165,7 @@ export async function getLearnerContextBlock(
       };
     });
 
-    const profile = await getOrCreateStudentProfile(studentId);
+    const profile = await getOrCreateStudentProfile(profileId);
     const gaps: LearnerContextGap[] = profile.gaps
       .filter((g) => (g.status === 'confirmed' || g.status === 'open') && !isGapStale(g, now))
       .sort((a, b) => b.lastSeenAt.localeCompare(a.lastSeenAt))

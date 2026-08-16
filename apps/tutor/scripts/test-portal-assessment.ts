@@ -168,7 +168,7 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
 
   let firstResult: Awaited<ReturnType<typeof submitAssessment>>;
   await test('grades, writes low-exposure mastery + candidate gap for the weak LO', async () => {
-    firstResult = await submitAssessment(submission('diag-s1'), fakeDeps, fakeResolver);
+    firstResult = await submitAssessment(submission('diag-s1'), fakeDeps, fakeResolver, 'test-partner');
     assert.ok(SessionResultSchema.safeParse(firstResult).success, 'must be a valid SessionResult');
 
     const mA = firstResult.learningStateDelta.mastery.find((m) => m.loId === LO_A)!;
@@ -188,7 +188,7 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
   });
 
   await test('idempotent on sessionId — re-submit yields no new deltas', async () => {
-    const again = await submitAssessment(submission('diag-s1'), fakeDeps, fakeResolver);
+    const again = await submitAssessment(submission('diag-s1'), fakeDeps, fakeResolver, 'test-partner');
     assert.strictEqual(again.learningStateDelta.gaps.new.length, 0);
   });
 
@@ -244,6 +244,7 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
       },
       rubricDeps,
       rubricResolver,
+      'test-partner',
     );
     const score = res.score!;
     assert.strictEqual(score.pointsAwarded, 3, 'partial 1.5+1.5');
@@ -261,7 +262,7 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     const res = await submitAssessment(
       { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'frac-1',
         responses: [{ itemId: 'n1', loId: 'apstats.lo-n', response: { text: '25/10' } }] },
-      fakeDeps, resolver,
+      fakeDeps, resolver, 'test-partner',
     );
     assert.strictEqual(res.review!.find((r) => r.itemId === 'n1')!.correct, true, '25/10 should grade as 2.5');
   });
@@ -272,7 +273,7 @@ async function call(h: (r: NextRequest, c: unknown) => Promise<Response>, req: N
     const res = await submitAssessment(
       { assessmentId: 'a', studentId: 'p', courseId: 'c', sessionId: 'fb-1',
         responses: [{ itemId: 'n2', loId: 'apstats.lo-n', response: { text: '5' } }] },
-      fakeDeps, resolver,
+      fakeDeps, resolver, 'test-partner',
     );
     const r = res.review!.find((x) => x.itemId === 'n2')!;
     assert.ok(r.correct);

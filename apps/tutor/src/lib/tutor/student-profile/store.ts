@@ -17,6 +17,7 @@
  * (lives in the orchestrator) and committed in one shot.
  */
 
+import { randomUUID } from 'node:crypto';
 import connectDB from '@core/db';
 import { StudentProfileModel, toStudentProfile, type IStudentProfileDoc } from '@/models/StudentProfile';
 import {
@@ -559,6 +560,210 @@ export function recordPlanContentSeen(
     problems: mergeSlot(prev.problems, fillings.problems),
   };
   return { ...profile, planContentSeen: { ...(profile.planContentSeen ?? {}), [planId]: next } };
+}
+
+/**
+ * M1c: identity resolution is flag-gated because resolveProfileId does NOT adopt
+ * a pre-existing row lacking partnerId/externalStudentId — it mints a new
+ * surrogate _id. Turning this on before the Task 6 backfill has stamped the 495
+ * existing profiles would hand every existing student a blank profile while
+ * their mastery stayed on the old _id. Flip it at rollout step 5a, after the
+ * backfill and the index build. Default off so a deploy is always safe.
+ */
+export function identityResolutionEnabled(): boolean {
+  return process.env.PORTAL_IDENTITY_RESOLUTION === 'on';
+}
+
+export interface ResolveProfileInput {
+  partnerId: string;
+  externalStudentId: string;
+}
+
+export interface ResolverDeps {
+  findExisting(input: ResolveProfileInput): Promise<{ _id: string } | null>;
+  findOneAndUpsert(
+    input: ResolveProfileInput & { newId: string },
+  ): Promise<{ _id: string } | null>;
+  newId(): string;
+}
+
+/**
+ * The Mongo filter that carries the M1c guarantee: identity is the PAIR,
+ * never `externalStudentId` alone. Exported and used by both
+ * `defaultResolverDeps` methods below (not duplicated), and pinned directly
+ * by a hermetic test — the fake-store tests below exercise the fake's own
+ * key, not this line, so this is the only thing standing between "correct"
+ * and "regressed to filtering on externalStudentId alone" reaching prod
+ * undetected.
+ */
+export function identityFilter({ partnerId, externalStudentId }: ResolveProfileInput) {
+  return { partnerId, externalStudentId };
+}
+
+/**
+ * M1c Task 5 (fix round 2, IMPORTANT D) — a structural discriminator (same
+ * idiom as `secret-box.ts`'s `SecretDecryptError`) for `resolveProfileId`'s
+ * three NON-operational throws: a missing `partnerId`/`externalStudentId`
+ * (a caller bug — should be unreachable given every caller now declares
+ * `partnerId` required, but this is the backstop), and "upsert reported a
+ * duplicate but no row was found" (the loudest possible signal that
+ * identity data is CORRUPT — a unique-index violation whose winner can't be
+ * found is not a transient condition to paper over). `resolveProfileIdOrRaw`
+ * re-throws these instead of degrading to the raw id; only genuine
+ * operational failures (a real Mongo blip on the upsert/read) still degrade.
+ */
+export class ProfileIdentityError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ProfileIdentityError';
+  }
+}
+
+const defaultResolverDeps: ResolverDeps = {
+  newId: () => randomUUID(),
+  async findExisting(input) {
+    await connectDB();
+    return StudentProfileModel
+      .findOne(identityFilter(input))
+      .select('_id')
+      .lean<{ _id: string }>()
+      .exec();
+  },
+  async findOneAndUpsert({ partnerId, externalStudentId, newId }) {
+    await connectDB();
+    const now = new Date().toISOString();
+    return StudentProfileModel.findOneAndUpdate(
+      identityFilter({ partnerId, externalStudentId }),
+      {
+        $setOnInsert: {
+          _id: newId,
+          ...emptyProfile(newId),
+          partnerId,
+          externalStudentId,
+          createdAt: now,
+          updatedAt: now,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    ).select('_id').lean<{ _id: string }>().exec();
+  },
+};
+
+/**
+ * Turn a partner-scoped identity into the surrogate profile `_id`.
+ *
+ * This is the M1c choke point. Two partners sending the same
+ * `externalStudentId` get two profiles because the unique index on
+ * (partnerId, externalStudentId) refuses otherwise — the guarantee is the
+ * database's, not a convention every call site must remember.
+ *
+ * Find-or-create is ONE atomic upsert, not a read followed by a write: two
+ * concurrent first-requests for the same new student would both miss and both
+ * insert, and the loser would surface E11000 to a legitimate student. On that
+ * error we re-read and adopt whoever won. `findExisting` MUST NOT be called
+ * on the happy path — that's the read-then-write anti-pattern this function
+ * exists to avoid, and the test suite asserts the call count to prove it.
+ */
+export async function resolveProfileId(
+  input: ResolveProfileInput,
+  deps: ResolverDeps = defaultResolverDeps,
+): Promise<string> {
+  if (!input.partnerId) throw new ProfileIdentityError('resolveProfileId: partnerId is required');
+  if (!input.externalStudentId) {
+    throw new ProfileIdentityError('resolveProfileId: externalStudentId is required');
+  }
+  const newId = deps.newId();
+  try {
+    const doc = await deps.findOneAndUpsert({ ...input, newId });
+    if (doc) return doc._id;
+  } catch (err) {
+    const e = err as { code?: number; codeName?: string };
+    // Accept both shapes: the driver's top-level numeric code, and a
+    // codeName that a wrapper/proxy might surface instead of (or in
+    // addition to) the numeric code.
+    if (e.code !== 11000 && e.codeName !== 'DuplicateKey') throw err;
+  }
+  const existing = await deps.findExisting(input);
+  if (!existing) {
+    throw new ProfileIdentityError(
+      `resolveProfileId: upsert reported a duplicate for ${input.partnerId} but no row was found`,
+    );
+  }
+  return existing._id;
+}
+
+/**
+ * M1c Task 5 (fix round 1, IMPORTANT 4; narrowed in fix round 2, IMPORTANT D)
+ * — the flag-gated wrapper every call site should use, instead of
+ * hand-rolling `identityResolutionEnabled() ? resolveProfileId(...) : raw`
+ * at each of the ~20 entry points.
+ *
+ * `getOrCreateStudentProfile` catches every DB error and degrades to an
+ * in-memory ephemeral profile — it never throws. `resolveProfileId` rethrows
+ * anything that isn't a duplicate-key race. Running it in front of
+ * `getOrCreateStudentProfile` (as every call site now must, per spec §4.1)
+ * would otherwise turn a transient Mongo blip on `/gaps`, `/mastery`,
+ * `/learner-state`, etc. from "200 with an empty/ephemeral profile" — the
+ * pre-M1c and still-getOrCreateStudentProfile contract — into a customer-
+ * visible 500. This wrapper preserves that contract for OPERATIONAL
+ * failures (a real Mongo blip on the upsert/read): it logs and degrades to
+ * the RAW `externalStudentId`, exactly what every call site did before M1c
+ * and what it does today with the flag off. A degraded response briefly
+ * reads/writes the wrong-keyed (unresolved) profile until the next
+ * successful resolve — judged the lesser risk against turning infra
+ * flakiness into an outage.
+ *
+ * `ProfileIdentityError` (a missing partnerId/externalStudentId, or an
+ * upsert-reported duplicate whose row can't be found) is NOT one of those
+ * operational failures — it stays loud. A missing `partnerId` should be
+ * unreachable given every caller now declares it a required, non-optional
+ * argument (a compile error, not a runtime path here) — this re-throw is
+ * the backstop if that guarantee is ever violated. And a duplicate-key
+ * upsert with no findable winner is the loudest possible signal that
+ * identity data is corrupt; swallowing it into "degrade to the raw id"
+ * would silently paper over exactly the failure mode this milestone exists
+ * to catch.
+ *
+ * M1c Task 5 (fix round 2, IMPORTANT E) — `trial:`-prefixed external ids
+ * NEVER resolve, flag on or off. Two guarantees depend on a trial id
+ * staying literally `trial:...` all the way through: `appendEvidence`
+ * drops any `EvidenceInput` whose `studentId` starts with `trial:` (demo/
+ * trial sessions don't feed the persistent learner model — 68 such
+ * profiles), and every write-path call site now shares ONE resolved id
+ * across the profile, evidence, projections, Elo and snapshot stores (spec
+ * §4.1). If trial ids resolved like any other, that shared id would become
+ * an opaque UUID with no `trial:` prefix left to filter on — silently
+ * turning "dropped by construction" into "written normally" — AND a
+ * request authenticated as one partner (e.g. the academy's own
+ * `/api/portal/v1/learner-state`) would mint a FRESH surrogate for a
+ * `trial:` id that pre-M1c (and the Task 6 backfill) always left on its
+ * bare, partner-agnostic `_id` — splitting that trial profile from itself
+ * depending on which route touched it. Short-circuiting here, in the one
+ * function every call site funnels through, means no call site has to
+ * remember this case individually.
+ */
+export async function resolveProfileIdOrRaw(
+  input: ResolveProfileInput,
+  /** M1c Task 5 (fix round 3, MINOR F) — injectable, same as
+   *  `resolveProfileId`'s own `deps` param. Added so the `trial:`
+   *  short-circuit above is provably never followed by a deps call in a
+   *  hermetic test, rather than the short-circuit's absence being masked
+   *  by this function's OWN degrade-on-failure catch below (a fake/real
+   *  `connectDB()` failure with no `MONGODB_URI` configured is a plain
+   *  `Error`, which that catch treats as operational and degrades to the
+   *  raw id too — so "returns the raw id" alone does not prove the
+   *  short-circuit ran; only "deps was never touched" does). */
+  deps: ResolverDeps = defaultResolverDeps,
+): Promise<string> {
+  if (input.externalStudentId.startsWith('trial:')) return input.externalStudentId;
+  if (!identityResolutionEnabled()) return input.externalStudentId;
+  try {
+    return await resolveProfileId(input, deps);
+  } catch (err) {
+    if (err instanceof ProfileIdentityError) throw err;
+    console.error('[student-profile] resolveProfileId failed, degrading to the raw id:', err);
+    return input.externalStudentId;
+  }
 }
 
 /** Patch the preferences sub-object on a profile and persist. Only keys

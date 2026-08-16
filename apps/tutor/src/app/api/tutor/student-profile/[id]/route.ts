@@ -19,6 +19,7 @@ import {
   resolveSettledGaps,
   upsertSessionMemory,
   recordPlanContentSeen,
+  resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import type { GapSignalCode } from '@/lib/tutor/student-profile/types';
 import { renderStudentProfileBlock } from '@/lib/tutor/student-profile/render';
@@ -26,20 +27,41 @@ import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
-import { checkEmbedAuth } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
+  const token = req.headers.get('x-embed-token');
   const auth = checkEmbedAuth({
-    token: req.headers.get('x-embed-token'),
+    token,
     expectedStudentId: id,
     route: 'student-profile:GET',
   });
   if (!auth.allow) {
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
   }
-  const profile = await getOrCreateStudentProfile(id);
+  // M1c final review (A-I5 / spec §4.0) — the round-4 rule, applied here
+  // too. `!auth.allow` alone is NOT the whole rule: in
+  // EMBED_TOKEN_ENFORCE='log' mode checkEmbedAuth returns
+  // `{allow: true, reason, payload}` for a token that FAILED verification,
+  // so the request would proceed and partnerIdForInternalRoute would
+  // degrade it to 'evelyn'. A present-but-invalid token is not retail; it
+  // must reject. A genuinely ABSENT token (retail /tutor) still passes
+  // through untouched — see embedTokenRejectionReason's doc comment.
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[student-profile] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
+  }
+  // M1c Task 5 (fix round 2, CRITICAL A / spec §4.0) — resolve ONCE per
+  // request under the embedded session's VERIFIED partner (the embed
+  // token's partner_id claim), not a hardcoded 'evelyn' — see
+  // partnerIdForInternalRoute's doc comment. Every student-keyed read below
+  // (the profile, and getLearnerContextBlock's own LearnerStateProjection
+  // read) uses this SAME `profileId`, never the raw `id` a second time.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: id });
+  const profile = await getOrCreateStudentProfile(profileId);
   const responseBody: Record<string, unknown> = {
     profile,
     // Task D1: interests ride the preferences line only behind the pedagogy
@@ -58,7 +80,7 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   // byte-identical to the pre-Task-17 shape for every existing caller.
   const lessonPlanId = new URL(req.url).searchParams.get('lessonPlanId');
   if (process.env.TUTOR_LEARNER_CONTEXT === 'on' && lessonPlanId) {
-    responseBody.learnerContext = await getLearnerContextBlock(id, lessonPlanId);
+    responseBody.learnerContext = await getLearnerContextBlock(profileId, lessonPlanId);
   }
   return NextResponse.json(responseBody);
 }
@@ -155,10 +177,31 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!auth.allow) {
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
   }
+  // M1c final review (A-I5 / spec §4.0) — see the GET handler above for the
+  // full reasoning. This is the higher-value half: POST is the session-end
+  // commit (mastery deltas, gaps, segmentOutcomes evidence). Without this,
+  // a partner session past its token's grace window in
+  // EMBED_TOKEN_ENFORCE='log' mode writes its ENTIRE outcome under
+  // ('evelyn', rawStudentId).
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[student-profile] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
+  }
 
   if (!body.sessionId) {
     return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
   }
+
+  // M1c Task 5 (fix round 1 CRITICAL 2 / fix round 2 CRITICAL A) — resolve
+  // ONCE, up front, under the embedded session's VERIFIED partner (not a
+  // hardcoded 'evelyn' — see partnerIdForInternalRoute), so both the
+  // segmentOutcomes evidence rows below AND the profile-store commit use
+  // the SAME `profileId`. Round 1 resolved only the profile-store call
+  // (further down) and left this evidence write on the raw `id` — two
+  // partners sending the same external id would then share one Elo/
+  // evidence trail while their profiles correctly split in two.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: id });
 
   // Task 11 — per-segment learner-model evidence (append point 1).
   // Fire-and-forget: appendEvidence is itself best-effort and never
@@ -180,7 +223,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       if (typeof so.outcome !== 'number' || !(so.outcome >= 0 && so.outcome <= 1)) continue;
       validated.push({
         idempotencyKey: `sess:${body.sessionId}:${so.segmentId}`,
-        studentId: id,
+        studentId: profileId,
         loId: so.loId,
         source: 'session',
         sessionId: body.sessionId,
@@ -199,7 +242,8 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     }
   }
 
-  let profile = await getOrCreateStudentProfile(id);
+  // `profileId` was already resolved above (once per request).
+  let profile = await getOrCreateStudentProfile(profileId);
 
   if (Array.isArray(body.masteryDeltas) && body.masteryDeltas.length) {
     profile = applyMasteryDeltas(profile, body.masteryDeltas);

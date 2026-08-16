@@ -12,6 +12,8 @@
     "seed": "npx ts-node scripts/seed-sample-data.ts",
     "seed:problem-bank": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/seed-problem-bank.ts",
     "seed:mock-form": "npx tsx scripts/seed-mock-form.ts",
+    "seed:partner-registry": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/seed-partner-registry.ts",
+    "backfill:partner-namespace": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/backfill-partner-namespace.ts",
     "lint:testprep-plans": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/lint-testprep-plans.ts",
     "lint:hs-plans": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/lint-hs-plans.ts",
     "gen:token-key": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/generate-token-encryption-key.ts",
@@ -20,6 +22,11 @@
     "test:portal-contract": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-contract.ts",
     "test:plan-generate": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-plan-generate.ts",
     "test:portal-auth": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-auth.ts",
+    "test:partner-secret-box": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-secret-box.ts",
+    "test:partner-registry": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-registry.ts",
+    "test:partner-flags": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-flags.ts",
+    "test:partner-seed": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-seed.ts",
+    "test:portal-auth-registry": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-auth-registry.ts",
     "test:portal-gap-links": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-gap-links.ts",
     "test:portal-practice": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-practice.ts",
     "test:portal-concept": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-concept-normalizer.ts",
@@ -27,7 +34,7 @@
     "test:portal-ced": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-ced-validator.ts",
     "test:portal-endpoints": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-endpoints.ts",
     "test:portal-assessment": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-assessment.ts",
-    "test:portal": "npm run test:portal-contract && npm run test:portal-auth && npm run test:portal-gap-links && npm run test:portal-practice && npm run test:portal-concept && npm run test:portal-grading && npm run test:portal-ced && npm run test:portal-endpoints && npm run test:portal-assessment && npm run test:embed-token && npm run test:segment-evidence",
+    "test:portal": "npm run test:portal-contract && npm run test:portal-auth && npm run test:portal-auth-registry && npm run test:portal-gap-links && npm run test:portal-practice && npm run test:portal-concept && npm run test:portal-grading && npm run test:portal-ced && npm run test:portal-endpoints && npm run test:portal-assessment && npm run test:embed-token && npm run test:segment-evidence",
     "test:material-extract": "npx tsx scripts/test-material-extract.ts",
     "test:taxonomy": "npx tsx scripts/test-taxonomy-generate.ts && npx tsx scripts/test-generated-lo-ids.ts",
     "test:mock-blueprints": "npx tsx src/lib/tutor/mock-exam/blueprints/blueprints.test.ts",
@@ -206,6 +213,10 @@
     "test:learner-model": "npx tsx scripts/test-learner-model.ts",
     "test:cell-content": "npx tsx scripts/test-cell-content-normalize.ts",
     "test:exercise-board": "npx tsx scripts/test-exercise-board-check.ts",
-    "test:derived-notes": "MONGODB_URI=mongodb://127.0.0.1:1/unused-stub npx tsx scripts/test-derived-notes.ts"
+    "test:derived-notes": "MONGODB_URI=mongodb://127.0.0.1:1/unused-stub npx tsx scripts/test-derived-notes.ts",
+    "test:profile-resolver": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-profile-resolver.ts",
+    "test:portal-student-scoping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-student-scoping.ts",
+    "test:partner-backfill": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-backfill.ts",
+    "test:partner-limits": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-limits.ts"
   }
 }

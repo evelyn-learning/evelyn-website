@@ -1,8 +1,11 @@
 /**
  * MongoDB model for StudentProfile.
  *
- * String _id — application-controlled (retail userId, or
- * `${partnerId}:${externalStudentId}` for B2B).
+ * String _id — a surrogate, never rewritten. M1c: identity is the pair
+ * (partnerId, externalStudentId), resolved to this `_id` via
+ * `resolveProfileId` in store.ts; `_id` itself is opaque
+ * (`crypto.randomUUID()` for new profiles), not a `${partnerId}:${id}`
+ * string convention.
  */
 
 import mongoose, { Schema } from 'mongoose';
@@ -28,7 +31,15 @@ export interface IStudentProfile {
   createdAt: string;
   updatedAt: string;
   schemaVersion: number;
+  // M1c: identity is (partnerId, externalStudentId); `_id` is a surrogate and
+  // is never rewritten, which is what keeps the five collections that reference
+  // it from having to migrate. The UNIQUE index on this pair is created by
+  // scripts/backfill-partner-namespace.ts AFTER the backfill — declaring it here
+  // would make Mongoose auto-build it over 495 rows that all share (null, null).
+  /** M1c: which partner this student belongs to. 'evelyn' for retail. */
   partnerId?: string;
+  /** M1c: the raw id the partner sent, before namespacing. */
+  externalStudentId?: string;
   metadata?: Record<string, unknown>;
   planContentSeen?: Record<string, PlanContentSeen>;
 }
@@ -54,7 +65,13 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
     createdAt: { type: String, required: true },
     updatedAt: { type: String, required: true },
     schemaVersion: { type: Number, required: true, default: 1 },
+    // M1c: identity is (partnerId, externalStudentId); `_id` is a surrogate and
+    // is never rewritten, which is what keeps the five collections that reference
+    // it from having to migrate. The UNIQUE index on this pair is created by
+    // scripts/backfill-partner-namespace.ts AFTER the backfill — declaring it here
+    // would make Mongoose auto-build it over 495 rows that all share (null, null).
     partnerId: { type: String, index: true },
+    externalStudentId: { type: String },
     metadata: { type: Schema.Types.Mixed, default: {} },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     planContentSeen: { type: Schema.Types.Mixed as any, default: undefined },

@@ -323,6 +323,12 @@ async function feedGapsAndMastery(
   }
 
   const store = profileStoreOf(deps);
+  // M1C-IDENTITY: resolved by caller. `attempt.studentId` is already the
+  // resolved profile id by the time it reaches this point:
+  // mock-exam/service.ts's `startOrResume` resolves it once, at attempt
+  // creation, and stamps it onto `AttemptDoc.studentId`; every subsequent
+  // read of this attempt (including this feed) inherits that same id. See
+  // service.ts's module doc for the full identity-resolution note.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let profile: any = await store.getOrCreate(attempt.studentId);
   profile = applyMasteryDeltas(profile, deltas);

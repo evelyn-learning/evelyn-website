@@ -59,6 +59,14 @@ const HUMOR_OPTIONS: HumorOption[] = [
 function SettingsInner() {
   const params = useSearchParams();
   const studentId = params.get('studentId') ?? undefined;
+  // M1c final review (A-I6): deliberately NO embedToken. This page is a
+  // standalone retail surface reached by URL with `?studentId=` — it is not
+  // rendered inside the partner embed and has no token to supply (there is
+  // no query param, no header and no parent frame to read one from). Both
+  // routes it calls treat a genuinely absent token as retail and allow it,
+  // which is the pre-M1c behaviour this page depends on. If a partner is
+  // ever linked to this page directly, the token has to be plumbed in
+  // through the URL first — that is a product decision, not a fix here.
   const { preferences, setPreference, clearPreference, source, isLoading } = useStudentPreferences({ studentId });
 
   const currentHumor: HumorLevel | null = preferences.humorCeiling ?? null;
