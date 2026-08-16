@@ -6,15 +6,21 @@
  * network round-trip in front of every partner call for data that changes
  * perhaps monthly.
  *
- * Why an env fallback: rollout step 1 seeds the collection while
+ * Why an env fallback: the seed step writes registry rows while
  * PORTAL_PARTNER_SECRETS is still authoritative. The registry row WINS once it
  * exists, so the switchover is per-partner and reversible by deleting a row.
- * Remove the fallback at rollout step 5 — but note `getPartnerSecret`
- * (auth.ts) is STILL LIVE production code as of this writing (the
- * demo-token route calls it directly for evelyn-marketing), so the same
- * two-mode env precedence now exists in two copies (`resolveEnvSecret`
- * below, and `getPartnerSecret`) that must be kept in sync until that
- * caller is migrated too. The duplication is deliberate, not an oversight:
+ *
+ * The fallback — and `PORTAL_PARTNER_SECRETS` itself — STAYS for the whole
+ * of M1c. Removing it is NOT a rollout step, and doing it would be an
+ * outage: `getPartnerSecret` (auth.ts) is still live production code that
+ * reads `process.env` ONLY and never consults this registry (the embed-token
+ * and replay-token modules and the demo-token route all call it), so
+ * deleting the env var returns "unknown partner" for every partner
+ * regardless of what the registry holds — every embedded session included.
+ * Retiring it is a later milestone's work, gated on migrating those three
+ * callers. Until then the same two-mode env precedence exists in two copies
+ * (`resolveEnvSecret` below, and `getPartnerSecret`) that must be kept in
+ * sync. The duplication is deliberate, not an oversight:
  * `resolveEnvSecret` takes an injected `env` so the registry stays testable
  * without touching `process.env`, which `getPartnerSecret` reads directly.
  */

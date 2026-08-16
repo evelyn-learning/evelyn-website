@@ -15,7 +15,7 @@ import { randomBytes } from 'node:crypto';
 
 process.env.PORTAL_SECRET_ENC_KEY = randomBytes(32).toString('base64');
 
-import { encryptSecret } from '@/lib/tutor/portal/secret-box';
+import { encryptSecret, SecretDecryptError } from '@/lib/tutor/portal/secret-box';
 import { getPartner, invalidatePartner, type RegistryDeps } from '@/lib/tutor/portal/registry';
 
 let passed = 0, failed = 0;
@@ -197,6 +197,64 @@ await test('expiresAt: a malformed date fails CLOSED (dropped), not open ("never
     ['fine'],
     'Date.parse("not-a-real-date") is NaN and NaN <= anything is false — an unparseable expiresAt must not be treated as "not expired"',
   );
+});
+
+// --- M1c final review, reviewer B finding 1 (its named merge condition):
+// registry.ts's `kind: doc.kind, status: doc.status` mapping had NO
+// assertion anywhere. Every kind/status test in the suite hands
+// withPortalAuth a hand-built PartnerRecord through
+// __setRegistryOverrideForTests, so hardcoding either line shipped green —
+// which would make `status: 'suspended'`, the documented incident-response
+// lever and the only registry gate that fires on a partner that HAS
+// credentials, permanently inert. Two cases per field, with DIFFERENT
+// values, so neither can be satisfied by a constant.
+
+await test('getPartner propagates a suspended status and a first-party kind off the row', async () => {
+  invalidatePartner('crimsora');
+  const row = doc({ status: 'suspended', kind: 'first-party' });
+  const p = await getPartner('crimsora', deps({ findPartner: async () => row }));
+  assert.strictEqual(p!.status, 'suspended', 'a hardcoded status:"active" would make suspension inert');
+  assert.strictEqual(p!.kind, 'first-party', 'a hardcoded kind:"partner" would let a namespace-only row authenticate');
+});
+
+await test('getPartner propagates an active status and a test kind off the row (the other value of each field)', async () => {
+  invalidatePartner('crimsora');
+  const row = doc({ status: 'active', kind: 'test' });
+  const p = await getPartner('crimsora', deps({ findPartner: async () => row }));
+  assert.strictEqual(p!.status, 'active');
+  assert.strictEqual(p!.kind, 'test');
+});
+
+// --- A-M7(b): registry.ts deliberately re-throws anything that is NOT a
+// SecretDecryptError, so a misconfigured KEY fails loudly instead of
+// silently reducing every partner to zero secrets (which auth.ts turns into
+// 401 unknown_partner for all of them). Every `not-openable` fixture in this
+// file produces a SecretDecryptError, so the re-throw branch had no test at
+// all. An unset PORTAL_SECRET_ENC_KEY is exactly that case: resolveKey
+// throws a plain Error.
+
+await test('a non-SecretDecryptError from decryptSecret (a misconfigured KEY) PROPAGATES — it is never swallowed into "zero secrets"', async () => {
+  invalidatePartner('crimsora');
+  const row = doc(); // sealed while the key is still present
+  const savedKey = process.env.PORTAL_SECRET_ENC_KEY;
+  delete process.env.PORTAL_SECRET_ENC_KEY;
+  try {
+    await assert.rejects(
+      () => getPartner('crimsora', deps({ findPartner: async () => row })),
+      (err: unknown) => {
+        assert.ok(err instanceof Error, `expected an Error, got ${String(err)}`);
+        assert.ok(
+          !(err instanceof SecretDecryptError),
+          'a key misconfiguration must NOT be reported as a per-secret decrypt failure — that is the class registry.ts swallows',
+        );
+        assert.match((err as Error).message, /PORTAL_SECRET_ENC_KEY/);
+        return true;
+      },
+    );
+  } finally {
+    process.env.PORTAL_SECRET_ENC_KEY = savedKey;
+    invalidatePartner('crimsora');
+  }
 });
 
 // --- IMPORTANT-4: exercise the REAL default findPartner (no injected deps),

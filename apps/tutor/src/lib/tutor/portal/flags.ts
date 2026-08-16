@@ -16,7 +16,15 @@ export function resolveFlag(
   partner: FlagCarrier | null,
   fallback: boolean | string,
 ): boolean | string {
-  const v = partner?.flagOverrides?.[name];
+  const overrides = partner?.flagOverrides;
+  // `Object.hasOwn`, not a bare index read: `flagOverrides` arrives from a
+  // Mongo `lean()` as an ordinary object, so `overrides['constructor']` /
+  // `['toString']` / `['valueOf']` would resolve to an Object.prototype
+  // member instead of falling through to the build-time constant. Flag
+  // names are compile-time constants today; this is one line of insurance
+  // against the day one isn't.
+  if (!overrides || !Object.hasOwn(overrides, name)) return fallback;
+  const v = overrides[name];
   // `??` not `||`: an override of `false` or '' is a real value, and `||`
   // would silently fall through to the build-time constant instead — the
   // opposite of what an operator setting a flag to `false` intends.

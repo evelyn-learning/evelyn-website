@@ -52,6 +52,29 @@ await test("an empty-string override is honoured, not treated as absent (the `??
   assert.strictEqual(resolveFlag('greeting', partner, 'default-greeting'), '');
 });
 
+// --- M1c final review, A-M6: `flagOverrides` arrives from Mongo as a
+// `lean()` plain object, so a bare `overrides[name]` read walks the
+// prototype chain. A flag named `constructor` / `toString` / `valueOf`
+// would resolve to an Object.prototype member — a function, i.e. neither
+// the override nor the fallback the caller asked for. `Object.hasOwn` is
+// the one-line fix; these are what pin it.
+
+await test('A-M6: a flag named after an Object.prototype member falls back, instead of resolving to the prototype member', () => {
+  const partner = { flagOverrides: {} };
+  for (const name of ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__']) {
+    assert.strictEqual(
+      resolveFlag(name, partner, 'fallback-value'), 'fallback-value',
+      `resolveFlag('${name}') must fall back, not read through the prototype chain`,
+    );
+    assert.strictEqual(resolveFlag(name, partner, false), false, `resolveFlag('${name}') boolean fallback`);
+  }
+});
+
+await test('A-M6: an OWN override with a prototype-shadowing name is still honoured', () => {
+  const partner = { flagOverrides: { toString: 'operator-set' } };
+  assert.strictEqual(resolveFlag('toString', partner, 'fallback-value'), 'operator-set');
+});
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);
 })();

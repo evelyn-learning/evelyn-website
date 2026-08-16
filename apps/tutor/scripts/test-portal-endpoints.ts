@@ -224,6 +224,27 @@ const ctxBody = (studentId: string) => ({
     assert.strictEqual(status, 400);
   });
 
+  // M1c final review, A-M5: /student-erase was the one portal route without
+  // the empty-`studentId` guard its six siblings carry. The review's premise
+  // (an empty id reaching resolveProfileIdOrRaw → ProfileIdentityError →
+  // 500) turned out NOT to hold here — `StudentEraseRequestSchema` is
+  // `z.string().min(1)`, unlike `SessionEmitRequestSchema` — so the guard is
+  // a backstop, not a live fix. What matters behaviourally, and what these
+  // assert, is that an empty or missing id is a clean 400 and can never
+  // become a 500 on the erase path.
+  console.log('\nStudent-erase (A-M5 — empty/missing studentId is a clean 400, never a 500):\n');
+  await test('student-erase POST with an EMPTY studentId → 400, never a 500 (it must not reach the resolver)', async () => {
+    const { POST: erasePOST } = await import('@/app/api/portal/v1/student-erase/route');
+    const { status } = await call(erasePOST, signed('POST', '/api/portal/v1/student-erase', { studentId: '' }));
+    assert.strictEqual(status, 400, 'an empty studentId must be rejected before it reaches the resolver');
+  });
+
+  await test('student-erase POST with a MISSING studentId → 400 (schema validation, unchanged)', async () => {
+    const { POST: erasePOST } = await import('@/app/api/portal/v1/student-erase/route');
+    const { status } = await call(erasePOST, signed('POST', '/api/portal/v1/student-erase', {}));
+    assert.strictEqual(status, 400);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);
 })();

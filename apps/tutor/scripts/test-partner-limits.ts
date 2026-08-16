@@ -27,7 +27,11 @@
  */
 import assert from 'node:assert';
 
-import { checkPartnerLimits, type LimitsDeps } from '@/lib/tutor/portal/limits';
+import {
+  checkPartnerLimits,
+  __resetLimitsWarningsForTests,
+  type LimitsDeps,
+} from '@/lib/tutor/portal/limits';
 import type { PartnerRecord } from '@/lib/tutor/portal/registry';
 
 let passed = 0;
@@ -240,6 +244,120 @@ function throwsOnlyFor(windowKind: 'minute' | 'day') {
     // rollout step exists to measure.
     const dayKey = `${partner.partnerId}::/x::day::2026-08-16`;
     assert.strictEqual(store.counts.get(dayKey), 2, 'both served calls must be metered in report-only mode');
+  });
+
+  // --- M1c final review, A-M7(a): report-only downgrading a QUOTA 402 had
+  // no assertion — only the burst path (the case above) was covered. It is
+  // the half that returns money, and it is the half the rollout's
+  // report-only window has to prove before PORTAL_LIMITS_MODE is removed.
+  await test('A-M7(a): report-only downgrades a QUOTA 402 to served, logs would-block, AND still meters it', async () => {
+    const partner = makePartner({ limits: { rpm: 600, burst: 1000, dailyQuota: 1 } });
+    const store = makeCounterStore();
+    const deps: LimitsDeps = {
+      bump: store.bump,
+      now: () => NOW_MS,
+      env: { PORTAL_LIMITS_MODE: 'report-only' } as NodeJS.ProcessEnv,
+    };
+    const v1 = await checkPartnerLimits(partner, '/x', deps); // day count 1, within quota
+    assert.deepStrictEqual(v1, { ok: true });
+
+    const originalWarn = console.warn;
+    let logged = '';
+    console.warn = (msg?: unknown) => { logged += String(msg); };
+    let v2;
+    try {
+      v2 = await checkPartnerLimits(partner, '/x', deps); // day count 2 > quota 1
+    } finally {
+      console.warn = originalWarn;
+    }
+    assert.deepStrictEqual(v2, { ok: true }, 'report-only must SERVE an over-quota request, not 402 it');
+    assert.ok(logged.includes('would-block'), `expected a would-block log line, got: ${logged}`);
+    assert.ok(logged.includes('quota_exceeded'), `the would-block line must name the quota reason, got: ${logged}`);
+    assert.strictEqual(
+      store.counts.get(`${partner.partnerId}::/x::day::2026-08-16`), 2,
+      'a served over-quota request must still be metered',
+    );
+  });
+
+  await test('A-M7(a): report-only ALSO downgrades the fail-CLOSED quota_unverifiable 402 (day counter down + quota configured)', async () => {
+    const partner = makePartner({ limits: { rpm: 600, burst: 1000, dailyQuota: 5 } });
+    const deps: LimitsDeps = {
+      bump: throwsOnlyFor('day'),
+      now: () => NOW_MS,
+      env: { PORTAL_LIMITS_MODE: 'report-only' } as NodeJS.ProcessEnv,
+    };
+    const originalWarn = console.warn;
+    let logged = '';
+    console.warn = (msg?: unknown) => { logged += String(msg); };
+    let v;
+    try {
+      v = await checkPartnerLimits(partner, '/x', deps);
+    } finally {
+      console.warn = originalWarn;
+    }
+    assert.deepStrictEqual(v, { ok: true }, 'the report-only window must not 402 on a counter outage either');
+    assert.ok(logged.includes('quota_unverifiable'), `expected the quota_unverifiable would-block line, got: ${logged}`);
+  });
+
+  // --- M1c final review, A-I2 (code half only; the flag semantics are NOT
+  // inverted — unset means ENFORCE, spec §10.1). `checkPartnerLimits` runs
+  // for every portal call from the first request, so a deploy that forgot
+  // `PORTAL_LIMITS_MODE=report-only` starts enforcing 60 req/min per
+  // (partner, endpoint) with no signal but the 429s themselves. One warn per
+  // PROCESS — not per request — naming the effective caps.
+  await test('A-I2: PORTAL_LIMITS_MODE unset emits ONE warning naming the effective caps, and changes no decision', async () => {
+    __resetLimitsWarningsForTests();
+    const partner = makePartner({ limits: { rpm: 600, burst: 60, dailyQuota: null } });
+    const deps = makeDeps(); // env: {} — PORTAL_LIMITS_MODE unset
+    const originalWarn = console.warn;
+    const lines: string[] = [];
+    console.warn = (msg?: unknown) => { lines.push(String(msg)); };
+    let v;
+    try {
+      v = await checkPartnerLimits(partner, '/x', deps);
+    } finally {
+      console.warn = originalWarn;
+    }
+    assert.deepStrictEqual(v, { ok: true }, 'the warning must not change any limiting decision');
+    assert.strictEqual(lines.length, 1, `expected exactly one warning, got ${lines.length}: ${lines.join(' | ')}`);
+    assert.ok(lines[0].includes('PORTAL_LIMITS_MODE is not set'), lines[0]);
+    assert.ok(lines[0].includes('ENFORCED'), `the warning must say the caps are ENFORCED: ${lines[0]}`);
+    assert.ok(
+      lines[0].includes('60 req/min'),
+      `the warning must name the EFFECTIVE cap min(rpm 600, burst 60) = 60: ${lines[0]}`,
+    );
+  });
+
+  await test('A-I2: the unset-mode warning fires at most ONCE per process, not once per request', async () => {
+    __resetLimitsWarningsForTests();
+    const partner = makePartner({ limits: { rpm: 600, burst: 60, dailyQuota: null } });
+    const deps = makeDeps();
+    const originalWarn = console.warn;
+    const lines: string[] = [];
+    console.warn = (msg?: unknown) => { lines.push(String(msg)); };
+    try {
+      await checkPartnerLimits(partner, '/x', deps);
+      await checkPartnerLimits(partner, '/x', deps);
+      await checkPartnerLimits(partner, '/y', deps);
+    } finally {
+      console.warn = originalWarn;
+    }
+    assert.strictEqual(lines.length, 1, `three calls must produce one warning, got ${lines.length}`);
+  });
+
+  await test('A-I2: no unset-mode warning when PORTAL_LIMITS_MODE IS set', async () => {
+    __resetLimitsWarningsForTests();
+    const partner = makePartner({ limits: { rpm: 600, burst: 60, dailyQuota: null } });
+    const deps = makeDeps({ env: { PORTAL_LIMITS_MODE: 'report-only' } as NodeJS.ProcessEnv });
+    const originalWarn = console.warn;
+    const lines: string[] = [];
+    console.warn = (msg?: unknown) => { lines.push(String(msg)); };
+    try {
+      await checkPartnerLimits(partner, '/x', deps);
+    } finally {
+      console.warn = originalWarn;
+    }
+    assert.deepStrictEqual(lines, [], `an explicitly-set mode must warn about nothing, got: ${lines.join(' | ')}`);
   });
 
   await test('minor: a tighter rpm than burst is the cap that is enforced', async () => {

@@ -58,6 +58,24 @@ export interface LimitsDeps {
 // request.
 let warnedNoDb = false;
 
+// Logged at most once per process, the first time the limiter runs with
+// PORTAL_LIMITS_MODE unset. Unset means ENFORCE (spec §10.1) — a deliberate,
+// twice-corrected decision — but that also means a deploy that FORGOT to set
+// `PORTAL_LIMITS_MODE=report-only` starts enforcing 60 req/min per (partner,
+// endpoint) on live traffic from its first request. Without this line the
+// only evidence of the mistake is the 429s themselves. It changes no
+// limiting decision whatsoever; it just makes a forgotten flag visible in
+// the logs.
+let warnedLimitsModeUnset = false;
+
+/** Test seam: lets the hermetic limits tests re-arm the once-per-process
+ *  warnings above so their assertions do not depend on suite ordering.
+ *  Production never calls this. */
+export function __resetLimitsWarningsForTests(): void {
+  warnedNoDb = false;
+  warnedLimitsModeUnset = false;
+}
+
 const defaultLimitsDeps: LimitsDeps = {
   async bump(key) {
     // No DB configured at all (a hermetic env-only test, or before this app
@@ -147,6 +165,17 @@ export async function checkPartnerLimits(
   // for that field individually. (Fix round 1, minor: rpm was dead config.)
   const burstCaps = [partner.limits.rpm, partner.limits.burst].filter((n) => n > 0);
   const burstCap = burstCaps.length > 0 ? Math.min(...burstCaps) : 0;
+
+  if (deps.env.PORTAL_LIMITS_MODE === undefined && !warnedLimitsModeUnset) {
+    warnedLimitsModeUnset = true;
+    console.warn(
+      `[portal/limits] PORTAL_LIMITS_MODE is not set — limits are ENFORCED (unset means enforce, spec §10.1). ` +
+        `Effective caps for the first partner seen (partner=${partner.partnerId} endpoint=${endpoint}): ` +
+        `${burstCap > 0 ? `${burstCap} req/min` : 'no burst cap'} per (partner, endpoint), ` +
+        `dailyQuota=${partner.limits.dailyQuota ?? 'none'} per (partner, endpoint). ` +
+        `Set PORTAL_LIMITS_MODE=report-only to meter without blocking.`,
+    );
+  }
 
   let burstVerdict: LimitVerdict | null = null;
   try {
