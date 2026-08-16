@@ -45,6 +45,32 @@
  * Also: `mongoose.set('autoIndex', false)` runs before `connectDB()` so a
  * plain dry run cannot silently trigger every schema's auto-built indexes —
  * including TutorSession's `{startedAt:1}` TTL index, which deletes rows.
+ *
+ * Round-2 review fixes:
+ *  - The write-gating logic (decideBackfill / executeBackfill below) is
+ *    factored out as pure/injectable so the three abort conditions
+ *    (ambiguous, unexpected-partners, missing-real-partners) are exercised
+ *    directly by hermetic tests — deleting any one of them turns the test
+ *    suite red (see test-partner-backfill.ts). Before this round, the tests
+ *    only proved the *detectors* returned the right values; nothing proved
+ *    main() actually acted on them.
+ *  - `mongoose.set('autoCreate', false)` alongside `autoIndex`: the dry run
+ *    against real prod data (see task-6-report.md) confirmed Mongoose was
+ *    creating an empty `partners` collection on connect even with writes
+ *    otherwise fully gated. With this, the only 3 mutating calls in the
+ *    file are the true full account of what can write.
+ *  - Reporting order: the partner-row plan and the profile-update count are
+ *    now printed BEFORE a missing-real-partners abort, not after — on the
+ *    first real run the abort used to fire before the operator saw either
+ *    number.
+ *  - The kind:'test' warning (e.g. for `portalA`) now names the actual
+ *    consequence verified against auth.ts's real branch order: a row with
+ *    `secrets: []` fails the `partner.secrets.length === 0` check BEFORE
+ *    the kind check ever runs, so the outcome is 401 `unknown_partner`, not
+ *    403 `partner_cannot_authenticate` — the 403 branch is unreachable with
+ *    an empty secrets array. Also names the concrete suites that configure
+ *    `PORTAL_PARTNER_SECRETS` for `portalA` and would break if run against
+ *    a DB that has been through `--write`.
  */
 import mongoose from 'mongoose';
 import connectDB from '@core/db';
@@ -56,6 +82,19 @@ const WRITE = process.argv.includes('--write');
 const BUILD_INDEX = process.argv.includes('--build-index');
 
 const TEST_PREFIXES = new Set(['lmtest', 'trial', 'revtest', 'portalA']);
+
+// Suites that configure PORTAL_PARTNER_SECRETS for 'portalA' and would 401
+// unknown_partner (see the header note above) if ever pointed at a DB that
+// has a portalA Partner row with secrets:[] — i.e. after this script has
+// run --write against that DB.
+const PORTAL_A_DEPENDENT_SUITES = [
+  'test:portal-auth',
+  'test:portal-endpoints',
+  'test:portal-assessment',
+  'test:plan-generate',
+  'test:portal-mock',
+  'test:learner-model',
+];
 
 // Every partnerId this backfill is allowed to observe, measured from
 // production (spec §"Measured production state"). Anything else — e.g. a
@@ -194,34 +233,91 @@ export function planPartnerRows(
   return { toCreate, missingReal };
 }
 
+export interface AttributionSummary {
+  ambiguous: Array<{ id: string; error: string }>;
+  partnersObserved: Set<string>;
+}
+
+export type BackfillDecision =
+  | { abort: true; reason: 'ambiguous'; detail: Array<{ id: string; error: string }> }
+  | { abort: true; reason: 'unexpected-partners'; detail: string[] }
+  | { abort: true; reason: 'missing-real-partners'; detail: string[]; partnerPlan: PartnerRowPlan }
+  | { abort: false; partnerPlan: PartnerRowPlan };
+
+/**
+ * Pure — no DB. The single place all three abort conditions are decided,
+ * in priority order: ambiguous attribution first (nothing else can be
+ * trusted if this fired), then the allowlist, then the partner-row plan.
+ * `missing-real-partners` still carries the full `partnerPlan` (not just
+ * the missing ids) so the caller can report what it WOULD have created
+ * before reporting what blocked it — round-2 fix: the abort must be the
+ * last thing printed, not the first.
+ */
+export function decideBackfill(
+  summary: AttributionSummary,
+  existingPartnerIds: Set<string>,
+): BackfillDecision {
+  if (summary.ambiguous.length > 0) {
+    return { abort: true, reason: 'ambiguous', detail: summary.ambiguous };
+  }
+  const unexpected = findUnexpectedPartners(summary.partnersObserved);
+  if (unexpected.length > 0) {
+    return { abort: true, reason: 'unexpected-partners', detail: unexpected };
+  }
+  const partnerPlan = planPartnerRows(summary.partnersObserved, existingPartnerIds);
+  if (partnerPlan.missingReal.length > 0) {
+    return { abort: true, reason: 'missing-real-partners', detail: partnerPlan.missingReal, partnerPlan };
+  }
+  return { abort: false, partnerPlan };
+}
+
+export interface BackfillWriteDeps {
+  createPartnerRow: (row: { partnerId: string; kind: 'first-party' | 'test' }) => void | Promise<void>;
+  writeProfile: (id: string, result: AttributionResult) => void | Promise<void>;
+}
+
+/**
+ * Executes a decision. If `decision.abort` is true, or `write` is false,
+ * NEITHER dep is ever called — this is the one function in the file that
+ * is allowed to invoke the write deps, and it only does so past both gates.
+ * Pure aside from calling the injected deps, so a test can supply spies and
+ * assert zero calls happened on an abort — proving the abort actually
+ * blocks writes, not just that the detector returned the right value.
+ * Deleting either gate (`if (decision.abort) return`, `if (!write) return`)
+ * makes a spy-count assertion in test-partner-backfill.ts fail.
+ */
+export async function executeBackfill(
+  decision: BackfillDecision,
+  toApply: Array<{ _id: string; result: AttributionResult }>,
+  write: boolean,
+  deps: BackfillWriteDeps,
+): Promise<void> {
+  if (decision.abort) return;
+  if (!write) return;
+  for (const row of decision.partnerPlan.toCreate) {
+    await deps.createPartnerRow(row);
+  }
+  for (const { _id, result } of toApply) {
+    await deps.writeProfile(_id, result);
+  }
+}
+
 /** Mask an _id for console output — enough to spot patterns, not enough to dox a student. */
 function mask(id: string): string {
   if (id.length <= 8) return `${id.slice(0, 2)}***`;
   return `${id.slice(0, 4)}...${id.slice(-4)}`;
 }
 
-/**
- * The write path for StudentProfile — this function performs the only
- * `updateOne` call in the script that mutates StudentProfile documents, and
- * it is called from exactly one place, gated by `if (WRITE)` in main().
- * Deliberately does NOT touch `updatedAt`: the documented rollback
- * ($unset the two identity fields) cannot restore an overwritten
- * `updatedAt`, and nothing reads it for logic — stamping all 495 rows with
- * today's date for no benefit is lossy for free.
- */
-async function applyWrite(_id: string, result: AttributionResult): Promise<void> {
-  await StudentProfileModel.updateOne(
-    { _id },
-    { $set: { partnerId: result.partnerId, externalStudentId: result.externalStudentId } },
-  );
-}
-
 async function main() {
-  // Must run before connectDB(): Mongoose 8 defaults autoIndex to true, so
-  // merely opening the connection builds every schema-declared index for
-  // every compiled model — including TutorSession's TTL index, which
-  // DELETES sessions older than 180 days. A "dry run" must not do that.
+  // Must run before connectDB(): Mongoose 8 defaults autoIndex/autoCreate to
+  // true, so merely opening the connection builds every schema-declared
+  // index for every compiled model — including TutorSession's TTL index,
+  // which DELETES sessions older than 180 days — and creates any collection
+  // that doesn't exist yet (observed against real prod: an empty `partners`
+  // collection appeared from a plain dry run before this fix). A "dry run"
+  // must not do either.
   mongoose.set('autoIndex', false);
+  mongoose.set('autoCreate', false);
   await connectDB();
 
   const profiles = await StudentProfileModel.find(
@@ -287,65 +383,84 @@ async function main() {
     for (const a of ambiguous) console.log(`    ${mask(a.id)}: ${a.error}`);
   }
 
-  if (ambiguous.length > 0) {
+  const existingPartnerDocs = await PartnerModel.find({}, { _id: 1 }).lean();
+  const existingPartnerIds = new Set(existingPartnerDocs.map((d) => d._id as string));
+
+  const decision = decideBackfill({ ambiguous, partnersObserved }, existingPartnerIds);
+
+  if (decision.abort && decision.reason === 'ambiguous') {
     console.error(
-      `\n${ambiguous.length} profile(s) have ambiguous partner attribution. Aborting — resolve by hand before running --write.`,
+      `\n${decision.detail.length} profile(s) have ambiguous partner attribution. Aborting — resolve by hand before running --write.`,
     );
     await mongooseDisconnectSafely();
     process.exit(1);
   }
 
-  // Allowlist guard: any partnerId outside the measured set (e.g. a stray
-  // colon inside an unnamespaced _id being misread as a prefix hint) must
-  // abort, not silently mint a permanent namespace for that student.
-  const unexpected = findUnexpectedPartners(partnersObserved);
-  if (unexpected.length > 0) {
+  if (decision.abort && decision.reason === 'unexpected-partners') {
     console.error(
-      `\nUnexpected partner id(s) observed (not in the measured allowlist): ${unexpected.join(', ')}. ` +
+      `\nUnexpected partner id(s) observed (not in the measured allowlist): ${decision.detail.join(', ')}. ` +
         'This could be a stray colon in an otherwise-unnamespaced _id fabricating a partner. Aborting before any write.',
     );
     await mongooseDisconnectSafely();
     process.exit(1);
   }
 
-  // Partner-row plan: never create a 'partner'-kind row (spec §5 step 3,
-  // amended). If a real partner id has no existing row, abort — seeding
-  // credentials is the seed script's job (spec §10 step 1), not ours.
-  const existingPartnerDocs = await PartnerModel.find({}, { _id: 1 }).lean();
-  const existingPartnerIds = new Set(existingPartnerDocs.map((d) => d._id as string));
-  const partnerPlan = planPartnerRows(partnersObserved, existingPartnerIds);
+  // From here, `decision` is either a clean plan or 'missing-real-partners'
+  // — both variants carry a `partnerPlan`, so the report below (what WOULD
+  // be created, how many profiles WOULD be updated) prints regardless of
+  // whether we're about to abort. Round-2 fix: the abort must be the LAST
+  // thing that happens, so an operator's first run always sees the full
+  // picture, not just an error naming what's missing.
+  const { partnerPlan } = decision;
 
-  if (partnerPlan.missingReal.length > 0) {
+  console.log(`\nPartner rows ${WRITE ? 'to create' : 'that would be created'}: ${partnerPlan.toCreate.length}`);
+  for (const { partnerId, kind } of partnerPlan.toCreate) {
+    console.log(`  ${WRITE ? 'creating' : 'would create'} Partner row: ${partnerId} (${kind})`);
+    if (kind === 'test') {
+      console.log(
+        `    NOTE: ${partnerId} is kind:'test' with secrets:[]. auth.ts checks ` +
+          '`!partner || partner.secrets.length === 0` BEFORE the kind check, so the consequence ' +
+          'is 401 unknown_partner — NOT 403 partner_cannot_authenticate, which is unreachable ' +
+          'with an empty secrets array. The registry row wins over the env fallback once it ' +
+          `exists (registry.ts), so anything still authenticating as ${partnerId} via ` +
+          'PORTAL_PARTNER_SECRETS breaks the moment this row is created.',
+      );
+      if (partnerId === 'portalA') {
+        console.log(
+          '    portalA is the id used in the documented PORTAL_PARTNER_SECRETS example, and these ' +
+            `suites configure it that way: ${PORTAL_A_DEPENDENT_SUITES.join(', ')}. ` +
+            'They only break if MONGODB_URI ever points them at a DB this script has --write-run ' +
+            "against — none of the suites above set MONGODB_URI themselves, so today's CI is safe; " +
+            'this is a warning for whoever next points a suite at a migrated DB.',
+        );
+      }
+    }
+  }
+
+  console.log(
+    `\n${toApply.length} profile(s) ${WRITE ? 'staged for update' : 'would be updated (pass --write to apply)'}.`,
+  );
+
+  if (decision.abort) {
+    // Only 'missing-real-partners' can still be true here.
     console.error(
-      `\nMissing Partner row(s) for real partner id(s): ${partnerPlan.missingReal.join(', ')}. ` +
+      `\nMissing Partner row(s) for real partner id(s): ${decision.detail.join(', ')}. ` +
         "This script never creates 'kind: partner' rows — a credential-less row would win over the " +
         "env fallback (registry.ts: \"the registry row WINS once it exists\") and 401 unknown_partner " +
-        'for that partner\'s live traffic. Run the seed script (spec §10 step 1) to create these with ' +
+        "for that partner's live traffic. Run the seed script (spec §10 step 1) to create these with " +
         'real secrets first, then re-run. Aborting before any write.',
     );
     await mongooseDisconnectSafely();
     process.exit(1);
   }
 
-  console.log(`\nPartner rows ${WRITE ? 'to create' : 'that would be created'}: ${partnerPlan.toCreate.length}`);
-  for (const { partnerId, kind } of partnerPlan.toCreate) {
-    console.log(`  ${WRITE ? 'creating' : 'would create'} Partner row: ${partnerId} (${kind})`);
-    if (partnerId === 'portalA') {
-      console.log(
-        "    NOTE: portalA is kind:'test' — auth.ts returns 403 partner_cannot_authenticate for any " +
-          'non-partner kind. portalA is the id used in the documented PORTAL_PARTNER_SECRETS example; ' +
-          'any harness that treats it as a live-auth partner will break.',
-      );
-    }
-  }
-
-  if (WRITE) {
-    for (const { partnerId, kind } of partnerPlan.toCreate) {
+  await executeBackfill(decision, toApply, WRITE, {
+    createPartnerRow: async (row) => {
       const now = new Date().toISOString();
       await PartnerModel.create({
-        _id: partnerId,
-        name: partnerId,
-        kind,
+        _id: row.partnerId,
+        name: row.partnerId,
+        kind: row.kind,
         status: 'active',
         secrets: [],
         allowedEndpoints: [],
@@ -355,15 +470,17 @@ async function main() {
         createdAt: now,
         updatedAt: now,
       });
-    }
+    },
+    writeProfile: async (id, result) => {
+      await StudentProfileModel.updateOne(
+        { _id: id },
+        { $set: { partnerId: result.partnerId, externalStudentId: result.externalStudentId } },
+      );
+    },
+  });
 
-    console.log(`\nApplying ${toApply.length} profile update(s)...`);
-    for (const { _id, result } of toApply) {
-      await applyWrite(_id, result);
-    }
-    console.log(`Applied ${toApply.length} update(s).`);
-  } else {
-    console.log(`\n${toApply.length} profile(s) would be updated. Pass --write to apply.`);
+  if (WRITE) {
+    console.log(`\nApplied ${toApply.length} profile update(s), created ${partnerPlan.toCreate.length} partner row(s).`);
   }
 
   if (BUILD_INDEX) {
