@@ -511,6 +511,370 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
     },
   );
 
+  await test(
+    'A-I6 STATIC CHECK: every /api/tutor/student-profile fetch in useStudentPreferences attaches x-embed-token, ' +
+      'and VoiceTutorRealtime supplies one',
+    () => {
+      // The last un-audited embed-originated fetch pair. Every other one had
+      // the header added across rounds 2-4; this hook was missed, and is
+      // benign today only by accident (the in-session humor chip calls the
+      // hook with no studentId, so the write early-returns). One partner
+      // link to /tutor/settings, or one change giving that chip a studentId,
+      // splits a partner student's preferences into an ('evelyn', <partner
+      // uuid>) shadow profile.
+      //
+      // This is a STATIC check, not a behavioural one: the hook is React and
+      // this suite has no renderer. It is written to be falsifiable — the
+      // counts are per CALL SITE, so removing the header from either fetch
+      // (not merely from the file) fails it.
+      const fs = require('node:fs') as typeof import('node:fs');
+      const hookPath = path.join(__dirname, '..', 'src', 'hooks', 'useStudentPreferences.ts');
+      const hook = fs.readFileSync(hookPath, 'utf8');
+      const profileFetches = hook.split('fetch(`/api/tutor/student-profile/').length - 1;
+      assert.strictEqual(profileFetches, 2, 'sanity: the hook still has exactly two student-profile call sites (GET + PATCH)');
+      const headerAttachments = hook.split("'x-embed-token'").length - 1;
+      assert.strictEqual(
+        headerAttachments, profileFetches,
+        'every student-profile fetch in this hook must attach x-embed-token — one per call site',
+      );
+      assert.ok(hook.includes('embedToken?: string'), 'the hook must accept an embedToken option');
+
+      const componentPath = path.join(__dirname, '..', 'src', 'app', 'tutor', 'components', 'VoiceTutorRealtime.tsx');
+      const component = fs.readFileSync(componentPath, 'utf8');
+      assert.ok(
+        /useStudentPreferences\(\{[^}]*embedToken[^}]*\}\)/.test(component),
+        'VoiceTutorRealtime (the embed-rendered caller, which already holds the token) must pass embedToken to the hook',
+      );
+    },
+  );
+
+  // -------------------------------------------------------------------------
+  // M1c final review, A-I5: the round-4 embed-token rule reached four of the
+  // six identity-deriving internal routes. `student-profile/[id]` GET and
+  // POST gated only on `!auth.allow` — and in EMBED_TOKEN_ENFORCE='log'
+  // checkEmbedAuth returns `{allow: true, reason, payload}` for a token that
+  // FAILED verification, so `!auth.allow` is false, the request proceeds,
+  // and partnerIdForInternalRoute degrades it to 'evelyn'. POST is the
+  // session-end commit: mastery deltas, gaps and segmentOutcomes evidence
+  // for the whole session, written under ('evelyn', rawStudentId).
+  //
+  // The existing round-4 test covers only topic-notes PATCH in 'on' mode,
+  // where `!auth.allow` catches it — so it could not have caught this.
+  // These run in 'log' mode specifically.
+  // -------------------------------------------------------------------------
+
+  async function callWithCapturedErrors<T>(fn: () => Promise<T>): Promise<{ result: T; errorCalls: unknown[][] }> {
+    const originalError = console.error;
+    const errorCalls: unknown[][] = [];
+    console.error = (...args: unknown[]) => { errorCalls.push(args); };
+    try {
+      return { result: await fn(), errorCalls };
+    } finally {
+      console.error = originalError;
+    }
+  }
+
+  await test(
+    "A-I5 (EMBED_TOKEN_ENFORCE='log'): a present-but-invalid token on student-profile POST 401s — it never " +
+      'proceeds to write the session outcome under evelyn',
+    async () => {
+      await withEnv('EMBED_TOKEN_ENFORCE', 'log', async () => {
+        const { POST } = await import('../src/app/api/tutor/student-profile/[id]/route');
+        const req = new Request('https://engine.test/api/tutor/student-profile/stu-partner-1', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-embed-token': 'not-a-valid-jwt' },
+          body: JSON.stringify({ sessionId: 's1', masteryDeltas: [{ loId: 'lo.1', delta: 0.2 }] }),
+        }) as unknown as NextRequest;
+        const { result: res, errorCalls } = await callWithCapturedErrors(() =>
+          POST(req, { params: Promise.resolve({ id: 'stu-partner-1' }) }),
+        );
+        assert.strictEqual(res.status, 401, "'log' mode must not let a present-but-invalid token through this write path");
+        const json = (await res.json()) as { error?: string; reason?: string };
+        assert.strictEqual(json.error, 'unauthorized');
+        assert.ok(json.reason, 'the rejection reason is reported, not swallowed');
+        assert.ok(errorCalls.length > 0, 'a console.error line must be emitted — a silent misattribution is the failure mode');
+      });
+    },
+  );
+
+  await test(
+    "A-I5 (EMBED_TOKEN_ENFORCE='log'): a present-but-invalid token on student-profile GET 401s too",
+    async () => {
+      await withEnv('EMBED_TOKEN_ENFORCE', 'log', async () => {
+        const { GET } = await import('../src/app/api/tutor/student-profile/[id]/route');
+        const req = new Request('https://engine.test/api/tutor/student-profile/stu-partner-1', {
+          method: 'GET',
+          headers: { 'x-embed-token': 'not-a-valid-jwt' },
+        }) as unknown as NextRequest;
+        const { result: res, errorCalls } = await callWithCapturedErrors(() =>
+          GET(req, { params: Promise.resolve({ id: 'stu-partner-1' }) }),
+        );
+        assert.strictEqual(res.status, 401);
+        assert.ok(errorCalls.length > 0, 'the rejection must be logged');
+      });
+    },
+  );
+
+  await test(
+    "A-I5: a token-LESS student-profile GET/POST still succeeds in 'log' mode — an absent token is retail, not a rejection",
+    async () => {
+      await withEnv('EMBED_TOKEN_ENFORCE', 'log', async () => {
+        const { GET, POST } = await import('../src/app/api/tutor/student-profile/[id]/route');
+        const getRes = await GET(
+          new Request('https://engine.test/api/tutor/student-profile/stu-retail-2', { method: 'GET' }) as unknown as NextRequest,
+          { params: Promise.resolve({ id: 'stu-retail-2' }) },
+        );
+        assert.notStrictEqual(getRes.status, 401, 'a retail (no-token) profile GET must never 401');
+        const postRes = await POST(
+          new Request('https://engine.test/api/tutor/student-profile/stu-retail-2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId: 's-retail-1' }),
+          }) as unknown as NextRequest,
+          { params: Promise.resolve({ id: 'stu-retail-2' }) },
+        );
+        assert.notStrictEqual(postRes.status, 401, 'a retail (no-token) profile POST must never 401');
+      });
+    },
+  );
+
+  // -------------------------------------------------------------------------
+  // M1c final review, reviewer B finding 8 (mutations M38, M39, M41, M42):
+  // spec §4.1 compliance at the REAL call sites was guarded only by the
+  // file-granular STATIC CHECK above. Reverting a single store call inside a
+  // file that already contains the string `resolveProfileIdOrRaw` shipped
+  // green — including reverting the WHOLE learner-state projection query,
+  // the gaps profile read, emitSessionResult's resolve and
+  // submitAssessment's resolve. That is the exact bug class Task 5 round 1
+  // shipped at six sites.
+  //
+  // These four tests are behavioural: they run the real call sites and
+  // observe WHICH id reaches the student-keyed store, with the flag on and
+  // with it off.
+  //
+  // Why the machinery below: with no MONGODB_URI, `resolveProfileIdOrRaw`
+  // degrades to the raw id on ANY resolution failure — so flag-on and
+  // flag-off would be indistinguishable unless resolution actually
+  // SUCCEEDS. So `connectDB` is stubbed and the resolver's single Mongo
+  // call (`StudentProfileModel.findOneAndUpdate`, reached through the real
+  // `defaultResolverDeps`, through the real `identityFilter`) is stubbed to
+  // mint `resolved::<partnerId>::<externalStudentId>`. Everything between
+  // the route handler and that one call is production code. `bufferCommands
+  // = false` makes every OTHER (unstubbed) model call fail fast, exactly as
+  // the real `connectDB()` throw does today, so the surrounding degrade
+  // paths behave as they already do in this suite.
+  // -------------------------------------------------------------------------
+
+  /* eslint-disable @typescript-eslint/no-explicit-any */
+  const storeModule = require('@/lib/tutor/student-profile/store') as Record<string, any>;
+  const learnerModelModule = require('@/lib/tutor/learner-model/store') as Record<string, any>;
+  const dbModule = require('@core/db') as Record<string, any>;
+  const { StudentProfileModel } = require('@/models/StudentProfile') as Record<string, any>;
+  const { LearnerStateProjectionModel, LearnerStateSnapshotModel } = require('@/models') as Record<string, any>;
+  const mongooseLib = require('mongoose') as Record<string, any>;
+
+  /** A stand-in for a Mongoose query: chainable AND awaitable. */
+  function fakeQuery(result: unknown): any {
+    const node: any = {
+      lean: () => node,
+      select: () => node,
+      sort: () => node,
+      exec: async () => result,
+      then: (res: (v: unknown) => unknown, rej: (e: unknown) => unknown) => Promise.resolve(result).then(res, rej),
+    };
+    return node;
+  }
+
+  /** Install property patches and return a restore function. */
+  function patchAll(entries: Array<[Record<string, any>, string, unknown]>): () => void {
+    const saved = entries.map(([obj, key]) => [obj, key, obj[key]] as [Record<string, any>, string, unknown]);
+    for (const [obj, key, value] of entries) obj[key] = value;
+    return () => { for (const [obj, key, value] of saved) obj[key] = value; };
+  }
+
+  /** The stub the resolver's ONE Mongo call is replaced by. Reads the filter
+   *  the real `identityFilter` produced, so a filter that dropped
+   *  `partnerId` mints `resolved::undefined::…` and the cross-partner
+   *  assertions below fail. */
+  function resolverUpsertStub(filter: any): any {
+    return fakeQuery({ _id: `resolved::${filter.partnerId}::${filter.externalStudentId}` });
+  }
+
+  const identityStubs: Array<[Record<string, any>, string, unknown]> = [
+    [dbModule, 'default', async () => undefined],
+    [StudentProfileModel, 'findOneAndUpdate', resolverUpsertStub],
+  ];
+
+  function signedGet(partnerId: string, pathWithQuery: string): NextRequest {
+    const timestamp = String(Date.now());
+    const sig = signPortalRequest(SECRET, { method: 'GET', path: pathWithQuery, timestamp, body: '' });
+    return new Request(`https://engine.test${pathWithQuery}`, {
+      method: 'GET',
+      headers: {
+        'x-evelyn-partner': partnerId,
+        'x-evelyn-timestamp': timestamp,
+        'x-evelyn-signature': sig,
+      },
+    }) as unknown as NextRequest;
+  }
+
+  const savedBufferCommands = mongooseLib.get('bufferCommands');
+  mongooseLib.set('bufferCommands', false);
+
+  await test(
+    'B-8 / M39: /api/portal/v1/gaps reads the profile under the RESOLVED id when the flag is on, and the RAW id when it is off',
+    async () => {
+      const seen: string[] = [];
+      const restore = patchAll([
+        ...identityStubs,
+        [storeModule, 'getOrCreateStudentProfile', async (id: string) => { seen.push(id); return { id, gaps: [] }; }],
+      ]);
+      try {
+        const { GET } = await import('../src/app/api/portal/v1/gaps/route');
+
+        process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
+        const onRes = await GET(signedGet('crimsora', '/api/portal/v1/gaps?studentId=user_1'), undefined);
+        assert.strictEqual(onRes.status, 200, 'sanity: the request must actually reach the handler');
+        assert.strictEqual(seen.at(-1), 'resolved::crimsora::user_1', 'the profile read must use the RESOLVED id');
+
+        await GET(signedGet('academy', '/api/portal/v1/gaps?studentId=user_1'), undefined);
+        assert.strictEqual(
+          seen.at(-1), 'resolved::academy::user_1',
+          'the same external id from a different partner must reach a DIFFERENT profile id',
+        );
+
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+        await GET(signedGet('crimsora', '/api/portal/v1/gaps?studentId=user_1'), undefined);
+        assert.strictEqual(seen.at(-1), 'user_1', 'flag off must pass the raw id through, byte-identical to pre-M1c');
+      } finally {
+        restore();
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+      }
+    },
+  );
+
+  await test(
+    'B-8 / M38: /api/portal/v1/learner-state queries LearnerStateProjection under the RESOLVED id (flag on) and the RAW id (flag off)',
+    async () => {
+      const projQueries: Array<{ studentId?: string }> = [];
+      const snapQueries: Array<{ studentId?: string }> = [];
+      const restore = patchAll([
+        ...identityStubs,
+        [storeModule, 'getOrCreateStudentProfile', async (id: string) => ({ id, gaps: [] })],
+        [LearnerStateProjectionModel, 'find', (q: any) => { projQueries.push(q); return fakeQuery([]); }],
+        [LearnerStateSnapshotModel, 'findOne', (q: any) => { snapQueries.push(q); return fakeQuery(null); }],
+      ]);
+      try {
+        const { GET } = await import('../src/app/api/portal/v1/learner-state/route');
+
+        process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
+        const onRes = await GET(signedGet('crimsora', '/api/portal/v1/learner-state?studentId=user_1'), undefined);
+        assert.strictEqual(onRes.status, 200, 'sanity: the request must actually reach the projection query');
+        assert.strictEqual(
+          projQueries.at(-1)?.studentId, 'resolved::crimsora::user_1',
+          'the projection query is a student-keyed store too — spec §4.1: one identity space, not two',
+        );
+        assert.strictEqual(snapQueries.at(-1)?.studentId, 'resolved::crimsora::user_1', 'and the snapshot read');
+
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+        await GET(signedGet('crimsora', '/api/portal/v1/learner-state?studentId=user_1'), undefined);
+        assert.strictEqual(projQueries.at(-1)?.studentId, 'user_1', 'flag off must query on the raw id');
+      } finally {
+        restore();
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+      }
+    },
+  );
+
+  await test(
+    'B-8 / M41: emitSessionResult commits the session under the RESOLVED id (flag on) and the RAW id (flag off)',
+    async () => {
+      const seen: string[] = [];
+      const restore = patchAll([
+        ...identityStubs,
+        [storeModule, 'getOrCreateStudentProfile', async (id: string) => {
+          seen.push(id);
+          return { id, mastery: {}, gaps: [], recentSessions: [], preferences: {}, schemaVersion: 1 };
+        }],
+      ]);
+      try {
+        const { emitSessionResult } = await import('../src/lib/tutor/portal/session-result');
+        const req = {
+          sessionId: 'sess-b8-1', studentId: 'user_1', courseId: 'course-1',
+          status: 'completed' as const, milestone: 'none' as const,
+          losTouched: [], masteryDeltas: [], gaps: [], notesTouched: [],
+        };
+
+        process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
+        const result = await emitSessionResult(req, { partnerId: 'crimsora' });
+        assert.strictEqual(seen.at(-1), 'resolved::crimsora::user_1', 'the session-end commit must use the RESOLVED id');
+        assert.strictEqual(
+          result.studentId, 'user_1',
+          'the CONTRACT response still echoes the raw external id — the portal has no concept of our surrogate',
+        );
+
+        await emitSessionResult({ ...req, sessionId: 'sess-b8-2' }, { partnerId: 'academy' });
+        assert.strictEqual(seen.at(-1), 'resolved::academy::user_1', 'two partners, same external id, two profiles');
+
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+        await emitSessionResult({ ...req, sessionId: 'sess-b8-3' }, { partnerId: 'crimsora' });
+        assert.strictEqual(seen.at(-1), 'user_1', 'flag off must commit under the raw id');
+      } finally {
+        restore();
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+      }
+    },
+  );
+
+  await test(
+    'B-8 / M42: submitAssessment stamps its evidence rows with the RESOLVED id (flag on) and the RAW id (flag off)',
+    async () => {
+      const evidenceStudentIds: string[] = [];
+      const restore = patchAll([
+        ...identityStubs,
+        [storeModule, 'getOrCreateStudentProfile', async (id: string) => ({
+          id, mastery: {}, gaps: [], recentSessions: [], preferences: {}, schemaVersion: 1,
+        })],
+        [learnerModelModule, 'appendEvidence', async (rows: Array<{ studentId: string }>) => {
+          for (const r of rows) evidenceStudentIds.push(r.studentId);
+        }],
+      ]);
+      try {
+        const { submitAssessment } = await import('../src/lib/tutor/portal/assessment');
+        const submission = (sessionId: string) => ({
+          assessmentId: 'asmt-b8', studentId: 'user_1', courseId: 'course-1', sessionId,
+          responses: [{ itemId: 'i1', loId: 'lo.1', response: { text: '5' } }],
+        });
+        // Every item resolves to null → the "unresolved item" branch, which
+        // still emits an evidence row stamped with `profileId`. No grading
+        // deps are ever reached.
+        const resolveItem = async () => null;
+        const gradeDeps = { judgeSingleAnswer: async () => { throw new Error('grading must not be reached'); } };
+
+        process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
+        evidenceStudentIds.length = 0;
+        await submitAssessment(submission('diag-b8-1') as any, gradeDeps as any, resolveItem as any, 'crimsora');
+        assert.ok(evidenceStudentIds.length > 0, 'sanity: at least one evidence row must have been emitted');
+        assert.deepStrictEqual(
+          [...new Set(evidenceStudentIds)], ['resolved::crimsora::user_1'],
+          'EVERY evidence row this submission produced must carry the resolved id',
+        );
+
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+        evidenceStudentIds.length = 0;
+        await submitAssessment(submission('diag-b8-2') as any, gradeDeps as any, resolveItem as any, 'crimsora');
+        assert.ok(evidenceStudentIds.length > 0);
+        assert.deepStrictEqual([...new Set(evidenceStudentIds)], ['user_1'], 'flag off must stamp the raw id');
+      } finally {
+        restore();
+        delete process.env.PORTAL_IDENTITY_RESOLUTION;
+      }
+    },
+  );
+
+  mongooseLib.set('bufferCommands', savedBufferCommands);
+  /* eslint-enable @typescript-eslint/no-explicit-any */
+
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);
 })();
