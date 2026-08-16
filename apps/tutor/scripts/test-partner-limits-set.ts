@@ -27,15 +27,18 @@ import mongoose from 'mongoose';
 import {
   parseArgs,
   applyLimitsPatch,
+  sameLimits,
   effectiveBurstCap,
   describeBurstCap,
   buildUpdateSet,
   resolveChange,
-  resolveStoredLimits,
+  resolveBaseline,
   buildCasFilter,
   makeDbDeps,
   PARTNER_READ_PROJECTION,
   main as limitsMain,
+  type LimitsBaseline,
+  type LimitsView,
   type PartnerLimits,
   type PartnerSnapshot,
   type PartnerStore,
@@ -146,6 +149,13 @@ await test('parseArgs: exponent and hex notation are rejected, not silently conv
   assert.match(parseError(['--partner', 'p', '--daily-quota', '1_000']), /must be a whole number/);
   // …and a plain digit string still parses, so the gate is not over-tight.
   assert.deepStrictEqual(parsedOk(['--partner', 'p', '--rpm', '1200']).patch, { rpm: 1200 });
+  // Surrounding whitespace IS accepted, deliberately: the trim runs before
+  // the regex, a padded value out of a shell variable is unambiguous, and
+  // the comment above the gate says so. Pinned so code and comment cannot
+  // drift apart again.
+  assert.deepStrictEqual(parsedOk(['--partner', 'p', '--rpm', '  900  ']).patch, { rpm: 900 });
+  // But padding is the ONLY thing tolerated — an inner space is not a number.
+  assert.match(parseError(['--partner', 'p', '--rpm', '9 00']), /--rpm must be a whole number/);
 });
 
 await test('parseArgs: a REPEATED flag is rejected rather than last-won', () => {
@@ -253,80 +263,123 @@ await test('buildUpdateSet: limits is a COPY — mutating the payload cannot rea
   assert.strictEqual(next.rpm, 1200);
 });
 
-await test('buildUpdateSet: the whole limits subdocument is written, not a sparse patch', () => {
-  // $set of a partial `limits` object replaces the subdocument and lets the
-  // schema defaults (600/60/null) take over the missing keys. All three
-  // fields must always be present.
-  // dailyQuota: null deliberately — a "drop the empty values" payload
-  // builder is the realistic way this goes wrong, and it looks fine until
-  // the one field whose legal value is null vanishes and the schema default
-  // fills it back in.
+await test('buildUpdateSet: a COMPLETE value writes the whole subdocument, not a sparse patch', () => {
+  // $set of a partial `limits` object replaces the subdocument, so a payload
+  // builder that drops "empty" values would silently unset a field.
+  // dailyQuota: null deliberately — that is the field whose legal value is
+  // falsy, and a "drop the empty values" builder looks fine until it vanishes.
   const set = buildUpdateSet({ rpm: 1200, burst: 60, dailyQuota: null }, () => 'TS');
   assert.deepStrictEqual(Object.keys(set.limits).sort(), ['burst', 'dailyQuota', 'rpm']);
 });
 
-// --- resolveStoredLimits: the two row shapes the schema type allows ------
+await test('buildUpdateSet: an UNSET field is not materialised, and no key is ever written as undefined', () => {
+  // A partial row must stay partial: writing `burst` here would give the
+  // limiter a cap the row never had. `$set` replaces the subdocument, so the
+  // keys present in the payload are exactly the keys the row ends up with.
+  const set = buildUpdateSet({ rpm: 1200 }, () => 'TS');
+  assert.deepStrictEqual(Object.keys(set.limits), ['rpm']);
+  assert.ok(!('burst' in set.limits), 'an unset burst must not appear at all, not even as undefined');
+  assert.ok(!Object.values(set.limits).includes(undefined as never));
+});
 
-await test('resolveStoredLimits: an ABSENT limits subdocument falls back to the REGISTRY\'s values, not to zeros', () => {
-  // registry.ts:221 substitutes ENV_FALLBACK_LIMITS for a missing `limits`,
-  // so that is what the limiter is enforcing on such a row. A 0/0 fallback
-  // would report "no burst limiting" for a partner capped at 60/min and,
-  // on a --rpm run, would WRITE burst: 0 — removing a live cap in the same
-  // change that turns enforcement on.
-  const r = resolveStoredLimits(null);
+// --- resolveBaseline: the row shapes, derived the way the READER derives them
+
+await test('resolveBaseline: an ABSENT subdocument gets the REGISTRY\'s whole-subdocument fallback', () => {
+  // registry.ts:221 is `doc.limits ?? { ...ENV_FALLBACK_LIMITS }`, so that is
+  // what the limiter enforces on a row with no `limits`. A 0/0 fallback would
+  // report "no burst limiting" for a partner capped at 60/min and, on a --rpm
+  // run, would WRITE burst: 0 — removing a live cap as enforcement goes on.
+  const r = resolveBaseline(null);
   assert.strictEqual(r.ok, true);
   const ok = r as Extract<typeof r, { ok: true }>;
+  assert.strictEqual(ok.kind, 'env-fallback');
   // Compared against the imported binding, not a copy of its values: a
   // hardcoded second copy is what desynced in the first place.
   assert.deepStrictEqual(ok.limits, { ...ENV_FALLBACK_LIMITS });
-  assert.deepStrictEqual(ok.fallbackFields, ['rpm', 'burst', 'dailyQuota']);
-  assert.ok(ok.limits.burst > 0, 'a missing burst must not resolve to the "unlimited" 0');
-  assert.deepStrictEqual(resolveStoredLimits(undefined), r, 'undefined and null are the same absence');
+  assert.deepStrictEqual(ok.unsetFields, [], 'a substituted field is not an unset one');
+  assert.deepStrictEqual(resolveBaseline(undefined), r, 'undefined and null are the same absence');
 });
 
-await test('resolveStoredLimits: a PARTIAL subdocument keeps what is stored and fills only what is missing', () => {
-  // { rpm: 600 } with no burst is reachable via .lean() (no schema defaults)
-  // and via any raw $set of a partial subdocument. Left alone it propagates
-  // `undefined` through a `number`-typed field, prints `burst=undefined`,
-  // and mongoose casts the missing keys straight back out of the $set.
-  const r = resolveStoredLimits({ rpm: 900 });
+await test('resolveBaseline: a PARTIAL subdocument keeps its missing fields UNSET — the fallback does not fire', () => {
+  // THE REGRESSION THIS TEST EXISTS FOR. `??` is on the whole subdocument, so
+  // a partial one is passed through as-is and a missing `burst` is
+  // `undefined` to limits.ts. Filling it with 60 reports a cap of 60 for a
+  // partner running at 600 and turns `--rpm 1200` into a 600 -> 60 CUT.
+  const r = resolveBaseline({ rpm: 600 });
   assert.strictEqual(r.ok, true);
   const ok = r as Extract<typeof r, { ok: true }>;
-  assert.strictEqual(ok.limits.rpm, 900, 'a stored value must survive untouched');
-  assert.strictEqual(ok.limits.burst, ENV_FALLBACK_LIMITS.burst);
-  assert.strictEqual(ok.limits.dailyQuota, ENV_FALLBACK_LIMITS.dailyQuota);
-  assert.deepStrictEqual(ok.fallbackFields, ['burst', 'dailyQuota']);
-  for (const v of Object.values(ok.limits)) {
-    assert.notStrictEqual(v, undefined, 'no field may ever resolve to undefined');
-  }
+  assert.strictEqual(ok.kind, 'partial');
+  assert.strictEqual(ok.limits.burst, undefined, 'an unset burst must NOT become the fallback 60');
+  assert.deepStrictEqual(ok.limits, { rpm: 600 }, 'exactly what is stored, nothing added');
+  assert.deepStrictEqual(ok.unsetFields, ['burst', 'dailyQuota']);
+  // And the cap the limiter would compute is the stored rpm, not 60.
+  assert.strictEqual(effectiveBurstCap(ok.limits), 600);
 });
 
-await test('resolveStoredLimits: a COMPLETE subdocument reports NO fallback fields', () => {
-  const r = resolveStoredLimits({ rpm: 1200, burst: 90, dailyQuota: 10000 });
-  const ok = r as Extract<typeof r, { ok: true }>;
+await test('resolveBaseline: a COMPLETE subdocument is complete — nothing unset, nothing substituted', () => {
+  const ok = resolveBaseline({ rpm: 1200, burst: 90, dailyQuota: 10000 }) as
+    Extract<LimitsBaseline, { ok: true }>;
+  assert.strictEqual(ok.kind, 'complete');
   assert.deepStrictEqual(ok.limits, { rpm: 1200, burst: 90, dailyQuota: 10000 });
-  assert.deepStrictEqual(ok.fallbackFields, [], 'nothing was substituted, so nothing may be flagged');
+  assert.deepStrictEqual(ok.unsetFields, []);
 });
 
-await test('resolveStoredLimits: a STORED dailyQuota null is a value, not an absent field', () => {
-  // null means "no quota" and is the seeded value; flagging it as a fallback
-  // would print a substitution warning on every normal row.
-  const ok = resolveStoredLimits({ rpm: 600, burst: 60, dailyQuota: null }) as
-    Extract<ReturnType<typeof resolveStoredLimits>, { ok: true }>;
+await test('resolveBaseline: a STORED dailyQuota null is a value, not an unset field', () => {
+  // null means "no quota" and is the seeded value; calling it unset would
+  // print a degenerate-row banner on every normal row.
+  const ok = resolveBaseline({ rpm: 600, burst: 60, dailyQuota: null }) as
+    Extract<LimitsBaseline, { ok: true }>;
+  assert.strictEqual(ok.kind, 'complete');
   assert.strictEqual(ok.limits.dailyQuota, null);
-  assert.deepStrictEqual(ok.fallbackFields, []);
+  assert.deepStrictEqual(ok.unsetFields, []);
 });
 
-await test('resolveStoredLimits: a stored field of the WRONG type is refused, never coerced', () => {
-  const bad = resolveStoredLimits({ rpm: 'lots' as unknown as number, burst: 60, dailyQuota: null });
+await test('resolveBaseline: an EMPTY stored subdocument is partial, not an absent one', () => {
+  // `{} ?? fallback` is `{}` — the registry does NOT substitute here, so
+  // neither may this script: the row genuinely has no caps.
+  const ok = resolveBaseline({}) as Extract<LimitsBaseline, { ok: true }>;
+  assert.strictEqual(ok.kind, 'partial');
+  assert.deepStrictEqual(ok.limits, {});
+  assert.deepStrictEqual(ok.unsetFields, ['rpm', 'burst', 'dailyQuota']);
+  assert.strictEqual(effectiveBurstCap(ok.limits), 0, 'no stored field means no cap, not the fallback');
+});
+
+await test('resolveBaseline: a stored field of the WRONG type is refused, never coerced', () => {
+  const bad = resolveBaseline({ rpm: 'lots' as unknown as number, burst: 60, dailyQuota: null });
   assert.strictEqual(bad.ok, false);
   assert.deepStrictEqual((bad as Extract<typeof bad, { ok: false }>).invalidFields, ['rpm="lots"']);
   // NaN is a number and would sail through a typeof check alone.
-  const nan = resolveStoredLimits({ rpm: 600, burst: Number.NaN, dailyQuota: null });
-  assert.strictEqual(nan.ok, false, 'NaN is not a usable cap');
-  // A null rpm is not "absent" — it is a stored value of the wrong type.
-  const nullRpm = resolveStoredLimits({ rpm: null, burst: 60, dailyQuota: null });
-  assert.strictEqual(nullRpm.ok, false, 'null is a legal value ONLY for dailyQuota');
+  assert.strictEqual(resolveBaseline({ rpm: 600, burst: Number.NaN }).ok, false, 'NaN is not a usable cap');
+  // A null rpm is not "unset" — it is a stored value of the wrong type.
+  assert.strictEqual(resolveBaseline({ rpm: null, burst: 60 }).ok, false, 'null is legal ONLY for dailyQuota');
+});
+
+// --- the unset semantics, mirrored from limits.ts ------------------------
+
+await test('effectiveBurstCap: an UNSET field contributes no cap, exactly as limits.ts drops it', () => {
+  // limits.ts: [rpm, burst].filter(n => n > 0) — `undefined > 0` is false, so
+  // a missing field simply is not a cap. Substituting one changes the answer.
+  assert.strictEqual(effectiveBurstCap({ rpm: 600 }), 600, 'no burst stored -> rpm is the only cap');
+  assert.strictEqual(effectiveBurstCap({ burst: 60 }), 60);
+  assert.strictEqual(effectiveBurstCap({}), 0, 'nothing stored -> no burst limiting at all');
+});
+
+await test('applyLimitsPatch: an unnamed UNSET field stays unset — a raise must not materialise a cap', () => {
+  const after = applyLimitsPatch({ rpm: 600 }, { rpm: 1200 });
+  assert.deepStrictEqual(after, { rpm: 1200 });
+  assert.ok(!('burst' in after), '--rpm must not invent a burst the row never had');
+  assert.strictEqual(effectiveBurstCap(after), 1200, 'the cap goes 600 -> 1200, not 600 -> 60');
+  // Naming it explicitly IS how an operator sets it.
+  assert.deepStrictEqual(applyLimitsPatch({ rpm: 600 }, { burst: 90 }), { rpm: 600, burst: 90 });
+});
+
+await test('sameLimits: unset and set are different states, both directions', () => {
+  assert.strictEqual(sameLimits({ rpm: 600 }, { rpm: 600 }), true);
+  assert.strictEqual(sameLimits({ rpm: 600 }, { rpm: 600, burst: 60 }), false);
+  assert.strictEqual(sameLimits({ rpm: 600, burst: 60 }, { rpm: 600 }), false);
+  // null is a value, and it is not the same as unset.
+  assert.strictEqual(sameLimits({ dailyQuota: null }, {}), false);
+  assert.strictEqual(sameLimits({}, {}), true);
 });
 
 // --- buildCasFilter: the compare-and-set baseline ------------------------
@@ -366,8 +419,9 @@ const SNAPSHOT: PartnerSnapshot = {
   kind: 'partner',
   status: 'active',
   limits: { rpm: 600, burst: 60, dailyQuota: null },
+  baselineKind: 'complete',
+  unsetFields: [],
   storedLimits: { rpm: 600, burst: 60, dailyQuota: null },
-  fallbackFields: [],
   allowedEndpoints: ['/api/portal/v1/'],
 };
 
@@ -375,6 +429,27 @@ const SNAPSHOT: PartnerSnapshot = {
 function snapWith(limits: PartnerLimits): PartnerSnapshot {
   return { ...SNAPSHOT, limits, storedLimits: { ...limits } };
 }
+
+/** A snapshot of a row storing a PARTIAL subdocument — the NB1 shape. */
+function partialSnap(stored: StoredLimits): PartnerSnapshot {
+  const ok = resolveBaseline(stored) as Extract<LimitsBaseline, { ok: true }>;
+  return {
+    ...SNAPSHOT,
+    limits: ok.limits,
+    baselineKind: ok.kind,
+    unsetFields: ok.unsetFields,
+    storedLimits: stored,
+  };
+}
+
+/** A snapshot of a row with NO `limits` subdocument at all — the C1 shape. */
+const FALLBACK_SNAP: PartnerSnapshot = {
+  ...SNAPSHOT,
+  limits: { ...ENV_FALLBACK_LIMITS },
+  baselineKind: 'env-fallback',
+  unsetFields: [],
+  storedLimits: null,
+};
 
 await test('resolveChange: a partner with NO row is refused as unknown-partner and named seed:partner-registry', () => {
   const r = resolveChange('crimosra', null, { rpm: 1200 });
@@ -384,21 +459,52 @@ await test('resolveChange: a partner with NO row is refused as unknown-partner a
   assert.match((r as Extract<typeof r, { ok: false }>).message, /seed:partner-registry/);
 });
 
-await test('resolveChange: requesting the values a partner ALREADY has is refused as a no-op', () => {
+/** The `noop` flag of an `ok` resolution. */
+function noopOf(r: ReturnType<typeof resolveChange>): boolean {
+  assert.strictEqual(r.ok, true, 'expected a resolution, not a refusal');
+  return (r as Extract<typeof r, { ok: true }>).noop;
+}
+
+await test('resolveChange: requesting the values a partner ALREADY stores is a no-op', () => {
   const r = resolveChange('crimsora', SNAPSHOT, { rpm: 600, burst: 60, dailyQuota: null });
-  assert.strictEqual(r.ok, false);
-  assert.strictEqual((r as Extract<typeof r, { ok: false }>).reason, 'no-op');
-  assert.match((r as Extract<typeof r, { ok: false }>).message, /already has exactly these limits/);
+  assert.strictEqual(noopOf(r), true);
+  assert.match(
+    (r as Extract<typeof r, { ok: true }>).message ?? '',
+    /already stores exactly these limits/,
+  );
 });
 
 await test('resolveChange: a no-op is detected across ALL THREE fields, not just rpm', () => {
   const snap: PartnerSnapshot = snapWith({ rpm: 600, burst: 60, dailyQuota: 10000 });
   // Same rpm, different burst -> a real change, not a no-op.
-  assert.strictEqual(resolveChange('crimsora', snap, { burst: 90 }).ok, true);
+  assert.strictEqual(noopOf(resolveChange('crimsora', snap, { burst: 90 })), false);
   // Same rpm+burst, different quota -> a real change.
-  assert.strictEqual(resolveChange('crimsora', snap, { dailyQuota: null }).ok, true);
+  assert.strictEqual(noopOf(resolveChange('crimsora', snap, { dailyQuota: null })), false);
   // Every field identical -> no-op.
-  assert.strictEqual(resolveChange('crimsora', snap, { rpm: 600, burst: 60, dailyQuota: 10000 }).ok, false);
+  assert.strictEqual(
+    noopOf(resolveChange('crimsora', snap, { rpm: 600, burst: 60, dailyQuota: 10000 })),
+    true,
+  );
+});
+
+await test('resolveChange: the no-op comparison is against STORED state, not against substituted values', () => {
+  // On a row with no `limits`, `--rpm 600` MATERIALISES the fallback: the
+  // effective limits do not move, but the row goes from storing nothing to
+  // storing 600/60/none. Calling that "already has these limits" was a false
+  // statement about stored state on the likeliest re-run path.
+  const r = resolveChange('crimsora', FALLBACK_SNAP, {
+    rpm: ENV_FALLBACK_LIMITS.rpm,
+    burst: ENV_FALLBACK_LIMITS.burst,
+    dailyQuota: ENV_FALLBACK_LIMITS.dailyQuota,
+  });
+  assert.strictEqual(noopOf(r), false, 'writing the fallback into an empty row IS a change');
+  // A partial row is still compared field for field, unset included.
+  const partial = partialSnap({ rpm: 600 });
+  assert.strictEqual(noopOf(resolveChange('crimsora', partial, { rpm: 600 })), true);
+  assert.strictEqual(
+    noopOf(resolveChange('crimsora', partial, { burst: 60 })), false,
+    'setting a field that was unset is a change, even to the fallback value',
+  );
 });
 
 await test('resolveChange: a real change returns before/after, with after MERGED onto before', () => {
@@ -426,6 +532,14 @@ interface FakeRun {
 }
 
 async function runMain(argv: string[], partner: PartnerSnapshot | null): Promise<FakeRun> {
+  return runMainWith(argv, partner, {});
+}
+
+async function runMainWith(
+  argv: string[],
+  partner: PartnerSnapshot | null,
+  overrides: Partial<LimitsOpsDeps>,
+): Promise<FakeRun> {
   const run: FakeRun = {
     logs: '', writes: [], connected: false, disconnected: false, guardAtConnect: null,
   };
@@ -441,6 +555,7 @@ async function runMain(argv: string[], partner: PartnerSnapshot | null): Promise
     disconnect: async () => { run.disconnected = true; },
     log: (m) => { run.logs += `${m}\n`; },
     fail: (m, code = 1) => { run.aborted = m; run.exitCode = code; throw new Aborted(m); },
+    ...overrides,
   };
   try {
     await limitsMain(argv, deps);
@@ -493,7 +608,7 @@ await test('main(): a NO-OP writes nothing, says so, and exits 0 — a satisfied
   const run = await runMain(['--partner', 'crimsora', '--rpm', '600', '--write'], SNAPSHOT);
   assert.strictEqual(run.aborted, undefined, 'a no-op must NOT go through the failure path');
   assert.strictEqual(run.exitCode, undefined, 'a no-op must not set a non-zero exit code');
-  assert.match(run.logs, /already has exactly these limits/, 'and it must still say so, loudly');
+  assert.match(run.logs, /already stores exactly these limits/, 'and it must still say so, loudly');
   assert.strictEqual(run.writes.length, 0, 'a redundant write must not bump updatedAt');
   assert.strictEqual(run.disconnected, true, 'the connection must still be closed');
 });
@@ -605,43 +720,126 @@ await test('main(): autoIndex and autoCreate are BOTH off by the time connect() 
   );
 });
 
-await test('main(): a FALLBACK-filled before block says so, naming the substituted fields', async () => {
-  // The one number the operator sizes the enforcement flip against. If the
-  // row does not store `burst`, "burst=60" is what the READER substitutes,
-  // not what the row holds, and applying the change materialises it.
-  const snap: PartnerSnapshot = {
-    ...SNAPSHOT,
-    limits: { rpm: 600, burst: ENV_FALLBACK_LIMITS.burst, dailyQuota: null },
-    storedLimits: { rpm: 600 },
-    fallbackFields: ['burst', 'dailyQuota'],
-  };
-  const run = await runMain(['--partner', 'crimsora', '--rpm', '1200'], snap);
-  assert.match(run.logs, /does NOT store burst, dailyQuota/);
-  assert.match(run.logs, /ENV_FALLBACK_LIMITS/);
+await test('main(): a row with NO limits says the values are the ENV FALLBACK, not stored ones', async () => {
+  // The one number the operator sizes the enforcement flip against: on this
+  // row the limiter really is running 600/60, but the row holds nothing, and
+  // applying the change materialises those values.
+  const run = await runMain(['--partner', 'crimsora', '--rpm', '1200'], FALLBACK_SNAP);
+  assert.match(run.logs, /stores NO `limits` subdocument at all/);
+  assert.match(
+    run.logs,
+    new RegExp(
+      `ENV_FALLBACK_LIMITS \\(rpm=${ENV_FALLBACK_LIMITS.rpm} burst=${ENV_FALLBACK_LIMITS.burst} ` +
+        `dailyQuota=${ENV_FALLBACK_LIMITS.dailyQuota ?? 'none'}\\)`,
+    ),
+    'the banner must quote the imported binding\'s values, not a restatement of them',
+  );
   assert.match(run.logs, /NOT stored values/);
   assert.match(run.logs, /writes them into the row/);
+  assert.match(run.logs, /before: rpm=600 burst=60 dailyQuota=none/, 'the live values, from the fallback');
 });
 
-await test('main(): a fully-stored row prints NO fallback note', async () => {
+await test('main(): a PARTIAL row reports its unset fields as unset — and a raise does not become a cut', async () => {
+  // NB1, the regression this whole shape exists to pin. registry.ts falls
+  // back on the WHOLE subdocument, so `{rpm:600}` reaches the limiter with
+  // burst undefined: the live cap is 600, not 60. Filling burst from the
+  // fallback reported 60 and made `--rpm 1200` a 600 -> 60 CUT.
+  const run = await runMain(['--partner', 'crimsora', '--rpm', '1200', '--write'], partialSnap({ rpm: 600 }));
+  assert.match(run.logs, /before: rpm=600 burst=unset dailyQuota=unset/);
+  assert.match(run.logs, /stores `limits` but NOT burst, dailyQuota/);
+  assert.match(run.logs, /env fallback does NOT\n {2}apply to a partial subdocument/);
+  assert.match(run.logs, /would CUT the effective cap/);
+  assert.match(run.logs, /after:  rpm=1200 burst=unset dailyQuota=unset/);
+  assert.match(
+    run.logs, /effective burst cap after this change: 1200 req\/min/,
+    'the cap must go 600 -> 1200; reporting 60 here is the regression',
+  );
+  assert.deepStrictEqual(
+    run.writes[0].set.limits, { rpm: 1200 },
+    'and the write must not materialise burst — that is what cut the cap',
+  );
+});
+
+await test('main(): a fully-stored row prints NEITHER degenerate-row banner', async () => {
   const run = await runMain(['--partner', 'crimsora', '--rpm', '1200'], SNAPSHOT);
   assert.ok(!/ENV_FALLBACK_LIMITS/.test(run.logs), 'nothing was substituted, so nothing may be claimed');
+  assert.ok(!/but NOT/.test(run.logs), 'nothing is unset either');
+  assert.ok(!/unset/.test(run.logs), 'and no field may print as unset');
+});
+
+await test('main(): the degenerate-row banner prints even when the run is a NO-OP', async () => {
+  // NB2: the no-op check used to return before the banner, so the likeliest
+  // re-run path onto a degenerate row was also the one path that suppressed
+  // the warning about it. `--rpm 600` on a row storing only `{rpm: 600}` is
+  // exactly that path: nothing to write, and everything to warn about.
+  const run = await runMain(['--partner', 'crimsora', '--rpm', '600', '--write'], partialSnap({ rpm: 600 }));
+  assert.match(run.logs, /before: rpm=600 burst=unset dailyQuota=unset/);
+  assert.match(
+    run.logs, /stores `limits` but NOT burst, dailyQuota/,
+    'the banner must print BEFORE the no-op return, not be skipped by it',
+  );
+  assert.match(run.logs, /already stores exactly these limits \(rpm=600 burst=unset dailyQuota=unset\)/);
+  assert.strictEqual(run.writes.length, 0, 'still a no-op: nothing is written');
+  assert.strictEqual(run.exitCode, undefined, 'and still exit 0');
+});
+
+await test('main(): re-typing the fallback values on a limits-less row is a WRITE, not a no-op', async () => {
+  // The row stores nothing; "already stores exactly these limits" would be a
+  // false statement about stored state, and it suppressed the banner too.
+  const run = await runMain(
+    ['--partner', 'crimsora', '--rpm', '600', '--burst', '60', '--daily-quota', 'none', '--write'],
+    FALLBACK_SNAP,
+  );
+  assert.ok(!/already stores/.test(run.logs), 'a row that stores nothing has nothing "already"');
+  assert.match(run.logs, /stores NO `limits` subdocument at all/, 'and the banner must print');
+  assert.strictEqual(run.writes.length, 1, 'materialising the fallback is a real write');
+  assert.deepStrictEqual(run.writes[0].set.limits, { rpm: 600, burst: 60, dailyQuota: null });
 });
 
 await test('main(): the write carries the STORED limits as its compare-and-set baseline', async () => {
-  // Not the effective limits: a fallback-filled burst was never in the row,
-  // and a CAS on it would never match. What was read is what must be matched.
-  const snap: PartnerSnapshot = {
-    ...SNAPSHOT,
-    limits: { rpm: 600, burst: ENV_FALLBACK_LIMITS.burst, dailyQuota: null },
-    storedLimits: { rpm: 600 },
-    fallbackFields: ['burst', 'dailyQuota'],
-  };
-  const run = await runMain(['--partner', 'crimsora', '--rpm', '1200', '--write'], snap);
+  // Not the effective limits: a substituted value was never in the row, and a
+  // CAS on it would never match. What was read is what must be matched.
+  const run = await runMain(['--partner', 'crimsora', '--rpm', '1200', '--write'], partialSnap({ rpm: 600 }));
   assert.strictEqual(run.writes.length, 1);
   assert.deepStrictEqual(run.writes[0].expected, { rpm: 600 });
+  // A limits-less row must be matched as storing nothing at all.
+  const fb = await runMain(['--partner', 'crimsora', '--rpm', '1200', '--write'], FALLBACK_SNAP);
+  assert.strictEqual(fb.writes[0].expected, null);
   // And on a normal row it is the full stored subdocument.
   const plain = await runMain(['--partner', 'crimsora', '--rpm', '1200', '--write'], SNAPSHOT);
   assert.deepStrictEqual(plain.writes[0].expected, { rpm: 600, burst: 60, dailyQuota: null });
+});
+
+await test('main(): an error on the DB path is reported through fail(), not as a raw throw', async () => {
+  // `NOTHING WAS WRITTEN` and `stores unusable limits` are the two loudest
+  // failures this script has; reaching the require.main tail printed them as
+  // a stack trace.
+  const run = await runMainWith(
+    ['--partner', 'crimsora', '--rpm', '1200', '--write'],
+    SNAPSHOT,
+    { savePartner: async () => { throw new Error('NOTHING WAS WRITTEN: the update matched 0 rows'); } },
+  );
+  assert.match(run.aborted ?? '', /Writing partner "crimsora" failed: NOTHING WAS WRITTEN/);
+  assert.strictEqual(run.exitCode, 1);
+  assert.strictEqual(run.error, undefined, 'it must not escape as an unhandled throw');
+  assert.strictEqual(run.disconnected, true, 'and the connection must still be closed');
+
+  const read = await runMainWith(
+    ['--partner', 'crimsora', '--rpm', '1200'],
+    SNAPSHOT,
+    { loadPartner: async () => { throw new Error('stores unusable limits (rpm="lots")'); } },
+  );
+  assert.match(read.aborted ?? '', /Reading partner "crimsora" failed: stores unusable limits/);
+  assert.strictEqual(read.error, undefined);
+
+  // The connection itself is the first thing that goes wrong on a new box.
+  const conn = await runMainWith(
+    ['--partner', 'crimsora', '--rpm', '1200'],
+    SNAPSHOT,
+    { connect: async () => { throw new Error('MONGODB_URI not configured'); } },
+  );
+  assert.match(conn.aborted ?? '', /Connecting to MongoDB failed: MONGODB_URI not configured/);
+  assert.strictEqual(conn.error, undefined);
 });
 
 // --- makeDbDeps: the DB-facing behaviour, driven through a fake store ----
@@ -698,18 +896,23 @@ await test('makeDbDeps.loadPartner: a row with NO limits reports the registry fa
   const store = fakeStore({ name: 'n', kind: 'partner', status: 'active', allowedEndpoints: ['/api/portal/v1/'] });
   const snap = await makeDbDeps(store).loadPartner('crimsora');
   assert.ok(snap);
+  assert.strictEqual(snap.baselineKind, 'env-fallback');
   assert.deepStrictEqual(snap.limits, { ...ENV_FALLBACK_LIMITS });
   assert.strictEqual(snap.storedLimits, null, 'the CAS baseline must record that nothing was stored');
-  assert.deepStrictEqual(snap.fallbackFields, ['rpm', 'burst', 'dailyQuota']);
+  assert.deepStrictEqual(snap.unsetFields, [], 'substituted is not the same as unset');
 });
 
-await test('makeDbDeps.loadPartner: a PARTIAL limits row never yields undefined', async () => {
+await test('makeDbDeps.loadPartner: a PARTIAL limits row keeps its unset fields unset', async () => {
+  // The end-to-end version of NB1: what the dep hands `main` is what gets
+  // printed and written, so the fallback must not be filled in here either.
   const store = fakeStore({ name: 'n', kind: 'partner', status: 'active', limits: { rpm: 600 } });
   const snap = await makeDbDeps(store).loadPartner('crimsora');
   assert.ok(snap);
-  assert.strictEqual(snap.limits.burst, ENV_FALLBACK_LIMITS.burst);
-  assert.notStrictEqual(snap.limits.burst, undefined, 'burst=undefined would print and then vanish in the cast');
+  assert.strictEqual(snap.baselineKind, 'partial');
+  assert.strictEqual(snap.limits.burst, undefined, 'an unset burst must not become the fallback 60');
+  assert.deepStrictEqual(snap.unsetFields, ['burst', 'dailyQuota']);
   assert.deepStrictEqual(snap.storedLimits, { rpm: 600 });
+  assert.strictEqual(effectiveBurstCap(snap.limits), 600, 'the live cap is rpm, not the fallback burst');
 });
 
 await test('makeDbDeps.loadPartner: an unusable stored value THROWS instead of being coerced', async () => {

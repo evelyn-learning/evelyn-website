@@ -74,16 +74,36 @@
  *    script now states the fan-out qualitatively and prints no multiplier
  *    it cannot justify from the row.
  *
- * A ROW WITH NO (OR PARTIAL) `limits` IS FILLED FROM THE READER'S OWN
- * FALLBACK. `registry.ts:221` substitutes `ENV_FALLBACK_LIMITS` when
- * `doc.limits` is absent, so THAT — not 0/0 — is what the running limiter
- * enforces on such a row. This script imports that same binding rather than
- * restating its values (a second hardcoded copy is exactly how the two
- * desynced: the original fallback here was `{rpm: 0, burst: 0}`, i.e. "no
- * burst limiting", the semantic inverse of the live 60/min). Any field taken
- * from the fallback is CALLED OUT in the printed `before:` block, because it
- * is a substituted value and not a stored one — and a `--rpm`-only run on
- * such a row materialises the substituted fields into the document.
+ * THE TWO DEGENERATE ROW SHAPES ARE HANDLED THE WAY THE READER HANDLES
+ * THEM, WHICH IS NOT THE SAME WAY FOR BOTH. `registry.ts:221` is
+ * `limits: doc.limits ?? { ...ENV_FALLBACK_LIMITS }` — a WHOLE-SUBDOCUMENT
+ * fallback. It fires only when `limits` is entirely absent. So:
+ *
+ *  - `limits` ABSENT — the limiter runs on `ENV_FALLBACK_LIMITS`. This
+ *    script substitutes the same values, from the imported binding rather
+ *    than a restatement of it (a second hardcoded copy is exactly how the
+ *    two desynced once already: the fallback here read `{rpm: 0, burst: 0}`,
+ *    i.e. "no burst limiting", the semantic inverse of the live 60/min).
+ *    A run on such a row materialises those values into the document, which
+ *    preserves the cap the partner is actually running under.
+ *
+ *  - `limits` PRESENT BUT PARTIAL — the fallback does NOT fire. The limiter
+ *    uses the subdocument as-is, and a missing field is `undefined`:
+ *    `[rpm, burst].filter((n) => n > 0)` drops it (so it contributes NO
+ *    cap), and `dailyQuota != null` is false (so there is no quota). An
+ *    unset field is therefore NOT the fallback value and must not be filled
+ *    with it — doing that on `{ rpm: 600 }` reports a cap of 60 for a
+ *    partner running at 600 and makes `--rpm 1200` write `burst: 60`,
+ *    CUTTING the effective cap 600 -> 60 with a command whose whole purpose
+ *    is raising it. This script keeps unset fields unset, excludes them from
+ *    the cap exactly as `limits.ts` does, and writes a subdocument that is
+ *    still missing them.
+ *
+ * Either shape is CALLED OUT in the printed `before:` block, with different
+ * wording, because "substituting the env fallback" and "these fields are
+ * unset and contribute no cap" are different statements. The banner prints
+ * before any no-op return, so it cannot be suppressed by the most likely
+ * re-run path.
  *
  * THE WRITE IS A COMPARE-AND-SET. `savePartner` filters on the exact
  * `limits` sub-fields that were read (`$exists: false` for the ones the row
@@ -154,6 +174,18 @@ export const LIMITS_FIELDS: readonly LimitsField[] = ['rpm', 'burst', 'dailyQuot
 export type StoredLimits = { [K in LimitsField]?: PartnerLimits[K] | null };
 
 /**
+ * A limits value in which a field may be UNSET, i.e. `undefined`.
+ *
+ * This is the type the whole reporting and merging path runs on, because it
+ * is the shape the LIMITER sees: a partial row reaches `limits.ts` with
+ * `undefined` in the missing slots, and every predicate there quietly drops
+ * them (`undefined > 0` is false; `undefined != null` is false). Modelling
+ * unset as "the fallback value" instead would be a lie in the one direction
+ * that costs a live cap — see the header.
+ */
+export type LimitsView = { [K in LimitsField]?: PartnerLimits[K] };
+
+/**
  * Only the fields NAMED on the command line appear here. A key being absent
  * is meaningfully different from its value being 0 or null, which is why
  * this is an optional-key patch and not a `Partial<PartnerLimits>` filled
@@ -201,11 +233,14 @@ export function parseArgs(argv: string[]): ParseResult {
     if (raw === undefined) return `${flag} requires a value`;
     // DIGITS ONLY, checked BEFORE Number(). `Number.isInteger(Number(x))` is
     // looser than the message it prints: it accepts `1e3` (1000), `0x10`
-    // (16), `0b11`, `' 12 '` and — because `Number('') === 0` — the empty
-    // string, which for rpm/burst means "no cap" and for dailyQuota means
-    // "block everything". A rate-limit flag has no use for exponent or hex
+    // (16), `0b11` and — because `Number('') === 0` — the empty string,
+    // which for rpm/burst means "no cap" and for dailyQuota means "block
+    // everything". A rate-limit flag has no use for exponent or hex
     // notation, and `--rpm 1e3` is far likelier a typo than an intent, so
     // the regex is the validator and Number() is only the conversion.
+    // Surrounding whitespace IS accepted (`--rpm ' 900 '` is 900): the trim
+    // runs first, and a padded value from a shell variable is unambiguous.
+    // Everything the regex then sees must be digits.
     const t = raw.trim();
     if (!/^-?\d+$/.test(t)) {
       return `${flag} must be a whole number, got ${JSON.stringify(raw)}`;
@@ -296,13 +331,30 @@ export function parseArgs(argv: string[]): ParseResult {
  * present in `patch` override it. Note the `in` checks — `dailyQuota: null`
  * is a value to apply, not an absent key, and `?? current.x` would get that
  * backwards.
+ *
+ * An UNSET field stays unset unless the patch names it. A field the row does
+ * not store contributes no cap to the live limiter, so materialising one
+ * here — with the fallback value or with anything else — would change the
+ * effective limits behind an operator who only asked to change `rpm`.
  */
-export function applyLimitsPatch(current: PartnerLimits, patch: LimitsPatch): PartnerLimits {
-  return {
-    rpm: 'rpm' in patch ? (patch.rpm as number) : current.rpm,
-    burst: 'burst' in patch ? (patch.burst as number) : current.burst,
-    dailyQuota: 'dailyQuota' in patch ? (patch.dailyQuota as number | null) : current.dailyQuota,
-  };
+export function applyLimitsPatch(current: LimitsView, patch: LimitsPatch): LimitsView {
+  const out: LimitsView = {};
+  const rpm = 'rpm' in patch ? patch.rpm : current.rpm;
+  if (rpm !== undefined) out.rpm = rpm;
+  const burst = 'burst' in patch ? patch.burst : current.burst;
+  if (burst !== undefined) out.burst = burst;
+  const dailyQuota = 'dailyQuota' in patch ? patch.dailyQuota : current.dailyQuota;
+  if (dailyQuota !== undefined) out.dailyQuota = dailyQuota;
+  return out;
+}
+
+/**
+ * Pure — no DB. True when two limits values are the same, INCLUDING which
+ * fields are unset: `{ rpm: 600 }` and `{ rpm: 600, burst: 60 }` are
+ * different states even though the stored one is a subset.
+ */
+export function sameLimits(a: LimitsView, b: LimitsView): boolean {
+  return LIMITS_FIELDS.every((key) => a[key] === b[key]);
 }
 
 /**
@@ -317,17 +369,22 @@ export function applyLimitsPatch(current: PartnerLimits, patch: LimitsPatch): Pa
  * its own exported function so the suite can pin the counter-intuitive
  * cases (0/0 is unlimited; one positive field wins over a zero one) rather
  * than only checking a printed string.
+ *
+ * An UNSET field drops out of the filter for free — `undefined > 0` is
+ * false — which is precisely what happens to a partial row inside
+ * `limits.ts`. The `typeof` guard is there for the type, not for the
+ * semantics: it must not change which values survive the filter.
  */
-export function effectiveBurstCap(limits: PartnerLimits): number {
-  const caps = [limits.rpm, limits.burst].filter((n) => n > 0);
+export function effectiveBurstCap(limits: LimitsView): number {
+  const caps = [limits.rpm, limits.burst].filter((n): n is number => typeof n === 'number' && n > 0);
   return caps.length > 0 ? Math.min(...caps) : 0;
 }
 
-export function describeBurstCap(limits: PartnerLimits): string {
+export function describeBurstCap(limits: LimitsView): string {
   const cap = effectiveBurstCap(limits);
   return cap > 0
     ? `${cap} req/min per (partner, endpoint)`
-    : 'NO BURST LIMITING (rpm and burst are both non-positive — this is unlimited, not blocked)';
+    : 'NO BURST LIMITING (neither rpm nor burst is a positive number — this is unlimited, not blocked)';
 }
 
 /**
@@ -341,7 +398,7 @@ export function describeBurstCap(limits: PartnerLimits): string {
  * never be able to restore access.
  */
 export interface UpdateSet {
-  limits: PartnerLimits;
+  limits: LimitsView;
   updatedAt: string;
 }
 
@@ -349,12 +406,22 @@ export interface UpdateSet {
  * Pure — no DB. The exact `$set` payload. Copies `limits` BY VALUE so
  * nothing downstream can mutate the caller's object through the payload
  * (the seed's `buildCreateDoc` does the same for the same reason).
+ *
+ * Only DEFINED fields are copied, and a key is never written as
+ * `undefined`. `$set` on `limits` replaces the whole subdocument, so the
+ * keys present here are exactly the keys the row ends up with: a complete
+ * value writes three, and a partial one deliberately writes fewer, leaving
+ * the unset fields unset rather than materialising a cap the row never had.
  */
 export function buildUpdateSet(
-  next: PartnerLimits,
+  next: LimitsView,
   now: () => string = () => new Date().toISOString(),
 ): UpdateSet {
-  return { limits: { ...next }, updatedAt: now() };
+  const limits: LimitsView = {};
+  if (next.rpm !== undefined) limits.rpm = next.rpm;
+  if (next.burst !== undefined) limits.burst = next.burst;
+  if (next.dailyQuota !== undefined) limits.dailyQuota = next.dailyQuota;
+  return { limits, updatedAt: now() };
 }
 
 export interface PartnerSnapshot {
@@ -363,75 +430,101 @@ export interface PartnerSnapshot {
   kind: string;
   status: string;
   /**
-   * EFFECTIVE limits: the stored values, with any absent field filled from
-   * `ENV_FALLBACK_LIMITS` — i.e. what the running limiter is enforcing right
-   * now, which is the only thing an operator can size a change against.
+   * What the RUNNING LIMITER sees today, derived exactly as `registry.ts`
+   * derives it: the stored subdocument, or `ENV_FALLBACK_LIMITS` if there is
+   * no subdocument at all. A partial subdocument keeps its unset fields
+   * unset, because that is what reaches `limits.ts`.
    */
-  limits: PartnerLimits;
+  limits: LimitsView;
+  /** How `limits` above was arrived at. Drives which banner is printed. */
+  baselineKind: LimitsBaselineKind;
+  /** Fields the row does not store. Non-empty only for a PARTIAL row. */
+  unsetFields: LimitsField[];
   /**
    * What the row LITERALLY stores. The compare-and-set baseline, and the
-   * reason a fallback-filled `limits` cannot be mistaken for stored state.
+   * reason substituted values cannot be mistaken for stored state.
    */
   storedLimits: StoredLimits | null;
-  /** Which of `limits`'s fields came from the fallback rather than the row. */
-  fallbackFields: LimitsField[];
   allowedEndpoints: string[];
 }
 
-export type StoredLimitsResolution =
-  | { ok: true; limits: PartnerLimits; fallbackFields: LimitsField[] }
+/**
+ * - `complete`     — all three fields stored. The ordinary row.
+ * - `env-fallback` — no `limits` subdocument at all; `registry.ts:221`
+ *                    substitutes `ENV_FALLBACK_LIMITS` wholesale.
+ * - `partial`      — a subdocument missing at least one field. The fallback
+ *                    does NOT fire; the missing fields are `undefined` to the
+ *                    limiter and contribute nothing.
+ */
+export type LimitsBaselineKind = 'complete' | 'env-fallback' | 'partial';
+
+export type LimitsBaseline =
+  | { ok: true; kind: LimitsBaselineKind; limits: LimitsView; unsetFields: LimitsField[] }
   | { ok: false; invalidFields: string[] };
 
 /**
  * Pure — no DB. Turns a stored (possibly absent, possibly partial) `limits`
- * subdocument into the EFFECTIVE limits, plus the list of fields that had to
- * be substituted.
+ * subdocument into what the LIMITER is enforcing, deriving it the way
+ * `registry.ts` + `limits.ts` derive it rather than approximating:
  *
- * The substitution source is `registry.ts`'s own `ENV_FALLBACK_LIMITS`
- * BINDING, imported rather than copied. This function exists because the
- * copy was wrong: it read `{ rpm: 0, burst: 0, dailyQuota: null }` under a
- * comment claiming it mirrored the registry, while the registry substitutes
- * `{ rpm: 600, burst: 60, dailyQuota: null }`. 0 means "no cap" downstream,
- * so the copy reported "no burst limiting" for a partner the limiter was
- * capping at 60/min, and a `--rpm 1200` run on such a row would have written
- * `burst: 0` — removing a live cap in the same change that turns enforcement
- * on. Importing the binding makes the two agree by construction.
+ *   registry.ts:221   limits: doc.limits ?? { ...ENV_FALLBACK_LIMITS }
+ *
+ * The `??` is on the WHOLE subdocument. So the fallback is substituted only
+ * when nothing is stored; a partial subdocument is passed through as-is and
+ * its missing fields simply do not participate. Substituting PER FIELD looks
+ * like the same thing and is not: on `{ rpm: 600 }` it reports a cap of 60
+ * for a partner running uncapped-by-burst at 600, and turns `--rpm 1200`
+ * into a 600 -> 60 cut. That is a regression this file shipped once.
+ *
+ * The substitution source is the imported `ENV_FALLBACK_LIMITS` BINDING, not
+ * a restatement of its values: the first version of this fallback read
+ * `{ rpm: 0, burst: 0 }` — "no burst limiting", the semantic inverse of the
+ * live 60/min — under a comment claiming it mirrored the registry.
  *
  * A field that is PRESENT but not a usable value (a string, NaN, a null rpm)
  * is NOT coerced and NOT silently replaced: it comes back as `invalidFields`
  * and the caller refuses. Coercing would print `burst=undefined` and write a
  * subdocument that mongoose casts back down to a partial one.
  */
-export function resolveStoredLimits(
-  stored: StoredLimits | null | undefined,
-): StoredLimitsResolution {
-  const fallbackFields: LimitsField[] = [];
+export function resolveBaseline(stored: StoredLimits | null | undefined): LimitsBaseline {
+  if (stored == null) {
+    return { ok: true, kind: 'env-fallback', limits: { ...ENV_FALLBACK_LIMITS }, unsetFields: [] };
+  }
+
+  const unsetFields: LimitsField[] = [];
   const invalidFields: string[] = [];
-  const out: Record<string, number | null> = {};
+  const limits: LimitsView = {};
 
   for (const key of LIMITS_FIELDS) {
-    const v = stored == null ? undefined : (stored as Record<string, unknown>)[key];
+    const v = (stored as Record<string, unknown>)[key];
     if (v === undefined) {
-      // Absent — including "the whole subdocument is absent". This is the
-      // case registry.ts substitutes for, so substitute the same thing.
-      fallbackFields.push(key);
-      out[key] = ENV_FALLBACK_LIMITS[key];
+      // Unset, NOT substituted: `undefined > 0` is false in limits.ts's
+      // filter and `undefined != null` is false in its quota gate, so this
+      // field contributes nothing to the live limits.
+      unsetFields.push(key);
       continue;
     }
     if (key === 'dailyQuota' && v === null) {
-      // A STORED null is a value ("no quota"), not an absent field.
-      out[key] = null;
+      // A STORED null is a value ("no quota"), not an unset field.
+      limits.dailyQuota = null;
       continue;
     }
     if (typeof v === 'number' && Number.isFinite(v)) {
-      out[key] = v;
+      if (key === 'rpm') limits.rpm = v;
+      else if (key === 'burst') limits.burst = v;
+      else limits.dailyQuota = v;
       continue;
     }
     invalidFields.push(`${key}=${JSON.stringify(v)}`);
   }
 
   if (invalidFields.length > 0) return { ok: false, invalidFields };
-  return { ok: true, limits: out as unknown as PartnerLimits, fallbackFields };
+  return {
+    ok: true,
+    kind: unsetFields.length > 0 ? 'partial' : 'complete',
+    limits,
+    unsetFields,
+  };
 }
 
 /**
@@ -461,22 +554,28 @@ export function buildCasFilter(
 }
 
 export type ChangeResolution =
-  | { ok: true; before: PartnerLimits; after: PartnerLimits }
-  | { ok: false; reason: 'unknown-partner' | 'no-op'; message: string };
+  | { ok: false; reason: 'unknown-partner'; message: string }
+  | { ok: true; before: LimitsView; after: LimitsView; noop: boolean; message: string | null };
 
 /**
  * Pure — no DB. Turns "the row we read (or didn't)" plus "what was asked"
- * into either a before/after pair or a refusal. Both refusals are here, not
- * inline in `main()`, so the suite can drive them without a database:
+ * into a before/after pair, a no-op verdict, or the one refusal:
  *
  *  - `unknown-partner` — `existing === null`. This is the no-upsert
  *    guarantee expressed as a value: there is no branch anywhere that turns
  *    a missing row into a written one.
- *  - `no-op` — the requested values already ARE the current ones. Worth an
- *    abort rather than a redundant write: on a rollout step an operator
- *    needs to know whether their change landed or whether they are looking
- *    at a stale terminal, and "0 fields differ" is the signal for that.
- *    It also keeps `updatedAt` honest as "when limits last actually moved".
+ *  - `noop: true` — the write would leave the STORED subdocument exactly as
+ *    it is. Worth reporting rather than performing: on a rollout step an
+ *    operator needs to know whether their change landed or whether they are
+ *    looking at a stale terminal, and it keeps `updatedAt` honest as "when
+ *    limits last actually moved". It is not a refusal — `main` prints the
+ *    full before/after report first and exits 0.
+ *
+ * The no-op comparison is against `storedLimits`, NOT against the effective
+ * limits. On a row with no `limits` subdocument the effective values are
+ * substituted, so `--rpm 600` there does change the row — it materialises
+ * the fallback — and calling that "already has exactly these limits" was a
+ * false statement about stored state on the most likely re-run path.
  */
 export function resolveChange(
   partnerId: string,
@@ -496,20 +595,40 @@ export function resolveChange(
   }
   const before = existing.limits;
   const after = applyLimitsPatch(before, patch);
-  if (before.rpm === after.rpm && before.burst === after.burst && before.dailyQuota === after.dailyQuota) {
+  const stored = storedView(existing);
+  if (sameLimits(after, stored)) {
     return {
-      ok: false,
-      reason: 'no-op',
+      ok: true,
+      before,
+      after,
+      noop: true,
       message:
-        `"${partnerId}" already has exactly these limits (rpm=${before.rpm}, burst=${before.burst}, ` +
-        `dailyQuota=${before.dailyQuota ?? 'none'}). Nothing to do — no write, no updatedAt bump.`,
+        `"${partnerId}" already stores exactly these limits (${fmt(stored)}). Nothing to do — ` +
+        `no write, no updatedAt bump.`,
     };
   }
-  return { ok: true, before, after };
+  return { ok: true, before, after, noop: false, message: null };
 }
 
-function fmt(limits: PartnerLimits): string {
-  return `rpm=${limits.rpm} burst=${limits.burst} dailyQuota=${limits.dailyQuota ?? 'none'}`;
+/**
+ * The STORED fields as a `LimitsView`. For a `complete` or `partial` row
+ * that is `existing.limits` itself (both are derived from stored values
+ * only); an `env-fallback` row stores nothing, so its view is empty — which
+ * is exactly what makes materialising the fallback a real change rather than
+ * a no-op.
+ */
+function storedView(existing: PartnerSnapshot): LimitsView {
+  return existing.baselineKind === 'env-fallback' ? {} : existing.limits;
+}
+
+function show(v: number | null | undefined): string {
+  if (v === undefined) return 'unset';
+  if (v === null) return 'none';
+  return String(v);
+}
+
+function fmt(limits: LimitsView): string {
+  return `rpm=${show(limits.rpm)} burst=${show(limits.burst)} dailyQuota=${show(limits.dailyQuota)}`;
 }
 
 export interface LimitsOpsDeps {
@@ -568,10 +687,10 @@ export function makeDbDeps(store: PartnerStore): Pick<LimitsOpsDeps, 'loadPartne
     loadPartner: async (partnerId) => {
       const doc = await store.findPartner(partnerId, PARTNER_READ_PROJECTION);
       if (!doc) return null;
-      const resolved = resolveStoredLimits(doc.limits);
-      if (!resolved.ok) {
+      const baseline = resolveBaseline(doc.limits);
+      if (!baseline.ok) {
         throw new Error(
-          `Partner "${partnerId}" stores unusable limits (${resolved.invalidFields.join(', ')}). ` +
+          `Partner "${partnerId}" stores unusable limits (${baseline.invalidFields.join(', ')}). ` +
             `Refusing to guess what the limiter is enforcing: fix the row before changing its limits.`,
         );
       }
@@ -580,9 +699,10 @@ export function makeDbDeps(store: PartnerStore): Pick<LimitsOpsDeps, 'loadPartne
         name: doc.name ?? '(unnamed)',
         kind: doc.kind ?? '(unknown)',
         status: doc.status ?? '(unknown)',
-        limits: resolved.limits,
+        limits: baseline.limits,
+        baselineKind: baseline.kind,
+        unsetFields: baseline.unsetFields,
         storedLimits: doc.limits ?? null,
-        fallbackFields: resolved.fallbackFields,
         allowedEndpoints: doc.allowedEndpoints ?? [],
       };
     },
@@ -644,6 +764,24 @@ const defaultDeps: LimitsOpsDeps = {
 };
 
 /**
+ * Runs a database call and routes any failure through `deps.fail`, so the
+ * two loudest failures this script can produce — `NOTHING WAS WRITTEN` and
+ * `stores unusable limits` — reach the operator as the clean one-line abort
+ * `fail()` prints, rather than as a raw stack trace from the `require.main`
+ * tail. The exit code and the `finally` disconnect are unchanged; only the
+ * output is. Nothing it wraps calls `fail()` itself — `connect`,
+ * `loadPartner` and `savePartner` report by throwing — so there is no
+ * already-reported case to special-case here.
+ */
+async function tryDb<T>(deps: LimitsOpsDeps, what: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    deps.fail(`${what} failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+/**
  * Exported and dep-injected for the same reason the seed's `main()` is
  * exported: a well-tested pure `resolveChange` proves nothing about whether
  * `main()` ACTS on it. The suite drives this with fake deps to assert that
@@ -674,38 +812,38 @@ export async function main(
   // neither. This bit this milestone already (an empty `partners`
   // collection appeared on prod from a plain dry run).
   configureMongooseForOpsScript();
-  await deps.connect();
+  await tryDb(deps, 'Connecting to MongoDB', () => deps.connect());
 
   try {
-    const existing = await deps.loadPartner(partnerId);
+    const existing = await tryDb(deps, `Reading partner "${partnerId}"`, () =>
+      deps.loadPartner(partnerId),
+    );
     const resolution = resolveChange(partnerId, existing, patch);
     if (!resolution.ok) {
-      if (resolution.reason === 'no-op') {
-        // EXIT 0. The requested state and the actual state agree — a
-        // satisfied postcondition, not a failure, and the most likely
-        // outcome of re-running a rollout step or verifying yesterday's
-        // raise. Exiting non-zero here would abort any `set -e` runbook and
-        // would be indistinguishable from "this partner does not exist".
-        // The message is unchanged; visibility comes from it, not from the
-        // exit code.
-        deps.log(resolution.message);
-        return;
-      }
       deps.fail(resolution.message);
       return;
     }
-    const { before, after } = resolution;
+    const { before, after, noop } = resolution;
     const row = existing as PartnerSnapshot;
 
     deps.log(`Mode: ${write ? 'WRITE' : 'dry-run'} — partner "${partnerId}" (kind=${row.kind}, status=${row.status})`);
     deps.log(`  before: ${fmt(before)}`);
-    if (row.fallbackFields.length > 0) {
+    // Printed BEFORE any no-op return: a re-run is the likeliest path onto a
+    // degenerate row, and it is the path that most needs the warning.
+    if (row.baselineKind === 'env-fallback') {
       deps.log(
-        `  *** the row does NOT store ${row.fallbackFields.join(', ')} — the value(s) shown above for ` +
-          `${row.fallbackFields.length === 1 ? 'that field' : 'those fields'} are\n` +
-          `  registry.ts's ENV_FALLBACK_LIMITS (rpm=${ENV_FALLBACK_LIMITS.rpm} burst=${ENV_FALLBACK_LIMITS.burst} ` +
-          `dailyQuota=${ENV_FALLBACK_LIMITS.dailyQuota ?? 'none'}), which is what the RUNNING limiter\n` +
-          `  substitutes for a missing field — NOT stored values. Applying this change writes them into the row. ***`,
+        `  *** the row stores NO \`limits\` subdocument at all. The values above are registry.ts's\n` +
+          `  ENV_FALLBACK_LIMITS (${fmt(ENV_FALLBACK_LIMITS)}) — what the RUNNING limiter substitutes for a\n` +
+          `  missing subdocument (\`doc.limits ?? { ...ENV_FALLBACK_LIMITS }\`), NOT stored values.\n` +
+          `  Applying this change writes them into the row. ***`,
+      );
+    } else if (row.baselineKind === 'partial') {
+      deps.log(
+        `  *** the row stores \`limits\` but NOT ${row.unsetFields.join(', ')}. The env fallback does NOT\n` +
+          `  apply to a partial subdocument — registry.ts falls back on the WHOLE subdocument — so ${row.unsetFields.length === 1 ? 'that' : 'those'}\n` +
+          `  field(s) reach the limiter as \`undefined\`: they contribute NO cap (\`undefined > 0\` is false)\n` +
+          `  and no quota (\`undefined != null\` is false). This script leaves them unset; filling them\n` +
+          `  would CUT the effective cap. Name one explicitly (--burst <n>) if you want it set. ***`,
       );
     }
     deps.log(`  after:  ${fmt(after)}`);
@@ -743,8 +881,21 @@ export async function main(
       );
     }
 
+    if (noop) {
+      // EXIT 0, and only after the full report above — a satisfied
+      // postcondition is not a failure, and it is the most likely outcome of
+      // re-running a rollout step or verifying yesterday's raise. Exiting
+      // non-zero would abort any `set -e` runbook and be indistinguishable
+      // from "this partner does not exist". Visibility comes from the
+      // message, not from the exit code.
+      deps.log(`\n${resolution.message}`);
+      return;
+    }
+
     if (write) {
-      await deps.savePartner(partnerId, buildUpdateSet(after), row.storedLimits);
+      await tryDb(deps, `Writing partner "${partnerId}"`, () =>
+        deps.savePartner(partnerId, buildUpdateSet(after), row.storedLimits),
+      );
       deps.log('\nDone. Only `limits` and `updatedAt` were written.');
       deps.log(
         'The running server does NOT see this immediately: registry.ts caches partner records for ' +
