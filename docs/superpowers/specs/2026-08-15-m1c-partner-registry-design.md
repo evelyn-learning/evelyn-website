@@ -477,7 +477,7 @@ immediate outage of every embedded session. Unblocking it means migrating those 
 | Risk | Mitigation |
 |---|---|
 | Mis-attribution of the 29 orphans | They go to `evelyn`, which is where retail users belong anyway; the dry-run table is reviewed before any write. |
-| `PORTAL_SECRET_ENC_KEY` lost | Secrets become unrecoverable and every partner must re-key. Key must be backed up alongside other production secrets before step 5. |
+| `PORTAL_SECRET_ENC_KEY` lost | Secrets become unrecoverable and every partner must re-key. Key must be backed up alongside other production secrets before **step 1** — it is needed the first time the seed seals a secret. (An earlier draft said 'before step 5', referring to a pre-rewrite numbering in which step 5 was 'flip the secret source to the registry'; that step no longer exists.) |
 | Index build fails on unexpected duplicates | This is the desired behaviour — it blocks the migration rather than corrupting silently. Resolve the duplicate, re-run. |
 | A new write path forgets to resolve | The unique index catches a genuine duplicate; a code-review rule plus the single choke point in `store.ts` is the primary guard. |
 | Report-only mode left on indefinitely | Step 7 is an explicit gate with its own verification. |
