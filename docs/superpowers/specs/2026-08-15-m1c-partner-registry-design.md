@@ -324,8 +324,16 @@ A single idempotent script with a mandatory dry-run mode:
    first. Seeding credentials is the seed script's job, not the backfill's.
 4. Build the unique index.
 
-**The index build is the verification.** It refuses to complete if any duplicate `(partnerId,
-externalStudentId)` pair exists, so a silent mis-attribution cannot pass unnoticed.
+**The real verification is `already-migrated == 0` in the dry run, not the index build.** An earlier
+draft claimed the build was the check. It overstates: every stamped row gets
+`externalStudentId = _id`, and `_id` is the primary key, so `(partnerId, externalStudentId)` is unique
+**by construction** and the build will succeed regardless — proving nothing about attribution. The
+only way a duplicate could arise is a row that already carries identity fields where
+`externalStudentId ≠ _id`, which is exactly what a non-zero `already-migrated` count reports. Do not
+lean on the index build as a safety net; read the dry-run summary.
+
+(Confirmed against production 2026-08-16: `already-migrated 0`, `ambiguous 0`, `existing-prefix 393`,
+`sourcePartnerId 75`, `orphan-default 29`, total 497 — nothing written.)
 
 **Rollback:** drop the index, `$unset` the two fields. Because `_id` never changed, nothing else in
 the database is affected and no other collection needs a compensating change.
