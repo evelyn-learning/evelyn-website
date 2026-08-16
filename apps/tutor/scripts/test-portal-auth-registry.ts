@@ -339,6 +339,32 @@ function makeLimitsDeps(env: Record<string, string> = {}): LimitsDeps {
     }
   });
 
+  // --- M1c Task 7, fix round 2: I3 was only partially closed — the two
+  // tests above use the default allowedEndpoints ('/api/portal/v1/', which
+  // covers the default request path), so they pass regardless of whether
+  // limits runs before or after the allowlist check. This one pins the
+  // ORDER: dailyQuota: 0 blocks unconditionally on the very first bump (see
+  // limits.ts), so if checkPartnerLimits ever ran before the allowlist
+  // check, this request would 402. It must 403 instead, because the
+  // endpoint isn't on this partner's allowlist at all — the allowlist has
+  // to run first, exactly as it does for the signature (see the
+  // 'garbage signature against a disallowed endpoint' case above, which
+  // pins the same ordering one check earlier in the chain).
+  await test('over-quota + disallowed endpoint → 403 endpoint_not_allowed (limits must run AFTER the allowlist)', async () => {
+    setRegistry(makePartner({
+      allowedEndpoints: ['/api/portal/v1/other'], // does NOT cover signedRequest's default path
+      limits: { rpm: 600, burst: 1000, dailyQuota: 0 }, // blocks everything, on the very first call
+    }));
+    __setLimitsDepsOverrideForTests(makeLimitsDeps());
+    try {
+      const { status, json } = await callEcho(signedRequest({}));
+      assert.strictEqual(status, 403);
+      assert.strictEqual(json.reason, 'endpoint_not_allowed');
+    } finally {
+      __setLimitsDepsOverrideForTests(null);
+    }
+  });
+
   __setRegistryOverrideForTests(null);
   __setLimitsDepsOverrideForTests(null);
 
