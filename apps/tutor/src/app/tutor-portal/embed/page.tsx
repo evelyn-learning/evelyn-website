@@ -479,7 +479,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         return undefined;
       }
     },
-    [config.mock_attempt_id, config.student_id, config.mock_item_ids],
+    // M1c Task 5 (fix round 3) — embedToken added: the fetch above reads it
+    // (line ~471) but the dep array omitted it. Harmless today (embedToken
+    // is mount-stable — parsed once from the URL query param, see
+    // `EmbedSessionInner`'s props), fixed for correctness anyway.
+    [config.mock_attempt_id, config.student_id, config.mock_item_ids, embedToken],
   );
   useEffect(() => {
     if (sessionGoal !== 'mock-review' || !config.mock_attempt_id) return;

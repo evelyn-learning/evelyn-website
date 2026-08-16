@@ -10,14 +10,16 @@
  *
  * DELETE handler is at .../[overlayId]/route.ts.
  *
- * M1c Task 5 (fix round 2, CRITICAL A / spec §4.0) — gained embed-token
- * auth. This route previously had none ("Add auth when retail launches" —
- * the old text of this comment), which meant it had no trustworthy partner
- * id to resolve identity under: the client must never be believed about
- * which partner it is. Additive/non-breaking while `EMBED_TOKEN_ENFORCE`
- * stays at its default `'off'` (`checkEmbedAuth` always allows, with no
- * payload, until enforcement is turned on) — see
- * `partnerIdForInternalRoute`'s doc comment.
+ * M1c Task 5 (fix round 2, CRITICAL A / spec §4.0; corrected fix round 3,
+ * CRITICAL A1) — gained embed-token verification, but it NEVER gates the
+ * request: this route previously had no auth at all ("Add auth when retail
+ * launches" — the old text of this comment), and `/tutor/dev/notes` is a
+ * genuinely retail/dev surface with no embed token. `checkEmbedAuth` runs
+ * only to extract a verified `partner_id` when a token IS present and
+ * valid; an absent or failed-verification token falls back to `'evelyn'`
+ * (see `partnerIdForInternalRoute`'s doc comment) rather than 401ing —
+ * requiring a token here would have broken retail traffic the moment
+ * `EMBED_TOKEN_ENFORCE` is turned on, independent of the identity flag.
  *
  * `baselineId` matches the corresponding lesson plan id (e.g.
  * `evelyn.ap.macro.loanable-funds-market.v1`). Next.js URL-decodes the
@@ -50,9 +52,6 @@ export async function GET(
     expectedStudentId: studentId,
     route: 'topic-notes:GET',
   });
-  if (!auth.allow) {
-    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
-  }
   const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: studentId });
   const rendered = await resolveTopicNotes(profileId, baselineId);
   if (!rendered) {
@@ -92,9 +91,6 @@ export async function PATCH(
     expectedStudentId: studentId,
     route: 'topic-notes:PATCH',
   });
-  if (!auth.allow) {
-    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
-  }
 
   let body: PatchBody;
   try {

@@ -5,8 +5,9 @@
  *
  * For the v1 delete UI on the dedicated reading page (per Q8g).
  *
- * M1c Task 5 (fix round 2, CRITICAL A / spec §4.0) — gained embed-token
- * auth; see the sibling route's module doc for why.
+ * M1c Task 5 (fix round 2, CRITICAL A / spec §4.0; corrected fix round 3,
+ * CRITICAL A1) — gained embed-token verification, but it never gates the
+ * request; see the sibling route's module doc for why.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -32,9 +33,6 @@ export async function DELETE(
     expectedStudentId: studentId,
     route: 'topic-notes:DELETE',
   });
-  if (!auth.allow) {
-    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
-  }
   const bucket = req.nextUrl.searchParams.get('bucket') as OverlayBucket | null;
   if (!bucket || !VALID_BUCKETS.includes(bucket)) {
     return NextResponse.json(

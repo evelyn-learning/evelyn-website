@@ -742,11 +742,23 @@ export async function resolveProfileId(
  * function every call site funnels through, means no call site has to
  * remember this case individually.
  */
-export async function resolveProfileIdOrRaw(input: ResolveProfileInput): Promise<string> {
+export async function resolveProfileIdOrRaw(
+  input: ResolveProfileInput,
+  /** M1c Task 5 (fix round 3, MINOR F) — injectable, same as
+   *  `resolveProfileId`'s own `deps` param. Added so the `trial:`
+   *  short-circuit above is provably never followed by a deps call in a
+   *  hermetic test, rather than the short-circuit's absence being masked
+   *  by this function's OWN degrade-on-failure catch below (a fake/real
+   *  `connectDB()` failure with no `MONGODB_URI` configured is a plain
+   *  `Error`, which that catch treats as operational and degrades to the
+   *  raw id too — so "returns the raw id" alone does not prove the
+   *  short-circuit ran; only "deps was never touched" does). */
+  deps: ResolverDeps = defaultResolverDeps,
+): Promise<string> {
   if (input.externalStudentId.startsWith('trial:')) return input.externalStudentId;
   if (!identityResolutionEnabled()) return input.externalStudentId;
   try {
-    return await resolveProfileId(input);
+    return await resolveProfileId(input, deps);
   } catch (err) {
     if (err instanceof ProfileIdentityError) throw err;
     console.error('[student-profile] resolveProfileId failed, degrading to the raw id:', err);

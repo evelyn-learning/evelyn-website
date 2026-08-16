@@ -63,20 +63,21 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
-  // M1c Task 5 (fix round 2, CRITICAL A) — this route had NO auth at all
-  // (pre-existing; reached by /tutor/settings and the in-session humor
-  // chip, per the module doc above), so it had no trustworthy partner id
-  // to resolve identity under. checkEmbedAuth is additive/non-breaking
-  // while EMBED_TOKEN_ENFORCE stays at its default 'off' (always allows,
-  // no payload) — see partnerIdForInternalRoute's doc comment.
+  // M1c Task 5 (fix round 2, CRITICAL A; corrected fix round 3, CRITICAL A1)
+  // — this route had NO auth at all (pre-existing; reached by
+  // /tutor/settings and the in-session humor chip, per the module doc
+  // above), so it had no trustworthy partner id to resolve identity under.
+  // checkEmbedAuth is called ONLY to extract a verified partner_id when an
+  // embed token is present — it must NEVER gate the request. /tutor/settings
+  // is a genuinely retail surface (useStudentPreferences.ts sends no
+  // token) and must keep working with no token, unconditionally — see
+  // partnerIdForInternalRoute's doc comment for why an absent OR
+  // failed-verification token both fall back to 'evelyn' rather than 401.
   const auth = checkEmbedAuth({
     token: req.headers.get('x-embed-token'),
     expectedStudentId: id,
     route: 'student-profile:preferences:PATCH',
   });
-  if (!auth.allow) {
-    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
-  }
 
   let body: unknown;
   try {

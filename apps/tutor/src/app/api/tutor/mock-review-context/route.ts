@@ -1,16 +1,17 @@
 /** Same-origin context fetch for mock-review embed sessions.
  *
- * M1c Task 5 (fix round 2, CRITICAL B / spec §4.0) — gained embed-token
- * auth. `getReview`'s ownership check (`attempt.studentId !== studentId`)
+ * M1c Task 5 (fix round 2, CRITICAL B / spec §4.0; corrected fix round 3,
+ * CRITICAL A1) — gained embed-token verification, but it never gates the
+ * request. `getReview`'s ownership check (`attempt.studentId !== studentId`)
  * now compares two RESOLVED ids once the identity flag is on (the
  * MockAttempt was created via the portal-authed
  * `/api/portal/v1/mock/attempts` route, under `auth.partnerId`) — the raw
  * query-param `studentId` here must resolve to that SAME id, under the
  * SAME partner, or every mock-review-in-embed request would 403. Resolving
  * under the embed token's verified `partner_id` claim (not a hardcoded
- * `'evelyn'`) is what makes that match — see
- * `partnerIdForInternalRoute`'s doc comment. Additive/non-breaking while
- * `EMBED_TOKEN_ENFORCE` stays at its default `'off'`. */
+ * `'evelyn'`) is what makes that match — see `partnerIdForInternalRoute`'s
+ * doc comment. An absent or failed-verification token falls back to
+ * `'evelyn'` rather than 401ing, same as every other internal route. */
 import { NextRequest, NextResponse } from 'next/server';
 import { mongoMockStores } from '@/lib/tutor/mock-exam/service';
 import { getMockReviewContext } from '@/lib/tutor/mock-exam/review-context';
@@ -28,9 +29,6 @@ export async function GET(req: NextRequest) {
     expectedStudentId: studentId,
     route: 'mock-review-context:GET',
   });
-  if (!auth.allow) {
-    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
-  }
   // Optional pinned-item ids: comma-separated, max 8, each ≤64 chars.
   // Invalid entries are dropped (degrade, never 400) — absent ⇒ no pins.
   const itemsParam = req.nextUrl.searchParams.get('items');

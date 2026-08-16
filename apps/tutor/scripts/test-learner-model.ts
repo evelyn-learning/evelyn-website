@@ -627,6 +627,16 @@ async function runServerAppendPointTests() {
         },
         deps,
         resolver,
+        // M1c fix round 3 (IMPORTANT C) — DELIBERATELY left at 3 args, not
+        // "fixed" to add a 4th: this block's own assertion below
+        // (`rowA?.partnerId === undefined`) is the intentional NEGATIVE
+        // half of a pair with the very next block ("partnerId threaded
+        // onto every diag: row", 'lmtest-partner-a') — adding a partnerId
+        // here would make that assertion false and delete the only
+        // coverage of "no partnerId supplied → not stamped". Safe at
+        // runtime regardless: this file runs under `tsx` (no type-check,
+        // scripts/ is outside tsconfig), and the flag stays off for this
+        // whole suite, so resolveProfileIdOrRaw never touches partnerId.
       );
 
       const landed = await waitFor(
@@ -731,6 +741,8 @@ async function runServerAppendPointTests() {
         },
         deps,
         resolver,
+        // M1c fix round 3 (IMPORTANT C): submitAssessment's partnerId is required.
+        'lmtest-partner-quiz',
       );
       const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qc`)));
       assert(landed, 'submitAssessment (quiz): evidence row lands');
@@ -770,6 +782,8 @@ async function runServerAppendPointTests() {
         },
         deps,
         resolver,
+        // M1c fix round 3 (IMPORTANT C): submitAssessment's partnerId is required.
+        'lmtest-partner-purpose-quiz',
       );
       const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qd`)));
       assert(landed, 'submitAssessment (purpose=quiz, empty notesTouched): evidence row lands');
@@ -810,6 +824,8 @@ async function runServerAppendPointTests() {
         },
         deps,
         resolver,
+        // M1c fix round 3 (IMPORTANT C): submitAssessment's partnerId is required.
+        'lmtest-partner-purpose-diag',
       );
       const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qe`)));
       assert(landed, 'submitAssessment (purpose=diagnostic, non-empty notesTouched): evidence row lands');

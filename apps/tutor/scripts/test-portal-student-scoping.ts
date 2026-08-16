@@ -268,18 +268,31 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
   );
 
   await test(
-    'fix round 2, IMPORTANT E: resolveProfileIdOrRaw NEVER resolves a trial:-prefixed id, flag ON or OFF',
+    'fix round 2, IMPORTANT E (fix round 3, MINOR F): resolveProfileIdOrRaw NEVER resolves a ' +
+      'trial:-prefixed id, flag ON or OFF — deps are provably never touched',
     async () => {
       process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
-      // resolveProfileIdOrRaw has no deps-injection seam (it always uses
-      // the real, Mongo-backed default deps) — this is exactly why the
-      // trial: short-circuit must happen before any deps call, and this
-      // test proves it hermetically: if the short-circuit were removed or
-      // reordered after the flag check, this call would try to hit real
-      // Mongo and throw/reject with a connection error, not resolve
-      // cleanly to the raw id.
-      const id = await resolveProfileIdOrRaw({ partnerId: 'crimsora', externalStudentId: 'trial:abc123' });
+      // MINOR F (fix round 3): the original version of this test asserted
+      // only the RETURN VALUE, which cannot fail — resolveProfileIdOrRaw's
+      // own degrade-on-failure catch ALSO returns the raw id whenever
+      // resolveProfileId throws a plain (non-ProfileIdentityError) Error,
+      // which is exactly what `connectDB()` throws in this hermetic
+      // environment (no MONGODB_URI). So deleting the short-circuit
+      // entirely would still make the old assertion pass, via the degrade
+      // path instead of the short-circuit — the same "prove the deps were
+      // never invoked" technique Task 4's MUTATION GUARD test used against
+      // the read-then-write anti-pattern. A counting `deps` proves it here:
+      // if the short-circuit is ever removed or reordered after this
+      // point, `newId`/`findOneAndUpsert` would be called at least once.
+      let depsCalls = 0;
+      const explodingDeps: ResolverDeps = {
+        newId: () => { depsCalls++; throw new Error('deps must not be touched for a trial: id'); },
+        findExisting: async () => { depsCalls++; throw new Error('deps must not be touched for a trial: id'); },
+        findOneAndUpsert: async () => { depsCalls++; throw new Error('deps must not be touched for a trial: id'); },
+      };
+      const id = await resolveProfileIdOrRaw({ partnerId: 'crimsora', externalStudentId: 'trial:abc123' }, explodingDeps);
       assert.strictEqual(id, 'trial:abc123', 'a trial: id must pass through completely unresolved');
+      assert.strictEqual(depsCalls, 0, 'the resolver deps must never be invoked for a trial: id');
     },
   );
 
@@ -331,6 +344,61 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
   });
 
   delete process.env.PORTAL_IDENTITY_RESOLUTION;
+
+  await test(
+    'fix round 3, CRITICAL A1: a token-less preferences PATCH succeeds (200) — never 401 — even ' +
+      'with EMBED_TOKEN_ENFORCE=on',
+    async () => {
+      // The regression this proves: an earlier version of this route
+      // required a valid embed token and 401'd everyone else.
+      // /tutor/settings (this route's only client, useStudentPreferences.ts)
+      // is retail and sends no token at all, so that 401 would have fired
+      // on every real user the moment the code shipped — independent of
+      // PORTAL_IDENTITY_RESOLUTION, since this auth check isn't gated by
+      // that flag. Runs with EMBED_TOKEN_ENFORCE='on' (the strictest mode)
+      // specifically to prove the no-token path survives even there.
+      process.env.EMBED_TOKEN_ENFORCE = 'on';
+      try {
+        const { PATCH } = await import('../src/app/api/tutor/student-profile/[id]/preferences/route');
+        const req = new Request('https://engine.test/api/tutor/student-profile/stu-retail-1/preferences', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ humorCeiling: 'light' }),
+        }) as unknown as NextRequest;
+        const res = await PATCH(req, { params: Promise.resolve({ id: 'stu-retail-1' }) });
+        assert.strictEqual(res.status, 200, 'a retail (no-token) preferences PATCH must succeed, not 401');
+        const json = (await res.json()) as { preferences?: { humorCeiling?: string } };
+        assert.strictEqual(json.preferences?.humorCeiling, 'light', 'the preference actually persisted');
+      } finally {
+        delete process.env.EMBED_TOKEN_ENFORCE;
+      }
+    },
+  );
+
+  await test(
+    'fix round 3, CRITICAL A1: a token-less topic-notes GET never 401s, even with EMBED_TOKEN_ENFORCE=on',
+    async () => {
+      // Same regression as above, for /tutor/dev/notes (this route's other
+      // no-auth-history caller). Asserts !== 401 rather than === 200
+      // because this specific baselineId isn't a registered baseline (a
+      // 404 is the correct, unrelated business-logic outcome) — the only
+      // thing under test is that the auth layer never blocks it.
+      process.env.EMBED_TOKEN_ENFORCE = 'on';
+      try {
+        const { GET } = await import('../src/app/api/tutor/topic-notes/[studentId]/[baselineId]/route');
+        const req = new Request(
+          'https://engine.test/api/tutor/topic-notes/stu-retail-1/not-a-registered-baseline',
+          { method: 'GET' },
+        ) as unknown as NextRequest;
+        const res = await GET(req, {
+          params: Promise.resolve({ studentId: 'stu-retail-1', baselineId: 'not-a-registered-baseline' }),
+        });
+        assert.notStrictEqual(res.status, 401, 'a retail (no-token) topic-notes GET must never 401');
+      } finally {
+        delete process.env.EMBED_TOKEN_ENFORCE;
+      }
+    },
+  );
 
   await test(
     'STATIC CHECK (fix round 1, MINOR 5): every direct caller of the profile store shows resolution evidence',
