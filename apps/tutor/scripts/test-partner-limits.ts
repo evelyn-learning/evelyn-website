@@ -16,6 +16,14 @@
  * object whose `bump` always throws, and the fail-closed case asserts a 402
  * from the same kind of always-throwing `bump`, distinguished only by
  * whether `dailyQuota` is set on the partner.
+ *
+ * Fix round 1 (I2) added the two REMAINING cells of the 2x2
+ * {which counter throws} x {quota configured?} matrix: minute-only-throws
+ * with a quota configured, and day-only-throws with no quota. Those two are
+ * the only cells where the two failure policies can actually contradict
+ * each other — a reviewer-planted mutation that let a burst-counter hiccup
+ * 402 a quota'd partner passed all cases *except* these. If you are
+ * "simplifying" this matrix, run the mutation in that comment first.
  */
 import assert from 'node:assert';
 
@@ -180,22 +188,86 @@ function throwsOnlyFor(windowKind: 'minute' | 'day') {
     assert.deepStrictEqual(v, { ok: true });
   });
 
-  await test('report-only mode allows an over-limit request and logs would-block', async () => {
+  // --- I2 (fix round 1): the two cells above never put the SAME half of
+  // the store on trial as the policy that half's failure decides — a
+  // minute-only outage was always paired with "no quota", and a day-only
+  // outage was always paired with "quota configured". That left the cross
+  // cells uncovered, and they are exactly where the two policies can
+  // contradict each other: a burst hiccup must NEVER 402 a quota'd
+  // partner, and a quota-counter hiccup must NEVER matter when no quota
+  // is configured in the first place.
+  await test('I2: minute counter alone unavailable + quota configured -> still allowed (burst fails open regardless of quota)', async () => {
+    const partner = makePartner({ limits: { rpm: 600, burst: 1000, dailyQuota: 10_000 } });
+    const deps: LimitsDeps = { bump: throwsOnlyFor('minute'), now: () => NOW_MS, env: {} as NodeJS.ProcessEnv };
+    const v = await checkPartnerLimits(partner, '/x', deps);
+    assert.deepStrictEqual(v, { ok: true });
+  });
+
+  await test('I2: day counter alone unavailable + no quota -> allowed (mirrors the no-quota fail-open case)', async () => {
+    const partner = makePartner({ limits: { rpm: 600, burst: 1000, dailyQuota: null } });
+    const deps: LimitsDeps = { bump: throwsOnlyFor('day'), now: () => NOW_MS, env: {} as NodeJS.ProcessEnv };
+    const v = await checkPartnerLimits(partner, '/x', deps);
+    assert.deepStrictEqual(v, { ok: true });
+  });
+
+  await test('report-only mode allows an over-limit request, logs would-block, AND still meters it (I1)', async () => {
     const partner = makePartner({ limits: { rpm: 600, burst: 1, dailyQuota: null } });
-    const deps = makeDeps({ env: { PORTAL_LIMITS_MODE: 'report-only' } as NodeJS.ProcessEnv });
-    await checkPartnerLimits(partner, '/x', deps); // count 1, under limit
+    const store = makeCounterStore();
+    const deps: LimitsDeps = {
+      bump: store.bump,
+      now: () => NOW_MS,
+      env: { PORTAL_LIMITS_MODE: 'report-only' } as NodeJS.ProcessEnv,
+    };
+    const v1 = await checkPartnerLimits(partner, '/x', deps); // count 1, under limit, served
+    assert.deepStrictEqual(v1, { ok: true });
 
     const originalWarn = console.warn;
     let logged = '';
     console.warn = (msg?: unknown) => { logged += String(msg); };
-    let v;
+    let v2;
     try {
-      v = await checkPartnerLimits(partner, '/x', deps); // count 2 > burst 1, would block
+      v2 = await checkPartnerLimits(partner, '/x', deps); // count 2 > burst 1, would block, served anyway
     } finally {
       console.warn = originalWarn;
     }
-    assert.deepStrictEqual(v, { ok: true });
+    assert.deepStrictEqual(v2, { ok: true });
     assert.ok(logged.includes('would-block'), `expected a would-block log line, got: ${logged}`);
+
+    // I1: both calls were served, so both must be metered. Before the fix,
+    // block() returned before the day bump on every burst block —
+    // report-only or not — so this second call went uncounted even though
+    // it was served: exactly the over-limit traffic the report-only
+    // rollout step exists to measure.
+    const dayKey = `${partner.partnerId}::/x::day::2026-08-16`;
+    assert.strictEqual(store.counts.get(dayKey), 2, 'both served calls must be metered in report-only mode');
+  });
+
+  await test('minor: a tighter rpm than burst is the cap that is enforced', async () => {
+    // burst=1000 alone would allow this; rpm=1 is the tighter of the two
+    // and must govern (rpm was previously read but never enforced).
+    const partner = makePartner({ limits: { rpm: 1, burst: 1000, dailyQuota: null } });
+    const deps = makeDeps();
+    await checkPartnerLimits(partner, '/x', deps); // count 1, within rpm=1
+    const v = await checkPartnerLimits(partner, '/x', deps); // count 2 > rpm=1
+    assert.strictEqual(v.ok, false);
+    if (!v.ok) assert.strictEqual(v.status, 429);
+  });
+
+  await test('minor: a tighter burst than rpm is the cap that is enforced', async () => {
+    const partner = makePartner({ limits: { rpm: 1000, burst: 1, dailyQuota: null } });
+    const deps = makeDeps();
+    await checkPartnerLimits(partner, '/x', deps); // count 1, within burst=1
+    const v = await checkPartnerLimits(partner, '/x', deps); // count 2 > burst=1
+    assert.strictEqual(v.ok, false);
+    if (!v.ok) assert.strictEqual(v.status, 429);
+  });
+
+  await test('minor: dailyQuota: 0 blocks the very first request (block-everything, not unlimited)', async () => {
+    const partner = makePartner({ limits: { rpm: 600, burst: 1000, dailyQuota: 0 } });
+    const deps = makeDeps();
+    const v = await checkPartnerLimits(partner, '/x', deps); // day count 1 > quota 0
+    assert.strictEqual(v.ok, false);
+    if (!v.ok) assert.strictEqual(v.status, 402);
   });
 
   await test('the day counter increments exactly once per call (metering)', async () => {

@@ -23,9 +23,15 @@ process.env.PORTAL_SECRET_ENC_KEY = randomBytes(32).toString('base64');
 
 import { signPortalRequest } from '@evelyn/portal-contract/auth';
 
-import { __setRegistryOverrideForTests, withPortalAuth, type PortalAuth } from '@/lib/tutor/portal/auth';
+import {
+  __setRegistryOverrideForTests,
+  __setLimitsDepsOverrideForTests,
+  withPortalAuth,
+  type PortalAuth,
+} from '@/lib/tutor/portal/auth';
 import { getPartner, invalidatePartner, type PartnerRecord } from '@/lib/tutor/portal/registry';
 import { encryptSecret } from '@/lib/tutor/portal/secret-box';
+import type { LimitsDeps } from '@/lib/tutor/portal/limits';
 import type { NextRequest } from 'next/server';
 
 // ---------------------------------------------------------------------------
@@ -111,6 +117,21 @@ function makePartner(over: Partial<PartnerRecord> = {}): PartnerRecord {
  *  (no Mongo). `null` simulates both "unknown partner" and "registry empty". */
 function setRegistry(record: PartnerRecord | null): void {
   __setRegistryOverrideForTests(async (id) => (id === PARTNER ? record : null));
+}
+
+/** In-memory stand-in for the real Mongo counter store — same key shape,
+ *  same "atomic increment, return the new count" contract as
+ *  scripts/test-partner-limits.ts's makeCounterStore. Fixed clock so a slow
+ *  test run can never cross a minute/day boundary mid-test. */
+function makeLimitsDeps(env: Record<string, string> = {}): LimitsDeps {
+  const counts = new Map<string, number>();
+  const bump: LimitsDeps['bump'] = async (key) => {
+    const k = `${key.partnerId}::${key.endpoint}::${key.windowKind}::${key.windowStart}`;
+    const next = (counts.get(k) ?? 0) + 1;
+    counts.set(k, next);
+    return next;
+  };
+  return { bump, now: () => Date.parse('2026-08-16T12:00:00.000Z'), env: env as NodeJS.ProcessEnv };
 }
 
 // ---------------------------------------------------------------------------
@@ -282,7 +303,44 @@ function setRegistry(record: PartnerRecord | null): void {
     assert.strictEqual(json.reason, 'unknown_partner');
   });
 
+  // --- M1c Task 7, fix round 1 (I3): the withPortalAuth → checkPartnerLimits
+  // wiring itself had no test — only checkPartnerLimits in isolation
+  // (scripts/test-partner-limits.ts). These two exercise it through the
+  // real wrapper, via the __setLimitsDepsOverrideForTests seam.
+  await test('over-burst through the wrapper → 429 with Retry-After', async () => {
+    setRegistry(makePartner({ limits: { rpm: 600, burst: 1, dailyQuota: null } }));
+    __setLimitsDepsOverrideForTests(makeLimitsDeps());
+    try {
+      const r1 = await echoHandler(signedRequest({}), undefined);
+      assert.strictEqual(r1.status, 200);
+      const r2 = await echoHandler(signedRequest({}), undefined);
+      assert.strictEqual(r2.status, 429);
+      const json = await r2.json();
+      assert.strictEqual(json.reason, 'rate_limited');
+      const retryAfter = r2.headers.get('Retry-After');
+      assert.ok(retryAfter && Number(retryAfter) > 0, `expected a positive Retry-After header, got ${retryAfter}`);
+    } finally {
+      __setLimitsDepsOverrideForTests(null);
+    }
+  });
+
+  await test('daily quota exceeded through the wrapper → 402', async () => {
+    setRegistry(makePartner({ limits: { rpm: 600, burst: 1000, dailyQuota: 1 } }));
+    __setLimitsDepsOverrideForTests(makeLimitsDeps());
+    try {
+      const r1 = await echoHandler(signedRequest({}), undefined);
+      assert.strictEqual(r1.status, 200);
+      const r2 = await echoHandler(signedRequest({}), undefined);
+      assert.strictEqual(r2.status, 402);
+      const json = await r2.json();
+      assert.strictEqual(json.reason, 'quota_exceeded');
+    } finally {
+      __setLimitsDepsOverrideForTests(null);
+    }
+  });
+
   __setRegistryOverrideForTests(null);
+  __setLimitsDepsOverrideForTests(null);
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
   if (failed > 0) process.exit(1);

@@ -21,7 +21,17 @@
  * do not "fix" this by adding Redis; that would make these policies
  * load-bearing for the first time, not safer.
  *
- * PORTAL_LIMITS_MODE=report-only logs what WOULD be blocked and allows it.
+ * PORTAL_LIMITS_MODE=report-only logs what WOULD be blocked and allows it —
+ * but only a GENUINE reject skips metering (see the burst section below): a
+ * report-only "would-block" is still served, so it is still counted. Fix
+ * round 1 (I1) found the original code exiting before the day bump on every
+ * burst block, report-only or not, which silently dropped exactly the
+ * over-limit traffic the report-only rollout step exists to measure.
+ *
+ * `dailyQuota` is enforced PER ENDPOINT, not per partner — the key includes
+ * `endpoint`, so a partner's real daily ceiling across N allowed endpoints is
+ * `dailyQuota × N`, not `dailyQuota`. Someone will set 10000 expecting a
+ * partner-wide cap; there is no partner-wide counter today.
  */
 import connectDB, { isDBConfigured } from '@core/db';
 import { PartnerCounterModel } from '@/models/PartnerCounter';
@@ -41,6 +51,13 @@ export interface LimitsDeps {
   env: NodeJS.ProcessEnv;
 }
 
+// Logged at most once per process — isDBConfigured() reads a value `@core/db`
+// captures from process.env at MODULE LOAD, so a process started without
+// MONGODB_URI stays unmetered for its whole lifetime even if the var is
+// later set in the environment; that's worth one loud line, not one per
+// request.
+let warnedNoDb = false;
+
 const defaultLimitsDeps: LimitsDeps = {
   async bump(key) {
     // No DB configured at all (a hermetic env-only test, or before this app
@@ -52,14 +69,42 @@ const defaultLimitsDeps: LimitsDeps = {
     // checkPartnerLimits — this guard only short-circuits the "no DB at
     // all" case, it does not add error-swallowing for a misconfigured-but-
     // present DB.
-    if (!isDBConfigured()) return 0;
+    if (!isDBConfigured()) {
+      if (!warnedNoDb) {
+        console.warn('[portal/limits] MONGODB_URI not configured — all burst limiting, quota and metering are OFF for this process');
+        warnedNoDb = true;
+      }
+      return 0;
+    }
     await connectDB();
-    const doc = await PartnerCounterModel.findOneAndUpdate(
-      key,
-      { $inc: { count: 1 }, $setOnInsert: { createdAt: new Date() } },
-      { upsert: true, new: true },
-    ).lean<{ count: number }>().exec();
-    return doc?.count ?? 1;
+    try {
+      const doc = await PartnerCounterModel.findOneAndUpdate(
+        key,
+        { $inc: { count: 1 }, $setOnInsert: { createdAt: new Date() } },
+        { upsert: true, new: true },
+      ).lean<{ count: number }>().exec();
+      return doc?.count ?? 1;
+    } catch (err) {
+      const e = err as { code?: number; codeName?: string };
+      if (e.code !== 11000 && e.codeName !== 'DuplicateKey') throw err;
+      // Two concurrent first-requests for a not-yet-existing window both hit
+      // the upsert; the loser surfaces E11000 (same shape as
+      // student-profile/store.ts's resolveProfileId — "the loser would
+      // surface E11000 to a legitimate student"). The winner already
+      // created the document, so re-issue the SAME $inc WITHOUT upsert: it
+      // now targets an existing row and cannot race a second time.
+      const retryDoc = await PartnerCounterModel.findOneAndUpdate(
+        key,
+        { $inc: { count: 1 } },
+        { upsert: false, new: true },
+      ).lean<{ count: number }>().exec();
+      if (!retryDoc) {
+        throw new Error(
+          `[portal/limits] bump: upsert reported a duplicate for ${JSON.stringify(key)} but no row was found on retry`,
+        );
+      }
+      return retryDoc.count;
+    }
   },
   now: () => Date.now(),
   env: process.env,
@@ -78,8 +123,10 @@ export async function checkPartnerLimits(
   deps: LimitsDeps = defaultLimitsDeps,
 ): Promise<LimitVerdict> {
   const reportOnly = deps.env.PORTAL_LIMITS_MODE === 'report-only';
-  const hasQuota =
-    typeof partner.limits.dailyQuota === 'number' && partner.limits.dailyQuota > 0;
+  // `!= null` (not `> 0`): dailyQuota: 0 means "block everything", not
+  // "unlimited" — an operator zeroing a delinquent partner should get the
+  // opposite of unlimited. (Fix round 1, minor.)
+  const hasQuota = partner.limits.dailyQuota != null;
   const nowMs = deps.now();
 
   const block = (v: Exclude<LimitVerdict, { ok: true }>): LimitVerdict => {
@@ -92,15 +139,24 @@ export async function checkPartnerLimits(
     return v;
   };
 
-  // --- burst: fails OPEN -------------------------------------------------
+  // --- burst: fails OPEN ---------------------------------------------------
+  // `rpm` was captured on every partner record but never enforced on its
+  // own — burst's window IS a minute, so burst already measures requests-
+  // per-minute over the same window rpm names. The effective cap is
+  // whichever of the two is tighter; a non-positive value means "no cap"
+  // for that field individually. (Fix round 1, minor: rpm was dead config.)
+  const burstCaps = [partner.limits.rpm, partner.limits.burst].filter((n) => n > 0);
+  const burstCap = burstCaps.length > 0 ? Math.min(...burstCaps) : 0;
+
+  let burstVerdict: LimitVerdict | null = null;
   try {
     const count = await deps.bump({
       partnerId: partner.partnerId, endpoint,
       windowKind: 'minute', windowStart: minuteWindow(nowMs),
     });
-    if (partner.limits.burst > 0 && count > partner.limits.burst) {
+    if (burstCap > 0 && count > burstCap) {
       const retryAfterSec = Math.ceil((60_000 - (nowMs % 60_000)) / 1000);
-      return block({ ok: false, status: 429, reason: 'rate_limited', retryAfterSec });
+      burstVerdict = block({ ok: false, status: 429, reason: 'rate_limited', retryAfterSec });
     }
   } catch (err) {
     console.error(
@@ -110,7 +166,21 @@ export async function checkPartnerLimits(
     // Deliberately fall through and serve the request.
   }
 
+  // A GENUINE reject (report-only ones were already converted to
+  // `{ ok: true }` by block() above) skips the day bump below: a request
+  // that was never served should not be metered/billed. A report-only
+  // "would-block" deliberately falls through instead — see the file header
+  // (I1): the whole point of report-only is to measure the over-limit
+  // traffic, so it has to be counted, not dropped.
+  if (burstVerdict && !burstVerdict.ok) {
+    return burstVerdict;
+  }
+
   // --- quota + metering: fails CLOSED, but only when a quota exists -------
+  // NOT Promise.all'd with the burst bump above, on purpose: whether this
+  // bump runs at all depends on the burst outcome (a genuine reject returns
+  // above and never reaches here), so the two calls cannot be made
+  // unconditionally concurrent without re-metering rejected requests.
   try {
     const count = await deps.bump({
       partnerId: partner.partnerId, endpoint,

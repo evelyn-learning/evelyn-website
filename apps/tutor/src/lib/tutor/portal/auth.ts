@@ -20,7 +20,7 @@ import {
   type SigningParts,
 } from '@evelyn/portal-contract/auth';
 import { getPartner, type PartnerRecord } from './registry';
-import { checkPartnerLimits } from './limits';
+import { checkPartnerLimits, type LimitsDeps } from './limits';
 
 /**
  * Resolve a partner's shared secret from the environment.
@@ -100,6 +100,20 @@ export function __setRegistryOverrideForTests(
   fn: ((id: string) => Promise<PartnerRecord | null>) | null,
 ): void {
   registryOverride = fn;
+}
+
+/**
+ * Test seam: lets the hermetic auth tests supply injected LimitsDeps (an
+ * in-memory bump/clock/env) for checkPartnerLimits, instead of the real
+ * Mongo-backed defaults. Production never sets this. Added in Task 7 fix
+ * round 1 (I3) — before this seam existed, nothing exercised the
+ * withPortalAuth → checkPartnerLimits wiring itself (the 429/402 responses,
+ * Retry-After, and the post-allowlist position), only checkPartnerLimits in
+ * isolation.
+ */
+let limitsDepsOverride: LimitsDeps | null = null;
+export function __setLimitsDepsOverrideForTests(deps: LimitsDeps | null): void {
+  limitsDepsOverride = deps;
 }
 
 /**
@@ -190,7 +204,9 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
     // check, not before: the existing header → partner → kind → status →
     // signature → allowlist order was arrived at over three review rounds
     // (see the comment above) and moving this earlier would reorder it.
-    const limitVerdict = await checkPartnerLimits(partner, u.pathname);
+    const limitVerdict = limitsDepsOverride
+      ? await checkPartnerLimits(partner, u.pathname, limitsDepsOverride)
+      : await checkPartnerLimits(partner, u.pathname);
     if (!limitVerdict.ok) {
       const res = NextResponse.json(
         { error: limitVerdict.status === 429 ? 'rate_limited' : 'quota_exceeded', reason: limitVerdict.reason },
