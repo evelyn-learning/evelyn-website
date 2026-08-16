@@ -303,14 +303,25 @@ test and trial fixtures. The rule is stated because correctness should not rest 
 
 A single idempotent script with a mandatory dry-run mode:
 
-1. For each **unnamespaced** profile: attribute via `TutorSession.sourcePartnerId`, falling back to
-   `sourceHost` then `source`; unattributable → `evelyn`. Set `partnerId`, and set
-   `externalStudentId = _id`. `_id` is not touched.
+1. For each **unnamespaced** profile: attribute via `TutorSession.sourcePartnerId`; unattributable →
+   `evelyn`. Set `partnerId`, and set `externalStudentId = _id`. `_id` is not touched.
+   **`sourceHost` and `source` are NOT partner identifiers and must not be used as a fallback.**
+   An earlier draft said to fall back to them. `source` is the fixed enum
+   `"tutor" | "embed" | "showcase" | "test"` — coercing `'embed'` into a `partnerId` would mint a
+   fictitious partner — and `sourceHost` is a hostname with no host→partner mapping anywhere in the
+   repo. A fallback that can only produce a wrong answer is worse than the deliberately conservative
+   `evelyn` default.
 2. For each **already-prefixed** profile (`lmtest:`, `trial:`, `revtest:`, `portalA:`, `academy:`):
    use the prefix as the `partnerId` **hint**, but still set `externalStudentId = _id` in full — see
    §4.2. Do **not** split the prefix off. `_id` is not touched.
-3. Create registry rows for every `partnerId` observed, including test prefixes, so the index has
-   no orphan references.
+3. Create registry rows **only** for `evelyn` and for `kind: 'test'` prefixes. **The backfill must
+   never create a `kind: 'partner'` row.** A row with `secrets: []` and `allowedEndpoints: []` wins
+   over the environment fallback (`registry.ts`: "the registry row WINS once it exists"), so
+   `withPortalAuth` would return `401 unknown_partner` for that partner within one 60s cache TTL —
+   i.e. the migration would take the live portal API offline for `academy` and `crimsora`, and the
+   documented rollback (drop the index, unset two fields) would not undo it. If an observed
+   `partnerId` needs a real partner row, **abort** and tell the operator to run the seed (§10 step 1)
+   first. Seeding credentials is the seed script's job, not the backfill's.
 4. Build the unique index.
 
 **The index build is the verification.** It refuses to complete if any duplicate `(partnerId,

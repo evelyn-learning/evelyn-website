@@ -1363,7 +1363,17 @@ Create `apps/tutor/scripts/backfill-partner-namespace.ts`. It must:
 3. For each profile, call `attributeProfile`.
 4. Print a table: `_id` (masked), inferred `partnerId`, signal. Summarise counts by signal.
 5. `--write`: `$set` `partnerId` + `externalStudentId` (always `= _id`, never a substring — spec 4.2). **Never touch `_id`.**
-6. Ensure a `Partner` row exists for every observed `partnerId` — `kind: 'test'` for `lmtest`/`trial`/`revtest`/`portalA`, `kind: 'first-party'` for `evelyn`, else `kind: 'partner'` with no secrets.
+6. Ensure a `Partner` row exists for `evelyn` (`kind: 'first-party'`) and for the test prefixes
+   `lmtest`/`trial`/`revtest`/`portalA` (`kind: 'test'`). **NEVER create a `kind: 'partner'` row** —
+   a credential-less row wins over the env fallback and 401s that partner's live traffic. If a real
+   partner id is observed with no existing row, **abort** and tell the operator to seed first.
+   Also assert the observed partner set is a subset of the eight expected ids and abort otherwise:
+   any `_id` containing a stray colon would otherwise mint a fabricated partner and a permanent
+   namespace for that student.
+7. Disable Mongoose index auto-build before connecting (`mongoose.set('autoIndex', false)`) so the
+   dry run is genuinely read-only. Otherwise opening the connection builds every schema-declared
+   index — including `TutorSession`'s `{startedAt:1}` TTL index, which **deletes** sessions older
+   than 180 days.
 7. `--build-index`: create the unique index, then verify it exists.
 
 ```ts
