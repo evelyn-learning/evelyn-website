@@ -59,13 +59,45 @@
  *    exactly why `--daily-quota 0` prints a loud warning instead of being
  *    quietly accepted.
  *
- *  - `dailyQuota` IS PER (partner, endpoint), NOT PER PARTNER. The counter
- *    key in `limits.ts` includes `endpoint`, so a partner's real daily
- *    ceiling is `dailyQuota × (number of allowedEndpoints)`. There is no
- *    partner-wide counter today. Whenever a quota is set, this script
- *    prints that product using the row's actual `allowedEndpoints`, because
- *    "10000/day" is what the operator thinks they typed and it is not what
- *    the limiter enforces.
+ *  - `dailyQuota` IS PER (partner, endpoint), NOT PER PARTNER — and
+ *    `endpoint` is the CONCRETE REQUEST PATH, not an allowlist entry.
+ *    `auth.ts:280` calls `checkPartnerLimits(partner, u.pathname)`, while
+ *    `allowedEndpoints` holds PREFIXES matched with `startsWith`. The
+ *    standard row's allowlist is the single prefix `/api/portal/v1/`, and
+ *    there are 23 concrete route files under it today. So the real daily
+ *    ceiling is `dailyQuota × (number of distinct PATHS the partner calls)`,
+ *    which is bounded by the routes under the prefixes and is NOT
+ *    `allowedEndpoints.length` — an earlier version of this script printed
+ *    that product and told a typical partner their ceiling was
+ *    "10000 x 1 = 10000 requests/day, not 10000", a sentence that
+ *    contradicts itself and understates the truth by roughly 23x. This
+ *    script now states the fan-out qualitatively and prints no multiplier
+ *    it cannot justify from the row.
+ *
+ * A ROW WITH NO (OR PARTIAL) `limits` IS FILLED FROM THE READER'S OWN
+ * FALLBACK. `registry.ts:221` substitutes `ENV_FALLBACK_LIMITS` when
+ * `doc.limits` is absent, so THAT — not 0/0 — is what the running limiter
+ * enforces on such a row. This script imports that same binding rather than
+ * restating its values (a second hardcoded copy is exactly how the two
+ * desynced: the original fallback here was `{rpm: 0, burst: 0}`, i.e. "no
+ * burst limiting", the semantic inverse of the live 60/min). Any field taken
+ * from the fallback is CALLED OUT in the printed `before:` block, because it
+ * is a substituted value and not a stored one — and a `--rpm`-only run on
+ * such a row materialises the substituted fields into the document.
+ *
+ * THE WRITE IS A COMPARE-AND-SET. `savePartner` filters on the exact
+ * `limits` sub-fields that were read (`$exists: false` for the ones the row
+ * did not have), and requires `matchedCount === 1`. Two overlapping runs — or
+ * this script racing any other writer of `limits` — cannot silently
+ * last-write-win, and a write that matched nothing can no longer print
+ * `Done.`
+ *
+ * EXIT CODES. 1 = validation failure, unknown partner, or a write that did
+ * not land. 0 = success AND no-op. A no-op is a satisfied postcondition, not
+ * a failure ("already applied" is the most likely outcome of re-running a
+ * rollout step), and exiting non-zero for it would abort any `set -e` runbook
+ * and collide with the code that means "this partner does not exist".
+ * Visibility comes from the message, which is unchanged.
  *
  * CACHE: the change is NOT immediate. `registry.ts` caches partner records
  * for 60s in the Next server process. This is a separate process, so
@@ -95,6 +127,7 @@
 import mongoose from 'mongoose';
 import connectDB from '@core/db';
 import { PartnerModel } from '@/models/Partner';
+import { ENV_FALLBACK_LIMITS } from '@/lib/tutor/portal/registry';
 import { configureMongooseForOpsScript } from './ops-mongoose';
 
 /** The exact shape of `Partner.limits` (see src/models/Partner.ts). */
@@ -103,6 +136,22 @@ export interface PartnerLimits {
   burst: number;
   dailyQuota: number | null;
 }
+
+export type LimitsField = 'rpm' | 'burst' | 'dailyQuota';
+
+/** Iteration order for every per-field walk below. */
+export const LIMITS_FIELDS: readonly LimitsField[] = ['rpm', 'burst', 'dailyQuota'] as const;
+
+/**
+ * What a row LITERALLY stores under `limits`. Every key optional, because
+ * `registry.ts`'s own doc type declares `limits?:` and `.lean()` applies no
+ * schema defaults — so both "no `limits` at all" and "`{ rpm: 600 }` and
+ * nothing else" are shapes a real document can have. `PartnerLimits` is the
+ * *effective* shape; this is the *stored* one, and the two are deliberately
+ * different types so a partial row cannot be passed where a complete one is
+ * required.
+ */
+export type StoredLimits = { [K in LimitsField]?: PartnerLimits[K] | null };
 
 /**
  * Only the fields NAMED on the command line appear here. A key being absent
@@ -133,10 +182,11 @@ export type ParseResult =
  * connection, so a fat-fingered `--rpm 12O0` costs nothing and cannot
  * half-apply.
  *
- * Numeric rules are deliberately strict: `Number.isInteger` on a value
- * parsed with `Number(...)` rejects NaN, Infinity, `1.5`, `'12O0'` and `''`
- * in one predicate, and negatives are rejected separately so the message
- * can say which mistake was made. 0 IS accepted for every field — it is a
+ * Numeric rules are deliberately strict: a `/^-?\d+$/` gate rejects NaN,
+ * Infinity, `1.5`, `'12O0'`, `''`, `1e3` and `0x10` before `Number()` is
+ * ever called, and negatives are rejected separately so the message can say
+ * which mistake was made. Repeated flags are rejected rather than last-won.
+ * 0 IS accepted for every field — it is a
  * legal value with a real meaning for each of them (see the header), and
  * the operator is warned about `--daily-quota 0` rather than blocked, since
  * "block this partner entirely" is a thing an operator may genuinely want.
@@ -145,17 +195,24 @@ export function parseArgs(argv: string[]): ParseResult {
   let partnerId: string | undefined;
   const patch: LimitsPatch = {};
   let write = false;
+  const seen = new Set<string>();
 
   const numeric = (flag: string, raw: string | undefined): number | string => {
     if (raw === undefined) return `${flag} requires a value`;
-    const n = Number(raw);
-    // `raw.trim() === ''` is checked SEPARATELY from Number.isInteger
-    // because `Number('') === 0` — an empty value would otherwise sail
-    // through as a perfectly valid 0, which for rpm/burst means "no cap"
-    // and for dailyQuota means "block everything". Caught by the suite, not
-    // by reading.
-    if (raw.trim() === '' || !Number.isInteger(n)) {
+    // DIGITS ONLY, checked BEFORE Number(). `Number.isInteger(Number(x))` is
+    // looser than the message it prints: it accepts `1e3` (1000), `0x10`
+    // (16), `0b11`, `' 12 '` and — because `Number('') === 0` — the empty
+    // string, which for rpm/burst means "no cap" and for dailyQuota means
+    // "block everything". A rate-limit flag has no use for exponent or hex
+    // notation, and `--rpm 1e3` is far likelier a typo than an intent, so
+    // the regex is the validator and Number() is only the conversion.
+    const t = raw.trim();
+    if (!/^-?\d+$/.test(t)) {
       return `${flag} must be a whole number, got ${JSON.stringify(raw)}`;
+    }
+    const n = Number(t);
+    if (!Number.isSafeInteger(n)) {
+      return `${flag} must be a whole number within the safe integer range, got ${JSON.stringify(raw)}`;
     }
     if (n < 0) return `${flag} must not be negative, got ${raw}`;
     return n;
@@ -163,6 +220,18 @@ export function parseArgs(argv: string[]): ParseResult {
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
+    // A REPEATED FLAG IS REJECTED, not last-won. `--rpm 900 --rpm 90`
+    // silently applies 90 under a last-wins parse — the same class of typo
+    // as `--rmp 900`, which is (rightly) rejected below, and with a worse
+    // outcome: it reports success having applied a number the operator did
+    // not mean to be final.
+    if (seen.has(arg)) {
+      return {
+        ok: false,
+        error: `${arg} was given more than once — remove the duplicate (a repeated flag would silently last-win)`,
+      };
+    }
+    seen.add(arg);
     switch (arg) {
       case '--write':
         write = true;
@@ -293,8 +362,102 @@ export interface PartnerSnapshot {
   name: string;
   kind: string;
   status: string;
+  /**
+   * EFFECTIVE limits: the stored values, with any absent field filled from
+   * `ENV_FALLBACK_LIMITS` — i.e. what the running limiter is enforcing right
+   * now, which is the only thing an operator can size a change against.
+   */
   limits: PartnerLimits;
+  /**
+   * What the row LITERALLY stores. The compare-and-set baseline, and the
+   * reason a fallback-filled `limits` cannot be mistaken for stored state.
+   */
+  storedLimits: StoredLimits | null;
+  /** Which of `limits`'s fields came from the fallback rather than the row. */
+  fallbackFields: LimitsField[];
   allowedEndpoints: string[];
+}
+
+export type StoredLimitsResolution =
+  | { ok: true; limits: PartnerLimits; fallbackFields: LimitsField[] }
+  | { ok: false; invalidFields: string[] };
+
+/**
+ * Pure — no DB. Turns a stored (possibly absent, possibly partial) `limits`
+ * subdocument into the EFFECTIVE limits, plus the list of fields that had to
+ * be substituted.
+ *
+ * The substitution source is `registry.ts`'s own `ENV_FALLBACK_LIMITS`
+ * BINDING, imported rather than copied. This function exists because the
+ * copy was wrong: it read `{ rpm: 0, burst: 0, dailyQuota: null }` under a
+ * comment claiming it mirrored the registry, while the registry substitutes
+ * `{ rpm: 600, burst: 60, dailyQuota: null }`. 0 means "no cap" downstream,
+ * so the copy reported "no burst limiting" for a partner the limiter was
+ * capping at 60/min, and a `--rpm 1200` run on such a row would have written
+ * `burst: 0` — removing a live cap in the same change that turns enforcement
+ * on. Importing the binding makes the two agree by construction.
+ *
+ * A field that is PRESENT but not a usable value (a string, NaN, a null rpm)
+ * is NOT coerced and NOT silently replaced: it comes back as `invalidFields`
+ * and the caller refuses. Coercing would print `burst=undefined` and write a
+ * subdocument that mongoose casts back down to a partial one.
+ */
+export function resolveStoredLimits(
+  stored: StoredLimits | null | undefined,
+): StoredLimitsResolution {
+  const fallbackFields: LimitsField[] = [];
+  const invalidFields: string[] = [];
+  const out: Record<string, number | null> = {};
+
+  for (const key of LIMITS_FIELDS) {
+    const v = stored == null ? undefined : (stored as Record<string, unknown>)[key];
+    if (v === undefined) {
+      // Absent — including "the whole subdocument is absent". This is the
+      // case registry.ts substitutes for, so substitute the same thing.
+      fallbackFields.push(key);
+      out[key] = ENV_FALLBACK_LIMITS[key];
+      continue;
+    }
+    if (key === 'dailyQuota' && v === null) {
+      // A STORED null is a value ("no quota"), not an absent field.
+      out[key] = null;
+      continue;
+    }
+    if (typeof v === 'number' && Number.isFinite(v)) {
+      out[key] = v;
+      continue;
+    }
+    invalidFields.push(`${key}=${JSON.stringify(v)}`);
+  }
+
+  if (invalidFields.length > 0) return { ok: false, invalidFields };
+  return { ok: true, limits: out as unknown as PartnerLimits, fallbackFields };
+}
+
+/**
+ * Pure — no DB. The compare-and-set filter: `_id` plus every `limits`
+ * sub-field EXACTLY as it was read, so a write only lands on the same row
+ * state the before/after report was computed from.
+ *
+ * Dotted sub-field paths, not the whole subdocument, because a field the row
+ * did not have must be matched as ABSENT — `{ 'limits.burst': 60 }` would
+ * not match a row with no `limits.burst`, and matching it as `null` would
+ * also match a row that stores an explicit null. `$exists: false` says
+ * exactly what was observed.
+ *
+ * Without this, two overlapping runs (two operators, or this script racing a
+ * future admin UI) clobber each other's fields and BOTH print `Done.`
+ */
+export function buildCasFilter(
+  partnerId: string,
+  stored: StoredLimits | null | undefined,
+): Record<string, unknown> {
+  const filter: Record<string, unknown> = { _id: partnerId };
+  for (const key of LIMITS_FIELDS) {
+    const v = stored == null ? undefined : (stored as Record<string, unknown>)[key];
+    filter[`limits.${key}`] = v === undefined ? { $exists: false } : v;
+  }
+  return filter;
 }
 
 export type ChangeResolution =
@@ -352,44 +515,131 @@ function fmt(limits: PartnerLimits): string {
 export interface LimitsOpsDeps {
   connect(): Promise<void>;
   loadPartner(partnerId: string): Promise<PartnerSnapshot | null>;
-  /** Writes `$set` on an EXISTING row. Never an upsert — see the header. */
-  savePartner(partnerId: string, set: UpdateSet): Promise<void>;
+  /**
+   * Writes `$set` on an EXISTING row, conditional on `expected` — the
+   * `limits` the read observed — still being what the row holds. Never an
+   * upsert; see the header.
+   */
+  savePartner(partnerId: string, set: UpdateSet, expected: StoredLimits | null): Promise<void>;
   disconnect(): Promise<void>;
   log(msg: string): void;
-  fail(msg: string): never;
+  /** Reports and aborts. Exit code 1 unless a caller passes another. */
+  fail(msg: string, exitCode?: number): never;
 }
+
+/**
+ * Exactly the fields this script reads, as a mongoose projection. Secrets
+ * are sealed, not plaintext, but there is no reason to pull partner
+ * ciphertexts into an ops process — and the top-level error handler and any
+ * future `console.log(doc)` would put them in an ops log.
+ */
+export const PARTNER_READ_PROJECTION = 'name kind status limits allowedEndpoints';
+
+/** What the projected read returns. Every field optional: it is a raw doc. */
+export interface RawPartnerDoc {
+  name?: string;
+  kind?: string;
+  status?: string;
+  limits?: StoredLimits | null;
+  allowedEndpoints?: string[];
+}
+
+export interface UpdateOutcome {
+  matchedCount: number;
+  modifiedCount: number;
+}
+
+/**
+ * The two database operations, behind an interface. This exists so the
+ * behaviour that used to live inline in `defaultDeps` — the fallback
+ * handling, the projection, the match-count check and the compare-and-set —
+ * is drivable by the suite. That region was where every finding of the first
+ * review round lived, precisely because dependency injection had moved it
+ * outside the tests: the only untested lines left are the four that call
+ * mongoose itself.
+ */
+export interface PartnerStore {
+  findPartner(partnerId: string, projection: string): Promise<RawPartnerDoc | null>;
+  updatePartner(filter: Record<string, unknown>, set: UpdateSet): Promise<UpdateOutcome>;
+}
+
+export function makeDbDeps(store: PartnerStore): Pick<LimitsOpsDeps, 'loadPartner' | 'savePartner'> {
+  return {
+    loadPartner: async (partnerId) => {
+      const doc = await store.findPartner(partnerId, PARTNER_READ_PROJECTION);
+      if (!doc) return null;
+      const resolved = resolveStoredLimits(doc.limits);
+      if (!resolved.ok) {
+        throw new Error(
+          `Partner "${partnerId}" stores unusable limits (${resolved.invalidFields.join(', ')}). ` +
+            `Refusing to guess what the limiter is enforcing: fix the row before changing its limits.`,
+        );
+      }
+      return {
+        partnerId,
+        name: doc.name ?? '(unnamed)',
+        kind: doc.kind ?? '(unknown)',
+        status: doc.status ?? '(unknown)',
+        limits: resolved.limits,
+        storedLimits: doc.limits ?? null,
+        fallbackFields: resolved.fallbackFields,
+        allowedEndpoints: doc.allowedEndpoints ?? [],
+      };
+    },
+    savePartner: async (partnerId, set, expected) => {
+      // No upsert: `updateOne` creates nothing without one, and the filter
+      // is a compare-and-set on the values the read observed.
+      const res = await store.updatePartner(buildCasFilter(partnerId, expected), set);
+      if (res.matchedCount !== 1) {
+        throw new Error(
+          `NOTHING WAS WRITTEN: the update matched ${res.matchedCount} rows for "${partnerId}". ` +
+            `Either the row was deleted or re-seeded, or its \`limits\` changed between this ` +
+            `script's read and its write (another operator, or another tool). Re-run to see the ` +
+            `current values before deciding what to apply.`,
+        );
+      }
+      if (res.modifiedCount !== 1) {
+        throw new Error(
+          `NOTHING WAS WRITTEN: the update matched "${partnerId}" but modified ` +
+            `${res.modifiedCount} rows. Treat the change as NOT applied and re-run to confirm.`,
+        );
+      }
+    },
+  };
+}
+
+const mongoStore: PartnerStore = {
+  findPartner: async (partnerId, projection) =>
+    (await PartnerModel.findById(partnerId)
+      .select(projection)
+      .lean()) as RawPartnerDoc | null,
+  updatePartner: async (filter, set) => {
+    const res = await PartnerModel.updateOne(filter, { $set: set });
+    return { matchedCount: res.matchedCount, modifiedCount: res.modifiedCount };
+  },
+};
+
+/** Thrown by `fail()` so the `finally` still disconnects. See `main`'s tail. */
+class OpsAbort extends Error {}
 
 const defaultDeps: LimitsOpsDeps = {
   connect: async () => {
     await connectDB();
   },
-  loadPartner: async (partnerId) => {
-    const doc = await PartnerModel.findById(partnerId).lean();
-    if (!doc) return null;
-    return {
-      partnerId,
-      name: doc.name,
-      kind: doc.kind,
-      status: doc.status,
-      // `?? ` mirrors registry.ts's own `doc.limits ?? …` tolerance for a
-      // row written before the field existed; the shape is otherwise
-      // schema-guaranteed.
-      limits: doc.limits ?? { rpm: 0, burst: 0, dailyQuota: null },
-      allowedEndpoints: doc.allowedEndpoints ?? [],
-    };
-  },
-  savePartner: async (partnerId, set) => {
-    // No upsert. `updateOne` with a non-matching filter is a no-op by
-    // default, and `resolveChange` has already proven the row exists.
-    await PartnerModel.updateOne({ _id: partnerId }, { $set: set });
-  },
+  ...makeDbDeps(mongoStore),
   disconnect: async () => {
     await mongoose.disconnect();
   },
   log: (msg) => console.log(msg),
-  fail: (msg) => {
+  fail: (msg, exitCode = 1) => {
     console.error(msg);
-    process.exit(1);
+    // `process.exitCode` + throw, NOT `process.exit()`: an immediate exit
+    // skips the `finally` that closes the connection, and can truncate the
+    // abort message when stderr is a pipe (`npm run … 2>&1 | tee ops.log`),
+    // because Node's pipe writes are async. Throwing unwinds through the
+    // `finally` and lets the process end naturally with the code set.
+    process.exitCode = exitCode;
+    throw new OpsAbort(msg);
   },
 };
 
@@ -430,6 +680,17 @@ export async function main(
     const existing = await deps.loadPartner(partnerId);
     const resolution = resolveChange(partnerId, existing, patch);
     if (!resolution.ok) {
+      if (resolution.reason === 'no-op') {
+        // EXIT 0. The requested state and the actual state agree — a
+        // satisfied postcondition, not a failure, and the most likely
+        // outcome of re-running a rollout step or verifying yesterday's
+        // raise. Exiting non-zero here would abort any `set -e` runbook and
+        // would be indistinguishable from "this partner does not exist".
+        // The message is unchanged; visibility comes from it, not from the
+        // exit code.
+        deps.log(resolution.message);
+        return;
+      }
       deps.fail(resolution.message);
       return;
     }
@@ -438,8 +699,29 @@ export async function main(
 
     deps.log(`Mode: ${write ? 'WRITE' : 'dry-run'} — partner "${partnerId}" (kind=${row.kind}, status=${row.status})`);
     deps.log(`  before: ${fmt(before)}`);
+    if (row.fallbackFields.length > 0) {
+      deps.log(
+        `  *** the row does NOT store ${row.fallbackFields.join(', ')} — the value(s) shown above for ` +
+          `${row.fallbackFields.length === 1 ? 'that field' : 'those fields'} are\n` +
+          `  registry.ts's ENV_FALLBACK_LIMITS (rpm=${ENV_FALLBACK_LIMITS.rpm} burst=${ENV_FALLBACK_LIMITS.burst} ` +
+          `dailyQuota=${ENV_FALLBACK_LIMITS.dailyQuota ?? 'none'}), which is what the RUNNING limiter\n` +
+          `  substitutes for a missing field — NOT stored values. Applying this change writes them into the row. ***`,
+      );
+    }
     deps.log(`  after:  ${fmt(after)}`);
     deps.log(`  effective burst cap after this change: ${describeBurstCap(after)}`);
+
+    if (effectiveBurstCap(after) === 0) {
+      // The inverse of the dailyQuota=0 trap, and the more dangerous half:
+      // an operator reaching for "shut this partner off" gets UNLIMITED.
+      deps.log(
+        '\n  *** WARNING: rpm=0 and burst=0 is NO BURST LIMITING AT ALL — unlimited, not blocked. ***\n' +
+          '  limits.ts takes the min over the POSITIVE values only and blocks only when\n' +
+          '  `burstCap > 0 && count > burstCap`, so zeroing both fields removes every per-minute cap this\n' +
+          '  partner has. This script CANNOT block a partner: that lever is `status: \'suspended\'` and it\n' +
+          '  lives in a different tool. To tighten a cap, pass a small POSITIVE --rpm/--burst instead.',
+      );
+    }
 
     if (after.dailyQuota === 0) {
       deps.log(
@@ -451,15 +733,18 @@ export async function main(
     } else if (after.dailyQuota != null) {
       const n = row.allowedEndpoints.length;
       deps.log(
-        `\n  NOTE: dailyQuota is enforced PER (partner, endpoint), not per partner. With ` +
-          `${n} allowed endpoint(s) (${row.allowedEndpoints.join(', ') || 'none'}), this partner's real ` +
-          `daily ceiling is ${after.dailyQuota} x ${n} = ${after.dailyQuota * n} requests/day, not ` +
-          `${after.dailyQuota}. There is no partner-wide counter today.`,
+        `\n  NOTE: dailyQuota is enforced PER (partner, endpoint), not per partner — and \`endpoint\` is the\n` +
+          `  CONCRETE REQUEST PATH: auth.ts passes u.pathname to checkPartnerLimits, while allowedEndpoints\n` +
+          `  holds PREFIXES matched with startsWith. This row allows ${n} prefix(es) ` +
+          `(${row.allowedEndpoints.join(', ') || 'none'}), and a\n` +
+          `  single prefix covers many concrete routes, so the real daily ceiling is ${after.dailyQuota} x (the number\n` +
+          `  of distinct PATHS this partner actually calls) — strictly more than ${after.dailyQuota}, and not a number\n` +
+          `  this script can compute from the row. There is no partner-wide counter today.`,
       );
     }
 
     if (write) {
-      await deps.savePartner(partnerId, buildUpdateSet(after));
+      await deps.savePartner(partnerId, buildUpdateSet(after), row.storedLimits);
       deps.log('\nDone. Only `limits` and `updatedAt` were written.');
       deps.log(
         'The running server does NOT see this immediately: registry.ts caches partner records for ' +
@@ -475,8 +760,13 @@ export async function main(
 }
 
 if (require.main === module) {
-  main().catch((err) => {
-    console.error(err);
-    process.exit(1);
+  main().catch((err: unknown) => {
+    // OpsAbort has already been reported by fail(), which also set the exit
+    // code. Anything else is unexpected: report it and set 1. No
+    // process.exit() here either — letting the event loop drain is what
+    // makes a piped stderr write survive.
+    if (err instanceof OpsAbort) return;
+    console.error(err instanceof Error ? (err.stack ?? err.message) : err);
+    process.exitCode = 1;
   });
 }
