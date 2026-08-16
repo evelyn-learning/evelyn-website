@@ -109,6 +109,21 @@ function resolveEnvSecret(partnerId: string, env: NodeJS.ProcessEnv): string | n
   return null;
 }
 
+/**
+ * The exact grant the env fallback hands a partner with no registry row.
+ * Exported so the seed script (Task 9) shares this value instead of
+ * hardcoding its own copy: a seeded row must grant IDENTICAL access to the
+ * env fallback it is meant to replace, and importing the same binding — not
+ * just an equal-looking literal — means a future narrowing of either value
+ * here is impossible to silently desync from what the seed writes.
+ */
+export const ENV_FALLBACK_ALLOWED_ENDPOINTS: string[] = ['/api/portal/v1/'];
+export const ENV_FALLBACK_LIMITS: { rpm: number; burst: number; dailyQuota: number | null } = {
+  rpm: 600,
+  burst: 60,
+  dailyQuota: null,
+};
+
 function fromEnv(partnerId: string, env: NodeJS.ProcessEnv): PartnerRecord | null {
   const secret = resolveEnvSecret(partnerId, env);
   if (!secret) return null;
@@ -117,8 +132,11 @@ function fromEnv(partnerId: string, env: NodeJS.ProcessEnv): PartnerRecord | nul
     kind: 'partner',
     status: 'active',
     secrets: [secret],
-    allowedEndpoints: ['/api/portal/v1/'],
-    limits: { rpm: 600, burst: 60, dailyQuota: null },
+    // Copied by value, not handed out as the module-level reference — two
+    // different partners resolving through fromEnv must not share one array
+    // or object that a future caller could mutate in place.
+    allowedEndpoints: [...ENV_FALLBACK_ALLOWED_ENDPOINTS],
+    limits: { ...ENV_FALLBACK_LIMITS },
     flagOverrides: {},
   };
 }
@@ -194,7 +212,7 @@ export async function getPartner(
       status: doc.status,
       secrets,
       allowedEndpoints: doc.allowedEndpoints ?? [],
-      limits: doc.limits ?? { rpm: 600, burst: 60, dailyQuota: null },
+      limits: doc.limits ?? { ...ENV_FALLBACK_LIMITS },
       flagOverrides: doc.flagOverrides ?? {},
     };
   } else {

@@ -12,17 +12,28 @@
  * `kind: 'first-party'` and NO secrets — it owns the retail student
  * namespace but can never authenticate as a caller.
  *
+ * Defaults to DRY RUN, matching backfill-partner-namespace.ts. Nothing is
+ * written unless `--write` is passed. This is a one-shot ops script run
+ * against production, not registry.ts's hot auth path — silently degrading
+ * a bad `PORTAL_PARTNER_SECRETS` to "seed only evelyn" and exiting 0 would
+ * let an operator believe every partner was seeded when none were (round-2
+ * review: a forgotten/fat-fingered env, or the repo-root dev `.env.local`
+ * sourced by mistake against a prod `MONGODB_URI`, writing DEV secrets into
+ * rows that then WIN over the env fallback and 401 both partners within the
+ * 60s cache TTL). `checkSecretsEnv` below aborts non-zero before doing
+ * anything else — no DB connection is even opened — when the env is
+ * missing, unparseable, or parses to zero usable secrets.
+ *
  * Idempotent, and safe to re-run:
  *  - A NEW partner is created with `allowedEndpoints: ['/api/portal/v1/']`
- *    (matching `registry.ts`'s `fromEnv` exactly, so a row seeded here
- *    grants identical access to the env fallback it is meant to replace —
- *    a row seeded WITHOUT this returns 403 for every request the partner
- *    makes, per `registry.ts`: `doc.allowedEndpoints ?? []`) and its secret
- *    sealed via `encryptSecret`.
- *  - An EXISTING row only has `name`, `kind` and `updatedAt` refreshed
- *    (`buildUpdateSet` below). Every other field is operator state once a
- *    row exists — a routine re-seed must not undo a deliberate operator
- *    decision:
+ *    (== `registry.ts`'s exported `ENV_FALLBACK_ALLOWED_ENDPOINTS`, so a row
+ *    seeded here grants identical access to the env fallback it is meant to
+ *    replace — a row seeded WITHOUT this returns 403 for every request the
+ *    partner makes, per `registry.ts`: `doc.allowedEndpoints ?? []`) and its
+ *    secret sealed via `encryptSecret`.
+ *  - An EXISTING row only has `name` and `updatedAt` refreshed
+ *    (`buildUpdateSet` below). Every other field is either operator state or
+ *    fixed at creation — a routine re-seed must not undo either:
  *      - `secrets`          — re-running must not clobber a rotated secret.
  *      - `status`           — this is the incident-response lever (suspend
  *        a partner abusing the API, in a billing dispute, or that leaked a
@@ -45,32 +56,65 @@
  *        it beyond `{}` at creation.
  *      - `metering`         — plan/billing metadata set out of band; the
  *        seed isn't authoritative for it either.
- *    `name` and `kind` stay seed-authoritative: today the seed is the only
- *    source for either (no admin console exists yet — M1e), so there is no
- *    operator-set value to protect. If M1e ever lets an operator set a
- *    custom display `name` independent of the partnerId slug, or manually
- *    reclassify a partner's `kind`, that assumption should be revisited —
- *    not a decision made here.
- *  - `invalidatePartner` is called after every create AND every update.
- *    `getPartner` caches NEGATIVE lookups too, so a partner seeded after an
- *    earlier failed lookup would otherwise stay 401 `unknown_partner` for
- *    up to the 60s cache TTL (registry.ts). The registry's own comment says
- *    "Call after any admin write" — this is that write.
+ *      - `kind`             — round-2 review: NOT seed-authoritative on
+ *        update either, even though this script only ever PROPOSES
+ *        'partner' or 'first-party' for a row it creates. `portalA` is a
+ *        `TEST_PREFIXES` fixture (backfill-partner-namespace.ts) seeded
+ *        with `kind: 'test'`. If an operator ever puts `portalA` in this
+ *        script's `PORTAL_PARTNER_SECRETS` map (by mistake, or to give it a
+ *        real secret), `planSeed` sees the existing row and plans an
+ *        'update' with `kind: 'partner'` — writing that on update would
+ *        silently reclassify a test fixture as a real partner, defeating
+ *        what `Partner.ts` documents `'test'` rows are for. The reverse
+ *        direction ('partner' → 'test') is structurally unreachable — this
+ *        script never proposes `kind: 'test'` for anything — but the fix is
+ *        symmetric: `kind` is written only at creation, full stop.
+ *    `name` stays seed-authoritative: today the seed is the only source for
+ *    it (no admin console exists yet — M1e), so there is no operator-set
+ *    value to protect. If M1e ever lets an operator set a custom display
+ *    `name` independent of the partnerId slug, that assumption should be
+ *    revisited — not a decision made here.
+ *  - `invalidatePartner` is called after every create AND every update (and
+ *    only those — a dry run calls neither write dep nor invalidate; see
+ *    `executeSeed`'s `write` gate). `getPartner` caches NEGATIVE lookups
+ *    too, so a partner seeded after an earlier failed lookup would
+ *    otherwise stay 401 `unknown_partner` for up to the 60s cache TTL
+ *    (registry.ts). The registry's own comment says "Call after any admin
+ *    write" — this is that write.
+ *
+ * Rotation has NO tooling in M1c: the create/update partition above means
+ * nothing in this script can add a second secret to an EXISTING partner (an
+ * update never touches `secrets`). The first rotation must be done by hand
+ * (direct Mongo write, sealing with `encryptSecret` and appending to the
+ * array) until an admin console ships in M1e. Documented in README.md too —
+ * recorded here so it is not silently discovered mid-incident.
  *
  * Usage:
  *   PORTAL_PARTNER_SECRETS='{"crimsora":"..."}' PORTAL_SECRET_ENC_KEY=... \
  *     npx ts-node -r tsconfig-paths/register \
  *     --compiler-options '{"module":"commonjs","baseUrl":"./"}' \
- *     scripts/seed-partner-registry.ts
+ *     scripts/seed-partner-registry.ts                # dry run, report only
+ *   ... scripts/seed-partner-registry.ts --write         # apply
  */
 import mongoose from 'mongoose';
 import connectDB from '@core/db';
 import { PartnerModel } from '@/models/Partner';
 import { encryptSecret, type SealedSecret } from '@/lib/tutor/portal/secret-box';
-import { invalidatePartner } from '@/lib/tutor/portal/registry';
+import {
+  invalidatePartner,
+  ENV_FALLBACK_ALLOWED_ENDPOINTS,
+  ENV_FALLBACK_LIMITS,
+} from '@/lib/tutor/portal/registry';
 
-export const ALLOWED_ENDPOINTS = ['/api/portal/v1/'];
-export const DEFAULT_LIMITS = { rpm: 600, burst: 60, dailyQuota: null as number | null };
+const WRITE = process.argv.includes('--write');
+
+// Re-exported, not re-hardcoded: importing the SAME binding registry.ts's
+// `fromEnv` uses means these two can never silently drift apart (round-2
+// review, I2) — a future narrowing of the env-fallback grant is impossible
+// to leave seeded rows unknowingly broader than, because there is only one
+// value, not two equal-looking copies.
+export const ALLOWED_ENDPOINTS = ENV_FALLBACK_ALLOWED_ENDPOINTS;
+export const DEFAULT_LIMITS = ENV_FALLBACK_LIMITS;
 export const EVELYN_PARTNER_ID = 'evelyn';
 
 export type SeedKind = 'partner' | 'first-party';
@@ -95,7 +139,11 @@ export interface SeedPlanRow extends SeedEntry {
  * Pure — no DB, no crypto. Parses PORTAL_PARTNER_SECRETS into a plain map.
  * Malformed JSON or a non-object value degrades to "no partners configured"
  * rather than throwing, matching registry.ts's `resolveEnvSecret` behavior
- * for the same env var (malformed map -> fall through).
+ * for the same env var (malformed map -> fall through). That degrade is
+ * correct for registry.ts's hot auth path (one bad partner must not break
+ * every other lookup) and is exactly why `checkSecretsEnv` below exists
+ * separately for this script: an ops script must NOT make the same
+ * "degrade and continue" choice about its OWN input.
  */
 export function parsePartnerSecretsEnv(raw: string | undefined): Record<string, string> {
   if (!raw) return {};
@@ -110,6 +158,37 @@ export function parsePartnerSecretsEnv(raw: string | undefined): Record<string, 
   } catch {
     return {};
   }
+}
+
+export type SecretsEnvStatus =
+  | { ok: true }
+  | { ok: false; reason: 'missing' | 'malformed' | 'empty' };
+
+/**
+ * Pure — no DB. The operator-mistake gate (round-2 review, I1). Distinct
+ * from `parsePartnerSecretsEnv`'s permissive parse: this is what `main()`
+ * checks BEFORE opening a DB connection or seeding anything, so a bad env
+ * aborts loudly instead of silently seeding only `evelyn` and exiting 0.
+ * `reason` is deliberately three-way — `missing` (unset), `malformed`
+ * (present but not a JSON object) and `empty` (a valid object with zero
+ * usable string secrets, e.g. `'{}'`) get distinct operator-facing messages
+ * in `main()` because they're different mistakes to go fix.
+ */
+export function checkSecretsEnv(raw: string | undefined): SecretsEnvStatus {
+  if (!raw) return { ok: false, reason: 'missing' };
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return { ok: false, reason: 'malformed' };
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return { ok: false, reason: 'malformed' };
+  }
+  if (Object.keys(parsePartnerSecretsEnv(raw)).length === 0) {
+    return { ok: false, reason: 'empty' };
+  }
+  return { ok: true };
 }
 
 /**
@@ -154,7 +233,7 @@ export interface CreateDoc {
   status: 'active';
   secrets: Array<{ ciphertext: string; keyVersion: number; label: string; createdAt: string }>;
   allowedEndpoints: string[];
-  limits: typeof DEFAULT_LIMITS;
+  limits: { rpm: number; burst: number; dailyQuota: number | null };
   flagOverrides: Record<string, never>;
   metering: Record<string, never>;
   createdAt: string;
@@ -164,8 +243,12 @@ export interface CreateDoc {
 /**
  * Pure — no DB. The full document for a brand-new row. Every field here is
  * written exactly once, at creation — see the header comment for why each
- * of `status`, `secrets`, `allowedEndpoints`, `limits`, `flagOverrides` and
- * `metering` is deliberately NOT in `buildUpdateSet` below.
+ * of `status`, `secrets`, `allowedEndpoints`, `limits`, `flagOverrides`,
+ * `metering` and `kind` is deliberately NOT in `buildUpdateSet` below.
+ * `allowedEndpoints`/`limits` are copied BY VALUE (`[...]` / `{...}`), not
+ * handed out as the shared `ALLOWED_ENDPOINTS`/`DEFAULT_LIMITS` module
+ * references — every created doc gets its own array/object so nothing
+ * downstream can mutate one partner's grant through another's.
  */
 export function buildCreateDoc(
   row: SeedPlanRow,
@@ -181,8 +264,8 @@ export function buildCreateDoc(
     secrets: secret
       ? [{ ciphertext: secret.ciphertext, keyVersion: secret.keyVersion, label: 'seed', createdAt: ts }]
       : [],
-    allowedEndpoints: ALLOWED_ENDPOINTS,
-    limits: DEFAULT_LIMITS,
+    allowedEndpoints: [...ALLOWED_ENDPOINTS],
+    limits: { ...DEFAULT_LIMITS },
     flagOverrides: {},
     metering: {},
     createdAt: ts,
@@ -192,24 +275,24 @@ export function buildCreateDoc(
 
 export interface UpdateSet {
   name: string;
-  kind: SeedKind;
   updatedAt: string;
 }
 
 /**
  * Pure — no DB. The exact `$set` payload for an EXISTING row. Deliberately
  * narrow: `status`, `secrets`, `allowedEndpoints`, `limits`,
- * `flagOverrides` and `metering` are operator state once a row exists and
- * must never appear here — see the header comment for the reasoning per
- * field. This is the one place that ownership boundary is enforced; a spy
- * test on `executeSeed`'s `updatePartner` dep proves nothing about it, so
- * `test-partner-seed.ts` asserts on this function's return shape directly.
+ * `flagOverrides`, `metering` AND `kind` are either operator state or fixed
+ * at creation, and must never appear here — see the header comment for the
+ * reasoning per field. This is the one place that ownership boundary is
+ * enforced; a spy test on `executeSeed`'s `updatePartner` dep proves
+ * nothing about it, so `test-partner-seed.ts` asserts on this function's
+ * return shape directly.
  */
 export function buildUpdateSet(
   row: SeedPlanRow,
   now: () => string = () => new Date().toISOString(),
 ): UpdateSet {
-  return { name: row.partnerId, kind: row.kind, updatedAt: now() };
+  return { name: row.partnerId, updatedAt: now() };
 }
 
 export interface SeedWriteDeps {
@@ -219,7 +302,13 @@ export interface SeedWriteDeps {
 }
 
 /**
- * Executes a plan. For each row: create XOR update (never both), then
+ * Executes a plan. `write=false` (the default — see `main()`'s `WRITE`)
+ * calls NONE of the deps, for any row, structurally: the loop body is
+ * unreachable when `write` is false. This is what makes dry-run safe, and
+ * is asserted directly by a spy test with zero calls, not just implied by
+ * `main()` never being invoked with `--write`.
+ *
+ * When `write` is true: for each row, create XOR update (never both), then
  * ALWAYS invalidate — both branches call `deps.invalidate` before moving to
  * the next row, so a spy test can assert invalidate fires exactly once per
  * planned row regardless of operation. `updatePartner` is never handed a
@@ -229,8 +318,10 @@ export async function executeSeed(
   plan: SeedPlanRow[],
   secretsMap: Record<string, string>,
   sealSecret: (plaintext: string) => SealedSecret,
+  write: boolean,
   deps: SeedWriteDeps,
 ): Promise<void> {
+  if (!write) return;
   for (const row of plan) {
     if (row.operation === 'create') {
       const secret = row.sealSecret ? sealSecret(secretsMap[row.partnerId]) : undefined;
@@ -242,10 +333,52 @@ export async function executeSeed(
   }
 }
 
+function describeSecretsEnvError(reason: 'missing' | 'malformed' | 'empty'): string {
+  switch (reason) {
+    case 'missing':
+      return (
+        'PORTAL_PARTNER_SECRETS is not set. Nothing would be seeded but evelyn — ' +
+        'aborting rather than doing that silently. Set it to a JSON map of ' +
+        '{"partnerId":"secret", ...} for every real partner before running this script.'
+      );
+    case 'malformed':
+      return (
+        'PORTAL_PARTNER_SECRETS is set but is not a valid JSON object (e.g. bad JSON, ' +
+        'or a JSON array/string/number instead of a map). Aborting before any write — ' +
+        'fix the env value and re-run.'
+      );
+    case 'empty':
+      return (
+        'PORTAL_PARTNER_SECRETS parses to zero usable secrets (empty object, or every ' +
+        'value non-string/empty). Aborting — this is almost always a fat-fingered or ' +
+        'wrong env, not an intentional "seed evelyn only" run.'
+      );
+  }
+}
+
 async function main() {
+  // Must run before connectDB(): see Task 6's identical fix in
+  // backfill-partner-namespace.ts — Mongoose 8 defaults autoIndex/autoCreate
+  // to true, so merely opening the connection builds every schema-declared
+  // index for every compiled model (including TutorSession's TTL index,
+  // which deletes sessions older than 180 days) and creates any collection
+  // that doesn't exist yet. Only PartnerModel is imported by this file today
+  // so this is harmless right now, but it re-arms the moment anything in
+  // this file's import graph pulls in TutorSession — and a dry run must
+  // never have side effects regardless of what else gets imported later.
+  mongoose.set('autoIndex', false);
+  mongoose.set('autoCreate', false);
+
+  const raw = process.env.PORTAL_PARTNER_SECRETS;
+  const envStatus = checkSecretsEnv(raw);
+  if (!envStatus.ok) {
+    console.error(describeSecretsEnvError(envStatus.reason));
+    process.exit(1);
+  }
+
   await connectDB();
 
-  const secretsMap = parsePartnerSecretsEnv(process.env.PORTAL_PARTNER_SECRETS);
+  const secretsMap = parsePartnerSecretsEnv(raw);
   const entries = buildSeedEntries(secretsMap);
 
   const existingDocs = await PartnerModel.find(
@@ -256,25 +389,33 @@ async function main() {
 
   const plan = planSeed(entries, existingIds);
 
-  console.log(`Seeding ${plan.length} partner row(s):`);
+  console.log(`Mode: ${WRITE ? 'WRITE' : 'dry-run'} — ${plan.length} partner row(s):`);
   for (const row of plan) {
-    console.log(`  ${row.operation.padEnd(6)} ${row.partnerId.padEnd(20)} kind=${row.kind}`);
+    const label = WRITE ? row.operation : `would ${row.operation}`;
+    console.log(`  ${label.padEnd(13)} ${row.partnerId.padEnd(20)} kind=${row.kind}`);
+  }
+  if (!WRITE) {
+    console.log(
+      '\n(dry run — pass --write to apply. Undo for any row this creates: delete it from the ' +
+        "`partners` collection — the PORTAL_PARTNER_SECRETS env fallback resumes automatically " +
+        'within 60s, registry.ts\'s cache TTL.)',
+    );
   }
 
-  await executeSeed(plan, secretsMap, encryptSecret, {
+  await executeSeed(plan, secretsMap, encryptSecret, WRITE, {
     createPartner: async (row, secret) => {
       await PartnerModel.create(buildCreateDoc(row, secret));
     },
     updatePartner: async (row) => {
       // buildUpdateSet is deliberately narrow — see the header comment and
-      // the function's own doc comment for which fields are operator state
-      // and therefore excluded.
+      // the function's own doc comment for which fields are excluded and
+      // why.
       await PartnerModel.updateOne({ _id: row.partnerId }, { $set: buildUpdateSet(row) });
     },
     invalidate: invalidatePartner,
   });
 
-  console.log('\nDone.');
+  if (WRITE) console.log('\nDone.');
   await mongoose.disconnect();
 }
 

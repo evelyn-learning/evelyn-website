@@ -68,25 +68,48 @@ Secrets are encrypted at rest with AES-256-GCM
 secrets.** It is the only key that can open a sealed partner secret — losing
 it means every partner must re-key.
 
+**Secret rotation has no tooling in M1c.** The seed script's update path
+never touches an existing row's `secrets` array (by design — see below), so
+nothing in M1c can add a second secret to an existing partner. The first
+rotation must be done by hand: seal the new secret with `encryptSecret`
+(`src/lib/tutor/portal/secret-box.ts`), append it to that partner's
+`secrets` array directly in Mongo, then remove the old entry once traffic
+has moved over. An admin console for this is M1e. `PORTAL_SECRET_ENC_KEY` is
+brand new as of this milestone, so the first rotation is not far off —
+recording this now rather than leaving it to be discovered mid-incident.
+
 Two ops commands (run from `apps/tutor`; neither is a `test:*` entry, so
-neither runs in CI or `npm run test:all`):
+neither runs in CI or `npm run test:all`). **Both default to a dry run** —
+pass `--write` to apply either one:
 
 - `npm run seed:partner-registry` — creates/refreshes `Partner` rows from
   `PORTAL_PARTNER_SECRETS`, plus a `kind: 'first-party'` `evelyn` row with no
-  secrets. Idempotent: re-running never overwrites an existing row's
-  `secrets` array.
+  secrets. Aborts non-zero, before touching the database, if
+  `PORTAL_PARTNER_SECRETS` is unset, unparseable, or parses to zero usable
+  secrets — a forgotten or fat-fingered env must not silently seed only
+  `evelyn` and exit 0 while an operator believes every partner was seeded.
+  Idempotent: re-running an existing row only refreshes `name`/`updatedAt`;
+  `status`, `secrets`, `allowedEndpoints`, `limits`, `flagOverrides`,
+  `metering` and `kind` are never touched once a row exists, because each is
+  either operator state (e.g. `status: 'suspended'` — the incident-response
+  lever) or fixed at creation (`kind`, so a `kind: 'test'` fixture like
+  `portalA` can never be silently reclassified as `'partner'`). **Undo:**
+  delete the row from the `partners` collection; the `PORTAL_PARTNER_SECRETS`
+  env fallback resumes automatically within 60s (`registry.ts`'s cache TTL).
 - `npm run backfill:partner-namespace` — stamps `(partnerId,
   externalStudentId)` onto existing `StudentProfile` rows and (with
   `--build-index`) builds the unique index that makes cross-partner
-  collision impossible. Defaults to a dry run; pass `--write` to apply.
-  **Refuses to run if any real partner id it observes has no `Partner` row —
-  run the seed script first.**
+  collision impossible. **Refuses to run if any real partner id it observes
+  has no `Partner` row — run the seed script first.**
 
 Two flags gate the rollout:
 
 - `PORTAL_LIMITS_MODE=report-only` — logs what the per-partner rate/quota
-  limiter would block without actually blocking it. Not set in any env
-  sample today; set it for the observe-only rollout step below.
+  limiter would block without actually blocking it, but still serves the
+  request. Not set in any env sample today. **Unset means enforce**, and
+  `checkPartnerLimits` runs for every portal call the moment this code is
+  live — so this flag is set **in the same deploy** that ships the limiter,
+  not scheduled as a later step (see rollout below).
 - `PORTAL_IDENTITY_RESOLUTION` — default off. Once on, portal call sites
   resolve a partner's external student id through the registry instead of
   using the raw request id as the profile `_id`. Flip only after the
@@ -104,11 +127,35 @@ preconditions before any of this starts:
 2. **The seed script must run before the backfill.** The backfill aborts
    otherwise (see above).
 
-Ordered steps: set and back up `PORTAL_SECRET_ENC_KEY` → `seed:partner-registry`
-→ `backfill:partner-namespace` dry run, review → `--write` → `--build-index`
-→ set `PORTAL_IDENTITY_RESOLUTION=on` → remove `PORTAL_PARTNER_SECRETS` from
-the env (only once every real partner has a registry row) → set
-`PORTAL_LIMITS_MODE=report-only`, observe → remove it (limits enforced).
+Ordered steps:
+
+1. Set and back up `PORTAL_SECRET_ENC_KEY`, and **deploy with
+   `PORTAL_LIMITS_MODE=report-only` set in that same deploy** — not later.
+2. `npm run seed:partner-registry` dry run, review; then `-- --write`.
+   Registry rows now win per-partner; env remains the fallback for any
+   partner without a row.
+3. `npm run backfill:partner-namespace` dry run; review the attribution
+   table. `already-migrated: 0` and `ambiguous: 0` are the real gate — the
+   index build below succeeds regardless of attribution correctness, because
+   `externalStudentId` is stamped equal to the already-unique `_id`.
+4. `npm run backfill:partner-namespace -- --write`.
+5. `npm run backfill:partner-namespace -- --build-index`.
+6. Set `PORTAL_IDENTITY_RESOLUTION=on` and deploy. Preconditions:
+   `EMBED_TOKEN_ENFORCE=on` (already confirmed above) and steps 3–5 complete.
+7. Observe the report-only window, then remove `PORTAL_LIMITS_MODE` — limits
+   enforced.
+
+**Not a rollout step, and blocked in M1c: removing `PORTAL_PARTNER_SECRETS`
+from the env.** A registry row does **not** cover this. Three call sites
+resolve a partner's secret through `getPartnerSecret`
+(`src/lib/tutor/portal/auth.ts`), which reads `process.env` **only** and
+never consults the registry: `embed-token.ts`, `replay-token.ts`, and the
+demo-token route. `verifyEmbedToken` gates the `tutor-portal/embed` page
+that academy and Crimsora iframe, plus six `/api/tutor/**` routes. Removing
+the env var returns `unknown partner` for every partner regardless of
+registry state — an immediate outage of every embedded session. Unblocking
+this means migrating those three call sites off `getPartnerSecret`, which is
+not M1c.
 
 ## Boundaries
 
