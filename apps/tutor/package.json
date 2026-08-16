@@ -14,6 +14,7 @@
     "seed:mock-form": "npx tsx scripts/seed-mock-form.ts",
     "seed:partner-registry": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/seed-partner-registry.ts",
     "backfill:partner-namespace": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/backfill-partner-namespace.ts",
+    "limits:set-partner": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/set-partner-limits.ts",
     "lint:testprep-plans": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/lint-testprep-plans.ts",
     "lint:hs-plans": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/lint-hs-plans.ts",
     "gen:token-key": "npx ts-node --compiler-options '{\"module\":\"commonjs\"}' scripts/generate-token-encryption-key.ts",
@@ -217,6 +218,7 @@
     "test:profile-resolver": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-profile-resolver.ts",
     "test:portal-student-scoping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-student-scoping.ts",
     "test:partner-backfill": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-backfill.ts",
-    "test:partner-limits": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-limits.ts"
+    "test:partner-limits": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-limits.ts",
+    "test:partner-limits-set": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-limits-set.ts"
   }
 }
