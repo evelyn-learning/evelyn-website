@@ -17,7 +17,7 @@ import {
   resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
-import { checkEmbedAuth, partnerIdForInternalRoute } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 
 const HUMOR_LEVELS = new Set(['off', 'light', 'medium', 'heavy']);
 const PACING_VALUES = new Set(['slower', 'default', 'faster']);
@@ -63,21 +63,28 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
-  // M1c Task 5 (fix round 2, CRITICAL A; corrected fix round 3, CRITICAL A1)
-  // — this route had NO auth at all (pre-existing; reached by
-  // /tutor/settings and the in-session humor chip, per the module doc
-  // above), so it had no trustworthy partner id to resolve identity under.
-  // checkEmbedAuth is called ONLY to extract a verified partner_id when an
-  // embed token is present — it must NEVER gate the request. /tutor/settings
-  // is a genuinely retail surface (useStudentPreferences.ts sends no
-  // token) and must keep working with no token, unconditionally — see
-  // partnerIdForInternalRoute's doc comment for why an absent OR
-  // failed-verification token both fall back to 'evelyn' rather than 401.
+  // M1c Task 5 (fix round 2, CRITICAL A; corrected fix round 3, CRITICAL A1;
+  // corrected fix round 4, spec §4.0 refinement) — this route had NO auth
+  // at all (pre-existing; reached by /tutor/settings and the in-session
+  // humor chip, per the module doc above), so it had no trustworthy
+  // partner id to resolve identity under. checkEmbedAuth verifies an embed
+  // token when one is present; a genuinely absent token is retail
+  // (/tutor/settings sends none) and must keep working, unconditionally,
+  // with no 401. But a token that WAS sent and fails verification is NOT
+  // retail — falling back to 'evelyn' for it would silently misattribute a
+  // partner student's write, so that case rejects (401) instead — see
+  // embedTokenRejectionReason's doc comment.
+  const token = req.headers.get('x-embed-token');
   const auth = checkEmbedAuth({
-    token: req.headers.get('x-embed-token'),
+    token,
     expectedStudentId: id,
     route: 'student-profile:preferences:PATCH',
   });
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[student-profile/preferences] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
+  }
 
   let body: unknown;
   try {

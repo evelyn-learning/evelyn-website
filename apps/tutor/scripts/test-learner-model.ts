@@ -493,7 +493,7 @@ async function runServerAppendPointTests() {
   }
 
   const { EvidenceEventModel } = await import('../src/models');
-  const { deleteLearnerModelData } = await import('../src/lib/tutor/learner-model/store');
+  const { deleteLearnerModelData, appendEvidence } = await import('../src/lib/tutor/learner-model/store');
   const { emitSessionResult } = await import('../src/lib/tutor/portal/session-result');
   const { submitAssessment } = await import('../src/lib/tutor/portal/assessment');
   const { ensureGraded } = await import('../src/lib/tutor/mock-exam/report');
@@ -627,16 +627,20 @@ async function runServerAppendPointTests() {
         },
         deps,
         resolver,
-        // M1c fix round 3 (IMPORTANT C) — DELIBERATELY left at 3 args, not
-        // "fixed" to add a 4th: this block's own assertion below
-        // (`rowA?.partnerId === undefined`) is the intentional NEGATIVE
-        // half of a pair with the very next block ("partnerId threaded
-        // onto every diag: row", 'lmtest-partner-a') — adding a partnerId
-        // here would make that assertion false and delete the only
-        // coverage of "no partnerId supplied → not stamped". Safe at
-        // runtime regardless: this file runs under `tsx` (no type-check,
-        // scripts/ is outside tsconfig), and the flag stays off for this
-        // whole suite, so resolveProfileIdOrRaw never touches partnerId.
+        // M1c fix round 4 (coordinator overruled round 3's deliberate
+        // omission here): submitAssessment's partnerId is a REQUIRED
+        // positional — "the caller passes none" is a compile error in
+        // every type-checked caller, so the 3-arg shape this round 3 kept
+        // was exercising an illegal call shape, not a supported contract.
+        // It also doesn't survive the flip: with the flag on and a real
+        // MONGODB_URI, the omitted partnerId hits resolveProfileId's guard
+        // and throws ProfileIdentityError, which round 2 made deliberately
+        // loud and never-degraded — so this call would fail at exactly the
+        // rollout step it exists to guard. The real, legal-shape coverage
+        // ("EvidenceInput.partnerId is optional and left unstamped when
+        // absent") moved to a direct appendEvidence call — see the
+        // dedicated block right after this one.
+        'lmtest-partner-1',
       );
 
       const landed = await waitFor(
@@ -669,7 +673,45 @@ async function runServerAppendPointTests() {
         totalRows === 2,
         'submitAssessment: exactly 2 evidence rows total (diag: only) — C1 fix, no spurious emit: fallback row',
       );
-      assert(rowA?.partnerId === undefined, 'submitAssessment: partnerId omitted when the caller passes none');
+      assert(
+        rowA?.partnerId === 'lmtest-partner-1',
+        'submitAssessment: partnerId (M3) threaded onto the diag: row (see the next block for the dedicated partnerId test)',
+      );
+    } finally {
+      await deleteLearnerModelData(studentId);
+    }
+  }
+
+  // --- (b) appendEvidence: partnerId is OPTIONAL and left unstamped when
+  // absent (learner-model/store.ts:33's EvidenceInput.partnerId?: string) ---
+  //
+  // M1c fix round 4 — this replaces the coverage round 3 kept by leaving a
+  // submitAssessment call at 3 args (an illegal shape once partnerId became
+  // a required positional there). appendEvidence's own EvidenceInput.partnerId
+  // IS still genuinely optional — this is the legal way to exercise "no
+  // partnerId supplied -> not stamped."
+  {
+    const studentId = `lmtest:evNoPartner:${process.pid}`;
+    const sessionId = `lmtest-evnopartner-session-${process.pid}`;
+    await deleteLearnerModelData(studentId);
+    try {
+      await appendEvidence([
+        {
+          idempotencyKey: `diag:${sessionId}:qa`,
+          studentId,
+          loId: 'lmtest.lo-nopartner',
+          source: 'diagnostic',
+          sessionId,
+          itemId: 'qa',
+          outcome: 1,
+          occurredAt: new Date(),
+          // partnerId deliberately omitted — this is the whole point.
+        },
+      ]);
+      const landed = await waitFor(async () => !!(await EvidenceEventModel.findById(`diag:${sessionId}:qa`)));
+      assert(landed, 'appendEvidence: evidence row lands');
+      const row = await EvidenceEventModel.findById(`diag:${sessionId}:qa`);
+      assert(row?.partnerId === undefined, 'appendEvidence: partnerId left unstamped when the input omits it');
     } finally {
       await deleteLearnerModelData(studentId);
     }

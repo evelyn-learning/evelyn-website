@@ -11,15 +11,15 @@
  * DELETE handler is at .../[overlayId]/route.ts.
  *
  * M1c Task 5 (fix round 2, CRITICAL A / spec §4.0; corrected fix round 3,
- * CRITICAL A1) — gained embed-token verification, but it NEVER gates the
- * request: this route previously had no auth at all ("Add auth when retail
- * launches" — the old text of this comment), and `/tutor/dev/notes` is a
- * genuinely retail/dev surface with no embed token. `checkEmbedAuth` runs
- * only to extract a verified `partner_id` when a token IS present and
- * valid; an absent or failed-verification token falls back to `'evelyn'`
- * (see `partnerIdForInternalRoute`'s doc comment) rather than 401ing —
- * requiring a token here would have broken retail traffic the moment
- * `EMBED_TOKEN_ENFORCE` is turned on, independent of the identity flag.
+ * CRITICAL A1; corrected fix round 4, spec §4.0 refinement) — gained
+ * embed-token verification. This route previously had no auth at all ("Add
+ * auth when retail launches" — the old text of this comment), and
+ * `/tutor/dev/notes` is a genuinely retail/dev surface with no embed
+ * token, so an ABSENT token never gates the request — see
+ * `partnerIdForInternalRoute`'s doc comment. But a token that WAS sent and
+ * fails verification (or fails the student-binding check) is not retail;
+ * that case rejects (401) rather than silently resolving under `'evelyn'`
+ * — see `embedTokenRejectionReason`'s doc comment for why.
  *
  * `baselineId` matches the corresponding lesson plan id (e.g.
  * `evelyn.ap.macro.loanable-funds-market.v1`). Next.js URL-decodes the
@@ -37,7 +37,7 @@ import {
   type AddPointerInput,
 } from '@/lib/tutor/topic-notes/apply-overlay';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
-import { checkEmbedAuth, partnerIdForInternalRoute } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 
 export async function GET(
   req: NextRequest,
@@ -47,11 +47,17 @@ export async function GET(
   if (!studentId || !baselineId) {
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
+  const token = req.headers.get('x-embed-token');
   const auth = checkEmbedAuth({
-    token: req.headers.get('x-embed-token'),
+    token,
     expectedStudentId: studentId,
     route: 'topic-notes:GET',
   });
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[topic-notes:GET] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
+  }
   const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: studentId });
   const rendered = await resolveTopicNotes(profileId, baselineId);
   if (!rendered) {
@@ -86,11 +92,17 @@ export async function PATCH(
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
 
+  const token = req.headers.get('x-embed-token');
   const auth = checkEmbedAuth({
-    token: req.headers.get('x-embed-token'),
+    token,
     expectedStudentId: studentId,
     route: 'topic-notes:PATCH',
   });
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[topic-notes:PATCH] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
+  }
 
   let body: PatchBody;
   try {

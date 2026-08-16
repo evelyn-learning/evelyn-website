@@ -69,6 +69,24 @@ async function test(name: string, fn: () => void | Promise<void>): Promise<void>
   }
 }
 
+/**
+ * Run `fn` with `process.env[key]` set to `value`, then restore whatever was
+ * there before — not just `delete` it. M1c Task 5 (fix round 4): a bare
+ * `delete process.env[KEY]` in a `finally` clobbers a value that existed
+ * before this test touched it (harmless for `EMBED_TOKEN_ENFORCE` in this
+ * process today, but a contagious pattern to avoid regardless).
+ */
+async function withEnv<T>(key: string, value: string, fn: () => Promise<T>): Promise<T> {
+  const prev = process.env[key];
+  process.env[key] = value;
+  try {
+    return await fn();
+  } finally {
+    if (prev === undefined) delete process.env[key];
+    else process.env[key] = prev;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Harness (request construction mirrors scripts/test-portal-auth-registry.ts)
 // ---------------------------------------------------------------------------
@@ -357,8 +375,7 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
       // PORTAL_IDENTITY_RESOLUTION, since this auth check isn't gated by
       // that flag. Runs with EMBED_TOKEN_ENFORCE='on' (the strictest mode)
       // specifically to prove the no-token path survives even there.
-      process.env.EMBED_TOKEN_ENFORCE = 'on';
-      try {
+      await withEnv('EMBED_TOKEN_ENFORCE', 'on', async () => {
         const { PATCH } = await import('../src/app/api/tutor/student-profile/[id]/preferences/route');
         const req = new Request('https://engine.test/api/tutor/student-profile/stu-retail-1/preferences', {
           method: 'PATCH',
@@ -369,9 +386,7 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
         assert.strictEqual(res.status, 200, 'a retail (no-token) preferences PATCH must succeed, not 401');
         const json = (await res.json()) as { preferences?: { humorCeiling?: string } };
         assert.strictEqual(json.preferences?.humorCeiling, 'light', 'the preference actually persisted');
-      } finally {
-        delete process.env.EMBED_TOKEN_ENFORCE;
-      }
+      });
     },
   );
 
@@ -383,8 +398,7 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
       // because this specific baselineId isn't a registered baseline (a
       // 404 is the correct, unrelated business-logic outcome) — the only
       // thing under test is that the auth layer never blocks it.
-      process.env.EMBED_TOKEN_ENFORCE = 'on';
-      try {
+      await withEnv('EMBED_TOKEN_ENFORCE', 'on', async () => {
         const { GET } = await import('../src/app/api/tutor/topic-notes/[studentId]/[baselineId]/route');
         const req = new Request(
           'https://engine.test/api/tutor/topic-notes/stu-retail-1/not-a-registered-baseline',
@@ -394,9 +408,52 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
           params: Promise.resolve({ studentId: 'stu-retail-1', baselineId: 'not-a-registered-baseline' }),
         });
         assert.notStrictEqual(res.status, 401, 'a retail (no-token) topic-notes GET must never 401');
-      } finally {
-        delete process.env.EMBED_TOKEN_ENFORCE;
-      }
+      });
+    },
+  );
+
+  await test(
+    'fix round 4, spec §4.0 refinement: a PRESENT but invalid token gets 401 (with a log line), ' +
+      'never a silent evelyn write',
+    async () => {
+      // The regression this proves: partnerIdForInternalRoute alone (round
+      // 3) fell back to 'evelyn' for a present-but-invalid token the same
+      // as a genuinely absent one — so a partner session whose token
+      // expired mid-session (or any tampered/malformed token) would have
+      // every subsequent topic-notes PATCH silently land under
+      // ('evelyn', rawStudentId) instead of erroring. A present token is
+      // NOT retail; it must reject, not degrade.
+      await withEnv('EMBED_TOKEN_ENFORCE', 'on', async () => {
+        const { PATCH } = await import('../src/app/api/tutor/topic-notes/[studentId]/[baselineId]/route');
+        const req = new Request(
+          'https://engine.test/api/tutor/topic-notes/stu-retail-1/some.baseline.id',
+          {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json', 'x-embed-token': 'not-a-valid-jwt' },
+            body: JSON.stringify({ bucket: 'theory', sessionId: 's1', input: {} }),
+          },
+        ) as unknown as NextRequest;
+        const originalError = console.error;
+        const errorCalls: unknown[][] = [];
+        console.error = (...args: unknown[]) => { errorCalls.push(args); };
+        let res: Response;
+        try {
+          res = await PATCH(req, {
+            params: Promise.resolve({ studentId: 'stu-retail-1', baselineId: 'some.baseline.id' }),
+          });
+        } finally {
+          console.error = originalError;
+        }
+        assert.strictEqual(res.status, 401, 'a present-but-invalid token must 401, not silently resolve under evelyn');
+        const json = (await res.json()) as { error?: string; reason?: string };
+        assert.strictEqual(json.error, 'unauthorized');
+        assert.ok(json.reason, 'the rejection reason is reported, not swallowed');
+        assert.ok(
+          errorCalls.length > 0,
+          'a log line was emitted — this must never be a SILENT misattribution (the exact failure mode ' +
+            "\"'on' mode returns {allow:false} with no log line\" that made round 3's gap invisible)",
+        );
+      });
     },
   );
 

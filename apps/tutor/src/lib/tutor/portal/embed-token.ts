@@ -185,6 +185,51 @@ export function partnerIdForInternalRoute(auth: EmbedAuthDecision): string {
 }
 
 /**
+ * M1c Task 5 (fix round 4, spec §4.0 refinement) — the reject/proceed
+ * decision an internal identity-deriving route must make BEFORE calling
+ * `partnerIdForInternalRoute`, given the raw token string and the
+ * `checkEmbedAuth` decision for it. Returns the failure `reason` to 401
+ * with, or `null` to proceed.
+ *
+ * Round 3 made `partnerIdForInternalRoute` fall back to `'evelyn'` for ANY
+ * decision with a `reason` set — that conflated two different situations:
+ *
+ *   - No token at all. This IS retail (`/tutor`, `/tutor/settings` send
+ *     none) and must resolve to `'evelyn'` and be SERVED, never 401 — the
+ *     round-3 CRITICAL A1 fix, and it stands.
+ *   - A token that WAS sent but failed verification (bad signature,
+ *     expired past the grace window, unknown partner) or failed the
+ *     student-binding check (`student_mismatch`). This is NOT retail — a
+ *     present token is by definition someone claiming to be a specific
+ *     partner's student. Falling back to `'evelyn'` here is silently
+ *     WRONG, not safely conservative: a partner's tutoring session running
+ *     past the token's grace window would have every subsequent write land
+ *     under `('evelyn', rawStudentId)` — colliding with any retail user
+ *     sharing that external id, the exact split-brain this milestone
+ *     exists to prevent, reached through a degraded token instead of a
+ *     missing one. And in `'on'` enforcement mode `checkEmbedAuth` returns
+ *     `{allow:false}` with NO log line, so the misattribution left no
+ *     trace. This function's whole job is to make that case reject (401)
+ *     and log instead, at every enforcement mode where verification
+ *     actually ran (`'off'` never attempts verification at all — `reason`
+ *     is never set there regardless of what the client sent — so this
+ *     never rejects in `'off'` mode; `'log'` mode's traditional "warn but
+ *     allow" is deliberately overridden here, because for THESE routes an
+ *     allowed-through bad token is a correctness bug, not an
+ *     observability nicety).
+ *
+ * `token` must be the SAME raw string passed into `checkEmbedAuth` — this
+ * function cannot infer "was a token sent" from `auth` alone, because in
+ * `'off'` mode `checkEmbedAuth` returns `{allow:true}` with no payload or
+ * reason regardless of whether the caller sent one.
+ */
+export function embedTokenRejectionReason(token: string | null, auth: EmbedAuthDecision): string | null {
+  if (token === null) return null; // no token sent at all -> retail, never reject
+  if (auth.reason === undefined) return null; // absent, or fully verified -> proceed
+  return auth.reason; // present but invalid/mismatched -> reject with this reason
+}
+
+/**
  * Verify a token and apply the current enforce mode. Never throws.
  *
  * - 'off': allow unconditionally, without attempting verification.
