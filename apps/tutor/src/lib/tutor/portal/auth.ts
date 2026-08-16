@@ -20,6 +20,7 @@ import {
   type SigningParts,
 } from '@evelyn/portal-contract/auth';
 import { getPartner, type PartnerRecord } from './registry';
+import { checkPartnerLimits } from './limits';
 
 /**
  * Resolve a partner's shared secret from the environment.
@@ -184,6 +185,20 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
     // allowlist without ever authenticating.)
     const allowed = partner.allowedEndpoints.some((p) => endpointAllowed(u.pathname, p));
     if (!allowed) return denyStatus('endpoint_not_allowed', 403);
+
+    // Burst/quota/metering (M1c Task 7). Deliberately AFTER the allowlist
+    // check, not before: the existing header → partner → kind → status →
+    // signature → allowlist order was arrived at over three review rounds
+    // (see the comment above) and moving this earlier would reorder it.
+    const limitVerdict = await checkPartnerLimits(partner, u.pathname);
+    if (!limitVerdict.ok) {
+      const res = NextResponse.json(
+        { error: limitVerdict.status === 429 ? 'rate_limited' : 'quota_exceeded', reason: limitVerdict.reason },
+        { status: limitVerdict.status },
+      );
+      if (limitVerdict.retryAfterSec) res.headers.set('Retry-After', String(limitVerdict.retryAfterSec));
+      return res;
+    }
 
     let body: unknown;
     if (rawBody) {
