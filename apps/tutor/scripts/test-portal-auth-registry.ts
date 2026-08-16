@@ -85,12 +85,19 @@ function signedRequest(opts: {
 }
 
 // A dummy authed handler that echoes the verified partner record + body.
+//
+// M1c final review (A-I3): `auth.partner` no longer carries the plaintext
+// secrets, which is what makes echoing it into a response body safe at all.
+// This harness echoing the record verbatim was named in the review as
+// "exactly the shape of the mistake" — it stays, deliberately, because the
+// assertion below now uses it to PROVE no secret can reach a handler.
 const echoHandler = withPortalAuth(async (_req, auth: PortalAuth) =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (await import('next/server')).NextResponse.json({
     ok: true,
     partnerId: auth.partnerId,
     partner: auth.partner,
+    partnerKeys: Object.keys(auth.partner).sort(),
     body: auth.body,
   }),
 );
@@ -246,6 +253,131 @@ function makeLimitsDeps(env: Record<string, string> = {}): LimitsDeps {
     const { status, json } = await callEcho(signedRequest({}));
     assert.strictEqual(status, 401);
     assert.strictEqual(json.reason, 'unknown_partner');
+  });
+
+  // --- M1c final review, A-I4: the kind/status gates moved BELOW the
+  // signature loop. The reason is verbatim the one recorded for the
+  // allowlist one check later: returning 403 to a caller who cannot sign
+  // let anyone who merely knows a partner slug map that partner's state off
+  // the 403-vs-401 split without ever authenticating. These are the mirror
+  // of the existing 'garbage signature against a disallowed endpoint' case.
+
+  function garbageSignedRequest(partnerId = PARTNER, path = '/api/portal/v1/x'): NextRequest {
+    return new Request(`https://engine.test${path}`, {
+      method: 'POST',
+      headers: {
+        'x-evelyn-partner': partnerId,
+        'x-evelyn-timestamp': String(Date.now()),
+        'x-evelyn-signature': 'deadbeef',
+      },
+    }) as unknown as NextRequest;
+  }
+
+  await test('A-I4: garbage signature against a SUSPENDED partner → 401 bad_signature, not 403 partner_suspended', async () => {
+    setRegistry(makePartner({ status: 'suspended' }));
+    const { status, json } = await callEcho(garbageSignedRequest());
+    assert.strictEqual(status, 401, 'an unauthenticated caller must not learn that this partner is suspended');
+    assert.strictEqual(json.reason, 'bad_signature');
+  });
+
+  await test('A-I4: garbage signature against a first-party row that DOES hold a secret → 401 bad_signature, not 403 partner_cannot_authenticate', async () => {
+    // `secrets: [SECRET]` on purpose: a first-party row with an empty
+    // secrets array 401s one check earlier (see the ordering case below),
+    // so it could not distinguish the two orderings.
+    setRegistry(makePartner({ kind: 'first-party' }));
+    const { status, json } = await callEcho(garbageSignedRequest());
+    assert.strictEqual(status, 401);
+    assert.strictEqual(json.reason, 'bad_signature');
+  });
+
+  await test('A-I4 ordering fact preserved: a first-party/test row with secrets:[] still 401s unknown_partner at the empty-secrets guard, never 403', async () => {
+    // This is the ordering the backfill script's operator warning documents
+    // ("the consequence is 401 unknown_partner — NOT 403
+    // partner_cannot_authenticate, which is unreachable with an empty
+    // secrets array"). Moving the kind/status checks below the signature
+    // must not change it. Signature is VALID here, so nothing but the
+    // empty-secrets guard can be producing the 401.
+    setRegistry(makePartner({ kind: 'first-party', secrets: [] }));
+    const { status, json } = await callEcho(signedRequest({}));
+    assert.strictEqual(status, 401);
+    assert.strictEqual(json.reason, 'unknown_partner');
+  });
+
+  // --- M1c final review, A-I1: spec §3 says a registry READ FAILURE is
+  // `unknown_partner` (401) — not a 500, and not a fail-open. Before the
+  // try/catch, a Mongo blip with MONGODB_URI set threw straight out of
+  // getPartner → withPortalAuth → Next, 500-ing every portal route at once.
+  // Routed through the REAL getPartner (an injected findPartner that
+  // rejects) rather than a throwing override, so this exercises the actual
+  // production error path.
+  await test('A-I1: a registry read failure → 401 unknown_partner, never a 500 and never the env fallback', async () => {
+    invalidatePartner('failpartner');
+    __setRegistryOverrideForTests(async (id) =>
+      id === 'failpartner'
+        ? getPartner('failpartner', {
+            findPartner: async () => { throw new Error('replica set failover'); },
+            now: () => Date.now(),
+            // A live env fallback for the SAME partner: if the fix ever
+            // "recovered" by falling through to fromEnv, this request would
+            // be 200 — silently resurrecting a partner (possibly a
+            // suspended one) for the duration of an outage.
+            env: { PORTAL_PARTNER_SECRETS: JSON.stringify({ failpartner: SECRET }) } as NodeJS.ProcessEnv,
+          })
+        : null,
+    );
+    const { status, json } = await callEcho(signedRequest({ partnerId: 'failpartner' }));
+    assert.strictEqual(status, 401, 'a read failure must be a clean 401, not an uncaught throw (500) and not a 200');
+    assert.strictEqual(json.reason, 'unknown_partner');
+  });
+
+  // --- M1c final review, reviewer B finding 1 (end-to-end half): route a
+  // SUSPENDED row through the REAL getPartner, so the registry's own
+  // `status: doc.status` mapping is on trial here, not just the hand-built
+  // fixture the case above uses.
+  await test('B-1 e2e: a suspended ROW (through the real getPartner) → 403 partner_suspended', async () => {
+    invalidatePartner('suspendedrow');
+    __setRegistryOverrideForTests(async (id) =>
+      id === 'suspendedrow'
+        ? getPartner('suspendedrow', {
+            findPartner: async () => ({
+              kind: 'partner' as const,
+              status: 'suspended' as const,
+              secrets: [{ ...encryptSecret(SECRET), label: 'v1', createdAt: '2026-01-01' }],
+              allowedEndpoints: ['/api/portal/v1/'],
+            }),
+            now: () => Date.now(),
+            env: {} as NodeJS.ProcessEnv,
+          })
+        : null,
+    );
+    const { status, json } = await callEcho(signedRequest({ partnerId: 'suspendedrow' }));
+    assert.strictEqual(status, 403);
+    assert.strictEqual(json.reason, 'partner_suspended');
+  });
+
+  // --- M1c final review, A-I3: the plaintext HMAC secrets must not leave
+  // withPortalAuth's verification loop. This harness echoes `auth.partner`
+  // straight into a response body — the exact mistake the review named — so
+  // if `secrets` ever comes back onto PortalAuth, a live credential appears
+  // in this JSON and the assertion fires.
+  await test('A-I3: auth.partner carries NO plaintext secrets (they never leave the verification loop)', async () => {
+    setRegistry(makePartner({ secrets: ['plaintext-should-never-escape'] }));
+    const { status, json } = await callEcho(
+      signedRequest({ secret: 'plaintext-should-never-escape' }),
+    );
+    assert.strictEqual(status, 200);
+    assert.ok(
+      !json.partnerKeys.includes('secrets'),
+      `auth.partner must not have a 'secrets' key; got ${JSON.stringify(json.partnerKeys)}`,
+    );
+    assert.ok(
+      !JSON.stringify(json).includes('plaintext-should-never-escape'),
+      'no plaintext secret may appear anywhere in what a handler can serialize',
+    );
+    // Still the SAME record otherwise — handlers legitimately need these.
+    assert.deepStrictEqual(json.partnerKeys, [
+      'allowedEndpoints', 'flagOverrides', 'kind', 'limits', 'partnerId', 'status',
+    ]);
   });
 
   await test('handler receives the full partner record (non-derivable field)', async () => {

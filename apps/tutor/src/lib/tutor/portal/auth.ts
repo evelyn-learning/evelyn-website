@@ -54,12 +54,27 @@ export function getPartnerSecret(partnerId: string): string | null {
   return null;
 }
 
+/**
+ * The registry record as a route handler sees it: everything EXCEPT the
+ * decrypted `secrets` array.
+ *
+ * Handlers legitimately need `limits`, `flagOverrides`, `allowedEndpoints`,
+ * `kind` and `status`; none of them needs a live HMAC credential. Handing
+ * the plaintext array to every wrapped handler put a working secret in
+ * scope at ~23 route handlers, one generic `console.error('portal failure',
+ * auth)` or telemetry serializer away from being written to logs — and
+ * gives away the whole point of sealing the secrets at rest (D15-R1: a
+ * database dump alone yields no working credential). The plaintext stays
+ * local to `withPortalAuth`'s verification loop.
+ */
+export type PublicPartnerRecord = Omit<PartnerRecord, 'secrets'>;
+
 /** What an authed handler receives in addition to the raw request. */
 export interface PortalAuth {
   /** Verified partner id (from the signed header). */
   partnerId: string;
-  /** The full registry record — limits, flags and allowlist for this caller. */
-  partner: PartnerRecord;
+  /** The registry record MINUS the plaintext secrets — limits, flags and allowlist for this caller. */
+  partner: PublicPartnerRecord;
   /** Parsed JSON body (undefined for empty bodies / GET). */
   body: unknown;
   /** Raw body string, exactly as signed. */
@@ -120,11 +135,11 @@ export function __setLimitsDepsOverrideForTests(deps: LimitsDeps | null): void {
  * Wrap a Next route handler so it runs only for an authenticated partner.
  *
  * Verifies: required headers present → partner known (registry, with an env
- * fallback) → partner kind is 'partner' and status is 'active' → timestamp
- * fresh and body-bound HMAC signature valid against any of the partner's
- * live secrets → endpoint is on the partner's allowlist. On success calls
- * `handler` with the verified `partnerId`, full `partner` record and parsed
- * body. The handler is responsible for scoping all data access to the
+ * fallback) → timestamp fresh and body-bound HMAC signature valid against
+ * any of the partner's live secrets → partner kind is 'partner' and status
+ * is 'active' → endpoint is on the partner's allowlist. On success calls
+ * `handler` with the verified `partnerId`, the `partner` record MINUS its
+ * plaintext secrets, and the parsed body. The handler is responsible for scoping all data access to the
  * `studentId` in its (validated) request — there is no listing/enumeration
  * endpoint, so a verified partner can only read the exact student it names.
  */
@@ -137,25 +152,38 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
       return deny('missing_auth_headers');
     }
 
-    const partner = registryOverride
-      ? await registryOverride(partnerId)
-      : await getPartner(partnerId);
+    // Spec §3: "a read failure is treated as `unknown_partner` (401) rather
+    // than failing open." Before this catch, a Mongo blip with MONGODB_URI
+    // set threw straight out of getPartner → withPortalAuth → Next, i.e. a
+    // 500 the frozen contract has no vocabulary for, on EVERY portal route
+    // at once. Logged with its own marker so an infrastructure outage is
+    // not misdiagnosed as a partner integration bug — the same rationale
+    // registry.ts already applies to per-secret decrypt failures.
+    //
+    // Deliberately does NOT fall through to `fromEnv` on error: the env
+    // fallback grants a full `/api/portal/v1/` allowlist with kind
+    // 'partner' / status 'active', so falling through would silently
+    // resurrect a SUSPENDED partner for the duration of an outage.
+    let partner: PartnerRecord | null;
+    try {
+      partner = registryOverride
+        ? await registryOverride(partnerId)
+        : await getPartner(partnerId);
+    } catch (err) {
+      console.error(
+        `[portal/auth] registry_unavailable partner=${partnerId} — denying as unknown_partner (spec §3); this is an infrastructure fault, not a partner integration problem`,
+        err,
+      );
+      return deny('unknown_partner');
+    }
 
     // Unknown, or known but with no secret we can open: both are
     // indistinguishable to a caller on purpose — we do not confirm that a
-    // partner id exists to an unauthenticated request.
+    // partner id exists to an unauthenticated request. This ALSO remains
+    // the check that stops a 'first-party'/'test' row (secrets: []) — those
+    // never reach the kind gate below, so their consequence is 401
+    // unknown_partner, not 403.
     if (!partner || partner.secrets.length === 0) return deny('unknown_partner');
-
-    // Only real partners authenticate. 'first-party' rows exist to own a
-    // student namespace ('evelyn' for retail /tutor); 'test' rows exist so
-    // fixture data has a valid reference. Neither may hold API credentials,
-    // even if a secret is added to one by mistake.
-    if (partner.kind !== 'partner') {
-      return denyStatus('partner_cannot_authenticate', 403);
-    }
-    if (partner.status === 'suspended') {
-      return denyStatus('partner_suspended', 403);
-    }
 
     const rawBody = await req.text();
     const u = new URL(req.url);
@@ -188,6 +216,27 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
       verdict = { ok: false, reason: v.reason };
     }
     if (!verdict.ok) return deny(verdict.reason);
+
+    // Only real partners authenticate. 'first-party' rows exist to own a
+    // student namespace ('evelyn' for retail /tutor); 'test' rows exist so
+    // fixture data has a valid reference. Neither may hold API credentials,
+    // even if a secret is added to one by mistake.
+    //
+    // Checked AFTER the signature, for exactly the reason the allowlist is
+    // (see the comment below): returning `403 partner_cannot_authenticate`
+    // or `403 partner_suspended` to a caller who cannot sign let anyone who
+    // merely knows a partner slug send a garbage signature and read that
+    // partner's state off the 403-vs-401 split. In practice only a
+    // SUSPENDED row with live secrets changes behaviour here — a
+    // 'first-party'/'test' row carries `secrets: []` and already 401s at
+    // the empty-secrets guard above, which is the ordering the backfill
+    // script's operator warning documents and which is unchanged.
+    if (partner.kind !== 'partner') {
+      return denyStatus('partner_cannot_authenticate', 403);
+    }
+    if (partner.status === 'suspended') {
+      return denyStatus('partner_suspended', 403);
+    }
 
     // Endpoint allowlist is checked AFTER the signature verifies, so only a
     // caller who already holds a valid secret for this partner can learn
@@ -225,6 +274,12 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
       }
     }
 
-    return handler(req, { partnerId, partner, body, rawBody }, ctx);
+    // The plaintext HMAC secrets never leave this function — see
+    // PublicPartnerRecord. The verification loop above is their whole
+    // lifetime.
+    const { secrets: _plaintextSecrets, ...partnerForHandler } = partner;
+    void _plaintextSecrets;
+
+    return handler(req, { partnerId, partner: partnerForHandler, body, rawBody }, ctx);
   };
 }
