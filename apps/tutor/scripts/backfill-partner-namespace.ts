@@ -8,8 +8,14 @@
  * flags so a dry-run of the attribution table can never accidentally build
  * an index over unmigrated data.
  *
+ * A mid-loop failure (crash, killed process) leaves a PARTIAL migration:
+ * some profiles stamped, some not. That is safe, not a disaster — every
+ * check here is re-derived from current DB state on each run, stamped rows
+ * report 'already-migrated' and are left alone (see attributeProfile), so
+ * simply re-running the script to completion is the recovery.
+ *
  * Usage:
- *   npx ts-node -r tsconfig-paths/register \
+ *   MONGODB_URI=... npx ts-node -r tsconfig-paths/register \
  *     --compiler-options '{"module":"commonjs","baseUrl":"./"}' \
  *     scripts/backfill-partner-namespace.ts                # dry run, report only
  *   ... scripts/backfill-partner-namespace.ts --write        # apply the backfill
@@ -26,7 +32,21 @@
  * a blank profile, for 393 of the 495 measured rows.
  *
  * `_id` is never touched by this script, in either mode.
+ *
+ * Round-1 review fixes (spec 5, amended): this script must NEVER create a
+ * `kind: 'partner'` Partner row. `registry.ts` says plainly: "the registry
+ * row WINS once it exists" — a row this script minted with `secrets: []`
+ * and `allowedEndpoints: []` would beat the env fallback and 401
+ * `unknown_partner` (auth.ts) for that partner's live traffic within one
+ * 60s cache TTL, and the documented rollback (drop index, unset two fields)
+ * does not undo it. Real partner rows are the seed script's job (Task 9,
+ * spec §10 step 1) — if one is missing here, this script aborts and tells
+ * the operator to seed first, rather than write a credential-less stand-in.
+ * Also: `mongoose.set('autoIndex', false)` runs before `connectDB()` so a
+ * plain dry run cannot silently trigger every schema's auto-built indexes —
+ * including TutorSession's `{startedAt:1}` TTL index, which deletes rows.
  */
+import mongoose from 'mongoose';
 import connectDB from '@core/db';
 import { StudentProfileModel } from '@/models/StudentProfile';
 import { TutorSession } from '@/models/TutorSession';
@@ -36,6 +56,22 @@ const WRITE = process.argv.includes('--write');
 const BUILD_INDEX = process.argv.includes('--build-index');
 
 const TEST_PREFIXES = new Set(['lmtest', 'trial', 'revtest', 'portalA']);
+
+// Every partnerId this backfill is allowed to observe, measured from
+// production (spec §"Measured production state"). Anything else — e.g. a
+// stray colon inside an otherwise-unnamespaced _id being misread as a
+// prefix — must abort rather than silently mint a fabricated partner and a
+// permanent namespace for that student.
+export const EXPECTED_PARTNERS = new Set([
+  'evelyn',
+  'evelyn-marketing',
+  'crimsora',
+  'academy',
+  'lmtest',
+  'trial',
+  'revtest',
+  'portalA',
+]);
 
 export type AttributionSignal =
   | 'already-migrated'
@@ -112,56 +148,81 @@ function partnerKind(partnerId: string): 'partner' | 'first-party' | 'test' {
   return 'partner';
 }
 
+/**
+ * Pure — no DB. Returns any observed partnerId NOT in the measured allowlist
+ * (sorted, empty when clean). The caller aborts before any write if this is
+ * non-empty.
+ */
+export function findUnexpectedPartners(observed: Iterable<string>): string[] {
+  return [...observed].filter((p) => !EXPECTED_PARTNERS.has(p)).sort();
+}
+
+export interface PartnerRowPlan {
+  /** Rows this script may safely create itself — never 'partner' kind. */
+  toCreate: Array<{ partnerId: string; kind: 'first-party' | 'test' }>;
+  /**
+   * Real ('partner'-kind) ids observed with no existing registry row. The
+   * caller MUST abort before any write when this is non-empty — creating
+   * one here would mint a credential-less row that 401s that partner's live
+   * traffic. Seeding is the seed script's job (spec §10 step 1).
+   */
+  missingReal: string[];
+}
+
+/**
+ * Pure — no DB. `existingIds` is the current Partner collection's _id set,
+ * passed in so this is testable without a database. Never proposes creating
+ * a `kind: 'partner'` row, structurally: the only two kinds in `toCreate`'s
+ * type are 'first-party' | 'test'.
+ */
+export function planPartnerRows(
+  observed: Iterable<string>,
+  existingIds: Set<string>,
+): PartnerRowPlan {
+  const toCreate: PartnerRowPlan['toCreate'] = [];
+  const missingReal: string[] = [];
+  for (const partnerId of observed) {
+    if (existingIds.has(partnerId)) continue;
+    const kind = partnerKind(partnerId);
+    if (kind === 'partner') {
+      missingReal.push(partnerId);
+    } else {
+      toCreate.push({ partnerId, kind });
+    }
+  }
+  missingReal.sort();
+  return { toCreate, missingReal };
+}
+
 /** Mask an _id for console output — enough to spot patterns, not enough to dox a student. */
 function mask(id: string): string {
   if (id.length <= 8) return `${id.slice(0, 2)}***`;
   return `${id.slice(0, 4)}...${id.slice(-4)}`;
 }
 
-async function ensurePartnerRow(partnerId: string, now: string, apply: boolean): Promise<boolean> {
-  const existing = await PartnerModel.findById(partnerId).lean();
-  if (existing) return false;
-  if (apply) {
-    await PartnerModel.create({
-      _id: partnerId,
-      name: partnerId,
-      kind: partnerKind(partnerId),
-      status: 'active',
-      secrets: [],
-      allowedEndpoints: [],
-      limits: { rpm: 600, burst: 60, dailyQuota: null },
-      flagOverrides: {},
-      metering: {},
-      createdAt: now,
-      updatedAt: now,
-    });
-  }
-  return true;
-}
-
 /**
- * The write path — this function performs the only `updateOne`/`create`
- * calls in the script that mutate StudentProfile or Partner documents, and
+ * The write path for StudentProfile — this function performs the only
+ * `updateOne` call in the script that mutates StudentProfile documents, and
  * it is called from exactly one place, gated by `if (WRITE)` in main().
- * There is no code path that reaches a Model.updateOne/create for these
- * collections without going through here, and this function is never
- * invoked unless WRITE is true.
+ * Deliberately does NOT touch `updatedAt`: the documented rollback
+ * ($unset the two identity fields) cannot restore an overwritten
+ * `updatedAt`, and nothing reads it for logic — stamping all 495 rows with
+ * today's date for no benefit is lossy for free.
  */
-async function applyWrite(
-  _id: string,
-  result: AttributionResult,
-  now: string,
-): Promise<void> {
+async function applyWrite(_id: string, result: AttributionResult): Promise<void> {
   await StudentProfileModel.updateOne(
     { _id },
-    { $set: { partnerId: result.partnerId, externalStudentId: result.externalStudentId, updatedAt: now } },
+    { $set: { partnerId: result.partnerId, externalStudentId: result.externalStudentId } },
   );
 }
 
 async function main() {
+  // Must run before connectDB(): Mongoose 8 defaults autoIndex to true, so
+  // merely opening the connection builds every schema-declared index for
+  // every compiled model — including TutorSession's TTL index, which
+  // DELETES sessions older than 180 days. A "dry run" must not do that.
+  mongoose.set('autoIndex', false);
   await connectDB();
-
-  const now = new Date().toISOString();
 
   const profiles = await StudentProfileModel.find(
     {},
@@ -191,7 +252,9 @@ async function main() {
   const partnersObserved = new Set<string>();
   const ambiguous: Array<{ id: string; error: string }> = [];
 
-  console.log(`${WRITE ? 'WRITE' : 'DRY RUN'} — ${profiles.length} profiles`);
+  console.log(
+    `Mode: profiles/partners=${WRITE ? 'WRITE' : 'dry-run'}, index=${BUILD_INDEX ? 'BUILD' : 'skip'} — ${profiles.length} profiles`,
+  );
   console.log('id (masked)          partnerId         signal');
 
   const toApply: Array<{ _id: string; result: AttributionResult }> = [];
@@ -232,23 +295,71 @@ async function main() {
     process.exit(1);
   }
 
-  // Ensure a Partner row exists for every observed partnerId (step 6 of the
-  // brief) — including test prefixes and 'evelyn' — so the index never
-  // references a partner that doesn't exist in the registry.
-  let partnerRowsCreated = 0;
-  for (const partnerId of partnersObserved) {
-    const wouldCreate = await ensurePartnerRow(partnerId, now, WRITE);
-    if (wouldCreate) {
-      partnerRowsCreated++;
-      console.log(`${WRITE ? 'created' : 'would create'} Partner row: ${partnerId} (${partnerKind(partnerId)})`);
+  // Allowlist guard: any partnerId outside the measured set (e.g. a stray
+  // colon inside an unnamespaced _id being misread as a prefix hint) must
+  // abort, not silently mint a permanent namespace for that student.
+  const unexpected = findUnexpectedPartners(partnersObserved);
+  if (unexpected.length > 0) {
+    console.error(
+      `\nUnexpected partner id(s) observed (not in the measured allowlist): ${unexpected.join(', ')}. ` +
+        'This could be a stray colon in an otherwise-unnamespaced _id fabricating a partner. Aborting before any write.',
+    );
+    await mongooseDisconnectSafely();
+    process.exit(1);
+  }
+
+  // Partner-row plan: never create a 'partner'-kind row (spec §5 step 3,
+  // amended). If a real partner id has no existing row, abort — seeding
+  // credentials is the seed script's job (spec §10 step 1), not ours.
+  const existingPartnerDocs = await PartnerModel.find({}, { _id: 1 }).lean();
+  const existingPartnerIds = new Set(existingPartnerDocs.map((d) => d._id as string));
+  const partnerPlan = planPartnerRows(partnersObserved, existingPartnerIds);
+
+  if (partnerPlan.missingReal.length > 0) {
+    console.error(
+      `\nMissing Partner row(s) for real partner id(s): ${partnerPlan.missingReal.join(', ')}. ` +
+        "This script never creates 'kind: partner' rows — a credential-less row would win over the " +
+        "env fallback (registry.ts: \"the registry row WINS once it exists\") and 401 unknown_partner " +
+        'for that partner\'s live traffic. Run the seed script (spec §10 step 1) to create these with ' +
+        'real secrets first, then re-run. Aborting before any write.',
+    );
+    await mongooseDisconnectSafely();
+    process.exit(1);
+  }
+
+  console.log(`\nPartner rows ${WRITE ? 'to create' : 'that would be created'}: ${partnerPlan.toCreate.length}`);
+  for (const { partnerId, kind } of partnerPlan.toCreate) {
+    console.log(`  ${WRITE ? 'creating' : 'would create'} Partner row: ${partnerId} (${kind})`);
+    if (partnerId === 'portalA') {
+      console.log(
+        "    NOTE: portalA is kind:'test' — auth.ts returns 403 partner_cannot_authenticate for any " +
+          'non-partner kind. portalA is the id used in the documented PORTAL_PARTNER_SECRETS example; ' +
+          'any harness that treats it as a live-auth partner will break.',
+      );
     }
   }
-  console.log(`Partner rows ${WRITE ? 'created' : 'to create'}: ${partnerRowsCreated}`);
 
   if (WRITE) {
+    for (const { partnerId, kind } of partnerPlan.toCreate) {
+      const now = new Date().toISOString();
+      await PartnerModel.create({
+        _id: partnerId,
+        name: partnerId,
+        kind,
+        status: 'active',
+        secrets: [],
+        allowedEndpoints: [],
+        limits: { rpm: 600, burst: 60, dailyQuota: null },
+        flagOverrides: {},
+        metering: {},
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+
     console.log(`\nApplying ${toApply.length} profile update(s)...`);
     for (const { _id, result } of toApply) {
-      await applyWrite(_id, result, now);
+      await applyWrite(_id, result);
     }
     console.log(`Applied ${toApply.length} update(s).`);
   } else {
@@ -292,7 +403,6 @@ async function main() {
 }
 
 async function mongooseDisconnectSafely(): Promise<void> {
-  const mongoose = (await import('mongoose')).default;
   await mongoose.disconnect();
 }
 

@@ -7,7 +7,11 @@
  * DB is involved and this counts in the oracle.
  */
 import assert from 'node:assert';
-import { attributeProfile } from './backfill-partner-namespace';
+import {
+  attributeProfile,
+  findUnexpectedPartners,
+  planPartnerRows,
+} from './backfill-partner-namespace';
 
 let passed = 0, failed = 0;
 async function test(name: string, fn: () => void | Promise<void>): Promise<void> {
@@ -63,6 +67,49 @@ await test('is idempotent — a migrated profile is left alone', () => {
   );
   assert.strictEqual(r.signal, 'already-migrated');
   assert.strictEqual(r.partnerId, 'crimsora');
+  // Round-1 fix: a regression here would silently rewrite a student's
+  // external id on a second run of the script.
+  assert.strictEqual(r.externalStudentId, 'user_1');
+});
+
+// --- Round-1 review fixes: the allowlist guard and the "never create a
+// kind:'partner' row" guard. Both are pure functions so the abort condition
+// can be proven without touching a database — main() calls process.exit(1)
+// as soon as either returns non-empty, before any write.
+
+await test('allowlist: a stray-colon id outside the measured set is flagged, not silently accepted', () => {
+  const violators = findUnexpectedPartners(['evelyn', 'crimsora', 'sneaky:colon']);
+  assert.deepStrictEqual(violators, ['sneaky:colon']);
+});
+
+await test('allowlist: every measured partner id passes clean', () => {
+  const violators = findUnexpectedPartners([
+    'evelyn', 'evelyn-marketing', 'crimsora', 'academy', 'lmtest', 'trial', 'revtest', 'portalA',
+  ]);
+  assert.deepStrictEqual(violators, []);
+});
+
+await test('partner-row plan: a real partner id with no existing row is reported as missingReal (main() aborts on this before any write)', () => {
+  const plan = planPartnerRows(['crimsora', 'evelyn'], new Set(['evelyn']));
+  assert.deepStrictEqual(plan.missingReal, ['crimsora']);
+});
+
+await test('partner-row plan: NEVER proposes creating a kind:partner row — only first-party/test are ever auto-created', () => {
+  const plan = planPartnerRows(['evelyn', 'lmtest', 'trial', 'crimsora'], new Set());
+  assert.deepStrictEqual(plan.missingReal, ['crimsora'], 'crimsora is real and unseeded — must block, not be planned');
+  assert.deepStrictEqual(
+    plan.toCreate.map((r) => r.partnerId).sort(),
+    ['evelyn', 'lmtest', 'trial'],
+  );
+  for (const row of plan.toCreate) {
+    assert.notStrictEqual(row.kind, 'partner', `${row.partnerId} must never be auto-created as kind:'partner'`);
+  }
+});
+
+await test('partner-row plan: an already-existing partner row (however it got there) is left alone, real or not', () => {
+  const plan = planPartnerRows(['crimsora', 'academy'], new Set(['crimsora', 'academy']));
+  assert.deepStrictEqual(plan.missingReal, []);
+  assert.deepStrictEqual(plan.toCreate, []);
 });
 
   console.log(`\n${passed} passed, ${failed} failed\n`);
