@@ -493,8 +493,20 @@ note after step 7.
    Before it opens a DB connection the seed aborts non-zero if `PORTAL_SECRET_ENC_KEY` is unset or
    fails a seal-then-open probe, and — in dry run too — prints its **fingerprint**: `sha256` of the
    base64 env value, first 8 hex chars. **Confirm it equals the fingerprint of the key deployed in
-   step 1 before running the write pass**, e.g. against the server's own env:
-   `printf %s "$PORTAL_SECRET_ENC_KEY" | shasum -a 256 | cut -c1-8`. A wrong-but-valid 32-byte key
+   step 1 before running the write pass**, taken from the deployed `.env.local` on the server —
+   that file, not the server's shell environment, is where the key lives (`deploy-tutor.sh` uploads
+   `.env.local.production` to `$REMOTE_DIR/apps/tutor/.env.local`, and Next reads it from there), and
+   hashing the `PORTAL_SECRET_ENC_KEY` you exported in the tunnel shell compares the value against
+   itself and matches tautologically:
+
+   ```
+   ssh <prod-host> 'sed -n "s/^PORTAL_SECRET_ENC_KEY=//p" /root/evelyn-tutor/apps/tutor/.env.local | tr -dc "A-Za-z0-9+/=" | sha256sum | cut -c1-8'
+   ```
+
+   `tr -dc` keeps only base64 characters, so surrounding quotes and the trailing newline drop out and
+   what is hashed is exactly the string the seed fingerprints; the command prints 8 hex characters
+   and can never print the key. Empty output means the line is not in the deployed file at all —
+   step 1 has not landed. A wrong-but-valid 32-byte key
    seals cleanly, writes rows and exits 0; the server then cannot open those secrets, the partner
    resolves with `secrets: []`, and because a registry row wins over the env fallback, every live
    partner starts returning `401 unknown_partner` within one 60s cache TTL.
@@ -505,7 +517,13 @@ note after step 7.
    `kind: 'partner'` row — not the `evelyn` first-party row, which has no secret and 401s by design —
    against an endpoint on its allowlist, and confirm `200`, not `401 unknown_partner`. (Sign with
    `signPortalRequest` from `@evelyn/portal-contract/auth`: the three `x-evelyn-*` headers over
-   method + path-with-query + timestamp + body.) This is an explicit step, not something "review the
+   method + path-with-query + timestamp + body.) **Wait at least 60s after the `--write` pass before
+   making that request, or restart the tutor process first.** `getPartner` caches the *env-fallback*
+   record as well as registry rows (`registry.ts`, `CACHE_TTL_MS = 60_000`), and live traffic keeps
+   that entry warm, so a request inside the window can be served `200` from the pre-seed env fallback
+   while the row just written is unopenable — this step would then report healthy for precisely the
+   failure it exists to catch, and the 401s would begin up to 60s later with the operator already on
+   step 3. This is an explicit step, not something "review the
    output" covers: reviewing the seed's output cannot detect a key mismatch, and 60s of cache TTL is
    the entire margin between a wrong key and every partner failing. **If a partner 401s:** delete
    its row from the `partners` collection — the `PORTAL_PARTNER_SECRETS` env fallback resumes

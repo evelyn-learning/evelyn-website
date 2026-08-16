@@ -178,17 +178,39 @@ Ordered steps:
    nothing. It aborts before connecting if `PORTAL_SECRET_ENC_KEY` is unset
    or unusable, and prints that key's fingerprint (sha256 of the base64 env
    value, first 8 hex chars). Review the plan and **check the fingerprint
-   equals the deployed key's** —
-   `printf %s "$PORTAL_SECRET_ENC_KEY" | shasum -a 256 | cut -c1-8` on the
-   server. Then `npm run seed:partner-registry -- --write`. Registry rows now win
+   equals the deployed key's** — fingerprint the key out of the deployed
+   `.env.local` on the server, which is the file the running server actually
+   reads (`deploy-tutor.sh` uploads `.env.local.production` to
+   `$REMOTE_DIR/apps/tutor/.env.local`); it is **not** in the server's shell
+   environment, and hashing your own exported `$PORTAL_SECRET_ENC_KEY`
+   locally compares the value against itself and always matches:
+
+   ```bash
+   ssh <prod-host> 'sed -n "s/^PORTAL_SECRET_ENC_KEY=//p" /root/evelyn-tutor/apps/tutor/.env.local | tr -dc "A-Za-z0-9+/=" | sha256sum | cut -c1-8'
+   ```
+
+   (`tr -dc` keeps only base64 characters, so surrounding quotes and the
+   trailing newline are stripped and what is hashed is exactly the value the
+   seed fingerprints. It prints 8 hex characters and never the key. An empty
+   output means the line is absent — step 1 was not deployed.)
+   Then `npm run seed:partner-registry -- --write`. Registry rows now win
    per-partner; env remains the fallback for any partner without a row, and
    the running server picks the rows up within 60s.
    **Step 2b — verify before continuing:** make one signed request per
    seeded `kind: 'partner'` row (not the `evelyn` first-party row — it has
    no secret and 401s by design) against an endpoint on its allowlist, and
    confirm `200`, not `401 unknown_partner` (sign with `signPortalRequest` from
-   `@evelyn/portal-contract/auth`). A wrong-but-valid 32-byte key seals
-   cleanly, writes rows and exits 0 — the server then cannot open those
+   `@evelyn/portal-contract/auth`).
+   **Wait at least 60s after the `--write` pass before making that request
+   — or restart the tutor process first.** `getPartner` caches the
+   *env-fallback* record as well as registry rows (`registry.ts`, 60s TTL),
+   and ordinary traffic keeps that cache warm, so a request made inside the
+   window can be answered `200` from the pre-seed env fallback while the row
+   just written is unopenable. Verifying too early is the one way this step
+   reports healthy for the exact failure it exists to catch, and the 401s
+   then start up to 60s later, after the operator has moved on.
+   A wrong-but-valid 32-byte key seals cleanly, writes rows and exits 0 —
+   the server then cannot open those
    secrets, the partner resolves with `secrets: []`, and because a registry
    row wins over the env fallback every live partner 401s within one 60s
    cache TTL. Reviewing the seed's output cannot detect this; the undo
