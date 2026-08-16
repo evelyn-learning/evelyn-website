@@ -242,6 +242,13 @@ async function dispatchTopicNotesOverlay(
   sessionId: string,
   bucket: 'theory' | 'methods' | 'pointers',
   input: Record<string, unknown>,
+  /** M1c Task 5 (fix round 2, CRITICAL A) — same header the student-profile
+   *  commit fetch already attaches (above): without it, the engine route
+   *  has no verified partner_id claim to resolve identity under and falls
+   *  back to 'evelyn' for every embedded session, splitting a partner
+   *  student's topic notes from the rest of their profile. This call was
+   *  the one place that forgot to attach it. */
+  embedToken?: string,
 ): Promise<void> {
   if (!studentId) return; // demo flow without studentId — drop silently
   try {
@@ -249,7 +256,7 @@ async function dispatchTopicNotesOverlay(
       `/api/tutor/topic-notes/${encodeURIComponent(studentId)}/${encodeURIComponent(baselineId)}`,
       {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body: JSON.stringify({ bucket, sessionId, input }),
       },
     );
@@ -5940,6 +5947,7 @@ export function VoiceTutorRealtime({
           sessionIdRef.current,
           bucket,
           input,
+          embedToken,
         );
         console.log(
           `[VoiceTutorRealtime] topic-notes ${bucket} dispatched (count ${counts[bucket]}/${limit}): action=${cmd.action}`,

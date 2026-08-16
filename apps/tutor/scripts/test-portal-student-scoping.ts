@@ -47,7 +47,13 @@ import type { NextRequest } from 'next/server';
 
 import { __setRegistryOverrideForTests, withPortalAuth, type PortalAuth } from '@/lib/tutor/portal/auth';
 import type { PartnerRecord } from '@/lib/tutor/portal/registry';
-import { resolveProfileId, identityResolutionEnabled, type ResolverDeps } from '@/lib/tutor/student-profile/store';
+import {
+  resolveProfileId,
+  resolveProfileIdOrRaw,
+  identityResolutionEnabled,
+  ProfileIdentityError,
+  type ResolverDeps,
+} from '@/lib/tutor/student-profile/store';
 
 let passed = 0;
 let failed = 0;
@@ -195,51 +201,104 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
   });
 
   await test(
-    'flag ON, MULTI-STORE (fix round 1, CRITICAL 2 / amended acceptance gate §3): ' +
-      'the collision guarantee holds past StudentProfile — resolving ONCE and reusing that id ' +
-      'for a profile store, a projection store, AND an Elo store keeps all three consistent for ' +
-      'one partner and correctly SEPARATE across two partners',
+    'flag ON, MULTI-STORE (fix round 1, CRITICAL 2 / fix round 2, MINOR F / amended acceptance ' +
+      'gate §3): the collision guarantee holds past StudentProfile — resolving ONCE and reusing ' +
+      'that id for a profile store, a projection store, an Elo store, AND a topic-notes store ' +
+      'keeps all four consistent for one partner and correctly SEPARATE across two partners',
     async () => {
       process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
       const deps = fakeResolverDeps();
-      // Three independent fake stores, standing in for StudentProfile,
-      // LearnerStateProjection, and EloRating — exactly the shape
-      // learner-state/route.ts's single `profileId` now feeds into (spec
-      // §4.1: "one identity space, not two"). A regression that resolved
-      // once for the profile but left another store on the raw external id
-      // (round 1's actual bug, at 6 different sites) would show up here as
-      // an entry present in `profiles` but ABSENT from `projections`/`elo`
-      // under the same key.
+      // Four independent fake stores, standing in for StudentProfile,
+      // LearnerStateProjection, EloRating, and StudentTopicNotes — exactly
+      // the shape learner-state/route.ts's and the topic-notes routes'
+      // single `profileId` now feeds into (spec §4.1: "one identity space,
+      // not two"). Topic notes is here per fix round 2's MINOR F: it's the
+      // collection this suite (and the amended acceptance gate) had missed
+      // — the one Task 5 itself only found by independently auditing
+      // /api/tutor/topic-notes/**, not from the reviewer's original list.
+      // A regression that resolved once for the profile but left another
+      // store on the raw external id (round 1's actual bug, at 6 different
+      // sites) would show up here as an entry present in `profiles` but
+      // ABSENT from one of the other three under the same key.
       const profiles = new Map<string, { touched: boolean }>();
       const projections = new Map<string, { estimate: number }>();
       const elo = new Map<string, { rating: number }>();
+      const topicNotes = new Map<string, { baselineId: string }>();
 
       // Mirrors the real Step-4-plus-§4.1 pattern: resolve ONCE per
-      // request, then use that SAME id for every store.
-      async function handleLikeLearnerState(partnerId: string, studentId: string): Promise<void> {
+      // request, then use that SAME id for every store. Returns the
+      // resolved id so callers can assert against it directly, rather than
+      // reverse-engineering "which id was this" from the stores' own
+      // contents (fix round 2, MINOR F: the previous version derived its
+      // assertion subject via a `.filter()` over these same maps, then
+      // asserted the very predicate it had just filtered by — a tautology
+      // that could never fail).
+      async function handleLikeLearnerState(partnerId: string, studentId: string): Promise<string> {
         const profileId = await resolveProfileId({ partnerId, externalStudentId: studentId }, deps);
         profiles.set(profileId, { touched: true });
         projections.set(profileId, { estimate: 0.5 });
         elo.set(profileId, { rating: 1500 });
+        topicNotes.set(profileId, { baselineId: 'course.unit1.v1' });
+        return profileId;
       }
 
-      await handleLikeLearnerState('crimsora', 'user_1');
-      await handleLikeLearnerState('academy', 'user_1'); // same external id, different partner
+      const crimsoraId1 = await handleLikeLearnerState('crimsora', 'user_1');
+      const academyId = await handleLikeLearnerState('academy', 'user_1'); // same external id, different partner
 
       assert.strictEqual(profiles.size, 2, 'two partners sending the same external id must get two profiles');
       assert.strictEqual(projections.size, 2, 'and two projections — not one shared with the profile split');
       assert.strictEqual(elo.size, 2, 'and two Elo rows — not one shared with the profile split');
+      assert.strictEqual(topicNotes.size, 2, 'and two topic-notes docs — not one shared with the profile split');
+      assert.notStrictEqual(crimsoraId1, academyId);
 
       // Same partner, same student, called twice (e.g. /gaps then
       // /learner-state in the same session) — must land on the SAME id in
       // every store, not just the profile.
-      const before = new Map(profiles);
-      await handleLikeLearnerState('crimsora', 'user_1');
-      assert.strictEqual(profiles.size, before.size, 'a repeat resolve for the same pair must not mint a new profile');
-      const [crimsoraId] = [...profiles.keys()].filter((id) => projections.has(id) && elo.has(id) && profiles.has(id));
-      assert.ok(
-        projections.has(crimsoraId) && elo.has(crimsoraId),
-        'the profile, projection, and Elo row for this student must all resolve to the SAME key',
+      const crimsoraId2 = await handleLikeLearnerState('crimsora', 'user_1');
+      assert.strictEqual(crimsoraId2, crimsoraId1, 'a repeat resolve for the same pair must reuse the same id');
+      assert.strictEqual(profiles.size, 2, 'a repeat resolve for the same pair must not mint a new profile');
+      assert.strictEqual(projections.size, 2);
+      assert.strictEqual(elo.size, 2);
+      assert.strictEqual(topicNotes.size, 2);
+      assert.ok(profiles.has(crimsoraId1), 'the profile for this student must be found under the resolved id');
+      assert.ok(projections.has(crimsoraId1), 'and the projection');
+      assert.ok(elo.has(crimsoraId1), 'and the Elo row');
+      assert.ok(topicNotes.has(crimsoraId1), 'and the topic-notes doc');
+    },
+  );
+
+  await test(
+    'fix round 2, IMPORTANT E: resolveProfileIdOrRaw NEVER resolves a trial:-prefixed id, flag ON or OFF',
+    async () => {
+      process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
+      // resolveProfileIdOrRaw has no deps-injection seam (it always uses
+      // the real, Mongo-backed default deps) — this is exactly why the
+      // trial: short-circuit must happen before any deps call, and this
+      // test proves it hermetically: if the short-circuit were removed or
+      // reordered after the flag check, this call would try to hit real
+      // Mongo and throw/reject with a connection error, not resolve
+      // cleanly to the raw id.
+      const id = await resolveProfileIdOrRaw({ partnerId: 'crimsora', externalStudentId: 'trial:abc123' });
+      assert.strictEqual(id, 'trial:abc123', 'a trial: id must pass through completely unresolved');
+    },
+  );
+
+  await test(
+    'fix round 2, IMPORTANT D: a ProfileIdentityError (e.g. missing partnerId) stays LOUD — never degrades',
+    async () => {
+      process.env.PORTAL_IDENTITY_RESOLUTION = 'on';
+      // Empty partnerId trips resolveProfileId's own guard BEFORE it ever
+      // touches deps (real Mongo), so this is safe to run hermetically —
+      // and it's exactly the "caller forgot to thread partnerId" case
+      // IMPORTANT C's required-param change is supposed to make
+      // unreachable in `src/`. This is the backstop: if it ever DID happen,
+      // it must not silently degrade to the raw externalStudentId.
+      await assert.rejects(
+        () => resolveProfileIdOrRaw({ partnerId: '', externalStudentId: 'user_1' }),
+        (err: unknown) => {
+          assert.ok(err instanceof ProfileIdentityError, `expected ProfileIdentityError, got ${err}`);
+          return true;
+        },
       );
     },
   );
@@ -289,6 +348,17 @@ async function resolvedIdFor(handler: ReturnType<typeof buildHandler>, partnerId
       // receive an already-resolved id from their own caller instead of
       // resolving themselves (context-block.ts, mock-exam/report.ts — see
       // each file's own comment for why).
+      //
+      // LIMITATION (fix round 2, MINOR F): this check is FILE-granular and
+      // only greps for the three profile-store entry points
+      // (getOrCreateStudentProfile / getStudentProfile / updateStudentPreferences).
+      // It would NOT have caught fix round 1's CRITICAL 2 (six OTHER
+      // student-keyed stores — LearnerStateProjection, EvidenceEvent,
+      // StudentTopicNotes, MockAttempt, EloRating — left on the raw id in a
+      // file that already resolved for the profile) because a file with a
+      // resolved profile call already passes this check regardless of what
+      // its OTHER store calls in the same file do. The multi-store test
+      // above is what actually exercises that cross-store guarantee.
       const srcDir = path.join(__dirname, '..', 'src');
       const grepOut = execFileSync(
         'grep',

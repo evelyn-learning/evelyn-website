@@ -199,11 +199,19 @@ export async function submitAssessment(
   sub: AssessmentSubmission,
   deps: GradeDeps,
   resolveItem: AssessmentItemResolver,
-  /** Final-review fix (M3, spec §4.1) — the authenticated partner id
-   *  (`auth.partnerId` from `withPortalAuth`), stamped onto every evidence
-   *  row this submission produces. The route passes it through; direct/test
-   *  callers may omit it. */
-  partnerId?: string,
+  /** Final-review fix (M3, spec §4.1); REQUIRED as of M1c Task 5 (fix
+   *  round 2, IMPORTANT C) — the authenticated partner id (`auth.partnerId`
+   *  from `withPortalAuth`), stamped onto every evidence row this
+   *  submission produces AND used to resolve the profile-store identity
+   *  below. Was optional with a `?? ''` fallback; required now so a caller
+   *  that forgot to thread it is a compile error, not a silent runtime
+   *  path into resolveProfileIdOrRaw's degrade. (This parameter is
+   *  positional, not part of an options object with a JS-level default —
+   *  a caller that already omits it at the call site keeps working
+   *  identically at runtime, since the flag-off short-circuit in
+   *  resolveProfileIdOrRaw never inspects it; only `src/`'s two real
+   *  callers, which already supply it, get the compile-time guarantee.) */
+  partnerId: string,
 ): Promise<AssessmentResult> {
   // Task 8 — quiz vs silent-diagnostic discriminator: `notesTouched` is the
   // submission's existing signal (v1.4.0 comment on AssessmentSubmissionSchema:
@@ -232,7 +240,7 @@ export async function submitAssessment(
   // land on the identical profile id at the cost of one redundant Mongo
   // round trip, in exchange for not needing a resolution-bypass parameter
   // on emitSessionResult itself.
-  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerId ?? '', externalStudentId: sub.studentId });
+  const profileId = await resolveProfileIdOrRaw({ partnerId, externalStudentId: sub.studentId });
 
   const perLo = new Map<string, { awarded: number; max: number }>();
   const review: AssessmentReviewItem[] = [];

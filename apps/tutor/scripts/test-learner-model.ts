@@ -541,7 +541,9 @@ async function runServerAppendPointTests() {
       // Replay (same sessionId) hits the idempotency guard before the evidence
       // build even runs — no new/duplicate rows.
       const countBefore = await EvidenceEventModel.countDocuments({ studentId });
-      await emitSessionResult(emitReq);
+      // M1c fix round 2 (IMPORTANT C): EmitOptions.partnerId is now
+      // required — same partner as the original emit above.
+      await emitSessionResult(emitReq, { partnerId: 'lmtest-partner-emit' });
       await new Promise((r) => setTimeout(r, 200)); // let any (wrongly) fired append settle
       const countAfter = await EvidenceEventModel.countDocuments({ studentId });
       assert(countBefore === countAfter, 'emitSessionResult: replayed terminal emit adds no evidence rows');
@@ -567,7 +569,8 @@ async function runServerAppendPointTests() {
     };
     await deleteLearnerModelData(studentId);
     try {
-      await emitSessionResult(emitReq);
+      // M1c fix round 2 (IMPORTANT C): EmitOptions.partnerId is now required.
+      await emitSessionResult(emitReq, { partnerId: 'lmtest-partner-emitfb' });
 
       const landed = await waitFor(
         async () =>

@@ -278,7 +278,13 @@ async function appendEvidenceInner(inputs: EvidenceInput[]): Promise<void> {
 /** Idempotent evidence append → per-(student, LO) projection recompute →
  *  silent Elo update. Best-effort: never throws, always logs on failure.
  *  `trial:`-prefixed studentIds are dropped before any write (demo/trial
- *  sessions don't feed the persistent learner model). */
+ *  sessions don't feed the persistent learner model). M1c Task 5 (fix
+ *  round 2, IMPORTANT E): this filter checks `i.studentId`, which every
+ *  call site now populates with a RESOLVED profile id — the guarantee only
+ *  holds because `resolveProfileIdOrRaw` never actually resolves a
+ *  `trial:`-prefixed id (see its doc comment), so `studentId` here is
+ *  still the literal `trial:...` string, not an opaque UUID that would
+ *  slip past this check. */
 export async function appendEvidence(inputs: EvidenceInput[]): Promise<void> {
   try {
     await appendEvidenceInner(inputs);

@@ -27,14 +27,8 @@ import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
-import { checkEmbedAuth } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuth, partnerIdForInternalRoute } from '@/lib/tutor/portal/embed-token';
 import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
-
-/** M1c Task 5 — this route is internal/retail (`/api/tutor/**`, embed-token
- *  auth, not `withPortalAuth`), so it resolves under the reserved 'evelyn'
- *  partner id rather than a verified partner. Flag-gated; see
- *  identityResolutionEnabled. */
-const RETAIL_PARTNER_ID = 'evelyn';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -46,11 +40,13 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   if (!auth.allow) {
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
   }
-  // M1c Task 5 (fix round 1, spec §4.1) — resolve ONCE per request; every
-  // student-keyed read below (the profile, and getLearnerContextBlock's own
-  // LearnerStateProjection read) uses this SAME `profileId`, never the raw
-  // `id` a second time.
-  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id });
+  // M1c Task 5 (fix round 2, CRITICAL A / spec §4.0) — resolve ONCE per
+  // request under the embedded session's VERIFIED partner (the embed
+  // token's partner_id claim), not a hardcoded 'evelyn' — see
+  // partnerIdForInternalRoute's doc comment. Every student-keyed read below
+  // (the profile, and getLearnerContextBlock's own LearnerStateProjection
+  // read) uses this SAME `profileId`, never the raw `id` a second time.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: id });
   const profile = await getOrCreateStudentProfile(profileId);
   const responseBody: Record<string, unknown> = {
     profile,
@@ -172,13 +168,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     return NextResponse.json({ error: 'sessionId required' }, { status: 400 });
   }
 
-  // M1c Task 5 (fix round 1, CRITICAL 2) — resolve ONCE, up front, so both
-  // the segmentOutcomes evidence rows below AND the profile-store commit
-  // use the SAME `profileId`. Round 1 resolved only the profile-store call
+  // M1c Task 5 (fix round 1 CRITICAL 2 / fix round 2 CRITICAL A) — resolve
+  // ONCE, up front, under the embedded session's VERIFIED partner (not a
+  // hardcoded 'evelyn' — see partnerIdForInternalRoute), so both the
+  // segmentOutcomes evidence rows below AND the profile-store commit use
+  // the SAME `profileId`. Round 1 resolved only the profile-store call
   // (further down) and left this evidence write on the raw `id` — two
   // partners sending the same external id would then share one Elo/
   // evidence trail while their profiles correctly split in two.
-  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id });
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: id });
 
   // Task 11 — per-segment learner-model evidence (append point 1).
   // Fire-and-forget: appendEvidence is itself best-effort and never

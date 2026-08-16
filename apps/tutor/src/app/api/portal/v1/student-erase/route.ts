@@ -8,7 +8,10 @@
  * `trial:` ids are NOT special-cased here — deleteLearnerModelData runs for
  * them too. Nothing is ever written for a trial: student in the first place
  * (appendEvidence drops them before any write), so this is a harmless
- * all-zero-counts erase rather than a no-op branch.
+ * all-zero-counts erase rather than a no-op branch. M1c Task 5 (fix round
+ * 2, IMPORTANT E): resolveProfileIdOrRaw never resolves a `trial:`-prefixed
+ * id (flag on or off) — it stays that literal string all the way to
+ * deleteLearnerModelData, which is what keeps this guarantee true post-M1c.
  */
 
 import { NextResponse } from 'next/server';

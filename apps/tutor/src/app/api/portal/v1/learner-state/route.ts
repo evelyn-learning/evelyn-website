@@ -97,15 +97,21 @@ async function handle(req: NextRequest, auth: { body: unknown; partnerId: string
   // so a resolved profile and an unresolved learner-model row would silently
   // stop agreeing. `studentId` (raw) is kept only for the `trial:` prefix
   // check below, which is about the wire format the portal sends, not the
-  // storage key.
+  // storage key. (fix round 2, IMPORTANT E) `resolveProfileIdOrRaw` never
+  // resolves a `trial:`-prefixed id in the first place — `profileId` equals
+  // `studentId` unchanged for one, so this line does NOT mint a surrogate
+  // profile for a trial student; getOrCreateStudentProfile below touches
+  // the same bare `trial:...` id it always has.
   const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
   const profile = await getOrCreateStudentProfile(profileId);
   const gaps = stripNullsDeep(profile.gaps.filter((g) => !isGapStale(g)));
 
   if (studentId.startsWith('trial:')) {
     // Trial sessions never write learner-model rows (appendEvidence drops
-    // trial: ids before any write) — los/reviewDueCount are explicitly empty
-    // rather than an incidental empty-query result.
+    // trial: ids before any write — a guarantee that still holds post-M1c
+    // because they're never resolved; see resolveProfileIdOrRaw's doc
+    // comment) — los/reviewDueCount are explicitly empty rather than an
+    // incidental empty-query result.
     const body: LearnerStateResponse = { los: [], gaps, reviewDueCount: 0 };
     return NextResponse.json(LearnerStateResponseSchema.parse(body));
   }

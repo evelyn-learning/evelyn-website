@@ -17,12 +17,7 @@ import {
   resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
-
-/** M1c Task 5 (fix round 1, CRITICAL 1) — this route is internal/retail
- *  (`/api/tutor/**`, no `withPortalAuth`), so it resolves under the reserved
- *  'evelyn' partner id. This call site was missed in the first pass — see
- *  identityResolutionEnabled's doc comment in store.ts. */
-const RETAIL_PARTNER_ID = 'evelyn';
+import { checkEmbedAuth, partnerIdForInternalRoute } from '@/lib/tutor/portal/embed-token';
 
 const HUMOR_LEVELS = new Set(['off', 'light', 'medium', 'heavy']);
 const PACING_VALUES = new Set(['slower', 'default', 'faster']);
@@ -68,6 +63,21 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
+  // M1c Task 5 (fix round 2, CRITICAL A) — this route had NO auth at all
+  // (pre-existing; reached by /tutor/settings and the in-session humor
+  // chip, per the module doc above), so it had no trustworthy partner id
+  // to resolve identity under. checkEmbedAuth is additive/non-breaking
+  // while EMBED_TOKEN_ENFORCE stays at its default 'off' (always allows,
+  // no payload) — see partnerIdForInternalRoute's doc comment.
+  const auth = checkEmbedAuth({
+    token: req.headers.get('x-embed-token'),
+    expectedStudentId: id,
+    route: 'student-profile:preferences:PATCH',
+  });
+  if (!auth.allow) {
+    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
+  }
+
   let body: unknown;
   try {
     body = await req.json();
@@ -79,7 +89,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   if (!v.ok) return NextResponse.json({ error: v.error }, { status: 400 });
 
   try {
-    const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: id });
+    const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: id });
     const saved = await updateStudentPreferences(profileId, v.patch as Partial<Record<keyof StudentPreferences, StudentPreferences[keyof StudentPreferences] | null>>);
     return NextResponse.json({ preferences: saved.preferences });
   } catch (err) {

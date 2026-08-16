@@ -128,6 +128,37 @@ export interface EmbedAuthDecision {
 }
 
 /**
+ * M1c Task 5 (fix round 2, spec §4.0) — the partner id an internal
+ * `/api/tutor/**` route resolves student identity under, given the
+ * `checkEmbedAuth` decision for that request.
+ *
+ * The tutor UI a partner's students actually sit in is `tutor-portal/embed`,
+ * and it commits session state through these internal routes — hardcoding
+ * `'evelyn'` there while the SAME partner's server-to-server portal reads
+ * resolve under their verified `auth.partnerId` gives one student two
+ * surrogate profiles (round-1 CRITICAL A). The verified embed token's
+ * `partner_id` claim is the correct answer for an embedded session;
+ * `'evelyn'` is reserved for genuinely retail traffic that carries none.
+ *
+ * `auth.payload` is undefined whenever no claim was actually VERIFIED —
+ * either `EMBED_TOKEN_ENFORCE` is `'off'` (still the current default:
+ * `checkEmbedAuth` returns `{allow:true}` with no payload, without even
+ * attempting verification) or the token was missing/invalid. Falling back
+ * to `'evelyn'` in that case is correct for a request that carried no
+ * verifiable token — but it means partner attribution here is only as good
+ * as `EMBED_TOKEN_ENFORCE`'s own rollout. `PORTAL_IDENTITY_RESOLUTION` must
+ * not flip to `'on'` in an environment where embed sessions are still
+ * running with enforcement `'off'`, or every embedded partner student would
+ * resolve under `'evelyn'` instead of their real partner — the exact split
+ * this function exists to prevent. That is a rollout-ordering precondition
+ * (same shape as the Task 6 backfill gate), not something this function can
+ * enforce by itself.
+ */
+export function partnerIdForInternalRoute(auth: EmbedAuthDecision): string {
+  return auth.payload?.partner_id ?? 'evelyn';
+}
+
+/**
  * Verify a token and apply the current enforce mode. Never throws.
  *
  * - 'off': allow unconditionally, without attempting verification.

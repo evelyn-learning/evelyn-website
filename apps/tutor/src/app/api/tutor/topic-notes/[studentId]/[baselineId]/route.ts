@@ -10,8 +10,14 @@
  *
  * DELETE handler is at .../[overlayId]/route.ts.
  *
- * No auth in v1 — matches the existing student-profile commit endpoint
- * pattern. Add auth when retail launches.
+ * M1c Task 5 (fix round 2, CRITICAL A / spec §4.0) — gained embed-token
+ * auth. This route previously had none ("Add auth when retail launches" —
+ * the old text of this comment), which meant it had no trustworthy partner
+ * id to resolve identity under: the client must never be believed about
+ * which partner it is. Additive/non-breaking while `EMBED_TOKEN_ENFORCE`
+ * stays at its default `'off'` (`checkEmbedAuth` always allows, with no
+ * payload, until enforcement is turned on) — see
+ * `partnerIdForInternalRoute`'s doc comment.
  *
  * `baselineId` matches the corresponding lesson plan id (e.g.
  * `evelyn.ap.macro.loanable-funds-market.v1`). Next.js URL-decodes the
@@ -29,22 +35,25 @@ import {
   type AddPointerInput,
 } from '@/lib/tutor/topic-notes/apply-overlay';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
-
-/** M1c Task 5 (fix round 1) — this route is internal/retail (`/api/tutor/**`,
- *  no `withPortalAuth` — "Add auth when retail launches", per the module
- *  doc above), so it resolves under the reserved 'evelyn' partner id. Same
- *  StudentTopicNotes store the portal-facing /notes routes touch. */
-const RETAIL_PARTNER_ID = 'evelyn';
+import { checkEmbedAuth, partnerIdForInternalRoute } from '@/lib/tutor/portal/embed-token';
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   ctx: { params: Promise<{ studentId: string; baselineId: string }> },
 ) {
   const { studentId, baselineId } = await ctx.params;
   if (!studentId || !baselineId) {
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
-  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: studentId });
+  const auth = checkEmbedAuth({
+    token: req.headers.get('x-embed-token'),
+    expectedStudentId: studentId,
+    route: 'topic-notes:GET',
+  });
+  if (!auth.allow) {
+    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
+  }
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: studentId });
   const rendered = await resolveTopicNotes(profileId, baselineId);
   if (!rendered) {
     return NextResponse.json({ error: 'baseline not found' }, { status: 404 });
@@ -78,6 +87,15 @@ export async function PATCH(
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
 
+  const auth = checkEmbedAuth({
+    token: req.headers.get('x-embed-token'),
+    expectedStudentId: studentId,
+    route: 'topic-notes:PATCH',
+  });
+  if (!auth.allow) {
+    return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
+  }
+
   let body: PatchBody;
   try {
     body = (await req.json()) as PatchBody;
@@ -94,7 +112,7 @@ export async function PATCH(
     return NextResponse.json({ error: 'bucket and input required' }, { status: 400 });
   }
 
-  const profileId = await resolveProfileIdOrRaw({ partnerId: RETAIL_PARTNER_ID, externalStudentId: studentId });
+  const profileId = await resolveProfileIdOrRaw({ partnerId: partnerIdForInternalRoute(auth), externalStudentId: studentId });
 
   if (body.bucket === 'theory') {
     const result = await expandTheoryOverlay({

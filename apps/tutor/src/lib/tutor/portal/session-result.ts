@@ -119,11 +119,17 @@ export interface EmitOptions {
    *  `req.evidence[]` (contract-level callers) is never affected. NOT part
    *  of the portal contract — internal engine option only. */
   skipEvidenceFallback?: boolean;
-  /** Final-review fix (M3, spec §4.1) — the authenticated partner id
-   *  (`auth.partnerId` from `withPortalAuth`), stamped onto every evidence
-   *  row this call produces. Route handlers pass it through; direct/test
-   *  callers may omit it. */
-  partnerId?: string;
+  /** Final-review fix (M3, spec §4.1); REQUIRED as of M1c Task 5 (fix round
+   *  2, IMPORTANT C) — the authenticated partner id (`auth.partnerId` from
+   *  `withPortalAuth`, or an internal route's `partnerIdForInternalRoute`),
+   *  stamped onto every evidence row this call produces AND used to resolve
+   *  the profile-store identity below. Was optional with a `?? ''`
+   *  fallback; that made the doc comment on `resolveProfileIdOrRaw`'s "every
+   *  caller declares partnerId as required" claim false for this function's
+   *  own option bag. Required (not just documented) so a caller that forgot
+   *  to thread it is a compile error, not a silent runtime path into that
+   *  function's catch. */
+  partnerId: string;
 }
 
 /**
@@ -280,7 +286,11 @@ function buildEmitEvidence(
 
 export async function emitSessionResult(
   req: SessionEmitRequest,
-  opts: EmitOptions = {},
+  /** M1c Task 5 (fix round 2, IMPORTANT C) — no default: `partnerId` is a
+   *  required field of `EmitOptions`, so an omitted `opts` object could
+   *  never satisfy the type anyway. Every real and test call site passes
+   *  an explicit options object (see EmitOptions.partnerId's doc comment). */
+  opts: EmitOptions,
 ): Promise<SessionResult> {
   // M1c Task 5 (spec §4.1) — resolve ONCE per request; `profileId` is used
   // for EVERY student-keyed store touched below (the profile itself,
@@ -288,12 +298,13 @@ export async function emitSessionResult(
   // lookups) — never `req.studentId` again except where the CONTRACT
   // response must echo back the raw external id the portal sent (`base`
   // below): the portal has no concept of our internal surrogate id.
-  // Both real callers of emitSessionResult (session-result/route.ts,
-  // assessment.ts's submitAssessment) are portal-only and thread
-  // opts.partnerId from auth.partnerId; direct/test callers may omit it
-  // while the flag is off — resolveProfileIdOrRaw degrades to the raw id
-  // rather than throwing, so a DB blip here can't 500 a session-end commit.
-  const profileId = await resolveProfileIdOrRaw({ partnerId: opts.partnerId ?? '', externalStudentId: req.studentId });
+  // Both real callers (session-result/route.ts, assessment.ts's
+  // submitAssessment) are portal-only and thread opts.partnerId from
+  // auth.partnerId. resolveProfileIdOrRaw still degrades to the raw id on
+  // a genuine resolution FAILURE (DB blip) rather than throwing, so a DB
+  // blip here can't 500 a session-end commit — but a missing partnerId is
+  // now a compile error, not a path that reaches that degrade.
+  const profileId = await resolveProfileIdOrRaw({ partnerId: opts.partnerId, externalStudentId: req.studentId });
   const profile = await getOrCreateStudentProfile(profileId);
 
   const artifacts =

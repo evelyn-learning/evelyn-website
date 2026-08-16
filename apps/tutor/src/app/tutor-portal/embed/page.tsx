@@ -462,7 +462,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       const ids = pinItemIds?.length ? pinItemIds : config.mock_item_ids;
       const pinned = ids?.length ? `&items=${encodeURIComponent(ids.join(','))}` : '';
       try {
-        const r = await fetch(`/api/tutor/mock-review-context?attemptId=${encodeURIComponent(config.mock_attempt_id)}&studentId=${encodeURIComponent(config.student_id)}${pinned}`);
+        // M1c Task 5 (fix round 2, CRITICAL B) — same header every other
+        // embed fetch in this component attaches: without it the engine
+        // route has no verified partner_id claim to resolve identity
+        // under, and falls back to 'evelyn'.
+        const r = await fetch(
+          `/api/tutor/mock-review-context?attemptId=${encodeURIComponent(config.mock_attempt_id)}&studentId=${encodeURIComponent(config.student_id)}${pinned}`,
+          embedToken ? { headers: { 'x-embed-token': embedToken } } : undefined,
+        );
         if (!r.ok) throw new Error(`context ${r.status}`);
         const ctx = (await r.json()) as MockReviewContext;
         setMockReview(ctx);

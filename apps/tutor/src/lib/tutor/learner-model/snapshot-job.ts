@@ -62,7 +62,12 @@ function dateKey(now: Date): string {
 // groups them by studentId; `trial:` students are skipped (appendEvidence
 // never writes projections for them in the first place, so this is
 // belt-and-braces — the read path treats it as a hard rule, not an
-// incidental consequence). Upserts on the unique {studentId, date} pair
+// incidental consequence). M1c Task 5 (fix round 2, IMPORTANT E): this
+// guarantee still holds post-M1c because `trial:`-prefixed ids are never
+// resolved (see resolveProfileIdOrRaw's doc comment) — a projection row's
+// `studentId` stays the literal `trial:...` string, never an opaque
+// resolved UUID, so this prefix check keeps working. Upserts on the
+// unique {studentId, date} pair
 // (LearnerStateSnapshot's index — see that model's header on why _id stays a
 // plain ObjectId instead of a composite key), so a second run on the same
 // day overwrites the same doc rather than duplicating it.
