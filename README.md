@@ -55,6 +55,61 @@ which need live APIs, a seeded DB, or a required argument. Run one app's suite d
 with `npm run --workspace @evelyn/tutor test:all` or
 `npm run --workspace @evelyn/marketing test:outreach`.
 
+## Partner registry (M1c)
+
+`apps/tutor` reads per-partner identity, secrets, allowed endpoints, limits and
+flag overrides from a `Partner` collection (`src/models/Partner.ts`), with the
+`PORTAL_PARTNER_SECRETS` / `PORTAL_PARTNER_ID` env vars kept as a fallback for
+any partner without a registry row (`src/lib/tutor/portal/registry.ts`).
+Secrets are encrypted at rest with AES-256-GCM
+(`src/lib/tutor/portal/secret-box.ts`).
+
+**`PORTAL_SECRET_ENC_KEY` must be backed up with the other production
+secrets.** It is the only key that can open a sealed partner secret — losing
+it means every partner must re-key.
+
+Two ops commands (run from `apps/tutor`; neither is a `test:*` entry, so
+neither runs in CI or `npm run test:all`):
+
+- `npm run seed:partner-registry` — creates/refreshes `Partner` rows from
+  `PORTAL_PARTNER_SECRETS`, plus a `kind: 'first-party'` `evelyn` row with no
+  secrets. Idempotent: re-running never overwrites an existing row's
+  `secrets` array.
+- `npm run backfill:partner-namespace` — stamps `(partnerId,
+  externalStudentId)` onto existing `StudentProfile` rows and (with
+  `--build-index`) builds the unique index that makes cross-partner
+  collision impossible. Defaults to a dry run; pass `--write` to apply.
+  **Refuses to run if any real partner id it observes has no `Partner` row —
+  run the seed script first.**
+
+Two flags gate the rollout:
+
+- `PORTAL_LIMITS_MODE=report-only` — logs what the per-partner rate/quota
+  limiter would block without actually blocking it. Not set in any env
+  sample today; set it for the observe-only rollout step below.
+- `PORTAL_IDENTITY_RESOLUTION` — default off. Once on, portal call sites
+  resolve a partner's external student id through the registry instead of
+  using the raw request id as the profile `_id`. Flip only after the
+  backfill has run and the unique index is built — flipping earlier gives
+  every existing student a blank profile.
+
+### Rollout order (production)
+
+Each step is independently reversible; do not batch them. Two hard
+preconditions before any of this starts:
+
+1. **`EMBED_TOKEN_ENFORCE=on`** in the target environment (production
+   already has it). With it `off`, an unauthenticated request falls back to
+   the `evelyn` partner, defeating the namespace split.
+2. **The seed script must run before the backfill.** The backfill aborts
+   otherwise (see above).
+
+Ordered steps: set and back up `PORTAL_SECRET_ENC_KEY` → `seed:partner-registry`
+→ `backfill:partner-namespace` dry run, review → `--write` → `--build-index`
+→ set `PORTAL_IDENTITY_RESOLUTION=on` → remove `PORTAL_PARTNER_SECRETS` from
+the env (only once every real partner has a registry row) → set
+`PORTAL_LIMITS_MODE=report-only`, observe → remove it (limits enforced).
+
 ## Boundaries
 
 ```bash
