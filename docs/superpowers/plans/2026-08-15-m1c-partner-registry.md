@@ -1676,7 +1676,12 @@ export async function checkPartnerLimits(
 
 - [ ] **Step 5: Wire into `withPortalAuth`**
 
-Call `checkPartnerLimits` immediately after the allowlist check and before signature verification is accepted, so a rate-limited caller is not also given a signature oracle.
+Call `checkPartnerLimits` immediately **after** the allowlist check — which now runs after signature
+verification, not before it. This step originally said "before signature verification is accepted",
+which was written against the pre-Task-3 ordering and is stale: Task 3's review found that checking
+the allowlist before the signature let an unauthenticated caller enumerate a partner's allowlist, so
+the order is now headers → partner → kind → status → **signature** → allowlist → limits. Do not
+reorder any of it.
 
 - [ ] **Step 6: Run the tests**
 
