@@ -233,6 +233,14 @@ The correct rule for an internal route is therefore:
 
 - **Token absent** → retail. Use `'evelyn'`. Do **not** 401; this is the pre-existing behaviour and
   must not regress.
+- **Token present but failing verification** → this is **not** retail, and must not be treated as
+  such. Reject it (401) and log the reason. Falling back to `'evelyn'` here looks safe and is not: a
+  partner session whose token expires past the grace window mid-session would have every subsequent
+  write land under `('evelyn', rawStudentId)`, colliding with any retail user sharing that external
+  id — the split-brain this milestone exists to prevent, reached through a degraded token rather than
+  a missing one. In `'on'` mode `checkEmbedAuth` returns `{allow:false}` with no log line, so the
+  misattribution would leave no trace at all. Retail is unaffected by this rule, because retail sends
+  no token; only a genuinely broken token errors, which is the correct and actionable outcome.
 - **Token present** → it must be *valid and student-bound*. Derive `partner_id` from it. A token that
   fails verification, or whose `student_id` does not bind to the path's student, must **not**
   contribute a partner id — otherwise a caller who obtained any signed token could choose whose
