@@ -27,18 +27,32 @@ import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/student-profile/session-summary';
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
-import { checkEmbedAuth, partnerIdForInternalRoute } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
+  const token = req.headers.get('x-embed-token');
   const auth = checkEmbedAuth({
-    token: req.headers.get('x-embed-token'),
+    token,
     expectedStudentId: id,
     route: 'student-profile:GET',
   });
   if (!auth.allow) {
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
+  }
+  // M1c final review (A-I5 / spec §4.0) — the round-4 rule, applied here
+  // too. `!auth.allow` alone is NOT the whole rule: in
+  // EMBED_TOKEN_ENFORCE='log' mode checkEmbedAuth returns
+  // `{allow: true, reason, payload}` for a token that FAILED verification,
+  // so the request would proceed and partnerIdForInternalRoute would
+  // degrade it to 'evelyn'. A present-but-invalid token is not retail; it
+  // must reject. A genuinely ABSENT token (retail /tutor) still passes
+  // through untouched — see embedTokenRejectionReason's doc comment.
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[student-profile] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
   }
   // M1c Task 5 (fix round 2, CRITICAL A / spec §4.0) — resolve ONCE per
   // request under the embedded session's VERIFIED partner (the embed
@@ -162,6 +176,17 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const auth = checkEmbedAuth({ token, expectedStudentId: id, route: 'student-profile:POST' });
   if (!auth.allow) {
     return NextResponse.json({ error: 'unauthorized', reason: auth.reason }, { status: 401 });
+  }
+  // M1c final review (A-I5 / spec §4.0) — see the GET handler above for the
+  // full reasoning. This is the higher-value half: POST is the session-end
+  // commit (mastery deltas, gaps, segmentOutcomes evidence). Without this,
+  // a partner session past its token's grace window in
+  // EMBED_TOKEN_ENFORCE='log' mode writes its ENTIRE outcome under
+  // ('evelyn', rawStudentId).
+  const rejection = embedTokenRejectionReason(token, auth);
+  if (rejection) {
+    console.error('[student-profile] embed token present but invalid:', rejection);
+    return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
   }
 
   if (!body.sessionId) {

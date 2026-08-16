@@ -980,7 +980,12 @@ export function VoiceTutorRealtime({
   // localStorage synchronously, then synced from /api/tutor/student-profile
   // when studentId is present. Used to drive the humor block in the
   // system prompt so the brain reflects the student's chosen level.
-  const { preferences: studentPreferences } = useStudentPreferences({ studentId });
+  // M1c final review (A-I6): the embed token rides along, exactly like every
+  // other embed-originated fetch in this file — the hook's two
+  // /api/tutor/student-profile calls were the last pair that never attached
+  // it, which post-flip would attribute a partner student's profile read and
+  // preference write to 'evelyn'.
+  const { preferences: studentPreferences } = useStudentPreferences({ studentId, embedToken });
   // Mirror the active humor level in a ref so the brain turn-start log can show
   // it every turn (the prompt-build log only fires at mount/pref-change, which a
   // late log capture can miss). Diagnostic only.

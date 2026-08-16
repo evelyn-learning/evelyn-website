@@ -65,6 +65,18 @@ export interface UseStudentPreferencesOptions {
    *  /api/tutor/student-profile/[id]/preferences endpoint. When absent,
    *  the hook is localStorage-only. */
   studentId?: string;
+  /** M1c final review (A-I6) — the embed session's `x-embed-token`, when this
+   *  hook is rendered inside the partner embed (VoiceTutorRealtime already
+   *  holds it). Both fetches below attach it, exactly like every other
+   *  embed-originated fetch: without it the two `/api/tutor/student-profile`
+   *  calls carry no partner identity at all, so post-flip
+   *  `partnerIdForInternalRoute` attributes them to 'evelyn' and the
+   *  preference write lands in a freshly-minted ('evelyn', <partner uuid>)
+   *  shadow profile while the rest of the session lives under the real
+   *  partner. Absent (retail /tutor and /tutor/settings, which have no
+   *  token to give) is unchanged and still correct — an absent token is
+   *  retail, and both routes deliberately allow it. */
+  embedToken?: string;
 }
 
 export interface UseStudentPreferencesResult {
@@ -77,7 +89,7 @@ export interface UseStudentPreferencesResult {
 }
 
 export function useStudentPreferences(options: UseStudentPreferencesOptions = {}): UseStudentPreferencesResult {
-  const { studentId } = options;
+  const { studentId, embedToken } = options;
   // SSR-safe initial state. The actual localStorage read happens in the
   // mount effect below — reading it synchronously inside useState's
   // initializer would return `{}` on the server but the real value on
@@ -105,7 +117,9 @@ export function useStudentPreferences(options: UseStudentPreferencesOptions = {}
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`);
+        const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`, {
+          headers: embedToken ? { 'x-embed-token': embedToken } : undefined,
+        });
         if (!res.ok) return;
         const data = (await res.json()) as { profile?: { preferences?: StudentPreferences } };
         const dbPrefs = data.profile?.preferences ?? {};
@@ -122,7 +136,7 @@ export function useStudentPreferences(options: UseStudentPreferencesOptions = {}
     return () => {
       cancelled = true;
     };
-  }, [studentId]);
+  }, [studentId, embedToken]);
 
   // Stay in sync with OTHER hook instances (same tab via PREFS_EVENT, other
   // tabs via the native storage event) so an in-session preference change is
@@ -143,14 +157,17 @@ export function useStudentPreferences(options: UseStudentPreferencesOptions = {}
       try {
         await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}/preferences`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(embedToken ? { 'x-embed-token': embedToken } : {}),
+          },
           body: JSON.stringify(patch),
         });
       } catch (err) {
         console.warn('[useStudentPreferences] DB write failed; localStorage retains the change', err);
       }
     },
-    [studentId],
+    [studentId, embedToken],
   );
 
   const setPreference = useCallback(
