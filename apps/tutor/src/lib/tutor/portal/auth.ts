@@ -170,8 +170,30 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
         ? await registryOverride(partnerId)
         : await getPartner(partnerId);
     } catch (err) {
+      // Same 401 either way — but NOT the same marker. `getPartner` does not
+      // only throw on a Mongo fault: its decrypt loop deliberately re-throws
+      // any non-SecretDecryptError out of key resolution (registry.ts), i.e.
+      // a missing or malformed PORTAL_SECRET_ENC_KEY at runtime. That is a
+      // CONFIGURATION error — the operator must fix the deployed env, not
+      // page whoever owns the database — and during the M1c rollout, when
+      // the key is brand new, it is the likeliest cause of a throw here.
+      // Logging it under the infrastructure marker states the wrong
+      // diagnosis at the exact moment someone is relying on it.
+      //
+      // Discriminator: `resolveKey` (portal/secret-box.ts) throws a plain
+      // `Error` with no `code` or subclass to key off, so the message is
+      // what the code actually makes available — and both of its
+      // env-sourced messages name the variable ("PORTAL_SECRET_ENC_KEY is
+      // not set", "PORTAL_SECRET_ENC_KEY must decode to 32 bytes"). A
+      // SecretDecryptError never reaches here (registry.ts swallows those
+      // per secret), so there is nothing else in the throw set whose
+      // message names that variable.
+      const message = err instanceof Error ? err.message : String(err);
+      const keyFault = message.includes('PORTAL_SECRET_ENC_KEY');
       console.error(
-        `[portal/auth] registry_unavailable partner=${partnerId} — denying as unknown_partner (spec §3); this is an infrastructure fault, not a partner integration problem`,
+        keyFault
+          ? `[portal/auth] secret_key_unavailable partner=${partnerId} — denying as unknown_partner (spec §3); PORTAL_SECRET_ENC_KEY is missing or unusable at runtime, so no partner's secrets can be opened. This is a CONFIGURATION fault in the deployed env, NOT an infrastructure fault — do not investigate the database`
+          : `[portal/auth] registry_unavailable partner=${partnerId} — denying as unknown_partner (spec §3); this is an infrastructure fault, not a partner integration problem`,
         err,
       );
       return deny('unknown_partner');
@@ -250,8 +272,9 @@ export function withPortalAuth<C = unknown>(handler: PortalRouteHandler<C>) {
     if (!allowed) return denyStatus('endpoint_not_allowed', 403);
 
     // Burst/quota/metering (M1c Task 7). Deliberately AFTER the allowlist
-    // check, not before: the existing header → partner → kind → status →
-    // signature → allowlist order was arrived at over three review rounds
+    // check, not before: the existing header → partner (incl. the
+    // empty-secrets 401) → signature → kind → status → allowlist order was
+    // arrived at over three review rounds
     // (see the comment above) and moving this earlier would reorder it.
     const limitVerdict = limitsDepsOverride
       ? await checkPartnerLimits(partner, u.pathname, limitsDepsOverride)

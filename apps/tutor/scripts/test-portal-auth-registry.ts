@@ -107,6 +107,23 @@ async function callEcho(req: NextRequest): Promise<{ status: number; json: any }
   return { status: res.status, json: await res.json() };
 }
 
+/** Run `fn` with console.error captured, returning both its result and every
+ *  error line joined. Used by the A-N3 pair, which asserts on the LOG MARKER
+ *  (the two faults share one 401 by design, so the response alone cannot
+ *  distinguish them). Restored in a finally so a throwing `fn` cannot leave
+ *  the rest of the suite silent. */
+async function captureErrors<T>(fn: () => Promise<T>): Promise<{ result: T; logs: string }> {
+  const lines: string[] = [];
+  const original = console.error;
+  console.error = (...args: unknown[]) => { lines.push(args.map(String).join(' ')); };
+  try {
+    const result = await fn();
+    return { result, logs: lines.join('\n') };
+  } finally {
+    console.error = original;
+  }
+}
+
 function makePartner(over: Partial<PartnerRecord> = {}): PartnerRecord {
   return {
     partnerId: PARTNER,
@@ -328,6 +345,78 @@ function makeLimitsDeps(env: Record<string, string> = {}): LimitsDeps {
     const { status, json } = await callEcho(signedRequest({ partnerId: 'failpartner' }));
     assert.strictEqual(status, 401, 'a read failure must be a clean 401, not an uncaught throw (500) and not a 200');
     assert.strictEqual(json.reason, 'unknown_partner');
+  });
+
+  // --- M1c residual review, N3: the A-I1 catch above swallows BOTH a Mongo
+  // fault and the config fault registry.ts deliberately re-throws (a bad or
+  // missing PORTAL_SECRET_ENC_KEY at runtime). The 401 is identical by
+  // design; the LOG MARKER must not be, or an operator reading logs during
+  // the rollout is told to investigate a database that is fine. Both cases
+  // below run through the REAL getPartner.
+  await test('A-N3: a KEY/config fault logs secret_key_unavailable (not registry_unavailable) and still 401s unknown_partner', async () => {
+    invalidatePartner('keyfault');
+    // Seal WHILE the key is still present, so the only thing that fails
+    // later is opening it — exactly the runtime shape of the fault.
+    const sealed = encryptSecret(SECRET);
+    __setRegistryOverrideForTests(async (id) =>
+      id === 'keyfault'
+        ? getPartner('keyfault', {
+            findPartner: async () => ({
+              kind: 'partner' as const,
+              status: 'active' as const,
+              secrets: [{ ...sealed, label: 'v1' }],
+              allowedEndpoints: ['/api/portal/v1/'],
+            }),
+            now: () => Date.now(),
+            env: {} as NodeJS.ProcessEnv,
+          })
+        : null,
+    );
+    const savedKey = process.env.PORTAL_SECRET_ENC_KEY;
+    delete process.env.PORTAL_SECRET_ENC_KEY;
+    let result: { status: number; json: any };
+    let logs: string;
+    try {
+      ({ result, logs } = await captureErrors(() => callEcho(signedRequest({ partnerId: 'keyfault' }))));
+    } finally {
+      process.env.PORTAL_SECRET_ENC_KEY = savedKey;
+    }
+    assert.strictEqual(result.status, 401, 'the auth decision must be unchanged by the log split');
+    assert.strictEqual(result.json.reason, 'unknown_partner');
+    assert.ok(
+      logs.includes('secret_key_unavailable'),
+      `a key/config fault must log its own marker; got: ${logs}`,
+    );
+    assert.ok(
+      !logs.includes('registry_unavailable'),
+      `a key/config fault must NOT be reported as an infrastructure fault; got: ${logs}`,
+    );
+  });
+
+  await test('A-N3: a DB fault still logs registry_unavailable (not secret_key_unavailable) and still 401s unknown_partner', async () => {
+    invalidatePartner('dbfault');
+    __setRegistryOverrideForTests(async (id) =>
+      id === 'dbfault'
+        ? getPartner('dbfault', {
+            findPartner: async () => { throw new Error('replica set failover'); },
+            now: () => Date.now(),
+            env: {} as NodeJS.ProcessEnv,
+          })
+        : null,
+    );
+    const { result, logs } = await captureErrors(() =>
+      callEcho(signedRequest({ partnerId: 'dbfault' })),
+    );
+    assert.strictEqual(result.status, 401);
+    assert.strictEqual(result.json.reason, 'unknown_partner');
+    assert.ok(
+      logs.includes('registry_unavailable'),
+      `an infrastructure fault must keep its marker; got: ${logs}`,
+    );
+    assert.ok(
+      !logs.includes('secret_key_unavailable'),
+      `an infrastructure fault must NOT be reported as a key/config fault; got: ${logs}`,
+    );
   });
 
   // --- M1c final review, reviewer B finding 1 (end-to-end half): route a
