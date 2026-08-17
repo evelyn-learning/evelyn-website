@@ -289,6 +289,7 @@ import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
+import { resolveStartTap } from '@/app/tutor/components/session/start-tap';
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -17965,28 +17966,42 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const pendingGestureStartRef = useRef(false);
 
   const handleMicClick = useCallback(() => {
-    // RESUME first-tap — handled BEFORE the connection gate below. On a fresh
-    // reload the relay WS churns, so a tap can land while realtime.isConnected
-    // is still false; the gated path would no-op (dead tap). Here we mark the
-    // session started (which unmutes the perception mic — the input authority in
-    // claude-brain) and kick the BRAIN to resume the turn. The brain has the
-    // rehydrated history + restored board, so it re-orients, RE-RENDERS any
-    // interrupted visual, and continues — voiced + drawn through the normal
-    // turn path (reliable; no relay-timing races, and tools actually run, which
-    // a raw relay re-voice could never do). bypassMidUtteranceGuard mirrors the
-    // [start lesson] kickoff: the synthetic opener must not be dropped by a
-    // transient startup-noise mid-utterance flag.
-    if (resumeState && !hasStarted && realtime.state !== 'listening' && realtime.state !== 'speaking') {
+    // 2026-08-17 triage (portal-96a436f0): the old if/else-if chain here let a
+    // PRE-START tap resolve to the stop-listening toggle whenever the relay
+    // had reached 'listening' on its own (pre-start blur/unmute leaks used to
+    // call startListening) — a silent dead tap, and the session never began.
+    // The branch decision now lives in the pure resolveStartTap rule
+    // (session/start-tap.ts, test:start-tap): before the session starts a tap
+    // is ALWAYS a start intent. Every tap also records its resolved action —
+    // the dead session was invisible precisely because the swallowed paths
+    // emitted no telemetry.
+    const tapAction = resolveStartTap({
+      hasStarted,
+      hasResumeState: !!resumeState,
+      realtimeState: realtime.state,
+      isConnected: realtime.isConnected,
+    });
+    onDebugEvent?.(
+      'start_tap',
+      `action=${tapAction} state=${realtime.state} connected=${realtime.isConnected} started=${hasStarted}`,
+    );
+    // RESUME first-tap — the brain has the rehydrated history + restored
+    // board, so it re-orients, RE-RENDERS any interrupted visual, and
+    // continues — voiced + drawn through the normal turn path (reliable; no
+    // relay-timing races, and tools actually run, which a raw relay re-voice
+    // could never do). resumeContinue self-guards on hasStarted, so a rapid
+    // double-tap can't double-kick the brain.
+    if (tapAction === 'resume-continue') {
       resumeContinue();
       return;
     }
-    if (realtime.state === 'listening') {
+    if (tapAction === 'stop-listening') {
       realtime.stopListening();
-    } else if (realtime.state === 'speaking') {
+    } else if (tapAction === 'interrupt') {
       realtime.interrupt();
       // Respect the student's muted state even when interrupting the tutor.
       if (!isMicMuted) realtime.startListening();
-    } else if (realtime.isConnected) {
+    } else if (tapAction === 'start') {
       // On first click, send context-aware greeting to get tutor's introduction.
       // In claudeBrainMode the greeting prompt is a system-style instruction
       // ("Open with 'Hey [name]!' — three words. Wait for the student.") that
@@ -18114,7 +18129,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       } else {
         console.log('[VoiceTutorRealtime] Start clicked while muted — skipping startListening');
       }
-    } else if (!hasStarted) {
+    } else if (tapAction === 'queue-start') {
       // R40 queued start (see pendingGestureStartRef doc above). Unlock audio
       // NOW — this is the user gesture iOS honours; the completion effect runs
       // outside any gesture and could not unlock it later.
@@ -18128,6 +18143,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       onDebugEvent?.('start_queued', `state=${realtime.state}`);
       console.log(`[STARTUP] start tap queued — relay not ready (state=${realtime.state})`);
     }
+    // tapAction === 'none' (mid-session, relay down): nothing actionable —
+    // the start_tap event above is the whole point, so the tap is no longer
+    // an invisible no-op.
   }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent, targetKind]);
 
   // Keep the handle's startSession pointed at the CURRENT handleMicClick
@@ -18220,7 +18238,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         setBrainBusy(false);
         queuedTranscriptsRef.current = [];
       }
-      realtime.startListening();
+      // 2026-08-17 (portal-96a436f0): pre-start, an unmute must NOT open the
+      // relay mic — startListening here could put the relay in 'listening'
+      // before the session began, which is the state the dead-session tap
+      // bug fed on. The pre-start mute is still honoured the original way:
+      // the Start tap's own branch checks isMicMuted and startListening()s.
+      if (hasStartedRef.current) {
+        realtime.startListening();
+      } else {
+        console.log('[VoiceTutorRealtime] Unmute before Start — mic opens with the Start tap');
+      }
       console.log('[VoiceTutorRealtime] Student mic unmuted');
       onDebugEvent?.('mic_unmute', 'Student unmuted mic');
     }
@@ -19081,8 +19108,12 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           }}
           onBlur={() => {
             studentTypingRef.current = false;
-            // Resume mic when done typing (only if student hasn't manually muted)
-            if (!isMicMuted && realtime.isConnected) {
+            // Resume mic when done typing (only if student hasn't manually
+            // muted). hasStarted guard (2026-08-17, portal-96a436f0): before
+            // the session starts there is no mic to resume — startListening
+            // here pushed the relay into 'listening' pre-start, arming the
+            // dead-Start-tap bug.
+            if (!isMicMuted && realtime.isConnected && hasStartedRef.current) {
               realtime.startListening();
             }
           }}

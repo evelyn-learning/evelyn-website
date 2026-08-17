@@ -55,7 +55,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'idle_nudge',
   // R40: a Start tap that landed before the relay connected and was queued
   // (the dead-first-tap class, embed-1785808658013) — proves the queue ran.
-  'start_queued',
+  // 2026-08-17 (portal-96a436f0): 'start_' also admits start_tap — every
+  // orb/mic tap now records its resolved action, so a swallowed pre-start
+  // tap can never again leave a zero-telemetry dead session.
+  'start_',
   // 2026-08-07 triage (embed-1786076855391): the brain/judge/tool families
   // were all absent from this list, so an embed session that misbehaved
   // (request treated as a correct answer) persisted 13 events and NO record
