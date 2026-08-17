@@ -6,7 +6,7 @@
  * rule: BEFORE the session starts, a tap always resolves to a start
  * action (start / queue-start / resume-continue), never to a toggle.
  */
-import { resolveStartTap } from '../src/app/tutor/components/session/start-tap';
+import { resolveStartTap, resolveStartWatchdog } from '../src/app/tutor/components/session/start-tap';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {
@@ -89,6 +89,27 @@ check(
   'disconnected mid-session → none (no silent fall-through; telemetry records it)',
   resolveStartTap({ hasStarted: true, hasResumeState: false, realtimeState: 'disconnected', isConnected: false }),
   'none',
+);
+
+console.log('start watchdog');
+// The watchdog is the safety net for silent-death variants the resolver
+// can't reach (agenda pick stuck mid-flight, handle not attached, unknown
+// future paths): 30s after mount with no started session it restores the
+// start affordance and always leaves a telemetry trace.
+check(
+  'session started → nothing to do',
+  resolveStartWatchdog({ started: true, agendaEngaged: false }),
+  'none',
+);
+check(
+  'agenda pick stuck pre-start → restore the orb as the start button',
+  resolveStartWatchdog({ started: false, agendaEngaged: true }),
+  'restore-start',
+);
+check(
+  'pre-start idle with orb available → log only (orb is already the affordance)',
+  resolveStartWatchdog({ started: false, agendaEngaged: false }),
+  'log-idle',
 );
 
 if (failures > 0) {

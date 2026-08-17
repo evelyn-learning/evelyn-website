@@ -29,6 +29,30 @@ export type StartTapAction =
   | 'interrupt'       // in-session: student cuts the tutor off
   | 'none';           // in-session, relay down: nothing actionable (telemetry only)
 
+export type StartWatchdogAction = 'none' | 'log-idle' | 'restore-start';
+
+/** How long a mounted, un-started session may sit before the watchdog acts. */
+export const START_WATCHDOG_MS = 30_000;
+
+/**
+ * Pre-start watchdog rule (2026-08-17 triage): the safety net for
+ * silent-death variants the tap resolver can't reach — an agenda pick stuck
+ * mid-flight (agendaEngaged latched, orb no longer a start button), a
+ * startSession handle that wasn't attached yet, or paths not discovered
+ * yet. Fired START_WATCHDOG_MS after mount while the session hasn't
+ * started: 'restore-start' un-latches a stuck agenda pick so the orb is a
+ * start button again; 'log-idle' just leaves a telemetry trace (the orb is
+ * already the affordance — a student reading the pre-start screen for 30s
+ * is legitimate).
+ */
+export function resolveStartWatchdog(opts: {
+  started: boolean;
+  agendaEngaged: boolean;
+}): StartWatchdogAction {
+  if (opts.started) return 'none';
+  return opts.agendaEngaged ? 'restore-start' : 'log-idle';
+}
+
 export function resolveStartTap(opts: {
   hasStarted: boolean;
   hasResumeState: boolean;

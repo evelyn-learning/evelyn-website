@@ -30,6 +30,7 @@ import { LessonPlanProgress } from '../LessonPlanProgress';
 import { LessonNudgePicker } from '../LessonNudgePicker';
 import SessionStage, { CaptionTicker, MicMeter, type VoiceState } from './SessionStage';
 import { AgendaRail } from './AgendaRail';
+import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
 import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
@@ -327,6 +328,9 @@ export default function TutorSession(props: TutorSessionProps) {
   // muted "Starting…" line so the list can't be double-tapped before the board
   // renders. Never reset — the board content hides the overlay from then on.
   const [agendaEngaged, setAgendaEngaged] = useState(false);
+  // Start watchdog: the pre-start idle event logs at most once per session
+  // (see the watchdog effect below the `started` derivation).
+  const startWatchdogIdleLoggedRef = useRef(false);
   // #7 hybrid (2026-07-17): standing difficulty preference — mirrored from
   // VoiceTutorRealtime via onDifficultyBiasChange (chip clicks AND blob
   // restore) so the Harder/Easier menu items render their sticky ✓×N state.
@@ -695,6 +699,28 @@ export default function TutorSession(props: TutorSessionProps) {
     agendaAutoOpenedRef.current = true;
     setAgendaDrawerOpen(true);
   }, [mockDrawer, started, agendaEngaged]);
+
+  // Start watchdog (2026-08-17 triage, portal-96a436f0: a session sat 4
+  // minutes pre-start with zero telemetry). START_WATCHDOG_MS after mount —
+  // or after an agenda pick latched agendaEngaged — with the session still
+  // not started: un-latch a stuck agenda pick so the orb is a start button
+  // again, and always leave a start_watchdog debug event. The idle variant
+  // logs once per session (a student reading the pre-start screen is
+  // legitimate); the restore variant fires whenever a pick strands the UI.
+  useEffect(() => {
+    if (started) return;
+    const t = setTimeout(() => {
+      const action = resolveStartWatchdog({ started: false, agendaEngaged });
+      if (action === 'restore-start') {
+        onDebugEvent?.('start_watchdog', 'agenda pick stuck pre-start — restoring the start orb');
+        setAgendaEngaged(false);
+      } else if (action === 'log-idle' && !startWatchdogIdleLoggedRef.current) {
+        startWatchdogIdleLoggedRef.current = true;
+        onDebugEvent?.('start_watchdog', `pre-start idle ${Math.round(START_WATCHDOG_MS / 1000)}s — session not started`);
+      }
+    }, START_WATCHDOG_MS);
+    return () => clearTimeout(t);
+  }, [started, agendaEngaged, onDebugEvent]);
   const liveCaption = lastTutorEntry?.text?.replace(/\*{1,2}([^*]+)\*{1,2}/g, '$1') || undefined;
   // Caption word-sync: stable poll getter for the CaptionTicker. Reads the
   // engine handle imperatively — no React state churn at poll frequency.
