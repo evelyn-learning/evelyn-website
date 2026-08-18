@@ -93,6 +93,9 @@ export type Bundle = {
    *  opener turn never completed — never fabricated. */
   sessionOpenerRecord?: OpenerRecord;
   meta: { taskId?: string; baseUrl: string; maxTurns: number };
+  /** The run's artifact directory, set by `runScenario`. Absent only when a
+   *  `Bundle` was assembled by a unit test (never fabricated). */
+  outDir?: string;
 };
 
 /**
@@ -350,14 +353,16 @@ export type RawCapturedTurn = Omit<BundleTurn, 'index'>;
 export function assembleBundle(
   persona: Persona,
   rawTurns: RawCapturedTurn[],
-  meta: { taskId?: string; baseUrl: string; maxTurns: number },
+  meta: { taskId?: string; baseUrl: string; maxTurns: number; outDir?: string },
   sessionResult?: unknown,
 ): Bundle {
+  const { outDir, ...restMeta } = meta;
   return {
     persona: { id: persona.id, mode: persona.mode },
     turns: rawTurns.map((t, index) => ({ index, ...t })),
     ...(sessionResult !== undefined ? { sessionResult } : {}),
-    meta,
+    meta: restMeta,
+    ...(outDir !== undefined ? { outDir } : {}),
   };
 }
 
@@ -442,6 +447,14 @@ export interface RunScenarioOpts {
    *  (the previous session's opener record). Only `runReplayScenario`
    *  sets this — and only on its SECOND session. */
   lastOpener?: OpenerRecord;
+  /** Verdict-bank seams (2026-08-18 plan): scripted student turns instead of
+   *  the Haiku simulator, a picker-start override that bypasses
+   *  personaToPickerStart, and a kickoff override. All optional — absent,
+   *  behavior is byte-identical to before. The provider receives the turn's
+   *  captured toolCalls so a probe can compute answers from board renders. */
+  studentTurnProvider?: (ctx: { tutorText: string; turnIndex: number; history: SimTurn[]; toolCalls: unknown[] }) => Promise<{ text: string; ended: boolean }> | { text: string; ended: boolean };
+  startOverride?: ReturnType<typeof personaToPickerStart>;
+  kickoffOverride?: string;
 }
 
 export async function runScenario(
@@ -449,7 +462,7 @@ export async function runScenario(
   opts: RunScenarioOpts,
 ): Promise<Bundle> {
   const baseUrl = opts.baseUrl ?? process.env.TUTOR_E2E_URL ?? 'http://localhost:3006';
-  const start = personaToPickerStart(persona, {
+  const start = opts.startOverride ?? personaToPickerStart(persona, {
     resumeVariant: opts.resumeVariant,
     sessionMaxMinutes: opts.sessionMaxMinutes,
     targetKind: opts.targetKind,
@@ -581,9 +594,9 @@ export async function runScenario(
     // session (ravi fresh-checkpoint variant) send the SAME synthetic
     // resume message the /tutor page's resumeContinue path uses, so the
     // brain picks up mid-lesson instead of being told to "start".
-    const kickoff = start.resume
+    const kickoff = opts.kickoffOverride ?? (start.resume
       ? '[Session-resumed: the student reloaded mid-session; pick up exactly where you left off]'
-      : '[start lesson]';
+      : '[start lesson]');
     log(`kickoff: ${kickoff}`);
     await page.evaluate((text) => window.__tutorSendText(text), kickoff);
     await waitForTurn(120_000, kickoff);
@@ -604,7 +617,9 @@ export async function runScenario(
       }
 
       log(`turn ${i}: simulating student reply to "${tutorText.slice(0, 80)}"`);
-      const { text: studentReply, ended } = await simulateStudent(persona, tutorText, history);
+      const { text: studentReply, ended } = opts.studentTurnProvider
+        ? await opts.studentTurnProvider({ tutorText, turnIndex: i, history, toolCalls })
+        : await simulateStudent(persona, tutorText, history);
       history = [...history, { role: 'tutor', text: tutorText }, { role: 'student', text: studentReply }];
 
       rawTurns.push({ tutorText, toolCalls, boardState, studentReply, ended });
@@ -617,7 +632,7 @@ export async function runScenario(
       await sleep(SETTLE_MS);
     }
 
-    const bundle = assembleBundle(persona, rawTurns, { taskId: opts.taskId, baseUrl, maxTurns: opts.maxTurns });
+    const bundle = assembleBundle(persona, rawTurns, { taskId: opts.taskId, baseUrl, maxTurns: opts.maxTurns, outDir });
     // Opener-recency (part A): read the session's own captured opener
     // record (page's __tutorTestState.sessionOpenerRecord) onto the bundle
     // — the replay driver derives session 2's lastOpener from it. Never
