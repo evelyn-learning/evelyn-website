@@ -52,6 +52,14 @@ const AUDIO_CONSTRAINTS: MediaTrackConstraints = {
 let sharedStream: MediaStream | null = null;
 let pending: Promise<MediaStream> | null = null;
 const holders = new Set<string>();
+/** 2026-08-17 dead-mic recovery: a student-chosen capture device (the
+ *  banner's "switch mic" offer). Every acquire — including perception's
+ *  separate getUserMedia, which reads this via getPreferredMicDeviceId —
+ *  targets it with `deviceId: { exact }`. Cleared automatically if that
+ *  exact device fails to open (unplugged between offer and tap), so a
+ *  vanished device can never brick the mic: the retry falls back to the
+ *  browser default. */
+let preferredDeviceId: string | null = null;
 /** Explicit per-consumer mute intent. Absent = the consumer has expressed
  *  none (it neither holds the track open nor pins it off). */
 const muteIntents = new Map<string, boolean>();
@@ -91,8 +99,21 @@ export async function acquireSharedMicStream(consumer: string): Promise<MediaStr
   }
   if (pending) return pending;
 
-  pending = navigator.mediaDevices
-    .getUserMedia({ audio: AUDIO_CONSTRAINTS })
+  const openWithPreference = async (): Promise<MediaStream> => {
+    if (preferredDeviceId) {
+      try {
+        return await navigator.mediaDevices.getUserMedia({
+          audio: { ...AUDIO_CONSTRAINTS, deviceId: { exact: preferredDeviceId } },
+        });
+      } catch (err) {
+        console.warn(`[shared-mic] preferred device "${preferredDeviceId}" failed to open — falling back to default:`, err);
+        preferredDeviceId = null;
+      }
+    }
+    return navigator.mediaDevices.getUserMedia({ audio: AUDIO_CONSTRAINTS });
+  };
+
+  pending = openWithPreference()
     .then((stream) => {
       sharedStream = stream;
       pending = null;
@@ -164,4 +185,35 @@ export function setSharedMicConsumerMuted(consumer: string, muted: boolean): voi
 export function getSharedMicSettings(): MediaTrackSettings | null {
   const track = sharedStream?.getAudioTracks()[0];
   return track?.getSettings?.() ?? null;
+}
+
+/** The label of the currently-open capture, for the dead-mic banner's
+ *  fallback picker ('' when no capture is open). */
+export function getSharedMicLabel(): string {
+  return sharedStream?.getAudioTracks()[0]?.label ?? '';
+}
+
+/** The device preference set by switchSharedMicDevice — read by
+ *  usePerceptionWS's own getUserMedia so BOTH captures follow the switch. */
+export function getPreferredMicDeviceId(): string | null {
+  return preferredDeviceId;
+}
+
+/**
+ * 2026-08-17 dead-mic recovery: point every future capture at `deviceId`
+ * and kill the current stream so consumers' next start cycle reopens on
+ * the new device. Holders and mute intents are deliberately kept — the
+ * consumers themselves aren't going anywhere, their capture graphs are
+ * simply rebuilt by the caller's reconnect choreography (VoiceTutorRealtime
+ * drives ink/perception disconnect→connect and a production re-listen).
+ */
+export function switchSharedMicDevice(deviceId: string): void {
+  preferredDeviceId = deviceId;
+  if (sharedStream) {
+    sharedStream.getTracks().forEach((t) => {
+      try { t.stop(); } catch {}
+    });
+    sharedStream = null;
+  }
+  console.warn(`[shared-mic] device switch requested → ${deviceId} (stream dropped; consumers reopen on next acquire)`);
 }

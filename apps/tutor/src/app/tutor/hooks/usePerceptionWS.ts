@@ -23,6 +23,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { shouldForceReconnectOnWatchdog } from '@/lib/tutor/voice/perception-watchdog';
+import { getPreferredMicDeviceId } from '@/lib/tutor/voice/shared-mic';
 import { shouldReconnectOnForeground } from '@/lib/tutor/voice/ws-recovery';
 import type { BargeInFrame } from '@/lib/tutor/voice/bargein-gate';
 
@@ -339,14 +340,28 @@ export function usePerceptionWS(options: UsePerceptionWSOptions): UsePerceptionW
     try {
       // Independent MediaStream from the production WS. Browsers share
       // the underlying hardware but each consumer gets its own track.
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          sampleRate: PERCEPTION_SAMPLE_RATE,
-          channelCount: 1,
-          echoCancellation: true,
-          noiseSuppression: true,
-        },
-      });
+      // 2026-08-17 dead-mic recovery: this capture follows the same
+      // student-chosen device as the shared mic (the banner's "switch
+      // mic"), with the same fall-back-to-default when the exact device
+      // fails to open — otherwise the switch would fix STT/recording
+      // while perception kept listening to the dead device.
+      const baseConstraints: MediaTrackConstraints = {
+        sampleRate: PERCEPTION_SAMPLE_RATE,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+      };
+      const preferred = getPreferredMicDeviceId();
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: preferred ? { ...baseConstraints, deviceId: { exact: preferred } } : baseConstraints,
+        });
+      } catch (err) {
+        if (!preferred) throw err;
+        console.warn(`${logPrefix} preferred mic "${preferred}" failed to open — falling back to default:`, err);
+        stream = await navigator.mediaDevices.getUserMedia({ audio: baseConstraints });
+      }
       mediaStreamRef.current = stream;
 
       const ctx = getPerceptionAudioContext();

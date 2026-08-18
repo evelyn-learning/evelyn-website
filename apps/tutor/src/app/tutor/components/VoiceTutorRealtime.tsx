@@ -92,6 +92,8 @@ import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradictio
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
+import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
+import { getSharedMicLabel, switchSharedMicDevice } from '@/lib/tutor/voice/shared-mic';
 import { decidePacingCredit, type ObjectiveCorrectSignal } from '@/lib/tutor/voice/objective-credit';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
@@ -937,6 +939,15 @@ export function VoiceTutorRealtime({
   // good the moment any real transcript proves the mic works.
   const [micNotice, setMicNotice] = useState<string | null>(null);
   const micNoticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 2026-08-17 dead-mic recovery: when the TRULY-dead banner shows (peak
+  // −∞ — e.g. the macOS iPhone Continuity mic recording pure zeros, hit 3×
+  // in the Aug 15-17 sessions), offer a one-tap switch to another real
+  // input instead of leaving restart as the only remedy. The offer is
+  // computed from enumerateDevices via pickFallbackMicDevice; tried ids
+  // accumulate so a still-dead capture can't ping-pong back to the device
+  // the student just escaped.
+  const [micSwitchOffer, setMicSwitchOffer] = useState<{ deviceId: string; label: string } | null>(null);
+  const micSwitchTriedIdsRef = useRef<string[]>([]);
   // Round-7c: mic-silent false positive on Android session start. Every
   // Android session showed the banner ~11s in while the opener was still
   // playing — the student simply hadn't spoken yet, and Android's
@@ -7803,6 +7814,17 @@ export function VoiceTutorRealtime({
           setMicNotice(bannerText);
           if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
           micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 20000);
+          // Truly-dead only (never the quiet-but-finite Android case):
+          // compute the one-tap device-switch offer for the banner.
+          void (async () => {
+            try {
+              const devices = await navigator.mediaDevices.enumerateDevices();
+              const offer = pickFallbackMicDevice(devices, getSharedMicLabel(), micSwitchTriedIdsRef.current);
+              if (offer) setMicSwitchOffer(offer);
+            } catch {
+              /* enumerate unavailable — banner stays text-only */
+            }
+          })();
         } else if (!micEverHeardRef.current) {
           pendingMicNoticeRef.current = bannerText;
           // Re-fires (startListening runs again after any stop/pause) go
@@ -15832,9 +15854,11 @@ export function VoiceTutorRealtime({
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
       // Any real ASR final proves the mic is capturing — clear the
-      // mic-silent notice so it can't linger over a working session.
+      // mic-silent notice (and any pending device-switch offer) so it
+      // can't linger over a working session.
       if (micNoticeTimerRef.current) { clearTimeout(micNoticeTimerRef.current); micNoticeTimerRef.current = null; }
       setMicNotice(null);
+      setMicSwitchOffer(null);
       // Round-7c: a final transcript is definitive proof the mic works —
       // permanently drop any gated/pending mic-silent notice so it can
       // never surface later in this session.
@@ -17338,6 +17362,38 @@ export function VoiceTutorRealtime({
   // Reference for lint cleanliness; explicit read so a future stage that
   // surfaces a status pill / closes barge-in gaps has something to consume.
   void perception.state;
+
+  // 2026-08-17 dead-mic recovery: the banner's one-tap device switch.
+  // switchSharedMicDevice points every future capture at the chosen device
+  // and drops the current shared stream; each live capture path is then
+  // rebuilt through its own full teardown/rebuild — ink + perception via
+  // disconnect→connect (their startMic re-acquires), the production
+  // recorder via a stop/start listening cycle (its startListening
+  // re-acquires too; when the session hasn't started or the student is
+  // muted, the normal Start/unmute path performs that acquire instead).
+  const handleMicSwitch = useCallback(() => {
+    if (!micSwitchOffer) return;
+    const { deviceId, label } = micSwitchOffer;
+    micSwitchTriedIdsRef.current.push(deviceId);
+    onDebugEvent?.('mic_device_switch', `→ "${label.slice(0, 60)}"`);
+    switchSharedMicDevice(deviceId);
+    if (perceptionInk2.state !== 'disabled') {
+      perceptionInk2.disconnect();
+      perceptionInk2.connect();
+    }
+    if (perceptionWS.state !== 'disabled') {
+      perceptionWS.disconnect();
+      perceptionWS.connect();
+    }
+    if (hasStartedRef.current && !isMicMutedRef.current) {
+      realtime.stopListening();
+      realtime.startListening();
+    }
+    setMicSwitchOffer(null);
+    setMicNotice(`Switched to ${label.slice(0, 40)} — say something to test it.`);
+    if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
+    micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 12000);
+  }, [micSwitchOffer, perceptionInk2, perceptionWS, realtime, onDebugEvent]);
 
   // ── Stage 2 dev-only test triggers ────────────────────────────────
   // window.__tutorForceFalseBargein() — fully synthetic cancel+restore
@@ -19010,10 +19066,21 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         </span>
       )}
 
-      {/* Mic-silent notice (transient, student-actionable) */}
+      {/* Mic-silent notice (transient, student-actionable). When the capture
+          is truly dead and another real input exists, the notice carries a
+          one-tap switch (2026-08-17 dead-mic recovery). */}
       {micNotice && !errorMessage && (
         <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded flex-shrink min-w-0">
           {micNotice}
+          {micSwitchOffer && (
+            <button
+              type="button"
+              onClick={handleMicSwitch}
+              className="ml-1.5 underline font-semibold text-amber-800 hover:text-amber-900"
+            >
+              Switch to {micSwitchOffer.label.slice(0, 32)}
+            </button>
+          )}
         </span>
       )}
 
