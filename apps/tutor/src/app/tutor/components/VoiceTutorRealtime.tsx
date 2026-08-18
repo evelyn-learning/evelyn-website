@@ -91,6 +91,7 @@ import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-ver
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
+import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { decidePacingCredit, type ObjectiveCorrectSignal } from '@/lib/tutor/voice/objective-credit';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
@@ -2229,6 +2230,17 @@ export function VoiceTutorRealtime({
   // e.g. after a student says "I don't see it" — leaving two copies on the
   // board). A trailing whitespace / casing difference is treated as identical.
   const lastEquationLatexRef = useRef<string>('');
+  // 2026-08-17 (portal-e3af265a): when the tutor puts a PLAIN ARITHMETIC
+  // expression on the board (show_equation with no variables/=), its
+  // deterministic value is held here so a following "what does that equal?"
+  // answer can ride the inverse-verdict KILL tier — the brain said "Not
+  // quite" to a correct 13 for `24 \div 4 \cdot 3 - 5` and no guard could
+  // fire (no problem card, no inline claim). Overwritten by each newer
+  // equation (non-computable → cleared: the board moved on); an ACTIVE
+  // problem card always outranks it at the consume site; and it expires
+  // after 2 minutes so a stale expression can't force-affirm a coincidental
+  // number much later in the session.
+  const pendingComputableEquationRef = useRef<{ latex: string; display: string; armedAtMs: number } | null>(null);
   // Session-scoped registry of show_equation labels seen so far.
   // Keyed by normalized-label (decorations stripped — see use site for
   // the strip list). Used to surface label-duplicate emissions back to
@@ -4676,6 +4688,12 @@ export function VoiceTutorRealtime({
         // these checks were aimed at. For authored content the brain
         // should render via show_segment_card (Lever A) instead of a
         // free-form show_equation labeled "Original Equation".
+        // 2026-08-17 (portal-e3af265a): arm/clear the computable-expression
+        // value for the inverse-verdict guard — see the ref's doc comment.
+        const computable = evaluateComputableLatex(latex);
+        pendingComputableEquationRef.current = computable
+          ? { latex, display: computable.display, armedAtMs: Date.now() }
+          : null;
       }
 
       // Punnett-square repair: when show_table has collapsed gamete headers
@@ -10389,16 +10407,30 @@ export function VoiceTutorRealtime({
                     const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
                       ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
                       : undefined;
+                    // 2026-08-17 (portal-e3af265a): with NO active problem
+                    // card, a recent computable board expression's value is a
+                    // deterministically-verified expected answer for the
+                    // pending "what does that equal?" — the exact hole the
+                    // "Not quite" to a correct 13 fell through. An active
+                    // card always wins; the value expires after 2 minutes
+                    // (see pendingComputableEquationRef's doc).
+                    const pendingEq = !currentProblemRef.current
+                      && pendingComputableEquationRef.current
+                      && Date.now() - pendingComputableEquationRef.current.armedAtMs < 120_000
+                      ? pendingComputableEquationRef.current
+                      : null;
                     const inv = checkInverseVerdict({
                       sentence: updatedSentence,
                       studentUtterance: transcript,
-                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
+                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
                       unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
                       choices: mcqChoices,
                     });
                     if (inv.verdict === 'false_denial') {
-                      const reason =
-                        `You denied the student's answer, but "${(transcript ?? '').slice(0, 80)}" MATCHES the verified expected answer (${inv.expected}). ` +
+                      const reason = pendingEq && !currentProblemRef.current?.expectedAnswer
+                        ? `You denied the student's answer, but "${(transcript ?? '').slice(0, 80)}" MATCHES the deterministically-computed value of the expression you put on the board (${pendingEq.latex} = ${pendingEq.display}). ` +
+                          `Their answer is correct. Re-emit your response: affirm it plainly, then move the lesson forward.`
+                        : `You denied the student's answer, but "${(transcript ?? '').slice(0, 80)}" MATCHES the verified expected answer (${inv.expected}). ` +
                         `Their answer is correct. Re-emit your response: affirm it plainly, then move the lesson forward.`;
                       rejectionsThisAttempt.push({ action: 'inverse_verdict_false_denial', reason });
                       judgeRetriesUsed++;
