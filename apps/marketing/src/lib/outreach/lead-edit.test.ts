@@ -90,6 +90,30 @@ const incoming = (over: Partial<DecisionMakerEditInput> = {}): DecisionMakerEdit
     assert.equal(merged.emailVerified, true);
   });
 
+  await test("linkedinNotFound survives an unrelated edit", () => {
+    const merged = mergeDecisionMakerEdit(
+      existing({ linkedinNotFound: true }),
+      incoming({ title: "Dean" })
+    );
+    assert.equal(merged.linkedinNotFound, true);
+  });
+
+  await test("entering a NEW LinkedIn URL clears linkedinNotFound", () => {
+    const merged = mergeDecisionMakerEdit(
+      existing({ linkedinUrl: undefined, linkedinNotFound: true }),
+      incoming({ linkedinUrl: "https://linkedin.com/in/found-after-all" })
+    );
+    assert.equal(merged.linkedinNotFound, undefined);
+  });
+
+  await test("clearing the LinkedIn URL does NOT clear linkedinNotFound", () => {
+    const merged = mergeDecisionMakerEdit(
+      existing({ linkedinNotFound: true }),
+      incoming({ linkedinUrl: "" })
+    );
+    assert.equal(merged.linkedinNotFound, true);
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   process.exit(failed > 0 ? 1 : 0);
 })();

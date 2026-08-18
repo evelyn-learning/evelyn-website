@@ -12,6 +12,8 @@ import {
   Pencil,
   ExternalLink,
   Sparkles,
+  Wand2,
+  UserX,
 } from "lucide-react";
 import { expectedNextChannel, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
 import { TOUCH_CHANNELS } from "@/lib/outreach/enums";
@@ -108,6 +110,51 @@ export default function TodayTab({
     }
   };
 
+  // Ask the server to have Claude write this channel's next message from the
+  // research on file (generate-draft route). Slow (~30-60s of model time) —
+  // the card's busy state covers the wait.
+  const generateDraft = async (id: string, channel: TouchChannel) => {
+    setPendingId(id);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}/generate-draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to generate draft");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to generate draft");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  const setLinkedinNotFound = async (id: string, value: boolean) => {
+    setPendingId(id);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setLinkedinNotFound", value }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to update lead");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to update lead");
+    } finally {
+      setPendingId(null);
+    }
+  };
+
   // Returns true when the enrichment chain found something new, false when
   // it ran but came up empty, and null on failure (already alerted, so the
   // card has nothing further to show).
@@ -147,6 +194,8 @@ export default function TodayTab({
           busy={pendingId === lead._id}
           onMarkSent={(channel) => markSent(lead._id, channel)}
           onCreateGmailDraft={(draft) => createGmailDraft(lead._id, draft)}
+          onGenerateDraft={(channel) => generateDraft(lead._id, channel)}
+          onSetLinkedinNotFound={(value) => setLinkedinNotFound(lead._id, value)}
           onEnrich={() => enrichLead(lead._id)}
           gmailAccount={gmailAccount}
         />
@@ -160,6 +209,8 @@ function LeadCard({
   busy,
   onMarkSent,
   onCreateGmailDraft,
+  onGenerateDraft,
+  onSetLinkedinNotFound,
   onEnrich,
   gmailAccount,
 }: {
@@ -172,6 +223,8 @@ function LeadCard({
     subject?: string;
     body: string;
   }) => Promise<boolean>;
+  onGenerateDraft: (channel: TouchChannel) => void;
+  onSetLinkedinNotFound: (value: boolean) => void;
   onEnrich: () => Promise<boolean | null>;
 }) {
   const dm = lead.decisionMaker;
@@ -184,10 +237,14 @@ function LeadCard({
   // cadence-derived value that drives the "Next: …" badge below) so the
   // tab that's actually due opens by default; falls back to Email when the
   // sequence is exhausted.
-  const [activeTab, setActiveTab] = useState<TouchChannel>(
-    () =>
-      expectedNextChannel(lead.touches.map((t) => ({ ...t, at: new Date(t.at) }))) ?? "email"
-  );
+  const [activeTab, setActiveTab] = useState<TouchChannel>(() => {
+    const next =
+      expectedNextChannel(lead.touches.map((t) => ({ ...t, at: new Date(t.at) }))) ?? "email";
+    // When the owner has marked the decision-maker as having no LinkedIn
+    // profile, the LinkedIn step can't be worked — open Email instead (the
+    // step counter is channel-blind, so an email consumes the step fine).
+    return next === "linkedin" && lead.decisionMaker?.linkedinNotFound ? "email" : next;
+  });
 
   const startEdit = () => {
     setEditSubject(lead.currentDraft?.subject ?? "");
@@ -254,7 +311,10 @@ function LeadCard({
             </span>
             {nextChannel !== null && (
               <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                Next: {SEQUENCE_STEP_LABELS[outboundCount]}
+                Next:{" "}
+                {nextChannel === "linkedin" && dm?.linkedinNotFound
+                  ? "Email (no LinkedIn profile)"
+                  : SEQUENCE_STEP_LABELS[outboundCount]}
               </span>
             )}
             {lastVisit && (
@@ -434,9 +494,24 @@ function LeadCard({
                 </div>
               </>
             ) : (
-              <p className="mt-2 text-sm text-gray-500">
-                No draft yet. Drafts are written by the agent via the draft API (Task 8).
-              </p>
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">
+                  No draft for this step yet.
+                </p>
+                <button
+                  onClick={() => onGenerateDraft("email")}
+                  disabled={busy}
+                  className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {/* Label by the EMAIL step, not the sequence slot — at
+                      count 1 the slot says "LinkedIn note" but this button
+                      generates an email (the skipped-LinkedIn bump). */}
+                  {busy
+                    ? "Generating…"
+                    : `Generate ${outboundCount <= 0 ? "intro email" : outboundCount >= 3 ? "breakup email" : "email bump"}`}
+                </button>
+              </div>
             )}
 
             <div className="mt-3 border-t border-gray-100 pt-3">
@@ -455,7 +530,27 @@ function LeadCard({
 
         {activeTab === "linkedin" && (
           <div className="mt-3">
-            {lead.linkedinDraft ? (
+            {dm?.linkedinNotFound ? (
+              // Owner verdict: this person has no findable LinkedIn profile.
+              // Nothing to draft or send on this channel — the card's header
+              // hint and default tab steer the step to email instead.
+              <div className="mt-2">
+                <p className="inline-flex items-center gap-1.5 text-sm text-gray-500">
+                  <UserX className="h-4 w-4" />
+                  Marked as no findable LinkedIn profile — the sequence suggests email
+                  for this lead instead.
+                </p>
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <button
+                    onClick={() => onSetLinkedinNotFound(false)}
+                    disabled={busy}
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    Undo — profile exists after all
+                  </button>
+                </div>
+              </div>
+            ) : lead.linkedinDraft ? (
               <>
                 <div className="text-sm font-medium text-gray-800">{lead.linkedinDraft.subject}</div>
                 <pre className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
@@ -497,7 +592,7 @@ function LeadCard({
                     </span>
                   )}
                 </div>
-                <div className="mt-3 border-t border-gray-100 pt-3">
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
                   <button
                     onClick={() => onMarkSent("linkedin")}
                     disabled={busy}
@@ -505,6 +600,15 @@ function LeadCard({
                   >
                     <Linkedin className="h-4 w-4" />
                     Mark LinkedIn sent
+                  </button>
+                  <button
+                    onClick={() => onSetLinkedinNotFound(true)}
+                    disabled={busy}
+                    title="Record that this person has no findable LinkedIn profile"
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <UserX className="h-4 w-4" />
+                    Profile not found
                   </button>
                 </div>
               </>
@@ -514,8 +618,16 @@ function LeadCard({
               // happen even though the agent never drafted it, so Mark Sent
               // stays available.
               <div className="mt-2">
-                <p className="text-sm text-gray-500">No draft yet — run the backfill script</p>
-                <div className="mt-3 border-t border-gray-100 pt-3">
+                <p className="text-sm text-gray-500">No draft yet.</p>
+                <button
+                  onClick={() => onGenerateDraft("linkedin")}
+                  disabled={busy}
+                  className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {busy ? "Generating…" : "Generate LinkedIn note"}
+                </button>
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
                   <button
                     onClick={() => onMarkSent("linkedin")}
                     disabled={busy}
@@ -523,6 +635,15 @@ function LeadCard({
                   >
                     <Linkedin className="h-4 w-4" />
                     Mark LinkedIn sent
+                  </button>
+                  <button
+                    onClick={() => onSetLinkedinNotFound(true)}
+                    disabled={busy}
+                    title="Record that this person has no findable LinkedIn profile"
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <UserX className="h-4 w-4" />
+                    Profile not found
                   </button>
                 </div>
               </div>
@@ -584,7 +705,15 @@ function LeadCard({
               // mean no send — keep Mark Sent available for a hand-filled
               // contact form.
               <div className="mt-2">
-                <p className="text-sm text-gray-500">No draft yet — run the backfill script</p>
+                <p className="text-sm text-gray-500">No draft yet.</p>
+                <button
+                  onClick={() => onGenerateDraft("form")}
+                  disabled={busy}
+                  className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {busy ? "Generating…" : "Generate contact-form message"}
+                </button>
                 <div className="mt-3 border-t border-gray-100 pt-3">
                   <button
                     onClick={() => onMarkSent("form")}
