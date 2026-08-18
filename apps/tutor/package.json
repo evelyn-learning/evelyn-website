@@ -65,6 +65,7 @@
     "test:denied-answer-reversal": "npx tsx scripts/test-denied-answer-reversal.ts",
     "test:verdict-classifier": "npx tsx scripts/tutor/verdict-bank/classifier.test.ts",
     "test:verdict-probes": "npx tsx scripts/tutor/verdict-bank/probes.test.ts",
+    "test:verdict-provider": "npx tsx scripts/tutor/verdict-bank/provider.test.ts",
     "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
     "test:stage2-restore-r32": "npx tsx scripts/test-stage2-restore-r32.ts",
     "test:stage2-cancel": "npx tsx scripts/test-stage2-cancel.ts",
