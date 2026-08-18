@@ -27,6 +27,16 @@ check('teaching statement = none', classifyVerdictOpener('The central executive 
 check('third-sentence verdict is NOT scanned', classifyVerdictOpener('Interesting. Let me think about that. Not quite what I had in mind.'), 'none');
 check('empty = none', classifyVerdictOpener(''), 'none');
 
+// Fix round 1 (2026-08-18): em-dash-joined hedge-then-verdict openers.
+check('hedge em-dash deny (reported bug)', classifyVerdictOpener('Hmm — not quite, look at the units.'), 'deny');
+check('hedge comma deny (still works)', classifyVerdictOpener('Hmm, not quite — check the exponent.'), 'deny');
+check('well em-dash deny', classifyVerdictOpener('Well — no, that flips the inequality.'), 'deny');
+check('oh em-dash affirm', classifyVerdictOpener('Oh — nice work, that is exactly it.'), 'affirm');
+check('well done raw match wins (regression guard)', classifyVerdictOpener('Well done — you carried the negative through.'), 'affirm');
+check('no worries survives stripping = none', classifyVerdictOpener('Hmm, no worries — take another run at it.'), 'none');
+check('hedge alone does not manufacture verdict = none', classifyVerdictOpener('So the central executive splits attention.'), 'none');
+check('hmm+no real denial still fires', classifyVerdictOpener('Hmm, no — the sign flips.'), 'deny');
+
 console.log('gradeOutcome');
 check('expected affirm, got affirm → pass', gradeOutcome('affirm', 'affirm'), 'pass');
 check('expected affirm, got deny → fail', gradeOutcome('affirm', 'deny'), 'fail');
