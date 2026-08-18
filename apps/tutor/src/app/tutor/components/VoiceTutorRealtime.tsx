@@ -94,6 +94,7 @@ import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
 import { getSharedMicLabel, switchSharedMicDevice } from '@/lib/tutor/voice/shared-mic';
+import { isVisualComplaint } from '@/lib/tutor/whiteboard/redraw-intent';
 import { decidePacingCredit, type ObjectiveCorrectSignal } from '@/lib/tutor/voice/objective-credit';
 import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mismatch';
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
@@ -2252,6 +2253,11 @@ export function VoiceTutorRealtime({
   // after 2 minutes so a stale expression can't force-affirm a coincidental
   // number much later in the session.
   const pendingComputableEquationRef = useRef<{ latex: string; display: string; armedAtMs: number } | null>(null);
+  // 2026-08-17 redraw-intent (portal-35b9a5d8): true while the latest REAL
+  // student turn complained about a visual (isVisualComplaint) — the render
+  // pipeline then relaxes evolve-in-place to a same-category replace.
+  // Written in armCoverForDispatch, overwritten by every real turn.
+  const redrawIntentRef = useRef(false);
   // Session-scoped registry of show_equation labels seen so far.
   // Keyed by normalized-label (decorations stripped — see use site for
   // the strip list). Used to surface label-duplicate emissions back to
@@ -6569,11 +6575,21 @@ export function VoiceTutorRealtime({
       // kill-recovery confirmation. See project_tutor_figure_identity_design.md.
       const anchorKey = isPrimaryFigure(action) ? computeAnchorKey(action, cmd) : undefined;
       if (anchorKey && !killRecoveryPinPageId) {
-        const prior = catalogRef.current.findEvolvableFigure(anchorKey, STALE_TURNS);
+        const evolvePrior = catalogRef.current.findEvolvableFigure(anchorKey, STALE_TURNS);
+        // 2026-08-17 redraw-intent (portal-35b9a5d8): the student just
+        // complained about a visual, so a retitled same-category re-render
+        // is their requested redraw — replace the latest same-category
+        // prior even though the strict containment test refused (three
+        // stacked timelines was the observed failure). See redraw-intent.ts
+        // + catalog.findRedrawReplaceTarget.
+        const redrawPrior = !evolvePrior && redrawIntentRef.current
+          ? catalogRef.current.findRedrawReplaceTarget(anchorKey, STALE_TURNS)
+          : null;
+        const prior = evolvePrior ?? redrawPrior;
         if (prior && prior.itemId !== id && !pendingRevisionRef.current.has(prior.itemId)) {
           evolveReplaceIds.push(prior.itemId);
-          console.log(`[VoiceTutorRealtime] evolve-in-place: ${id} (${anchorKey}) supersedes ${prior.itemId} on ${prior.pageId ?? '(no page)'}`);
-          onDebugEvent?.('figure_evolve_replace', `${id} ⟵ ${prior.itemId}`);
+          console.log(`[VoiceTutorRealtime] ${redrawPrior ? 'redraw-intent replace' : 'evolve-in-place'}: ${id} (${anchorKey}) supersedes ${prior.itemId} on ${prior.pageId ?? '(no page)'}`);
+          onDebugEvent?.(redrawPrior ? 'figure_redraw_replace' : 'figure_evolve_replace', `${id} ⟵ ${prior.itemId}`);
         }
       }
       // Register in the authoritative session catalog. The catalog is the
@@ -14036,6 +14052,17 @@ export function VoiceTutorRealtime({
   // ref (stable identity) or a module-level pure import — see the
   // useCallback deps for the two non-ref component values it touches.
   const armCoverForDispatch = useCallback((transcript: string) => {
+    // 2026-08-17 redraw-intent (portal-35b9a5d8): stamp whether THIS student
+    // turn complains about a visual on the board — while set, the render
+    // pipeline relaxes evolve-in-place to a same-category replace so a
+    // retitled redraw supersedes the complained-about figure instead of
+    // stacking under it. Bracketed/synthetic dispatches leave the previous
+    // real turn's flag in place; every real turn overwrites it (true OR
+    // false), so the relaxation can't outlive the complaint by more than
+    // the turn that answers it.
+    if (!/^\s*\[/.test(transcript)) {
+      redrawIntentRef.current = isVisualComplaint(transcript);
+    }
     // Phase 2: arm the acknowledgment micro-turn. Only REAL dispatches
     // reach this point (classify/noise-filter run upstream; retries live
     // inside callBrainOnce and never re-arm), so classification='clean'

@@ -679,6 +679,39 @@ export class WhiteboardCatalog {
     return null;
   }
 
+  /**
+   * Redraw-intent relaxation of {@link findEvolvableFigure} (2026-08-17,
+   * portal-35b9a5d8): when the student's current turn COMPLAINED about a
+   * visual (isVisualComplaint, redraw-intent.ts), the strict containment
+   * test is the wrong bar — the brain routinely retitles its redraw
+   * ("From Failing Government…" → "From Failed Government…"), so the old
+   * overlapping figure survives and stacks under the "fix". Here the match
+   * is CATEGORY-only (same render kind, e.g. showDiagram:historical_timeline),
+   * newest first, same staleness bound. Only ever called with an explicit
+   * student redraw signal — never as the default replace path.
+   */
+  findRedrawReplaceTarget(newAnchorKey: string, staleTurns: number): CatalogItem | null {
+    const sep = newAnchorKey.indexOf('|||');
+    const category = sep >= 0 ? newAnchorKey.slice(0, sep) : newAnchorKey;
+    if (!category) return null;
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      const it = this.items[i];
+      if (!it.anchorKey) continue;                       // supporting / pre-stamp
+      if (!isPrimaryFigure(it.action)) continue;
+      const psep = it.anchorKey.indexOf('|||');
+      const priorCategory = psep >= 0 ? it.anchorKey.slice(0, psep) : it.anchorKey;
+      if (priorCategory !== category) continue;          // different render kind
+      if (
+        typeof it.renderedAtTurn === 'number' &&
+        this.currentTurn - it.renderedAtTurn > staleTurns
+      ) {
+        continue; // stale — student moved on; don't yank it
+      }
+      return it;
+    }
+    return null;
+  }
+
   /** Forget the listed items. Called by the orchestrator when a brain
    *  attempt is killed AFTER it dispatched renders — the figures are
    *  pulled off the board (via a 'removeItems' whiteboard command), so

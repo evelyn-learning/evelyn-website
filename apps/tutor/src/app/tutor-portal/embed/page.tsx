@@ -59,6 +59,11 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // orb/mic tap now records its resolved action, so a swallowed pre-start
   // tap can never again leave a zero-telemetry dead session.
   'start_',
+  // 2026-08-17 (portal-35b9a5d8): figure_evolve_replace / figure_redraw_replace
+  // / figure_evolve_removed — the supersede trail for "the diagram is
+  // overlapping, redraw it" fixes; without these the portal replay can't
+  // show WHY an item vanished.
+  'figure_',
   // 2026-08-07 triage (embed-1786076855391): the brain/judge/tool families
   // were all absent from this list, so an embed session that misbehaved
   // (request treated as a correct answer) persisted 13 events and NO record
