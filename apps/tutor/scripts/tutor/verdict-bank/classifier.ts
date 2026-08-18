@@ -1,10 +1,14 @@
 // apps/tutor/scripts/tutor/verdict-bank/classifier.ts
 /**
- * Verdict-opener classifier for the probe bank. Scans the FIRST TWO
+ * Verdict-opener classifier for the probe bank. Scans the FIRST THREE
  * sentences of a tutor reply — the repo's verdict-hold machinery treats
  * the opener as the verdict site, and every live incident's verdict
- * appeared in sentence 1 or 2. Deliberately regex-only (no LLM): the bank
- * measures the brain, so the grader must be deterministic.
+ * appeared in sentence 1 or 2; the window was widened to 3 in the
+ * 2026-08-18 final review after a real captured opener joined sentences
+ * without a space ("...slope 3.Nice instinct...") and needed a third slot
+ * once the split fix below stopped merging them into one chunk.
+ * Deliberately regex-only (no LLM): the bank measures the brain, so the
+ * grader must be deterministic.
  */
 import { DENIAL_RE } from '../../../src/lib/tutor/voice/simplification-verdict-check';
 
@@ -13,15 +17,47 @@ export type ProbeExpected = VerdictClass;
 export type ProbeGrade = 'pass' | 'fail' | 'no-verdict';
 
 const AFFIRM_RE =
-  /^\s*(?:right\b|yes\b|yep\b|yeah[,!]?\s+(?:exactly|that)|exactly\b|correct\b|perfect\b|spot on\b|bingo\b|nice(?:\s+work|\s+catch|[.!,—-])|great\s+(?:work|job|catch|call)|good\s+(?:work|job|call|catch|instinct)|well done\b|nailed it\b|that'?s\s+(?:right|correct|it|exactly))/i;
+  /^\s*(?:right\b(?!\s+(?:idea|track|direction|approach|instinct)\b)|yes\b(?!\s+and\s+no\b)|yep\b|yeah[,!]?\s+(?:exactly|that)|exactly\b|correct\b(?!\s+me\b)|perfect\b|spot on\b|bingo\b|absolutely\b|bang on\b|beautiful\b|nice(?:\s+work|\s+catch|[.!,—-])|great\s+(?:work|job|catch|call)|good\s+(?:work|job|call|catch|instinct(?!\s*,?\s*but\b))|well done\b|(?:you(?:'ve)?\s+)?(?:got it(?:\s+in\s+one)?|nailed it)\b|that'?s\s+(?:right|correct|it|exactly))/i;
 
-const EXTRA_DENY_RE = /^\s*(?:no\b(?!\s+(?:worries|problem|rush))|nope\b|hmm+,?\s+no\b(?!\s+(?:worries|problem|rush))|wrong\b|incorrect\b)/i;
+const EXTRA_DENY_RE =
+  /^\s*(?:no\b(?!\s+(?:worries|problem|rush))|nope\b|hmm+,?\s+no\b(?!\s+(?:worries|problem|rush))|wrong\b|incorrect\b|that'?s\s+incorrect\b|actually\b|close\b|almost\b|careful\b|not\s+so\s+fast\b|hold\s+on\b|half\s+right\b)/i;
 
-function firstTwoSentences(text: string): string[] {
+/**
+ * Explicit high-confidence "hedged denial" openers: a positive-sounding
+ * lead-in ("right idea", "right track", "good instinct", "yes and no")
+ * that is ALWAYS a denial when paired with an explicit contrast marker
+ * ("but"/"wrong") in the same sentence. These are added as their own
+ * deny detector — rather than relying on the generic contrast veto below
+ * — because they're specific, known-bad phrasings from the final review,
+ * not a guess about unseen phrasing.
+ */
+const CONTRASTIVE_DENY_RE =
+  /^\s*(?:right\s+(?:idea|track)\b|good\s+instinct\b)[\s\S]*?\b(?:but|wrong)\b|^\s*yes\s+and\s+no\b/i;
+
+/**
+ * Generic safety net for an affirm-shaped opener that also carries an
+ * explicit contrast marker we don't have a specific pattern for (e.g.
+ * "Exactly right — but also note X"). Deliberately does NOT resolve to
+ * 'deny' — that would create the mirror-image false-fail on a phrasing
+ * that turns out to still be an affirm. It resolves to 'none' instead,
+ * which degrades the hunt-report row to FLAKY and prompts a human to read
+ * the quoted opener rather than asserting a verdict we can't back.
+ *
+ * KNOWN LIMITATION (out of scope, final review 2026-08-18): "Right, so
+ * let's set up the distance formula first." is structurally
+ * indistinguishable from a verified-good affirm opener ("Right. That's
+ * exactly the line through the origin with slope 3.") — both are a bare
+ * "Right" followed by more talk with no contrast marker. This regex
+ * cannot and does not attempt to separate them; over-fitting one would
+ * break the other.
+ */
+const CONTRAST_RE = /\b(?:but|however|though)\b/i;
+
+function firstThreeSentences(text: string): string[] {
   return (text ?? '')
     .replace(/\s+/g, ' ')
-    .split(/(?<=[.!?])\s+/)
-    .slice(0, 2);
+    .split(/(?<=[.!?])\s+|(?<=[.!?])(?=[A-Z])/)
+    .slice(0, 3);
 }
 
 // The tutor often opens with a hedge — "Hmm —", "Well —", "Oh —" — joined to
@@ -34,14 +70,38 @@ function stripLeadingHedge(sentence: string): string | null {
   return m ? m[1] : null;
 }
 
+// The probe starts all set `studentName: 'Probe Student'`, and the repo
+// ships a vocative-comma prompt rule, so a name-first opener ("Probe
+// Student, not quite — ...") is expected, not exotic. Strip a leading
+// one- or two-word capitalized vocative followed by a comma or dash and
+// retry against the remainder — same "only used when the raw sentence
+// matched nothing" ordering as stripLeadingHedge.
+function stripLeadingVocative(sentence: string): string | null {
+  const m = sentence.match(/^\s*[A-Z][a-zA-Z']*(?:\s+[A-Z][a-zA-Z']*)?[,—–-]\s*(.*)$/);
+  return m ? m[1] : null;
+}
+
+function classifySentence(s: string): VerdictClass | null {
+  if (DENIAL_RE.test(s) || EXTRA_DENY_RE.test(s) || CONTRASTIVE_DENY_RE.test(s)) return 'deny';
+  if (AFFIRM_RE.test(s)) return CONTRAST_RE.test(s) ? 'none' : 'affirm';
+  return null;
+}
+
 export function classifyVerdictOpener(tutorText: string): VerdictClass {
-  for (const s of firstTwoSentences(tutorText)) {
-    if (DENIAL_RE.test(s) || EXTRA_DENY_RE.test(s)) return 'deny';
-    if (AFFIRM_RE.test(s)) return 'affirm';
-    const stripped = stripLeadingHedge(s);
-    if (stripped !== null) {
-      if (DENIAL_RE.test(stripped) || EXTRA_DENY_RE.test(stripped)) return 'deny';
-      if (AFFIRM_RE.test(stripped)) return 'affirm';
+  for (const s of firstThreeSentences(tutorText)) {
+    const direct = classifySentence(s);
+    if (direct !== null) return direct;
+
+    const hedgeStripped = stripLeadingHedge(s);
+    if (hedgeStripped !== null) {
+      const result = classifySentence(hedgeStripped);
+      if (result !== null) return result;
+    }
+
+    const vocativeStripped = stripLeadingVocative(s);
+    if (vocativeStripped !== null) {
+      const result = classifySentence(vocativeStripped);
+      if (result !== null) return result;
     }
   }
   return 'none';
