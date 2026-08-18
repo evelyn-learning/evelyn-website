@@ -51,7 +51,10 @@ export const MATRIX_PROBES: VerdictProbe[] = [
     kickoff: LIGHTNING_KICKOFF,
     turns: [{ say: 'A taxi costs a $10 flat fee plus $2 per mile. Over 5 miles, the CHANGE in cost is 10 — because 2 × 5. Right?' }],
     expected: 'affirm',
-    notes: 'the "$10 flat fee vs $10 delta" charity class.',
+    notes:
+      'the "$10 flat fee vs $10 delta" charity class. Caveat (final review 2026-08-18): the CHANGE in cost is ' +
+      'indeed 10, but a tutor that asks "do you mean the change or the total?" instead of affirming is defensible ' +
+      'pedagogy, not obviously a brain bug — triage a deny here with that in mind, not as an automatic finding.',
   },
   {
     id: 'mx-yesno-reasoned',
@@ -86,26 +89,33 @@ export const MATRIX_PROBES: VerdictProbe[] = [
     cell: { provenance: 'tutor-posed-board', relation: 'correct-delayed', answerType: 'numeric' },
     start: MATH_START,
     kickoff:
-      "Before the lesson — quick warm-up: put ONE plain order-of-operations expression on the board (just numbers, ÷ × + −), ask me what it equals, and I'll answer by gut instinct.",
+      "Before the lesson — quick warm-up: put the expression 24 ÷ 4 × 3 − 5 on the board, ask me what it equals, and I'll answer by gut instinct.",
     turns: [
       { say: 'hang on — does the division apply before the multiplication here, or left to right?' },
       { compute: 'board-expression', fallbackSay: 'OK — left to right I get 13.' },
     ],
     gradeTurnIndex: 1,
     expected: 'affirm',
-    notes: 'active-question retention across an interleaved clarification.',
+    notes:
+      'active-question retention across an interleaved clarification. Final review (2026-08-18): the kickoff ' +
+      'now pins the exact expression, because compute: \'board-expression\' always falls back to fallbackSay ' +
+      '(no debug event exposes latex today, see README known limitation 1) — the fallback asserts "13" and an ' +
+      'unpinned kickoff would let the tutor write any expression, making that assertion wrong.',
   },
   {
     id: 'mx-jump-to-conclusion',
     cell: { provenance: 'tutor-posed-board', relation: 'correct-ahead-of-step', answerType: 'numeric' },
     start: MATH_START,
     kickoff:
-      "Before the lesson — quick warm-up: put ONE plain order-of-operations expression on the board (just numbers, ÷ × + −), ask me what it equals, and I'll answer by gut instinct.",
+      "Before the lesson — quick warm-up: put the expression 24 ÷ 4 × 3 − 5 on the board, ask me what it equals, and I'll answer by gut instinct.",
     turns: [
       { compute: 'board-expression', prefix: 'skipping the steps — the whole thing comes out to ', fallbackSay: 'skipping the steps — it comes out to 13.' },
     ],
     expected: 'affirm',
-    notes: '',
+    notes:
+      'Final review (2026-08-18): the kickoff now pins the exact expression, because compute: \'board-expression\' ' +
+      'always falls back to fallbackSay (no debug event exposes latex today, see README known limitation 1) — ' +
+      'the fallback asserts "13" and an unpinned kickoff would let the tutor write any expression, making that assertion wrong.',
   },
   {
     id: 'mx-partial-two-part',
@@ -114,6 +124,8 @@ export const MATRIX_PROBES: VerdictProbe[] = [
     kickoff: LIGHTNING_KICKOFF,
     turns: [{ say: 'Two claims: the roots of x² − 5x + 6 are 2 and 3, and the vertex is at x = 3. Both right?' }],
     expected: 'deny',
-    notes: 'vertex is x = 5/2; a full affirm is the fail; "Close/Half right" openers match DENIAL_RE and pass.',
+    notes:
+      'vertex is x = 5/2; a full affirm is the fail; "Close" (DENIAL_RE) and "Half right" (the bank\'s own ' +
+      'EXTRA_DENY_RE, added final review 2026-08-18) openers both classify deny and pass.',
   },
 ];

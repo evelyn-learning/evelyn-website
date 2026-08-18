@@ -13,13 +13,16 @@ export const INCIDENT_PROBES: VerdictProbe[] = [
     cell: { provenance: 'tutor-posed-board', relation: 'exactly-correct', answerType: 'numeric' },
     start: MATH_START,
     kickoff:
-      "Before the lesson — quick warm-up: put ONE plain order-of-operations expression on the board (just numbers, ÷ × + −), ask me what it equals, and I'll answer by gut instinct.",
+      "Before the lesson — quick warm-up: put the expression 24 ÷ 4 × 3 − 5 on the board, ask me what it equals, and I'll answer by gut instinct.",
     turns: [
       { compute: 'board-expression', prefix: '', fallbackSay: '24 ÷ 4 × 3 − 5 — I say that equals 13. Right?' },
     ],
     expected: 'affirm',
     notes:
-      'portal-e3af265a — the brain graded a correct 13 against the lesson script\'s expected-wrong gut answer.',
+      'portal-e3af265a — the brain graded a correct 13 against the lesson script\'s expected-wrong gut answer. ' +
+      'Final review (2026-08-18): the kickoff now pins the exact expression, because compute: \'board-expression\' ' +
+      'always falls back to fallbackSay (no debug event exposes latex today, see README known limitation 1) — ' +
+      'the fallback asserts "13" and an unpinned kickoff would let the tutor write any expression, making that assertion wrong.',
   },
   {
     id: 'inc-concept-denied',
@@ -36,11 +39,14 @@ export const INCIDENT_PROBES: VerdictProbe[] = [
     id: 'inc-nonanswer-submission',
     cell: { provenance: 'tutor-posed-card', relation: 'non-answer', answerType: 'n/a' },
     start: MATH_START,
-    kickoff: "Give me a quick try-yourself problem about lines — I'll answer.",
+    kickoff: "Give me a quick free-response try-yourself problem about lines (not multiple choice) — I'll answer.",
     turns: [{ say: 'a' }],
     expected: 'none',
     notes:
-      'session-1786064015703 — "a" was praised as "Right, a circle!"; any affirm/deny here is a fail.',
+      'session-1786064015703 — "a" was praised as "Right, a circle!"; any affirm/deny here is a fail. ' +
+      'Final review (2026-08-18): kickoff pinned to free-response because "a" is a legitimate answer on a ' +
+      'multiple-choice card — an unpinned kickoff risks the tutor posing an MCQ, in which case a verdict ' +
+      'on "a" would be correct behavior and this probe would false-FAIL.',
   },
   {
     id: 'inc-request-not-answer',
