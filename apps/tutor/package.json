@@ -57,6 +57,7 @@
     "test:prestart": "npx tsx scripts/test-prestart-affordances.ts",
     "test:start-tap": "npx tsx scripts/test-start-tap.ts",
     "test:finalize-audio": "npx tsx scripts/test-finalize-audio.ts",
+    "test:timeline-layout": "npx tsx scripts/test-timeline-layout.ts",
     "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
     "test:stage2-restore-r32": "npx tsx scripts/test-stage2-restore-r32.ts",
     "test:stage2-cancel": "npx tsx scripts/test-stage2-cancel.ts",

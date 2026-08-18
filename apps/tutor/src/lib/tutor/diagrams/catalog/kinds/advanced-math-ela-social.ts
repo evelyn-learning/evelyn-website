@@ -1,6 +1,7 @@
 /** Phases 6+7+8 — advanced math, ELA, social studies, organizers. */
 
 import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
+import { shouldEvenSpaceTimeline } from './historical-timeline-layout';
 
 // ── unit_circle (Phase 6) ─────────────────────────────────────────────────
 export interface UnitCircleFigure {
@@ -420,10 +421,17 @@ export function solveHistoricalTimeline(params: Record<string, unknown>): Histor
   // Sort by year ONLY when every date had a real year; otherwise preserve the
   // author's order (already chronological) and space evenly.
   if (!anyImprecise) events.sort((a, b) => a.year - b.year);
+  // 2026-08-17 (portal-35b9a5d8): even with fully-parseable years, a dense
+  // span (e.g. 1781-1788 with two same-year events) makes the proportional
+  // layout's 156px boxes overlap — deterministically, so a brain re-render
+  // can never fix it. Run the actual box geometry and flip to even spacing
+  // whenever proportional placement collides (historical-timeline-layout.ts,
+  // test:timeline-layout).
+  const evenSpace = anyImprecise || shouldEvenSpaceTimeline(events);
   return {
     events,
     title: typeof params.title === 'string' ? params.title : undefined,
-    evenSpace: anyImprecise || undefined,
+    evenSpace: evenSpace || undefined,
   };
 }
 

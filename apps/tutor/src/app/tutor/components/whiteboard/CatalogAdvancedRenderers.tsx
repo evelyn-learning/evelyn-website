@@ -40,6 +40,7 @@ import {
   plotDiagramFeatureNames,
   PLOT_STAGES,
 } from '@/lib/tutor/diagrams/catalog/kinds/advanced-math-ela-social';
+import { TIMELINE_GEOM, layoutTimelineEvents } from '@/lib/tutor/diagrams/catalog/kinds/historical-timeline-layout';
 
 // ── Unit circle ───────────────────────────────────────────────────────────
 export function CatalogUnitCircleRenderer({ figure }: { figure: UnitCircleFigure }) {
@@ -481,25 +482,13 @@ function wrapTimelineLabel(label: string, maxCharsPerLine = 18): [string, string
 export function CatalogHistoricalTimelineRenderer({ figure }: { figure: HistoricalTimelineFigure }) {
   const { events, title } = figure;
   const N = historicalTimelineFeatureNames;
-  const W = 760;
-  const H = 320;
-  const PAD = 40;
-  const BOX_W = 156;
-  const BOX_H = 52; // taller to fit 2 lines of label
-  const years = events.map((e) => e.year);
-  const minY = Math.min(...years);
-  const maxY = Math.max(...years);
-  const span = maxY - minY || 1;
-  const usableW = W - PAD * 2;
-  // Even spacing in author order when years aren't reliable (or degenerate),
-  // else proportional by year. Prevents the squish/overlap from a stray year-0.
-  const evenSpace = figure.evenSpace || maxY <= minY || events.length === 1;
-  const xOf = (e: { year: number }, i: number) =>
-    evenSpace
-      ? PAD + (events.length === 1 ? usableW / 2 : (i / (events.length - 1)) * usableW)
-      : PAD + ((e.year - minY) / span) * usableW;
-  const baseY = 200;
-  const altOffsets = [-100, 70, -70, 100, -80, 80];
+  // Geometry lives in historical-timeline-layout.ts (2026-08-17): the SAME
+  // layout the solver runs for its collision-driven evenSpace decision, so
+  // the drawn boxes and the solver's overlap check can never drift. The
+  // layout also owns the degenerate fallbacks (single event / zero-year
+  // span → even spacing — prevents the squish from a stray year-0).
+  const { W, H, PAD, BOX_W, BOX_H, BASE_Y: baseY } = TIMELINE_GEOM;
+  const layout = layoutTimelineEvents(events, figure.evenSpace || false);
   return (
     <div className="w-full flex flex-col items-center">
       {title && <div className="text-base font-semibold text-gray-800 mb-2"><InlineMathText text={title} /></div>}
@@ -524,18 +513,11 @@ export function CatalogHistoricalTimelineRenderer({ figure }: { figure: Historic
           <line x1={PAD} y1={baseY} x2={W - PAD} y2={baseY} stroke="#1f2937" strokeWidth={2} />
         </g>
         {events.map((e, i) => {
-          const x = xOf(e, i);
-          const dy = altOffsets[i % altOffsets.length];
-          // Clamp labelY so the BOX (52px tall, centered on labelY)
-          // stays inside the SVG viewBox. Without this the bottom-alt
-          // events at dy=+100 (labelY=300) push the box to y=326,
-          // clipped by the H=320 viewBox (observed 2026-05-13 session
-          // #16: Mars Rover event box bottom cut off).
-          const labelYRaw = baseY + dy;
-          const labelY = Math.max(BOX_H / 2 + 4, Math.min(H - BOX_H / 2 - 4, labelYRaw));
+          // x/boxX/labelY come pre-clamped from the shared layout (box kept
+          // inside the viewBox — the 2026-05-13 Mars Rover bottom-clip fix
+          // lives there now).
+          const { x, boxX, labelY } = layout[i];
           const color = e.color || '#3b82f6';
-          const boxXNatural = x - BOX_W / 2;
-          const boxX = Math.max(4, Math.min(W - BOX_W - 4, boxXNatural));
           const boxCenterX = boxX + BOX_W / 2;
           const [labelLine1, labelLine2] = wrapTimelineLabel(e.label);
           return (
