@@ -60,6 +60,7 @@
     "test:timeline-layout": "npx tsx scripts/test-timeline-layout.ts",
     "test:computable-equation": "npx tsx scripts/test-computable-equation.ts",
     "test:mic-devices": "npx tsx scripts/test-mic-devices.ts",
+    "test:define-before-quiz": "npx tsx scripts/test-define-before-quiz-prompt.ts",
     "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
     "test:stage2-restore-r32": "npx tsx scripts/test-stage2-restore-r32.ts",
     "test:stage2-cancel": "npx tsx scripts/test-stage2-cancel.ts",
