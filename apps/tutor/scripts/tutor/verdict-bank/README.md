@@ -163,6 +163,31 @@ mid-hunt still leaves a readable partial report.
    specifically includes `scripts/tutor/verdict-bank/**/*.ts`) — that's the
    real type check for this code.
 
+### Known classifier false positives (final review 2026-08-18)
+
+The final review widened `classifier.ts`'s affirm/deny matching to close a
+false-negative gap (openers that should have graded a verdict but graded
+`none` instead, making the hunt mostly FLAKY). That widening was a
+deliberate trade: closing the false-negative gap pulled in a few plain
+acknowledgment openers that now misgrade as verdicts, and rather than risk
+reintroducing false negatives right before handoff, these were left as a
+documented caveat instead of chased further:
+
+- `"Got it — here's another example."` and `"Absolutely — …"` grade as
+  **affirm**.
+- `"Hold on, …"` and `"Actually, …"` grade as **deny**.
+- `"Absolutely not — that flips the sign."` grades as **affirm** — the one
+  case where a genuine denial is misread as praise.
+
+**What to do about it:** treat a FAIL row on `inc-request-not-answer` or
+`inc-nonanswer-submission` as suspect until you've read the quoted
+opener — an acknowledgment ("Got it", "Absolutely") is a plausible correct
+tutor reply to both a clarifying request and a non-answer, and it now
+grades as a verdict where it should grade `none`. The same caution applies
+to any deny-expected probe whose opener begins "Absolutely not". Every
+sample's opener is quoted verbatim in the report, so these are always
+recoverable at triage — read the quote before trusting the grade.
+
 ## The growth rule
 
 **Every live incident adds a pinned probe to `probes/incidents.ts` in the
@@ -175,7 +200,7 @@ fixed class gets caught by the next hunt, not rediscovered live.
 
 | File | Role |
 | --- | --- |
-| `classifier.ts` | Deterministic (regex, no LLM) verdict-opener classifier — scans the first three sentences of a tutor reply and returns `affirm` / `deny` / `none`, plus `gradeOutcome` to compare against a probe's `expected`. |
+| `classifier.ts` | Deterministic (regex, no LLM) verdict-opener classifier — scans the first two sentences of a tutor reply and returns `affirm` / `deny` / `none`, plus `gradeOutcome` to compare against a probe's `expected`. |
 | `types.ts` | `VerdictProbe` / `ProbeTurn` shape shared by every probe file. |
 | `probes/` | The 21-probe bank: `incidents.ts` (5 pinned live incidents), `matrix.ts` (11 provenance × relation × answer-type combinations), `controls.ts` (5 plainly-wrong controls), `starts.ts` (shared lesson-start configs), `index.ts` (`ALL_PROBES` + documented known gaps: voice channel, MCQ-letter answers, board-card submissions). |
 | `provider.ts` | `makeProbeProvider` — turns a probe's scripted `turns` into a `studentTurnProvider` for `runScenario`, including the board-expression recursive extractor (see limitation 1 above). |
