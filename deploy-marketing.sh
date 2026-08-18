@@ -372,7 +372,18 @@ if [ ! -s ".env.local.production" ]; then
   exit 1
 fi
 
-log_message "INFO" "Preflight OK (.env.local.production present)"
+# The per-app .env.local symlink must exist and resolve — same check, same
+# rationale as deploy-tutor.sh's Step 0c (live incident 2026-08-18: a
+# symlink-less checkout builds fine but bakes ZERO NEXT_PUBLIC_* vars into
+# the client bundle, silently disabling whole client subsystems).
+if [ ! -e "$APP_DIR/.env.local" ]; then
+  log_message "ERROR" "$APP_DIR/.env.local is missing (or a dangling symlink)."
+  log_message "ERROR" "The build loads env from the APP directory, so without it NO env vars — including every NEXT_PUBLIC_* flag — reach the client bundle, silently."
+  log_message "ERROR" "Create the standard symlink once for this checkout, then rerun:"
+  log_message "ERROR" "    ln -s ../../.env.local $APP_DIR/.env.local"
+  exit 1
+fi
+log_message "INFO" "Preflight OK (.env.local.production present; $APP_DIR/.env.local resolves)"
 
 # Step 1: Build locally using production env (for NEXT_PUBLIC_ vars)
 log_message "STEP" "Building Next.js application locally..."

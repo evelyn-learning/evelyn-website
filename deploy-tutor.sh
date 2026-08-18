@@ -468,7 +468,30 @@ for _ketcher_asset in "$APP_DIR/public/ketcher/bundle.js" "$APP_DIR/public/ketch
   fi
 done
 unset _ketcher_asset
-log_message "INFO" "Preflight OK (.env.local.production present; ketcher bundles present)"
+# 0c. The per-app .env.local symlink must exist and resolve.
+#
+# The build below runs with its cwd inside $APP_DIR, and Next.js loads env
+# files FROM THE APP DIRECTORY — the repo-root .env.local that Step 1 swaps
+# to production is only visible to the build through the gitignored symlink
+# $APP_DIR/.env.local -> ../../.env.local. That symlink is created per
+# checkout, by hand, and a checkout without it builds SUCCESSFULLY with
+# ZERO env vars: every NEXT_PUBLIC_* reference stays un-inlined, resolves
+# to undefined in the browser, and whole client subsystems silently
+# disable themselves. Live incident 2026-08-18 (portal-77a01c18): a deploy
+# from a symlink-less checkout shipped a bundle with
+# NEXT_PUBLIC_TUTOR_PERCEPTION_STAGE un-baked → perception stage -1 → the
+# entire STT layer never connected — the tutor spoke its opener and then
+# could not hear the student at all. Nothing in the build output hints at
+# it; only the served bundle shows the bare variable name. So: hard abort.
+# `-e` follows symlinks, so a dangling link fails this check too.
+if [ ! -e "$APP_DIR/.env.local" ]; then
+  log_message "ERROR" "$APP_DIR/.env.local is missing (or a dangling symlink)."
+  log_message "ERROR" "The build loads env from the APP directory, so without it NO env vars — including every NEXT_PUBLIC_* flag — reach the client bundle, silently."
+  log_message "ERROR" "Create the standard symlink once for this checkout, then rerun:"
+  log_message "ERROR" "    ln -s ../../.env.local $APP_DIR/.env.local"
+  exit 1
+fi
+log_message "INFO" "Preflight OK (.env.local.production present; ketcher bundles present; $APP_DIR/.env.local resolves)"
 
 # Step 1: Build locally using production env (for NEXT_PUBLIC_ vars)
 log_message "STEP" "Building Next.js application locally..."
