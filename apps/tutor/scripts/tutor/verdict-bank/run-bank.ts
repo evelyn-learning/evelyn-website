@@ -27,6 +27,10 @@ import { renderReport, renderSummaryTable, type ProbeResult, type SampleResult }
 
 function log(msg: string) { console.log(`[hunt:verdicts] ${msg}`); }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // ── CLI args ────────────────────────────────────────────────────────────
 
 export interface CliArgs {
@@ -37,11 +41,14 @@ export interface CliArgs {
 
 /** Pure: parses `--probe <id>` (repeatable), `--samples <n>`, `--base-url
  *  <url>` off argv. Throws on a malformed flag — `main()` turns that into a
- *  loud exit(1), never a silent fallback. */
+ *  loud exit(1), never a silent fallback. Default `baseUrl` honors
+ *  `TUTOR_E2E_URL` (final review 2026-08-18, MINOR 8) so the README's claim
+ *  that the env var works is actually true; an explicit `--base-url` still
+ *  wins over both. */
 export function parseArgs(argv: string[]): CliArgs {
   const probeIds: string[] = [];
   let samples = 3;
-  let baseUrl = 'http://localhost:3006';
+  let baseUrl = process.env.TUTOR_E2E_URL ?? 'http://localhost:3006';
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -107,6 +114,13 @@ export function buildStartOverride(probe: VerdictProbe): TestStartConfig {
   return start;
 }
 
+// Final review (2026-08-18) IMPORTANT 7: 'verdict_guard' (kept below,
+// unchanged — see the entries it does NOT match) matches none of the 277
+// emitted debug-event types, while these four families ARE emitted and were
+// previously unmatched — 'praise_contradiction' in particular is the core
+// bug class this bank hunts (praise contradicting a denial). Added, not
+// swapped in for the existing families: a dead entry costs one line and
+// keeps the plan's original contract intact.
 const GUARD_FAMILIES = [
   'denied_answer_',
   'inverse_verdict_',
@@ -116,6 +130,10 @@ const GUARD_FAMILIES = [
   'verdict_guard',
   'simplification_verdict',
   'nonanswer',
+  'verdict_hold',
+  'praise_contradiction',
+  'bare_praise_ending',
+  'judge_kill',
 ];
 
 function isGuardEventType(type: string): boolean {
@@ -247,6 +265,25 @@ async function main(): Promise<void> {
     console.error("dev server not reachable — run 'npm run dev' in apps/tutor first");
     process.exit(1);
     return;
+  }
+
+  // MINOR 9 (final review 2026-08-18): a cost guard. `npm run hunt:verdicts
+  // --probe mx-equiv-form` (forgetting the `--` separator) makes npm swallow
+  // the `--probe` flag as an npm option instead of passing it through, so
+  // `process.argv` ends up empty and the FULL 21×3 bank runs silently — real
+  // money, no confirmation. When no `--probe` filter was given, announce the
+  // scope/cost/time up front and give a ~10s window to Ctrl-C out.
+  if (args.probeIds.length === 0) {
+    const totalSamples = probes.length * args.samples;
+    const estCostLow = (totalSamples * 0.15).toFixed(2);
+    const estCostHigh = (totalSamples * 0.4).toFixed(2);
+    const estMinLow = Math.max(1, Math.round(totalSamples * (60 / 63)));
+    const estMinHigh = Math.max(1, Math.round(totalSamples * (90 / 63)));
+    log(`no --probe filter given — running the FULL bank: ${probes.length} probe(s) × ${args.samples} sample(s) = ${totalSamples} live session(s).`);
+    log(`estimated cost: $${estCostLow}-$${estCostHigh}. estimated time: ~${estMinLow}-${estMinHigh} min, sequential.`);
+    log("if you meant to filter this run, remember the '--' separator: \"npm run hunt:verdicts -- --probe <id>\" — without it, npm swallows the flag and you get this full run instead.");
+    log('starting in ~10s — Ctrl-C now to abort.');
+    await sleep(10_000);
   }
 
   const persona = loadPersona('anon');

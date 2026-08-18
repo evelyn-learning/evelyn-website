@@ -50,8 +50,11 @@ Fix: either run a server that's actually bound to :3006 (e.g. another app in
 this monorepo already listening there — confirm with
 `curl -s -o /dev/null -w '%{http_code}' http://localhost:3006/tutor`), or if
 you deliberately started `apps/tutor`'s own `npm run dev` on :3007, pass
-`--base-url http://localhost:3007` (or set `TUTOR_E2E_URL` if the harness
-honors it) on every `hunt:verdicts` invocation.
+`--base-url http://localhost:3007` on every `hunt:verdicts` invocation, or
+set `TUTOR_E2E_URL=http://localhost:3007` once in your shell — `run-bank.ts`
+now defaults `--base-url` to `process.env.TUTOR_E2E_URL`, falling back to
+`http://localhost:3006` only when that's unset; an explicit `--base-url`
+still wins over both.
 
 ## Commands
 
@@ -83,6 +86,15 @@ roughly **$0.15–0.40 per session**. The full 21-probe × 3-sample hunt is
 a time, never in parallel — so budget the wall-clock time accordingly before
 kicking it off.
 
+**`--` gotcha:** `npm run hunt:verdicts --probe mx-equiv-form` (forgetting
+the `--` separator before npm-script arguments) makes npm swallow the
+`--probe` flag instead of passing it through, so the script sees an empty
+argv and silently runs the **full** bank. The correct form is
+`npm run hunt:verdicts -- --probe mx-equiv-form`. As a backstop, whenever
+`run-bank.ts` is invoked with no `--probe` filter at all, it prints the
+probe count, sample count, and estimated cost/time, then waits ~10 seconds
+before the first sample so an accidental full run can still be Ctrl-C'd.
+
 ## How to read the report
 
 `run-bank.ts` writes `artifacts/verdict-bank/<stamp>/report.md` (and a
@@ -104,7 +116,8 @@ mid-hunt still leaves a readable partial report.
 - **`## Guard saves`** section — each entry here is a sample where a
   deterministic guard (a `denied_answer_*`, `inverse_verdict_*`,
   `arith_claim_*`, `praise_echo_*`, `contradiction_inversion`,
-  `verdict_guard`, `simplification_verdict`, or `nonanswer` debug event)
+  `verdict_guard`, `simplification_verdict`, `nonanswer`, `verdict_hold`,
+  `praise_contradiction`, `bare_praise_ending`, or `judge_kill` debug event)
   intervened during the session. This means **the brain misfired and a
   guard caught it** — the sample still counts as a pass/fail on its own
   merits, but every guard save is still worth filing: the guards' fire-rate
@@ -138,7 +151,11 @@ mid-hunt still leaves a readable partial report.
    that instrumentation is added, but until then, treat any board-expression
    probe as running its fallback string verbatim. This affects
    `inc-arith-tutor-posed`, `mx-delayed-answer`, and
-   `mx-jump-to-conclusion`.
+   `mx-jump-to-conclusion` — all three now pin the exact expression
+   (`24 ÷ 4 × 3 − 5`) in their kickoff text (final review 2026-08-18) so the
+   fallback's hardcoded "13" assertion is actually correct, instead of
+   asking the tutor for an unspecified expression and asserting a specific
+   answer to it.
 2. **Plain `npx tsc --noEmit` does not type-check this directory.**
    `apps/tutor/tsconfig.json` excludes `scripts/` entirely. Use
    `npm run typecheck:verdict-bank` (which runs
@@ -158,7 +175,7 @@ fixed class gets caught by the next hunt, not rediscovered live.
 
 | File | Role |
 | --- | --- |
-| `classifier.ts` | Deterministic (regex, no LLM) verdict-opener classifier — scans the first two sentences of a tutor reply and returns `affirm` / `deny` / `none`, plus `gradeOutcome` to compare against a probe's `expected`. |
+| `classifier.ts` | Deterministic (regex, no LLM) verdict-opener classifier — scans the first three sentences of a tutor reply and returns `affirm` / `deny` / `none`, plus `gradeOutcome` to compare against a probe's `expected`. |
 | `types.ts` | `VerdictProbe` / `ProbeTurn` shape shared by every probe file. |
 | `probes/` | The 21-probe bank: `incidents.ts` (5 pinned live incidents), `matrix.ts` (11 provenance × relation × answer-type combinations), `controls.ts` (5 plainly-wrong controls), `starts.ts` (shared lesson-start configs), `index.ts` (`ALL_PROBES` + documented known gaps: voice channel, MCQ-letter answers, board-card submissions). |
 | `provider.ts` | `makeProbeProvider` — turns a probe's scripted `turns` into a `studentTurnProvider` for `runScenario`, including the board-expression recursive extractor (see limitation 1 above). |
