@@ -64,6 +64,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // overlapping, redraw it" fixes; without these the portal replay can't
   // show WHY an item vanished.
   'figure_',
+  // 2026-08-18 (portal-a972c7e9): denied_answer_stashed /
+  // denied_answer_reversal_kill — the deny-then-assert self-contradiction
+  // guard's trail.
+  'denied_answer',
   // 2026-08-07 triage (embed-1786076855391): the brain/judge/tool families
   // were all absent from this list, so an embed session that misbehaved
   // (request treated as a correct answer) persisted 13 events and NO record

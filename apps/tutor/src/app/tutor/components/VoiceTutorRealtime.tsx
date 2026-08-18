@@ -87,7 +87,8 @@ import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
-import { checkSimplificationVerdict } from '@/lib/tutor/voice/simplification-verdict-check';
+import { checkSimplificationVerdict, DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
+import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer } from '@/lib/tutor/voice/denied-answer-reversal';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
@@ -2258,6 +2259,15 @@ export function VoiceTutorRealtime({
   // pipeline then relaxes evolve-in-place to a same-category replace.
   // Written in armCoverForDispatch, overwritten by every real turn.
   const redrawIntentRef = useRef(false);
+  // 2026-08-18 denied-answer reversal (portal-a972c7e9): short student
+  // answers the tutor DENIED, kept for a few turns so a later sentence
+  // asserting the same answer ("belongs to the central executive after
+  // all" / "it's the central executive") is caught as a provable
+  // self-contradiction and killed with credit-the-student feedback.
+  // studentTurnCounterRef ticks once per REAL student dispatch (same site
+  // as redrawIntentRef) and drives the stash's expiry.
+  const deniedAnswersRef = useRef<DeniedAnswer[]>([]);
+  const studentTurnCounterRef = useRef(0);
   // Session-scoped registry of show_equation labels seen so far.
   // Keyed by normalized-label (decorations stripped — see use site for
   // the strip list). Used to surface label-duplicate emissions back to
@@ -10322,6 +10332,39 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
+                  // Denied-answer reversal (2026-08-18, portal-a972c7e9, AP
+                  // Psych): the brain denied the student's "central
+                  // executive", then two turns later said the juggling
+                  // "belongs to the central executive after all" and finally
+                  // revealed it as a fresh fact. Purely structural — deny a
+                  // short answer X, later ASSERT X — so no domain knowledge
+                  // is needed and it may kill (mirrors the arithmetic check
+                  // above). Runs on every streamed sentence: the live "after
+                  // all" concession was mid-turn, not an opener. The stash
+                  // entry is consumed BEFORE the kill so the crediting
+                  // retry's own "your earlier answer X was correct" line
+                  // cannot re-fire the guard.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && deniedAnswersRef.current.length > 0) {
+                    const rev = checkDeniedAnswerReversal({
+                      sentence: updatedSentence,
+                      denied: deniedAnswersRef.current,
+                      currentTurn: studentTurnCounterRef.current,
+                    });
+                    if (rev.verdict === 'reversal') {
+                      deniedAnswersRef.current = deniedAnswersRef.current.filter(
+                        (d) => !(d.phrase === rev.phrase && d.turn === rev.turn),
+                      );
+                      const reason =
+                        `Earlier this session the student answered "${rev.phrase}" and you told them it was not correct. You are now presenting "${rev.phrase}" as the answer. ` +
+                        `The student was right. Re-emit your response: state plainly that their earlier answer "${rev.phrase}" was actually correct, own the mix-up in one short clause, and continue teaching from there — do not present it as a fresh reveal.`;
+                      rejectionsThisAttempt.push({ action: 'denied_answer_reversal', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] denied-answer reversal: "${rev.phrase}" (denied turn ${rev.turn}) asserted in "${updatedSentence.slice(0, 80)}" — kill + retry`);
+                      onDebugEvent?.('denied_answer_reversal_kill', `"${rev.phrase}" denied@${rev.turn} asserted@${studentTurnCounterRef.current}`);
+                      continue;
+                    }
+                  }
                   // Deterministic simplification-verdict check (2026-07-31,
                   // session portal-734b537e…): the brain asked "what does
                   // $3x - 12 + 2$ combine into?", the student answered
@@ -10507,6 +10550,25 @@ export function VoiceTutorRealtime({
                           `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may actually match the intended answer "${inv.expected}" — re-check and, if right, credit them. ` +
                           `If on re-checking you stand by what you said, continue naturally and do not mention this review.`;
                         onDebugEvent?.('inverse_verdict_correction_note_planted', `expected=${inv.expected?.slice(0, 40)}`);
+                      }
+                    }
+                    // 2026-08-18 denied-answer stash (portal-a972c7e9): the
+                    // opener is a DENIAL that survived every kill above — if
+                    // the student's utterance was a short answer-like phrase,
+                    // remember it for a few turns so a later sentence
+                    // asserting the SAME phrase as the answer (the "central
+                    // executive after all" shape) is caught as a provable
+                    // self-contradiction (checkDeniedAnswerReversal, below
+                    // in the per-sentence checks).
+                    if (DENIAL_RE.test(updatedSentence)) {
+                      const deniedPhrase = extractDeniableAnswer(transcript ?? '');
+                      if (deniedPhrase) {
+                        const turnNow = studentTurnCounterRef.current;
+                        deniedAnswersRef.current = [
+                          ...deniedAnswersRef.current.filter((d) => d.phrase !== deniedPhrase && turnNow - d.turn <= 6),
+                          { phrase: deniedPhrase, turn: turnNow },
+                        ].slice(-3);
+                        onDebugEvent?.('denied_answer_stashed', `"${deniedPhrase}" turn=${turnNow}`);
                       }
                     }
                   }
@@ -12841,12 +12903,23 @@ export function VoiceTutorRealtime({
                   // pendingJudgeCorrectionNoteRef.current, so a kill-class
                   // note always wins over an advisory one from the same
                   // judge response.
-                  const mathAdvisoryIssues = advisoryIssues.filter((i) => hasMathExpression(i.claim));
-                  if (mathAdvisoryIssues.length > 0) {
-                    const advisoryCorrectionNote = buildJudgeCorrectionNote(mathAdvisoryIssues.map((i) => i.claim));
+                  // 2026-08-18 (portal-a972c7e9): DENIAL-bearing advisories
+                  // join the math-bearing ones. The judge flagged a false
+                  // "Not quite" to a correct concept answer TWICE in that
+                  // session, and both flags dead-ended here because the
+                  // claims carried no math — the student was never told they
+                  // had been right. A flagged claim that OPENS with a denial
+                  // is exactly the trust-critical class the correction note
+                  // exists for (the note's safety-valve wording already
+                  // covers a brain that re-checks and stands by its call).
+                  const noteworthyAdvisoryIssues = advisoryIssues.filter(
+                    (i) => hasMathExpression(i.claim) || DENIAL_RE.test(i.claim),
+                  );
+                  if (noteworthyAdvisoryIssues.length > 0) {
+                    const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim));
                     if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
-                      onDebugEvent?.('judge_correction_note_planted', `advisory: ${mathAdvisoryIssues[0].claim.slice(0, 60)}`);
+                      onDebugEvent?.('judge_correction_note_planted', `advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
                     }
                   }
                 }
@@ -14062,6 +14135,9 @@ export function VoiceTutorRealtime({
     // the turn that answers it.
     if (!/^\s*\[/.test(transcript)) {
       redrawIntentRef.current = isVisualComplaint(transcript);
+      // Denied-answer reversal: one tick per real student turn — the
+      // stash's clock (see deniedAnswersRef's doc comment).
+      studentTurnCounterRef.current++;
     }
     // Phase 2: arm the acknowledgment micro-turn. Only REAL dispatches
     // reach this point (classify/noise-filter run upstream; retries live
