@@ -42,6 +42,18 @@ export async function POST(
       return NextResponse.json({ error: "Invalid channel" }, { status: 400 });
     }
 
+    // Same stale-UI protection as mark-sent: if the lead left the active
+    // pipeline after the Today tab loaded (reply detected, killed, parked),
+    // refuse before the paid model call rather than clobber the draft that
+    // was live when the prospect replied. Staged is allowed — pre-approval
+    // drafting is harmless and the Review tab may grow the button later.
+    if (!["staged", "approved", "contacted"].includes(lead.status)) {
+      return NextResponse.json(
+        { error: `Cannot generate a draft for a lead with status "${lead.status}"` },
+        { status: 409 }
+      );
+    }
+
     let costUsd = 0;
     let parsed: GenerateParsed;
     try {
@@ -60,12 +72,10 @@ export async function POST(
       );
     }
 
-    // Overwriting an email draft that already has a minted Gmail draft would
-    // orphan it in the Gmail drafts folder — clean it up first, with the
-    // same tolerances as the draft route's re-draft path (404 = already
-    // sent/removed by hand; not-connected = nothing minted to clean up).
     const oldDraftId =
       channel === "email" ? lead.currentDraft?.gmailDraftId : undefined;
+    const oldThreadId =
+      channel === "email" ? lead.currentDraft?.gmailThreadId : undefined;
 
     const demoLink = demoLinkFor(
       process.env.NEXT_PUBLIC_SITE_URL || "",
@@ -79,6 +89,21 @@ export async function POST(
       );
     }
 
+    // Carry the prior thread pointer forward: it's the only thing mark-sent
+    // uses to seed gmailThreadIds (reply-watching + follow-up threading), and
+    // the operator may have hand-sent the old minted draft without marking it
+    // yet. A dead thread is harmless — the watcher prunes 404 threads.
+    if (channel === "email" && oldThreadId && lead.currentDraft) {
+      lead.currentDraft.gmailThreadId = oldThreadId;
+    }
+
+    await lead.save();
+
+    // Only after the new draft is durably saved is the old minted Gmail
+    // draft safe to remove — deleting first would leave the persisted
+    // currentDraft pointing at a Gmail draft that no longer exists if the
+    // save failed. Tolerances match the draft route's re-draft path (404 =
+    // already sent/removed by hand; not-connected = nothing minted).
     if (oldDraftId) {
       try {
         const gmail = await getOutreachGmail();
@@ -91,7 +116,6 @@ export async function POST(
       }
     }
 
-    await lead.save();
     return NextResponse.json({ success: true, lead, costUsd });
   } catch (error) {
     console.error("[OUTREACH] generate-draft Error:", error);

@@ -94,6 +94,11 @@ export async function POST(
         lead.decisionMaker.linkedinUrl = result.linkedinUrl;
         lead.decisionMaker.linkedinSource = "vendor";
         lead.decisionMaker.linkedinProvider = result.provider;
+        // A vendor-supplied profile URL supersedes an owner "profile not
+        // found" verdict — without this the Today card would keep refusing
+        // the LinkedIn channel despite a URL on file (mirrors the manual-
+        // edit rule in lead-edit.ts).
+        lead.decisionMaker.linkedinNotFound = false;
         merged = true;
       }
       if (merged) {

@@ -41,14 +41,21 @@ export const GENERATE_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-// Which email of the sequence this generation is for, by outbound-touch
-// count. The cadence's step counter is channel-blind (see ../cadence.ts), so
-// an email generated at count 1 — the slot the sequence reserves for the
-// LinkedIn note — is still a first follow-up: bump copy, not a second intro.
+// Which email of the sequence this generation is for. The cadence's step
+// counter is channel-blind (see ../cadence.ts), but the COPY must not be:
+// a lead worked only via LinkedIn/contact-form has never received an email,
+// so its first email is an intro regardless of which slot it lands in —
+// "floating this back up" bump copy (or a breakup) would reference a thread
+// that doesn't exist. Once at least one email has gone out, the slot rules
+// apply: final slot → breakup, anything between → bump.
 export type EmailStep = "intro" | "bump" | "breakup";
-export function emailStepFor(outboundCount: number): EmailStep {
-  if (outboundCount <= 0) return "intro";
-  if (outboundCount >= 3) return "breakup";
+export function emailStepFor(
+  touches: Array<{ channel: string; direction: string }>
+): EmailStep {
+  const outbound = touches.filter((t) => t.direction === "outbound");
+  const emailsSent = outbound.filter((t) => t.channel === "email").length;
+  if (emailsSent === 0) return "intro";
+  if (outbound.length >= 3) return "breakup";
   return "bump";
 }
 
@@ -87,17 +94,20 @@ export function generateDraftParams(
   lead: GenerateLead,
   channel: TouchChannel
 ): Record<string, unknown> {
-  const outboundCount = lead.touches.filter((t) => t.direction === "outbound").length;
   const brief =
     channel === "email"
-      ? EMAIL_BRIEFS[emailStepFor(outboundCount)]
+      ? EMAIL_BRIEFS[emailStepFor(lead.touches)]
       : CHANNEL_BRIEFS[channel];
   const personLine = lead.decisionMaker.name
     ? `${lead.decisionMaker.name}${lead.decisionMaker.title ? `, ${lead.decisionMaker.title}` : ""}`
     : "no named decision-maker on file";
   return {
     model: RESEARCH_MODEL,
-    max_tokens: 4096,
+    // 16000 like the pipeline's discovery/candidate calls — the model's
+    // adaptive thinking counts toward max_tokens, and a 4k budget can be
+    // consumed by reasoning before the JSON completes (RESEARCH_TRUNCATED
+    // after the spend).
+    max_tokens: 16000,
     output_config: { format: { type: "json_schema", schema: GENERATE_SCHEMA } },
     messages: [{
       role: "user",

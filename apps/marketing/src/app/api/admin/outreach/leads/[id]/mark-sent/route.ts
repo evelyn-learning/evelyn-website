@@ -56,9 +56,15 @@ export async function POST(
     lead.status = result.status;
     lead.nextActionAt = result.nextActionAt;
 
-    if (channel === "email" && lead.currentDraft?.gmailThreadId) {
-      if (!lead.gmailThreadIds.includes(lead.currentDraft.gmailThreadId)) {
-        lead.gmailThreadIds.push(lead.currentDraft.gmailThreadId);
+    // An email send always consumes the draft slot — a generated draft has
+    // no Gmail ids (the operator copies it into their own client), and
+    // leaving it in place would both block the next step's "Generate" button
+    // and re-offer this step's copy as the follow-up. The thread id is
+    // seeded only when a real Gmail draft was minted.
+    if (channel === "email" && lead.currentDraft) {
+      const threadId = lead.currentDraft.gmailThreadId;
+      if (threadId && !lead.gmailThreadIds.includes(threadId)) {
+        lead.gmailThreadIds.push(threadId);
       }
       lead.currentDraft = null;
     }

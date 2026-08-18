@@ -36,12 +36,19 @@ function promptOf(params: Record<string, unknown>): string {
 }
 
 (async () => {
-  await test("emailStepFor maps outbound count to sequence step", () => {
-  assert.equal(emailStepFor(0), "intro");
-  assert.equal(emailStepFor(1), "bump"); // skipped-LinkedIn slot is still a bump
-  assert.equal(emailStepFor(2), "bump");
-  assert.equal(emailStepFor(3), "breakup");
-  assert.equal(emailStepFor(4), "breakup");
+  await test("emailStepFor: intro until an email has gone out, then slot rules", () => {
+  assert.equal(emailStepFor([]), "intro");
+  // No email sent yet → always intro, even deep into the sequence: the
+  // prospect has never seen an email, so bump/breakup copy would reference
+  // a thread that doesn't exist.
+  assert.equal(emailStepFor([out("linkedin")]), "intro");
+  assert.equal(emailStepFor([out("linkedin"), out("form"), out("form")]), "intro");
+  // Skipped-LinkedIn slot is still a bump once an email exists.
+  assert.equal(emailStepFor([out("email")]), "bump");
+  assert.equal(emailStepFor([out("email"), out("linkedin")]), "bump");
+  assert.equal(emailStepFor([out("email"), out("linkedin"), out("email")]), "breakup");
+  // Inbound touches ignored.
+  assert.equal(emailStepFor([out("email"), inb]), "bump");
 });
 
   await test("intro email prompt: first-touch history line + intro brief", () => {
