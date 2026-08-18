@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "next-env.d.ts",
+    "src/types/**/*.d.ts",
+    "scripts/tutor/verdict-bank/**/*.ts"
+  ],
+  "exclude": ["node_modules"]
+}

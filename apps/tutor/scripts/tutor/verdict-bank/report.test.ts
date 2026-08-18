@@ -7,6 +7,13 @@
  */
 import { renderReport, renderSummaryTable, statusForProbe } from './report';
 import type { ProbeResult, SampleResult } from './report';
+// Fix round 1: sanitizeOpenerQuote is a pure function that happens to live
+// in run-bank.ts (the only I/O-doing file in this directory, which per the
+// Task 5 brief gets no dedicated unit test) — imported here to prove the
+// newline-collapsing contract it hands report.ts actually holds. Importing
+// the module is side-effect-free: main() only runs under its own
+// isMainModule guard.
+import { sanitizeOpenerQuote } from './run-bank';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {
@@ -190,6 +197,22 @@ console.log('renderReport — no-verdict sample uses its own opener sentinel');
   const md = renderReport([flakyProbe]);
   check('FLAKY status appears', md.includes('### mx-second-attempt — FLAKY'), true);
   check('no-verdict opener sentinel is quoted', md.includes('(no tutor reply captured)'), true);
+}
+
+console.log('sanitizeOpenerQuote (run-bank.ts) — a multi-line opener renders on a single line');
+{
+  const raw = 'Right —\n\nnice work, that is exactly it.\nGreat job overall.';
+  const sanitized = sanitizeOpenerQuote(raw);
+  check('sanitizeOpenerQuote strips embedded newlines', sanitized.includes('\n'), false);
+  check(
+    'sanitizeOpenerQuote collapses runs of whitespace to single spaces',
+    sanitized,
+    'Right — nice work, that is exactly it. Great job overall.',
+  );
+
+  const md = renderReport([probeResult({ samples: [sample({ grade: 'fail', openerQuote: sanitized })] })]);
+  const openerLine = md.split('\n').find((l) => l.includes('- Opener:'));
+  check('the rendered Opener bullet is exactly one line', openerLine, `  - Opener: "${sanitized}"`);
 }
 
 if (failures > 0) { console.error(`\n${failures} failure(s)`); process.exit(1); }

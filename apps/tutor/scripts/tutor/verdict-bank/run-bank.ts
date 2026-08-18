@@ -142,6 +142,21 @@ function readGuardEvents(outDir: string | undefined): string[] {
 }
 
 /**
+ * Collapses all whitespace — including embedded newlines — in a live-model
+ * opener quote down to single spaces, THEN truncates to 160 chars (so the
+ * 160-char budget yields 160 visible characters rather than being computed
+ * on text that still has raw newlines in it). `openerQuote` is spliced into
+ * a single-line `- Opener: "..."` markdown bullet in report.ts; an embedded
+ * `\n` would spill onto an unindented line and cosmetically break that
+ * bullet. report.ts stays dumb on purpose — it renders whatever it is
+ * given — so the sanitizing happens here, at the one place the quote is
+ * built from raw model output.
+ */
+export function sanitizeOpenerQuote(text: string): string {
+  return text.replace(/\s+/g, ' ').trim().slice(0, 160);
+}
+
+/**
  * Grades one completed `Bundle` against `probe`. `k` is the turn index of
  * the scripted ANSWER (`bundle.turns[k].studentReply`); the reply actually
  * graded is the tutor turn that FOLLOWS it, `bundle.turns[k + 1]`. A
@@ -161,7 +176,7 @@ export function gradeSample(probe: VerdictProbe, bundle: Bundle): SampleResult {
 
   const verdictClass = classifyVerdictOpener(gradedTurn.tutorText);
   const grade = gradeOutcome(probe.expected, verdictClass);
-  const openerQuote = gradedTurn.tutorText.slice(0, 160);
+  const openerQuote = sanitizeOpenerQuote(gradedTurn.tutorText);
   return { grade, verdictClass, openerQuote, guardEvents, bundleDir };
 }
 
@@ -188,7 +203,7 @@ async function runSample(persona: Persona, probe: VerdictProbe, baseUrl: string)
     return {
       grade: 'no-verdict',
       verdictClass: 'none',
-      openerQuote: `(sample threw: ${message.slice(0, 160)})`,
+      openerQuote: `(sample threw: ${sanitizeOpenerQuote(message)})`,
       guardEvents: [],
       bundleDir: '',
     };

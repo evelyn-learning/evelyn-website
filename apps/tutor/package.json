@@ -67,6 +67,7 @@
     "test:verdict-probes": "npx tsx scripts/tutor/verdict-bank/probes.test.ts",
     "test:verdict-provider": "npx tsx scripts/tutor/verdict-bank/provider.test.ts",
     "test:verdict-report": "npx tsx scripts/tutor/verdict-bank/report.test.ts",
+    "typecheck:verdict-bank": "npx tsc --noEmit -p tsconfig.verdict-bank.json",
     "hunt:verdicts": "npx tsx scripts/tutor/verdict-bank/run-bank.ts",
     "test:stage2-restore": "npx tsx scripts/test-stage2-restore.ts",
     "test:stage2-restore-r32": "npx tsx scripts/test-stage2-restore-r32.ts",
