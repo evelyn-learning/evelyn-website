@@ -6,7 +6,7 @@
  * rule: BEFORE the session starts, a tap always resolves to a start
  * action (start / queue-start / resume-continue), never to a toggle.
  */
-import { resolveStartTap, resolveStartWatchdog } from '../src/app/tutor/components/session/start-tap';
+import { resolveAgendaPickFailure, resolveStartTap, resolveStartWatchdog } from '../src/app/tutor/components/session/start-tap';
 
 let failures = 0;
 function check(name: string, actual: unknown, expected: unknown) {
@@ -110,6 +110,39 @@ check(
   'pre-start idle with orb available → log only (orb is already the affordance)',
   resolveStartWatchdog({ started: false, agendaEngaged: false }),
   'log-idle',
+);
+
+console.log('agenda pick failure fallbacks');
+// A pre-start agenda-row tap IS the student's start gesture. When the pick
+// itself can't complete, the session must still start — the failure modes:
+// no mock-review context loaded yet (nothing dispatched → run the plain
+// full start), or the beyond-focus refetch dies AFTER gestureSessionStart
+// already marked the session started (brain never kicked → student stuck
+// on the warmup spinner). Mid-session picks keep their log-and-ignore.
+check(
+  'no context + first gesture → plain full start',
+  resolveAgendaPickFailure({ isFirstGesture: true, stage: 'no-context' }),
+  'plain-start',
+);
+check(
+  'no context mid-session → ignore',
+  resolveAgendaPickFailure({ isFirstGesture: false, stage: 'no-context' }),
+  'ignore',
+);
+check(
+  'refetch unavailable + first gesture → kick the lesson anyway',
+  resolveAgendaPickFailure({ isFirstGesture: true, stage: 'refetch-unavailable' }),
+  'kickoff-lesson',
+);
+check(
+  'refetch failed + first gesture → kick the lesson anyway',
+  resolveAgendaPickFailure({ isFirstGesture: true, stage: 'refetch-failed' }),
+  'kickoff-lesson',
+);
+check(
+  'refetch failed mid-session → ignore (current behavior preserved)',
+  resolveAgendaPickFailure({ isFirstGesture: false, stage: 'refetch-failed' }),
+  'ignore',
 );
 
 if (failures > 0) {

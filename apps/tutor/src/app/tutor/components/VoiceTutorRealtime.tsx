@@ -289,7 +289,7 @@ import { validateFlowchart } from '@/lib/tutor/diagrams/flowchart-validator';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
-import { resolveStartTap } from '@/app/tutor/components/session/start-tap';
+import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -1925,6 +1925,15 @@ export function VoiceTutorRealtime({
   useEffect(() => { onStudentInputRef.current = onStudentInput; }, [onStudentInput]);
   const onControlMessageRef = useRef(onControlMessage);
   useEffect(() => { onControlMessageRef.current = onControlMessage; }, [onControlMessage]);
+  // 2026-08-17: ref mirrors for the []-dep pickAgendaItem below — its
+  // failure fallbacks need telemetry and the guarded brain kickoff, and the
+  // brain dispatcher is declared thousands of lines later (same idiom as
+  // resumeContinueRef).
+  const onDebugEventRef = useRef(onDebugEvent);
+  useEffect(() => { onDebugEventRef.current = onDebugEvent; }, [onDebugEvent]);
+  const handleStudentTranscriptForBrainRef = useRef<
+    ((transcript: string, opts?: { silent?: boolean; bypassMidUtteranceGuard?: boolean }) => unknown) | null
+  >(null);
   const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
   const mockDrawer = useMemo(() => buildMockReviewDrawer(mockReview), [mockReview]);
   const mockCorrectDrawer = useMemo(() => buildMockReviewCorrectRows(mockReview), [mockReview]);
@@ -1964,8 +1973,33 @@ export function VoiceTutorRealtime({
   // synchronously and would otherwise beat the prop-driven re-render. On a
   // refetch failure we log and do nothing (no broken utterance).
   const pickAgendaItem = useCallback(async (itemId: string) => {
+    // 2026-08-17 triage: a pre-start pick IS the student's start gesture, so
+    // every failure path below must still start the session (and record a
+    // debug event) instead of silently stranding the pre-start screen —
+    // previously a refetch failure left hasStarted=true with NO brain
+    // dispatch (warmup spinner until the 40s fail net), and a missing
+    // context was a bare return. Rule + tests: resolveAgendaPickFailure
+    // (session/start-tap.ts, test:start-tap). Mid-session picks keep the
+    // historical log-and-ignore.
+    const isFirstGesture = !hasStartedRef.current;
+    const fallback = (stage: AgendaPickFailureStage) => {
+      const action = resolveAgendaPickFailure({ isFirstGesture, stage });
+      onDebugEventRef.current?.('agenda_pick_fallback', `stage=${stage} action=${action}`);
+      if (action === 'plain-start') {
+        // Nothing dispatched yet — run the full orb-start path (kickoff,
+        // warmup, listening) inside this same tap gesture.
+        micClickRef.current?.();
+      } else if (action === 'kickoff-lesson') {
+        // gestureSessionStart already ran (hasStarted set, warmup armed,
+        // audio unlocked in the tap's gesture) but the brain was never
+        // kicked — dispatch the normal lesson opener, and arm
+        // warmupKickoffRef so the R32 T9 20s watchdog can re-kick it too.
+        warmupKickoffRef.current = '[start lesson]';
+        void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+      }
+    };
     const ctx = mockReviewRef.current;
-    if (!ctx) return;
+    if (!ctx) { fallback('no-context'); return; }
     // Agenda round 4 (Round-16 reincarnation): a pick IS the student's first
     // real gesture in an agenda-only session. Fire the one-time session start
     // (clock + unlockAudio + hasStarted) NOW, synchronously in this tap's call
@@ -1989,16 +2023,22 @@ export function VoiceTutorRealtime({
     }
     const refetch = refetchMockReviewRef.current;
     if (!refetch) {
-      console.warn('[mock-review] agenda pick: item not in focus and no refetch available — ignoring');
+      console.warn('[mock-review] agenda pick: item not in focus and no refetch available');
+      fallback('refetch-unavailable');
       return;
     }
     try {
       const fresh = await refetch([itemId]);
-      if (!fresh) { console.warn('[mock-review] agenda pick: refetch returned no context — ignoring'); return; }
+      if (!fresh) {
+        console.warn('[mock-review] agenda pick: refetch returned no context');
+        fallback('refetch-failed');
+        return;
+      }
       mockReviewRef.current = fresh; // beat the prop-render race for the next brain turn
       send('[Via their review-agenda menu, the student selected a new question — it is now Item 1 in your mock_review list. Move to it now.]');
     } catch (e) {
-      console.error('[mock-review] agenda pick: refetch failed — ignoring:', e);
+      console.error('[mock-review] agenda pick: refetch failed:', e);
+      fallback('refetch-failed');
     }
   }, []);
 
@@ -14653,6 +14693,10 @@ export function VoiceTutorRealtime({
       }
     }
   }, [callBrainOnce, onDebugEvent, armCoverForDispatch, runStudentTurnDetection]);
+  // 2026-08-17: keep the early-declared ref (used by pickAgendaItem's
+  // failure fallbacks) pointed at the CURRENT closure — same idiom as
+  // resumeContinueRef.
+  handleStudentTranscriptForBrainRef.current = handleStudentTranscriptForBrain;
 
   // Resume-from-cut granularity (P5), factored so both resume sites — the
   // verdict-driven 'speaking' branch below and the R32 (H3) timeout-resume

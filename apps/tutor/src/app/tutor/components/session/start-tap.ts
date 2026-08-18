@@ -29,6 +29,30 @@ export type StartTapAction =
   | 'interrupt'       // in-session: student cuts the tutor off
   | 'none';           // in-session, relay down: nothing actionable (telemetry only)
 
+export type AgendaPickFailureStage = 'no-context' | 'refetch-unavailable' | 'refetch-failed';
+export type AgendaPickFailureAction = 'plain-start' | 'kickoff-lesson' | 'ignore';
+
+/**
+ * What to do when an agenda-row pick cannot complete (2026-08-17 triage).
+ * A pre-start pick IS the student's start gesture, so its failure must not
+ * strand the session:
+ * - 'no-context' happens BEFORE gestureSessionStart ran — nothing was
+ *   dispatched, so run the plain full start (micClick path, kickoff and
+ *   all) and let the pick itself go.
+ * - the refetch stages happen AFTER gestureSessionStart marked the session
+ *   started (warmup armed, orb demoted) but before any brain dispatch —
+ *   kick the lesson so the student gets the normal opener instead of a
+ *   spinner that only the 40s fail net clears.
+ * Mid-session picks keep the historical log-and-ignore.
+ */
+export function resolveAgendaPickFailure(opts: {
+  isFirstGesture: boolean;
+  stage: AgendaPickFailureStage;
+}): AgendaPickFailureAction {
+  if (!opts.isFirstGesture) return 'ignore';
+  return opts.stage === 'no-context' ? 'plain-start' : 'kickoff-lesson';
+}
+
 export type StartWatchdogAction = 'none' | 'log-idle' | 'restore-start';
 
 /** How long a mounted, un-started session may sit before the watchdog acts. */
