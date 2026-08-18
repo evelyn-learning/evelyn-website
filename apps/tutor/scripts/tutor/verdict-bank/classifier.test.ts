@@ -24,10 +24,7 @@ check('second-sentence deny still counts', classifyVerdictOpener('Hmm. Not quite
 check('question back = none', classifyVerdictOpener('What makes you pick that one?'), 'none');
 check('plain reveal without verdict word = none', classifyVerdictOpener("No worries — it's a circle, because every point sits the same distance from the center."), 'none');
 check('teaching statement = none', classifyVerdictOpener('The central executive decides how attention gets split.'), 'none');
-// NOTE (final review 2026-08-18, MINOR 10): this fixture's expected value
-// changed from 'none' to 'deny' when the scan window widened from 2
-// sentences to 3 — see the "third-sentence verdict IS scanned" check below,
-// which now owns this exact input and asserts the new expected value.
+check('third-sentence verdict is NOT scanned', classifyVerdictOpener('Interesting. Let me think about that. Not quite what I had in mind.'), 'none');
 check('empty = none', classifyVerdictOpener(''), 'none');
 
 // Fix round 1 (2026-08-18): em-dash-joined hedge-then-verdict openers.
@@ -69,12 +66,10 @@ check('hmm no worries still none (regression)', classifyVerdictOpener('Hmm, no w
 check('vocative + deny', classifyVerdictOpener('Probe Student, not quite — the vertex is 5/2.'), 'deny');
 check('vocative + affirm', classifyVerdictOpener('Probe Student, right — that is exactly it.'), 'affirm');
 
-// Final review (2026-08-18) — MINOR 10: run-together sentence split.
+// Final review (2026-08-18) — MINOR 10: run-together sentence split (window
+// stays at 2 sentences per controller ruling; only the split point changed).
 check('run-together sentence (real smoke-run opener) still affirms', classifyVerdictOpener("Right. That's exactly the line through the origin with slope 3.Nice instinct converting slope form into that general line shape — very handy for JEE. Ready for the next one?"), 'affirm');
-
-// Final review (2026-08-18) — MINOR 10: 3-sentence window boundary.
-check('third-sentence verdict IS scanned in a 3-sentence window (was NOT in the 2-sentence window)', classifyVerdictOpener('Interesting. Let me think about that. Not quite what I had in mind.'), 'deny');
-check('fourth-sentence verdict still NOT scanned', classifyVerdictOpener('Interesting. Let me think about that. Anyway. Not quite what I had in mind.'), 'none');
+check('extra boundary check: verdict past sentence 2 still NOT scanned, even across a run-together split', classifyVerdictOpener('Interesting. Let me think about that. Anyway. Not quite what I had in mind.'), 'none');
 
 // Final review (2026-08-18) — MINOR 11: "half right" now a real deny.
 check('half right = deny', classifyVerdictOpener('Half right — roots yes, vertex no.'), 'deny');

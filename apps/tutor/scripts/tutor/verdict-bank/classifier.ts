@@ -1,14 +1,14 @@
 // apps/tutor/scripts/tutor/verdict-bank/classifier.ts
 /**
- * Verdict-opener classifier for the probe bank. Scans the FIRST THREE
+ * Verdict-opener classifier for the probe bank. Scans the FIRST TWO
  * sentences of a tutor reply — the repo's verdict-hold machinery treats
  * the opener as the verdict site, and every live incident's verdict
- * appeared in sentence 1 or 2; the window was widened to 3 in the
- * 2026-08-18 final review after a real captured opener joined sentences
- * without a space ("...slope 3.Nice instinct...") and needed a third slot
- * once the split fix below stopped merging them into one chunk.
- * Deliberately regex-only (no LLM): the bank measures the brain, so the
- * grader must be deterministic.
+ * appeared in sentence 1 or 2. The window is deliberately kept at TWO
+ * (controller ruling, 2026-08-18 final review): widening it would let a
+ * tutor that opens with two neutral sentences and denies something
+ * unrelated in sentence three false-deny a probe. Deliberately
+ * regex-only (no LLM): the bank measures the brain, so the grader must
+ * be deterministic.
  */
 import { DENIAL_RE } from '../../../src/lib/tutor/voice/simplification-verdict-check';
 
@@ -53,11 +53,20 @@ const CONTRASTIVE_DENY_RE =
  */
 const CONTRAST_RE = /\b(?:but|however|though)\b/i;
 
-function firstThreeSentences(text: string): string[] {
+// Split on sentence-ending punctuation followed by whitespace, OR by a
+// capital letter with no whitespace at all — the latter alternative added
+// 2026-08-18 after a real captured opener joined sentences with no space
+// ("...slope 3.Nice instinct...", from bundle-turns.json of a smoke run).
+// Without it, that run-on text would count as ONE sentence and the fixed
+// 2-sentence window below would silently swallow whatever came after,
+// which is exactly the failure mode the window is supposed to prevent —
+// this split is what keeps the 2-sentence window honest against
+// run-together model output, not a widening of the window itself.
+function firstTwoSentences(text: string): string[] {
   return (text ?? '')
     .replace(/\s+/g, ' ')
     .split(/(?<=[.!?])\s+|(?<=[.!?])(?=[A-Z])/)
-    .slice(0, 3);
+    .slice(0, 2);
 }
 
 // The tutor often opens with a hedge — "Hmm —", "Well —", "Oh —" — joined to
@@ -88,7 +97,7 @@ function classifySentence(s: string): VerdictClass | null {
 }
 
 export function classifyVerdictOpener(tutorText: string): VerdictClass {
-  for (const s of firstThreeSentences(tutorText)) {
+  for (const s of firstTwoSentences(tutorText)) {
     const direct = classifySentence(s);
     if (direct !== null) return direct;
 
