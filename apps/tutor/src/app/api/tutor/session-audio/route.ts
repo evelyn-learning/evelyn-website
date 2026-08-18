@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
 import { verifyReplayToken } from '@/lib/tutor/portal/replay-token';
+import { resolveAudioFinalize } from '@/lib/tutor/recordings/finalize-audio';
 
 const AUDIO_BASE_DIR = process.env.TUTOR_AUDIO_DIR || '/var/data/evelyn/audio';
 
@@ -49,32 +50,45 @@ export async function POST(request: NextRequest) {
     await fs.mkdir(sessionDir, { recursive: true });
 
     if (finalize) {
-      // Write metadata file
-      const meta = {
-        sampleRate: 24000,
-        channels: 1,
-        bitDepth: 16,
-        format: 'pcm16',
-        totalChunks: chunkIndex,
-        finalizedAt: new Date().toISOString(),
-      };
-      await fs.writeFile(
-        path.join(sessionDir, `${role}.meta.json`),
-        JSON.stringify(meta, null, 2)
-      );
+      // 2026-08-17 triage: the unload beacon finalizes even for sessions
+      // that never uploaded a chunk (dead pre-start sessions) — writing the
+      // meta sidecar and setting hasAudio for a track with no bytes is what
+      // produced the admin "audio-flag-drift" class. Decide from what's
+      // actually on disk (rule + tests: recordings/finalize-audio.ts).
+      const pcmBytes = await fs
+        .stat(path.join(sessionDir, `${role}.pcm16`))
+        .then((s) => s.size)
+        .catch(() => null);
+      const { writeMeta, markHasAudio } = resolveAudioFinalize({ pcmBytes });
 
-      // Update session in DB to mark hasAudio
-      try {
-        await connectDB();
-        await TutorSession.updateOne(
-          { sessionId: safeId },
-          { $set: { hasAudio: true } }
+      if (writeMeta) {
+        const meta = {
+          sampleRate: 24000,
+          channels: 1,
+          bitDepth: 16,
+          format: 'pcm16',
+          totalChunks: chunkIndex,
+          finalizedAt: new Date().toISOString(),
+        };
+        await fs.writeFile(
+          path.join(sessionDir, `${role}.meta.json`),
+          JSON.stringify(meta, null, 2)
         );
-      } catch (dbErr) {
-        console.error('[session-audio] Failed to update hasAudio:', dbErr);
       }
 
-      return NextResponse.json({ success: true, finalized: true });
+      if (markHasAudio) {
+        try {
+          await connectDB();
+          await TutorSession.updateOne(
+            { sessionId: safeId },
+            { $set: { hasAudio: true } }
+          );
+        } catch (dbErr) {
+          console.error('[session-audio] Failed to update hasAudio:', dbErr);
+        }
+      }
+
+      return NextResponse.json({ success: true, finalized: writeMeta, empty: !writeMeta });
     }
 
     // Read raw PCM16 bytes from the body stream. Empty body → skip (the
