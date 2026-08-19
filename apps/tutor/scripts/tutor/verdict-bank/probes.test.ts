@@ -2,7 +2,7 @@
 /**
  * Sanity checks on the probe bank itself (2026-08-18 verdict-probe-bank
  * plan, Task 3). Not a check of the brain — just structural integrity of
- * the 21 authored probes so a bad edit fails loudly before Tasks 4-5 ever
+ * the 22 authored probes so a bad edit fails loudly before Tasks 4-5 ever
  * drive a real session against them.
  */
 import { ALL_PROBES } from './probes/index';
@@ -15,7 +15,7 @@ function check(name: string, actual: unknown, expected: unknown) {
 }
 
 console.log('ALL_PROBES structure');
-check('exactly 21 probes', ALL_PROBES.length, 21);
+check('exactly 22 probes', ALL_PROBES.length, 22);
 
 const ids = ALL_PROBES.map((p) => p.id);
 check('all ids unique', new Set(ids).size, ids.length);

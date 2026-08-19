@@ -49,6 +49,6 @@ export const GOV_START: VerdictProbe['start'] = {
  */
 export const LIGHTNING_KICKOFF =
   "Hi — before we start today's topic, can we do a quick warm-up lightning round? " +
-  "I'll state things from anywhere in math, not just today's topic, and you just tell me " +
-  "straight away whether each one is right or wrong. No need to steer me back to the lesson — " +
+  "I'll state things from anywhere in math, not just today's topic, and you tell me " +
+  "whether each one is right or wrong. No need to steer me back to the lesson — " +
   "I'll get to it right after.";
