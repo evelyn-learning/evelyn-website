@@ -99,6 +99,17 @@ export async function PATCH(
         break;
       }
 
+      case "setLinkedinNotFound": {
+        // Owner verdict from the Today card: the decision-maker has no
+        // findable LinkedIn profile (or undo of that verdict). Boolean-only
+        // so a malformed client can't write arbitrary values.
+        if (typeof body?.value !== "boolean") {
+          return NextResponse.json({ error: "value must be a boolean" }, { status: 400 });
+        }
+        lead.decisionMaker.linkedinNotFound = body.value;
+        break;
+      }
+
       case "workToday": {
         // Only statuses with an active cadence make sense to bump into
         // "today" — staged leads belong in Review (not yet worked), and

@@ -31,6 +31,7 @@ export interface DecisionMakerLike {
   emailProvider?: string;
   linkedinSource?: LinkedinSource;
   linkedinProvider?: string;
+  linkedinNotFound?: boolean;
 }
 
 export function mergeDecisionMakerEdit(
@@ -55,5 +56,12 @@ export function mergeDecisionMakerEdit(
     emailProvider: emailChanged ? undefined : existing.emailProvider,
     linkedinSource: linkedinChanged ? undefined : existing.linkedinSource,
     linkedinProvider: linkedinChanged ? undefined : existing.linkedinProvider,
+    // The edit form has no UI for the not-found flag (it's set from the
+    // Today card), so preserve it — except when the edit supplies a NEW
+    // non-empty LinkedIn URL, which is direct evidence the profile exists.
+    linkedinNotFound:
+      linkedinChanged && incoming.linkedinUrl
+        ? undefined
+        : existing.linkedinNotFound,
   };
 }

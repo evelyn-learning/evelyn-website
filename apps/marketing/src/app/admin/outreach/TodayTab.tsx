@@ -12,6 +12,8 @@ import {
   Pencil,
   ExternalLink,
   Sparkles,
+  Wand2,
+  UserX,
 } from "lucide-react";
 import { expectedNextChannel, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from "@/lib/outreach/cadence";
 import { TOUCH_CHANNELS } from "@/lib/outreach/enums";
@@ -59,10 +61,21 @@ export default function TodayTab({
       (l.status === "approved" || l.status === "contacted")
   );
 
-  const [pendingId, setPendingId] = useState<string | null>(null);
+  // Per-lead busy set, not a single shared id: generateDraft holds a card
+  // busy for 30-60s of model time, and with one shared slot, acting on any
+  // other card would instantly un-busy the generating one (double-click →
+  // two billed model calls racing on the same document).
+  const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(new Set());
+  const setPending = (id: string, on: boolean) =>
+    setPendingIds((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id);
+      else next.delete(id);
+      return next;
+    });
 
   const markSent = async (id: string, channel: TouchChannel) => {
-    setPendingId(id);
+    setPending(id, true);
     try {
       const res = await fetch(`/api/admin/outreach/leads/${id}/mark-sent`, {
         method: "POST",
@@ -78,7 +91,7 @@ export default function TodayTab({
     } catch {
       alert("Failed to mark sent");
     } finally {
-      setPendingId(null);
+      setPending(id, false);
     }
   };
 
@@ -86,7 +99,7 @@ export default function TodayTab({
     id: string,
     draft: { channel: TouchChannel; subject?: string; body: string }
   ): Promise<boolean> => {
-    setPendingId(id);
+    setPending(id, true);
     try {
       const res = await fetch(`/api/admin/outreach/leads/${id}/draft`, {
         method: "POST",
@@ -104,7 +117,52 @@ export default function TodayTab({
       alert("Failed to create Gmail draft");
       return false;
     } finally {
-      setPendingId(null);
+      setPending(id, false);
+    }
+  };
+
+  // Ask the server to have Claude write this channel's next message from the
+  // research on file (generate-draft route). Slow (~30-60s of model time) —
+  // the card's busy state covers the wait.
+  const generateDraft = async (id: string, channel: TouchChannel) => {
+    setPending(id, true);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}/generate-draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ channel }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to generate draft");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to generate draft");
+    } finally {
+      setPending(id, false);
+    }
+  };
+
+  const setLinkedinNotFound = async (id: string, value: boolean) => {
+    setPending(id, true);
+    try {
+      const res = await fetch(`/api/admin/outreach/leads/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setLinkedinNotFound", value }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Failed to update lead");
+        return;
+      }
+      await refresh();
+    } catch {
+      alert("Failed to update lead");
+    } finally {
+      setPending(id, false);
     }
   };
 
@@ -112,7 +170,7 @@ export default function TodayTab({
   // it ran but came up empty, and null on failure (already alerted, so the
   // card has nothing further to show).
   const enrichLead = async (id: string): Promise<boolean | null> => {
-    setPendingId(id);
+    setPending(id, true);
     try {
       const res = await fetch(`/api/admin/outreach/leads/${id}/enrich`, { method: "POST" });
       const data = await res.json().catch(() => ({}));
@@ -126,7 +184,7 @@ export default function TodayTab({
       alert("Failed to enrich lead");
       return null;
     } finally {
-      setPendingId(null);
+      setPending(id, false);
     }
   };
 
@@ -144,9 +202,11 @@ export default function TodayTab({
         <LeadCard
           key={lead._id}
           lead={lead}
-          busy={pendingId === lead._id}
+          busy={pendingIds.has(lead._id)}
           onMarkSent={(channel) => markSent(lead._id, channel)}
           onCreateGmailDraft={(draft) => createGmailDraft(lead._id, draft)}
+          onGenerateDraft={(channel) => generateDraft(lead._id, channel)}
+          onSetLinkedinNotFound={(value) => setLinkedinNotFound(lead._id, value)}
           onEnrich={() => enrichLead(lead._id)}
           gmailAccount={gmailAccount}
         />
@@ -160,6 +220,8 @@ function LeadCard({
   busy,
   onMarkSent,
   onCreateGmailDraft,
+  onGenerateDraft,
+  onSetLinkedinNotFound,
   onEnrich,
   gmailAccount,
 }: {
@@ -172,6 +234,8 @@ function LeadCard({
     subject?: string;
     body: string;
   }) => Promise<boolean>;
+  onGenerateDraft: (channel: TouchChannel) => void;
+  onSetLinkedinNotFound: (value: boolean) => void;
   onEnrich: () => Promise<boolean | null>;
 }) {
   const dm = lead.decisionMaker;
@@ -184,10 +248,14 @@ function LeadCard({
   // cadence-derived value that drives the "Next: …" badge below) so the
   // tab that's actually due opens by default; falls back to Email when the
   // sequence is exhausted.
-  const [activeTab, setActiveTab] = useState<TouchChannel>(
-    () =>
-      expectedNextChannel(lead.touches.map((t) => ({ ...t, at: new Date(t.at) }))) ?? "email"
-  );
+  const [activeTab, setActiveTab] = useState<TouchChannel>(() => {
+    const next =
+      expectedNextChannel(lead.touches.map((t) => ({ ...t, at: new Date(t.at) }))) ?? "email";
+    // When the owner has marked the decision-maker as having no LinkedIn
+    // profile, the LinkedIn step can't be worked — open Email instead (the
+    // step counter is channel-blind, so an email consumes the step fine).
+    return next === "linkedin" && lead.decisionMaker?.linkedinNotFound ? "email" : next;
+  });
 
   const startEdit = () => {
     setEditSubject(lead.currentDraft?.subject ?? "");
@@ -220,6 +288,9 @@ function LeadCard({
   };
 
   const outboundCount = lead.touches.filter((t) => t.direction === "outbound").length;
+  const emailOutboundCount = lead.touches.filter(
+    (t) => t.direction === "outbound" && t.channel === "email"
+  ).length;
   const nextChannel = expectedNextChannel(
     lead.touches.map((t) => ({ ...t, at: new Date(t.at) }))
   );
@@ -229,7 +300,10 @@ function LeadCard({
   const demoLink = lead.demoToken ? `${siteUrl}/d/${lead.demoToken}` : null;
   const contactGuess = lead.website ? `${lead.website.replace(/\/$/, "")}/contact` : null;
 
-  const canSendEmail = !!lead.currentDraft?.gmailThreadId;
+  // A drafted body is enough to send: a generated draft has no Gmail ids —
+  // the operator copies it into their own client — and mark-sent records the
+  // touch either way (it only seeds gmailThreadIds when a thread was minted).
+  const canSendEmail = lead.currentDraft?.channel === "email" && !!lead.currentDraft?.body;
   const showCreateDraftButton =
     lead.currentDraft?.channel === "email" && !lead.currentDraft?.gmailDraftId;
   const missingChannel = !dm?.email || !dm?.linkedinUrl;
@@ -254,7 +328,10 @@ function LeadCard({
             </span>
             {nextChannel !== null && (
               <span className="inline-flex rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
-                Next: {SEQUENCE_STEP_LABELS[outboundCount]}
+                Next:{" "}
+                {nextChannel === "linkedin" && dm?.linkedinNotFound
+                  ? "Email (no LinkedIn profile)"
+                  : SEQUENCE_STEP_LABELS[outboundCount]}
               </span>
             )}
             {lastVisit && (
@@ -324,6 +401,19 @@ function LeadCard({
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium text-gray-700">Drafted message</h4>
               <div className="flex items-center gap-2">
+                {/* Regenerate covers the stale-draft flows: a prior step's
+                    copy left in the slot (e.g. intro drafted, LinkedIn sent
+                    instead) would otherwise block per-step generation. */}
+                {lead.currentDraft && !editing && (
+                  <button
+                    onClick={() => onGenerateDraft("email")}
+                    disabled={busy}
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <Wand2 className="h-3.5 w-3.5" />
+                    {busy ? "Working…" : "Regenerate"}
+                  </button>
+                )}
                 {lead.currentDraft && !editing && (
                   <button
                     onClick={startEdit}
@@ -434,16 +524,47 @@ function LeadCard({
                 </div>
               </>
             ) : (
-              <p className="mt-2 text-sm text-gray-500">
-                No draft yet. Drafts are written by the agent via the draft API (Task 8).
-              </p>
+              <div className="mt-2">
+                <p className="text-sm text-gray-500">
+                  No draft for this step yet.
+                </p>
+                {/* No point paying for email copy that can't be sent or
+                    recorded — without an address, "Create Gmail draft" 400s.
+                    Same gate shape as the Enrich affordance above. */}
+                {dm?.email ? (
+                  <button
+                    onClick={() => onGenerateDraft("email")}
+                    disabled={busy}
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    {/* Label by the EMAIL step, not the sequence slot — at
+                        count 1 the slot says "LinkedIn note" but this button
+                        generates an email (the skipped-LinkedIn bump). Step
+                        rule mirrors emailStepFor in generate-draft.ts. */}
+                    {busy
+                      ? "Generating…"
+                      : `Generate ${
+                          emailOutboundCount === 0
+                            ? "intro email"
+                            : outboundCount >= 3
+                              ? "breakup email"
+                              : "email bump"
+                        }`}
+                  </button>
+                ) : (
+                  <p className="mt-2 text-sm text-gray-400">
+                    No decision-maker email on file — use Enrich to find one first.
+                  </p>
+                )}
+              </div>
             )}
 
             <div className="mt-3 border-t border-gray-100 pt-3">
               <button
                 onClick={() => onMarkSent("email")}
                 disabled={busy || !canSendEmail}
-                title={!canSendEmail ? "Nothing drafted to send — create a Gmail draft first" : undefined}
+                title={!canSendEmail ? "Nothing drafted to send — generate or write a draft first" : undefined}
                 className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
               >
                 <Mail className="h-4 w-4" />
@@ -455,7 +576,27 @@ function LeadCard({
 
         {activeTab === "linkedin" && (
           <div className="mt-3">
-            {lead.linkedinDraft ? (
+            {dm?.linkedinNotFound ? (
+              // Owner verdict: this person has no findable LinkedIn profile.
+              // Nothing to draft or send on this channel — the card's header
+              // hint and default tab steer the step to email instead.
+              <div className="mt-2">
+                <p className="inline-flex items-center gap-1.5 text-sm text-gray-500">
+                  <UserX className="h-4 w-4" />
+                  Marked as no findable LinkedIn profile — the sequence suggests email
+                  for this lead instead.
+                </p>
+                <div className="mt-3 border-t border-gray-100 pt-3">
+                  <button
+                    onClick={() => onSetLinkedinNotFound(false)}
+                    disabled={busy}
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    Undo — profile exists after all
+                  </button>
+                </div>
+              </div>
+            ) : lead.linkedinDraft ? (
               <>
                 <div className="text-sm font-medium text-gray-800">{lead.linkedinDraft.subject}</div>
                 <pre className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
@@ -497,7 +638,7 @@ function LeadCard({
                     </span>
                   )}
                 </div>
-                <div className="mt-3 border-t border-gray-100 pt-3">
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
                   <button
                     onClick={() => onMarkSent("linkedin")}
                     disabled={busy}
@@ -505,6 +646,15 @@ function LeadCard({
                   >
                     <Linkedin className="h-4 w-4" />
                     Mark LinkedIn sent
+                  </button>
+                  <button
+                    onClick={() => onSetLinkedinNotFound(true)}
+                    disabled={busy}
+                    title="Record that this person has no findable LinkedIn profile"
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <UserX className="h-4 w-4" />
+                    Profile not found
                   </button>
                 </div>
               </>
@@ -514,8 +664,16 @@ function LeadCard({
               // happen even though the agent never drafted it, so Mark Sent
               // stays available.
               <div className="mt-2">
-                <p className="text-sm text-gray-500">No draft yet — run the backfill script</p>
-                <div className="mt-3 border-t border-gray-100 pt-3">
+                <p className="text-sm text-gray-500">No draft yet.</p>
+                <button
+                  onClick={() => onGenerateDraft("linkedin")}
+                  disabled={busy}
+                  className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {busy ? "Generating…" : "Generate LinkedIn note"}
+                </button>
+                <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3">
                   <button
                     onClick={() => onMarkSent("linkedin")}
                     disabled={busy}
@@ -523,6 +681,15 @@ function LeadCard({
                   >
                     <Linkedin className="h-4 w-4" />
                     Mark LinkedIn sent
+                  </button>
+                  <button
+                    onClick={() => onSetLinkedinNotFound(true)}
+                    disabled={busy}
+                    title="Record that this person has no findable LinkedIn profile"
+                    className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    <UserX className="h-4 w-4" />
+                    Profile not found
                   </button>
                 </div>
               </div>
@@ -584,7 +751,15 @@ function LeadCard({
               // mean no send — keep Mark Sent available for a hand-filled
               // contact form.
               <div className="mt-2">
-                <p className="text-sm text-gray-500">No draft yet — run the backfill script</p>
+                <p className="text-sm text-gray-500">No draft yet.</p>
+                <button
+                  onClick={() => onGenerateDraft("form")}
+                  disabled={busy}
+                  className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-600 disabled:opacity-50"
+                >
+                  <Wand2 className="h-4 w-4" />
+                  {busy ? "Generating…" : "Generate contact-form message"}
+                </button>
                 <div className="mt-3 border-t border-gray-100 pt-3">
                   <button
                     onClick={() => onMarkSent("form")}

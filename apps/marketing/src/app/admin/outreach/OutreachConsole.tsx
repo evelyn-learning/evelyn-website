@@ -42,6 +42,7 @@ export interface LeadJSON {
     emailProvider?: string;
     linkedinSource?: LinkedinSource;
     linkedinProvider?: string;
+    linkedinNotFound?: boolean;
   };
   website: string;
   source: string;

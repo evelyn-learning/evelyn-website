@@ -46,6 +46,9 @@ export interface ILead extends Document {
     emailProvider?: string;
     linkedinSource?: LinkedinSource;
     linkedinProvider?: string;
+    // Owner searched LinkedIn and the person has no findable profile —
+    // the Today card should stop suggesting a LinkedIn touch for this lead.
+    linkedinNotFound?: boolean;
   };
   website: string;
   source: string;
@@ -92,6 +95,7 @@ const LeadSchema = new Schema<ILead>(
       emailProvider: String,
       linkedinSource: { type: String, enum: LINKEDIN_SOURCES },
       linkedinProvider: String,
+      linkedinNotFound: Boolean,
     },
     website: { type: String, default: "" },
     source: { type: String, default: "" },
