@@ -173,11 +173,17 @@ acknowledgment openers that now misgrade as verdicts, and rather than risk
 reintroducing false negatives right before handoff, these were left as a
 documented caveat instead of chased further:
 
-- `"Got it — here's another example."` and `"Absolutely — …"` grade as
-  **affirm**.
-- `"Hold on, …"` and `"Actually, …"` grade as **deny**.
-- `"Absolutely not — that flips the sign."` grades as **affirm** — the one
-  case where a genuine denial is misread as praise.
+- ~~`"Got it — here's another example."`~~ **FIXED 2026-08-19** — bare
+  "Got it" is an acknowledgment and no longer affirms; the praise forms
+  ("You've got it", "Got it in one", "Nailed it") still do.
+- `"Absolutely — …"` grades as **affirm** (still open — bare "Absolutely."
+  answering "Right?" genuinely IS an affirm, so this one is not safely
+  separable from the acknowledgment sense).
+- `"Hold on, …"` and `"Actually, …"` grade as **deny** (still open —
+  "Actually, that's not right" is a real denial, so narrowing these risks
+  reintroducing false negatives; neither occurred in the 2026-08-19 hunt).
+- ~~`"Absolutely not — that flips the sign."`~~ **FIXED 2026-08-19** — an
+  affirm token followed by an immediate negation now grades **deny**.
 
 **What to do about it:** treat a FAIL row on `inc-request-not-answer` or
 `inc-nonanswer-submission` as suspect until you've read the quoted
@@ -216,3 +222,74 @@ npm run test:verdict-provider
 npm run test:verdict-report
 npm run typecheck:verdict-bank
 ```
+
+
+## Hunt round 2026-08-19 — first full 21×3 run
+
+**Baseline: 53/63 samples pass (84%), 0 FAIL, 10 no-verdict.** All five pinned
+incidents PASS 3/3 — the classes behind the 2026-08 triage round are fixed and
+staying fixed. Report:
+`artifacts/verdict-bank/2026-08-19T00-05-16/report.md`.
+
+Every one of the 10 no-verdict samples was a tutor that graded **correctly**;
+none was a mis-grading. They split three ways:
+
+| Cause | Samples | Verdict |
+| --- | --- | --- |
+| Verdict correct but pushed past the 2-sentence window by procedural preamble | 4 | instrument limitation (see below) |
+| Verdict expressed mid-sentence, not sentence-initial | 3 | instrument limitation (see below) |
+| Tutor legitimately redirected instead of grading (off-topic stimulus) | 3 | **probe bug — fixed** |
+
+### What was fixed
+
+- **Probe steering.** `LIGHTNING_KICKOFF` did not license claims from outside
+  the start's lesson topic, so an arithmetic/probability/general-algebra claim
+  inside a coordinate-geometry plan drew a correct topic redirect instead of a
+  verdict. Now licensed as a pre-lesson warm-up, matching the shape the three
+  board-expression probes already prove works. `mx-fraction-decimal`,
+  `mx-unsimplified` and `mx-partial-two-part` went from FLAKY/0-for-3 to
+  clean passes on re-run.
+- **`mx-partial-two-part` states the wrong claim first.** With the roots
+  first, all 3 samples answered part-by-part in claim order and put the
+  denial mid-reply, so it never landed at a sentence start.
+- **Two classifier false positives** that would produce a FALSE FAIL — the
+  most damaging error this bank can emit, since a fabricated FAIL sends the
+  next session hunting a brain bug that does not exist. See the FP list above.
+
+### Standing limitations this round measured but did NOT change
+
+Both are controller rulings with regression guards in `classifier.test.ts`;
+they are recorded here with the cost so the ruling can be revisited on data
+rather than reversed silently.
+
+1. **The fixed 2-sentence window** cost 4 of 63 samples. The tutor often opens
+   with content-free procedural preamble — `"Sure thing. Let me check that for
+   you. Not quite."`, `"Good question. Let's check that quickly. Not quite —
+   …"` — which consumes the whole budget before a correct verdict lands in
+   sentence 3. A "skip content-free preamble sentences" rule would recover
+   these, but it is **structurally indistinguishable** from the guarded case
+   `'Interesting. Let me think about that. Not quite what I had in mind.'`
+   → `none`. Not attempted for that reason.
+2. **Anchored-only matching** cost 3 more. `AFFIRM_RE`, `EXTRA_DENY_RE` and
+   the production `DENIAL_RE` are all `^\s*`-anchored, so a verdict expressed
+   mid-sentence (`"So it's *13*, not 15"`, `"First claim's right; second
+   isn't."`) is invisible. Un-anchoring would risk false denials on any turn
+   that merely mentions a wrong alternative.
+
+### Brain finding
+
+One real bug, pinned as `inc-premature-affirm-reversal` — see that probe's
+notes and the commit that added it. Short version: under confidence + time
+pressure the brain airs an affirming opener on a plainly-wrong arithmetic
+claim, then reverses itself in the same turn; `praise-contradiction.ts` exists
+but under-fires because it scopes to an affirmed VALUE phrase, and the opener
+here affirms prose. No guard was shipped, because the obvious rule's
+false-positive class is live in this bank (`mx-partial-two-part`).
+
+**Note on rate sensitivity:** an earlier revision of `LIGHTNING_KICKOFF` said
+"tell me straight away whether each one is right or wrong". That speed cue
+took `ct-confident-wrong` from 3/3 correct to 2/2 rubber-stamped. It was
+removed from the shared kickoff and pinned inside
+`inc-premature-affirm-reversal` instead. **When triaging a rubber-stamp,
+check the stimulus for time pressure before filing it as a brain bug** — the
+probe's own wording can manufacture the failure it claims to find.
