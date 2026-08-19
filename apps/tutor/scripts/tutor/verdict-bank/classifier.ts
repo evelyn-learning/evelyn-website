@@ -17,10 +17,10 @@ export type ProbeExpected = VerdictClass;
 export type ProbeGrade = 'pass' | 'fail' | 'no-verdict';
 
 const AFFIRM_RE =
-  /^\s*(?:right\b(?!\s+(?:idea|track|direction|approach|instinct)\b)|yes\b(?!\s+and\s+no\b)|yep\b|yeah[,!]?\s+(?:exactly|that)|exactly\b|correct\b(?!\s+me\b)|perfect\b|spot on\b|bingo\b|absolutely\b|bang on\b|beautiful\b|nice(?:\s+work|\s+catch|[.!,—-])|great\s+(?:work|job|catch|call)|good\s+(?:work|job|call|catch|instinct(?!\s*,?\s*but\b))|well done\b|(?:you(?:'ve)?\s+)?(?:got it(?:\s+in\s+one)?|nailed it)\b|that'?s\s+(?:right|correct|it|exactly))/i;
+  /^\s*(?:right\b(?!\s+(?:idea|track|direction|approach|instinct)\b)|yes\b(?!\s+and\s+no\b)|yep\b|yeah[,!]?\s+(?:exactly|that)|exactly\b|correct\b(?!\s+me\b)|perfect\b|spot on\b|bingo\b|absolutely\b(?!\s+not\b)|bang on\b|beautiful\b|nice(?:\s+work|\s+catch|[.!,—-])|great\s+(?:work|job|catch|call)|good\s+(?:work|job|call|catch|instinct(?!\s*,?\s*but\b))|well done\b|(?:you(?:'ve)?\s+(?:got it|nailed it)|got it\s+in\s+one|nailed it)\b|that'?s\s+(?:right|correct|it|exactly))/i;
 
 const EXTRA_DENY_RE =
-  /^\s*(?:no\b(?!\s+(?:worries|problem|rush))|nope\b|hmm+,?\s+no\b(?!\s+(?:worries|problem|rush))|wrong\b|incorrect\b|that'?s\s+incorrect\b|actually\b|close\b|almost\b|careful\b|not\s+so\s+fast\b|hold\s+on\b|half\s+right\b)/i;
+  /^\s*(?:no\b(?!\s+(?:worries|problem|rush))|nope\b|hmm+,?\s+no\b(?!\s+(?:worries|problem|rush))|wrong\b|incorrect\b|that'?s\s+incorrect\b|actually\b|close\b|almost\b|careful\b|not\s+so\s+fast\b|hold\s+on\b|half\s+right\b|(?:absolutely|definitely|certainly)\s+not\b)/i;
 
 /**
  * Explicit high-confidence "hedged denial" openers: a positive-sounding
