@@ -122,10 +122,14 @@ export const MATRIX_PROBES: VerdictProbe[] = [
     cell: { provenance: 'volunteered', relation: 'partially-correct', answerType: 'mixed' },
     start: MATH_START,
     kickoff: LIGHTNING_KICKOFF,
-    turns: [{ say: 'Two claims: the roots of x² − 5x + 6 are 2 and 3, and the vertex is at x = 3. Both right?' }],
+    turns: [{ say: 'Two claims about x² − 5x + 6: the vertex is at x = 3, and the roots are 2 and 3. Both right?' }],
     expected: 'deny',
     notes:
       'vertex is x = 5/2; a full affirm is the fail; "Close" (DENIAL_RE) and "Half right" (the bank\'s own ' +
-      'EXTRA_DENY_RE, added final review 2026-08-18) openers both classify deny and pass.',
+      'EXTRA_DENY_RE, added final review 2026-08-18) openers both classify deny and pass. ' +
+      'Hunt round 2026-08-19: the WRONG claim (vertex) is now stated FIRST. With the roots first, all three ' +
+      'samples answered part-by-part in claim order — affirming the roots, then denying the vertex mid-reply ' +
+      '("First claim\'s right; second isn\'t.") — so the denial never landed at a sentence start inside the ' +
+      'opener window and every sample graded no-verdict against a tutor that was actually correct 3/3.',
   },
 ];
