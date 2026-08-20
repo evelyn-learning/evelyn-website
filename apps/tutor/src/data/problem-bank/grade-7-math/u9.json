@@ -1,0 +1,394 @@
+[
+  {
+    "id": "m7math-populations-and-samples-001",
+    "loId": "m7math.populations-and-samples",
+    "cedCode": "M7MATH-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A school has 800 students. The principal wants to know how many of them ride the bus, so she surveys 60 students. What is the population?",
+    "choices": [
+      "The 60 students who were surveyed",
+      "All 800 students at the school",
+      "Only the students who ride the bus",
+      "The principal and the school staff"
+    ],
+    "answer": "B",
+    "hints": [
+      "Read the question the principal is asking, and name the whole group she wants to know about.",
+      "The population is everyone you care about. The smaller group that actually answered is called the sample."
+    ]
+  },
+  {
+    "id": "m7math-populations-and-samples-002",
+    "loId": "m7math.populations-and-samples",
+    "cedCode": "M7MATH-9.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A factory makes 900 flashlights in one day. A checker tests 45 of them to see whether they turn on. How many flashlights are in the population but NOT in the sample? Type your answer as a number.",
+    "hints": [
+      "First decide which number is the population and which is the sample.",
+      "The population is all 900 flashlights and the sample is the 45 that were tested. Subtract the sample from the population."
+    ],
+    "answer": "855"
+  },
+  {
+    "id": "m7math-populations-and-samples-003",
+    "loId": "m7math.populations-and-samples",
+    "cedCode": "M7MATH-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jonas wants to know the favorite kind of music of all 400 students at his school. Which sample is most likely to be representative?",
+    "choices": [
+      "The 25 students in the school choir",
+      "The first 30 students who reply to a poll posted on the school website",
+      "40 students whose names are drawn at random from a list of all 400",
+      "The 20 students waiting outside the band room"
+    ],
+    "answer": "C",
+    "hints": [
+      "For each group, ask who gets left out, and whether the students left out would answer differently.",
+      "A representative sample gives every one of the 400 students the same chance of being picked."
+    ]
+  },
+  {
+    "id": "m7math-populations-and-samples-004",
+    "loId": "m7math.populations-and-samples",
+    "cedCode": "M7MATH-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A town wants to know how often its 3,000 residents use the public pool. A surveyor stands at the pool entrance on Saturday and asks 100 people who walk in. Why is this sample biased?",
+    "choices": [
+      "Everyone asked was already at the pool, so people who use the pool are over-represented",
+      "A sample of 100 is too small to say anything about 3,000 residents",
+      "Saturday is the busiest day, so the surveyor counted too many people",
+      "The surveyor should have asked 100 people at the library instead"
+    ],
+    "answer": "A",
+    "hints": [
+      "Bias comes from HOW people were chosen, not from how many were chosen.",
+      "Think about the residents who never go to the pool at all. What was their chance of being asked?"
+    ]
+  },
+  {
+    "id": "m7math-populations-and-samples-005",
+    "loId": "m7math.populations-and-samples",
+    "cedCode": "M7MATH-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Devon surveyed the 18 members of the chess club about the best after-school activity, and 15 of them said chess. He wants his result to speak for all 500 students at the school. What should he change?",
+    "choices": [
+      "Survey 200 chess club members instead of 18",
+      "Survey the same 18 chess club members again on a different day",
+      "Report the result as a percent of the club instead of a count",
+      "Draw 50 names at random from a list of all 500 students"
+    ],
+    "answer": "D",
+    "hints": [
+      "Decide first whether Devon's problem is the size of his sample or the way he picked it.",
+      "A bigger pile of tilted answers is still tilted. Fix how the students are chosen."
+    ]
+  },
+  {
+    "id": "m7math-populations-and-samples-006",
+    "loId": "m7math.populations-and-samples",
+    "cedCode": "M7MATH-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A librarian wants the mean number of books read over the summer by the 1,000 students at her school, who are 500 seventh graders and 500 eighth graders. Which survey plan would give an estimate that is TOO HIGH?",
+    "choices": [
+      "Survey 80 students chosen at random from a list of all 1,000 students",
+      "Survey the 80 students who signed up for the summer reading club",
+      "Survey 40 students chosen at random from the seventh grade and 40 chosen at random from the eighth grade",
+      "Survey the first 80 students to arrive at school on Monday morning"
+    ],
+    "answer": "B",
+    "hints": [
+      "You are not just looking for a biased plan. You are looking for one that tilts in a particular direction.",
+      "Ask which group of students already reads more than a typical student, before anyone surveys them."
+    ]
+  },
+  {
+    "id": "m7math-random-sampling-and-inferences-001",
+    "loId": "m7math.random-sampling-and-inferences",
+    "cedCode": "M7MATH-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which plan gives a random sample of the 600 students at Oak Middle School?",
+    "choices": [
+      "Ask the 30 students sitting at the two lunch tables nearest the door",
+      "Post a poll on the school website and use the first 30 replies",
+      "Number every student from 1 to 600 and have a computer pick 30 of the numbers",
+      "Ask the 30 students on the track team"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether every one of the 600 students has an equal chance of ending up in the sample.",
+      "Three of these let something other than chance decide: where you sit, how much you want to reply, or which team you joined."
+    ]
+  },
+  {
+    "id": "m7math-random-sampling-and-inferences-002",
+    "loId": "m7math.random-sampling-and-inferences",
+    "cedCode": "M7MATH-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A school has 800 students. In a random sample of 40 students, 9 said they bring lunch from home. About how many of the 800 students bring lunch from home?",
+    "choices": ["180", "360", "20", "9"],
+    "answer": "A",
+    "hints": [
+      "First find the scale factor: how many groups of 40 fit into 800?",
+      "Multiply the 9 lunch-bringers by that scale factor, then check that your answer divided by 800 matches 9 divided by 40."
+    ]
+  },
+  {
+    "id": "m7math-random-sampling-and-inferences-003",
+    "loId": "m7math.random-sampling-and-inferences",
+    "cedCode": "M7MATH-9.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Maple Middle School has 750 students. In a random sample of 30 students, 7 said they ride a bike to school. About how many of the 750 students ride a bike to school? Type your answer as a number.",
+    "hints": [
+      "Divide 750 by 30 to find how many sample-sized groups fit into the school.",
+      "The scale factor is 25. Multiply the 7 bike riders by 25, then check that your answer divided by 750 matches 7 divided by 30."
+    ],
+    "answer": "175"
+  },
+  {
+    "id": "m7math-random-sampling-and-inferences-004",
+    "loId": "m7math.random-sampling-and-inferences",
+    "cedCode": "M7MATH-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A classroom library holds 500 books. In a random sample of 25 of those books, 6 were mysteries. Which conclusion is the most appropriate?",
+    "choices": [
+      "Exactly 120 of the 500 books are mysteries",
+      "About 150 of the 500 books are mysteries",
+      "About 6 of the 500 books are mysteries",
+      "About 120 of the 500 books are mysteries"
+    ],
+    "answer": "D",
+    "hints": [
+      "Do the scaling first, then look hard at the wording of each choice.",
+      "The scale factor is 500 divided by 25. A sample tells you the neighborhood, not the exact address, so the right sentence starts with about."
+    ]
+  },
+  {
+    "id": "m7math-random-sampling-and-inferences-005",
+    "loId": "m7math.random-sampling-and-inferences",
+    "cedCode": "M7MATH-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two classes each take a random sample from the same library of 1,200 books to estimate how many are graphic novels. Class 1 samples 20 books. Class 2 samples 200 books. Which statement is true?",
+    "choices": [
+      "Class 1's estimate is more reliable, because a smaller sample is easier to count carefully",
+      "Class 2's estimate is more reliable, because in a larger sample each book stands for fewer books in the library",
+      "Both estimates are equally reliable, because both samples were chosen at random",
+      "Neither estimate can be trusted, because no sample can describe 1,200 books"
+    ],
+    "answer": "B",
+    "hints": [
+      "Work out the scale factor for each class: 1,200 divided by 20, and 1,200 divided by 200.",
+      "In Class 1 every single book stands for 60 books, so one unusual book swings the estimate by 60. How far does one book swing Class 2's estimate?"
+    ]
+  },
+  {
+    "id": "m7math-random-sampling-and-inferences-006",
+    "loId": "m7math.random-sampling-and-inferences",
+    "cedCode": "M7MATH-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A town has 2,400 middle school students. From a random sample of 60 students, a reporter estimated that about 720 of the 2,400 own a skateboard. How many students in the sample of 60 said they own a skateboard?",
+    "choices": ["18", "12", "40", "720"],
+    "answer": "A",
+    "hints": [
+      "This runs the usual scaling backwards. Find the scale factor first, then undo the multiplication.",
+      "The scale factor is 2,400 divided by 60. Divide the estimate of 720 by that factor, then check your answer divided by 60 matches 720 divided by 2,400."
+    ]
+  },
+  {
+    "id": "m7math-measures-of-center-and-variability-001",
+    "loId": "m7math.measures-of-center-and-variability",
+    "cedCode": "M7MATH-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Six friends counted how many songs they downloaded this month: 3, 5, 6, 8, 10, 16. What is the mean?",
+    "choices": ["7", "13", "8", "48"],
+    "answer": "C",
+    "hints": [
+      "The mean is the sum of all the values divided by how many values there are.",
+      "Add all six numbers, then divide that total by 6. Do not stop at the total."
+    ]
+  },
+  {
+    "id": "m7math-measures-of-center-and-variability-002",
+    "loId": "m7math.measures-of-center-and-variability",
+    "cedCode": "M7MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A soccer team scored these numbers of goals in six games: 6, 2, 9, 4, 11, 8. What is the median?",
+    "choices": ["6", "9", "8", "7"],
+    "answer": "D",
+    "hints": [
+      "The median is the middle of the ORDERED list, so put the six numbers in order first.",
+      "Six values have no single middle. Find the 3rd and 4th values of the ordered list and average them."
+    ]
+  },
+  {
+    "id": "m7math-measures-of-center-and-variability-003",
+    "loId": "m7math.measures-of-center-and-variability",
+    "cedCode": "M7MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Zoe timed how many minutes she read on six nights: 6, 8, 10, 10, 12, 14. What is the mean absolute deviation? Type your answer as a number.",
+    "hints": [
+      "MAD has three steps: find the mean, find each distance from the mean, then average those distances.",
+      "The mean is 10. The distances from 10 are 4, 2, 0, 0, 2 and 4, and every distance is positive. Add them and divide by 6."
+    ],
+    "answer": "2"
+  },
+  {
+    "id": "m7math-measures-of-center-and-variability-004",
+    "loId": "m7math.measures-of-center-and-variability",
+    "cedCode": "M7MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Six friends counted how many books they read this summer: 4, 8, 9, 10, 14, 15. The mean is 10. What is the mean absolute deviation?",
+    "choices": ["3", "0", "11", "18"],
+    "answer": "A",
+    "hints": [
+      "Find how far each value sits from 10, and keep every distance positive, because a distance is never negative.",
+      "The distances are 6, 2, 1, 0, 4 and 5. Add those six distances, then divide by 6."
+    ]
+  },
+  {
+    "id": "m7math-measures-of-center-and-variability-005",
+    "loId": "m7math.measures-of-center-and-variability",
+    "cedCode": "M7MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Seven students recorded how many minutes they waited for the bus: 6, 8, 8, 9, 11, 12, 65. The mean is 17, the median is 9, the mode is 8 and the range is 59. Which measure best describes a typical wait?",
+    "choices": [
+      "The mean, 17 minutes, because it is the only measure that uses every value",
+      "The median, 9 minutes, because the single wait of 65 pulls the mean far above most of the data",
+      "The mode, 8 minutes, because it is the only value that repeats",
+      "The range, 59 minutes, because it covers the whole data set"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at the seven waits and count how many of them are actually close to 17 minutes.",
+      "One value sits far from the rest. Which measure of center does an outlier drag hard, and which one barely notices it?"
+    ]
+  },
+  {
+    "id": "m7math-measures-of-center-and-variability-006",
+    "loId": "m7math.measures-of-center-and-variability",
+    "cedCode": "M7MATH-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ana took six quizzes. Five of her scores were 12, 14, 15, 18 and 19. Her mean score over all six quizzes was 16. What was her sixth score?",
+    "choices": ["2", "16", "18", "78"],
+    "answer": "C",
+    "hints": [
+      "The mean times the number of quizzes gives the total of all six scores. Work out that total first.",
+      "Six quizzes with a mean of 16 means the six scores add to 96. Add up the five you know, then subtract."
+    ]
+  },
+  {
+    "id": "m7math-comparing-two-populations-001",
+    "loId": "m7math.comparing-two-populations",
+    "cedCode": "M7MATH-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Team Green does a mean of 25 push-ups with a MAD of 2. Team Gold does a mean of 37 push-ups with a MAD of 2. About how many MADs apart are the two means?",
+    "choices": ["12", "2", "24", "6"],
+    "answer": "D",
+    "hints": [
+      "First subtract to find the gap between the two means.",
+      "The gap is 37 minus 25. Divide that gap by the MAD of 2 to measure it in wobbles."
+    ]
+  },
+  {
+    "id": "m7math-comparing-two-populations-002",
+    "loId": "m7math.comparing-two-populations",
+    "cedCode": "M7MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Class A reads a mean of 32 pages a night with a MAD of 10 pages. Class B reads a mean of 35 pages a night with a MAD of 10 pages. Which statement is best supported?",
+    "choices": [
+      "Class B clearly reads more, because 35 is greater than 32",
+      "The 3-page gap is less than half of the MAD of 10, so the two classes are about the same",
+      "Every student in Class B reads more pages than every student in Class A",
+      "The two classes cannot be compared, because their MADs are equal"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the gap between the means, then compare it with the MAD before deciding anything.",
+      "The gap is 3 and the MAD is 10. Is 3 bigger or smaller than one whole wobble of 10?"
+    ]
+  },
+  {
+    "id": "m7math-comparing-two-populations-003",
+    "loId": "m7math.comparing-two-populations",
+    "cedCode": "M7MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "The Falcons score a mean of 18 points a game with a MAD of 4 points. The Eagles score a mean of 34 points a game with a MAD of 4 points. How many MADs apart are the two means? Type your answer as a number.",
+    "hints": [
+      "Subtract the two means to get the gap, then divide the gap by the MAD.",
+      "The gap is 34 minus 18, which is 16. Divide 16 by the MAD of 4."
+    ],
+    "answer": "4"
+  },
+  {
+    "id": "m7math-comparing-two-populations-004",
+    "loId": "m7math.comparing-two-populations",
+    "cedCode": "M7MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Group A practiced for these numbers of minutes: 10, 12, 14, 14, 16, 18. Group B practiced for these: 20, 22, 24, 24, 26, 28. Each group has a MAD of 2 minutes. Which statement is best supported?",
+    "choices": [
+      "The 10-minute gap between the means is 5 times the MAD of 2, so the difference is meaningful",
+      "The gap is 10 and the MAD is 2, so the two means are only 0.2 of a MAD apart",
+      "The two groups overlap heavily, so the difference is not meaningful",
+      "Group A is more consistent than Group B, so the two cannot be compared fairly"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the mean of each list first, then subtract to get the gap, then divide the gap by the MAD.",
+      "Check your answer against the overlap: compare Group A's longest practice with Group B's shortest one."
+    ]
+  },
+  {
+    "id": "m7math-comparing-two-populations-005",
+    "loId": "m7math.comparing-two-populations",
+    "cedCode": "M7MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Comparison 1: two soccer teams have means of 20 and 26 goals, and each has a MAD of 2 goals. Comparison 2: two chess clubs have means of 20 and 26 wins, and each has a MAD of 12 wins. In which comparison is the gap of 6 meaningful?",
+    "choices": [
+      "Both, because the gap between the means is 6 in each case",
+      "Comparison 2 only, because a larger MAD makes a gap stand out more",
+      "Comparison 1 only, because a gap of 6 is 3 MADs there but only 0.5 of a MAD in Comparison 2",
+      "Neither, because a gap of 6 is never large enough to matter"
+    ],
+    "answer": "C",
+    "hints": [
+      "The same gap can be huge or tiny. It depends on how much the numbers already wobble on their own.",
+      "Divide the gap of 6 by each MAD, then use the rule that about 2 MADs or more counts as meaningful."
+    ]
+  },
+  {
+    "id": "m7math-comparing-two-populations-006",
+    "loId": "m7math.comparing-two-populations",
+    "cedCode": "M7MATH-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Kim's club spends a mean of 30 minutes on homework with a MAD of 4 minutes. A second club also has a MAD of 4 minutes. Using the rule that a gap of about 2 MADs or more counts as meaningful, what is the smallest mean the second club could have and still be meaningfully HIGHER than 30 minutes?",
+    "choices": ["32", "34", "60", "38"],
+    "answer": "D",
+    "hints": [
+      "This runs the comparison backwards: you are given the number of MADs and must find the mean.",
+      "Work out how many minutes 2 MADs is worth when one MAD is 4 minutes, then add that to 30."
+    ]
+  }
+]

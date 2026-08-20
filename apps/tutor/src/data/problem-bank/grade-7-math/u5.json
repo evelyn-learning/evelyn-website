@@ -1,0 +1,337 @@
+[
+  {
+    "id": "m7math-writing-algebraic-expressions-001",
+    "loId": "m7math.writing-algebraic-expressions",
+    "cedCode": "M7MATH-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which expression means \"8 more than a number n\"?",
+    "choices": ["8 - n", "8n", "n + 8", "n - 8"],
+    "answer": "C",
+    "hints": [
+      "\"More than\" is one of the addition words, and addition can be written in either order.",
+      "Start at n and add 8 to it. Test it with a number: 8 more than 10 is 18."
+    ]
+  },
+  {
+    "id": "m7math-writing-algebraic-expressions-002",
+    "loId": "m7math.writing-algebraic-expressions",
+    "cedCode": "M7MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which expression means \"5 less than a number n\"?",
+    "choices": ["n - 5", "5 - n", "n + 5", "5n"],
+    "answer": "A",
+    "hints": [
+      "\"Less than\" names the amount you take away first and the amount you start with second, so the symbols come out in the opposite order from the words.",
+      "Test it with a number you can check in your head: 5 less than 12 is 7. Which expression gives 7 when n = 12?"
+    ]
+  },
+  {
+    "id": "m7math-writing-algebraic-expressions-003",
+    "loId": "m7math.writing-algebraic-expressions",
+    "cedCode": "M7MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A movie ticket costs 9 dollars, and each bag of popcorn costs 4 dollars. Which expression gives the total cost in dollars for one ticket and b bags of popcorn?",
+    "choices": ["9b + 4", "13b", "4(9 + b)", "9 + 4b"],
+    "answer": "D",
+    "hints": [
+      "Which amount happens exactly once, and which amount repeats for every bag?",
+      "The repeating amount is the one that gets multiplied by b. The one-time amount is the constant, so it stands alone."
+    ]
+  },
+  {
+    "id": "m7math-writing-algebraic-expressions-004",
+    "loId": "m7math.writing-algebraic-expressions",
+    "cedCode": "M7MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which expression means \"twice the sum of a number x and 6\"?",
+    "choices": ["2x + 6", "2(x + 6)", "2 + x + 6", "6(x + 2)"],
+    "answer": "B",
+    "hints": [
+      "Build the inside piece first. \"The sum of a number x and 6\" is x + 6, and that is one chunk.",
+      "\"Twice\" doubles the whole chunk, not just the x, so the chunk needs parentheses. Test with x = 3: the sum is 10, and twice 10 is 20."
+    ]
+  },
+  {
+    "id": "m7math-writing-algebraic-expressions-005",
+    "loId": "m7math.writing-algebraic-expressions",
+    "cedCode": "M7MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which expression means \"4 less than the quotient of a number n and 3\"?",
+    "choices": ["4 - n/3", "3/n - 4", "n/3 - 4", "(n - 4)/3"],
+    "answer": "C",
+    "hints": [
+      "\"The quotient of n and 3\" puts the first number named on top, so it is n/3.",
+      "\"Less than\" reverses the order: start at the quotient and take 4 away. Test with n = 12, where the quotient is 4."
+    ]
+  },
+  {
+    "id": "m7math-writing-algebraic-expressions-006",
+    "loId": "m7math.writing-algebraic-expressions",
+    "cedCode": "M7MATH-5.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Ella has 3 fewer stickers than twice the number Ben has. Ben has b stickers. Write an expression for the number of stickers Ella has, then find its value when b = 7. Type your answer as a number.",
+    "answer": "11",
+    "hints": [
+      "\"Twice the number Ben has\" is 2b. Then \"fewer than\" behaves exactly like \"less than\" and reverses the order.",
+      "The expression is 2b - 3. Now put 7 in place of b: 2(7) - 3."
+    ]
+  },
+
+  {
+    "id": "m7math-evaluating-expressions-001",
+    "loId": "m7math.evaluating-expressions",
+    "cedCode": "M7MATH-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate 4n + 3 when n = 5.",
+    "choices": ["12", "23", "32", "48"],
+    "answer": "B",
+    "hints": [
+      "Substitute first and compute second: replace n with 5, written in parentheses, before any arithmetic starts.",
+      "4n means 4 times n, so the line reads 4(5) + 3. Multiply before you add."
+    ]
+  },
+  {
+    "id": "m7math-evaluating-expressions-002",
+    "loId": "m7math.evaluating-expressions",
+    "cedCode": "M7MATH-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate 3x - 7 when x = -2.",
+    "choices": ["-1", "-6", "13", "-13"],
+    "answer": "D",
+    "hints": [
+      "Wrap the substituted number in parentheses: 3(-2) - 7. Those parentheses keep a multiplication from turning into a subtraction.",
+      "3(-2) is -6. Now take 7 away from -6, which moves you further below zero."
+    ]
+  },
+  {
+    "id": "m7math-evaluating-expressions-003",
+    "loId": "m7math.evaluating-expressions",
+    "cedCode": "M7MATH-5.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate x squared + 5 when x = -4. Type your answer as a number.",
+    "answer": "21",
+    "hints": [
+      "Substitute in parentheses: (-4) squared + 5. The parentheses mean the negative sign is part of what gets squared.",
+      "(-4) squared is (-4) times (-4), and a negative times a negative is positive. Add 5 to that result."
+    ]
+  },
+  {
+    "id": "m7math-evaluating-expressions-004",
+    "loId": "m7math.evaluating-expressions",
+    "cedCode": "M7MATH-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate 2a - 5b when a = 4 and b = -3.",
+    "choices": ["23", "-7", "-26", "4"],
+    "answer": "A",
+    "hints": [
+      "Write down which number belongs to which letter first, then substitute both, each in parentheses.",
+      "The line is 2(4) - 5(-3). Since 5(-3) is -15, the last step subtracts a negative, and subtracting a negative adds."
+    ]
+  },
+  {
+    "id": "m7math-evaluating-expressions-005",
+    "loId": "m7math.evaluating-expressions",
+    "cedCode": "M7MATH-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate 2x squared - 4 when x = -3.",
+    "choices": ["-22", "32", "14", "-16"],
+    "answer": "C",
+    "hints": [
+      "Only the x is squared here, not the 2 sitting in front of it. Substitute in parentheses first.",
+      "Exponents come before multiplying: square the -3, then multiply that result by 2, then subtract 4 last."
+    ]
+  },
+  {
+    "id": "m7math-evaluating-expressions-006",
+    "loId": "m7math.evaluating-expressions",
+    "cedCode": "M7MATH-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate (a + b) squared - ab when a = -5 and b = 2.",
+    "choices": ["1", "-1", "39", "19"],
+    "answer": "D",
+    "hints": [
+      "Parentheses come first, so add a and b before squaring anything. Then work out the product ab on its own.",
+      "a + b is -3, and (-3) squared is 9. Since ab is -10, the final step is 9 - (-10), and subtracting a negative adds."
+    ]
+  },
+
+  {
+    "id": "m7math-combining-like-terms-001",
+    "loId": "m7math.combining-like-terms",
+    "cedCode": "M7MATH-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: 4x + 6x",
+    "choices": ["10x", "10x squared", "24x", "10"],
+    "answer": "A",
+    "hints": [
+      "These two are like terms, so add the coefficients and copy the variable part down unchanged.",
+      "4 + 6 = 10. The x part never changes and never picks up an exponent when you combine."
+    ]
+  },
+  {
+    "id": "m7math-combining-like-terms-002",
+    "loId": "m7math.combining-like-terms",
+    "cedCode": "M7MATH-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: 3y + 6 - 8y",
+    "choices": ["11y + 6", "5y + 6", "-5y + 6", "y"],
+    "answer": "C",
+    "hints": [
+      "List the terms with their signs first: 3y, then +6, then -8y. The sign in front belongs to its term.",
+      "The y pile is 3y - 8y, which is (3 - 8)y. The 6 has no y, so it cannot join that pile."
+    ]
+  },
+  {
+    "id": "m7math-combining-like-terms-003",
+    "loId": "m7math.combining-like-terms",
+    "cedCode": "M7MATH-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which expression is already in simplest form?",
+    "choices": ["4a + 2a", "5x + 2", "7n - n", "8 - 3"],
+    "answer": "B",
+    "hints": [
+      "An expression is in simplest form when no two terms are like terms and no two plain numbers are left to combine.",
+      "A lone variable carries a silent 1, so 7n - n does combine. A plain number never joins a variable pile."
+    ]
+  },
+  {
+    "id": "m7math-combining-like-terms-004",
+    "loId": "m7math.combining-like-terms",
+    "cedCode": "M7MATH-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: 3x + 3x squared",
+    "choices": ["6x squared", "6x cubed", "9x cubed", "It is already in simplest form"],
+    "answer": "D",
+    "hints": [
+      "Ignore the numbers in front for a second and look only at the variable part of each term. Do the letter AND the exponent match?",
+      "3x counts copies of x, while 3x squared counts copies of x times x. Different things never go into the same pile."
+    ]
+  },
+  {
+    "id": "m7math-combining-like-terms-005",
+    "loId": "m7math.combining-like-terms",
+    "cedCode": "M7MATH-5.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Simplify 5b - 2 - 9b + 7 completely. In your simplified expression, what is the coefficient of b? Type your answer as a number.",
+    "answer": "-4",
+    "hints": [
+      "Sort first. Which terms carry a b, and what sign does each one bring with it?",
+      "The b pile is 5b - 9b, which is (5 - 9)b. The coefficient is the number left in front of b, minus sign included."
+    ]
+  },
+  {
+    "id": "m7math-combining-like-terms-006",
+    "loId": "m7math.combining-like-terms",
+    "cedCode": "M7MATH-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: 6a + 3b - a - 5b + 2",
+    "choices": ["5a - 2b + 2", "6a - 2b + 2", "5a + 2b + 2", "3ab + 2"],
+    "answer": "A",
+    "hints": [
+      "There are three piles here: the a terms, the b terms, and the plain number. Sort before you add anything.",
+      "-a means -1a, so the a pile is 6a - 1a. The b pile is 3b - 5b, and 3 - 5 lands below zero."
+    ]
+  },
+
+  {
+    "id": "m7math-distributive-property-and-factoring-001",
+    "loId": "m7math.distributive-property-and-factoring",
+    "cedCode": "M7MATH-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Expand: 5(x + 3)",
+    "choices": ["5x + 3", "5x + 15", "5x + 8", "8x"],
+    "answer": "B",
+    "hints": [
+      "The factor outside the parentheses multiplies every term inside, not just the first one.",
+      "There are two products to write: 5 times x, and 5 times 3. Write both, then add them."
+    ]
+  },
+  {
+    "id": "m7math-distributive-property-and-factoring-002",
+    "loId": "m7math.distributive-property-and-factoring",
+    "cedCode": "M7MATH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Expand: -4(x - 2)",
+    "choices": ["-4x - 8", "-4x - 2", "-4x + 8", "4x - 8"],
+    "answer": "C",
+    "hints": [
+      "The multiplier is -4, minus sign included, and it has to reach both terms inside.",
+      "Work out the second product on its own: -4 times -2. A negative times a negative is positive."
+    ]
+  },
+  {
+    "id": "m7math-distributive-property-and-factoring-003",
+    "loId": "m7math.distributive-property-and-factoring",
+    "cedCode": "M7MATH-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Factor completely: 12x + 18",
+    "choices": ["6(2x + 3)", "2(6x + 9)", "3(4x + 6)", "6(2x + 18)"],
+    "answer": "A",
+    "hints": [
+      "List what divides 12 and what divides 18, then take the largest number that appears on both lists.",
+      "Every term inside must be divided by the factor you pulled out. If the numbers left inside still share a factor, you are not finished."
+    ]
+  },
+  {
+    "id": "m7math-distributive-property-and-factoring-004",
+    "loId": "m7math.distributive-property-and-factoring",
+    "cedCode": "M7MATH-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: 3(2x + 5) - 4x",
+    "choices": ["10x + 15", "2x + 5", "-2x + 15", "2x + 15"],
+    "answer": "D",
+    "hints": [
+      "Distribute first, then sort whatever is left into piles.",
+      "3(2x + 5) is 6x + 15. Now the x pile is 6x - 4x, and the 15 has no x, so it stays on its own."
+    ]
+  },
+  {
+    "id": "m7math-distributive-property-and-factoring-005",
+    "loId": "m7math.distributive-property-and-factoring",
+    "cedCode": "M7MATH-5.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Simplify -2(x - 6) + 5x completely, then evaluate your simplified expression when x = 3. Type your answer as a number.",
+    "answer": "21",
+    "hints": [
+      "Carry the whole multiplier -2 into both terms inside the parentheses, then combine like terms.",
+      "After distributing you have -2x + 12 + 5x, which simplifies to 3x + 12. Now substitute x = 3."
+    ]
+  },
+  {
+    "id": "m7math-distributive-property-and-factoring-006",
+    "loId": "m7math.distributive-property-and-factoring",
+    "cedCode": "M7MATH-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Simplify: 4(x + 2) - 3(x - 1)",
+    "choices": ["x + 5", "x + 11", "7x + 11", "x + 7"],
+    "answer": "B",
+    "hints": [
+      "The second multiplier is -3, minus sign included, and it reaches both terms in its own parentheses.",
+      "-3 times -1 is +3, so the second expansion is -3x + 3. Then combine the x pile and the number pile."
+    ]
+  }
+]

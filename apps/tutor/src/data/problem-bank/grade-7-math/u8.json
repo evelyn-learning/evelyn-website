@@ -1,0 +1,339 @@
+[
+  {
+    "id": "m7math-area-of-polygons-001",
+    "loId": "m7math.area-of-polygons",
+    "cedCode": "M7MATH-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A parallelogram has a base of 7 cm and a perpendicular height of 4 cm. What is its area?",
+    "choices": ["28 cm²", "14 cm²", "28 cm³", "11 cm²"],
+    "hints": [
+      "A parallelogram slides into a rectangle with the same base and height, so its area is A = bh with no halving.",
+      "Multiply 7 by 4. Area is a flat surface, so the units are square centimeters, not cubic and not plain."
+    ],
+    "answer": "A"
+  },
+  {
+    "id": "m7math-area-of-polygons-002",
+    "loId": "m7math.area-of-polygons",
+    "cedCode": "M7MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A triangle has a base of 12 in. The dashed segment drawn straight down to that base, meeting it at a square corner, is 5 in. One slanted side is labeled 13 in. What is the area of the triangle?",
+    "choices": ["60 in²", "78 in²", "30 in²", "156 in²"],
+    "hints": [
+      "Three numbers are given and the formula A = ½bh only wants two of them. Which one meets the base at a square corner?",
+      "The 13 in slanted side is not a height, so cross it out. Use ½ × 12 × 5, and remember the ½."
+    ],
+    "answer": "C"
+  },
+  {
+    "id": "m7math-area-of-polygons-003",
+    "loId": "m7math.area-of-polygons",
+    "cedCode": "M7MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A trapezoid has parallel sides of 7 m and 11 m, and the perpendicular height between them is 6 m. What is its area?",
+    "choices": ["108 m²", "54 m²", "42 m²", "66 m²"],
+    "hints": [
+      "Both parallel sides go into A = ½(b₁ + b₂)h. Neither one gets left behind.",
+      "Add 7 and 11 to get 18, take half of that to get the average of the two bases, then multiply by the height of 6."
+    ],
+    "answer": "B"
+  },
+  {
+    "id": "m7math-area-of-polygons-004",
+    "loId": "m7math.area-of-polygons",
+    "cedCode": "M7MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A bedroom floor is shaped like the letter L. The whole floor fits inside a rectangle 9 m long and 7 m wide, but a rectangle 4 m by 3 m is missing from one corner. What is the area of the floor, in square meters? Type your answer as a number.",
+    "hints": [
+      "Start with the full rectangle as if the corner were still there: 9 × 7.",
+      "Now find the area of the missing corner, 4 × 3, and take it away from the full rectangle."
+    ],
+    "answer": "51"
+  },
+  {
+    "id": "m7math-area-of-polygons-005",
+    "loId": "m7math.area-of-polygons",
+    "cedCode": "M7MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paper flag is made of a rectangle 10 cm wide and 6 cm tall, with a triangle sitting on top of it. The triangle has a base of 10 cm along the top of the rectangle and a perpendicular height of 4 cm. What is the total area of the flag?",
+    "choices": ["60 cm²", "100 cm²", "20 cm²", "80 cm²"],
+    "hints": [
+      "There is no formula for this shape, so treat it as two pieces you already know and add them.",
+      "Rectangle: 10 × 6. Triangle: ½ × 10 × 4. Both pieces count, so add them together."
+    ],
+    "answer": "D"
+  },
+  {
+    "id": "m7math-area-of-polygons-006",
+    "loId": "m7math.area-of-polygons",
+    "cedCode": "M7MATH-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A triangular sail has an area of 48 cm² and a base of 16 cm. What is its perpendicular height, in centimeters?",
+    "choices": ["3 cm", "6 cm", "1.5 cm", "96 cm"],
+    "hints": [
+      "Put what you know into A = ½bh: 48 = ½ × 16 × h, and then undo the operations to free h.",
+      "Half of 16 is 8, so 48 = 8h. Divide 48 by 8. A height is a length, so the answer gets plain centimeters."
+    ],
+    "answer": "B"
+  },
+  {
+    "id": "m7math-circumference-and-area-of-circles-001",
+    "loId": "m7math.circumference-and-area-of-circles",
+    "cedCode": "M7MATH-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A circular badge has a diameter of 8 cm. Use π ≈ 3.14. What is its circumference?",
+    "choices": ["50.24 cm²", "25.12 cm", "12.56 cm", "200.96 cm²"],
+    "hints": [
+      "Circumference is the distance all the way around, so it is a length and it gets plain centimeters.",
+      "C = πd takes the diameter exactly as it is. Multiply 3.14 by 8 without halving anything first."
+    ],
+    "answer": "B"
+  },
+  {
+    "id": "m7math-circumference-and-area-of-circles-002",
+    "loId": "m7math.circumference-and-area-of-circles",
+    "cedCode": "M7MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A round rug has a radius of 5 m. Use π ≈ 3.14. What is its area?",
+    "choices": ["314 m²", "31.4 m", "78.5 m²", "15.7 m²"],
+    "hints": [
+      "Area is the surface inside the circle, so use A = πr² and expect square meters.",
+      "The little 2 means r × r, so square the 5 first to get 25, then multiply by 3.14."
+    ],
+    "answer": "C"
+  },
+  {
+    "id": "m7math-circumference-and-area-of-circles-003",
+    "loId": "m7math.circumference-and-area-of-circles",
+    "cedCode": "M7MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A round trampoline has a diameter of 20 ft. Use π ≈ 3.14. How much ground does it cover?",
+    "choices": ["1256 ft²", "62.8 ft", "31.4 ft²", "314 ft²"],
+    "hints": [
+      "The area formula asks for the radius, and you were handed the diameter. Fix that before anything else.",
+      "r = 20 ÷ 2 = 10. Square the 10 to get 100, then multiply by 3.14, and give the answer in square feet."
+    ],
+    "answer": "D"
+  },
+  {
+    "id": "m7math-circumference-and-area-of-circles-004",
+    "loId": "m7math.circumference-and-area-of-circles",
+    "cedCode": "M7MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A bicycle wheel has a radius of 35 cm. Use π ≈ 3.14. How far does the bike roll forward in one full turn of the wheel, in centimeters? Type your answer as a number.",
+    "hints": [
+      "One full turn lays the whole rim out along the ground, so the distance rolled equals the circumference.",
+      "You have the radius, so use C = 2πr: multiply 2 × 3.14 × 35."
+    ],
+    "answer": "219.8"
+  },
+  {
+    "id": "m7math-circumference-and-area-of-circles-005",
+    "loId": "m7math.circumference-and-area-of-circles",
+    "cedCode": "M7MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A circular garden has a radius of 9 m. A stone path runs all the way around the outside edge. Use π ≈ 3.14. Which pair gives the length of the path and the area of ground inside the garden?",
+    "choices": [
+      "path ≈ 56.52 m and area ≈ 254.34 m²",
+      "path ≈ 28.26 m and area ≈ 254.34 m²",
+      "path ≈ 56.52 m and area ≈ 1017.36 m²",
+      "path ≈ 254.34 m and area ≈ 56.52 m²"
+    ],
+    "hints": [
+      "A path around the edge is a distance around, so that part is circumference. The ground inside is area.",
+      "C = 2πr = 2 × 3.14 × 9, in plain meters. A = πr² = 3.14 × 81, in square meters. Do not swap them."
+    ],
+    "answer": "A"
+  },
+  {
+    "id": "m7math-circumference-and-area-of-circles-006",
+    "loId": "m7math.circumference-and-area-of-circles",
+    "cedCode": "M7MATH-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A tape measure wrapped once around a tree trunk reads 40 cm. Use π ≈ 3.14 and round your answer to two decimal places. How wide is the trunk straight across?",
+    "choices": ["6.37 cm", "125.6 cm", "12.74 cm", "20 cm"],
+    "hints": [
+      "The tape reading is the circumference, and \"straight across\" is the diameter, so start from C = πd.",
+      "40 = 3.14d, so divide 40 by 3.14 and round the result to two decimal places. Do not stop at the radius."
+    ],
+    "answer": "C"
+  },
+  {
+    "id": "m7math-surface-area-of-prisms-and-pyramids-001",
+    "loId": "m7math.surface-area-of-prisms-and-pyramids",
+    "cedCode": "M7MATH-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A wooden number cube has edges 5 cm long. What is its surface area?",
+    "choices": ["125 cm³", "25 cm²", "150 cm²", "30 cm²"],
+    "hints": [
+      "Unfold the cube into its net. Every one of its faces is the same square, 5 cm by 5 cm.",
+      "One face is 5 × 5 = 25 cm². A cube has six faces, so multiply. Surface area is flat, so the units stay square."
+    ],
+    "answer": "C"
+  },
+  {
+    "id": "m7math-surface-area-of-prisms-and-pyramids-002",
+    "loId": "m7math.surface-area-of-prisms-and-pyramids",
+    "cedCode": "M7MATH-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pencil box is a rectangular prism 7 cm long, 4 cm wide and 2 cm tall. What is its surface area?",
+    "choices": ["100 cm²", "50 cm²", "84 cm²", "56 cm³"],
+    "hints": [
+      "Find the three different rectangles first: 7 × 4, 7 × 2, and 4 × 2. All three must appear.",
+      "Every one of those three has a twin on the opposite side, so add the three and double the total: SA = 2(lw + lh + wh)."
+    ],
+    "answer": "A"
+  },
+  {
+    "id": "m7math-surface-area-of-prisms-and-pyramids-003",
+    "loId": "m7math.surface-area-of-prisms-and-pyramids",
+    "cedCode": "M7MATH-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A square pyramid has a base 12 cm on each side. Its vertical height is 8 cm and its slant height is 10 cm. What is its surface area?",
+    "choices": ["336 cm²", "240 cm²", "204 cm²", "384 cm²"],
+    "hints": [
+      "Two heights are printed and only one belongs on the outside faces. Surface area uses the slant height.",
+      "Base: 12 × 12. Then FOUR identical triangles, each ½ × 12 × 10. Add the base to all four triangles."
+    ],
+    "answer": "D"
+  },
+  {
+    "id": "m7math-surface-area-of-prisms-and-pyramids-004",
+    "loId": "m7math.surface-area-of-prisms-and-pyramids",
+    "cedCode": "M7MATH-8.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A net is cut from card. It is one square 9 ft on each side, with four identical triangles folded out from the four edges of the square. Each triangle has a base of 9 ft and a slant height of 6 ft. When the net is folded into a square pyramid, what is its surface area, in square feet? Type your answer as a number.",
+    "hints": [
+      "Count the pieces on the net before adding: one square and four triangles is five faces in total.",
+      "Square: 9 × 9. One triangle: ½ × 9 × 6. Multiply that triangle by 4, then add the square."
+    ],
+    "answer": "189"
+  },
+  {
+    "id": "m7math-surface-area-of-prisms-and-pyramids-005",
+    "loId": "m7math.surface-area-of-prisms-and-pyramids",
+    "cedCode": "M7MATH-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cube has a surface area of 216 cm². How long is one of its edges?",
+    "choices": ["36 cm", "6 cm", "1296 cm", "6 cm²"],
+    "hints": [
+      "Run SA = 6s² backwards. Undo the multiplication by 6 first, then undo the squaring.",
+      "216 ÷ 6 = 36, and that 36 is s², the area of ONE face. Which number times itself gives 36? An edge is a length, so the units are plain centimeters."
+    ],
+    "answer": "B"
+  },
+  {
+    "id": "m7math-surface-area-of-prisms-and-pyramids-006",
+    "loId": "m7math.surface-area-of-prisms-and-pyramids",
+    "cedCode": "M7MATH-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A fish tank is a rectangular prism 40 cm long, 25 cm wide and 30 cm tall. It is open at the top, so the top face has no glass. How much glass does the tank use?",
+    "choices": ["5900 cm²", "3900 cm²", "4900 cm²", "30000 cm³"],
+    "hints": [
+      "List the faces that actually exist: a bottom, two long sides and two short ends. That is five faces, not six.",
+      "Bottom: 40 × 25. Two long sides: 40 × 30 each. Two ends: 25 × 30 each. Add all five, and keep square centimeters."
+    ],
+    "answer": "C"
+  },
+  {
+    "id": "m7math-volume-of-prisms-and-composite-solids-001",
+    "loId": "m7math.volume-of-prisms-and-composite-solids",
+    "cedCode": "M7MATH-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A cereal box is a rectangular prism 6 cm long, 5 cm wide and 4 cm tall. What is its volume?",
+    "choices": ["120 cm²", "148 cm²", "15 cm³", "120 cm³"],
+    "hints": [
+      "Use V = Bh. The base is the rectangle on the bottom, so B = 6 × 5 first.",
+      "Then stack that base up through the 4 cm height. Three lengths were multiplied, so the units are cubic centimeters."
+    ],
+    "answer": "D"
+  },
+  {
+    "id": "m7math-volume-of-prisms-and-composite-solids-002",
+    "loId": "m7math.volume-of-prisms-and-composite-solids",
+    "cedCode": "M7MATH-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A chocolate bar is a triangular prism. Each triangular end has a base of 10 cm and a perpendicular height of 6 cm, and the bar is 9 cm long. What is its volume?",
+    "choices": ["270 cm³", "540 cm³", "135 cm³", "270 cm²"],
+    "hints": [
+      "The two identical parallel faces are the triangles on the ends, so B is the area of a triangle.",
+      "B = ½ × 10 × 6 = 30 cm². Now multiply that base area by the 9 cm length, and do not halve a second time."
+    ],
+    "answer": "A"
+  },
+  {
+    "id": "m7math-volume-of-prisms-and-composite-solids-003",
+    "loId": "m7math.volume-of-prisms-and-composite-solids",
+    "cedCode": "M7MATH-8.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A shipping crate is a rectangular prism. Its base measures 12 in by 7 in and it stands 15 in tall. How many cubic inches does it hold when full? Type your answer as a number.",
+    "hints": [
+      "Find the base area first: B = 12 × 7.",
+      "Then use V = Bh with the 15 in height."
+    ],
+    "answer": "1260"
+  },
+  {
+    "id": "m7math-volume-of-prisms-and-composite-solids-004",
+    "loId": "m7math.volume-of-prisms-and-composite-solids",
+    "cedCode": "M7MATH-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A birthday cake is two rectangular blocks stacked into a tier. The bottom block is 20 cm by 20 cm and 8 cm tall. The top block sits on it and is 10 cm by 10 cm and 6 cm tall. What is the total volume of the cake?",
+    "choices": ["5600 cm³", "3200 cm³", "3800 cm²", "3800 cm³"],
+    "hints": [
+      "There is no formula for a tiered cake, so find V = Bh for each block separately and add the two results.",
+      "Bottom: B = 20 × 20, height 8. Top: B = 10 × 10, height 6. The top block has its own smaller base."
+    ],
+    "answer": "D"
+  },
+  {
+    "id": "m7math-volume-of-prisms-and-composite-solids-005",
+    "loId": "m7math.volume-of-prisms-and-composite-solids",
+    "cedCode": "M7MATH-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A concrete block is a rectangular prism 12 cm long, 8 cm wide and 5 cm thick. A rectangular hole 4 cm by 3 cm is cut straight through the 5 cm thickness. What is the volume of the concrete that is left?",
+    "choices": ["420 cm³", "480 cm³", "540 cm³", "60 cm³"],
+    "hints": [
+      "Find the volume of the solid block as if the hole were not there, then deal with the hole.",
+      "Whole block: 12 × 8 × 5. Hole: 4 × 3 × 5, because it goes all the way through. Take the hole away from the block."
+    ],
+    "answer": "A"
+  },
+  {
+    "id": "m7math-volume-of-prisms-and-composite-solids-006",
+    "loId": "m7math.volume-of-prisms-and-composite-solids",
+    "cedCode": "M7MATH-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular fish tank holds 18000 cm³ of water when it is filled right to the top. Its base measures 40 cm by 25 cm. How tall is the tank?",
+    "choices": ["720 cm", "18 cm", "450 cm", "1000 cm"],
+    "hints": [
+      "Run V = Bh backwards. Work out B, the area of the base, before you divide anything.",
+      "B = 40 × 25 = 1000 cm², so 18000 = 1000h. Divide 18000 by 1000. A height is a length, so plain centimeters."
+    ],
+    "answer": "B"
+  }
+]

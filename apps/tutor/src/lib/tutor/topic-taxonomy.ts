@@ -134,6 +134,7 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'geometry-angles', label: 'Geometry & Angles' },
       { id: 'statistics-probability', label: 'Statistics & Probability' },
       { id: 'coordinate-plane', label: 'Coordinate Plane' },
+      { id: 'grade-7-math', label: 'Grade 7 Math' },
     ],
     '9-10': [
       { id: 'algebra-1', label: 'Algebra 1' },

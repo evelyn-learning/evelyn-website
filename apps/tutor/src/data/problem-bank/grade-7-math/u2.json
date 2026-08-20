@@ -1,0 +1,334 @@
+[
+  {
+    "id": "m7math-adding-rational-numbers-001",
+    "loId": "m7math.adding-rational-numbers",
+    "cedCode": "M7MATH-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -9 + 4",
+    "choices": ["-13", "13", "-5", "5"],
+    "answer": "C",
+    "hints": [
+      "The two numbers pull opposite directions, so this is the different-signs case, not the same-signs case.",
+      "Different signs means subtract the absolute values: 9 - 4 = 5. Now keep the sign of whichever number had the LARGER absolute value."
+    ]
+  },
+  {
+    "id": "m7math-adding-rational-numbers-002",
+    "loId": "m7math.adding-rational-numbers",
+    "cedCode": "M7MATH-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -3/8 + (-1/4)",
+    "choices": ["-4/12", "-5/8", "-1/8", "5/8"],
+    "answer": "B",
+    "hints": [
+      "Both numbers are negative, so they pull the same direction. Same signs means add the absolute values and keep the shared sign.",
+      "Make the pieces the same size first: -1/4 is -2/8. Now add 3/8 and 2/8, and remember the sign both numbers shared."
+    ]
+  },
+  {
+    "id": "m7math-adding-rational-numbers-003",
+    "loId": "m7math.adding-rational-numbers",
+    "cedCode": "M7MATH-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Your snack account reads -6.4 dollars. You pay in 2.75 dollars. Evaluate: -6.4 + 2.75",
+    "choices": ["-9.15", "3.65", "-4.35", "-3.65"],
+    "answer": "D",
+    "hints": [
+      "The signs are different, so compare the absolute values and decide which side wins the tug of war before you compute anything.",
+      "Write 6.4 as 6.40 so the decimal points line up, then subtract 2.75 from it. The 6.40 was the negative one, so the answer keeps that sign."
+    ]
+  },
+  {
+    "id": "m7math-adding-rational-numbers-004",
+    "loId": "m7math.adding-rational-numbers",
+    "cedCode": "M7MATH-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -2/3 + 5/6",
+    "choices": ["1/6", "-1/6", "3/9", "-3/2"],
+    "answer": "A",
+    "hints": [
+      "The denominators are different, so rewrite both fractions in sixths before you touch the signs.",
+      "-2/3 is -4/6, so the problem reads -4/6 + 5/6. Different signs means subtract 4 from 5 and keep the sign of the number with the larger absolute value."
+    ]
+  },
+  {
+    "id": "m7math-adding-rational-numbers-005",
+    "loId": "m7math.adding-rational-numbers",
+    "cedCode": "M7MATH-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a game your health bar starts the level at 2 1/2 hearts below full, which is -2 1/2. A trap costs you another 1 3/4 hearts. What is your total change from full?",
+    "choices": ["-3/4", "-3 4/6", "-4 1/4", "4 1/4"],
+    "answer": "C",
+    "hints": [
+      "Losing more hearts is another negative number, so the problem is -2 1/2 + (-1 3/4). Both pull the same direction.",
+      "Same signs means add the absolute values: 2 1/2 is 2.5 and 1 3/4 is 1.75. Add those, then put the shared negative sign back on."
+    ]
+  },
+  {
+    "id": "m7math-adding-rational-numbers-006",
+    "loId": "m7math.adding-rational-numbers",
+    "cedCode": "M7MATH-2.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A number is added to -3.75 and the sum is -1.25. What is that number? Type your answer as a number.",
+    "hints": [
+      "Work backwards. Starting at -3.75 you ended up higher than you started, so the missing number has to move you to the right.",
+      "The missing number is -1.25 - (-3.75). Rewrite that as -1.25 + 3.75 and use the different-signs rule."
+    ],
+    "answer": "2.5"
+  },
+  {
+    "id": "m7math-subtracting-rational-numbers-001",
+    "loId": "m7math.subtracting-rational-numbers",
+    "cedCode": "M7MATH-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: 5 - (-3)",
+    "choices": ["-8", "2", "8", "-2"],
+    "answer": "C",
+    "hints": [
+      "Rewrite the subtraction as adding the opposite before you compute. What is the opposite of -3?",
+      "The problem becomes 5 + 3. Subtracting a negative moves you RIGHT, so the answer must end up bigger than 5."
+    ]
+  },
+  {
+    "id": "m7math-subtracting-rational-numbers-002",
+    "loId": "m7math.subtracting-rational-numbers",
+    "cedCode": "M7MATH-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -4.2 - 3.5",
+    "choices": ["-7.7", "-0.7", "0.7", "7.7"],
+    "answer": "A",
+    "hints": [
+      "Rewrite first: the opposite of 3.5 is -3.5, so this becomes -4.2 + (-3.5).",
+      "Now both numbers are negative, so they pull the same direction. Add 4.2 and 3.5 and keep the sign they share."
+    ]
+  },
+  {
+    "id": "m7math-subtracting-rational-numbers-003",
+    "loId": "m7math.subtracting-rational-numbers",
+    "cedCode": "M7MATH-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: 1/2 - 3/4",
+    "choices": ["1/4", "-1/4", "1", "-5/4"],
+    "answer": "B",
+    "hints": [
+      "Rewrite as adding the opposite: 1/2 + (-3/4). Order matters in subtraction, so keep the 1/2 first.",
+      "1/2 is 2/4, so the problem reads 2/4 + (-3/4). Different signs means subtract 2 from 3 and keep the sign of the larger absolute value."
+    ]
+  },
+  {
+    "id": "m7math-subtracting-rational-numbers-004",
+    "loId": "m7math.subtracting-rational-numbers",
+    "cedCode": "M7MATH-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -3/4 - (-1/3)",
+    "choices": ["-13/12", "5/12", "-2/12", "-5/12"],
+    "answer": "D",
+    "hints": [
+      "Two minus signs in a row mean add. Rewrite as -3/4 + 1/3 before you look for a common denominator.",
+      "In twelfths that is -9/12 + 4/12. Different signs means subtract 4 from 9, and the -9/12 had the larger absolute value."
+    ]
+  },
+  {
+    "id": "m7math-subtracting-rational-numbers-005",
+    "loId": "m7math.subtracting-rational-numbers",
+    "cedCode": "M7MATH-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "How far apart are -5.25 and 3.5 on the number line?",
+    "choices": ["-8.75", "1.75", "-1.75", "8.75"],
+    "answer": "D",
+    "hints": [
+      "Distance is the absolute value of the difference, so set up |-5.25 - 3.5|. A distance is never negative.",
+      "Inside the bars, rewrite as adding the opposite: -5.25 + (-3.5). Same signs, so add 5.25 and 3.50, then the bars strip the sign."
+    ]
+  },
+  {
+    "id": "m7math-subtracting-rational-numbers-006",
+    "loId": "m7math.subtracting-rational-numbers",
+    "cedCode": "M7MATH-2.2",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "At the top of the ski lift it is -8.5 degrees Celsius, which is 12.75 degrees colder than at the bottom. What is the temperature at the bottom? Type your answer as a number.",
+    "hints": [
+      "Name the bottom temperature first. Going from the bottom down to the top means subtracting 12.75, and that lands on -8.5.",
+      "So bottom - 12.75 = -8.5, which means bottom = -8.5 + 12.75. Use the different-signs rule on those two."
+    ],
+    "answer": "4.25"
+  },
+  {
+    "id": "m7math-multiplying-dividing-rational-numbers-001",
+    "loId": "m7math.multiplying-dividing-rational-numbers",
+    "cedCode": "M7MATH-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: (-6)(-7)",
+    "choices": ["-42", "42", "-13", "13"],
+    "answer": "B",
+    "hints": [
+      "Settle the sign before the size. For multiplying, same signs give a positive answer and different signs give a negative one.",
+      "Both factors are negative, so the signs are the same and the answer is positive. Now multiply 6 by 7."
+    ]
+  },
+  {
+    "id": "m7math-multiplying-dividing-rational-numbers-002",
+    "loId": "m7math.multiplying-dividing-rational-numbers",
+    "cedCode": "M7MATH-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: (-2/5)(3/4)",
+    "choices": ["-8/15", "3/10", "-3/10", "1/9"],
+    "answer": "C",
+    "hints": [
+      "One factor is negative and one is positive, so write the minus sign down now, before you touch the numbers.",
+      "Multiply straight across, top times top and bottom times bottom: 2 times 3 over 5 times 4 gives 6/20. Then simplify."
+    ]
+  },
+  {
+    "id": "m7math-multiplying-dividing-rational-numbers-003",
+    "loId": "m7math.multiplying-dividing-rational-numbers",
+    "cedCode": "M7MATH-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -4²",
+    "choices": ["-16", "16", "-8", "8"],
+    "answer": "A",
+    "hints": [
+      "Look for parentheses. There are none, so what exactly is the exponent sitting on?",
+      "With no parentheses the base is just 4. Square it first, then apply the minus sign that was waiting in front."
+    ]
+  },
+  {
+    "id": "m7math-multiplying-dividing-rational-numbers-004",
+    "loId": "m7math.multiplying-dividing-rational-numbers",
+    "cedCode": "M7MATH-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: (-4/9) ÷ (-2/3)",
+    "choices": ["8/27", "-2/3", "3/2", "2/3"],
+    "answer": "D",
+    "hints": [
+      "Both numbers are negative, so the signs are the same and the answer will be positive. Then turn the division into multiplication.",
+      "Flip the SECOND fraction only: 2/3 becomes 3/2. Now compute (4/9)(3/2) and simplify."
+    ]
+  },
+  {
+    "id": "m7math-multiplying-dividing-rational-numbers-005",
+    "loId": "m7math.multiplying-dividing-rational-numbers",
+    "cedCode": "M7MATH-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: (-0.6)(-4)(-2.5)",
+    "choices": ["6", "-6", "-7.1", "60"],
+    "answer": "B",
+    "hints": [
+      "Count how many of the three factors are negative before you multiply anything. An even count is positive, an odd count is negative.",
+      "All three are negative, and three is odd, so the answer is negative. Now multiply the sizes: 0.6 times 4 is 2.4, and 2.4 times 2.5 is 6."
+    ]
+  },
+  {
+    "id": "m7math-multiplying-dividing-rational-numbers-006",
+    "loId": "m7math.multiplying-dividing-rational-numbers",
+    "cedCode": "M7MATH-2.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A number multiplied by -2/3 gives 8. What is that number? Type your answer as a number.",
+    "hints": [
+      "Work backwards: to undo multiplying by -2/3, divide 8 by -2/3.",
+      "Dividing means multiplying by the reciprocal, so compute 8 times -3/2. The signs are different, so the answer is negative."
+    ],
+    "answer": "-12"
+  },
+  {
+    "id": "m7math-order-of-operations-rationals-001",
+    "loId": "m7math.order-of-operations-rationals",
+    "cedCode": "M7MATH-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: 5 + 2 × (-6)",
+    "choices": ["-7", "-42", "17", "-17"],
+    "answer": "A",
+    "hints": [
+      "Multiplication is rank three and addition is rank four, so one of them has to happen first. Which one?",
+      "Multiply first: 2 × (-6) = -12. Now the problem reads 5 + (-12), which is the different-signs addition rule."
+    ]
+  },
+  {
+    "id": "m7math-order-of-operations-rationals-002",
+    "loId": "m7math.order-of-operations-rationals",
+    "cedCode": "M7MATH-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: 9.5 - 4.5 + 2",
+    "choices": ["7", "3", "12", "16"],
+    "answer": "A",
+    "hints": [
+      "Addition and subtraction share ONE rank, so neither one outranks the other. What decides which goes first?",
+      "Tied operations run left to right: do 9.5 - 4.5 first, then add 2 to that result."
+    ]
+  },
+  {
+    "id": "m7math-order-of-operations-rationals-003",
+    "loId": "m7math.order-of-operations-rationals",
+    "cedCode": "M7MATH-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -2² + (-3)²",
+    "choices": ["-13", "5", "13", "-5"],
+    "answer": "B",
+    "hints": [
+      "The two terms look alike but the parentheses are not in the same place. Decide the base of each one separately.",
+      "-2² has no parentheses, so the base is just 2 and the answer is -4. (-3)² has parentheses, so the base is -3 and the answer is 9. Now add them."
+    ]
+  },
+  {
+    "id": "m7math-order-of-operations-rationals-004",
+    "loId": "m7math.order-of-operations-rationals",
+    "cedCode": "M7MATH-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate the fraction that has (-4.8 + 1.8) on top and (5 - 2 × 4) on the bottom.",
+    "choices": ["-1", "-0.25", "1", "0.25"],
+    "answer": "C",
+    "hints": [
+      "The fraction bar is a grouping symbol. Finish the whole top and the whole bottom as separate little problems before anything crosses the bar.",
+      "Top: -4.8 + 1.8 = -3. Bottom: multiplication outranks subtraction, so 2 × 4 = 8 first, giving 5 - 8. Then let the bar divide."
+    ]
+  },
+  {
+    "id": "m7math-order-of-operations-rationals-005",
+    "loId": "m7math.order-of-operations-rationals",
+    "cedCode": "M7MATH-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -3 + (1/2)(-4)²",
+    "choices": ["-11", "-7", "8", "5"],
+    "answer": "D",
+    "hints": [
+      "Exponents come before multiplying and adding. The parentheses wrap the minus sign, so what is the base being squared?",
+      "The base is -4, so (-4)² = 16. Half of 16 is 8, and the expression becomes -3 + 8."
+    ]
+  },
+  {
+    "id": "m7math-order-of-operations-rationals-006",
+    "loId": "m7math.order-of-operations-rationals",
+    "cedCode": "M7MATH-2.4",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Evaluate: (-1.5)(-4) - 3² + 1/2 × (-8). Type your answer as a number.",
+    "hints": [
+      "Handle the exponent first, then every multiplication, and save the adding and subtracting for last. Watch what 3² is sitting on.",
+      "(-1.5)(-4) = 6, 3² = 9, and 1/2 × (-8) = -4. Now run 6 - 9 + (-4) left to right."
+    ],
+    "answer": "-7"
+  }
+]

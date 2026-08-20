@@ -45,6 +45,7 @@ const COURSE_NAMES: Record<string, string> = {
   act: 'ACT',
   'algebra-1': 'Algebra 1',
   'geometry': 'Geometry',
+  'grade-7-math': 'Grade 7 Math',
   biology: 'Biology',
   'chemistry': 'Chemistry',
   'hs-english': 'HS English',

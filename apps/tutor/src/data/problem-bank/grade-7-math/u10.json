@@ -1,0 +1,369 @@
+[
+  {
+    "id": "m7math-probability-of-simple-events-001",
+    "loId": "m7math.probability-of-simple-events",
+    "cedCode": "M7MATH-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A spinner is split into 10 equal sections numbered 1, 2, 3, 4, 5, 6, 7, 8, 9, 10. What is the probability that it lands on 7?",
+    "choices": ["1/7", "7/10", "1/10", "1/9"],
+    "answer": "C",
+    "hints": [
+      "Probability is favorable outcomes over total outcomes, and the sections are all the same size so they are equally likely.",
+      "Only one section is labelled 7, and there are 10 sections in all. The number printed on a section is a label, not a count."
+    ]
+  },
+  {
+    "id": "m7math-probability-of-simple-events-002",
+    "loId": "m7math.probability-of-simple-events",
+    "cedCode": "M7MATH-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bag holds 4 red marbles, 6 blue marbles and 2 green marbles. One marble is picked without looking. What is P(red) in lowest terms?",
+    "choices": ["1/3", "1/2", "2/3", "1/12"],
+    "answer": "A",
+    "hints": [
+      "The denominator is the whole sample space, so add up every marble in the bag before you divide.",
+      "There are 4 + 6 + 2 = 12 marbles and 4 of them are red. Now reduce 4/12."
+    ]
+  },
+  {
+    "id": "m7math-probability-of-simple-events-003",
+    "loId": "m7math.probability-of-simple-events",
+    "cedCode": "M7MATH-10.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A box holds 20 cards numbered 1 through 20. One card is drawn without looking. What is the probability that the card shows a multiple of 5? Type your answer as a decimal.",
+    "hints": [
+      "List the favorable outcomes first: which numbers from 1 to 20 are multiples of 5?",
+      "There are 4 of them - 5, 10, 15 and 20 - out of 20 cards. Divide 4 by 20 to get the decimal."
+    ],
+    "answer": "0.2"
+  },
+  {
+    "id": "m7math-probability-of-simple-events-004",
+    "loId": "m7math.probability-of-simple-events",
+    "cedCode": "M7MATH-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A jar holds 6 orange counters, 5 white counters and 9 purple counters. One counter is taken without looking. What is P(not purple)?",
+    "choices": ["9/20", "9/11", "11/9", "11/20"],
+    "answer": "D",
+    "hints": [
+      "Find P(purple) first, then use the complement rule: P(not purple) = 1 - P(purple).",
+      "There are 20 counters in all and 9 are purple, so 11 are not. The denominator stays 20 either way, because the whole jar is still the sample space."
+    ]
+  },
+  {
+    "id": "m7math-probability-of-simple-events-005",
+    "loId": "m7math.probability-of-simple-events",
+    "cedCode": "M7MATH-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A spinner has 8 equal sections: 5 are blue and 3 are white. Written as a percent, what is P(blue)?",
+    "choices": ["62.5 percent", "37.5 percent", "50 percent", "160 percent"],
+    "answer": "A",
+    "hints": [
+      "Write the probability as a fraction first, then divide to get a decimal, then multiply by 100 for the percent.",
+      "P(blue) = 5/8. Dividing 5 by 8 gives 0.625, and the fraction bar means top divided by bottom, not bottom divided by top."
+    ]
+  },
+  {
+    "id": "m7math-probability-of-simple-events-006",
+    "loId": "m7math.probability-of-simple-events",
+    "cedCode": "M7MATH-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A bag holds only green marbles and black marbles. There are 6 green marbles, and P(green) = 2/7. How many BLACK marbles are in the bag?",
+    "choices": ["21", "15", "5", "7"],
+    "answer": "B",
+    "hints": [
+      "Work backwards from the fraction. If 2 out of every 7 marbles are green, how many groups of 2 green marbles do you have?",
+      "6 green is 3 groups of 2, so the bag has 3 groups of 7, which is 21 marbles in total. The question asks for black, not the total."
+    ]
+  },
+  {
+    "id": "m7math-experimental-vs-theoretical-probability-001",
+    "loId": "m7math.experimental-vs-theoretical-probability",
+    "cedCode": "M7MATH-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Jonah spins a spinner 30 times and it lands on blue 12 times. What is the EXPERIMENTAL probability of blue, in lowest terms?",
+    "choices": ["2/3", "5/2", "2/5", "2/15"],
+    "answer": "C",
+    "hints": [
+      "Experimental probability is successes divided by trials, and every spin counts as one trial.",
+      "That gives 12/30. Reduce it by dividing the top AND the bottom by the same number, 6."
+    ]
+  },
+  {
+    "id": "m7math-experimental-vs-theoretical-probability-002",
+    "loId": "m7math.experimental-vs-theoretical-probability",
+    "cedCode": "M7MATH-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fair number cube with faces 1, 2, 3, 4, 5, 6 is rolled 24 times and lands on 2 exactly 7 times. What is the THEORETICAL probability of rolling a 2?",
+    "choices": ["7/24", "1/6", "1/24", "7/17"],
+    "answer": "B",
+    "hints": [
+      "Theoretical probability comes from the model, not from the tally sheet, so the roll results are not needed here.",
+      "The cube has 6 equally likely faces and exactly one of them is a 2."
+    ]
+  },
+  {
+    "id": "m7math-experimental-vs-theoretical-probability-003",
+    "loId": "m7math.experimental-vs-theoretical-probability",
+    "cedCode": "M7MATH-10.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "From a long experiment, the probability that a water bottle flip lands upright is 0.15. In 200 flips, about how many would you expect to land upright? Type your answer as a number.",
+    "hints": [
+      "To predict a count, multiply the probability by the number of trials.",
+      "Work out 0.15 times 200."
+    ],
+    "answer": "30"
+  },
+  {
+    "id": "m7math-experimental-vs-theoretical-probability-004",
+    "loId": "m7math.experimental-vs-theoretical-probability",
+    "cedCode": "M7MATH-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A fair coin has just landed heads 4 times in a row. What is the probability that the next flip lands heads?",
+    "choices": [
+      "less than 1/2, because tails is due",
+      "1/32, because five heads in a row is very unlikely",
+      "greater than 1/2, because the coin has been landing heads a lot",
+      "1/2, because each flip is a separate trial with the same chance"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether the coin has any way of remembering what it did on the last four flips.",
+      "Each flip is an independent trial, so the theoretical probability of heads is the same on flip 5 as it was on flip 1."
+    ]
+  },
+  {
+    "id": "m7math-experimental-vs-theoretical-probability-005",
+    "loId": "m7math.experimental-vs-theoretical-probability",
+    "cedCode": "M7MATH-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A fair coin is tested in two sessions. Session A: 14 heads in 20 flips. Session B: 260 heads in 500 flips. Whose experimental probability of heads is closer to the theoretical 0.5, and why?",
+    "choices": [
+      "Session A, because 14 heads is a smaller miss than 260 heads",
+      "Session A, because fewer flips leaves less room to drift away from 0.5",
+      "Session B, because 0.52 is only 0.02 away from 0.5",
+      "Neither, because the theoretical probability changes as more flips are added"
+    ],
+    "answer": "C",
+    "hints": [
+      "Turn each session into a decimal first: successes divided by trials, for both sessions.",
+      "Session A gives 14/20 = 0.7 and Session B gives 260/500 = 0.52. Compare each one with 0.5 and see which gap is smaller."
+    ]
+  },
+  {
+    "id": "m7math-experimental-vs-theoretical-probability-006",
+    "loId": "m7math.experimental-vs-theoretical-probability",
+    "cedCode": "M7MATH-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A spinner has 25 equal sections and 6 of them are purple. It is spun 150 times, and the experimental probability of purple comes out at exactly 0.24. How many spins landed on purple, and how does that compare with what the model predicts?",
+    "choices": [
+      "36 spins, exactly what the model predicts",
+      "24 spins, fewer than the model predicts",
+      "6 spins, fewer than the model predicts",
+      "36 spins, more than the model predicts"
+    ],
+    "answer": "A",
+    "hints": [
+      "Get the count of purple spins by multiplying the experimental probability by the number of trials, then work out the theoretical probability from the sections.",
+      "0.24 times 150 gives the purple count, and 6 out of 25 sections gives the theoretical probability. Compare the two numbers before you choose."
+    ]
+  },
+  {
+    "id": "m7math-probability-models-and-simulations-001",
+    "loId": "m7math.probability-models-and-simulations",
+    "cedCode": "M7MATH-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which situation has a UNIFORM probability model?",
+    "choices": [
+      "a bag holding 2 red tiles and 9 blue tiles",
+      "a spinner whose red section covers half the circle while blue, green and yellow split the rest",
+      "a spinner with 5 equal sections, one for each of 5 colors",
+      "a bent coin that lands heads about 7 times in every 10"
+    ],
+    "answer": "C",
+    "hints": [
+      "Uniform means every outcome in the sample space has exactly the same probability.",
+      "Check each one for equal chances, not just for a tidy number of outcomes. Two outcomes does not make something 50-50."
+    ]
+  },
+  {
+    "id": "m7math-probability-models-and-simulations-002",
+    "loId": "m7math.probability-models-and-simulations",
+    "cedCode": "M7MATH-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A spinner shows only four colors: red, blue, green and orange. Its model says P(red) = 0.4, P(blue) = 0.15 and P(green) = 0.25. What must P(orange) be?",
+    "choices": ["0.8", "0.6", "1.8", "0.2"],
+    "answer": "D",
+    "hints": [
+      "Every complete probability model has to add up to one particular total. Add the three you were given first.",
+      "The four colors cover the whole spinner, so all four probabilities must add to exactly 1. Subtract the 0.8 you already have from 1."
+    ]
+  },
+  {
+    "id": "m7math-probability-models-and-simulations-003",
+    "loId": "m7math.probability-models-and-simulations",
+    "cedCode": "M7MATH-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Each cereal box holds 1 of 4 different stickers, and the 4 stickers are equally likely. You want to estimate the probability of getting 2 DIFFERENT stickers when you buy 2 boxes, using a spinner with 4 equal sections. What is ONE trial of this simulation?",
+    "choices": [
+      "one spin",
+      "two spins, one for each box",
+      "spinning until two different sections come up",
+      "all 100 spins you plan to make"
+    ],
+    "answer": "B",
+    "hints": [
+      "A trial has to produce one complete answer to the question being asked. Can a single spin tell you whether two boxes held different stickers?",
+      "The question is about 2 boxes, so a trial must stand in for 2 boxes before you can write down a result."
+    ]
+  },
+  {
+    "id": "m7math-probability-models-and-simulations-004",
+    "loId": "m7math.probability-models-and-simulations",
+    "cedCode": "M7MATH-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A basketball player makes 3 out of every 5 free throws. Which device is the best stand-in for ONE free throw in a simulation?",
+    "choices": [
+      "a fair coin, heads for a make and tails for a miss",
+      "a bag holding 3 red tiles and 5 blue tiles, red for a make",
+      "a number cube, 1 2 or 3 for a make and 4 5 or 6 for a miss",
+      "a spinner with 5 equal sections, 3 marked MAKE and 2 marked MISS"
+    ],
+    "answer": "D",
+    "hints": [
+      "The stand-in device must give the SAME probability as the real situation. Write the real probability as a fraction first.",
+      "The player makes 3 out of 5, so P(make) = 3/5 = 0.6. Work out P(make) for each device and keep the one that matches, remembering that 3 red among 3 red and 5 blue is 3 out of 8, not 3 out of 5."
+    ]
+  },
+  {
+    "id": "m7math-probability-models-and-simulations-005",
+    "loId": "m7math.probability-models-and-simulations",
+    "cedCode": "M7MATH-10.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "In the two-box sticker simulation, 120 trials were run and 78 of them gave 2 different stickers. What is the estimated probability of getting 2 different stickers? Type your answer as a decimal.",
+    "hints": [
+      "A simulation estimate is successful trials divided by total trials, the same successes-over-trials idea as experimental probability.",
+      "Divide 78 by 120. Reducing first helps: 78/120 = 13/20."
+    ],
+    "answer": "0.65"
+  },
+  {
+    "id": "m7math-probability-models-and-simulations-006",
+    "loId": "m7math.probability-models-and-simulations",
+    "cedCode": "M7MATH-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A rare hat drops from a game crate 1 time in 4. To estimate the probability of getting at least one hat in 3 crates, Priya uses a spinner with 4 equal sections and marks one section HAT. She makes 90 spins in all, and 27 of them land on HAT. How many TRIALS has she run, and what does she still need?",
+    "choices": [
+      "90 trials; the estimate is 27/90",
+      "27 trials; the estimate is 27/90",
+      "30 trials; she still needs to know how many of those trials contained at least one HAT spin",
+      "30 trials; the estimate is 27/30, because 27 hats came up"
+    ],
+    "answer": "C",
+    "hints": [
+      "One trial has to cover the whole question, and the question is about 3 crates. Work out how many spins make one trial, then divide.",
+      "90 spins at 3 spins per trial is 30 trials. The estimate must count successful TRIALS, not successful spins - a trial with two hats in it still counts as just one success."
+    ]
+  },
+  {
+    "id": "m7math-compound-events-001",
+    "loId": "m7math.compound-events",
+    "cedCode": "M7MATH-10.4",
+    "difficulty": 1,
+    "responseFormat": "numeric",
+    "problemText": "A frozen yogurt shop offers 5 flavors, 3 toppings and 2 cup sizes. A cup is one flavor, one topping and one size. How many different cups are possible? Type your answer as a number.",
+    "hints": [
+      "Use the counting principle instead of writing out the whole list: multiply the number of choices at each stage.",
+      "Flavors times toppings times sizes: 5 times 3 times 2."
+    ],
+    "answer": "30"
+  },
+  {
+    "id": "m7math-compound-events-002",
+    "loId": "m7math.compound-events",
+    "cedCode": "M7MATH-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fair coin is flipped and a spinner with 4 equal sections (red, blue, green, yellow) is spun. What is P(tails and blue)?",
+    "choices": ["1/8", "3/4", "1/6", "1/4"],
+    "answer": "A",
+    "hints": [
+      "The coin cannot change the spinner, so these are independent events. For independent events you multiply the probabilities, never add them.",
+      "P(tails) = 1/2 and P(blue) = 1/4. You can check by counting: 2 coin outcomes times 4 spinner outcomes is 8 equally likely pairs, and only one of them is tails-blue."
+    ]
+  },
+  {
+    "id": "m7math-compound-events-003",
+    "loId": "m7math.compound-events",
+    "cedCode": "M7MATH-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two fair number cubes, each with faces 1, 2, 3, 4, 5, 6, are rolled. What is the probability that BOTH show a 5?",
+    "choices": ["1/6", "1/12", "1/3", "1/36"],
+    "answer": "D",
+    "hints": [
+      "Think of the table with one cube down the side and the other across the top, and count how many cells it has.",
+      "6 rows times 6 columns is 36 equally likely pairs, and exactly one cell is a 5 with a 5. Multiplying 1/6 times 1/6 gives the same answer."
+    ]
+  },
+  {
+    "id": "m7math-compound-events-004",
+    "loId": "m7math.compound-events",
+    "cedCode": "M7MATH-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A bag holds 6 yellow counters and 4 black counters. Two counters are drawn WITHOUT replacement. What is P(both yellow)?",
+    "choices": ["9/25", "3/10", "1/3", "5/9"],
+    "answer": "C",
+    "hints": [
+      "Do the first draw, then rebuild the bag before the second draw and multiply the two probabilities.",
+      "First draw: 6 yellow out of 10. That yellow counter stays out, so the second draw is 5 yellow out of 9 counters - both numbers drop, not just the top one."
+    ]
+  },
+  {
+    "id": "m7math-compound-events-005",
+    "loId": "m7math.compound-events",
+    "cedCode": "M7MATH-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two fair number cubes are rolled and the two faces are added. What is P(sum of 5)?",
+    "choices": ["1/18", "1/9", "5/36", "1/6"],
+    "answer": "B",
+    "hints": [
+      "There are 36 equally likely ordered pairs. List every pair that adds to 5.",
+      "The pairs are 1 and 4, 2 and 3, 3 and 2, and 4 and 1 - a 1 on the first cube with a 4 on the second is a different cell from a 4 then a 1. Now reduce 4/36."
+    ]
+  },
+  {
+    "id": "m7math-compound-events-006",
+    "loId": "m7math.compound-events",
+    "cedCode": "M7MATH-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A bag holds 4 green marbles and 6 orange marbles. Two marbles are drawn WITHOUT replacement. What is the probability that both marbles are the SAME color?",
+    "choices": ["7/15", "13/25", "1/3", "8/15"],
+    "answer": "A",
+    "hints": [
+      "Same color happens two different ways: both green, or both orange. Work out each one separately, then add those two probabilities.",
+      "Both green is 4/10 times 3/9 = 12/90, and both orange is 6/10 times 5/9 = 30/90. Remember that each marble drawn leaves the bag, so both the top and the bottom drop on the second draw."
+    ]
+  }
+]
