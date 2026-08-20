@@ -48,6 +48,9 @@ const HS_COURSE_NAMES: Record<string, string> = {
 // (middle-school) courses are backfilled.
 const MS_COURSE_NAMES: Record<string, string> = {
   m7math: 'Grade 7 Math',
+  m7ela: 'Grade 7 English Language Arts',
+  m7sci: 'Grade 7 Science',
+  m7geo: 'Grade 7 World Geography',
 };
 
 interface BaselineDraft {
