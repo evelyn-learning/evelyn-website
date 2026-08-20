@@ -90,3 +90,75 @@ export function stripStageDirections(text: string): string {
   // an orphaned space before punctuation, leading/trailing whitespace.
   return stripped.replace(/[ \t]{2,}/g, ' ').replace(/ +([.,!?;:])/g, '$1').trim();
 }
+
+/**
+ * Third-person meta-narration leak defense (live 2026-08-20,
+ * portal-2d53e403 at 288.4s). The tutor SPOKE its own adjudication
+ * reasoning to the student:
+ *
+ *   Their reply "10.5" answers an earlier question (After Tuesday), but
+ *   the active question asks for ten fifty minus six seventy-five.
+ *   Hang on — that ten fifty was the number after Tuesday...
+ *
+ * That first sentence is machinery talking to itself. It is NOT a template
+ * — no such string exists in this codebase; the brain composed it, prompted
+ * by the stale-card grading rule in claude-brain.ts ("Their reply answers
+ * THIS question — grade it against THIS..."). It passed the judge
+ * (`judge_pass grounded`) and passed stripStageDirections, which only ever
+ * removes PARENTHETICALS, and was counted as part of a 4-sentence turn.
+ *
+ * The discriminator is grammatical person. A tutor addresses the student in
+ * the SECOND person — "you", "your answer". A sentence whose subject is the
+ * student in the THIRD person ("their reply", "the student's answer") is
+ * addressed to no one in the room.
+ *
+ * DELIBERATELY TWO-PART, and the second part is what makes it safe: the
+ * sentence needs a third-person-student subject AND an adjudication marker.
+ * "Their reply to the king was open defiance" is ordinary history prose and
+ * must survive; so must "The colonists sent their answer, and it did not
+ * match what London expected." Requiring both signals is what separates the
+ * grading machinery's voice from a lesson about people who replied to
+ * things. When only one signal is present, the sentence is kept — a leaked
+ * sentence is embarrassing, but eating a real sentence of teaching mid-turn
+ * is worse and much harder to notice.
+ *
+ * Exercised by `npm run test:stage-direction-strip`.
+ */
+
+/** Subject is the student, in the third person, doing something answer-shaped. */
+const META_SUBJECT_RE =
+  /^\s*["'“]?\s*(?:their|they|the\s+student(?:'s|’s)?|student(?:'s|’s))\s+(?:\w+\s+){0,2}?(?:repl(?:y|ies|ied)|answers?|answered|responses?|responded|responds?|utterances?|said|says|claims?|claimed|guess(?:es|ed)?)\b/i;
+
+/** The turn is adjudicating an answer against a question, not teaching. */
+const META_ADJUDICATION_RE =
+  /\b(?:active|earlier|previous|current|prior)\s+question\b|\bexpected\s+answer\b|\bactive\s+problem\b|\bthe\s+question\s+(?:asks|asked)\b|\b(?:matches|match(?:es)?|contradicts)\s+the\s+(?:expected|verified|active)\b/i;
+
+/**
+ * Remove whole sentences that are internal adjudication narrated in the
+ * third person. Returns the remaining text, trimmed. Returns '' when every
+ * sentence was meta — callers already drop empty sentences (SentenceBuffer
+ * pushes only truthy strings and flush() returns `trimmed || null`).
+ */
+export function stripMetaNarration(text: string): string {
+  const src = (text ?? '').trim();
+  if (!src) return '';
+  // Cheap bail: no third-person student subject anywhere ⇒ nothing to do.
+  if (!/\b(?:their|they|student)\b/i.test(src)) return src;
+  // Sentence split that does NOT break on decimals. A naive /[.!?]/ split
+  // cuts `Their reply "10.5" answers...` in half at the decimal point,
+  // leaving the subject in one fragment and the adjudication marker in the
+  // other so NEITHER matches — which is exactly how the live leak slipped
+  // through a first attempt at this guard. In a math tutor, decimals inside
+  // sentences are the norm, not an edge case. So: break only where a
+  // terminator is followed by whitespace and a capital (or a quote then a
+  // capital). `10.5` has a digit after the period and stays intact.
+  const parts = src.split(/(?<=[.!?]["'”’]?)\s+(?=["'“']?[A-Z])/);
+  if (parts.length === 0) return src;
+  const kept = parts.filter((raw) => {
+    const one = raw.trim();
+    if (!one) return false;
+    return !(META_SUBJECT_RE.test(one) && META_ADJUDICATION_RE.test(one));
+  });
+  if (kept.length === parts.length) return src; // nothing matched
+  return kept.join(' ').replace(/[ \t]{2,}/g, ' ').trim();
+}

@@ -22,7 +22,15 @@ import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { normalizeSentenceSpacing, stripStageDirections, ABBREV_TAIL_RE } from './sentence-spacing';
+import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, ABBREV_TAIL_RE } from './sentence-spacing';
+import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
+
+/** R49b: stage directions (parentheticals) then third-person adjudication
+ *  narration. Both are the brain talking to itself; neither may reach TTS or
+ *  the stored transcript. The meta pass is flag-gated — off ⇒ identical to
+ *  the pre-R49b single strip. */
+const scrubTutorText = (t: string): string =>
+  TUTOR_META_NARRATION_STRIP ? stripMetaNarration(stripStageDirections(t)) : stripStageDirections(t);
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 
@@ -500,7 +508,7 @@ export class SentenceBuffer {
       if (!m) break;
       // Stage-direction leak defense (live 2026-07-30): "(waiting for
       // the student's answer)" must never reach TTS or the transcript.
-      const sentence = stripStageDirections(m[1].trim());
+      const sentence = scrubTutorText(m[1].trim());
       if (sentence) out.push(sentence);
       this.buf = this.buf.slice(m[0].length);
     }
@@ -509,7 +517,7 @@ export class SentenceBuffer {
 
   /** Flush whatever is left. Called at block boundaries and stream end. */
   flush(): string | null {
-    const trimmed = stripStageDirections(this.buf.trim());
+    const trimmed = scrubTutorText(this.buf.trim());
     this.buf = '';
     return trimmed || null;
   }
@@ -1580,7 +1588,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   return {
     // C1: transcript storage must match what the SentenceBuffer voiced —
     // repair terminator-glued sentences and strip stage directions here too.
-    text: stripStageDirections(normalizeSentenceSpacing(accumulatedText.trim())),
+    text: scrubTutorText(normalizeSentenceSpacing(accumulatedText.trim())),
     toolCalls: accumulatedToolCalls,
     stopReason: lastStopReason,
     usage: totalUsage,
@@ -1949,7 +1957,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     usage: totalUsage,
     // C1: keep transcript text consistent with the repaired sentences
     // (spacing repair + stage-direction strip, same as the voiced path).
-    fullText: stripStageDirections(normalizeSentenceSpacing(accumulatedText.trim())),
+    fullText: scrubTutorText(normalizeSentenceSpacing(accumulatedText.trim())),
     toolCalls: accumulatedToolCalls,
   };
 }

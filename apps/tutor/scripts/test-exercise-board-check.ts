@@ -9,7 +9,7 @@
  * Run: npx tsx scripts/test-exercise-board-check.ts
  */
 import { strict as assert } from 'node:assert';
-import { detectVoiceOnlyExercise, RENDER_TOOLS, isRenderTool } from '../src/lib/tutor/voice/exercise-board-check';
+import { detectVoiceOnlyExercise, detectUnanchoredQuantities, RENDER_TOOLS, isRenderTool } from '../src/lib/tutor/voice/exercise-board-check';
 
 // Whole-branch review ride-along: the drift pin derives its expectation from
 // the REAL tool list instead of a hardcoded count. WHITEBOARD_TOOLS is
@@ -186,6 +186,72 @@ test('RENDER_TOOLS: exactly the show_* tools in WHITEBOARD_TOOLS (drift-proof)',
     `RENDER_TOOLS drifted from toolDefinitions.ts — missing: [${missing.join(', ')}], extra: [${extra.join(', ')}]`,
   );
 });
+
+// ── R49b: quantity anchoring (live portal-2d53e403, turn 1) ──────────────
+// R48's exercise_no_board asks "did this turn call a render tool?". The
+// Crimsora opener DID — showNumberLine with min -10, max 10 and a single
+// point at 0 labelled "Start" — so the advisory never fired. Meanwhile the
+// four events that WERE the problem (Sat +12, Mon -4.50, Tue +3, Wed -6.75)
+// existed only in speech, and 59 seconds later the student asked "Can you
+// write all those events on the whiteboard?".
+//
+// Presence of a render tool is not presence of the content. This checks
+// whether the QUANTITIES the tutor spoke actually reached the board.
+const OPENER = "So here's the week: Saturday you get plus 12 dollars allowance. "
+  + 'Monday a smoothie costs you 4 dollars 50. Tuesday a friend pays back 3 dollars. '
+  + 'Wednesday the vending machine takes 6 dollars 75.';
+// What showNumberLine-1 actually put on the board that turn.
+const PLACEHOLDER_BOARD = '-10 10 1 0 Start Snack Account Balance';
+// What showTable-1 put up one turn later, after the student asked.
+const REAL_BOARD = 'Day Event Amount Saturday Allowance lands +12.00 Monday Smoothie -4.50 '
+  + 'Tuesday Friend pays back +3.00 Wednesday Vending machine -6.75';
+
+test('fires on the live opener: quantities spoken, placeholder on the board', () => {
+  const r = detectUnanchoredQuantities({ turnText: OPENER, renderedText: PLACEHOLDER_BOARD });
+  assert.equal(r.unanchored, true, 'a number line with only a Start dot anchors nothing');
+  // Exactly three of the four events are counted. Tuesday's "+3" is dropped
+  // by the small-count filter (bare integer <= SMALL_COUNT_MAX), which is a
+  // KNOWN AND ACCEPTED miss: real problem data that happens to be a single
+  // digit looks identical to "3 ways to solve this", and the false-positive
+  // cost of keeping it is far higher than the cost of counting three events
+  // instead of four. The turn still fires, which is what matters.
+  assert.deepEqual(r.missing, ['12', '4.5', '6.75']);
+  assert.ok(r.missing.includes('12'), 'the +12 allowance is missing from the board');
+  assert.ok(r.missing.includes('6.75'), 'the -6.75 vending machine is missing from the board');
+});
+
+test('does NOT fire once the same quantities are actually on the board', () => {
+  const r = detectUnanchoredQuantities({ turnText: OPENER, renderedText: REAL_BOARD });
+  assert.equal(r.unanchored, false, 'showTable carried every value — nothing to flag');
+});
+
+test('tolerates decimal formatting differences between speech and board', () => {
+  // Spoken "4 dollars 50" vs rendered "-4.50"; spoken "3 dollars" vs "+3.00".
+  const r = detectUnanchoredQuantities({
+    turnText: 'That is 4 dollars 50 and then 3 dollars more.',
+    renderedText: '-4.50 +3.00',
+  });
+  assert.equal(r.unanchored, false, 'trailing-zero and sign differences must not read as missing');
+});
+
+// ── false-positive guards ───────────────────────────────────────────────
+test('does NOT fire on a turn with too few quantities to be a posed situation', () => {
+  const r = detectUnanchoredQuantities({ turnText: 'Nice — so we landed on 7.', renderedText: '' });
+  assert.equal(r.unanchored, false, 'one number in passing is not a spoken problem');
+});
+
+test('does NOT fire on conversational counts', () => {
+  const r = detectUnanchoredQuantities({
+    turnText: 'There are 3 ways to look at this, and I want to try 2 of them with you first.',
+    renderedText: '',
+  });
+  assert.equal(r.unanchored, false, 'small bare counts are prose, not problem data');
+});
+
+test('empty inputs are total, never throw', () => {
+  assert.equal(detectUnanchoredQuantities({ turnText: '', renderedText: '' }).unanchored, false);
+});
+
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

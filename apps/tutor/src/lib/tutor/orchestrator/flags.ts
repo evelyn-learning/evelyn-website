@@ -153,6 +153,29 @@ export const TUTOR_SPOKEN_MONEY =
 export const TUTOR_DOCK_STATE_ONLY =
   process.env.NEXT_PUBLIC_TUTOR_DOCK_STATE_ONLY === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_DOCK_STATE_ONLY === 'true';
+// R49b meta-narration strip (2026-08-20, portal-2d53e403 288.4s). The tutor
+// spoke its own adjudication reasoning in the third person — `Their reply
+// "10.5" answers an earlier question (After Tuesday), but the active
+// question asks for...` — which passed the judge AND stripStageDirections
+// (that guard only removes parentheticals). Strips whole sentences carrying
+// BOTH a third-person-student subject and an adjudication marker. Pure
+// decision in voice/sentence-spacing.ts (test:stage-direction-strip).
+// Default OFF.
+export const TUTOR_META_NARRATION_STRIP =
+  process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_STRIP === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_STRIP === 'true';
+// R49b quantity anchoring (2026-08-20, portal-2d53e403 turn 1). R48's
+// exercise_no_board is a PRESENCE check — "did the turn call a render
+// tool?" — which a contentless placeholder satisfies completely. The
+// Crimsora opener called show_number_line with one "Start" dot at 0 while
+// all four money events stayed in speech, and the student had to ask for
+// the board 59s later. This adds the CONTENT check: do the quantities the
+// tutor spoke actually appear in the render payload? Telemetry
+// (`quantities_unanchored`) alongside the existing advisory. Pure decision
+// in voice/exercise-board-check.ts (test:exercise-board). Default OFF.
+export const TUTOR_QUANTITY_ANCHOR = 
+  process.env.NEXT_PUBLIC_TUTOR_QUANTITY_ANCHOR === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_QUANTITY_ANCHOR === 'true';
 // A command that paints teaching content on the board (vs meta nav like
 // newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
 // tell whether the brain drew anything this turn.

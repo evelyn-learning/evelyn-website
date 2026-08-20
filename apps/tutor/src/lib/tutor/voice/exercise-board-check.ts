@@ -179,3 +179,122 @@ export const RENDER_TOOLS: ReadonlySet<string> = new Set([
 export function isRenderTool(name: string): boolean {
   return RENDER_TOOLS.has(name);
 }
+
+/**
+ * Quantity anchoring (R49b, live 2026-08-20 portal-2d53e403 turn 1).
+ *
+ * `detectVoiceOnlyExercise` above asks a PRESENCE question — did this turn
+ * dispatch a render tool? The Crimsora opener answered yes and was still
+ * the exact failure the rule exists to prevent. It called `show_number_line`
+ * with `min:-10, max:10, step:1` and one point at 0 labelled "Start", while
+ * the four events that WERE the problem — Saturday +12, Monday -4.50,
+ * Tuesday +3, Wednesday -6.75 — lived only in speech. Fifty-nine seconds
+ * later the student said "Can you write all those events on the whiteboard?".
+ *
+ * A contentless placeholder satisfies a presence check completely. So this
+ * asks the CONTENT question instead: of the quantities the tutor just spoke,
+ * how many actually reached the board?
+ *
+ * WHY NUMBERS AND NOT PROSE. Numerals are the part of a posed situation a
+ * student cannot hold in their head and cannot recover by asking a vague
+ * question — and they are cheap to compare without an LLM. Prose framing
+ * ("your snack account") is genuinely fine to deliver by voice; the ledger
+ * of values is not.
+ *
+ * FALSE-POSITIVE DISCIPLINE. Every teaching turn contains stray numerals,
+ * so firing on one missing value would make this noise. Two gates:
+ *   - at least MIN_SITUATION_QUANTITIES distinct values must be spoken, so
+ *     a turn has to look like a posed situation rather than a passing
+ *     mention;
+ *   - bare small integers (<= SMALL_COUNT_MAX) with no decimal part are
+ *     treated as conversational counts ("3 ways", "2 of them") and ignored
+ *     entirely — they are overwhelmingly prose, and a genuine problem
+ *     built only from single digits still has its OTHER values checked.
+ *
+ * Comparison is value-based, not string-based: spoken "4 dollars 50" and
+ * rendered "-4.50" are the same quantity, as are "3 dollars" and "+3.00".
+ * Sign is deliberately ignored — the board writes "-4.50" for money the
+ * tutor describes as a cost, and treating those as different values would
+ * fire on correctly-anchored turns.
+ *
+ * Advisory only, like every other member of this family. Pure, never throws.
+ * Exercised by `npm run test:exercise-board`.
+ */
+
+/** Fewer distinct spoken quantities than this ⇒ not a posed situation. */
+export const MIN_SITUATION_QUANTITIES = 3;
+/** Bare integers at or below this are conversational counts, not data. */
+export const SMALL_COUNT_MAX = 5;
+
+/**
+ * Spoken money carries its cents as a separate word — the tutor says "4
+ * dollars 50" and "6 dollars 75" where the board writes "-4.50" and
+ * "-6.75". Without this rewrite the two sides never line up, and the
+ * detector fires on turns that anchored everything correctly (caught by the
+ * REAL_BOARD case in the suite — showTable held all four values and the
+ * naive comparison still reported three missing). Same underlying
+ * phenomenon as spoken-money.ts: money read aloud loses its decimal point.
+ */
+function foldSpokenMoney(text: string): string {
+  return (text || '').replace(
+    /(\d+)\s*(?:dollars?|pounds?|euros?|bucks?)\s+(\d{1,2})\b/gi,
+    (_m, whole: string, cents: string) => `${whole}.${cents.padEnd(2, '0')}`,
+  );
+}
+
+/** Every numeric literal in a blob, as canonical value strings. */
+function numericValues(text: string): string[] {
+  const out: string[] = [];
+  const re = /-?\d+(?:\.\d+)?/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text || '')) !== null) {
+    const n = Math.abs(parseFloat(m[0]));
+    if (Number.isFinite(n)) out.push(canonicalQuantity(n));
+  }
+  return out;
+}
+
+/** "4.50" and "4.5" and "+4.50" all collapse to the same key. */
+function canonicalQuantity(n: number): string {
+  return String(Math.round(n * 100) / 100);
+}
+
+export interface UnanchoredQuantitiesResult {
+  /** True when the turn posed a multi-value situation the board did not carry. */
+  unanchored: boolean;
+  /** Spoken quantities with no counterpart on the board. */
+  missing: string[];
+  /** Distinct spoken quantities considered (post small-count filter). */
+  considered: number;
+}
+
+export function detectUnanchoredQuantities(opts: {
+  /** Everything the tutor said this turn. */
+  turnText: string;
+  /** Flattened text of every render payload this turn put on the board. */
+  renderedText: string;
+}): UnanchoredQuantitiesResult {
+  const NONE: UnanchoredQuantitiesResult = { unanchored: false, missing: [], considered: 0 };
+  const spokenRaw = numericValues(foldSpokenMoney(opts.turnText));
+  if (spokenRaw.length === 0) return NONE;
+
+  // Drop conversational counts before deduping so "3 ways" never counts
+  // toward the situation threshold.
+  const spoken = Array.from(new Set(
+    spokenRaw.filter((v) => {
+      const n = parseFloat(v);
+      const isBareSmallInt = Number.isInteger(n) && n <= SMALL_COUNT_MAX;
+      return !isBareSmallInt;
+    }),
+  ));
+  if (spoken.length < MIN_SITUATION_QUANTITIES) return { ...NONE, considered: spoken.length };
+
+  const onBoard = new Set(numericValues(opts.renderedText));
+  const missing = spoken.filter((v) => !onBoard.has(v));
+
+  // Fire only when the board is carrying essentially none of the situation.
+  // A turn that anchored most of its values and dropped one is not the
+  // failure this exists to catch.
+  const unanchored = missing.length >= MIN_SITUATION_QUANTITIES;
+  return { unanchored, missing, considered: spoken.length };
+}

@@ -177,6 +177,7 @@ import {
   TUTOR_BRAIN_STALL_GUARD,
   TUTOR_SPOKEN_MONEY,
   TUTOR_DOCK_STATE_ONLY,
+  TUTOR_QUANTITY_ANCHOR,
   TUTOR_AGENDA_RAIL,
   TUTOR_VALIDATE_BEFORE_SPEAK,
   TUTOR_KEEP_VALIDATED_ON_KILL,
@@ -215,7 +216,7 @@ import {
   resolveBargeInEnergyThreshold,
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
-import { detectVoiceOnlyExercise, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { detectVoiceOnlyExercise, detectUnanchoredQuantities, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
@@ -1496,6 +1497,11 @@ export function VoiceTutorRealtime({
   // flushed). Feeds shouldBypassRenderSync so only the opening turn's FIRST
   // render skips the sync buffer. Reset with the other per-turn render state.
   const rendersDispatchedThisTurnRef = useRef(0);
+  // R49b: flattened text of every board-render payload THIS turn produced,
+  // for the quantity-anchor check. Accumulated at dispatch time (before the
+  // sync buffer) so it reflects everything the turn drew, whether the render
+  // painted immediately, was buffered to its anchor, or was dropped later.
+  const turnRenderPayloadTextRef = useRef('');
   // Per-turn opening directive (flag-ON follow-up #1 from the whole-branch
   // review): the B4 opener clause used to be baked into the SESSION-STATIC
   // system prompt (a byte-stable 1h-cached prefix — see runBrainTurn's
@@ -3936,6 +3942,15 @@ export function VoiceTutorRealtime({
     // end-of-turn and only while openingTurnPendingRef is armed).
     if (TUTOR_PEDAGOGY_OPENER && openingTurnPendingRef.current) {
       openingTurnValidRenderCountRef.current += processed.filter(isBoardRenderCommand).length;
+    }
+    // R49b: capture the payload text of board renders for the quantity
+    // anchor check. Cheap (one stringify per batch) and unconditional so
+    // the flag can be flipped mid-session without a blind first turn.
+    for (const c of processed) {
+      if (isBoardRenderCommand(c)) {
+        try { turnRenderPayloadTextRef.current += ' ' + JSON.stringify(c); }
+        catch { /* a non-serializable command is simply not counted */ }
+      }
     }
     if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
       onWhiteboardCommand(processed);
@@ -8577,6 +8592,7 @@ export function VoiceTutorRealtime({
     // Board-anchor re-anchoring: fresh per-turn narration.
     turnNarrationRef.current = [];
     rendersDispatchedThisTurnRef.current = 0;
+    turnRenderPayloadTextRef.current = '';
     // Task B3 (flag-gated): fresh per-turn valid-render counter for the
     // opener-fallback check. openingTurnPendingRef itself is NOT reset here
     // (it's a one-shot "is this the opener turn" flag seeded once at mount
@@ -13448,6 +13464,24 @@ export function VoiceTutorRealtime({
             onDebugEvent?.(
               'exercise_no_board',
               `shape=${exerciseCheck.shape} · "${fullText.slice(0, 120)}"`,
+            );
+          }
+        }
+        // R49b: the CONTENT companion to the presence check above. A render
+        // tool firing is not the same as the problem reaching the board —
+        // portal-2d53e403's opener called show_number_line with a single
+        // "Start" dot at 0 while all four money events stayed in speech, so
+        // `exercise_no_board` was satisfied and the student still had to
+        // ask "Can you write all those events on the whiteboard?". Compares
+        // the quantities SPOKEN this turn against the quantities actually
+        // in this turn's render payloads. Advisory only, same precedent.
+        if (TUTOR_QUANTITY_ANCHOR) {
+          const renderedText = turnRenderPayloadTextRef.current;
+          const q = detectUnanchoredQuantities({ turnText: fullText, renderedText });
+          if (q.unanchored) {
+            onDebugEvent?.(
+              'quantities_unanchored',
+              `${q.missing.length}/${q.considered} spoken value(s) never reached the board: ${q.missing.join(', ')}`,
             );
           }
         }
