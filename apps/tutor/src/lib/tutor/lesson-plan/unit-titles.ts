@@ -61,6 +61,18 @@ export const UNIT_TITLES: Record<string, Record<string, string>> = {
     '9': 'Radicals & Rational Expressions',
     '10': 'Data & Sequences',
   },
+  'grade-7-math': {
+    '1': 'Rational Numbers',
+    '2': 'Operations with Rational Numbers',
+    '3': 'Ratios & Proportional Relationships',
+    '4': 'Percent & Applications',
+    '5': 'Algebraic Expressions',
+    '6': 'Equations & Inequalities',
+    '7': 'Geometry: Angles & Figures',
+    '8': 'Area, Surface Area & Volume',
+    '9': 'Statistics & Sampling',
+    '10': 'Probability',
+  },
   geometry: {
     '1': 'Foundations of Geometry',
     '2': 'Reasoning & Proof',
