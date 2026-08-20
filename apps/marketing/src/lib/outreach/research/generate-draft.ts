@@ -10,6 +10,7 @@
 // sign-off, [DEMO_LINK] literal) — keep them in sync.
 import type { TouchChannel } from "../enums";
 import { applyDemoLink } from "../draft-body";
+import { resolveRecipient, applyGenericGreeting } from "../recipient";
 import { RESEARCH_MODEL } from "./prompts";
 
 export interface GenerateLead {
@@ -19,7 +20,8 @@ export interface GenerateLead {
   whyFit: string;
   useCaseHypothesis: string;
   notes?: string;
-  decisionMaker: { name: string; title: string };
+  decisionMaker: { name: string; title: string; email?: string };
+  orgEmail?: string;
   touches: Array<{ at: Date | string; channel: string; direction: string; summary: string }>;
   currentDraft?: { channel: TouchChannel; subject?: string; body: string; gmailDraftId?: string; gmailThreadId?: string } | null;
   linkedinDraft?: { subject: string; body: string } | null;
@@ -81,7 +83,7 @@ const CHANNEL_BRIEFS: Record<Exclude<TouchChannel, "email">, string> = {
 const EMAIL_BRIEFS: Record<EmailStep, string> = {
   intro:
     `- subject: a short, specific subject line (no clickbait).
-- body: a personalized intro email (120-180 words) from Praveen at Evelyn Learning to the decision-maker (or "Hi there" if no person is on file). Reference the specific real thing from the research. Include this exact line on its own line where the demo link belongs: [DEMO_LINK]. End: "Best,\nPraveen\nEvelyn Learning". No pricing claims, no fake statistics.`,
+- body: a personalized intro email (120-180 words) from Praveen at Evelyn Learning. Reference the specific real thing from the research. Include this exact line on its own line where the demo link belongs: [DEMO_LINK]. End: "Best,\nPraveen\nEvelyn Learning". No pricing claims, no fake statistics.`,
   bump:
     `- subject: a short follow-up subject (it will usually thread onto the intro email as a reply, so keep it natural as a standalone too).
 - body: a SHORT follow-up bump (50-90 words) to the earlier outreach listed above. Do not repeat the intro pitch — add ONE new angle or concrete detail from the research, keep the tone light ("floating this back up"), include the literal line [DEMO_LINK] on its own line, and end: "Best,\nPraveen\nEvelyn Learning".`,
@@ -101,6 +103,15 @@ export function generateDraftParams(
   const personLine = lead.decisionMaker.name
     ? `${lead.decisionMaker.name}${lead.decisionMaker.title ? `, ${lead.decisionMaker.title}` : ""}`
     : "no named decision-maker on file";
+  // Who this actually gets delivered to decides how it must open. The
+  // deterministic pass in applyGeneratedDraft enforces the same rule after
+  // the fact; telling the model up front is what makes the whole body read
+  // as written for a shared inbox rather than a patched personal note.
+  const { isGeneric } = resolveRecipient(lead);
+  const recipientBrief =
+    channel === "email" && isGeneric
+      ? `\nDelivery: this email goes to the organization's GENERAL inbox (${lead.orgEmail}), NOT to ${lead.decisionMaker.name || "a named person"} directly — whoever opens it is not them. Open with "Hello," (never a personal first name), and in the opening line ask to be pointed to the right person, naming them and their role. Write the rest for a reader who may be forwarding it on.\n`
+      : "";
   return {
     model: RESEARCH_MODEL,
     // 16000 like the pipeline's discovery/candidate calls — the model's
@@ -120,7 +131,7 @@ About: ${lead.about}
 Why Evelyn fits: ${lead.whyFit}
 Use-case hypothesis: ${lead.useCaseHypothesis}
 Decision-maker: ${personLine}
-${lead.notes ? `Owner notes: ${lead.notes}\n` : ""}
+${recipientBrief}${lead.notes ? `Owner notes: ${lead.notes}\n` : ""}
 ${touchHistoryBlock(lead)}
 
 Produce:
@@ -147,7 +158,23 @@ export function applyGeneratedDraft(
   const body = parsed.body?.trim() ? applyDemoLink(parsed.body, demoLink) : "";
   if (!body) return false;
   if (channel === "email") {
-    lead.currentDraft = { channel: "email", subject: parsed.subject ?? "", body };
+    // Belt to the prompt's braces: the brief above asks for a generic
+    // opening when this is bound for a shared inbox, but the salutation is
+    // the one line that is plainly wrong if the model ignores it, and it is
+    // the line the recipient reads first. Enforce it rather than hope.
+    // LinkedIn and contact-form drafts are untouched — an InMail always
+    // reaches the person themselves, and form copy is already impersonal.
+    const { isGeneric } = resolveRecipient(lead);
+    lead.currentDraft = {
+      channel: "email",
+      subject: parsed.subject ?? "",
+      body: isGeneric
+        ? applyGenericGreeting(body, {
+            name: lead.decisionMaker.name,
+            title: lead.decisionMaker.title,
+          })
+        : body,
+    };
     return true;
   }
   if (channel === "linkedin") {

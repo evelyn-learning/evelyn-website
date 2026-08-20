@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth";
 import { connectDB } from "@core/db";
 import { Lead, LEAD_STATUSES, type LeadStatus } from "@/models";
 import { mergeDecisionMakerEdit, type DecisionMakerEditInput } from "@/lib/outreach/lead-edit";
+import { applyApprove, applyKill } from "@/lib/outreach/lead-transitions";
 
 const EDIT_FIELDS = [
   "company",
@@ -13,6 +14,8 @@ const EDIT_FIELDS = [
   "whyFit",
   "useCaseHypothesis",
   "decisionMaker",
+  "orgEmail",
+  "orgEmailSourceUrl",
   "website",
   "source",
   "notes",
@@ -44,21 +47,21 @@ export async function PATCH(
 
     switch (action) {
       case "approve": {
-        if (lead.status !== "staged") {
+        // Shared with the bulk route so the staged-only guard, the
+        // one-time demo-token mint, and the nextActionAt/approvedAt stamps
+        // can't drift between the two paths.
+        const res = applyApprove(lead, new Date(), () => randomBytes(8).toString("base64url"));
+        if (!res.ok) {
           return NextResponse.json(
             { error: "Only staged leads can be approved" },
             { status: 400 }
           );
         }
-        lead.status = "approved";
-        lead.demoToken = lead.demoToken ?? randomBytes(8).toString("base64url");
-        lead.nextActionAt = new Date();
         break;
       }
 
       case "kill": {
-        lead.status = "dead";
-        lead.nextActionAt = null;
+        applyKill(lead);
         break;
       }
 
@@ -69,6 +72,21 @@ export async function PATCH(
         const fieldsRecord = fields as Record<string, unknown>;
         for (const key of EDIT_FIELDS) {
           if (!Object.prototype.hasOwnProperty.call(fieldsRecord, key)) continue;
+          if (key === "orgEmail") {
+            // Same provenance rule as mergeDecisionMakerEdit applies to the
+            // decision-maker's address: the source URL is evidence that THIS
+            // address is published THERE. Hand-editing the address invalidates
+            // it, and a stale URL is worse than none — the console renders it
+            // as "Published at <url>".
+            const next = typeof fieldsRecord.orgEmail === "string"
+              ? fieldsRecord.orgEmail.trim()
+              : "";
+            if (next !== (lead.orgEmail ?? "")) {
+              lead.orgEmailSourceUrl = undefined;
+            }
+            lead.orgEmail = next || undefined;
+            continue;
+          }
           if (key === "decisionMaker") {
             // Merge, don't replace: the client's edit form (ReviewQueueTab
             // `EditFields`) only carries name/title/linkedinUrl/email/

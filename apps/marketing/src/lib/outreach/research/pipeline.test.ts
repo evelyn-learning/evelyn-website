@@ -19,6 +19,7 @@ const researched = (over: Partial<ResearchedLead> = {}): ResearchedLead => ({
   decisionMakerName: "Dana Smith", decisionMakerTitle: "Dean",
   linkedinUrl: "", email: "dsmith@acme.edu",
   emailSourceUrl: "https://acme.edu/staff", nameSourceUrl: "https://acme.edu/staff",
+  orgEmail: "", orgEmailSourceUrl: "",
   sourceUrls: ["https://acme.edu/programs", "https://acme.edu/staff"],
   draftSubject: "NCLEX prep at Acme", draftBody: "Hi Dana...\n[DEMO_LINK]\nBest,\nPraveen\nEvelyn Learning",
   contactPageUrl: "https://acme.edu/contact",
@@ -256,6 +257,125 @@ const leadMsg = (r: ResearchedLead): ResearchMessage =>
       { call, fetchFn, enrich }, () => {}
     );
     assert.equal(out.outcome, "no_email");
+  });
+
+
+  // --- general-inbox fallback (lib/outreach/recipient.ts) ---
+
+  const noPersonalEmail = { email: "", emailSourceUrl: "" };
+  const withOrgInbox = {
+    ...noPersonalEmail,
+    orgEmail: "info@acme.edu",
+    orgEmailSourceUrl: "https://acme.edu/contact",
+  };
+
+  await test("mapper: verified org inbox is kept with its source URL", () => {
+    const row = researchedToLeadRow(
+      researched(withOrgInbox),
+      { segment: "nursing_program", jobId: "j1", emailVerified: false, orgEmailVerified: true }
+    ) as { orgEmail?: string; orgEmailSourceUrl?: string };
+    assert.equal(row.orgEmail, "info@acme.edu");
+    assert.equal(row.orgEmailSourceUrl, "https://acme.edu/contact");
+  });
+
+  await test("mapper: unverified org inbox is stripped, same as a personal one", () => {
+    const row = researchedToLeadRow(
+      researched(withOrgInbox),
+      { segment: "nursing_program", jobId: "j1", emailVerified: false, orgEmailVerified: false }
+    ) as { orgEmail?: string; orgEmailSourceUrl?: string };
+    assert.equal(row.orgEmail, undefined);
+    assert.equal(row.orgEmailSourceUrl, undefined);
+  });
+
+  await test("runCandidate: no personal email but a verified org inbox -> inserted", async () => {
+    const call: CallModel = async () => leadMsg(researched(withOrgInbox));
+    const fetchFn = (async () => new Response("Contact us at info@acme.edu")) as typeof fetch;
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, ...noEnrich }, () => {}
+    );
+    // Reachable is what "inserted" means here — the send target is the
+    // general inbox rather than the dean's own address.
+    assert.equal(out.outcome, "inserted");
+    const row = out.row as { orgEmail?: string; decisionMaker: { email?: string } };
+    assert.equal(row.orgEmail, "info@acme.edu");
+    assert.equal(row.decisionMaker.email, undefined);
+    assert.ok(out.note && /general inbox/i.test(out.note));
+  });
+
+  await test("runCandidate: an org inbox absent from its page is stripped -> no_email", async () => {
+    const call: CallModel = async () => leadMsg(researched(withOrgInbox));
+    const fetchFn = (async () => new Response("no emails on this page")) as typeof fetch;
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, ...noEnrich }, () => {}
+    );
+    assert.equal(out.outcome, "no_email");
+    const row = out.row as { orgEmail?: string };
+    assert.equal(row.orgEmail, undefined);
+  });
+
+  await test("runCandidate: a draft bound for the org inbox loses its personal greeting", async () => {
+    const call: CallModel = async () =>
+      leadMsg(researched({
+        ...withOrgInbox,
+        draftBody: "Hi Dana,\n\nYour NCLEX pass rate caught my eye.\n\nBest,\nPraveen",
+      }));
+    const fetchFn = (async () => new Response("Contact us at info@acme.edu")) as typeof fetch;
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, ...noEnrich }, () => {}
+    );
+    const row = out.row as { currentDraft: { body: string } };
+    assert.equal(row.currentDraft.body.startsWith("Hello,"), true);
+    assert.equal(row.currentDraft.body.includes("Hi Dana"), false);
+    assert.ok(/hoping to reach Dana Smith, your Dean/.test(row.currentDraft.body));
+    assert.ok(row.currentDraft.body.includes("Your NCLEX pass rate caught my eye."));
+  });
+
+  await test("runCandidate: a draft going to the person's own address keeps its greeting", async () => {
+    const call: CallModel = async () =>
+      leadMsg(researched({
+        orgEmail: "info@acme.edu",
+        orgEmailSourceUrl: "https://acme.edu/contact",
+        draftBody: "Hi Dana,\n\nYour NCLEX pass rate caught my eye.\n\nBest,\nPraveen",
+      }));
+    const fetchFn = (async () => new Response("Dean Dana Smith — dsmith@acme.edu, info@acme.edu")) as typeof fetch;
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, ...noEnrich }, () => {}
+    );
+    const row = out.row as { currentDraft: { body: string }; decisionMaker: { email?: string } };
+    assert.equal(row.decisionMaker.email, "dsmith@acme.edu");
+    assert.equal(row.currentDraft.body.startsWith("Hi Dana,"), true);
+  });
+
+  await test("runCandidate: an enrichment-found personal email restores the personal greeting", async () => {
+    // The model wrote "Hello," because it found no personal address, then
+    // the vendor supplied one — the salutation must follow the envelope.
+    const call: CallModel = async () =>
+      leadMsg(researched({
+        ...withOrgInbox,
+        draftBody: "Hello,\n\nYour NCLEX pass rate caught my eye.\n\nBest,\nPraveen",
+      }));
+    const fetchFn = (async () => new Response("Contact us at info@acme.edu")) as typeof fetch;
+    const enrich = async (_: EnrichInput): Promise<ChainOutcome> => ({
+      result: { email: "dsmith@acme.edu", provider: "apollo", creditsUsed: 1 },
+      attempts: [{ provider: "apollo", status: "hit" }],
+    });
+    const out = await runCandidate(
+      { company: "Acme Nursing College", website: "https://acme.edu" },
+      { segment: "nursing_program", niche: "", jobId: "j1" },
+      { call, fetchFn, enrich }, () => {}
+    );
+    const row = out.row as { currentDraft: { body: string }; decisionMaker: { email?: string } };
+    assert.equal(row.decisionMaker.email, "dsmith@acme.edu");
+    // Not generic any more, so no routing line was inserted.
+    assert.equal(row.currentDraft.body.includes("hoping to reach"), false);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

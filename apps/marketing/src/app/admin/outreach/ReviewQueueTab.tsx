@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle, XCircle, Pencil, Mail, Linkedin, Globe, BadgeCheck } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CheckCircle, XCircle, Pencil, Mail, Linkedin, Globe, BadgeCheck, Building2 } from "lucide-react";
 import { LEAD_SEGMENTS } from "@/lib/outreach/enums";
 import type { EmailSource } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
@@ -57,6 +57,45 @@ export function EmailProvenanceBadge({
   return null;
 }
 
+// The organization's general inbox, shown where a decision-maker's own
+// address would be. Deliberately distinct from EmailProvenanceBadge: that
+// badge answers "how good is this address", this one answers "this is not
+// the person" — which is what changes how the draft reads.
+export function GeneralInboxChip({
+  email,
+  sourceUrl,
+}: {
+  email: string;
+  sourceUrl?: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1 text-gray-500">
+      <a
+        href={`mailto:${email}`}
+        className="inline-flex items-center gap-1 hover:text-primary-600"
+      >
+        <Building2 className="h-3.5 w-3.5" />
+        {email}
+      </a>
+      {sourceUrl ? (
+        <a
+          href={sourceUrl}
+          target="_blank"
+          rel="noreferrer"
+          title={`Published at ${sourceUrl}`}
+          className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 hover:bg-amber-200"
+        >
+          General inbox
+        </a>
+      ) : (
+        <span className="inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+          General inbox
+        </span>
+      )}
+    </span>
+  );
+}
+
 interface EditFields {
   company: string;
   segment: string;
@@ -70,6 +109,7 @@ interface EditFields {
     email: string;
     emailVerified: boolean;
   };
+  orgEmail: string;
   website: string;
   source: string;
   notes: string;
@@ -89,6 +129,7 @@ function toEditFields(lead: LeadJSON): EditFields {
       email: lead.decisionMaker?.email ?? "",
       emailVerified: lead.decisionMaker?.emailVerified ?? false,
     },
+    orgEmail: lead.orgEmail ?? "",
     website: lead.website ?? "",
     source: lead.source ?? "",
     notes: lead.notes ?? "",
@@ -102,9 +143,32 @@ export default function ReviewQueueTab({
   leads: LeadJSON[];
   refresh: () => Promise<void>;
 }) {
-  const staged = leads.filter((l) => l.status === "staged");
+  const staged = useMemo(() => leads.filter((l) => l.status === "staged"), [leads]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  // Selection is derived against the live queue on every render rather than
+  // trusted as-is: a refresh (or another tab acting on the same lead) can
+  // remove a row from `staged` while its id is still checked, and sending a
+  // vanished id would just come back as a "not found" skip.
+  const selectedIds = useMemo(
+    () => staged.filter((l) => selected.has(l._id)).map((l) => l._id),
+    [staged, selected]
+  );
+  const allSelected = staged.length > 0 && selectedIds.length === staged.length;
+
+  const toggleOne = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const toggleAll = () =>
+    setSelected(allSelected ? new Set() : new Set(staged.map((l) => l._id)));
 
   const patchLead = async (id: string, body: Record<string, unknown>) => {
     setPendingId(id);
@@ -139,6 +203,43 @@ export default function ReviewQueueTab({
     setEditingId(null);
   };
 
+  const bulk = async (action: "approve" | "kill") => {
+    const ids = selectedIds;
+    if (ids.length === 0) return;
+    const verb = action === "approve" ? "Approve" : "Kill";
+    if (!confirm(`${verb} ${ids.length} lead${ids.length === 1 ? "" : "s"}?`)) return;
+
+    setBulkBusy(true);
+    try {
+      const res = await fetch("/api/admin/outreach/leads/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ids }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || `Failed to ${action} leads`);
+        return;
+      }
+      // Report the shortfall rather than letting a partial batch look like a
+      // clean sweep — a lead someone else already approved comes back here
+      // as a skip, and the operator needs to know which ones stayed put.
+      const skipped: { id: string; reason: string }[] = data.skipped ?? [];
+      if (skipped.length > 0) {
+        alert(
+          `${data.updated?.length ?? 0} updated, ${skipped.length} skipped:\n` +
+            skipped.map((s) => `• ${s.reason}`).join("\n")
+        );
+      }
+      setSelected(new Set());
+      await refresh();
+    } catch {
+      alert(`Failed to ${action} leads`);
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   if (staged.length === 0) {
     return (
       <div className="rounded-xl bg-white p-6 text-sm text-gray-500 shadow">
@@ -149,6 +250,48 @@ export default function ReviewQueueTab({
 
   return (
     <div className="space-y-4">
+      <div className="sticky top-0 z-10 flex flex-wrap items-center gap-3 rounded-xl bg-white p-4 shadow">
+        <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-gray-300"
+            checked={allSelected}
+            // Some-but-not-all reads as a dash rather than a tick, so the
+            // header box never implies the whole queue is selected.
+            ref={(el) => {
+              if (el) el.indeterminate = selectedIds.length > 0 && !allSelected;
+            }}
+            onChange={toggleAll}
+          />
+          Select all ({staged.length})
+        </label>
+
+        <span className="text-sm text-gray-500">
+          {selectedIds.length} selected
+        </span>
+
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => bulk("approve")}
+            disabled={bulkBusy || selectedIds.length === 0}
+            className="inline-flex items-center gap-1 rounded-lg bg-green-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            <CheckCircle className="h-4 w-4" />
+            {bulkBusy ? "Working…" : `Approve selected`}
+          </button>
+          <button
+            type="button"
+            onClick={() => bulk("kill")}
+            disabled={bulkBusy || selectedIds.length === 0}
+            className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-50"
+          >
+            <XCircle className="h-4 w-4" />
+            Kill selected
+          </button>
+        </div>
+      </div>
+
       {staged.map((lead) =>
         editingId === lead._id ? (
           <EditCard
@@ -162,7 +305,9 @@ export default function ReviewQueueTab({
           <ReviewCard
             key={lead._id}
             lead={lead}
-            busy={pendingId === lead._id}
+            busy={pendingId === lead._id || bulkBusy}
+            selected={selected.has(lead._id)}
+            onToggleSelect={() => toggleOne(lead._id)}
             onApprove={() => approve(lead._id)}
             onEdit={() => setEditingId(lead._id)}
             onKill={() => kill(lead._id)}
@@ -176,21 +321,37 @@ export default function ReviewQueueTab({
 function ReviewCard({
   lead,
   busy,
+  selected,
+  onToggleSelect,
   onApprove,
   onEdit,
   onKill,
 }: {
   lead: LeadJSON;
   busy: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
   onApprove: () => void;
   onEdit: () => void;
   onKill: () => void;
 }) {
   const dm = lead.decisionMaker;
   return (
-    <div className="rounded-xl bg-white p-6 shadow">
+    <div
+      className={`rounded-xl bg-white p-6 shadow ${
+        selected ? "ring-2 ring-primary-300" : ""
+      }`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            className="mt-1.5 h-4 w-4 rounded border-gray-300"
+            checked={selected}
+            onChange={onToggleSelect}
+            aria-label={`Select ${lead.company}`}
+          />
+          <div>
           <div className="flex items-center gap-2">
             <h3 className="text-lg font-semibold text-gray-900">{lead.company}</h3>
             <span className="inline-flex rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">
@@ -208,6 +369,7 @@ function ReviewCard({
               {lead.website}
             </a>
           )}
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -276,6 +438,13 @@ function ReviewCard({
             <Mail className="h-3.5 w-3.5" />
             {dm.email}
           </a>
+        )}
+        {/* Only when there's no personal address: this is the fallback the
+            draft would actually go to, so it's the address the reviewer is
+            deciding about. Showing it alongside a personal email would just
+            be noise. */}
+        {!dm?.email && lead.orgEmail && (
+          <GeneralInboxChip email={lead.orgEmail} sourceUrl={lead.orgEmailSourceUrl} />
         )}
         {dm?.linkedinUrl && (
           <a
@@ -465,6 +634,20 @@ function EditCard({
           Email verified
         </label>
       </fieldset>
+
+      <label className="mt-4 block text-sm text-gray-700">
+        Organization inbox
+        <input
+          className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+          placeholder="info@example.edu"
+          value={fields.orgEmail}
+          onChange={(e) => setFields((f) => ({ ...f, orgEmail: e.target.value }))}
+        />
+        <span className="mt-1 block text-xs text-gray-500">
+          Used only when the decision-maker has no email of their own. The draft
+          then opens &ldquo;Hello,&rdquo; and asks to be passed to them by name.
+        </span>
+      </label>
 
       <label className="mt-4 block text-sm text-gray-700">
         Notes

@@ -9,6 +9,7 @@ import { callWithToolLoop, extractJson, type CallModel } from "./claude";
 import { discoveryParams, candidateParams, type ResearchedLead } from "./prompts";
 import { priceUsageUsd, costCapUsd, type UsageLike } from "./cost";
 import { verifyEmailPublished } from "./verify-email";
+import { resolveRecipient, applyGenericGreeting } from "../recipient";
 import { validateLeadRows, insertLeads } from "../import-leads";
 import { enrichLead, type ChainOutcome } from "../enrich/chain";
 import type { EnrichInput } from "../enrich/types";
@@ -21,10 +22,11 @@ export interface PipelineDeps {
 
 export function researchedToLeadRow(
   r: ResearchedLead,
-  opts: { segment: string; jobId: string; emailVerified: boolean }
+  opts: { segment: string; jobId: string; emailVerified: boolean; orgEmailVerified?: boolean }
 ): Record<string, unknown> {
   const linkedinOk = r.linkedinUrl && r.sourceUrls.includes(r.linkedinUrl);
   const emailKept = opts.emailVerified && !!r.email;
+  const orgEmailKept = !!opts.orgEmailVerified && !!r.orgEmail;
   return {
     company: r.company,
     segment: opts.segment,
@@ -33,6 +35,9 @@ export function researchedToLeadRow(
     useCaseHypothesis: r.useCaseHypothesis,
     website: r.website,
     source: r.source || `research-job:${opts.jobId}`,
+    // Survives the same fetch-the-page gate as a personal address; an
+    // unverified one is dropped rather than kept as a weaker signal.
+    ...(orgEmailKept ? { orgEmail: r.orgEmail, orgEmailSourceUrl: r.orgEmailSourceUrl } : {}),
     decisionMaker: {
       name: r.decisionMakerName,
       title: r.decisionMakerTitle,
@@ -88,9 +93,21 @@ export async function runCandidate(
       note = "no published email found";
     }
 
+    // The organization's general inbox goes through the identical gate. It
+    // is only a fallback, so a failure here is not worth overwriting the
+    // decision-maker note the operator actually needs to see.
+    let orgEmailVerified = false;
+    if (r.orgEmail && r.orgEmailSourceUrl) {
+      orgEmailVerified = await verifyEmailPublished(
+        r.orgEmail, r.orgEmailSourceUrl, deps.fetchFn ?? fetch
+      );
+    }
+
     const row = researchedToLeadRow(r, {
-      segment: job.segment, jobId: job.jobId, emailVerified,
+      segment: job.segment, jobId: job.jobId, emailVerified, orgEmailVerified,
     }) as Record<string, unknown> & {
+      orgEmail?: string;
+      currentDraft?: { channel: string; subject: string; body: string };
       decisionMaker: {
         name: string; title: string;
         linkedinUrl?: string; email?: string; emailVerified: boolean;
@@ -98,7 +115,14 @@ export async function runCandidate(
         linkedinProvider?: string;
       };
     };
-    let outcome: CandidateOutcome["outcome"] = emailVerified ? "inserted" : "no_email";
+    // "no_email" means "we cannot reach this lead", not "no personal
+    // address" — a verified general inbox is a real send target, so it
+    // counts as reachable the same way a vendor-sourced email does below.
+    let outcome: CandidateOutcome["outcome"] =
+      emailVerified || (orgEmailVerified && !!r.orgEmail) ? "inserted" : "no_email";
+    if (!emailVerified && orgEmailVerified && r.orgEmail) {
+      note = `${note ?? "no published email found"}; general inbox ${r.orgEmail} verified`;
+    }
 
     // Auto-enrich: only when we have a real person and are missing either
     // channel. Never lets an enrichment failure fail the candidate — this
@@ -156,6 +180,25 @@ export async function runCandidate(
           // Enrichment is best-effort on top of an already-valid research
           // result — a vendor/network hiccup must never fail the candidate.
         }
+      }
+    }
+
+    // Greeting reconciliation, deliberately last. The model chose the
+    // draft's salutation from what it knew mid-research, but the recipient
+    // has had two chances to change since: verification above may have
+    // stripped an unpublished personal address, and the enrichment chain
+    // may have just added one. Resolve the real send target now and rewrite
+    // the body only if it is actually headed for a general inbox.
+    if (row.currentDraft?.body) {
+      const { isGeneric } = resolveRecipient({
+        decisionMaker: { email: row.decisionMaker.email },
+        orgEmail: row.orgEmail,
+      });
+      if (isGeneric) {
+        row.currentDraft.body = applyGenericGreeting(row.currentDraft.body, {
+          name: row.decisionMaker.name,
+          title: row.decisionMaker.title,
+        });
       }
     }
 

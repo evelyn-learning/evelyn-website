@@ -5,6 +5,7 @@ import { connectDB } from "@core/db";
 import { Lead, TOUCH_CHANNELS, type TouchChannel } from "@/models";
 import { createOutreachDraft, getOutreachGmail, httpStatusOf } from "@/lib/outreach/gmail";
 import { applyDemoLink, demoLinkFor } from "@/lib/outreach/draft-body";
+import { resolveRecipient, applyGenericGreeting } from "@/lib/outreach/recipient";
 
 // POST - (re)write the lead's current draft. For email this creates a real
 // Gmail draft (threaded onto the intro by default once one exists); for
@@ -42,7 +43,7 @@ export async function POST(
     // that actually goes out — the console's copy buttons read the same
     // field, and previously handed the operator a body still containing the
     // literal token.
-    const resolvedBody = applyDemoLink(
+    let resolvedBody = applyDemoLink(
       body,
       demoLinkFor(process.env.NEXT_PUBLIC_SITE_URL || "", lead.demoToken),
     );
@@ -54,12 +55,26 @@ export async function POST(
     }
 
     // channel === "email"
-    const to = lead.decisionMaker?.email;
+    // Falls back to the organization's published general inbox when the
+    // decision-maker has no findable address — previously this 400'd and the
+    // lead was simply unworkable from the console.
+    const { email: to, isGeneric } = resolveRecipient(lead);
     if (!to) {
       return NextResponse.json(
-        { error: "Lead has no decision-maker email" },
+        { error: "Lead has no decision-maker email or organization inbox" },
         { status: 400 }
       );
+    }
+
+    // The last gate before Gmail. This body may be hand-edited copy straight
+    // from the operator's textarea (the console's Edit-draft path posts
+    // here), so a personal salutation can arrive that the generator's own
+    // pass never saw. A shared inbox must not be greeted by name.
+    if (isGeneric) {
+      resolvedBody = applyGenericGreeting(resolvedBody, {
+        name: lead.decisionMaker?.name,
+        title: lead.decisionMaker?.title,
+      });
     }
 
     try {

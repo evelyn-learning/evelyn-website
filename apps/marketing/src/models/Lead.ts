@@ -53,10 +53,17 @@ export interface ILead extends Document {
   website: string;
   source: string;
   status: LeadStatus;
+  // The organization's own published general inbox (info@/admissions@/
+  // support@), used to reach a lead whose decision-maker has no findable
+  // personal address. See lib/outreach/recipient.ts for the send-target and
+  // greeting rules that hang off it.
+  orgEmail?: string;
+  orgEmailSourceUrl?: string;
   demoToken?: string;
   demoVisits: IDemoVisit[];
   gmailThreadIds: string[];
   nextActionAt?: Date | null;
+  approvedAt?: Date | null;
   touches: ITouch[];
   currentDraft?: ICurrentDraft | null;
   linkedinDraft?: { subject: string; body: string } | null;
@@ -100,6 +107,12 @@ const LeadSchema = new Schema<ILead>(
     website: { type: String, default: "" },
     source: { type: String, default: "" },
     status: { type: String, enum: LEAD_STATUSES, default: "staged" },
+    orgEmail: String,
+    orgEmailSourceUrl: String,
+    // When the owner approved the lead — the Today tab's ordering key
+    // (lib/outreach/today-order.ts). Absent on leads approved before this
+    // field shipped, which is why that module falls back to createdAt.
+    approvedAt: { type: Date, default: null },
     demoToken: { type: String },
     demoVisits: [{ at: { type: Date, required: true }, ua: { type: String, default: "" }, _id: false }],
     gmailThreadIds: { type: [String], default: [] },

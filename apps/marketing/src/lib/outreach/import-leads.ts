@@ -17,7 +17,7 @@ const emptyCounts = (): ImportCounts =>
 export function sanitizeLeadRow(row: Record<string, unknown>): Record<string, unknown> {
   const r = { ...row };
   delete r.status; delete r.demoToken; delete r.gmailThreadIds;
-  delete r.touches; delete r.demoVisits;
+  delete r.touches; delete r.demoVisits; delete r.approvedAt;
   if (r.currentDraft && typeof r.currentDraft === "object") {
     const d = { ...(r.currentDraft as Record<string, unknown>) };
     delete d.gmailDraftId; delete d.gmailThreadId;

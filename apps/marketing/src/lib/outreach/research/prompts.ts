@@ -41,6 +41,8 @@ export interface ResearchedLead {
   linkedinUrl: string;
   email: string;
   emailSourceUrl: string;
+  orgEmail: string;
+  orgEmailSourceUrl: string;
   nameSourceUrl: string;
   sourceUrls: string[];
   draftSubject: string;
@@ -65,6 +67,8 @@ export const LEAD_SCHEMA = {
     linkedinUrl: { type: "string" },
     email: { type: "string" },
     emailSourceUrl: { type: "string" },
+    orgEmail: { type: "string" },
+    orgEmailSourceUrl: { type: "string" },
     nameSourceUrl: { type: "string" },
     sourceUrls: { type: "array", items: { type: "string" } },
     draftSubject: { type: "string" },
@@ -77,7 +81,8 @@ export const LEAD_SCHEMA = {
   required: [
     "company", "website", "about", "whyFit", "useCaseHypothesis", "source",
     "decisionMakerName", "decisionMakerTitle", "linkedinUrl", "email",
-    "emailSourceUrl", "nameSourceUrl", "sourceUrls", "draftSubject", "draftBody",
+    "emailSourceUrl", "orgEmail", "orgEmailSourceUrl",
+    "nameSourceUrl", "sourceUrls", "draftSubject", "draftBody",
     "contactPageUrl", "inmailSubject", "inmailBody", "contactFormBody",
   ],
   additionalProperties: false,
@@ -147,9 +152,11 @@ Using web search and web fetch, research the organization's OWN website (program
 - nameSourceUrl: the URL where that person is named (empty if none).
 - email: the person's email ONLY if it is published on an official page you actually fetched. NEVER guess or construct an email — do not infer patterns like first.last@domain. If not published, return "".
 - emailSourceUrl: the exact page URL where the email appears (empty if email is empty).
+- orgEmail: the organization's GENERAL published inbox (e.g. info@, admissions@, contact@, support@) as printed on their contact/about page — the fallback for reaching them when the person above has no published address. Same rule: it must appear on a page you actually fetched, never constructed. If none is published, return "".
+- orgEmailSourceUrl: the exact page URL where orgEmail appears (empty if orgEmail is empty).
 - linkedinUrl: the person's LinkedIn URL ONLY if you actually visited it; else "".
 - sourceUrls: every URL you actually used.
-- draftSubject/draftBody: a short (120-180 word) personalized intro email from Praveen at Evelyn Learning to that person (or "Hi there" if no person found). Reference the specific real thing from whyFit. Include this exact line on its own line where the demo link belongs: [DEMO_LINK]. End: "Best,\\nPraveen\\nEvelyn Learning". No pricing claims, no fake statistics.
+- draftSubject/draftBody: a short (120-180 word) personalized intro email from Praveen at Evelyn Learning. Reference the specific real thing from whyFit. Include this exact line on its own line where the demo link belongs: [DEMO_LINK]. End: "Best,\\nPraveen\\nEvelyn Learning". No pricing claims, no fake statistics. Address it to whoever will actually receive it: if you found the person's own email, open "Hi <first name>,"; if you did NOT (so it will go to the general inbox above, read by someone who is not them), open "Hello," and instead ask in the opening line to be pointed to the person by name and role. If no person was found at all, open "Hello," and address the organization.
 - contactPageUrl: the organization's contact/inquiry page URL if you found one (e.g. a "Contact Us" or "Request Info" page); else "".
 - inmailSubject/inmailBody: a LinkedIn InMail to the same person. inmailBody MUST be UNDER 500 characters — short and personal, citing the same real hook from whyFit. Include the literal line [DEMO_LINK] on its own line. End with "— Praveen, Evelyn Learning". If no person was found, leave both "".
 - contactFormBody: a self-contained message (100-150 words) suitable for pasting into the organization's own contact/inquiry form — it will NOT be threaded to an email, so it must stand alone: cite the same real hook, include the literal line [DEMO_LINK], and end with the sign-off block "Praveen — Evelyn Learning — praveen@evelynlearning.com".

@@ -121,6 +121,78 @@ function promptOf(params: Record<string, unknown>): string {
   assert.deepEqual(l.contactFormDraft, { body: "msg" });
 });
 
+
+  // --- general-inbox delivery (lib/outreach/recipient.ts) ---
+
+  const genericLead = (over: Partial<GenerateLead> = {}): GenerateLead => ({
+    ...lead(),
+    decisionMaker: { name: "Dana Smith", title: "Program Director" },
+    orgEmail: "info@acmenursing.edu",
+    ...over,
+  });
+
+  await test("prompt tells the model when the email lands in a shared inbox", () => {
+    const prompt = promptOf(generateDraftParams(genericLead(), "email"));
+    assert.ok(prompt.includes("GENERAL inbox (info@acmenursing.edu)"));
+    assert.ok(/Open with "Hello,"/.test(prompt));
+  });
+
+  await test("prompt says nothing about delivery when we have the person's address", () => {
+    const l = genericLead({
+      decisionMaker: { name: "Dana Smith", title: "Program Director", email: "dana@acmenursing.edu" },
+    });
+    assert.equal(promptOf(generateDraftParams(l, "email")).includes("GENERAL inbox"), false);
+  });
+
+  await test("LinkedIn drafts never get the shared-inbox brief", () => {
+    // An InMail reaches the person themselves whatever the email situation.
+    assert.equal(promptOf(generateDraftParams(genericLead(), "linkedin")).includes("GENERAL inbox"), false);
+  });
+
+  await test("a generated email for a shared inbox is rewritten generic", () => {
+    const l = genericLead();
+    const written = applyGeneratedDraft(
+      l, "email",
+      { subject: "NCLEX prep", body: "Hi Dana,\n\nYour ADN cohort caught my eye.\n\nBest,\nPraveen" },
+      null
+    );
+    assert.equal(written, true);
+    assert.equal(l.currentDraft!.body.startsWith("Hello,"), true);
+    assert.ok(/hoping to reach Dana Smith, your Program Director/.test(l.currentDraft!.body));
+    assert.ok(l.currentDraft!.body.includes("Your ADN cohort caught my eye."));
+  });
+
+  await test("a generated email to the person keeps its personal greeting", () => {
+    const l = genericLead({
+      decisionMaker: { name: "Dana Smith", title: "Program Director", email: "dana@acmenursing.edu" },
+    });
+    applyGeneratedDraft(
+      l, "email",
+      { subject: "NCLEX prep", body: "Hi Dana,\n\nYour ADN cohort caught my eye.\n\nBest,\nPraveen" },
+      null
+    );
+    assert.equal(l.currentDraft!.body.startsWith("Hi Dana,"), true);
+    assert.equal(l.currentDraft!.body.includes("hoping to reach"), false);
+  });
+
+  await test("the demo link still resolves on the rewritten generic body", () => {
+    const l = genericLead();
+    applyGeneratedDraft(
+      l, "email",
+      { subject: "s", body: "Hi Dana,\n\nWorth a look:\n\n[DEMO_LINK]\n\nBest,\nPraveen" },
+      "https://evelynlearning.com/d/abc123"
+    );
+    assert.ok(l.currentDraft!.body.includes("https://evelynlearning.com/d/abc123"));
+    assert.equal(l.currentDraft!.body.includes("[DEMO_LINK]"), false);
+    assert.equal(l.currentDraft!.body.startsWith("Hello,"), true);
+  });
+
+  await test("a LinkedIn draft is not rewritten even with only an org inbox", () => {
+    const l = genericLead();
+    applyGeneratedDraft(l, "linkedin", { subject: "NCLEX prep", body: "Hi Dana — quick note." }, null);
+    assert.equal(l.linkedinDraft!.body, "Hi Dana — quick note.");
+  });
+
   console.log(`\n${passed} passed, ${failed} failed`);
   process.exit(failed > 0 ? 1 : 0);
 })();

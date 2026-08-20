@@ -47,10 +47,14 @@ export interface LeadJSON {
   website: string;
   source: string;
   status: LeadStatus;
+  /** The organization's general inbox — the fallback send target. */
+  orgEmail?: string;
+  orgEmailSourceUrl?: string;
   demoToken?: string;
   demoVisits: { at: string; ua: string }[];
   gmailThreadIds: string[];
   nextActionAt?: string | null;
+  approvedAt?: string | null;
   touches: LeadTouch[];
   currentDraft?: LeadDraft | null;
   linkedinDraft?: { subject: string; body: string } | null;

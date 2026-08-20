@@ -19,12 +19,20 @@ import { expectedNextChannel, SEQUENCE_STEP_LABELS, MAX_OUTBOUND_TOUCHES } from 
 import { TOUCH_CHANNELS } from "@/lib/outreach/enums";
 import type { TouchChannel } from "@/lib/outreach/enums";
 import type { LeadJSON } from "./OutreachConsole";
-import { SEGMENT_LABELS, EmailProvenanceBadge } from "./ReviewQueueTab";
+import { SEGMENT_LABELS, EmailProvenanceBadge, GeneralInboxChip } from "./ReviewQueueTab";
+import { sortTodayLeads, todayTier, type TodayTier } from "@/lib/outreach/today-order";
+import { resolveRecipient } from "@/lib/outreach/recipient";
 
 const TAB_LABELS: Record<TouchChannel, string> = {
   email: "Email",
   linkedin: "LinkedIn",
   form: "Contact form",
+};
+
+const TIER_LABELS: Record<TodayTier, string> = {
+  newly_approved: "Newly approved — not contacted yet",
+  verified_email: "Verified email",
+  rest: "Everything else",
 };
 
 const chipClass =
@@ -54,11 +62,17 @@ export default function TodayTab({
   gmailAccount?: string | null;
 }) {
   const now = Date.now();
-  const due = leads.filter(
-    (l) =>
-      l.nextActionAt != null &&
-      new Date(l.nextActionAt).getTime() <= now &&
-      (l.status === "approved" || l.status === "contacted")
+  // Newly approved first, then anything else reachable at a verified
+  // address, then the rest — each newest-approved first. See
+  // lib/outreach/today-order.ts for why the first tier is defined by
+  // "no outbound touch yet" rather than by a clock.
+  const due = sortTodayLeads(
+    leads.filter(
+      (l) =>
+        l.nextActionAt != null &&
+        new Date(l.nextActionAt).getTime() <= now &&
+        (l.status === "approved" || l.status === "contacted")
+    )
   );
 
   // Per-lead busy set, not a single shared id: generateDraft holds a card
@@ -198,9 +212,16 @@ export default function TodayTab({
 
   return (
     <div className="space-y-4">
-      {due.map((lead) => (
+      {due.map((lead, i) => (
+        <div key={lead._id} className="space-y-4">
+          {/* Heading only where the tier changes — the list is already
+              sorted, so this labels each block without re-grouping it. */}
+          {(i === 0 || todayTier(due[i - 1]!) !== todayTier(lead)) && (
+            <h2 className="pt-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+              {TIER_LABELS[todayTier(lead)]}
+            </h2>
+          )}
         <LeadCard
-          key={lead._id}
           lead={lead}
           busy={pendingIds.has(lead._id)}
           onMarkSent={(channel) => markSent(lead._id, channel)}
@@ -210,6 +231,7 @@ export default function TodayTab({
           onEnrich={() => enrichLead(lead._id)}
           gmailAccount={gmailAccount}
         />
+        </div>
       ))}
     </div>
   );
@@ -306,6 +328,13 @@ function LeadCard({
   const canSendEmail = lead.currentDraft?.channel === "email" && !!lead.currentDraft?.body;
   const showCreateDraftButton =
     lead.currentDraft?.channel === "email" && !lead.currentDraft?.gmailDraftId;
+  // The address an email would actually go to. A lead with only an
+  // organization inbox is workable — the draft just opens generically (see
+  // lib/outreach/recipient.ts) — so the email affordances gate on this
+  // rather than on dm.email, which used to strand those leads entirely.
+  const recipient = resolveRecipient(lead);
+  // Enrichment is still worth offering for a generic-only lead: finding the
+  // person's own address upgrades the copy as well as the deliverability.
   const missingChannel = !dm?.email || !dm?.linkedinUrl;
 
   const handleEnrich = async () => {
@@ -355,6 +384,9 @@ function LeadCard({
                 {dm.email}
               </a>
             )}
+            {!dm?.email && lead.orgEmail && (
+              <GeneralInboxChip email={lead.orgEmail} sourceUrl={lead.orgEmailSourceUrl} />
+            )}
             <EmailProvenanceBadge
               emailVerified={dm?.emailVerified}
               emailSource={dm?.emailSource}
@@ -398,6 +430,16 @@ function LeadCard({
 
         {activeTab === "email" && (
           <div className="mt-3">
+            {/* Say plainly where this is headed. A draft that opens "Hello,"
+                and asks to be forwarded looks like a mistake until you can
+                see it's addressed to a shared inbox. */}
+            {recipient.isGeneric && (
+              <p className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                Goes to <strong>{recipient.email}</strong> — the organization&rsquo;s
+                general inbox, not {dm?.name || "the decision-maker"}. The draft
+                opens generically and asks to be passed along.
+              </p>
+            )}
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-medium text-gray-700">Drafted message</h4>
               <div className="flex items-center gap-2">
@@ -531,7 +573,7 @@ function LeadCard({
                 {/* No point paying for email copy that can't be sent or
                     recorded — without an address, "Create Gmail draft" 400s.
                     Same gate shape as the Enrich affordance above. */}
-                {dm?.email ? (
+                {recipient.email ? (
                   <button
                     onClick={() => onGenerateDraft("email")}
                     disabled={busy}
@@ -554,7 +596,8 @@ function LeadCard({
                   </button>
                 ) : (
                   <p className="mt-2 text-sm text-gray-400">
-                    No decision-maker email on file — use Enrich to find one first.
+                    No decision-maker email and no organization inbox on file — use
+                    Enrich, or add one in Review → Edit.
                   </p>
                 )}
               </div>

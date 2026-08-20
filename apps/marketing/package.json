@@ -17,6 +17,9 @@
     "test:outreach-research": "npx tsx src/lib/outreach/research/cost.test.ts && npx tsx src/lib/outreach/research/verify-email.test.ts && npx tsx src/lib/outreach/research/claude.test.ts && npx tsx src/lib/outreach/research/pipeline.test.ts && npx tsx src/lib/outreach/research/backfill-drafts.test.ts && npx tsx src/lib/outreach/research/generate-draft.test.ts",
     "test:outreach-enrich": "npx tsx src/lib/outreach/enrich/ledger.test.ts && npx tsx src/lib/outreach/enrich/providers.test.ts && npx tsx src/lib/outreach/enrich/chain.test.ts",
     "test:outreach-guards": "npx tsx scripts/test-outreach-guards.ts",
-    "test:outreach": "npm run test:outreach-model && npm run test:outreach-job && npm run test:outreach-import && npm run test:outreach-cadence && npm run test:outreach-reply && npm run test:outreach-lead-edit && npm run test:outreach-research && npm run test:outreach-enrich && npm run test:outreach-guards"
+    "test:outreach": "npm run test:outreach-model && npm run test:outreach-job && npm run test:outreach-import && npm run test:outreach-cadence && npm run test:outreach-lead-transitions && npm run test:outreach-today-order && npm run test:outreach-recipient && npm run test:outreach-reply && npm run test:outreach-lead-edit && npm run test:outreach-research && npm run test:outreach-enrich && npm run test:outreach-guards",
+    "test:outreach-lead-transitions": "npx tsx src/lib/outreach/lead-transitions.test.ts",
+    "test:outreach-today-order": "npx tsx src/lib/outreach/today-order.test.ts",
+    "test:outreach-recipient": "npx tsx src/lib/outreach/recipient.test.ts"
   }
 }
