@@ -1,0 +1,359 @@
+[
+  {
+    "id": "m7math-one-step-equations-001",
+    "loId": "m7math.one-step-equations",
+    "cedCode": "M7MATH-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x + 8 = 3",
+    "choices": ["-5", "11", "5", "-11"],
+    "answer": "A",
+    "hints": [
+      "Eight is being added to x, so undo it with the inverse operation: subtract 8 from both sides.",
+      "The right side becomes 3 - 8. Start at 3 on the number line and take eight steps to the left. Landing below zero is normal."
+    ]
+  },
+  {
+    "id": "m7math-one-step-equations-002",
+    "loId": "m7math.one-step-equations",
+    "cedCode": "M7MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for m: -7m = 56",
+    "choices": ["8", "49", "-8", "-392"],
+    "answer": "C",
+    "hints": [
+      "The coefficient is -7, with the minus sign included, so divide both sides by -7 and not by 7.",
+      "A positive divided by a negative is negative. Then check your answer: does -7 times it really give 56?"
+    ]
+  },
+  {
+    "id": "m7math-one-step-equations-003",
+    "loId": "m7math.one-step-equations",
+    "cedCode": "M7MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for w: w/5 = -4",
+    "choices": ["-9", "-20", "20", "-0.8"],
+    "answer": "B",
+    "hints": [
+      "w is being divided by 5, and division is undone by multiplication, so multiply both sides by 5.",
+      "The right side becomes -4 times 5. Then check by substituting: your answer divided by 5 should give -4."
+    ]
+  },
+  {
+    "id": "m7math-one-step-equations-004",
+    "loId": "m7math.one-step-equations",
+    "cedCode": "M7MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Three fourths of a number x is 18. In symbols, (3/4)x = 18. What is x? Type your answer as a number.",
+    "hints": [
+      "A fraction coefficient means x was multiplied by 3 and divided by 4. Undo the division by 4 first: multiply both sides by 4.",
+      "That gives 3x = 72. Now divide both sides by 3, then check that three fourths of your answer really is 18."
+    ],
+    "answer": "24"
+  },
+  {
+    "id": "m7math-one-step-equations-005",
+    "loId": "m7math.one-step-equations",
+    "cedCode": "M7MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x - 3.5 = -1.2",
+    "choices": ["-4.7", "-2.3", "4.7", "2.3"],
+    "answer": "D",
+    "hints": [
+      "Subtraction is undone by addition, so add 3.5 to both sides. Decimals do not change the method.",
+      "The right side is -1.2 + 3.5. Start at -1.2 and move 3.5 to the right, which carries you past zero."
+    ]
+  },
+  {
+    "id": "m7math-one-step-equations-006",
+    "loId": "m7math.one-step-equations",
+    "cedCode": "M7MATH-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A number x makes the equation x - 12 = -20 true. What is the value of x + 5?",
+    "choices": ["13", "-27", "-3", "-13"],
+    "answer": "C",
+    "hints": [
+      "This is two jobs. First solve for x by adding 12 to both sides, then do what the question actually asks with that value.",
+      "Adding 12 to -20 gives x = -8. Now add 5 to -8, moving five steps to the right from -8."
+    ]
+  },
+  {
+    "id": "m7math-two-step-equations-001",
+    "loId": "m7math.two-step-equations",
+    "cedCode": "M7MATH-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 3x + 6 = 21",
+    "choices": ["15", "1", "9", "5"],
+    "answer": "D",
+    "hints": [
+      "Two operations are wrapped around x, so undo them in reverse order: the +6 comes off first.",
+      "Subtracting 6 from both sides leaves 3x = 15, which is not the answer yet. One inverse operation still to go."
+    ]
+  },
+  {
+    "id": "m7math-two-step-equations-002",
+    "loId": "m7math.two-step-equations",
+    "cedCode": "M7MATH-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x/4 - 3 = 2",
+    "choices": ["5", "20", "1.25", "-4"],
+    "answer": "B",
+    "hints": [
+      "Clear the -3 first by adding 3 to both sides. That leaves x divided by 4 equal to a single number.",
+      "Division is undone by multiplication, so multiply both sides by 4. Then check: your answer divided by 4, minus 3, should give 2."
+    ]
+  },
+  {
+    "id": "m7math-two-step-equations-003",
+    "loId": "m7math.two-step-equations",
+    "cedCode": "M7MATH-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 5 - 4x = 21",
+    "choices": ["4", "16", "-4", "21"],
+    "answer": "C",
+    "hints": [
+      "The variable term is -4x, with the minus sign attached to it. Subtract 5 from both sides first.",
+      "That leaves -4x = 16. Divide both sides by -4, not by 4, and expect a negative answer."
+    ]
+  },
+  {
+    "id": "m7math-two-step-equations-004",
+    "loId": "m7math.two-step-equations",
+    "cedCode": "M7MATH-6.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "Solve for x and type your answer as a number: x/3 + 7 = 4",
+    "hints": [
+      "Undo the +7 first by subtracting 7 from both sides. The right side will drop below zero.",
+      "That leaves x/3 = -3. Multiply both sides by 3, then check that your answer divided by 3, plus 7, really gives 4."
+    ],
+    "answer": "-9"
+  },
+  {
+    "id": "m7math-two-step-equations-005",
+    "loId": "m7math.two-step-equations",
+    "cedCode": "M7MATH-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: 26 = 4x - 6",
+    "choices": ["8", "5", "12.5", "32"],
+    "answer": "A",
+    "hints": [
+      "The variable is on the right this time, which changes nothing. Undo the -6 first, and subtraction is undone by addition.",
+      "Adding 6 to both sides gives 32 = 4x. Now divide both sides by 4 to get the variable alone."
+    ]
+  },
+  {
+    "id": "m7math-two-step-equations-006",
+    "loId": "m7math.two-step-equations",
+    "cedCode": "M7MATH-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the equation 4x + b = 26, the letter b stands for a missing number, and the solution is x = 5. What is b?",
+    "choices": ["46", "-6", "1.5", "6"],
+    "answer": "D",
+    "hints": [
+      "Substitute the solution into the equation first: replace x with 5 and work out 4 times 5.",
+      "The equation becomes 20 + b = 26. Now this is a one-step equation, so subtract 20 from both sides."
+    ]
+  },
+  {
+    "id": "m7math-writing-equations-from-word-problems-001",
+    "loId": "m7math.writing-equations-from-word-problems",
+    "cedCode": "M7MATH-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Ben had some marbles. He gave 7 of them away and now has 15 left. If m stands for the number of marbles Ben started with, which equation models the story?",
+    "choices": ["m + 7 = 15", "7 - m = 15", "m - 7 = 15", "7m = 15"],
+    "answer": "C",
+    "hints": [
+      "Start from what m stands for, the number he began with, and act out the story on it: what happened to that pile?",
+      "Giving marbles away takes them off the starting pile, and the words \"has 15 left\" supply the equals sign."
+    ]
+  },
+  {
+    "id": "m7math-writing-equations-from-word-problems-002",
+    "loId": "m7math.writing-equations-from-word-problems",
+    "cedCode": "M7MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which equation models \"5 less than four times a number n is 31\"?",
+    "choices": ["4n - 5 = 31", "5 - 4n = 31", "4(n - 5) = 31", "5n - 4 = 31"],
+    "answer": "A",
+    "hints": [
+      "Build the inside piece first. \"Four times a number n\" is 4n, and only then does something happen to it.",
+      "\"Less than\" reverses the order you read it in. Test with a plain number: 5 less than 20 is 15, which is 20 - 5."
+    ]
+  },
+  {
+    "id": "m7math-writing-equations-from-word-problems-003",
+    "loId": "m7math.writing-equations-from-word-problems",
+    "cedCode": "M7MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bowling alley charges 4 dollars once to rent shoes, plus 6 dollars for every game. Dev spent 28 dollars in all. Which equation finds g, the number of games Dev bowled?",
+    "choices": ["10g = 28", "6 + 4g = 28", "6g - 4 = 28", "4 + 6g = 28"],
+    "answer": "D",
+    "hints": [
+      "Sort the two numbers first: which amount happens exactly once, and which amount repeats for every game?",
+      "The repeating amount is the coefficient, so it multiplies g. The one-time amount is added on by itself, not subtracted."
+    ]
+  },
+  {
+    "id": "m7math-writing-equations-from-word-problems-004",
+    "loId": "m7math.writing-equations-from-word-problems",
+    "cedCode": "M7MATH-6.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A T-shirt costs 12 dollars and each hat costs 7 dollars. Ana bought one T-shirt and some hats, and spent 47 dollars in all. How many hats did she buy? Type your answer as a number.",
+    "hints": [
+      "Define the variable in words first: let h = the number of hats Ana bought. Then write 12 + 7h = 47.",
+      "Subtract 12 from both sides to clear the one-time T-shirt cost, then divide by 7. Answer in hats, and check that the total comes back to 47."
+    ],
+    "answer": "5"
+  },
+  {
+    "id": "m7math-writing-equations-from-word-problems-005",
+    "loId": "m7math.writing-equations-from-word-problems",
+    "cedCode": "M7MATH-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sam's age is 4 years less than twice his sister's age. Sam is 18. How old is his sister?",
+    "choices": ["7", "11", "14", "40"],
+    "answer": "B",
+    "hints": [
+      "Define the variable as the age you do NOT know: let s = the sister's age. Twice her age is 2s.",
+      "\"4 years less than twice her age\" is 2s - 4, and \"is 18\" gives 2s - 4 = 18. Solve it as a two-step equation."
+    ]
+  },
+  {
+    "id": "m7math-writing-equations-from-word-problems-006",
+    "loId": "m7math.writing-equations-from-word-problems",
+    "cedCode": "M7MATH-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A school pays a one-time park entry fee of 45 dollars, plus 60 dollars to rent each bus. The whole trip budget is 285 dollars. How many buses can the school rent?",
+    "choices": ["4", "240", "4.75", "5.5"],
+    "answer": "A",
+    "hints": [
+      "Let b = the number of buses. The 45 dollars happens once, and the 60 dollars repeats for every bus, so 45 + 60b = 285.",
+      "Clear the one-time 45 first by subtracting it from both sides, and only then divide by 60. The answer is a count of buses."
+    ]
+  },
+  {
+    "id": "m7math-solving-and-graphing-inequalities-001",
+    "loId": "m7math.solving-and-graphing-inequalities",
+    "cedCode": "M7MATH-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x + 6 < 10 (x plus 6 is less than 10).",
+    "choices": [
+      "x is greater than 4",
+      "x is less than 4",
+      "x is less than 16",
+      "x is greater than 16"
+    ],
+    "answer": "B",
+    "hints": [
+      "Solve it exactly like an equation: subtract 6 from both sides.",
+      "Subtracting never reverses the symbol, so the less-than stays a less-than. Test x = 0 in the original to be sure."
+    ]
+  },
+  {
+    "id": "m7math-solving-and-graphing-inequalities-002",
+    "loId": "m7math.solving-and-graphing-inequalities",
+    "cedCode": "M7MATH-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: -6x >= 18 (negative 6 times x is greater than or equal to 18).",
+    "choices": [
+      "x is greater than or equal to -3",
+      "x is less than or equal to 3",
+      "x is greater than or equal to 3",
+      "x is less than or equal to -3"
+    ],
+    "answer": "D",
+    "hints": [
+      "Divide both sides by -6. That divisor is negative, so the flip rule applies to the symbol.",
+      "Dividing by a negative reverses greater-than-or-equal into less-than-or-equal, and 18 divided by -6 is negative. Test x = -4: -6 times -4 is 24, and 24 is at least 18."
+    ]
+  },
+  {
+    "id": "m7math-solving-and-graphing-inequalities-003",
+    "loId": "m7math.solving-and-graphing-inequalities",
+    "cedCode": "M7MATH-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve 5x + 2 <= 17 (5x plus 2 is less than or equal to 17), then describe its graph on a number line. Which description is correct?",
+    "choices": [
+      "A closed circle at 3 with shading to the left",
+      "An open circle at 3 with shading to the left",
+      "A closed circle at 3 with shading to the right",
+      "A closed circle at 15 with shading to the left"
+    ],
+    "answer": "A",
+    "hints": [
+      "Solve first: subtract 2 from both sides, then divide by 5. The 5 is positive, so nothing flips.",
+      "You end at x less than or equal to 3. An inclusive symbol decides the kind of circle, and the final line decides which way to shade."
+    ]
+  },
+  {
+    "id": "m7math-solving-and-graphing-inequalities-004",
+    "loId": "m7math.solving-and-graphing-inequalities",
+    "cedCode": "M7MATH-6.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "What is the LARGEST integer value of x that makes -2x > -10 true (negative 2 times x is greater than negative 10)? Type your answer as a number.",
+    "hints": [
+      "Divide both sides by -2 and reverse the symbol, because the divisor is negative.",
+      "You get x less than 5. Since the symbol is strict, 5 itself is not allowed, so take the whole number just below it."
+    ],
+    "answer": "4"
+  },
+  {
+    "id": "m7math-solving-and-graphing-inequalities-005",
+    "loId": "m7math.solving-and-graphing-inequalities",
+    "cedCode": "M7MATH-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "To solve 4 - 5x < 19 you subtract 4 from both sides, then divide both sides by -5. At which step must the inequality symbol be reversed?",
+    "choices": [
+      "At the subtract-4 step, because a number is being taken away",
+      "At both steps, because the problem contains a negative number",
+      "At the divide-by-negative-5 step, because the divisor is negative",
+      "At neither step, because the symbol never changes once it is written"
+    ],
+    "answer": "C",
+    "hints": [
+      "Adding or subtracting never reverses the symbol, no matter what signs are floating around in the problem.",
+      "The symbol turns around at exactly one moment: when BOTH sides are multiplied or divided by a negative number."
+    ]
+  },
+  {
+    "id": "m7math-solving-and-graphing-inequalities-006",
+    "loId": "m7math.solving-and-graphing-inequalities",
+    "cedCode": "M7MATH-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Solve 10 - 4x < -2 (10 minus 4x is less than negative 2), then describe its graph on a number line. Which description is correct?",
+    "choices": [
+      "An open circle at 3 with shading to the left",
+      "An open circle at 3 with shading to the right",
+      "A closed circle at 3 with shading to the right",
+      "An open circle at -3 with shading to the right"
+    ],
+    "answer": "B",
+    "hints": [
+      "Subtract 10 from both sides first; that step changes nothing about the symbol. You are left with -4x on one side.",
+      "Now divide by -4 and reverse the symbol. A negative divided by a negative is positive, and a strict symbol means an unfilled circle."
+    ]
+  }
+]

@@ -1,0 +1,389 @@
+[
+  {
+    "id": "m7math-ratios-and-unit-rates-001",
+    "loId": "m7math.ratios-and-unit-rates",
+    "cedCode": "M7MATH-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A pack of 8 granola bars costs $2.40. What is the price per bar?",
+    "choices": ["$3.33 per bar", "$0.30 per bar", "$2.40 per bar", "$19.20 per bar"],
+    "answer": "B",
+    "hints": [
+      "Read the per phrase first. Price per bar means dollars divided by bars.",
+      "You are splitting $2.40 into 8 equal shares, so the answer must be less than a dollar."
+    ]
+  },
+  {
+    "id": "m7math-ratios-and-unit-rates-002",
+    "loId": "m7math.ratios-and-unit-rates",
+    "cedCode": "M7MATH-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is a unit rate?",
+    "choices": [
+      "3 cups of water to 2 cups of juice",
+      "144 pages in 6 hours",
+      "$7.00 for 10 juice boxes",
+      "45 miles per hour"
+    ],
+    "answer": "D",
+    "hints": [
+      "A unit rate compares two different units AND the second amount is exactly one.",
+      "Two of these are rates, but they are priced or timed for more than one thing, so they are not yet per-one. One choice compares the same unit to itself, which makes it a ratio, not a rate."
+    ]
+  },
+  {
+    "id": "m7math-ratios-and-unit-rates-003",
+    "loId": "m7math.ratios-and-unit-rates",
+    "cedCode": "M7MATH-3.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Devon rides his bike 84 miles in 6 hours. How many miles does he ride per hour? Type your answer as a number.",
+    "answer": "14",
+    "hints": [
+      "Miles per hour means miles divided by hours, so the 84 gets split into 6 equal parts.",
+      "Check by scaling back up: your answer times 6 should land exactly on 84."
+    ]
+  },
+  {
+    "id": "m7math-ratios-and-unit-rates-004",
+    "loId": "m7math.ratios-and-unit-rates",
+    "cedCode": "M7MATH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Pack A holds 5 pens for $3.75. Pack B holds 8 pens for $5.60. Which pack is the better buy?",
+    "choices": [
+      "Pack B, because $0.70 per pen is less than $0.75 per pen",
+      "Pack A, because $3.75 is less than $5.60",
+      "Pack A, because $0.75 per pen is more than $0.70 per pen",
+      "They cost the same per pen, because both packs charge more money for more pens"
+    ],
+    "answer": "A",
+    "hints": [
+      "The two totals buy different numbers of pens, so turn each pack into a price for ONE pen before comparing.",
+      "For a price per pen, the SMALLER number is the better buy, because you pay less for each one."
+    ]
+  },
+  {
+    "id": "m7math-ratios-and-unit-rates-005",
+    "loId": "m7math.ratios-and-unit-rates",
+    "cedCode": "M7MATH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Rice costs $1.60 per pound. How much does 3.5 pounds of rice cost?",
+    "choices": ["$2.19", "$4.80", "$5.60", "$0.46"],
+    "answer": "C",
+    "hints": [
+      "A unit rate scales up by multiplying: the cost of one pound times the number of pounds.",
+      "3.5 pounds is 3 pounds plus half a pound, so add 3 times $1.60 to half of $1.60."
+    ]
+  },
+  {
+    "id": "m7math-ratios-and-unit-rates-006",
+    "loId": "m7math.ratios-and-unit-rates",
+    "cedCode": "M7MATH-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A 6-cup pack of yogurt costs $4.50. A 4-cup pack of the same yogurt is the better buy by exactly 5 cents per cup. What does the 4-cup pack cost?",
+    "choices": ["$3.20", "$4.45", "$3.00", "$2.80"],
+    "answer": "D",
+    "hints": [
+      "Find the price per cup of the 6-pack first, then adjust it by 5 cents in the direction that makes the 4-pack cheaper per cup.",
+      "The 6-pack is $0.75 per cup, so the 4-pack must be $0.70 per cup. Now scale that up to 4 cups."
+    ]
+  },
+  {
+    "id": "m7math-complex-fraction-unit-rates-001",
+    "loId": "m7math.complex-fraction-unit-rates",
+    "cedCode": "M7MATH-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A turtle walks 1/3 of a mile in 1/6 of an hour. What is its speed in miles per hour?",
+    "choices": [
+      "2 miles per hour",
+      "1/2 mile per hour",
+      "1/18 mile per hour",
+      "18 miles per hour"
+    ],
+    "answer": "A",
+    "hints": [
+      "Miles per hour means miles divided by hours, so write 1/3 divided by 1/6 before computing anything.",
+      "Keep the first fraction, flip only the second one, and multiply: 1/3 times 6/1."
+    ]
+  },
+  {
+    "id": "m7math-complex-fraction-unit-rates-002",
+    "loId": "m7math.complex-fraction-unit-rates",
+    "cedCode": "M7MATH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A recipe uses 3/4 of a cup of milk to make 1/2 of a batch of pancakes. How many cups of milk does one whole batch need?",
+    "choices": ["3/8 of a cup", "2/3 of a cup", "1 1/2 cups", "3/4 of a cup"],
+    "answer": "C",
+    "hints": [
+      "Cups per batch means cups divided by batches, so set up 3/4 divided by 1/2.",
+      "Half a batch is only part of the job, so a whole batch must need MORE than 3/4 of a cup."
+    ]
+  },
+  {
+    "id": "m7math-complex-fraction-unit-rates-003",
+    "loId": "m7math.complex-fraction-unit-rates",
+    "cedCode": "M7MATH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A snail crawls 3/8 of a meter in 3/4 of a minute. How many meters does it crawl per minute?",
+    "choices": [
+      "9/32 of a meter",
+      "1/2 of a meter",
+      "2 meters",
+      "3/8 of a meter"
+    ],
+    "answer": "B",
+    "hints": [
+      "Meters per minute means meters divided by minutes, so the 3/8 goes first and the 3/4 goes second.",
+      "Flip the second fraction and multiply: 3/8 times 4/3, then simplify."
+    ]
+  },
+  {
+    "id": "m7math-complex-fraction-unit-rates-004",
+    "loId": "m7math.complex-fraction-unit-rates",
+    "cedCode": "M7MATH-3.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A painter finishes 1 1/2 walls in 3/4 of an hour. How many walls does she paint per hour? Type your answer as a number.",
+    "answer": "2",
+    "hints": [
+      "Rewrite the mixed number as an improper fraction first, because you cannot flip a mixed number.",
+      "1 1/2 becomes 3/2, so compute 3/2 divided by 3/4 by flipping the second fraction."
+    ]
+  },
+  {
+    "id": "m7math-complex-fraction-unit-rates-005",
+    "loId": "m7math.complex-fraction-unit-rates",
+    "cedCode": "M7MATH-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Jordan bikes 2 1/4 miles in 1/2 of an hour. What is his speed in miles per hour?",
+    "choices": [
+      "1 1/8 miles per hour",
+      "2/9 mile per hour",
+      "4 miles per hour",
+      "4 1/2 miles per hour"
+    ],
+    "answer": "D",
+    "hints": [
+      "Change 2 1/4 into an improper fraction before you divide, and remember the order is miles divided by hours.",
+      "9/4 divided by 1/2 becomes 9/4 times 2/1. Half an hour is half the trip, so a whole hour is double the distance."
+    ]
+  },
+  {
+    "id": "m7math-complex-fraction-unit-rates-006",
+    "loId": "m7math.complex-fraction-unit-rates",
+    "cedCode": "M7MATH-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Ana walks 3/4 of a mile in 1/4 of an hour. Ben walks 2/3 of a mile in 1/6 of an hour. Who walks faster?",
+    "choices": [
+      "Ana, because 3/4 of a mile is farther than 2/3 of a mile",
+      "Ben, because 4 miles per hour is faster than 3 miles per hour",
+      "Ana, because 1/3 of an hour per mile is more than 1/4 of an hour per mile",
+      "They walk the same speed, because each one covers a fraction of a mile in a fraction of an hour"
+    ],
+    "answer": "B",
+    "hints": [
+      "Distances alone cannot be compared here, because the two walks took different amounts of time. Put both on a per-hour footing first.",
+      "Ana: 3/4 divided by 1/4. Ben: 2/3 divided by 1/6. For miles per hour, the LARGER number is faster."
+    ]
+  },
+  {
+    "id": "m7math-proportional-relationships-001",
+    "loId": "m7math.proportional-relationships",
+    "cedCode": "M7MATH-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which equation shows a proportional relationship?",
+    "choices": ["y = 3x + 1", "y = 5x", "y = x - 4", "y = 6"],
+    "answer": "B",
+    "hints": [
+      "A proportional equation has the form y = kx: a number times x, and nothing else.",
+      "Anything added on or subtracted off is still riding along when x is 0, which breaks the rule that x = 0 must give y = 0."
+    ]
+  },
+  {
+    "id": "m7math-proportional-relationships-002",
+    "loId": "m7math.proportional-relationships",
+    "cedCode": "M7MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A table shows: 2 hours of babysitting pays 14 dollars, 3 hours pays 21 dollars, and 5 hours pays 35 dollars. Is the relationship between hours and pay proportional?",
+    "choices": [
+      "Yes, because dividing the pay by the hours gives 7 in every row",
+      "No, because the hours do not go up by the same amount from row to row",
+      "Yes, because the pay gets bigger whenever the hours get bigger",
+      "No, because 2, 3, and 5 are not multiples of one another"
+    ],
+    "answer": "A",
+    "hints": [
+      "The table test is to divide the second quantity by the first in EVERY row, then see whether the answers match.",
+      "Compute 14 divided by 2, then 21 divided by 3, then 35 divided by 5."
+    ]
+  },
+  {
+    "id": "m7math-proportional-relationships-003",
+    "loId": "m7math.proportional-relationships",
+    "cedCode": "M7MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these tables shows a proportional relationship?",
+    "choices": [
+      "x: 1, 2, 3 and y: 5, 8, 11",
+      "x: 1, 2, 3 and y: 1, 4, 9",
+      "x: 1, 2, 3 and y: 5, 10, 15",
+      "x: 1, 2, 3 and y: 3, 6, 10"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide y by x in every row of every table. Do not stop after the first row.",
+      "Climbing by the same amount each step is not the test. The test is that y divided by x gives the same number every time."
+    ]
+  },
+  {
+    "id": "m7math-proportional-relationships-004",
+    "loId": "m7math.proportional-relationships",
+    "cedCode": "M7MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A straight line passes through the points (0, 4), (2, 10), and (4, 16). Is the relationship proportional?",
+    "choices": [
+      "Yes, because all three points lie on one straight line",
+      "Yes, because y goes up by 6 every time x goes up by 2",
+      "Yes, because 16 divided by 4 is 4, so one matching row is enough",
+      "No, because the line crosses the vertical axis at (0, 4) instead of the origin"
+    ],
+    "answer": "D",
+    "hints": [
+      "The graph test has two parts, and straight is only the first part.",
+      "Look hard at the point (0, 4). In a proportional relationship, what must y be when x is 0?"
+    ]
+  },
+  {
+    "id": "m7math-proportional-relationships-005",
+    "loId": "m7math.proportional-relationships",
+    "cedCode": "M7MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "This table is proportional. A table shows: x of 6 gives y of 15, x of 10 gives y of 25, and x of 14 gives y of 35. Every row gives the same value of y divided by x. What is that value? Type your answer as a number.",
+    "answer": "2.5",
+    "hints": [
+      "Pick any row and divide y by x, then check a second row to be sure they agree.",
+      "Start with the easiest row: 15 divided by 6."
+    ]
+  },
+  {
+    "id": "m7math-proportional-relationships-006",
+    "loId": "m7math.proportional-relationships",
+    "cedCode": "M7MATH-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A table shows: 2 shirts cost 18 dollars, 4 shirts cost 32 dollars, and 6 shirts cost 46 dollars. Is the relationship between shirts and cost proportional?",
+    "choices": [
+      "Yes, because the cost climbs by exactly $14 every time 2 more shirts are added",
+      "Yes, because doubling the shirts from 2 to 4 also increases the cost",
+      "No, because 18 divided by 2 is 9, 32 divided by 4 is 8, and 46 divided by 6 is about 7.7",
+      "It cannot be decided from a table, because proportionality can only be seen on a graph"
+    ],
+    "answer": "C",
+    "hints": [
+      "A steady climb makes a relationship linear, which is weaker than proportional. Divide instead of subtracting.",
+      "Doubling x must EXACTLY double y. Going from 2 shirts to 4 shirts took the cost from $18 to $32, and $32 is not double $18."
+    ]
+  },
+  {
+    "id": "m7math-constant-of-proportionality-001",
+    "loId": "m7math.constant-of-proportionality",
+    "cedCode": "M7MATH-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A proportional table shows: x of 4 gives y of 20, x of 7 gives y of 35, and x of 9 gives y of 45. What is the constant of proportionality?",
+    "choices": ["5", "1/5", "16", "80"],
+    "answer": "A",
+    "hints": [
+      "The constant of proportionality is k = y divided by x, in that order.",
+      "Start with 20 divided by 4, then confirm with 35 divided by 7."
+    ]
+  },
+  {
+    "id": "m7math-constant-of-proportionality-002",
+    "loId": "m7math.constant-of-proportionality",
+    "cedCode": "M7MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A neighbor pays $9 for every dog you walk. Which equation gives the money y you earn for walking x dogs?",
+    "choices": ["y = x/9", "y = 9 + x", "y = 9x", "y = 9"],
+    "answer": "C",
+    "hints": [
+      "A proportional relationship is written y = kx, where k is the steady per-one amount.",
+      "Test your equation on a case you can check: 3 dogs should give $27."
+    ]
+  },
+  {
+    "id": "m7math-constant-of-proportionality-003",
+    "loId": "m7math.constant-of-proportionality",
+    "cedCode": "M7MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A proportional relationship graphs as a straight line through the origin and through the point (8, 24). What is the constant of proportionality? Type your answer as a number.",
+    "answer": "3",
+    "hints": [
+      "Use k = y divided by x with the point you were given. Do not just read the y-coordinate.",
+      "Here x is 8 and y is 24, so compute 24 divided by 8."
+    ]
+  },
+  {
+    "id": "m7math-constant-of-proportionality-004",
+    "loId": "m7math.constant-of-proportionality",
+    "cedCode": "M7MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A proportional relationship graphs as a straight line through the origin and through the point (5, 12). Which equation matches it?",
+    "choices": ["y = 12x", "y = 2.4x", "y = (5/12)x", "y = x + 7"],
+    "answer": "B",
+    "hints": [
+      "Find k first, using k = y divided by x. The y-value alone is k only at the point where x = 1.",
+      "Test your equation on the given point: putting x = 5 into the right equation has to give y = 12."
+    ]
+  },
+  {
+    "id": "m7math-constant-of-proportionality-005",
+    "loId": "m7math.constant-of-proportionality",
+    "cedCode": "M7MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cactus grows at a constant rate, and the equation y = 1.5x gives its height in inches after x months. What does the point (4, 6) mean in this story?",
+    "choices": [
+      "After 4 months the cactus is 6 inches tall",
+      "After 6 months the cactus is 4 inches tall",
+      "The cactus grows 6 inches every month",
+      "The cactus was 4 inches tall at the start and then grew 6 more inches"
+    ],
+    "answer": "A",
+    "hints": [
+      "In the point (x, y), the first number is always the x-quantity, which here is months.",
+      "The growth per month is k, which is 1.5, not the y-value of the point."
+    ]
+  },
+  {
+    "id": "m7math-constant-of-proportionality-006",
+    "loId": "m7math.constant-of-proportionality",
+    "cedCode": "M7MATH-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A printer prints at a constant rate and finishes 96 pages in 8 minutes. At that same rate, how many minutes does it take to print 180 pages?",
+    "choices": ["12 minutes", "2,160 minutes", "22.5 minutes", "15 minutes"],
+    "answer": "D",
+    "hints": [
+      "Find k first: pages per minute is 96 divided by 8. That number is the rate, not the answer.",
+      "Now solve 180 = kx for the minutes x, which means dividing 180 by the rate you just found."
+    ]
+  }
+]

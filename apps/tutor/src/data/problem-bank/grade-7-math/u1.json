@@ -1,0 +1,344 @@
+[
+  {
+    "id": "m7math-integers-and-absolute-value-001",
+    "loId": "m7math.integers-and-absolute-value",
+    "cedCode": "M7MATH-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: |-15|",
+    "choices": ["-15", "0", "15", "30"],
+    "answer": "C",
+    "hints": [
+      "The two straight bars ask one question: how far is this number from zero?",
+      "Distance is never negative. Count the units from -15 back to zero."
+    ]
+  },
+  {
+    "id": "m7math-integers-and-absolute-value-002",
+    "loId": "m7math.integers-and-absolute-value",
+    "cedCode": "M7MATH-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: -|-6|",
+    "choices": ["-6", "6", "0", "12"],
+    "answer": "A",
+    "hints": [
+      "The bars act like parentheses: finish what is inside them before you touch anything outside.",
+      "Inside the bars you get 6. There is still a minus sign in front, waiting its turn."
+    ]
+  },
+  {
+    "id": "m7math-integers-and-absolute-value-003",
+    "loId": "m7math.integers-and-absolute-value",
+    "cedCode": "M7MATH-1.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "How far apart are -9 and 4 on the number line? Type your answer as a number.",
+    "hints": [
+      "The distance between two numbers is the absolute value of their difference: |-9 - 4|.",
+      "You can also count the jumps: nine steps from -9 up to 0, then keep counting to 4."
+    ],
+    "answer": "13"
+  },
+  {
+    "id": "m7math-integers-and-absolute-value-004",
+    "loId": "m7math.integers-and-absolute-value",
+    "cedCode": "M7MATH-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of these has the greatest value?",
+    "choices": ["-|12|", "|7|", "-|-20|", "|-9|"],
+    "answer": "D",
+    "hints": [
+      "Work each one out to a single number first, then compare those numbers.",
+      "A minus sign sitting OUTSIDE the bars does not disappear, so -|-20| is not 20."
+    ]
+  },
+  {
+    "id": "m7math-integers-and-absolute-value-005",
+    "loId": "m7math.integers-and-absolute-value",
+    "cedCode": "M7MATH-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate: |-4| - |-9|",
+    "choices": ["13", "-5", "5", "-13"],
+    "answer": "B",
+    "hints": [
+      "Clear each set of bars first, then do the subtraction that is left.",
+      "The bars turn this into 4 - 9. Taking 9 away from 4 crosses zero."
+    ]
+  },
+  {
+    "id": "m7math-integers-and-absolute-value-006",
+    "loId": "m7math.integers-and-absolute-value",
+    "cedCode": "M7MATH-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a card game Ravi's score is -12 points and Nora's score is 8 points. Whose score is further from zero, and by how much further?",
+    "choices": ["Nora, by 4", "Ravi, by 4", "Ravi, by 20", "Nora, by 20"],
+    "answer": "B",
+    "hints": [
+      "How far a score sits from zero is its absolute value, no matter which side of zero it is on.",
+      "Find |-12| and |8|, then subtract the smaller distance from the larger one to see how much further."
+    ]
+  },
+  {
+    "id": "m7math-rational-numbers-on-the-number-line-001",
+    "loId": "m7math.rational-numbers-on-the-number-line",
+    "cedCode": "M7MATH-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these numbers sits between -3 and -2 on the number line?",
+    "choices": ["-0.4", "-2.4", "2.4", "-3.6"],
+    "answer": "B",
+    "hints": [
+      "Start at zero and walk left. Count the WHOLE units you pass before the decimal part even starts.",
+      "A number between -2 and -3 is more than 2 units from zero but less than 3 units from zero."
+    ]
+  },
+  {
+    "id": "m7math-rational-numbers-on-the-number-line-002",
+    "loId": "m7math.rational-numbers-on-the-number-line",
+    "cedCode": "M7MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which decimal lands on exactly the same point of the number line as -3/4?",
+    "choices": ["-1.33", "0.75", "-0.34", "-0.75"],
+    "answer": "D",
+    "hints": [
+      "The fraction bar means divide. Which number goes inside the division box, the 3 or the 4?",
+      "Work out 3 divided by 4, not 4 divided by 3, and keep the number on the left side of zero."
+    ]
+  },
+  {
+    "id": "m7math-rational-numbers-on-the-number-line-003",
+    "loId": "m7math.rational-numbers-on-the-number-line",
+    "cedCode": "M7MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Write 7/4 as a decimal. Type your answer as a decimal number.",
+    "hints": [
+      "A fraction bar is a division sign, so this is 7 divided by 4. Put the 7 inside.",
+      "7 is bigger than 4, so the answer is more than 1 whole. Write 7 as 7.00 and divide until the remainder is zero."
+    ],
+    "answer": "1.75"
+  },
+  {
+    "id": "m7math-rational-numbers-on-the-number-line-004",
+    "loId": "m7math.rational-numbers-on-the-number-line",
+    "cedCode": "M7MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ana says -7 is not a rational number, because it is not written as a fraction. Which response is correct?",
+    "choices": [
+      "She is right: a number must already be written as a fraction to be rational.",
+      "She is right: -7 has no denominator, so no fraction can equal it.",
+      "She is wrong: -7 can be written as -7/1, so it is rational.",
+      "She is right: negative numbers are never rational."
+    ],
+    "answer": "C",
+    "hints": [
+      "Go back to the definition: a rational number is any number you CAN write as one integer over another.",
+      "Ask yourself what happens if you put a 1 underneath -7. Does that change its value?"
+    ]
+  },
+  {
+    "id": "m7math-rational-numbers-on-the-number-line-005",
+    "loId": "m7math.rational-numbers-on-the-number-line",
+    "cedCode": "M7MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Each unit on a number line is cut into 4 equal parts. Starting at 0 and counting 5 parts to the LEFT, which number do you land on?",
+    "choices": ["-1.25", "-0.25", "1.25", "-5.4"],
+    "answer": "A",
+    "hints": [
+      "Counting 5 parts when each unit holds 4 of them means you go past the first whole unit.",
+      "Four parts carry you all the way to -1. The fifth part keeps going left, a quarter of a unit further."
+    ]
+  },
+  {
+    "id": "m7math-rational-numbers-on-the-number-line-006",
+    "loId": "m7math.rational-numbers-on-the-number-line",
+    "cedCode": "M7MATH-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Point P sits exactly halfway between -1.25 and -0.75 on the number line. What number is P?",
+    "choices": ["-2", "-0.25", "-1.75", "-1"],
+    "answer": "D",
+    "hints": [
+      "Halfway between two numbers means their sum divided by 2 - or count the gap and step half of it.",
+      "The gap from -1.25 to -0.75 is 0.5 units wide, so P sits 0.25 to the RIGHT of -1.25."
+    ]
+  },
+  {
+    "id": "m7math-comparing-and-ordering-rationals-001",
+    "loId": "m7math.comparing-and-ordering-rationals",
+    "cedCode": "M7MATH-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these numbers is the greatest: -12, -8, -20, -3 ?",
+    "choices": ["-12", "-8", "-20", "-3"],
+    "answer": "D",
+    "hints": [
+      "Put all four on a number line. Greatest always means furthest RIGHT.",
+      "Every one of these is negative, so the one closest to zero is the one furthest right."
+    ]
+  },
+  {
+    "id": "m7math-comparing-and-ordering-rationals-002",
+    "loId": "m7math.comparing-and-ordering-rationals",
+    "cedCode": "M7MATH-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement is true?",
+    "choices": ["-3.5 > -3.05", "-3.5 > 0.5", "-3.05 > -3.5", "-3.05 = -3.5"],
+    "answer": "C",
+    "hints": [
+      "Line up the decimal places first: compare the sizes 3.50 and 3.05, and remember a positive always beats a negative.",
+      "Both numbers are negative, so the bigger SIZE sits further left - and further left is smaller."
+    ]
+  },
+  {
+    "id": "m7math-comparing-and-ordering-rationals-003",
+    "loId": "m7math.comparing-and-ordering-rationals",
+    "cedCode": "M7MATH-1.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Of the numbers -2.5, -2.05 and -2.55, which one is the LEAST? Type it as a number.",
+    "hints": [
+      "Line up the decimal places first: compare the sizes 2.50, 2.05 and 2.55.",
+      "All three are negative, so the one with the LARGEST size sits furthest left, and furthest left is least."
+    ],
+    "answer": "-2.55"
+  },
+  {
+    "id": "m7math-comparing-and-ordering-rationals-004",
+    "loId": "m7math.comparing-and-ordering-rationals",
+    "cedCode": "M7MATH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of these numbers is the greatest: 2/3, 5/8, 0.63, -0.95 ?",
+    "choices": ["2/3", "5/8", "0.63", "-0.95"],
+    "answer": "A",
+    "hints": [
+      "Drop anything negative straight away, then turn each fraction into a decimal by dividing top by bottom.",
+      "2 divided by 3 is 0.666..., and 5 divided by 8 is 0.625. Write all three as 0.666, 0.625 and 0.630 before you decide - you cannot compare fractions by their top numbers alone."
+    ]
+  },
+  {
+    "id": "m7math-comparing-and-ordering-rationals-005",
+    "loId": "m7math.comparing-and-ordering-rationals",
+    "cedCode": "M7MATH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which list is in order from LEAST to GREATEST?",
+    "choices": [
+      "-3/4, -1.5, 0.2, 3/5",
+      "-1.5, -3/4, 0.2, 3/5",
+      "-1.5, -3/4, 3/5, 0.2",
+      "3/5, 0.2, -3/4, -1.5"
+    ],
+    "answer": "B",
+    "hints": [
+      "Turn every number into a decimal first, then sort the negatives, zero and positives as three groups.",
+      "-3/4 is -0.75 and 3/5 is 0.6. Among the negatives, the larger size sits further left, so it comes first."
+    ]
+  },
+  {
+    "id": "m7math-comparing-and-ordering-rationals-006",
+    "loId": "m7math.comparing-and-ordering-rationals",
+    "cedCode": "M7MATH-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A number n is greater than -1/2 and less than -0.2. Which of these could be n?",
+    "choices": ["-0.75", "-0.15", "0.35", "-0.35"],
+    "answer": "D",
+    "hints": [
+      "Write -1/2 as a decimal so both fences are in the same form, then picture the stretch of line between them.",
+      "n has to sit to the RIGHT of -0.5 and to the LEFT of -0.2, so its distance from zero is between 0.2 and 0.5."
+    ]
+  },
+  {
+    "id": "m7math-fractions-decimals-percents-001",
+    "loId": "m7math.fractions-decimals-percents",
+    "cedCode": "M7MATH-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Write 6% as a decimal.",
+    "choices": ["0.06", "0.6", "6.0", "600"],
+    "answer": "A",
+    "hints": [
+      "Percent means out of 100, so start by writing 6% as the fraction 6/100.",
+      "Leaving a percent makes the number smaller, so the point slides two places LEFT. Start from 6.0 and slide it twice."
+    ]
+  },
+  {
+    "id": "m7math-fractions-decimals-percents-002",
+    "loId": "m7math.fractions-decimals-percents",
+    "cedCode": "M7MATH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is equal to 1/3?",
+    "choices": ["0.13", "1.3", "0.333... (the 3 repeating forever)", "0.3 exactly"],
+    "answer": "C",
+    "hints": [
+      "The fraction bar means divide, so this is 1 divided by 3 - not the digits 1 and 3 written around a point.",
+      "Write 1 as 1.000 and divide. The remainder 1 keeps coming back, so the same digit repeats forever."
+    ]
+  },
+  {
+    "id": "m7math-fractions-decimals-percents-003",
+    "loId": "m7math.fractions-decimals-percents",
+    "cedCode": "M7MATH-1.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Write 3/8 as a percent. Type just the number, without the percent sign.",
+    "hints": [
+      "Divide 3 by 8 first. Write the 3 as 3.000 and keep going until the remainder is zero.",
+      "3 divided by 8 is 0.375. Now multiply by 100, which slides the point two places to the RIGHT."
+    ],
+    "answer": "37.5"
+  },
+  {
+    "id": "m7math-fractions-decimals-percents-004",
+    "loId": "m7math.fractions-decimals-percents",
+    "cedCode": "M7MATH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Write 35% as a fraction in simplest form.",
+    "choices": ["35/100", "7/20", "1/35", "35/10"],
+    "answer": "B",
+    "hints": [
+      "Percent means out of one hundred, so write the number over 100 first.",
+      "Both 35 and 100 divide by 5. Do not stop before you have simplified."
+    ]
+  },
+  {
+    "id": "m7math-fractions-decimals-percents-005",
+    "loId": "m7math.fractions-decimals-percents",
+    "cedCode": "M7MATH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is the greatest: 0.7, 68%, 3/4, 5/8 ?",
+    "choices": ["0.7", "68%", "3/4", "5/8"],
+    "answer": "C",
+    "hints": [
+      "Put all four into the same form. Decimals are easiest: divide each fraction top by bottom, and slide the percent two places LEFT.",
+      "68% is 0.68 and 5/8 is 0.625. Now line up 0.700, 0.680 and 0.625 against the decimal for 3/4."
+    ]
+  },
+  {
+    "id": "m7math-fractions-decimals-percents-006",
+    "loId": "m7math.fractions-decimals-percents",
+    "cedCode": "M7MATH-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A video game has 20 levels. Leo has finished 65% of them. How many levels does he have LEFT to finish?",
+    "choices": ["7", "13", "6.5", "35"],
+    "answer": "A",
+    "hints": [
+      "Turn 65% into a decimal first, then use it to find how many of the 20 levels Leo has already finished.",
+      "65% is 0.65, and 0.65 x 20 = 13 levels finished. The question asks for the ones still left out of 20."
+    ]
+  }
+]

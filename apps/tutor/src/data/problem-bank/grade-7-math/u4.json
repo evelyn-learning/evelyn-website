@@ -1,0 +1,335 @@
+[
+  {
+    "id": "m7math-percent-of-a-number-001",
+    "loId": "m7math.percent-of-a-number",
+    "cedCode": "M7MATH-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is 25% of 60?",
+    "choices": ["1500", "15", "35", "240"],
+    "answer": "B",
+    "hints": [
+      "Percent means per hundred, so rewrite 25% as a decimal by sliding the point two places left.",
+      "The whole is given, so multiply: 0.25 times 60. Benchmarks check it — 10% of 60 is 6, so 25% is two of those plus half of one."
+    ]
+  },
+  {
+    "id": "m7math-percent-of-a-number-002",
+    "loId": "m7math.percent-of-a-number",
+    "cedCode": "M7MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is 8% of 250?",
+    "choices": ["2000", "200", "2", "20"],
+    "answer": "D",
+    "hints": [
+      "Convert 8% to a decimal first. The point moves TWO places left, not one.",
+      "8% is 0.08, so multiply 0.08 times 250. Size test: 8% is a small slice, less than a tenth of 250."
+    ]
+  },
+  {
+    "id": "m7math-percent-of-a-number-003",
+    "loId": "m7math.percent-of-a-number",
+    "cedCode": "M7MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A video game costs 60 dollars. You have saved 45% of the price. How many dollars have you saved? Type your answer as a number.",
+    "hints": [
+      "The whole price is sitting right there, so this is the forward direction: convert the percent, then multiply.",
+      "45% is 0.45. Check with benchmarks — 10% of 60 is 6, so 40% is 24, and 5% is half of 6."
+    ],
+    "answer": "27"
+  },
+  {
+    "id": "m7math-percent-of-a-number-004",
+    "loId": "m7math.percent-of-a-number",
+    "cedCode": "M7MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "12 is 15% of what number?",
+    "choices": ["80", "1.8", "8", "800"],
+    "answer": "A",
+    "hints": [
+      "Ask which quantity is missing. You are handed the part and the percent, and the WHOLE is unknown, so this is the backward direction.",
+      "Write 0.15 times the whole = 12, then divide 12 by 0.15. The whole must come out bigger than 12."
+    ]
+  },
+  {
+    "id": "m7math-percent-of-a-number-005",
+    "loId": "m7math.percent-of-a-number",
+    "cedCode": "M7MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You paid 18 dollars for a backpack. That was 40% of its original price. What was the original price, in dollars?",
+    "choices": ["7.20", "25.20", "45", "450"],
+    "answer": "C",
+    "hints": [
+      "The 18 dollars is the part, and the original price is the whole you are missing, so divide rather than multiply.",
+      "Write 0.40 times the original = 18, then divide 18 by 0.40. Check it forward: 40% of your answer should land back on 18."
+    ]
+  },
+  {
+    "id": "m7math-percent-of-a-number-006",
+    "loId": "m7math.percent-of-a-number",
+    "cedCode": "M7MATH-4.1",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "Your class has collected 240 cans for a food drive. That is 60% of the goal. How many MORE cans are needed to reach the goal? Type your answer as a number.",
+    "hints": [
+      "Find the goal first. The 240 cans are the part and 60% is the percent, so the whole is missing — divide.",
+      "The goal is 240 divided by 0.60. The question asks how many MORE are needed, so subtract the 240 you already have."
+    ],
+    "answer": "160"
+  },
+  {
+    "id": "m7math-percent-increase-decrease-001",
+    "loId": "m7math.percent-increase-decrease",
+    "cedCode": "M7MATH-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A comic book used to cost 8 dollars and now costs 10 dollars. What is the percent increase?",
+    "choices": ["2%", "20%", "25%", "80%"],
+    "answer": "C",
+    "hints": [
+      "Subtract to find the change in dollars first, then decide which number belongs on the bottom of the fraction.",
+      "The original is 8 dollars, because that is what the comic used to cost. Divide the change by 8, then multiply by 100."
+    ]
+  },
+  {
+    "id": "m7math-percent-increase-decrease-002",
+    "loId": "m7math.percent-increase-decrease",
+    "cedCode": "M7MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A pair of sneakers drops from 50 dollars to 42 dollars. What is the percent decrease? Type your answer as a number, without the percent sign.",
+    "hints": [
+      "Find the size of the drop in dollars by subtracting.",
+      "Divide that drop by the ORIGINAL price of 50, then multiply by 100 to turn the decimal into a percent."
+    ],
+    "answer": "16"
+  },
+  {
+    "id": "m7math-percent-increase-decrease-003",
+    "loId": "m7math.percent-increase-decrease",
+    "cedCode": "M7MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 40 dollar hoodie goes DOWN in price by 15%. Which single step gives the new price?",
+    "choices": [
+      "Multiply 40 by 0.85",
+      "Multiply 40 by 0.15",
+      "Multiply 40 by 1.15",
+      "Multiply 40 by 0.85, then subtract the result from 40"
+    ],
+    "answer": "A",
+    "hints": [
+      "The old price counts as 100% of itself. After 15% comes off, what percent of the old price is left?",
+      "100% minus 15% is 85%, and 85% as a decimal is 0.85. Your pick must give an answer smaller than 40, but not tiny."
+    ]
+  },
+  {
+    "id": "m7math-percent-increase-decrease-004",
+    "loId": "m7math.percent-increase-decrease",
+    "cedCode": "M7MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A video has 200 likes on Monday. On Tuesday the count goes up 50%. On Wednesday it goes down 50% from Tuesday's count. How many likes are there on Wednesday?",
+    "choices": ["300", "200", "100", "150"],
+    "answer": "D",
+    "hints": [
+      "Do the two months one at a time. Each percent is taken of the amount that is actually there when that step happens.",
+      "Tuesday's count is 200 times 1.50. Wednesday takes half of THAT number away, not half of the original 200."
+    ]
+  },
+  {
+    "id": "m7math-percent-increase-decrease-005",
+    "loId": "m7math.percent-increase-decrease",
+    "cedCode": "M7MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A bike that cost 240 dollars is now on sale for 180 dollars. What is the percent decrease? Type your answer as a number, without the percent sign.",
+    "hints": [
+      "Subtract to find how many dollars the price fell.",
+      "The original price is 240, because that is where the price started. Divide the fall by 240, then multiply by 100."
+    ],
+    "answer": "25"
+  },
+  {
+    "id": "m7math-percent-increase-decrease-006",
+    "loId": "m7math.percent-increase-decrease",
+    "cedCode": "M7MATH-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "After a 20% increase, a monthly game pass costs 18 dollars. What did it cost each month before the increase, in dollars?",
+    "choices": ["14.40", "15", "22.50", "21.60"],
+    "answer": "B",
+    "hints": [
+      "Write the forward version first: the old price times the increase multiplier gives 18.",
+      "A 20% increase is a multiplier of 1.20, so the old price times 1.20 = 18. Undo a multiplication by dividing, then check that 1.20 times your answer lands on 18."
+    ]
+  },
+  {
+    "id": "m7math-tax-tip-discount-markup-001",
+    "loId": "m7math.tax-tip-discount-markup",
+    "cedCode": "M7MATH-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A lunch bill comes to 20 dollars and you leave a 15% tip. How much is the TIP, in dollars?",
+    "choices": ["17", "23", "0.30", "3"],
+    "answer": "D",
+    "hints": [
+      "A tip is a percent OF the bill, so convert 15% to a decimal and multiply.",
+      "This question asks for the tip by itself, not the total. Work out 0.15 times 20 and stop there."
+    ]
+  },
+  {
+    "id": "m7math-tax-tip-discount-markup-002",
+    "loId": "m7math.tax-tip-discount-markup",
+    "cedCode": "M7MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 45 dollar jacket is 20% off. What is the sale price, in dollars?",
+    "choices": ["9", "36", "54", "25"],
+    "answer": "B",
+    "hints": [
+      "A discount comes OFF, so the multiplier is 1 minus the rate.",
+      "1 minus 0.20 is 0.80, so multiply 45 by 0.80. The discount amount is not the sale price — the sale price is what is left."
+    ]
+  },
+  {
+    "id": "m7math-tax-tip-discount-markup-003",
+    "loId": "m7math.tax-tip-discount-markup",
+    "cedCode": "M7MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A store charges 6% sales tax. Which single multiplier turns the price of an item into the total you pay at the register?",
+    "choices": ["0.06", "0.94", "1.06", "1.6"],
+    "answer": "C",
+    "hints": [
+      "The price counts as 100% of itself, and tax gets ADDED on top of it.",
+      "100% plus 6% is 106%, and 106% written as a decimal slides the point two places left. Test it on a 100 dollar item — the total should be a little above 100."
+    ]
+  },
+  {
+    "id": "m7math-tax-tip-discount-markup-004",
+    "loId": "m7math.tax-tip-discount-markup",
+    "cedCode": "M7MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "An 80 dollar pair of headphones is 25% off, and then 8% sales tax is added to the sale price. How many dollars do you pay in total? Type your answer as a number.",
+    "hints": [
+      "Two steps means two multiplications. Never add or subtract the percents.",
+      "First the discount: 80 times 0.75. Then charge tax on THAT sale price by multiplying by 1.08. Round to the nearest cent at the end."
+    ],
+    "answer": "64.80"
+  },
+  {
+    "id": "m7math-tax-tip-discount-markup-005",
+    "loId": "m7math.tax-tip-discount-markup",
+    "cedCode": "M7MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A store buys a skateboard for 40 dollars and marks it up 35%. What is the selling price, in dollars?",
+    "choices": ["54", "14", "26", "75"],
+    "answer": "A",
+    "hints": [
+      "A markup is added on top of what the store paid, so the multiplier is 1 plus the rate.",
+      "1 plus 0.35 is 1.35, so multiply 40 by 1.35. The markup amount by itself is not the selling price, and the selling price must be higher than 40."
+    ]
+  },
+  {
+    "id": "m7math-tax-tip-discount-markup-006",
+    "loId": "m7math.tax-tip-discount-markup",
+    "cedCode": "M7MATH-4.3",
+    "difficulty": 4,
+    "responseFormat": "numeric",
+    "problemText": "A backpack is on sale for 34 dollars after a 15% discount. What was the original price, in dollars? Type your answer as a number.",
+    "hints": [
+      "Write the forward version first: the original price times the discount multiplier gives 34.",
+      "A 15% discount is a multiplier of 0.85, so the original times 0.85 = 34. Divide to undo it, and check that 0.85 times your answer comes back to 34."
+    ],
+    "answer": "40"
+  },
+  {
+    "id": "m7math-simple-interest-and-percent-error-001",
+    "loId": "m7math.simple-interest-and-percent-error",
+    "cedCode": "M7MATH-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You put 400 dollars into a savings account that pays 3% simple interest per year. How much interest do you earn in 1 year, in dollars?",
+    "choices": ["12", "120", "1200", "412"],
+    "answer": "A",
+    "hints": [
+      "Use I = P times r times t, with the rate written as a decimal.",
+      "P is 400, r is 0.03 and t is 1. The question asks for the interest only, not the balance."
+    ]
+  },
+  {
+    "id": "m7math-simple-interest-and-percent-error-002",
+    "loId": "m7math.simple-interest-and-percent-error",
+    "cedCode": "M7MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A loan of 600 dollars charges 8% simple interest per year and is paid back after 6 months. How much interest is owed, in dollars?",
+    "choices": ["288", "48", "24", "240"],
+    "answer": "C",
+    "hints": [
+      "Write P, r and t down separately before you multiply. The rate 8% becomes 0.08.",
+      "The rate is a yearly rate, so t must be counted in years. Six months is half a year. Find one full year of interest first, then take half of it."
+    ]
+  },
+  {
+    "id": "m7math-simple-interest-and-percent-error-003",
+    "loId": "m7math.simple-interest-and-percent-error",
+    "cedCode": "M7MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "You guess that a jar holds 250 marbles. It actually holds 200 marbles. What is the percent error of your guess? Type your answer as a number, without the percent sign.",
+    "hints": [
+      "Subtract to find the size of the miss, then decide which value goes on the bottom.",
+      "Percent error divides the gap by the ACTUAL number of marbles, which is 200, and then multiplies by 100."
+    ],
+    "answer": "25"
+  },
+  {
+    "id": "m7math-simple-interest-and-percent-error-004",
+    "loId": "m7math.simple-interest-and-percent-error",
+    "cedCode": "M7MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student measures a desk as 148 cm wide. The actual width is 160 cm. What is the percent error of the measurement?",
+    "choices": ["12%", "7.5%", "about 8.1%", "92.5%"],
+    "answer": "B",
+    "hints": [
+      "The top of the fraction is the size of the gap between the measurement and the truth, not the whole measurement.",
+      "The gap is 12 cm. Divide it by the ACTUAL width of 160, then multiply by 100. Dividing by 148 would judge the miss against the mistake."
+    ]
+  },
+  {
+    "id": "m7math-simple-interest-and-percent-error-005",
+    "loId": "m7math.simple-interest-and-percent-error",
+    "cedCode": "M7MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "You put 350 dollars into an account that pays 4% simple interest per year. How many dollars of interest have you earned after 9 months? Type your answer as a number.",
+    "hints": [
+      "Turn 9 months into years first, because the rate is a yearly rate. Twelve months is one year.",
+      "Nine months is three quarters of a year, so t = 0.75. Use I = P times r times t with P = 350 and r = 0.04, and give your answer to the nearest cent."
+    ],
+    "answer": "10.50"
+  },
+  {
+    "id": "m7math-simple-interest-and-percent-error-006",
+    "loId": "m7math.simple-interest-and-percent-error",
+    "cedCode": "M7MATH-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Your brother borrows 900 dollars at 6% simple interest per year and pays the loan back after 8 months. What TOTAL amount does he pay back, in dollars?",
+    "choices": ["36", "954", "1332", "936"],
+    "answer": "D",
+    "hints": [
+      "Find the interest with I = P times r times t first, remembering that t is measured in years.",
+      "Eight months is two thirds of a year. One full year of interest is 54 dollars, so take two thirds of that, then add the interest to the 900 he borrowed."
+    ]
+  }
+]

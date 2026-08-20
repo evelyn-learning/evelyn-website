@@ -33,6 +33,7 @@ export const COURSE_PREFIX: Record<string, string> = {
   chemistry: 'chem',
   'hs-english': 'engl',
   'world-history': 'whist',
+  'grade-7-math': 'm7math',
 };
 
 const FRQ_FILE_RE = /-(frq|saq|dbq|leq)-/;

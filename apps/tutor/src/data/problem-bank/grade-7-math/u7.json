@@ -1,0 +1,374 @@
+[
+  {
+    "id": "m7math-angle-relationships-001",
+    "loId": "m7math.angle-relationships",
+    "cedCode": "M7MATH-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two angles are complementary. One of them measures 28 degrees. What is the measure of the other angle?",
+    "choices": ["62 degrees", "152 degrees", "28 degrees", "72 degrees"],
+    "answer": "A",
+    "hints": [
+      "Decide which total you need before you subtract anything. Complementary angles use one total, supplementary angles use a different one.",
+      "Complementary angles add to 90 degrees, so the missing angle is 90 - 28."
+    ]
+  },
+  {
+    "id": "m7math-angle-relationships-002",
+    "loId": "m7math.angle-relationships",
+    "cedCode": "M7MATH-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two straight lines cross at a point, making an X with four angles around it. One of those angles measures 115 degrees. What is the measure of the angle directly across the X from it?",
+    "choices": ["65 degrees", "245 degrees", "115 degrees", "It cannot be determined without measuring that angle"],
+    "answer": "C",
+    "hints": [
+      "Name the relationship first. Is the angle across the X a vertical angle, or is it the neighbor angle sitting on the same straight line?",
+      "Vertical angles are the pair directly across from each other, and vertical angles are always equal. The 180-degree rule belongs to the neighbor angle, not this one."
+    ]
+  },
+  {
+    "id": "m7math-angle-relationships-003",
+    "loId": "m7math.angle-relationships",
+    "cedCode": "M7MATH-7.1",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Two adjacent angles together form a straight line. One measures (x + 40) degrees and the other measures (3x) degrees. What is the value of x?",
+    "answer": "35",
+    "hints": [
+      "Two angles that together form a straight line are supplementary, so write a sum equation before you touch any numbers.",
+      "The equation is (x + 40) + 3x = 180, which becomes 4x + 40 = 180. Subtract the 40 first, then divide."
+    ]
+  },
+  {
+    "id": "m7math-angle-relationships-004",
+    "loId": "m7math.angle-relationships",
+    "cedCode": "M7MATH-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Angle A and angle B are supplementary. Angle A measures (4x + 5) degrees and angle B measures (x + 25) degrees. What is the measure of angle A?",
+    "choices": ["30 degrees", "53 degrees", "55 degrees", "125 degrees"],
+    "answer": "D",
+    "hints": [
+      "Supplementary means the two measures ADD to 180 degrees. It does not mean they are equal.",
+      "Solve (4x + 5) + (x + 25) = 180 to get x, then put that value back into 4x + 5, because the question asks for the angle and not for x."
+    ]
+  },
+  {
+    "id": "m7math-angle-relationships-005",
+    "loId": "m7math.angle-relationships",
+    "cedCode": "M7MATH-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two straight lines cross. The two angles that sit directly across the X from each other measure (6x - 10) degrees and (4x + 30) degrees. What is the measure of each of those two angles?",
+    "choices": ["16 degrees", "110 degrees", "86 degrees", "20 degrees"],
+    "answer": "B",
+    "hints": [
+      "Angles directly across the X from each other are vertical angles. Equal angles give you an expression = expression equation, not a sum equation.",
+      "Solve 6x - 10 = 4x + 30 for x, then substitute that value back into either expression to get the angle."
+    ]
+  },
+  {
+    "id": "m7math-angle-relationships-006",
+    "loId": "m7math.angle-relationships",
+    "cedCode": "M7MATH-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Angle P and angle Q are complementary. Angle Q measures 6 degrees less than twice angle P. What is the measure of angle Q?",
+    "choices": ["32 degrees", "56 degrees", "58 degrees", "118 degrees"],
+    "answer": "C",
+    "hints": [
+      "Let angle P be x. Then write angle Q in terms of x, and remember that complementary angles add to 90 degrees.",
+      "The equation is x + (2x - 6) = 90, so 3x - 6 = 90. Solve for x to get angle P, then use it to find angle Q."
+    ]
+  },
+  {
+    "id": "m7math-triangle-side-and-angle-conditions-001",
+    "loId": "m7math.triangle-side-and-angle-conditions",
+    "cedCode": "M7MATH-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two angles of a triangle measure 48 degrees and 72 degrees. What is the measure of the third angle?",
+    "choices": ["24 degrees", "60 degrees", "120 degrees", "240 degrees"],
+    "answer": "B",
+    "hints": [
+      "The three angles inside any triangle add to 180 degrees. Write that as an equation using x for the missing angle.",
+      "Add the two angles you were given, then subtract that total from 180."
+    ]
+  },
+  {
+    "id": "m7math-triangle-side-and-angle-conditions-002",
+    "loId": "m7math.triangle-side-and-angle-conditions",
+    "cedCode": "M7MATH-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which set of side lengths can form a triangle?",
+    "choices": ["3 cm, 4 cm, 8 cm", "4 cm, 5 cm, 9 cm", "2 cm, 3 cm, 7 cm", "5 cm, 7 cm, 9 cm"],
+    "answer": "D",
+    "hints": [
+      "For each set, find the longest side first, then add the other two lengths together.",
+      "The two shorter sides must add to MORE than the longest side. A sum that lands exactly on the longest side fails, because the shape flattens out."
+    ]
+  },
+  {
+    "id": "m7math-triangle-side-and-angle-conditions-003",
+    "loId": "m7math.triangle-side-and-angle-conditions",
+    "cedCode": "M7MATH-7.2",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "Two sides of a triangle measure 6 inches and 11 inches. What is the smallest whole-number length, in inches, that the third side can be?",
+    "answer": "6",
+    "hints": [
+      "If the third side is too short, the 6-inch side plus the third side will not reach across the 11-inch side.",
+      "You need 6 + x to be greater than 11, so x must be greater than 5. What is the smallest whole number that is strictly greater than 5?"
+    ]
+  },
+  {
+    "id": "m7math-triangle-side-and-angle-conditions-004",
+    "loId": "m7math.triangle-side-and-angle-conditions",
+    "cedCode": "M7MATH-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student checks whether side lengths of 6 cm, 6 cm, and 12 cm can form a triangle. He tests 6 + 12 = 18, notices that 18 is greater than 6, and says yes. Which statement is correct?",
+    "choices": [
+      "He is right. One check that passes is enough to prove the triangle exists.",
+      "He is wrong. The three sides of a triangle must all be different lengths.",
+      "He is wrong. The check 6 + 6 = 12 is not greater than 12, so these lengths form no triangle.",
+      "He is wrong, but 6 + 6 lands exactly on 12, so the triangle is simply a very flat one."
+    ],
+    "answer": "C",
+    "hints": [
+      "There are three checks to run, one for each pair of sides, and every one of them has to pass.",
+      "Find the longest side first, then test the two shortest sides against it. That is the check the student skipped."
+    ]
+  },
+  {
+    "id": "m7math-triangle-side-and-angle-conditions-005",
+    "loId": "m7math.triangle-side-and-angle-conditions",
+    "cedCode": "M7MATH-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a triangle, the second angle is twice the first angle and the third angle is 3 times the first angle. What is the measure of the LARGEST angle?",
+    "choices": ["90 degrees", "30 degrees", "45 degrees", "60 degrees"],
+    "answer": "A",
+    "hints": [
+      "Call the first angle x. Then the other two are 2x and 3x, and all three together must add to 180 degrees.",
+      "Solve x + 2x + 3x = 180 to find x, then multiply to get the largest angle, which is the 3x one."
+    ]
+  },
+  {
+    "id": "m7math-triangle-side-and-angle-conditions-006",
+    "loId": "m7math.triangle-side-and-angle-conditions",
+    "cedCode": "M7MATH-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which set of conditions determines EXACTLY ONE triangle?",
+    "choices": [
+      "Three angles measuring 55 degrees, 65 degrees, and 60 degrees",
+      "Three sides measuring 5 cm, 12 cm, and 13 cm",
+      "Three sides measuring 3 cm, 5 cm, and 9 cm",
+      "Three angles measuring 90 degrees, 50 degrees, and 30 degrees"
+    ],
+    "answer": "B",
+    "hints": [
+      "Test each set. For side lengths use the triangle inequality; for angle measures check whether they add to 180 degrees.",
+      "Three angles that add to 180 degrees lock the shape but not the size, so they give many triangles. Three sides that pass the inequality lock both, so they give exactly one."
+    ]
+  },
+  {
+    "id": "m7math-scale-drawings-001",
+    "loId": "m7math.scale-drawings",
+    "cedCode": "M7MATH-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A map uses the scale 1 inch : 20 miles. Two towns are 4 inches apart on the map. How far apart are the towns in real life?",
+    "choices": ["5 miles", "24 miles", "80 miles", "0.2 miles"],
+    "answer": "C",
+    "hints": [
+      "Say out loud which distance should be bigger, the one on the map or the one in real life. That tells you whether to multiply or divide.",
+      "Every 1 inch stands for 20 miles, and the real distance is bigger, so multiply 4 by 20."
+    ]
+  },
+  {
+    "id": "m7math-scale-drawings-002",
+    "loId": "m7math.scale-drawings",
+    "cedCode": "M7MATH-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A drawing of a bike uses the scale 1 cm : 15 cm. The real bike is 180 cm long. How long is the bike in the drawing?",
+    "choices": ["12 cm", "2700 cm", "165 cm", "1.2 cm"],
+    "answer": "A",
+    "hints": [
+      "This one runs backwards from the usual direction: you are going from the actual object down to the drawing.",
+      "Drawing to actual you multiply by the scale factor, so actual to drawing you divide. Compute 180 divided by 15."
+    ]
+  },
+  {
+    "id": "m7math-scale-drawings-003",
+    "loId": "m7math.scale-drawings",
+    "cedCode": "M7MATH-7.3",
+    "difficulty": 2,
+    "responseFormat": "numeric",
+    "problemText": "A model train car is built to the scale 1 cm : 24 cm. The model is 7 cm long. How long is the real train car, in centimeters?",
+    "answer": "168",
+    "hints": [
+      "The real train car is 24 times as long as the model, so the answer must come out bigger than 7.",
+      "Compute 7 times 24. Split it up if it helps: 7 times 20 is 140, and 7 times 4 is 28."
+    ]
+  },
+  {
+    "id": "m7math-scale-drawings-004",
+    "loId": "m7math.scale-drawings",
+    "cedCode": "M7MATH-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rectangle in a scale drawing measures 6 cm by 3 cm. The scale factor from the drawing to the actual figure is 4. What is the area of the actual figure?",
+    "choices": [
+      "18 square centimeters",
+      "72 square centimeters",
+      "4.5 square centimeters",
+      "288 square centimeters"
+    ],
+    "answer": "D",
+    "hints": [
+      "The safest route is to scale each SIDE first, then multiply the two scaled sides together.",
+      "6 times 4 is 24 and 3 times 4 is 12, so the actual rectangle is 24 cm by 12 cm. Now find its area. Area does not get multiplied by 4 the way a single length does."
+    ]
+  },
+  {
+    "id": "m7math-scale-drawings-005",
+    "loId": "m7math.scale-drawings",
+    "cedCode": "M7MATH-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a scale drawing of a park, a flagpole that is really 9 m tall is drawn 6 cm tall. On the same drawing, how long should a fence that is really 12 m long be drawn?",
+    "choices": ["8 cm", "18 cm", "12 cm", "108 cm"],
+    "answer": "A",
+    "hints": [
+      "Find the scale factor from one pair of lengths you know in both places: drawing length divided by real length.",
+      "The flagpole gives 6 divided by 9, which is two thirds. Multiply the fence's real length of 12 by that same two thirds."
+    ]
+  },
+  {
+    "id": "m7math-scale-drawings-006",
+    "loId": "m7math.scale-drawings",
+    "cedCode": "M7MATH-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A small photo has an area of 12 square inches. It is enlarged so that the bigger photo has an area of 108 square inches. What is the scale factor from the small photo to the enlarged photo?",
+    "choices": ["9", "1/3", "81", "3"],
+    "answer": "D",
+    "hints": [
+      "Start by finding how many times bigger the AREA got, then remember that area does not scale by the scale factor itself.",
+      "The area grew by a factor of 108 divided by 12, which is 9. Since area scales by the scale factor times itself, you need the number that gives 9 when multiplied by itself."
+    ]
+  },
+  {
+    "id": "m7math-cross-sections-of-solids-001",
+    "loId": "m7math.cross-sections-of-solids",
+    "cedCode": "M7MATH-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A block of cheese is a right rectangular prism. It is sliced straight through by a cut parallel to its base. What two-dimensional shape is the cross section?",
+    "choices": [
+      "A rectangle smaller than the base",
+      "A rectangle exactly the same size and shape as the base",
+      "A triangle",
+      "A square, no matter what the base looks like"
+    ],
+    "answer": "B",
+    "hints": [
+      "Picture the block of cheese. Does it get narrower as it goes up, or does it stay exactly the same all the way from bottom to top?",
+      "A prism keeps the same rectangle at every height, so a slice taken parallel to the base cannot come out any smaller or any larger."
+    ]
+  },
+  {
+    "id": "m7math-cross-sections-of-solids-002",
+    "loId": "m7math.cross-sections-of-solids",
+    "cedCode": "M7MATH-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right rectangular pyramid is sliced by a cut parallel to its base, partway up between the base and the apex. What two-dimensional shape is the cross section?",
+    "choices": [
+      "A triangle, because the side walls of a pyramid are triangles",
+      "A rectangle exactly the same size and shape as the base",
+      "A rectangle smaller than the base but the same shape as the base",
+      "A single point"
+    ],
+    "answer": "C",
+    "hints": [
+      "You are naming the flat face the knife exposes, not the shape of the side walls it passed through.",
+      "A pyramid leans inward as it rises, so the cut crosses all four slanted walls and those crossings close up into a shape narrower than the base."
+    ]
+  },
+  {
+    "id": "m7math-cross-sections-of-solids-003",
+    "loId": "m7math.cross-sections-of-solids",
+    "cedCode": "M7MATH-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A right rectangular prism is 10 cm long, 6 cm wide, and 4 cm tall. It is sliced straight down, perpendicular to the base, with the cut running parallel to the 6 cm wide side. What are the dimensions of the cross section?",
+    "choices": [
+      "6 cm by 4 cm",
+      "10 cm by 6 cm",
+      "10 cm by 4 cm",
+      "10 cm by 6 cm by 4 cm"
+    ],
+    "answer": "A",
+    "hints": [
+      "A cut that goes straight down uses the HEIGHT of the prism as one side of the exposed rectangle.",
+      "The other side is whichever base edge the knife ran along. The cut runs parallel to the 6 cm side, and the prism is 4 cm tall."
+    ]
+  },
+  {
+    "id": "m7math-cross-sections-of-solids-004",
+    "loId": "m7math.cross-sections-of-solids",
+    "cedCode": "M7MATH-7.4",
+    "difficulty": 3,
+    "responseFormat": "numeric",
+    "problemText": "A right rectangular pyramid has a base that is 14 cm by 9 cm. A cut is made parallel to the base, exactly halfway between the base and the apex. What is the area of that cross section, in square centimeters?",
+    "answer": "31.5",
+    "hints": [
+      "Halfway up a pyramid, the cross section is a rectangle whose sides are each half as long as the matching side of the base.",
+      "Halve each side first: 14 divided by 2 is 7, and 9 divided by 2 is 4.5. Then find the area of that rectangle."
+    ]
+  },
+  {
+    "id": "m7math-cross-sections-of-solids-005",
+    "loId": "m7math.cross-sections-of-solids",
+    "cedCode": "M7MATH-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which cut of a right rectangular pyramid produces a TRIANGLE as its cross section?",
+    "choices": [
+      "A cut parallel to the base, halfway up",
+      "A cut parallel to the base, very close to the apex",
+      "A cut parallel to the base, right at the level of the base",
+      "A cut straight down through the apex, perpendicular to the base"
+    ],
+    "answer": "D",
+    "hints": [
+      "A triangle needs three corners, so the cut has to pass through a place on the solid where edges meet at a single point.",
+      "Every cut parallel to the base closes up into a four-sided shape. Only a cut that goes through the apex gives a face with a bottom edge and two sides meeting at one point."
+    ]
+  },
+  {
+    "id": "m7math-cross-sections-of-solids-006",
+    "loId": "m7math.cross-sections-of-solids",
+    "cedCode": "M7MATH-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A solid is sliced twice. A cut parallel to the base gives a rectangle 8 cm by 5 cm, and a second cut parallel to the base much higher up gives another rectangle 8 cm by 5 cm. Which solid is it, and what shape would a cut perpendicular to its base give?",
+    "choices": [
+      "A right rectangular pyramid, and the perpendicular cut would give a triangle",
+      "A right rectangular prism, and the perpendicular cut would give a rectangle",
+      "A right rectangular prism, and the perpendicular cut would give a triangle",
+      "A right rectangular pyramid, and the perpendicular cut would give a smaller rectangle"
+    ],
+    "answer": "B",
+    "hints": [
+      "Work backwards from the clue. Which solid gives the SAME rectangle no matter how high up you slice it, and which one gives a smaller rectangle the higher you go?",
+      "Once you know the solid, recall what a straight-down cut does to it. For that solid the second cut still gives a rectangle, just with the height as one of its sides."
+    ]
+  }
+]
