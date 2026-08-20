@@ -1940,6 +1940,8 @@ import { SEED_M7MATH_U10_PROBABILITY_OF_SIMPLE_EVENTS } from './seeds/m7math-u10
 import { SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY } from './seeds/m7math-u10-experimental-vs-theoretical-probability';
 import { SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS } from './seeds/m7math-u10-probability-models-and-simulations';
 import { SEED_M7MATH_U10_COMPOUND_EVENTS } from './seeds/m7math-u10-compound-events';
+import { SEED_M7ELA_U1_CHARACTERIZATION } from './seeds/m7ela-u1-characterization';
+import { SEED_M7ELA_U6_FRAGMENTS_AND_RUN_ONS } from './seeds/m7ela-u6-fragments-and-run-ons';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3802,6 +3804,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY,
   SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS,
   SEED_M7MATH_U10_COMPOUND_EVENTS,
+  // MS-core — Grade 7 English Language Arts.
+  SEED_M7ELA_U1_CHARACTERIZATION,
+  SEED_M7ELA_U6_FRAGMENTS_AND_RUN_ONS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
