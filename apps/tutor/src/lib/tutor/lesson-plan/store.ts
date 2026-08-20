@@ -1899,6 +1899,9 @@ import { SEED_WHIST_U9_HOLOCAUST_HUMAN_RIGHTS } from './seeds/whist-u9-holocaust
 import { SEED_WHIST_U9_INTERWAR_YEARS } from './seeds/whist-u9-interwar-years';
 import { SEED_WHIST_U9_WORLD_WAR_I } from './seeds/whist-u9-world-war-i';
 import { SEED_WHIST_U9_WORLD_WAR_II } from './seeds/whist-u9-world-war-ii';
+// MS-core — Grade 7 Math (CCSS 7.NS / 7.EE).
+import { SEED_M7MATH_U1_INTEGERS_AND_ABSOLUTE_VALUE } from './seeds/m7math-u1-integers-and-absolute-value';
+import { SEED_M7MATH_U5_COMBINING_LIKE_TERMS } from './seeds/m7math-u5-combining-like-terms';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3720,6 +3723,9 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_WHIST_U9_INTERWAR_YEARS,
   SEED_WHIST_U9_WORLD_WAR_I,
   SEED_WHIST_U9_WORLD_WAR_II,
+  // MS-core — Grade 7 Math.
+  SEED_M7MATH_U1_INTEGERS_AND_ABSOLUTE_VALUE,
+  SEED_M7MATH_U5_COMBINING_LIKE_TERMS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
