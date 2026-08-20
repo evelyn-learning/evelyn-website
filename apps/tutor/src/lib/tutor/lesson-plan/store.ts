@@ -1901,7 +1901,45 @@ import { SEED_WHIST_U9_WORLD_WAR_I } from './seeds/whist-u9-world-war-i';
 import { SEED_WHIST_U9_WORLD_WAR_II } from './seeds/whist-u9-world-war-ii';
 // MS-core — Grade 7 Math (CCSS 7.NS / 7.EE).
 import { SEED_M7MATH_U1_INTEGERS_AND_ABSOLUTE_VALUE } from './seeds/m7math-u1-integers-and-absolute-value';
+import { SEED_M7MATH_U1_RATIONAL_NUMBERS_ON_THE_NUMBER_LINE } from './seeds/m7math-u1-rational-numbers-on-the-number-line';
+import { SEED_M7MATH_U1_COMPARING_AND_ORDERING_RATIONALS } from './seeds/m7math-u1-comparing-and-ordering-rationals';
+import { SEED_M7MATH_U1_FRACTIONS_DECIMALS_PERCENTS } from './seeds/m7math-u1-fractions-decimals-percents';
+import { SEED_M7MATH_U2_ADDING_RATIONAL_NUMBERS } from './seeds/m7math-u2-adding-rational-numbers';
+import { SEED_M7MATH_U2_SUBTRACTING_RATIONAL_NUMBERS } from './seeds/m7math-u2-subtracting-rational-numbers';
+import { SEED_M7MATH_U2_MULTIPLYING_DIVIDING_RATIONAL_NUMBERS } from './seeds/m7math-u2-multiplying-dividing-rational-numbers';
+import { SEED_M7MATH_U2_ORDER_OF_OPERATIONS_RATIONALS } from './seeds/m7math-u2-order-of-operations-rationals';
+import { SEED_M7MATH_U3_RATIOS_AND_UNIT_RATES } from './seeds/m7math-u3-ratios-and-unit-rates';
+import { SEED_M7MATH_U3_COMPLEX_FRACTION_UNIT_RATES } from './seeds/m7math-u3-complex-fraction-unit-rates';
+import { SEED_M7MATH_U3_PROPORTIONAL_RELATIONSHIPS } from './seeds/m7math-u3-proportional-relationships';
+import { SEED_M7MATH_U3_CONSTANT_OF_PROPORTIONALITY } from './seeds/m7math-u3-constant-of-proportionality';
+import { SEED_M7MATH_U4_PERCENT_OF_A_NUMBER } from './seeds/m7math-u4-percent-of-a-number';
+import { SEED_M7MATH_U4_PERCENT_INCREASE_DECREASE } from './seeds/m7math-u4-percent-increase-decrease';
+import { SEED_M7MATH_U4_TAX_TIP_DISCOUNT_MARKUP } from './seeds/m7math-u4-tax-tip-discount-markup';
+import { SEED_M7MATH_U4_SIMPLE_INTEREST_AND_PERCENT_ERROR } from './seeds/m7math-u4-simple-interest-and-percent-error';
+import { SEED_M7MATH_U5_WRITING_ALGEBRAIC_EXPRESSIONS } from './seeds/m7math-u5-writing-algebraic-expressions';
+import { SEED_M7MATH_U5_EVALUATING_EXPRESSIONS } from './seeds/m7math-u5-evaluating-expressions';
 import { SEED_M7MATH_U5_COMBINING_LIKE_TERMS } from './seeds/m7math-u5-combining-like-terms';
+import { SEED_M7MATH_U5_DISTRIBUTIVE_PROPERTY_AND_FACTORING } from './seeds/m7math-u5-distributive-property-and-factoring';
+import { SEED_M7MATH_U6_ONE_STEP_EQUATIONS } from './seeds/m7math-u6-one-step-equations';
+import { SEED_M7MATH_U6_TWO_STEP_EQUATIONS } from './seeds/m7math-u6-two-step-equations';
+import { SEED_M7MATH_U6_WRITING_EQUATIONS_FROM_WORD_PROBLEMS } from './seeds/m7math-u6-writing-equations-from-word-problems';
+import { SEED_M7MATH_U6_SOLVING_AND_GRAPHING_INEQUALITIES } from './seeds/m7math-u6-solving-and-graphing-inequalities';
+import { SEED_M7MATH_U7_ANGLE_RELATIONSHIPS } from './seeds/m7math-u7-angle-relationships';
+import { SEED_M7MATH_U7_TRIANGLE_SIDE_AND_ANGLE_CONDITIONS } from './seeds/m7math-u7-triangle-side-and-angle-conditions';
+import { SEED_M7MATH_U7_SCALE_DRAWINGS } from './seeds/m7math-u7-scale-drawings';
+import { SEED_M7MATH_U7_CROSS_SECTIONS_OF_SOLIDS } from './seeds/m7math-u7-cross-sections-of-solids';
+import { SEED_M7MATH_U8_AREA_OF_POLYGONS } from './seeds/m7math-u8-area-of-polygons';
+import { SEED_M7MATH_U8_CIRCUMFERENCE_AND_AREA_OF_CIRCLES } from './seeds/m7math-u8-circumference-and-area-of-circles';
+import { SEED_M7MATH_U8_SURFACE_AREA_OF_PRISMS_AND_PYRAMIDS } from './seeds/m7math-u8-surface-area-of-prisms-and-pyramids';
+import { SEED_M7MATH_U8_VOLUME_OF_PRISMS_AND_COMPOSITE_SOLIDS } from './seeds/m7math-u8-volume-of-prisms-and-composite-solids';
+import { SEED_M7MATH_U9_POPULATIONS_AND_SAMPLES } from './seeds/m7math-u9-populations-and-samples';
+import { SEED_M7MATH_U9_RANDOM_SAMPLING_AND_INFERENCES } from './seeds/m7math-u9-random-sampling-and-inferences';
+import { SEED_M7MATH_U9_MEASURES_OF_CENTER_AND_VARIABILITY } from './seeds/m7math-u9-measures-of-center-and-variability';
+import { SEED_M7MATH_U9_COMPARING_TWO_POPULATIONS } from './seeds/m7math-u9-comparing-two-populations';
+import { SEED_M7MATH_U10_PROBABILITY_OF_SIMPLE_EVENTS } from './seeds/m7math-u10-probability-of-simple-events';
+import { SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY } from './seeds/m7math-u10-experimental-vs-theoretical-probability';
+import { SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS } from './seeds/m7math-u10-probability-models-and-simulations';
+import { SEED_M7MATH_U10_COMPOUND_EVENTS } from './seeds/m7math-u10-compound-events';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3725,7 +3763,45 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_WHIST_U9_WORLD_WAR_II,
   // MS-core — Grade 7 Math.
   SEED_M7MATH_U1_INTEGERS_AND_ABSOLUTE_VALUE,
+  SEED_M7MATH_U1_RATIONAL_NUMBERS_ON_THE_NUMBER_LINE,
+  SEED_M7MATH_U1_COMPARING_AND_ORDERING_RATIONALS,
+  SEED_M7MATH_U1_FRACTIONS_DECIMALS_PERCENTS,
+  SEED_M7MATH_U2_ADDING_RATIONAL_NUMBERS,
+  SEED_M7MATH_U2_SUBTRACTING_RATIONAL_NUMBERS,
+  SEED_M7MATH_U2_MULTIPLYING_DIVIDING_RATIONAL_NUMBERS,
+  SEED_M7MATH_U2_ORDER_OF_OPERATIONS_RATIONALS,
+  SEED_M7MATH_U3_RATIOS_AND_UNIT_RATES,
+  SEED_M7MATH_U3_COMPLEX_FRACTION_UNIT_RATES,
+  SEED_M7MATH_U3_PROPORTIONAL_RELATIONSHIPS,
+  SEED_M7MATH_U3_CONSTANT_OF_PROPORTIONALITY,
+  SEED_M7MATH_U4_PERCENT_OF_A_NUMBER,
+  SEED_M7MATH_U4_PERCENT_INCREASE_DECREASE,
+  SEED_M7MATH_U4_TAX_TIP_DISCOUNT_MARKUP,
+  SEED_M7MATH_U4_SIMPLE_INTEREST_AND_PERCENT_ERROR,
+  SEED_M7MATH_U5_WRITING_ALGEBRAIC_EXPRESSIONS,
+  SEED_M7MATH_U5_EVALUATING_EXPRESSIONS,
   SEED_M7MATH_U5_COMBINING_LIKE_TERMS,
+  SEED_M7MATH_U5_DISTRIBUTIVE_PROPERTY_AND_FACTORING,
+  SEED_M7MATH_U6_ONE_STEP_EQUATIONS,
+  SEED_M7MATH_U6_TWO_STEP_EQUATIONS,
+  SEED_M7MATH_U6_WRITING_EQUATIONS_FROM_WORD_PROBLEMS,
+  SEED_M7MATH_U6_SOLVING_AND_GRAPHING_INEQUALITIES,
+  SEED_M7MATH_U7_ANGLE_RELATIONSHIPS,
+  SEED_M7MATH_U7_TRIANGLE_SIDE_AND_ANGLE_CONDITIONS,
+  SEED_M7MATH_U7_SCALE_DRAWINGS,
+  SEED_M7MATH_U7_CROSS_SECTIONS_OF_SOLIDS,
+  SEED_M7MATH_U8_AREA_OF_POLYGONS,
+  SEED_M7MATH_U8_CIRCUMFERENCE_AND_AREA_OF_CIRCLES,
+  SEED_M7MATH_U8_SURFACE_AREA_OF_PRISMS_AND_PYRAMIDS,
+  SEED_M7MATH_U8_VOLUME_OF_PRISMS_AND_COMPOSITE_SOLIDS,
+  SEED_M7MATH_U9_POPULATIONS_AND_SAMPLES,
+  SEED_M7MATH_U9_RANDOM_SAMPLING_AND_INFERENCES,
+  SEED_M7MATH_U9_MEASURES_OF_CENTER_AND_VARIABILITY,
+  SEED_M7MATH_U9_COMPARING_TWO_POPULATIONS,
+  SEED_M7MATH_U10_PROBABILITY_OF_SIMPLE_EVENTS,
+  SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY,
+  SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS,
+  SEED_M7MATH_U10_COMPOUND_EVENTS,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
