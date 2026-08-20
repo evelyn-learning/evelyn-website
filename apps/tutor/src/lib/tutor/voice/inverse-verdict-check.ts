@@ -29,6 +29,7 @@
  */
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
 import { matchUtteranceToAnswer } from '@/lib/tutor/voice/utterance-answer-match';
+import { looksMonetary } from '@/lib/tutor/voice/spoken-money';
 
 export interface InverseVerdictResult {
   verdict: 'ok' | 'false_denial' | 'advisory_false_denial';
@@ -44,19 +45,34 @@ export function checkInverseVerdict(args: {
   verifiedExpectedAnswer?: string;
   unverifiedCardAnswer?: string;
   choices?: Array<{ letter: string; text: string }>;
+  /** R49: the live problem statement, used ONLY to decide whether spoken
+   *  money may be reconciled against a cents-shaped expected answer (see
+   *  spoken-money.ts). Absent ⇒ no reconciliation, pre-R49 behaviour. */
+  problemContext?: string;
+  /** R49: TUTOR_SPOKEN_MONEY. Passed in so this module stays env-free. */
+  spokenMoneyEnabled?: boolean;
 }): InverseVerdictResult {
   if (!DENIAL_RE.test(args.sentence ?? '')) return OK;
 
+  // R49 (portal-2d53e403): "three seventy-five" transcribes as "375", so a
+  // correct money answer arrives here as an integer 100x the expected value
+  // and reads as a mismatch — the tutor denied it, then computed the same
+  // number itself two minutes later. Only ever offered when the caller
+  // confirms currency markers in the live problem.
+  const matchOpts = {
+    monetary: args.spokenMoneyEnabled === true && looksMonetary(args.problemContext ?? ''),
+  };
+
   const verified = (args.verifiedExpectedAnswer ?? '').trim();
   if (verified) {
-    const m = matchUtteranceToAnswer(args.studentUtterance, verified, args.choices);
+    const m = matchUtteranceToAnswer(args.studentUtterance, verified, args.choices, matchOpts);
     if (m.verdict === 'agree') return { verdict: 'false_denial', expected: verified, matchReason: m.reason };
     return OK; // disagree OR unknown: denial stands / can't judge
   }
 
   const unverified = (args.unverifiedCardAnswer ?? '').trim();
   if (unverified) {
-    const m = matchUtteranceToAnswer(args.studentUtterance, unverified, args.choices);
+    const m = matchUtteranceToAnswer(args.studentUtterance, unverified, args.choices, matchOpts);
     if (m.verdict === 'agree') return { verdict: 'advisory_false_denial', expected: unverified, matchReason: m.reason };
   }
 

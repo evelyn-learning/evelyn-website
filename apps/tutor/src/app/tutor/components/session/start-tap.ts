@@ -82,6 +82,31 @@ export function resolveStartTap(opts: {
   hasResumeState: boolean;
   realtimeState: string;
   isConnected: boolean;
+  /** R49 (2026-08-20, user decision): TUTOR_DOCK_STATE_ONLY. Once the
+   *  session has started the dock control is a STATE INDICATOR, not a
+   *  button — every in-session tap resolves to 'none'.
+   *
+   *  Why: the dock mic served five different actions behind one unlabelled
+   *  glyph. Its label ("Tutor speaking" / "Click to interrupt") has been
+   *  dead code in the shipped layout since the July-2026 caption merge —
+   *  TutorSession passes `captionSlot`, and the caption REPLACES the
+   *  stateUI text block, so what the student sees while the tutor talks is
+   *  a green pulsing circle that silently kills the audio. A first-time
+   *  visitor tapped it twice during the opening turn of
+   *  embed-1787073582144 and abandoned the session at 37s.
+   *
+   *  Nothing is lost: End/Pause owns the session, the Mute button owns the
+   *  mic, and speaking over the tutor owns barge-in. The opening turn does
+   *  become uninterruptible — deliberate, since opening-turn voice
+   *  barge-in is already suppressed by design
+   *  (`perception_cancel_suppressed_opening`), and an intro cut short by a
+   *  noisy room is a worse first impression than one that finishes.
+   *
+   *  PRE-START IS UNTOUCHED. A tap before the session begins is still
+   *  always a start intent — that is the invariant this whole module
+   *  exists to protect (portal-96a436f0), and the R49 change must not
+   *  weaken it. */
+  dockStateOnly?: boolean;
 }): StartTapAction {
   const { hasStarted, hasResumeState, realtimeState, isConnected } = opts;
   if (!hasStarted) {
@@ -89,6 +114,11 @@ export function resolveStartTap(opts: {
     if (hasResumeState) return 'resume-continue';
     return isConnected ? 'start' : 'queue-start';
   }
+  // In-session, state-only mode: the control is inert. 'none' (rather than
+  // simply not wiring a handler) keeps the tap on the telemetry path — a
+  // student still TAPPING a dead control is exactly the signal that would
+  // tell us this decision was wrong.
+  if (opts.dockStateOnly) return 'none';
   if (realtimeState === 'listening') return 'stop-listening';
   if (realtimeState === 'speaking') return 'interrupt';
   return isConnected ? 'start' : 'none';

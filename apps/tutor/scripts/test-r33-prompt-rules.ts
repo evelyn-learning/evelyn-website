@@ -135,5 +135,30 @@ test('R48 Task 2: Rule 3e — posed exercises with concrete parts land on the bo
   );
 });
 
+// ── R49 first-turn v2 (2026-08-20) ───────────────────────────────────────
+// Rule 15 and the anchor-calibration paragraph BOTH tell the brain the board
+// may "sit bare through the opening sentences". True mid-lesson, ruinous on
+// turn 1: embed-1787073582144 (marketing demo) bounced at 37s having watched
+// an empty board for 15.5s, and portal-2d53e403 went 22.6s before its first
+// paint and had to be ASKED to use the board. The carve-out withdraws that
+// licence for the opener only, and is flag-gated so the default prompt is
+// byte-identical.
+test('first-turn v2 OFF: prompt is byte-identical to a context without the field', () => {
+  assert.equal(buildSystemPrompt({ ...baseCtx, firstTurnV2: false }), prompt);
+  assert.equal(buildSystemPrompt({ ...baseCtx }), prompt);
+});
+
+test('first-turn v2 ON: adds an opening-turn exception to the bare-board licence', () => {
+  const p2 = buildSystemPrompt({ ...baseCtx, firstTurnV2: true });
+  assert.notEqual(p2, prompt, 'flag must change the prompt');
+  assert.match(p2, /FIRST turn of the session is the one exception/i);
+});
+
+test('first-turn v2 ON: names the concrete requirement — a visual inside the opening turn', () => {
+  const p2 = buildSystemPrompt({ ...baseCtx, firstTurnV2: true });
+  assert.match(p2, /empty board/i);
+  assert.match(p2, /first two sentences/i);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

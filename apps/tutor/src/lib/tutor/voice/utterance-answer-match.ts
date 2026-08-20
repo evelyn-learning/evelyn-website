@@ -12,6 +12,7 @@
 // components (VoiceTutorRealtime, perception-classifier); problem-generator
 // is server-only (mongoose) and crashed the browser bundle (2026-08-10).
 import { resolveMcqLetter, extractAnswerNumber } from '@/lib/tutor/voice/answer-primitives';
+import { spokenMoneyMatches } from '@/lib/tutor/voice/spoken-money';
 
 export type AnswerMatchVerdict = 'agree' | 'disagree' | 'unknown';
 export interface AnswerMatchResult { verdict: AnswerMatchVerdict; reason: string }
@@ -260,10 +261,17 @@ export function normalizeSpokenMath(utterance: string): string {
   return t.trim();
 }
 
+/** R49 (2026-08-20) caller-supplied context. `monetary` is set ONLY by a
+ *  caller that has seen currency markers in the live problem (see
+ *  looksMonetary) AND has the TUTOR_SPOKEN_MONEY flag on — this module
+ *  stays free of env reads, matching the rest of its pure surface. */
+export interface AnswerMatchOpts { monetary?: boolean }
+
 export function matchUtteranceToAnswer(
   utterance: string,
   expected: string,
-  choices?: Array<{ letter: string; text: string }>
+  choices?: Array<{ letter: string; text: string }>,
+  opts?: AnswerMatchOpts,
 ): AnswerMatchResult {
   const uRaw = normalizeSpokenMath(utterance), e = (expected ?? '').trim();
   if (!uRaw || !e) return { verdict: 'unknown', reason: 'empty side' };
@@ -322,6 +330,17 @@ export function matchUtteranceToAnswer(
     // '6.999'/'7.001' vs '7' (diff .001) agree.
     const eitherPlainInteger = isPlainIntegerLiteral(cu) || isPlainIntegerLiteral(ce);
     const agrees = eitherPlainInteger ? Math.abs(nu - ne) <= 0.01 : withinTolerance(nu, ne);
+    // R49: money spoken aloud loses its decimal point ("three seventy-five"
+    // → "375"), so a correct answer reaches this branch as an integer 100×
+    // the expected value and the epsilon rejects it. Reconcile ONLY in
+    // caller-confirmed monetary context — see spoken-money.ts for why the
+    // gate is this tight (the same digits are also the classic
+    // misplaced-decimal error, and praising THAT is worse than the denial).
+    if (!agrees && spokenMoneyMatches({
+      enabled: true, monetary: opts?.monetary === true, utterance: u, expected: e,
+    })) {
+      return { verdict: 'agree', reason: `money ${nu} = ${ne} in cents` };
+    }
     return agrees
       ? { verdict: 'agree', reason: eitherPlainInteger ? `integer ${nu}≈${ne}` : `numeric ${nu}≈${ne}` }
       : { verdict: 'disagree', reason: eitherPlainInteger ? `integer ${nu}≠${ne}` : `numeric ${nu}≠${ne}` };

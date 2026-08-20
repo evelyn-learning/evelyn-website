@@ -154,7 +154,8 @@ import {
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
 import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/tutor/whiteboard/conic-construction';
-import { flushableCount } from '@/lib/tutor/whiteboard/render-sync';
+import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
+import { shouldAbortStalledBrain } from '@/lib/tutor/voice/brain-stall';
 import type { InteractionType } from '@/hooks/useDemoTracking';
 
 import {
@@ -172,6 +173,10 @@ import {
   TUTOR_BOARD_ANCHOR_ASSIST,
   TUTOR_RESUME_FROM_CLAUSE,
   TUTOR_PEDAGOGY_OPENER,
+  TUTOR_FIRST_TURN_V2,
+  TUTOR_BRAIN_STALL_GUARD,
+  TUTOR_SPOKEN_MONEY,
+  TUTOR_DOCK_STATE_ONLY,
   TUTOR_AGENDA_RAIL,
   TUTOR_VALIDATE_BEFORE_SPEAK,
   TUTOR_KEEP_VALIDATED_ON_KILL,
@@ -1487,6 +1492,10 @@ export function VoiceTutorRealtime({
   // + task-B3-brief.md.
   const openingTurnPendingRef = useRef(false);
   const openingTurnValidRenderCountRef = useRef(0);
+  // R49 first-turn v2: renders already DISPATCHED this turn (bypassed or
+  // flushed). Feeds shouldBypassRenderSync so only the opening turn's FIRST
+  // render skips the sync buffer. Reset with the other per-turn render state.
+  const rendersDispatchedThisTurnRef = useRef(0);
   // Per-turn opening directive (flag-ON follow-up #1 from the whole-branch
   // review): the B4 opener clause used to be baked into the SESSION-STATIC
   // system prompt (a byte-stable 1h-cached prefix — see runBrainTurn's
@@ -3774,6 +3783,11 @@ export function VoiceTutorRealtime({
       }
     } catch { /* pacing is a hint, never a failure */ }
     for (const entry of ready) onWhiteboardCommand(entry.processed);
+    // R49: keep the per-turn dispatch count honest on the normal flush path
+    // too, so the opening bypass fires for the FIRST render only whichever
+    // way that first render happened to reach the board.
+    rendersDispatchedThisTurnRef.current += ready.reduce(
+      (n, e) => n + e.processed.filter(isBoardRenderCommand).length, 0);
     if (onDebugEvent) {
       const flushedIds = ready.flatMap((e) =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -3925,6 +3939,32 @@ export function VoiceTutorRealtime({
     }
     if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
       onWhiteboardCommand(processed);
+      rendersDispatchedThisTurnRef.current += processed.filter(isBoardRenderCommand).length;
+      return;
+    }
+    // R49 first-turn v2: the OPENING turn's first render skips the sync
+    // buffer. Rule 15 licenses the brain to park a render beside a later
+    // sentence "even if the board sits bare through the opening sentences",
+    // and the buffer faithfully holds it there — which at session start
+    // means the student watches an EMPTY board while a voice talks
+    // (15.5s in embed-1787073582144, 22.6s in portal-2d53e403; the first
+    // bounced at 37s, the second asked the tutor to use the board). Only
+    // the first render bypasses — everything after it keeps full anchor
+    // semantics, so a multi-card opener still lands in step once the board
+    // has proved it is alive. A repair frame (anchorOverride) is a
+    // post-turn artifact and never the opener's first paint.
+    if (
+      anchorOverride === undefined
+      && shouldBypassRenderSync({
+        enabled: TUTOR_FIRST_TURN_V2,
+        isOpeningTurn: openingTurnPendingRef.current,
+        rendersDispatchedThisTurn: rendersDispatchedThisTurnRef.current,
+      })
+      && processed.some(isBoardRenderCommand)
+    ) {
+      onWhiteboardCommand(processed);
+      rendersDispatchedThisTurnRef.current += processed.filter(isBoardRenderCommand).length;
+      onDebugEvent?.('render_sync_opening_bypass', `${processed.length} command(s) painted without waiting for an anchor`);
       return;
     }
     // A Rule-8 repair frame carries its own introducing-sentence number
@@ -8536,6 +8576,7 @@ export function VoiceTutorRealtime({
     renderSyncActiveRef.current = true;
     // Board-anchor re-anchoring: fresh per-turn narration.
     turnNarrationRef.current = [];
+    rendersDispatchedThisTurnRef.current = 0;
     // Task B3 (flag-gated): fresh per-turn valid-render counter for the
     // opener-fallback check. openingTurnPendingRef itself is NOT reset here
     // (it's a one-shot "is this the opener turn" flag seeded once at mount
@@ -8568,6 +8609,31 @@ export function VoiceTutorRealtime({
     // declared inside `try { }` is scoped to that block and invisible
     // from `catch { }` in JS/TS, even though both are one logical turn.
     let audibleSentenceCount = 0;
+    // R49 brain-stall guard. Per-call, declared beside audibleSentenceCount
+    // and for the same reason: the catch below has to read it, and a `let`
+    // inside the try is invisible from there. `stalled` is what separates a
+    // TIMEOUT abort from a perception barge-in abort — without it the catch
+    // would classify our own abort as a student interruption and go silent,
+    // which is precisely the failure this guard exists to end.
+    const stallState = { lastFrameAt: Date.now(), spokeAnySentence: false, stalled: false };
+    const stallPoll = TUTOR_BRAIN_STALL_GUARD
+      ? setInterval(() => {
+          const inFlight = inFlightBrainAbortRef.current;
+          if (shouldAbortStalledBrain({
+            enabled: true,
+            msSinceLastFrame: Date.now() - stallState.lastFrameAt,
+            spokeAnySentence: stallState.spokeAnySentence,
+            alreadyAborted: inFlight?.signal.aborted ?? true,
+          })) {
+            stallState.stalled = true;
+            onDebugEvent?.(
+              'brain_stall_abort',
+              `no SSE frame for ${Date.now() - stallState.lastFrameAt}ms (spoke=${stallState.spokeAnySentence})`,
+            );
+            try { inFlight?.abort(); } catch { /* already gone */ }
+          }
+        }, 2000)
+      : null;
     try {
       // Make sure the student turn is in transcriptRef so subsequent turns
       // see it as conversation history. In voice mode the hook's
@@ -9710,6 +9776,9 @@ export function VoiceTutorRealtime({
           const scriptId = pushTtsScriptForPerception(s);
           speakTextRef.current?.(s, scriptId);
           audibleSentenceCount++;
+          // R49: audio is playing now — widen the stall window so a slow
+          // tail is never cut out from under a turn the student is hearing.
+          stallState.spokeAnySentence = true;
           // Always recorded (was gated behind TUTOR_BOARD_ANCHOR_ASSIST):
           // the anchor assists read only the last element, and rule-8 v2's
           // client repair needs the full spoken-sentence list at turn end.
@@ -10121,6 +10190,8 @@ export function VoiceTutorRealtime({
           while (true) {
             await tryForceKill();
             const { done, value } = await reader.read();
+            // R49: any frame — even a keepalive — proves the stream is alive.
+            stallState.lastFrameAt = Date.now();
             if (done) break;
             buf += decoder.decode(value, { stream: true });
             let idx;
@@ -10506,6 +10577,14 @@ export function VoiceTutorRealtime({
                       verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
                       unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
                       choices: mcqChoices,
+                      // R49: currency context for the spoken-money
+                      // reconciliation. Sourced from the LIVE problem
+                      // statement (the board carried "$10.50 - $6.75" while
+                      // the expected answer was the bare "3.75"), so the
+                      // expected answer alone would never have shown it.
+                      spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
+                      problemContext: currentProblemRef.current?.statement
+                        ?? pendingEq?.latex,
                     });
                     if (inv.verdict === 'false_denial') {
                       const reason = pendingEq && !currentProblemRef.current?.expectedAnswer
@@ -13911,9 +13990,14 @@ export function VoiceTutorRealtime({
       // 'aborted'. Treat both as silent — the perception layer will
       // re-fire (restore or merge) once the verdict lands; the user
       // shouldn't hear "lost my train of thought" mid-thinking.
+      // R49: our OWN stall abort is shaped exactly like a perception abort.
+      // Excluding it here routes a wedged stream into the brain-failure
+      // branch below, so the student hears the honest cover line instead of
+      // the silence the perception path deliberately keeps.
       const isAbort =
-        (err instanceof DOMException && err.name === 'AbortError') ||
-        (err instanceof Error && /abort/i.test(err.message));
+        !stallState.stalled && (
+          (err instanceof DOMException && err.name === 'AbortError') ||
+          (err instanceof Error && /abort/i.test(err.message)));
       if (isAbort) {
         brainTurnAbortedRef.current = true;
         console.log('[brain-orchestrator] aborted (perception-initiated cancel)');
@@ -13972,6 +14056,7 @@ export function VoiceTutorRealtime({
         setStreamingEntryActive(false);
       }
     } finally {
+      if (stallPoll) clearInterval(stallPoll);
       // R48 Task 3 — CATCH-ALL RELEASE. Disarm first (any later out-of-turn
       // dispatch must emit immediately, not hold with nobody left to release
       // it), then drain. On the happy path this is a no-op: the post-credit
@@ -17998,7 +18083,7 @@ export function VoiceTutorRealtime({
             openingDirectiveRef.current = baseDirective;
             teacherIntroDirectiveRef.current =
               teacherPersona && baseDirective && shouldIntroduceTeacher(beh.journey)
-                ? renderTeacherIntroDirective(teacherPersona)
+                ? renderTeacherIntroDirective(teacherPersona, { firstTurnV2: TUTOR_FIRST_TURN_V2 })
                 : null;
             // Mid-session style salience: seed the session-static
             // <teacher_style> body under the same one-shot latch.
@@ -18023,6 +18108,9 @@ export function VoiceTutorRealtime({
           level,
           studentPreferences,
           realtimeV2: useRealtimeV2,
+          // R49: withdraw the bare-board licence for the OPENING turn only.
+          // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
+          ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
           ...openerFields,
         });
 
@@ -18215,6 +18303,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       hasResumeState: !!resumeState,
       realtimeState: realtime.state,
       isConnected: realtime.isConnected,
+      dockStateOnly: TUTOR_DOCK_STATE_ONLY,
     });
     onDebugEvent?.(
       'start_tap',
@@ -19060,6 +19149,29 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           {/* Main mic button — the HERO control. The island dock keeps it
               compact (R1 slim bar, 2026-07-14) — the color/pulse carries the
               state, not the size. */}
+          {/* R49: once the session is running this is a STATE INDICATOR, not
+              a control (TUTOR_DOCK_STATE_ONLY). It must not LOOK pressable
+              either — the hover/active scale is what sold it as a button to
+              the student who tapped it twice and left. aria-hidden + no
+              tabIndex keeps it out of the tab order; the caption beside it
+              and the End/Pause + Mute controls carry the real affordances.
+              Pre-start it is still the start button, unchanged. */}
+          {TUTOR_DOCK_STATE_ONLY && hasStarted ? (
+            <div
+              aria-hidden
+              data-testid="tutor-mic-state"
+              className={`
+                relative rounded-full text-white flex-shrink-0
+                transition-all duration-200 flex items-center justify-center
+                ${isIsland ? 'w-10 h-10 shadow-md' : 'w-12 h-12'}
+                ${stateUI.color}
+                ${stateUI.pulse ? 'animate-pulse' : ''}
+              `}
+              title={stateUI.text}
+            >
+              {stateUI.icon}
+            </div>
+          ) : (
           <button
             onClick={handleMicClick}
             disabled={isDisabled}
@@ -19076,6 +19188,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           >
             {stateUI.icon}
           </button>
+          )}
 
           {/* R34 T4: Manual mic send affordance — a companion button beside
               the mic rather than rewiring the mic's own state machine (the

@@ -9,7 +9,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { flushableCount, type RenderSyncEntry } from '../src/lib/tutor/whiteboard/render-sync';
+import { flushableCount, shouldBypassRenderSync, type RenderSyncEntry } from '../src/lib/tutor/whiteboard/render-sync';
 
 let passed = 0;
 let failed = 0;
@@ -217,6 +217,27 @@ function main() {
   test('word anchor: FIFO prefix — word-ready front releases, later sentence-anchored entry still blocked', () => {
     const b: RenderSyncEntry[] = [{ anchorM: 2, anchorWord: 4 }, { anchorM: 3 }];
     assert.equal(flushableCount(b, 2, { wordPos: { sentenceIdx: 2, wordIdx: 4 } }), 1, 'front via word (mid-introducer); second needs count≥4');
+  });
+
+  // ── R49 opening-turn bypass (2026-08-20) ──────────────────────────────
+  // Rule 15 tells the brain to emit a render beside its introducing
+  // sentence "even if the board sits bare through the opening sentences",
+  // and render-sync then honours that anchor. Correct mid-lesson; on the
+  // OPENING turn it guarantees a blank board while the tutor talks —
+  // measured 15.5s (embed-1787073582144) and 22.6s (portal-2d53e403) from
+  // Start tap to first paint. The bypass releases the opening turn's FIRST
+  // render immediately and leaves every later render on normal semantics.
+  test('opening bypass: first render of the opening turn goes straight through', () => {
+    assert.equal(shouldBypassRenderSync({ enabled: true, isOpeningTurn: true, rendersDispatchedThisTurn: 0 }), true);
+  });
+  test('opening bypass: only the FIRST render — the second is buffered normally', () => {
+    assert.equal(shouldBypassRenderSync({ enabled: true, isOpeningTurn: true, rendersDispatchedThisTurn: 1 }), false);
+  });
+  test('opening bypass: never applies after the opening turn', () => {
+    assert.equal(shouldBypassRenderSync({ enabled: true, isOpeningTurn: false, rendersDispatchedThisTurn: 0 }), false);
+  });
+  test('opening bypass: flag off ⇒ always false (byte-identical pre-R49 behaviour)', () => {
+    assert.equal(shouldBypassRenderSync({ enabled: false, isOpeningTurn: true, rendersDispatchedThisTurn: 0 }), false);
   });
 
   console.log(`\n${passed} passed, ${failed} failed`);

@@ -104,6 +104,55 @@ export const TUTOR_AGENDA_RAIL = process.env.NEXT_PUBLIC_TUTOR_AGENDA_RAIL !== '
 // EXACTLY as before — no new fields, byte-identical prompt. See
 // project_tutor_pedagogy_opener_calibration + .superpowers/sdd/task-B2-brief.md.
 export const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER);
+// R49 first-turn group (2026-08-20). One flag over every fix aimed at the
+// first ~20 seconds of a session, because a half-applied version can't be
+// judged: (1) the teacher intro directive gains a FLOOR so the opener is
+// never a bare "Elena here." (renderTeacherIntroDirective firstTurnV2);
+// (2) the opening turn's FIRST board render flushes immediately instead of
+// waiting for its anchor sentence, so the board is never blank while the
+// tutor talks; (3) the Rule-15 "board may sit bare through the opening
+// sentences" licence is withdrawn for the opener only.
+// Diagnosed from embed-1787073582144 (marketing demo, bounced at 37s with
+// the board still empty) and portal-2d53e403 (22.6s from Start tap to the
+// first painted render). Default OFF. See the R49 entry in the live-test
+// ledger.
+export const TUTOR_FIRST_TURN_V2 =
+  process.env.NEXT_PUBLIC_TUTOR_FIRST_TURN_V2 === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_FIRST_TURN_V2 === 'true';
+// R49 brain-stall guard (2026-08-20, session portal-2d53e403). The brain
+// fetch has NO request or stream timeout — its AbortController exists only
+// for perception barge-in — so a wedged upstream stream simply hangs. One
+// ran 125s; the student sat through 78s of silence, answering twice into
+// the void, before the 90s brain watchdog requeued them. This watches SSE
+// frame arrival and aborts a stalled call early enough that the existing
+// brain-failure cover speaks instead of nothing. Pure decision in
+// src/lib/tutor/voice/brain-stall.ts (test:brain-stall). Default OFF.
+export const TUTOR_BRAIN_STALL_GUARD =
+  process.env.NEXT_PUBLIC_TUTOR_BRAIN_STALL_GUARD === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_BRAIN_STALL_GUARD === 'true';
+// R49 spoken-money reconciliation (2026-08-20, session portal-2d53e403).
+// Money read aloud loses its decimal point — "three seventy-five" reaches
+// the comparator as "375" against an expected 3.75, so a CORRECT answer
+// registers as a mismatch and the tutor denied it, then derived the same
+// 3.75 itself 115s later. Narrowly gated on currency markers in the live
+// problem; see src/lib/tutor/voice/spoken-money.ts for why (the same digits
+// are also the classic misplaced-decimal error). test:spoken-money.
+// Default OFF.
+export const TUTOR_SPOKEN_MONEY =
+  process.env.NEXT_PUBLIC_TUTOR_SPOKEN_MONEY === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_SPOKEN_MONEY === 'true';
+// R49 dock-state-only (2026-08-20, user decision). Post-start the dock mic
+// becomes a pure state indicator: no interrupt-on-tap, no stop-listening.
+// End/Pause owns the session, Mute owns the mic, speech owns barge-in. The
+// control's own label has been unreachable since the July-2026 caption
+// merge (captionSlot replaces the stateUI text block), leaving an
+// unlabelled green circle that kills audio — tapped twice by the visitor
+// who then abandoned embed-1787073582144 at 37s. Pre-start behaviour is
+// untouched. Pure decision in session/start-tap.ts (test:start-tap).
+// Default OFF.
+export const TUTOR_DOCK_STATE_ONLY =
+  process.env.NEXT_PUBLIC_TUTOR_DOCK_STATE_ONLY === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_DOCK_STATE_ONLY === 'true';
 // A command that paints teaching content on the board (vs meta nav like
 // newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
 // tell whether the brain drew anything this turn.

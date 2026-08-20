@@ -132,3 +132,39 @@ export function flushableCount(
   }
   return n;
 }
+
+/** Inputs to the R49 opening-turn bypass decision. */
+export interface OpeningBypassOpts {
+  /** TUTOR_FIRST_TURN_V2. False ⇒ this decision is always false and the
+   *  buffer behaves exactly as it did before R49. */
+  enabled: boolean;
+  /** Is the turn being buffered the session's proactive opener? */
+  isOpeningTurn: boolean;
+  /** Renders already dispatched (bypassed OR flushed) during THIS turn. */
+  rendersDispatchedThisTurn: number;
+}
+
+/**
+ * Should this render skip the sync buffer and paint immediately?
+ *
+ * Only ever true for the FIRST render of the OPENING turn. Rationale: the
+ * anchor discipline exists so a visual never beats the sentence that
+ * introduces it — a mid-lesson concern, where the board already holds
+ * context and a premature pop is the only failure mode. At session start
+ * the board is EMPTY and the failure mode inverts: the student hears a
+ * voice over a blank screen for as long as it takes the narration to reach
+ * the anchor sentence (15.5s in embed-1787073582144, 22.6s in
+ * portal-2d53e403 — both bounced or asked for the board). Painting the
+ * opener's first visual early costs a few seconds of "shown before
+ * described"; painting it late costs the student's belief that anything is
+ * there at all.
+ *
+ * Deliberately scoped to ONE render: the rest of the opening turn keeps
+ * full sync semantics, so a multi-card opener still lands in step after
+ * the first card has proved the board is alive.
+ */
+export function shouldBypassRenderSync(opts: OpeningBypassOpts): boolean {
+  if (!opts.enabled) return false;
+  if (!opts.isOpeningTurn) return false;
+  return opts.rendersDispatchedThisTurn === 0;
+}

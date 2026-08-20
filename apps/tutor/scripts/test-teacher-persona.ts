@@ -155,6 +155,39 @@ function main() {
     assert.ok(!d.includes(FULL_PERSONA.intro), 'persona intro text must not be embedded');
   });
 
+  // ── R49 first-turn v2 (2026-08-20, embed-1787073582144 + user report) ──
+  // The v1 directive said "one warm greeting sentence, just your first name"
+  // against FIVE no-biography prohibitions. The brain took the safe minimum
+  // and opened with "Elena here." — a ~0.8s TTS chunk landing after ~6-8s of
+  // connect silence, whose leading phoneme the first audio chunk clips
+  // ("ena here"). v2 keeps every biography ban but replaces the brevity
+  // ceiling with a FLOOR: name + what today is for, in one breath.
+  test('intro directive v2: demands the first sentence carry the session subject, not just a name', () => {
+    const d = renderTeacherIntroDirective(FULL_PERSONA, { firstTurnV2: true });
+    assert.match(d, /same breath/i, 'v2 fuses the name with what today is about');
+    assert.match(d, /what today is about/i);
+  });
+
+  test('intro directive v2: explicitly bans the bare two-word greeting', () => {
+    const d = renderTeacherIntroDirective(FULL_PERSONA, { firstTurnV2: true });
+    assert.match(d, /Test here\./, 'names the exact failing shape with the real first name');
+    assert.match(d, /too thin/i);
+  });
+
+  test('intro directive v2: keeps every v1 biography ban', () => {
+    const d = renderTeacherIntroDirective(FULL_PERSONA, { firstTurnV2: true });
+    assert.match(d, /NO biography/i);
+    assert.match(d, /personal props, anecdotes/);
+    assert.match(d, /a hello, not a resume/);
+    assert.ok(!d.includes(FULL_PERSONA.intro), 'persona intro text must not be embedded');
+  });
+
+  test('intro directive: v1 is byte-identical when the flag is off (no opts, or false)', () => {
+    const v1 = renderTeacherIntroDirective(FULL_PERSONA);
+    assert.equal(renderTeacherIntroDirective(FULL_PERSONA, { firstTurnV2: false }), v1);
+    assert.notEqual(renderTeacherIntroDirective(FULL_PERSONA, { firstTurnV2: true }), v1);
+  });
+
   // ── renderTeacherStyleReminder (mid-session style salience, 2026-07-04) ──
   // The per-turn <teacher_style> body: audible markers only (pace, ≤2
   // catchphrases, ≤3 analogy domains) + the audibility line. Judge kept

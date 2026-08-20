@@ -145,6 +145,59 @@ check(
   'ignore',
 );
 
+// ── R49 dock-state-only (2026-08-20, user decision) ─────────────────────
+// The dock mic is a five-way control whose label was orphaned in July 2026:
+// TutorSession passes captionSlot, and the caption REPLACES the stateUI text
+// block, so "Tutor speaking / Click to interrupt" has been unreachable in the
+// shipped layout ever since. What remains is an unlabelled green pulsing
+// circle that kills the tutor's audio. In embed-1787073582144 a first-time
+// visitor tapped it twice during the opening turn and left at 37s.
+// Decision: post-start the dock becomes a pure state indicator. End/Pause
+// owns the session, Mute owns the mic, and speech owns barge-in. The opening
+// turn becomes uninterruptible, which is deliberate — opening-turn voice
+// barge-in is already suppressed (perception_cancel_suppressed_opening), and
+// a noisy room cutting the intro is a worse outcome than not cutting it.
+check(
+  'dock-state-only: a tap during speaking no longer interrupts',
+  resolveStartTap({ hasStarted: true, hasResumeState: false, realtimeState: 'speaking', isConnected: true, dockStateOnly: true }),
+  'none',
+);
+check(
+  'dock-state-only: a tap during listening no longer stops the mic (Mute owns that)',
+  resolveStartTap({ hasStarted: true, hasResumeState: false, realtimeState: 'listening', isConnected: true, dockStateOnly: true }),
+  'none',
+);
+check(
+  'dock-state-only: the in-session default is inert too',
+  resolveStartTap({ hasStarted: true, hasResumeState: false, realtimeState: 'connected', isConnected: true, dockStateOnly: true }),
+  'none',
+);
+check(
+  'dock-state-only: PRE-start is untouched — the tap must still start the session',
+  resolveStartTap({ hasStarted: false, hasResumeState: false, realtimeState: 'connected', isConnected: true, dockStateOnly: true }),
+  'start',
+);
+check(
+  'dock-state-only: a queued pre-start tap is untouched',
+  resolveStartTap({ hasStarted: false, hasResumeState: false, realtimeState: 'connecting', isConnected: false, dockStateOnly: true }),
+  'queue-start',
+);
+check(
+  'dock-state-only: resume is untouched — the first tap must still continue the lesson',
+  resolveStartTap({ hasStarted: false, hasResumeState: true, realtimeState: 'connected', isConnected: true, dockStateOnly: true }),
+  'resume-continue',
+);
+check(
+  'flag off: speaking still interrupts (byte-identical pre-R49 behaviour)',
+  resolveStartTap({ hasStarted: true, hasResumeState: false, realtimeState: 'speaking', isConnected: true }),
+  'interrupt',
+);
+check(
+  'flag off: listening still stops listening',
+  resolveStartTap({ hasStarted: true, hasResumeState: false, realtimeState: 'listening', isConnected: true }),
+  'stop-listening',
+);
+
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);
   process.exit(1);

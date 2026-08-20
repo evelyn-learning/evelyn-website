@@ -144,6 +144,11 @@ export interface SystemPromptContext {
   sessionMode?: 'demo' | 'subscribed';
   /** True on the turn that opens the session — gates buildOpenerClause. */
   openingPhase?: boolean;
+  /** R49 first-turn v2 (2026-08-20), gated by NEXT_PUBLIC_TUTOR_FIRST_TURN_V2.
+   *  Appends the opening-turn carve-out to the Rule-15 / anchor-calibration
+   *  "the board may sit bare through the opening sentences" licence. Absent
+   *  or false ⇒ prompt byte-identical to pre-R49. */
+  firstTurnV2?: boolean;
   /** How the session started: a UI button press, the student typing a
    *  real question/statement first, or the student typing just a bare
    *  greeting ('hi'). */
@@ -1853,6 +1858,20 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // Session-static, so it stays cache-safe in the prompt prefix.
   if (context.teacherPersona) {
     prompt += `\n\n## Teacher Identity\n${renderTeacherPersonaBlock(context.teacherPersona)}\n`;
+  }
+
+  // R49 first-turn v2 — the one carve-out from the bare-board licence.
+  // Rule 15 and the anchor-calibration paragraph both tell you a render
+  // belongs beside its introducing sentence "even if the board sits bare
+  // through the opening sentences". That is right mid-lesson, where the
+  // board already carries context and the only failure is a visual landing
+  // before its narration. At session START the board is EMPTY and the
+  // failure inverts: two live sessions (embed-1787073582144,
+  // portal-2d53e403) spent 15.5s and 22.6s talking at a blank screen — one
+  // student left, the other asked the tutor to please use the board.
+  // Additive + gated, so an absent flag keeps the prompt byte-identical.
+  if (context.firstTurnV2) {
+    prompt += `\n\n**The FIRST turn of the session is the one exception to the bare-board rule.** Everywhere else, a render waits for the sentence that introduces it — including through your opening sentences. Not on turn one. The student is looking at an empty board and deciding whether anything is really happening here, and a voice talking over nothing reads as a recording, not a teacher. So on your FIRST turn get ONE visual up inside the first two sentences — the problem, the scenario, the object you are about to talk about — and structure the turn so that visual has a sentence to sit beside that early. Do not save it for the sentence where it would naturally land. Every render AFTER that first one goes back to normal anchor discipline for the rest of the session.\n`;
   }
 
   return prompt;

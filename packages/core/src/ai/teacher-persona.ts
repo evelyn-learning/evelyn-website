@@ -581,11 +581,37 @@ export function renderTeacherPersonaBlock(t: TeacherPersonaWire): string {
  * ONE vivid human detail, credentials explicitly off the table. Generic
  * across personas — no teacher-specific wording here.
  */
-export function renderTeacherIntroDirective(t: TeacherPersonaWire): string {
+export interface TeacherIntroDirectiveOptions {
+  /** R49 first-turn v2 (2026-08-20). Gated by NEXT_PUBLIC_TUTOR_FIRST_TURN_V2
+   *  at the VoiceTutorRealtime call site; absent/false ⇒ the v1 string,
+   *  byte-identical. See the v2 rationale on the branch below. */
+  firstTurnV2?: boolean;
+}
+
+export function renderTeacherIntroDirective(
+  t: TeacherPersonaWire,
+  opts?: TeacherIntroDirectiveOptions,
+): string {
   const first = teacherFirstName(t.name);
+  // v1 (2026-07-09): "one warm greeting sentence, just your first name" set a
+  // brevity CEILING and stacked five prohibitions against it. The brain
+  // rationally took the shortest legal sentence — "Elena here." — which the
+  // sentence-by-sentence TTS renders as a ~0.8s chunk arriving after ~6-8s of
+  // connect silence, with its leading phoneme clipped by the session's first
+  // audio ramp ("ena here", low and flat). Live reports called the result
+  // indistinguishable from a startup noise. v2 keeps every biography ban
+  // verbatim and swaps the ceiling for a FLOOR: the name never travels alone.
+  const openingSpec = opts?.firstTurnV2
+    ? `Introduce yourself simply as ${first} in your first turn — your first name AND, in the same ` +
+      `breath, what today is about (one warm sentence; no honorific, no surname). Your first sentence ` +
+      `must never be a bare greeting: "${first} here." or "I'm ${first}." on its own is too thin to ` +
+      `land — the student has just sat through several seconds of silence, and a two-word opener reads ` +
+      `as a glitch rather than a teacher. Give them the name and the subject together. `
+    : `Introduce yourself simply as ${first} in your first turn — one warm greeting sentence, just your ` +
+      `first name (no honorific, no surname). `;
   return (
-    `Introduce yourself simply as ${first} in your first turn — one warm greeting sentence, just your ` +
-    `first name (no honorific, no surname). NO biography of any kind: no credentials, years of ` +
+    openingSpec +
+    `NO biography of any kind: no credentials, years of ` +
     `experience, subject lists, personal props, anecdotes, or history — it's a hello, not a resume. ` +
     `Your personality shows through HOW you teach, not through facts about yourself. Then get into the opener.`
   );
