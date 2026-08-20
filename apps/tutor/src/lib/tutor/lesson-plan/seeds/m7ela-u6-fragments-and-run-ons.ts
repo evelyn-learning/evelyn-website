@@ -7,8 +7,8 @@
  * and the belief that sentence LENGTH is what makes a run-on.
  *
  * NOTE FOR FUTURE AUTHORS: every ungrammatical example in this file is
- * explicitly labelled WRONG, with the CORRECT version beside it. A tutor
- * reads these aloud, and an unlabelled fragment would be presented to the
+ * explicitly labeled WRONG, with the CORRECT version beside it. A tutor
+ * reads these aloud, and an unlabeled fragment would be presented to the
  * student as a model sentence. Never write a broken example bare.
  */
 

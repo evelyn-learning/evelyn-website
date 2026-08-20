@@ -1940,8 +1940,46 @@ import { SEED_M7MATH_U10_PROBABILITY_OF_SIMPLE_EVENTS } from './seeds/m7math-u10
 import { SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY } from './seeds/m7math-u10-experimental-vs-theoretical-probability';
 import { SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS } from './seeds/m7math-u10-probability-models-and-simulations';
 import { SEED_M7MATH_U10_COMPOUND_EVENTS } from './seeds/m7math-u10-compound-events';
+import { SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE } from './seeds/m7ela-u1-text-evidence-and-inference';
+import { SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT } from './seeds/m7ela-u1-plot-structure-and-conflict';
 import { SEED_M7ELA_U1_CHARACTERIZATION } from './seeds/m7ela-u1-characterization';
+import { SEED_M7ELA_U1_SETTING_AND_STORY_ELEMENTS } from './seeds/m7ela-u1-setting-and-story-elements';
+import { SEED_M7ELA_U2_THEME_AND_SUMMARY } from './seeds/m7ela-u2-theme-and-summary';
+import { SEED_M7ELA_U2_POINT_OF_VIEW } from './seeds/m7ela-u2-point-of-view';
+import { SEED_M7ELA_U2_FIGURATIVE_LANGUAGE } from './seeds/m7ela-u2-figurative-language';
+import { SEED_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE } from './seeds/m7ela-u2-tone-mood-and-word-choice';
+import { SEED_M7ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS } from './seeds/m7ela-u3-central-idea-and-supporting-details';
+import { SEED_M7ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT } from './seeds/m7ela-u3-summarizing-informational-text';
+import { SEED_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS } from './seeds/m7ela-u3-text-features-and-graphics';
+import { SEED_M7ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY } from './seeds/m7ela-u3-technical-and-domain-vocabulary';
+import { SEED_M7ELA_U4_TEXT_STRUCTURE } from './seeds/m7ela-u4-text-structure';
+import { SEED_M7ELA_U4_AUTHORS_PURPOSE_AND_PERSPECTIVE } from './seeds/m7ela-u4-authors-purpose-and-perspective';
+import { SEED_M7ELA_U4_TRACING_AN_ARGUMENT } from './seeds/m7ela-u4-tracing-an-argument';
+import { SEED_M7ELA_U4_COMPARING_TWO_TEXTS } from './seeds/m7ela-u4-comparing-two-texts';
+import { SEED_M7ELA_U5_PARTS_OF_SPEECH } from './seeds/m7ela-u5-parts-of-speech';
+import { SEED_M7ELA_U5_SUBJECT_VERB_AGREEMENT } from './seeds/m7ela-u5-subject-verb-agreement';
+import { SEED_M7ELA_U5_PRONOUNS_AND_ANTECEDENTS } from './seeds/m7ela-u5-pronouns-and-antecedents';
+import { SEED_M7ELA_U5_VERB_TENSE_CONSISTENCY } from './seeds/m7ela-u5-verb-tense-consistency';
+import { SEED_M7ELA_U6_PHRASES_AND_CLAUSES } from './seeds/m7ela-u6-phrases-and-clauses';
+import { SEED_M7ELA_U6_SENTENCE_TYPES_AND_COMBINING } from './seeds/m7ela-u6-sentence-types-and-combining';
 import { SEED_M7ELA_U6_FRAGMENTS_AND_RUN_ONS } from './seeds/m7ela-u6-fragments-and-run-ons';
+import { SEED_M7ELA_U6_COMMAS_AND_END_PUNCTUATION } from './seeds/m7ela-u6-commas-and-end-punctuation';
+import { SEED_M7ELA_U7_CONTEXT_CLUES } from './seeds/m7ela-u7-context-clues';
+import { SEED_M7ELA_U7_ROOTS_PREFIXES_AND_SUFFIXES } from './seeds/m7ela-u7-roots-prefixes-and-suffixes';
+import { SEED_M7ELA_U7_CONNOTATION_AND_DENOTATION } from './seeds/m7ela-u7-connotation-and-denotation';
+import { SEED_M7ELA_U7_COMMONLY_CONFUSED_WORDS } from './seeds/m7ela-u7-commonly-confused-words';
+import { SEED_M7ELA_U8_CLAIMS_AND_REASONS } from './seeds/m7ela-u8-claims-and-reasons';
+import { SEED_M7ELA_U8_EVIDENCE_AND_ELABORATION } from './seeds/m7ela-u8-evidence-and-elaboration';
+import { SEED_M7ELA_U8_COUNTERCLAIMS } from './seeds/m7ela-u8-counterclaims';
+import { SEED_M7ELA_U8_ORGANIZING_AN_ARGUMENT } from './seeds/m7ela-u8-organizing-an-argument';
+import { SEED_M7ELA_U9_INFORMATIVE_THESIS_AND_STRUCTURE } from './seeds/m7ela-u9-informative-thesis-and-structure';
+import { SEED_M7ELA_U9_PARAGRAPH_DEVELOPMENT } from './seeds/m7ela-u9-paragraph-development';
+import { SEED_M7ELA_U9_TRANSITIONS_AND_COHESION } from './seeds/m7ela-u9-transitions-and-cohesion';
+import { SEED_M7ELA_U9_NARRATIVE_TECHNIQUE } from './seeds/m7ela-u9-narrative-technique';
+import { SEED_M7ELA_U10_RESEARCH_QUESTIONS } from './seeds/m7ela-u10-research-questions';
+import { SEED_M7ELA_U10_EVALUATING_SOURCES } from './seeds/m7ela-u10-evaluating-sources';
+import { SEED_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/m7ela-u10-quoting-paraphrasing-summarizing';
+import { SEED_M7ELA_U10_CITING_SOURCES } from './seeds/m7ela-u10-citing-sources';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3805,8 +3843,46 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS,
   SEED_M7MATH_U10_COMPOUND_EVENTS,
   // MS-core — Grade 7 English Language Arts.
+  SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE,
+  SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT,
   SEED_M7ELA_U1_CHARACTERIZATION,
+  SEED_M7ELA_U1_SETTING_AND_STORY_ELEMENTS,
+  SEED_M7ELA_U2_THEME_AND_SUMMARY,
+  SEED_M7ELA_U2_POINT_OF_VIEW,
+  SEED_M7ELA_U2_FIGURATIVE_LANGUAGE,
+  SEED_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE,
+  SEED_M7ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS,
+  SEED_M7ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT,
+  SEED_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS,
+  SEED_M7ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY,
+  SEED_M7ELA_U4_TEXT_STRUCTURE,
+  SEED_M7ELA_U4_AUTHORS_PURPOSE_AND_PERSPECTIVE,
+  SEED_M7ELA_U4_TRACING_AN_ARGUMENT,
+  SEED_M7ELA_U4_COMPARING_TWO_TEXTS,
+  SEED_M7ELA_U5_PARTS_OF_SPEECH,
+  SEED_M7ELA_U5_SUBJECT_VERB_AGREEMENT,
+  SEED_M7ELA_U5_PRONOUNS_AND_ANTECEDENTS,
+  SEED_M7ELA_U5_VERB_TENSE_CONSISTENCY,
+  SEED_M7ELA_U6_PHRASES_AND_CLAUSES,
+  SEED_M7ELA_U6_SENTENCE_TYPES_AND_COMBINING,
   SEED_M7ELA_U6_FRAGMENTS_AND_RUN_ONS,
+  SEED_M7ELA_U6_COMMAS_AND_END_PUNCTUATION,
+  SEED_M7ELA_U7_CONTEXT_CLUES,
+  SEED_M7ELA_U7_ROOTS_PREFIXES_AND_SUFFIXES,
+  SEED_M7ELA_U7_CONNOTATION_AND_DENOTATION,
+  SEED_M7ELA_U7_COMMONLY_CONFUSED_WORDS,
+  SEED_M7ELA_U8_CLAIMS_AND_REASONS,
+  SEED_M7ELA_U8_EVIDENCE_AND_ELABORATION,
+  SEED_M7ELA_U8_COUNTERCLAIMS,
+  SEED_M7ELA_U8_ORGANIZING_AN_ARGUMENT,
+  SEED_M7ELA_U9_INFORMATIVE_THESIS_AND_STRUCTURE,
+  SEED_M7ELA_U9_PARAGRAPH_DEVELOPMENT,
+  SEED_M7ELA_U9_TRANSITIONS_AND_COHESION,
+  SEED_M7ELA_U9_NARRATIVE_TECHNIQUE,
+  SEED_M7ELA_U10_RESEARCH_QUESTIONS,
+  SEED_M7ELA_U10_EVALUATING_SOURCES,
+  SEED_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING,
+  SEED_M7ELA_U10_CITING_SOURCES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

@@ -43,7 +43,7 @@ export const SEED_M7ELA_U1_CHARACTERIZATION: LessonPlan = {
       kind: 'hook',
       goal: 'Show that the student already reads people this way, so the lesson only names a skill they own.',
       script:
-        'Someone walks up to your lunch table and drops into the seat without a word. They do not look up. They push the same chip around the tray for a minute. Nobody had to tell you anything, and already you have a pretty good guess about their day. You did that by reading details. Writers count on it. A good writer almost never says a character is stubborn or kind or scared. Instead they show you a detail and let you do exactly what you just did at that lunch table. Today we name the five moves writers use, and we practise pointing at the exact line that gave the answer away.',
+        'Someone walks up to your lunch table and drops into the seat without a word. They do not look up. They push the same chip around the tray for a minute. Nobody had to tell you anything, and already you have a pretty good guess about their day. You did that by reading details. Writers count on it. A good writer almost never says a character is stubborn or kind or scared. Instead they show you a detail and let you do exactly what you just did at that lunch table. Today we name the five moves writers use, and we practice pointing at the exact line that gave the answer away.',
       estimatedMinutes: 1,
     },
     {
