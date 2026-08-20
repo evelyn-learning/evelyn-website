@@ -16,6 +16,21 @@ const COURSE_SEL = new RegExp(`^evelyn\\.ms\\.(${Object.keys(COURSES).join('|')}
 const ID_PATTERN = /^evelyn\.ms\.([a-z0-9]+)\.[a-z0-9-]+\.v\d+$/;
 const FRQ_MARKERS = /frq|dbq|leq|saq/i;
 
+// Fixed MS lesson shape: 9 segments in this exact order, every time. Guards
+// the template fan-out — a reordered/dropped/duplicated segment breaks the
+// recipe silently otherwise.
+const EXPECTED_SEGMENT_KINDS = [
+  'hook',
+  'concept',
+  'worked_example',
+  'worked_example',
+  'try_yourself',
+  'try_yourself',
+  'try_yourself',
+  'misconception_check',
+  'recap',
+];
+
 const errors: string[] = [];
 const err = (id: string, msg: string) => errors.push(`${id}: ${msg}`);
 
@@ -74,6 +89,32 @@ for (const p of plans) {
 
   if (!p.segments.some((s) => s.kind === 'recap')) err(p.id, 'needs a recap segment');
   if (p.schemaVersion !== 1) err(p.id, 'schemaVersion must be 1');
+
+  // Plan-level time budget: fixed 18-22 minute band for this grade.
+  if (!Number.isInteger(p.estimatedMinutes) || p.estimatedMinutes < 18 || p.estimatedMinutes > 22) {
+    err(p.id, `estimatedMinutes must be an integer 18-22 (has ${p.estimatedMinutes})`);
+  }
+
+  // Segment minutes must sum to (approximately) the plan's estimatedMinutes.
+  // A missing segment estimatedMinutes is its own error, not a silent 0 that
+  // could paper over a bad sum.
+  let segMinutesSum = 0;
+  for (const s of p.segments) {
+    if (typeof s.estimatedMinutes !== 'number') {
+      err(p.id, `${s.id}: segment missing estimatedMinutes`);
+    } else {
+      segMinutesSum += s.estimatedMinutes;
+    }
+  }
+  if (Math.abs(segMinutesSum - p.estimatedMinutes) > 1) {
+    err(p.id, `segment estimatedMinutes sum (${segMinutesSum}) must be within 1 of plan estimatedMinutes (${p.estimatedMinutes})`);
+  }
+
+  // Fixed segment order — see EXPECTED_SEGMENT_KINDS.
+  const kinds = p.segments.map((s) => s.kind);
+  if (JSON.stringify(kinds) !== JSON.stringify(EXPECTED_SEGMENT_KINDS)) {
+    err(p.id, `segment order must be [${EXPECTED_SEGMENT_KINDS.join(', ')}] but got [${kinds.join(', ')}]`);
+  }
 }
 
 // Prerequisite/followUp chain: every reference must resolve to an LO in this
