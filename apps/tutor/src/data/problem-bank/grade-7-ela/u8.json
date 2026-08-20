@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-claims-and-reasons-001",
+    "loId": "m7ela.claims-and-reasons",
+    "cedCode": "M7ELA-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You have been asked to write an argument about bike parking at your school. Which sentence is a claim you could build that argument on?",
+    "choices": [
+      "The bike rack by the side door holds eight bikes.",
+      "Should our school add a second bike rack?",
+      "Our school should add a second bike rack by the side door.",
+      "Bike parking at our school."
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the debatability test on each one. Say the opposite out loud and ask whether a reasonable person could argue it.",
+      "One choice is a checkable fact, one asks instead of answers, and one names the topic without taking any side."
+    ]
+  },
+  {
+    "id": "m7ela-claims-and-reasons-002",
+    "loId": "m7ela.claims-and-reasons",
+    "cedCode": "M7ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence FAILS the debatability test, so it could not be used as a claim?",
+    "choices": [
+      "The school day should start at 8:30 instead of 7:20.",
+      "The school day at our school starts at 7:20 in the morning.",
+      "Students should be allowed to keep water bottles on their desks.",
+      "The town should add lights to the walking path behind the library."
+    ],
+    "answer": "B",
+    "hints": [
+      "Take each sentence and say its opposite out loud. A claim is a sentence whose opposite a reasonable person could argue.",
+      "Three of these take a side you could argue against. One is checkable, so its opposite is simply false and nobody can hold it."
+    ]
+  },
+  {
+    "id": "m7ela-claims-and-reasons-003",
+    "loId": "m7ela.claims-and-reasons",
+    "cedCode": "M7ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"Our school should put a covered bike rack by the side door.\" Which choice is the strongest reason to put under that claim?",
+    "choices": [
+      "Because a covered bike rack is something our school really ought to have.",
+      "Because on Tuesday Jonah's bike seat was soaked when he came out of school.",
+      "Because bike parking is a subject worth thinking about.",
+      "Because bikes left leaning on the fence block the side walkway, so people have to step into the driveway to get past."
+    ],
+    "answer": "D",
+    "hints": [
+      "Read each choice right after the claim, starting with because. A reason has to add ground the claim did not already cover.",
+      "One choice is the claim reworded, one is a single example that belongs lower down as evidence, and one names the topic without giving any why."
+    ]
+  },
+  {
+    "id": "m7ela-claims-and-reasons-004",
+    "loId": "m7ela.claims-and-reasons",
+    "cedCode": "M7ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"Our school should move the seventh-grade lockers from the back hallway to the main hallway.\" The first reason is already written: \"Because the back hallway is a dead end, so students walk past their classrooms and then double back.\" Which choice works as a genuinely distinct second reason?",
+    "choices": [
+      "Because the main hallway has an aide on duty between periods, and the back hallway has nobody watching it.",
+      "Because reaching those lockers means going out of your way and then coming back again.",
+      "Because the back hallway is not the right place for the seventh-grade lockers.",
+      "Because last week I was late to math after stopping at my locker."
+    ],
+    "answer": "A",
+    "hints": [
+      "Run the pillar test against the first reason: could one of them be true while the other is false?",
+      "One choice is the first reason in new words, one only says the claim again, and one is a single example rather than a reason."
+    ]
+  },
+  {
+    "id": "m7ela-claims-and-reasons-005",
+    "loId": "m7ela.claims-and-reasons",
+    "cedCode": "M7ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"Our school should make lunch thirty minutes long instead of twenty.\" Which PAIR of reasons gives the claim two separate pillars rather than one pillar twice?",
+    "choices": [
+      "\"Because twenty minutes is not long enough for lunch\" and \"because students need more than twenty minutes to eat.\"",
+      "\"Because the lunch line takes so long that late-lunch students barely have time to eat\" and \"because the students who go through last get almost no eating time.\"",
+      "\"Because the lunch line takes so long that late-lunch students barely have time to eat\" and \"because the field is a five-minute walk each way, so nobody gets outside during the day.\"",
+      "\"Because students are worn out by the afternoon\" and \"because students do not get enough of a rest during the school day.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Take each pair and ask the pillar question: could one of the two be true while the other is false?",
+      "In three of the pairs the second reason is the first one wearing a different set of words, and in one of those pairs both reasons also just restate the claim."
+    ]
+  },
+  {
+    "id": "m7ela-claims-and-reasons-006",
+    "loId": "m7ela.claims-and-reasons",
+    "cedCode": "M7ELA-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student drafted this: \"Our school should let seventh graders eat lunch in the courtyard on dry days. One reason is that the cafeteria is too crowded to find a seat. Another reason is that there are too many people in the cafeteria at once.\" Which revision best fixes the problem with the second reason?",
+    "choices": [
+      "Another reason is that the cafeteria gets extremely crowded during seventh-grade lunch.",
+      "Another reason is that the courtyard is the only place students could get fresh air during a seven-hour school day.",
+      "Another reason is that eating in the courtyard on dry days would be good for seventh graders.",
+      "Another reason is that on Monday I could not find a seat until the bell had already rung."
+    ],
+    "answer": "B",
+    "hints": [
+      "First name the problem. Read the two reasons back to back and ask whether one could be true while the other is false.",
+      "The second reason is the first one reworded, so the fix has to be a reason that stands somewhere else. One choice is crowding for a third time, one is the claim said again, and one is a single example that belongs under reason one as evidence."
+    ]
+  },
+  {
+    "id": "m7ela-evidence-and-elaboration-001",
+    "loId": "m7ela.evidence-and-elaboration",
+    "cedCode": "M7ELA-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A body paragraph runs the three-part move: reason, evidence, elaboration. What job does the elaboration sentence do?",
+    "choices": [
+      "It explains how the evidence proves the reason it sits under.",
+      "It says the evidence over again in different words so the reader remembers it.",
+      "It adds one more piece of evidence to the paragraph.",
+      "It states the claim again at the end of the paragraph."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about why the sentence exists. Evidence does not speak for itself, so somebody has to say what it means.",
+      "The elaboration is the sentence that connects the fact you pointed at to the reason you are trying to prove."
+    ]
+  },
+  {
+    "id": "m7ela-evidence-and-elaboration-002",
+    "loId": "m7ela.evidence-and-elaboration",
+    "cedCode": "M7ELA-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Reason: \"The vending machine in the gym lobby is out of order more often than it works.\" Which choice is evidence that actually supports THIS reason?",
+    "choices": [
+      "That vending machine is honestly the most annoying thing in our whole school.",
+      "The vending machine sits between the gym doors and the trophy case.",
+      "The gym lobby gets very cold in January when the outside doors are propped open.",
+      "I tried to buy water after practice four times this month, and the machine took my money once and stood dark the other three times."
+    ],
+    "answer": "D",
+    "hints": [
+      "Say the reason out loud, then each choice out loud, and ask whether the choice makes that reason more likely to be true.",
+      "One choice reports a feeling instead of something that happened, and two are true statements about the lobby that say nothing about whether the machine works."
+    ]
+  },
+  {
+    "id": "m7ela-evidence-and-elaboration-003",
+    "loId": "m7ela.evidence-and-elaboration",
+    "cedCode": "M7ELA-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Reason: \"The clock in Room 12 cannot be trusted.\" Evidence: \"On Monday that clock read 1:55 while the hallway clock read 2:10.\" Which sentence best elaborates - which one explains how the evidence proves the reason?",
+    "choices": [
+      "On Monday the clock in Room 12 was fifteen minutes behind the clock in the hallway.",
+      "Fifteen minutes is a whole activity, so a class watching that clock would still be working while the rest of the building was already packing up.",
+      "Room 12 is also the coldest classroom in the building in the winter.",
+      "A new clock would make the room look less shabby, since the case on the old one is cracked."
+    ],
+    "answer": "B",
+    "hints": [
+      "Elaboration tells the reader something the evidence did not already say. Ask of each choice whether it adds a new link or just repeats what you were told.",
+      "One choice says the evidence over again, one brings in a brand-new idea about the temperature, and one argues for a different reason about how the room looks."
+    ]
+  },
+  {
+    "id": "m7ela-evidence-and-elaboration-004",
+    "loId": "m7ela.evidence-and-elaboration",
+    "cedCode": "M7ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this paragraph. \"(1) Our library should stay open for half an hour after the last bell. (2) One reason is that students waiting for the late bus have nowhere quiet to go. (3) The late bus does not pull up until twenty-five minutes after the last bell. (4) The library has twelve tables and a printer.\" Which sentence should be cut, and why?",
+    "choices": [
+      "Sentence 2, because a reason does not belong inside a body paragraph.",
+      "Sentence 3, because a fact about time cannot count as evidence.",
+      "Sentence 4, because it is true but it does not make the reason more likely to be true.",
+      "Sentence 4, because the writer did not count the tables personally."
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the relevance test on each sentence: say the reason, say the sentence, and ask whether it makes that reason more likely to be true.",
+      "The reason is about students having nowhere quiet to wait. One sentence describes the room instead of the need - and evidence does not have to be something you measured yourself to count."
+    ]
+  },
+  {
+    "id": "m7ela-evidence-and-elaboration-005",
+    "loId": "m7ela.evidence-and-elaboration",
+    "cedCode": "M7ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: \"The cafeteria should move the salad bar to the front of the line instead of the back. One reason is that students reach it only after their trays are already full. By the time the salad bar comes up, a student is holding a loaded tray in one hand and a drink in the other.\" Which sentence best finishes the paragraph?",
+    "choices": [
+      "Someone carrying a full tray and a drink has no free hand for the tongs, so the salad bar gets skipped for a reason that has nothing to do with wanting salad.",
+      "Students reach the salad bar at the end of the line with their trays already full.",
+      "The cafeteria also runs out of forks by the time third lunch starts.",
+      "Moving the salad bar would shorten the whole line, because students would spread out along the counter instead of bunching at one end."
+    ],
+    "answer": "A",
+    "hints": [
+      "The paragraph already has a reason and a piece of evidence. What move is missing?",
+      "One choice restates the evidence, one introduces a new idea about forks, and one argues for a different reason about line length."
+    ]
+  },
+  {
+    "id": "m7ela-evidence-and-elaboration-006",
+    "loId": "m7ela.evidence-and-elaboration",
+    "cedCode": "M7ELA-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: \"Our school should add a second water fountain in the gym lobby. One reason is that the single fountain cannot keep up right after gym class. A whole class leaves the gym at once and there is one spout. The gym lobby was repainted last summer.\" Which revision would most improve this paragraph?",
+    "choices": [
+      "Add a second piece of evidence about how long the line at the fountain gets.",
+      "Move the reason to the end of the paragraph so that the paragraph finishes strongly.",
+      "Replace the reason with a stronger statement of the claim.",
+      "Cut the sentence about the repainting, and add a sentence explaining how one spout and a whole class arriving at once leaves students still waiting when the next bell rings."
+    ],
+    "answer": "D",
+    "hints": [
+      "Check the paragraph twice: once for a sentence that fails the relevance test, and once for a missing move.",
+      "Stacking more evidence does not fix a paragraph that never explained the evidence it already has, and the reason belongs first, not last."
+    ]
+  },
+  {
+    "id": "m7ela-counterclaims-001",
+    "loId": "m7ela.counterclaims",
+    "cedCode": "M7ELA-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In an argument, what is a counterclaim?",
+    "choices": [
+      "The writer's own claim, written out again with the word not dropped into it.",
+      "The strongest position someone who disagrees would take, together with the reason they hold it.",
+      "A question the writer asks the reader in the middle of the essay.",
+      "The sentence at the end of the essay that repeats the claim."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what a rebuttal needs in order to have something to answer.",
+      "A counterclaim is a position somebody actually holds, and it arrives carrying its own reason."
+    ]
+  },
+  {
+    "id": "m7ela-counterclaims-002",
+    "loId": "m7ela.counterclaims",
+    "cedCode": "M7ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"Our school should plant a vegetable garden behind the gym.\" Which choice is a real counterclaim?",
+    "choices": [
+      "Some students say the school should not plant a vegetable garden behind the gym.",
+      "Some people say gardening is boring and nobody at our school would even bother with it.",
+      "Some custodians say the garden would sit unwatered through July and August, when nobody is in the building.",
+      "A garden would give science classes a place to run growing experiments outdoors."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask two things of each choice. Does somebody actually hold this position, and does the sentence tell you WHY they hold it?",
+      "One choice is the claim with not dropped in, one shrinks the other side to something silly, and one is a reason for the writer's own side."
+    ]
+  },
+  {
+    "id": "m7ela-counterclaims-003",
+    "loId": "m7ela.counterclaims",
+    "cedCode": "M7ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An essay has already stated this counterclaim: \"It is true that the garden would need watering through July and August, when nobody is in the building.\" Which choice is a real rebuttal?",
+    "choices": [
+      "However, the summer camp that uses the gym meets on that side of the building every weekday in July, and its counselors have offered to add the garden to their morning routine.",
+      "That argument is wrong, and our school should definitely plant a vegetable garden behind the gym.",
+      "Anyone who worries about summer watering must not care whether students ever learn anything outside a classroom.",
+      "That is a fair point, and eight weeks really is a long time for a garden to go without water."
+    ],
+    "answer": "A",
+    "hints": [
+      "A rebuttal has to ADD something: either a reason the objection is wrong, or a reason your side outweighs it.",
+      "One choice denies the objection and then repeats the claim, one attacks the people instead of the point, and one concedes and never turns back."
+    ]
+  },
+  {
+    "id": "m7ela-counterclaims-004",
+    "loId": "m7ela.counterclaims",
+    "cedCode": "M7ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Claim: \"Our school should let students use their phones during study hall.\" Which choice states the opposing view most FAIRLY, in its strongest version?",
+    "choices": [
+      "Some teachers say the school should not let students use their phones during study hall.",
+      "Some teachers just do not like phones very much.",
+      "Some teachers say that students who reach for a phone are lazy and do not want to do any work.",
+      "Some teachers say a phone on the desk pulls a student out of a task every time it lights up, so a forty-minute study hall turns into a string of five-minute starts."
+    ],
+    "answer": "D",
+    "hints": [
+      "The fairest version is the one a teacher would agree they had said. Ask of each choice whether anyone would volunteer to be described that way.",
+      "One choice is the claim flipped to the negative with no reason at all, one shrinks the objection to a matter of taste, and one insults students instead of naming a problem with the plan."
+    ]
+  },
+  {
+    "id": "m7ela-counterclaims-005",
+    "loId": "m7ela.counterclaims",
+    "cedCode": "M7ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student arguing that the town should add lights to the walking path behind the library writes: \"Some people say the town should not add lights to the walking path. But that is wrong. The town should definitely add lights to the path.\" What are the two problems with this passage?",
+    "choices": [
+      "The counterclaim is stated too strongly, and the rebuttal gives away too much of the writer's own side.",
+      "The counterclaim is only the writer's claim flipped to the negative, so it carries no reason, and the rebuttal denies it without adding anything new.",
+      "The counterclaim belongs after the conclusion, and the rebuttal should have come before it.",
+      "The counterclaim names a group of people, and a writer should never mention the other side at all."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask the counterclaim the test question: WHY would they say that? Then ask what the rebuttal hands the reader that they did not already have.",
+      "Compare the first sentence with the claim word for word, and notice that the third sentence is the claim again, only louder."
+    ]
+  },
+  {
+    "id": "m7ela-counterclaims-006",
+    "loId": "m7ela.counterclaims",
+    "cedCode": "M7ELA-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An essay argues that the small park on Grove Street should stay open until 8:00 in the summer instead of closing at sunset. It has already stated this counterclaim: \"Some neighbors say that voices in the park after dark carry straight into the bedrooms of the houses along the fence line.\" Which choice is the strongest rebuttal?",
+    "choices": [
+      "However, the park should stay open later, because summer evenings are the best part of the whole year.",
+      "It is true that sound carries at night, and the houses along the fence line do sit very close to the park.",
+      "It is true that sound carries once the street goes quiet. Even so, the noise comes from the basketball court at the fence end, so the town could keep that one court on the sunset schedule while the paths and the picnic tables stay open until 8:00.",
+      "However, the neighbors along the fence line knew there was a park behind their houses when they moved in."
+    ],
+    "answer": "C",
+    "hints": [
+      "There are two legal rebuttal moves: show the objection is wrong, or concede part of it and show why your side still outweighs it. Which choice completes one of them?",
+      "One choice repeats the claim instead of answering, one concedes and never turns back, and one dismisses the neighbors rather than dealing with the noise they described."
+    ]
+  },
+  {
+    "id": "m7ela-organizing-an-argument-001",
+    "loId": "m7ela.organizing-an-argument",
+    "cedCode": "M7ELA-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the shape of an argument essay, where do the counterclaim and its rebuttal belong?",
+    "choices": [
+      "In the introduction, in place of the claim.",
+      "After the conclusion, as a final note at the very end.",
+      "Inside the same paragraph as the strongest reason.",
+      "After the body paragraphs and before the conclusion."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask when the reader needs to watch you answer the other side - while the argument is still open, or after you have closed it?",
+      "Anything placed after the conclusion reopens a case you already closed, and it leaves the other side with the last word."
+    ]
+  },
+  {
+    "id": "m7ela-organizing-an-argument-002",
+    "loId": "m7ela.organizing-an-argument",
+    "cedCode": "M7ELA-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student's second body paragraph explains that the cafeteria is too loud to hold a conversation in. Her third body paragraph explains that the cafeteria has no windows, so students never see daylight between the morning bell and dismissal. Which opening signals the right relationship for that third paragraph?",
+    "choices": [
+      "In addition,",
+      "However,",
+      "Because of this,",
+      "For example,"
+    ],
+    "answer": "A",
+    "hints": [
+      "Say the relationship in plain words first. Does the third paragraph turn against the second, follow from it, give an example of it, or stack one more reason on the same side?",
+      "Noise did not cause the missing windows, and no windows is not an example of noise. Both paragraphs argue for the same claim."
+    ]
+  },
+  {
+    "id": "m7ela-organizing-an-argument-003",
+    "loId": "m7ela.organizing-an-argument",
+    "cedCode": "M7ELA-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Rosa argued that her school should plant a vegetable garden behind the gym. Her reasons were that science classes could run growing experiments outdoors and that the cafeteria could use what the garden produces. Which ending is a real conclusion rather than a repeat?",
+    "choices": [
+      "In conclusion, I have shown that our school should plant a vegetable garden behind the gym.",
+      "As I said at the start, science classes could run growing experiments outdoors and the cafeteria could use what the garden produces.",
+      "A strip of ground behind the gym could feed the salad bar by fall and give every science class a plot to work, so the student council should ask for the space before planting season starts in March.",
+      "In conclusion, plants have always mattered to people, and growing things is a skill that everyone should have."
+    ],
+    "answer": "C",
+    "hints": [
+      "A conclusion answers the so what. What should happen now, who should do it, and what changes if they do?",
+      "One choice announces the essay, one copies the reasons back in the same words, and one wanders off to a topic the argument never made."
+    ]
+  },
+  {
+    "id": "m7ela-organizing-an-argument-004",
+    "loId": "m7ela.organizing-an-argument",
+    "cedCode": "M7ELA-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Nadia is arguing that her school should install a bike rack by the side door. Her second body paragraph so far reads: \"Bikes left leaning on the fence block the side walkway. Last Thursday four bikes lay across the path, and students stepped into the driveway to get around them.\" Her next reason, saved for last, is about theft. Which sentence belongs NEXT in this paragraph?",
+    "choices": [
+      "Another reason for a rack is that a frame locked to a metal loop is much harder to steal.",
+      "Stepping into the driveway puts students in the path of the cars that use the side entrance, which is a risk a rack would remove entirely.",
+      "Some students say the school does not need a rack, because most people walk to school anyway.",
+      "For all of these reasons, our school should install a bike rack by the side door."
+    ],
+    "answer": "B",
+    "hints": [
+      "A body paragraph runs reason, then evidence, then elaboration. Nadia has given the reason and the evidence, so what move is left?",
+      "One choice starts a different reason, one is the counterclaim, and one is the conclusion. Each of those has its own home somewhere else in the argument."
+    ]
+  },
+  {
+    "id": "m7ela-organizing-an-argument-005",
+    "loId": "m7ela.organizing-an-argument",
+    "cedCode": "M7ELA-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In which pair of sentences does the transition signal the actual relationship between them?",
+    "choices": [
+      "The lunch line runs past the door during fifth period. Another reason, the students at the back have about ten minutes left to eat once they sit down.",
+      "The lunch line runs past the door during fifth period. However, the students at the back have about ten minutes left to eat once they sit down.",
+      "The lunch line runs past the door during fifth period. For example, the students at the back have about ten minutes left to eat once they sit down.",
+      "The lunch line runs past the door during fifth period. Because of this, the students at the back have about ten minutes left to eat once they sit down."
+    ],
+    "answer": "D",
+    "hints": [
+      "Name the relationship between the two sentences in plain words before you look at the phrases. The long line is what leaves the back of the line with ten minutes.",
+      "That is a result, so it takes a cause signal. A contrast word would promise a turn that never comes, an addition word would promise a new reason, and an example word would promise an instance of the first sentence."
+    ]
+  },
+  {
+    "id": "m7ela-organizing-an-argument-006",
+    "loId": "m7ela.organizing-an-argument",
+    "cedCode": "M7ELA-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student turned in an argument for a longer lunch period. The claim, all three reasons and all of the evidence sit together in one long paragraph, and the counterclaim and rebuttal are tacked on after the conclusion. Which revision best fixes the organization?",
+    "choices": [
+      "Split the long paragraph so that each reason gets its own body paragraph with its evidence and elaboration, and move the counterclaim and rebuttal so they sit after the reasons and before the conclusion.",
+      "Keep the single paragraph, but paste a transition on the front of every sentence so the reader can follow the order.",
+      "Move the counterclaim and rebuttal to the very end of the essay and delete the conclusion instead.",
+      "Move the strongest reason into the middle of the long paragraph so that the essay builds toward it."
+    ],
+    "answer": "A",
+    "hints": [
+      "Two things are wrong here, so the right revision has to fix both: where the reasons live, and where the counterclaim sits.",
+      "Paragraph breaks are the map the reader follows, transitions cannot replace them, and the strongest reason should never end up in the middle where readers skim."
+    ]
+  }
+]

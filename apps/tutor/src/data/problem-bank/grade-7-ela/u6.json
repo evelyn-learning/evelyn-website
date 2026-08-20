@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-phrases-and-clauses-001",
+    "loId": "m7ela.phrases-and-clauses",
+    "cedCode": "M7ELA-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these groups of words is a PHRASE rather than a clause?",
+    "choices": [
+      "the sprinklers turned on at dawn",
+      "beside the recycling bins",
+      "my sneakers squeaked",
+      "the gym smelled like fresh paint"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask each group two questions: who or what is the doer, and what is the action?",
+      "A phrase has no subject-verb pair at all. One of these only tells you WHERE something is, and nobody in it does anything."
+    ]
+  },
+  {
+    "id": "m7ela-phrases-and-clauses-002",
+    "loId": "m7ela.phrases-and-clauses",
+    "cedCode": "M7ELA-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these groups of words is a CLAUSE?",
+    "choices": [
+      "waiting outside the band room for twenty minutes",
+      "across the muddy field behind the school",
+      "the puppy chewed my shoelace",
+      "to return the library books before Friday"
+    ],
+    "answer": "C",
+    "hints": [
+      "A clause needs a subject-verb pair. Hunt for the doer first, because that is the half people forget.",
+      "Do not pick the longest one. An -ing word standing alone is not acting as the verb, a to-word is not either, and a location word such as \"across\" starts a phrase."
+    ]
+  },
+  {
+    "id": "m7ela-phrases-and-clauses-003",
+    "loId": "m7ela.phrases-and-clauses",
+    "cedCode": "M7ELA-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these groups of words is a DEPENDENT clause?",
+    "choices": [
+      "because the sprinklers came on early",
+      "under the folding table",
+      "the field was still soaked",
+      "running through the wet grass"
+    ],
+    "answer": "A",
+    "hints": [
+      "First throw out anything with no subject-verb pair, because a phrase cannot be any kind of clause.",
+      "Two options have a pair. Check the very first word of each: a starter word such as because, although, when or since holds the thought open and makes the clause dependent."
+    ]
+  },
+  {
+    "id": "m7ela-phrases-and-clauses-004",
+    "loId": "m7ela.phrases-and-clauses",
+    "cedCode": "M7ELA-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: \"The neighbor who waters our plants left a note on the door.\" Which group of words is the dependent clause?",
+    "choices": [
+      "The neighbor",
+      "on the door",
+      "left a note on the door",
+      "who waters our plants"
+    ],
+    "answer": "D",
+    "hints": [
+      "A dependent clause still needs BOTH halves of the pair. Test each option: who or what, and doing what?",
+      "A subject with no verb is not a clause, and a verb with no subject is not one either. Look for the group that has both and opens with who, which or that."
+    ]
+  },
+  {
+    "id": "m7ela-phrases-and-clauses-005",
+    "loId": "m7ela.phrases-and-clauses",
+    "cedCode": "M7ELA-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student says that \"behind the old cafeteria on a rainy Tuesday morning\" must be a clause because it is long, and that \"Snow fell\" must be a phrase because it is only two words. Which labeling is actually correct?",
+    "choices": [
+      "Both of the student's labels are correct.",
+      "\"Behind the old cafeteria on a rainy Tuesday morning\" is a phrase, and \"Snow fell\" is a clause.",
+      "Both groups are phrases, because neither one names a real doer.",
+      "Both groups are clauses, because each one describes something that happened."
+    ],
+    "answer": "B",
+    "hints": [
+      "Length is never the test. Run the subject-verb hunt on each group separately.",
+      "The long group stacks up where-and-when details and never says who did anything. In the short group, \"snow\" is the doer and \"fell\" is the action."
+    ]
+  },
+  {
+    "id": "m7ela-phrases-and-clauses-006",
+    "loId": "m7ela.phrases-and-clauses",
+    "cedCode": "M7ELA-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: \"After the fire drill ended, the students who had left their jackets inside hurried back up the stairs.\" Which statement about its parts is correct?",
+    "choices": [
+      "\"After the fire drill ended\" is a dependent clause, and \"who had left their jackets inside\" is a phrase.",
+      "\"After the fire drill ended\" is a phrase, and \"up the stairs\" is a dependent clause.",
+      "\"After the fire drill ended\" is an independent clause, and \"who had left their jackets inside\" is a dependent clause.",
+      "\"After the fire drill ended\" and \"who had left their jackets inside\" are both dependent clauses, and \"up the stairs\" is a phrase."
+    ],
+    "answer": "D",
+    "hints": [
+      "Take the three groups one at a time and run the same test on each: subject, verb, then check the front word.",
+      "\"The fire drill ended\" is a pair held open by \"After.\" In \"who had left their jackets inside,\" who is the doer and had left is the action. \"Up the stairs\" has no doer at all."
+    ]
+  },
+  {
+    "id": "m7ela-sentence-types-and-combining-001",
+    "loId": "m7ela.sentence-types-and-combining",
+    "cedCode": "M7ELA-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is a COMPOUND sentence?",
+    "choices": [
+      "The bell rang, and everyone grabbed their backpacks.",
+      "The bell rang at the end of fourth period.",
+      "When the bell rang, everyone grabbed their backpacks.",
+      "The bell rang and echoed down the empty hallway."
+    ],
+    "answer": "A",
+    "hints": [
+      "A compound sentence needs TWO independent clauses, so cover the joining word and check that each side has its own subject and its own verb.",
+      "One option has a starter word on the front of its first clause, which makes that clause dependent. Another has one subject doing two things, which is only a compound verb."
+    ]
+  },
+  {
+    "id": "m7ela-sentence-types-and-combining-002",
+    "loId": "m7ela.sentence-types-and-combining",
+    "cedCode": "M7ELA-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is a SIMPLE sentence?",
+    "choices": [
+      "Nadia stayed after school, and Theo walked home alone.",
+      "Because Nadia stayed after school, Theo walked home alone.",
+      "Nadia stayed after school; Theo walked home alone.",
+      "Nadia and Theo stayed after school for the poster contest."
+    ],
+    "answer": "D",
+    "hints": [
+      "A simple sentence has exactly one independent clause and no dependent clause. Count the subject-verb pairs in each option.",
+      "Two names sharing one verb is a compound SUBJECT, and that is still one clause. A semicolon between two complete sentences still makes a compound sentence."
+    ]
+  },
+  {
+    "id": "m7ela-sentence-types-and-combining-003",
+    "loId": "m7ela.sentence-types-and-combining",
+    "cedCode": "M7ELA-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What type of sentence is this? \"Although the forecast promised sun, we packed two umbrellas.\"",
+    "choices": [
+      "simple",
+      "compound",
+      "complex",
+      "compound-complex"
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the two counts: how many independent clauses, and how many dependent clauses?",
+      "\"We packed two umbrellas\" stands alone, and \"Although the forecast promised sun\" cannot. One independent plus one dependent has a name."
+    ]
+  },
+  {
+    "id": "m7ela-sentence-types-and-combining-004",
+    "loId": "m7ela.sentence-types-and-combining",
+    "cedCode": "M7ELA-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which version combines these two sentences correctly AND signals how the ideas really relate? \"The bus broke down on Cypress Road. We walked the last six blocks.\"",
+    "choices": [
+      "The bus broke down on Cypress Road, but we walked the last six blocks.",
+      "The bus broke down on Cypress Road, so we walked the last six blocks.",
+      "The bus broke down on Cypress Road, we walked the last six blocks.",
+      "The bus broke down on Cypress Road, or we walked the last six blocks."
+    ],
+    "answer": "B",
+    "hints": [
+      "Name the relationship before you pick a word. Did the breakdown cause the walking, or did the walking happen in spite of it?",
+      "But signals contrast, or signals a choice between two things, and a comma with no joining word at all is a comma splice. Only one of these signals a result."
+    ]
+  },
+  {
+    "id": "m7ela-sentence-types-and-combining-005",
+    "loId": "m7ela.sentence-types-and-combining",
+    "cedCode": "M7ELA-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What type of sentence is this? \"When the sprinklers came on, Renata grabbed the picnic blanket, and Owen rescued the paper plates.\"",
+    "choices": [
+      "compound-complex",
+      "complex",
+      "compound",
+      "simple"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find every subject-verb pair first, then decide which ones could stand alone.",
+      "There are three pairs here. One is held open by the starter word \"When,\" and the other two are joined the legal way with a comma plus \"and.\""
+    ]
+  },
+  {
+    "id": "m7ela-sentence-types-and-combining-006",
+    "loId": "m7ela.sentence-types-and-combining",
+    "cedCode": "M7ELA-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer wants to combine these two facts so that the small number of tickets becomes background information and the sell-out is the main point the reader remembers. \"The drama club printed only sixty tickets. The winter show sold out in one afternoon.\" Which version does that?",
+    "choices": [
+      "Although the winter show sold out in one afternoon, the drama club printed only sixty tickets.",
+      "The drama club printed only sixty tickets, and the winter show sold out in one afternoon.",
+      "Because the drama club printed only sixty tickets, the winter show sold out in one afternoon.",
+      "The drama club printed only sixty tickets, the winter show sold out in one afternoon."
+    ],
+    "answer": "C",
+    "hints": [
+      "Whatever sits in the independent clause is what the reader walks away with, so decide which fact belongs in the dependent clause.",
+      "One option pushes the sell-out into the background instead, one gives both facts equal weight in two independent clauses, and one joins two complete sentences with only a comma."
+    ]
+  },
+  {
+    "id": "m7ela-fragments-and-run-ons-001",
+    "loId": "m7ela.fragments-and-run-ons",
+    "cedCode": "M7ELA-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which group of words is a FRAGMENT?",
+    "choices": [
+      "The gym doors were locked.",
+      "We waited outside for ten minutes.",
+      "Because the gym doors were locked.",
+      "Someone finally found the custodian."
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the three-part test on each one: subject, verb, finished thought.",
+      "Three of these finish their thought. One has a subject and a verb but a starter word is holding it open, so you are left waiting."
+    ]
+  },
+  {
+    "id": "m7ela-fragments-and-run-ons-002",
+    "loId": "m7ela.fragments-and-run-ons",
+    "cedCode": "M7ELA-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is wrong with this sentence? \"The power went out during third period, the whole school got an early lunch.\"",
+    "choices": [
+      "It is a comma splice - two complete sentences held together by only a comma.",
+      "It is a fragment - it is missing a subject.",
+      "It is a run-on - the two complete sentences have nothing at all between them.",
+      "Nothing is wrong with it."
+    ],
+    "answer": "A",
+    "hints": [
+      "Cover each side of the comma and read what is left. Could each half be sent as its own message?",
+      "Both halves are complete sentences, and there IS a mark between them - just not a strong enough one. That error has its own name."
+    ]
+  },
+  {
+    "id": "m7ela-fragments-and-run-ons-003",
+    "loId": "m7ela.fragments-and-run-ons",
+    "cedCode": "M7ELA-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which revision correctly fixes this sentence? \"My dog hates thunder, he hides under the kitchen table.\"",
+    "choices": [
+      "My dog hates thunder he hides under the kitchen table.",
+      "My dog hates thunder, however, he hides under the kitchen table.",
+      "My dog hates thunder, then he hides under the kitchen table.",
+      "My dog hates thunder, so he hides under the kitchen table."
+    ],
+    "answer": "D",
+    "hints": [
+      "There are exactly three legal fixes: a period, a semicolon, or a comma plus one of for, and, nor, but, or, yet, so.",
+      "Deleting the comma is not a fix - it turns the splice into a run-on. However and then are not joining words, so a comma in front of either one repairs nothing."
+    ]
+  },
+  {
+    "id": "m7ela-fragments-and-run-ons-004",
+    "loId": "m7ela.fragments-and-run-ons",
+    "cedCode": "M7ELA-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which revision fixes the fragment AND punctuates the result correctly? \"While my sister practiced her trumpet. I moved my homework to the basement.\"",
+    "choices": [
+      "While my sister practiced her trumpet; I moved my homework to the basement.",
+      "While my sister practiced her trumpet, I moved my homework to the basement.",
+      "While my sister practiced her trumpet, and I moved my homework to the basement.",
+      "While my sister practiced her trumpet I moved my homework to the basement."
+    ],
+    "answer": "B",
+    "hints": [
+      "Read the first group alone. \"While\" holds it open, so it is a dependent clause and it has to lean on the complete sentence beside it.",
+      "A semicolon needs a complete sentence on its LEFT, and a joining word is only for two independent clauses. A dependent clause that comes first attaches with a comma after it."
+    ]
+  },
+  {
+    "id": "m7ela-fragments-and-run-ons-005",
+    "loId": "m7ela.fragments-and-run-ons",
+    "cedCode": "M7ELA-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly?",
+    "choices": [
+      "Our science teacher collects rain in a barrel, she uses it for the courtyard garden.",
+      "Our science teacher collects rain in a barrel she uses it for the courtyard garden.",
+      "Even though our science teacher collects rain in a barrel. She still waters the courtyard garden with a hose.",
+      "Our science teacher collects rain in a barrel; she uses it for the courtyard garden."
+    ],
+    "answer": "D",
+    "hints": [
+      "Three of these commit one of the three errors from this lesson. Test both halves of every option: complete sentence, or not?",
+      "One joins two complete sentences with only a comma, one joins them with nothing at all, and one strands an \"Even though\" clause as its own sentence."
+    ]
+  },
+  {
+    "id": "m7ela-fragments-and-run-ons-006",
+    "loId": "m7ela.fragments-and-run-ons",
+    "cedCode": "M7ELA-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this: \"The trail was closed for repairs, therefore we hiked the loop by the creek instead.\" Which revision fixes the error?",
+    "choices": [
+      "The trail was closed for repairs; therefore, we hiked the loop by the creek instead.",
+      "The trail was closed for repairs therefore we hiked the loop by the creek instead.",
+      "The trail was closed for repairs, therefore, we hiked the loop by the creek instead.",
+      "The trail was closed for repairs, therefore; we hiked the loop by the creek instead."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check both halves first. If each one could stand alone, ask what is actually holding them apart.",
+      "\"Therefore\" is a transition word, not a joining word, so no arrangement of commas around it can hold two sentences apart. Something stronger has to sit at the boundary."
+    ]
+  },
+  {
+    "id": "m7ela-commas-and-end-punctuation-001",
+    "loId": "m7ela.commas-and-end-punctuation",
+    "cedCode": "M7ELA-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "After we finished the mural we cleaned the brushes, the trays, and the sink.",
+      "After we finished the mural, we, cleaned the brushes, the trays, and the sink.",
+      "After we finished the mural, we cleaned the brushes the trays and the sink.",
+      "After we finished the mural, we cleaned the brushes, the trays, and the sink."
+    ],
+    "answer": "D",
+    "hints": [
+      "Two comma jobs are in play here: closing an introductory element, and separating items in a series.",
+      "The setup \"After we finished the mural\" needs a comma after it, the three things cleaned need commas between them, and nothing at all is allowed to sit between \"we\" and \"cleaned.\""
+    ]
+  },
+  {
+    "id": "m7ela-commas-and-end-punctuation-002",
+    "loId": "m7ela.commas-and-end-punctuation",
+    "cedCode": "M7ELA-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "My uncle Desmond who repairs pianos drove up from Macon.",
+      "My uncle Desmond, who repairs pianos, drove up from Macon.",
+      "My uncle Desmond, who repairs pianos drove up from Macon.",
+      "My uncle Desmond who repairs pianos, drove up from Macon."
+    ],
+    "answer": "B",
+    "hints": [
+      "Run the removal test. Lift out \"who repairs pianos\" and read what is left. Does the sentence still work, and do you still know exactly who drove up?",
+      "His name is already in the sentence, so the piano part is extra information - and extra information takes a PAIR of commas. One comma on its own builds half a fence."
+    ]
+  },
+  {
+    "id": "m7ela-commas-and-end-punctuation-003",
+    "loId": "m7ela.commas-and-end-punctuation",
+    "cedCode": "M7ELA-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "None of these sentences has a comma before the word \"and,\" but exactly one of them needs one. Which sentence needs a comma before \"and\"?",
+    "choices": [
+      "Trevor grabbed his helmet and rode down to the courts.",
+      "Trevor grabbed his helmet and his elbow pads before he left.",
+      "Trevor grabbed his helmet and Elena checked the tire pressure on both bikes.",
+      "Trevor and Elena rode down to the courts after dinner."
+    ],
+    "answer": "C",
+    "hints": [
+      "A comma goes before a joining word only when it is holding two complete sentences together. Cover the \"and\" and test what follows it.",
+      "In three of these, the part after \"and\" has no subject of its own - it is a second verb, a second object, or a second name sharing one verb. Only one option has a whole new subject and verb after the \"and.\""
+    ]
+  },
+  {
+    "id": "m7ela-commas-and-end-punctuation-004",
+    "loId": "m7ela.commas-and-end-punctuation",
+    "cedCode": "M7ELA-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "It was a damp, chilly morning, so Priya wore her dark blue hoodie.",
+      "It was a damp chilly morning, so Priya wore her dark blue hoodie.",
+      "It was a damp, chilly morning, so Priya wore her dark, blue hoodie.",
+      "It was a damp chilly morning, so Priya wore her dark, blue hoodie."
+    ],
+    "answer": "A",
+    "hints": [
+      "Every option punctuates the two complete sentences the same way, so the adjectives are what decide this. Run the \"and\" test on each pair, then swap their order.",
+      "\"Damp and chilly\" works and \"chilly, damp morning\" works, so that pair is coordinate and needs a comma. \"Dark and blue\" does not work and \"a blue dark hoodie\" does not either, so that pair gets nothing."
+    ]
+  },
+  {
+    "id": "m7ela-commas-and-end-punctuation-005",
+    "loId": "m7ela.commas-and-end-punctuation",
+    "cedCode": "M7ELA-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly?",
+    "choices": [
+      "The team lost it's captain to a sprained ankle, so two seventh grader's stepped in.",
+      "The team lost its captain to a sprained ankle, so two seventh grader's stepped in.",
+      "The team lost its captain to a sprained ankle, so two seventh graders stepped in.",
+      "The team lost it's captain to a sprained ankle, so two seventh graders stepped in."
+    ],
+    "answer": "C",
+    "hints": [
+      "Two apostrophe rules are being tested at once. Expand the first one to check it, and ask what job the second one could possibly be doing.",
+      "\"It's\" means \"it is,\" and \"the team lost it is captain\" falls apart - so the possessive here is \"its,\" with no apostrophe. And an apostrophe never makes a word plural."
+    ]
+  },
+  {
+    "id": "m7ela-commas-and-end-punctuation-006",
+    "loId": "m7ela.commas-and-end-punctuation",
+    "cedCode": "M7ELA-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is punctuated correctly?",
+    "choices": [
+      "On the first cold morning of November, Ms. Kaplan our homeroom teacher, brought in a box of donated gloves.",
+      "On the first cold morning of November, Ms. Kaplan, our homeroom teacher, brought in a box of donated gloves.",
+      "On the first cold morning of November Ms. Kaplan, our homeroom teacher, brought in a box of donated gloves.",
+      "On the first cold morning of November, Ms. Kaplan, our homeroom teacher, brought in a box of donated gloves, everyone took a pair."
+    ],
+    "answer": "B",
+    "hints": [
+      "Three separate checks: is the introductory element closed off, is the extra information fenced on BOTH sides, and does the sentence stop where the thought stops?",
+      "\"Our homeroom teacher\" can be lifted straight out, so it needs a comma before and after. One option leaves the setup phrase open, and one keeps going past the end of the thought with only a comma holding two complete sentences apart."
+    ]
+  }
+]

@@ -1,0 +1,388 @@
+[
+  {
+    "id": "m7ela-parts-of-speech-001",
+    "loId": "m7ela.parts-of-speech",
+    "cedCode": "M7ELA-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What part of speech is the word \"loudly\" in this sentence? \"The crowd cheered loudly when the mascot slid across the gym floor.\"",
+    "choices": ["noun", "adverb", "adjective", "preposition"],
+    "answer": "B",
+    "hints": [
+      "Find the word that \"loudly\" is telling you about, then ask what job THAT word is doing.",
+      "It tells you HOW the crowd cheered, and \"cheered\" is a verb. A word that describes a verb is an adverb."
+    ]
+  },
+  {
+    "id": "m7ela-parts-of-speech-002",
+    "loId": "m7ela.parts-of-speech",
+    "cedCode": "M7ELA-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What part of speech is the word \"friendly\" in this sentence? \"A friendly crossing guard waves to us at the corner every morning.\"",
+    "choices": ["adverb", "verb", "noun", "adjective"],
+    "answer": "D",
+    "hints": [
+      "The -ly ending is not evidence of anything. Find the word being described first.",
+      "\"Friendly\" tells you what kind of crossing guard, and \"crossing guard\" names a person, so it is a noun. A word that describes a noun is an adjective."
+    ]
+  },
+  {
+    "id": "m7ela-parts-of-speech-003",
+    "loId": "m7ela.parts-of-speech",
+    "cedCode": "M7ELA-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What part of speech is the word \"was\" in this sentence? \"The locker room was quiet after the final buzzer.\"",
+    "choices": ["verb", "adjective", "noun", "preposition"],
+    "answer": "A",
+    "hints": [
+      "Nobody does anything in this sentence, but that does not mean there is no verb. Run the tense test on \"was.\"",
+      "Yesterday the room was quiet, tomorrow the room will be quiet. Am, is, are, was and were are real verbs - they tell what IS instead of what happens."
+    ]
+  },
+  {
+    "id": "m7ela-parts-of-speech-004",
+    "loId": "m7ela.parts-of-speech",
+    "cedCode": "M7ELA-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In which sentence does the word \"train\" function as a verb?",
+    "choices": [
+      "The train pulled into the station ten minutes late.",
+      "Maya rode the train all the way to her grandmother's stop.",
+      "Our coach will train the new goalie on Saturday.",
+      "A model train circled the base of the tree in the window."
+    ],
+    "answer": "C",
+    "hints": [
+      "Do not answer from the word by itself. Run the tense test on each option: could you say it happened yesterday and will happen tomorrow?",
+      "In three options \"train\" names a thing you could put \"the\" or \"a\" in front of. In one option it is the action somebody does to the goalie."
+    ]
+  },
+  {
+    "id": "m7ela-parts-of-speech-005",
+    "loId": "m7ela.parts-of-speech",
+    "cedCode": "M7ELA-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What part of speech is the word \"hard\" in this sentence? \"My older brother practices hard every night before tryouts.\"",
+    "choices": ["adjective", "noun", "conjunction", "adverb"],
+    "answer": "D",
+    "hints": [
+      "No -ly ending does not mean no adverb. Ask which word \"hard\" is telling you about.",
+      "Here it tells you HOW he practices, and \"practices\" is a verb - so this time \"hard\" is an adverb, even though the same word describes a noun in \"a hard bench.\""
+    ]
+  },
+  {
+    "id": "m7ela-parts-of-speech-006",
+    "loId": "m7ela.parts-of-speech",
+    "cedCode": "M7ELA-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the sentence \"Hey, my cousin fixed the loose chain quickly, so we rode to the creek before dinner,\" what are the parts of speech of \"Hey,\" \"loose,\" and \"before,\" in that order?",
+    "choices": [
+      "interjection, adjective, preposition",
+      "interjection, adverb, preposition",
+      "adverb, adjective, preposition",
+      "interjection, adjective, conjunction"
+    ],
+    "answer": "A",
+    "hints": [
+      "Take the three words one at a time and ask what each one attaches to. Do not guess a word's job from how it looks.",
+      "\"Hey\" is a burst of feeling you could delete and still have a sentence; \"loose\" tells what kind of chain, and \"chain\" is a noun; \"before\" sits in front of the noun \"dinner\" and starts the group \"before dinner.\""
+    ]
+  },
+  {
+    "id": "m7ela-subject-verb-agreement-001",
+    "loId": "m7ela.subject-verb-agreement",
+    "cedCode": "M7ELA-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"The crate of water bottles ___ next to the dugout.\"",
+    "choices": ["are", "were", "is", "have been"],
+    "answer": "C",
+    "hints": [
+      "Cross out the prepositional phrase \"of water bottles\" and see which word is left as the subject.",
+      "One crate is doing the sitting, so the subject is the singular \"crate\" and the verb has to be singular too. \"Bottles\" is inside a crossed-out phrase and cannot control the verb."
+    ]
+  },
+  {
+    "id": "m7ela-subject-verb-agreement-002",
+    "loId": "m7ela.subject-verb-agreement",
+    "cedCode": "M7ELA-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"Each of the sixth-grade tour guides ___ a map of the building.\"",
+    "choices": ["carry", "carries", "are carrying", "have carried"],
+    "answer": "B",
+    "hints": [
+      "The subject is \"Each.\" The phrase \"of the sixth-grade tour guides\" is a prepositional phrase, so it does not get a vote.",
+      "Each, either, neither, everybody and nobody are grammatically singular no matter how big a crowd they sound like, so the verb must be singular. Remember that on a present-tense verb, the -s ending is the singular one."
+    ]
+  },
+  {
+    "id": "m7ela-subject-verb-agreement-003",
+    "loId": "m7ela.subject-verb-agreement",
+    "cedCode": "M7ELA-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"___ three cardboard boxes stacked behind the stage.\"",
+    "choices": ["There is", "There was", "There has been", "There are"],
+    "answer": "D",
+    "hints": [
+      "This sentence is inverted, so the subject comes AFTER the verb. The word \"There\" is only a placeholder and is never the subject.",
+      "Ask what actually exists: three boxes. That is plural, so the verb has to be plural and present."
+    ]
+  },
+  {
+    "id": "m7ela-subject-verb-agreement-004",
+    "loId": "m7ela.subject-verb-agreement",
+    "cedCode": "M7ELA-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"Neither the drummers nor the singer ___ ready for the first rehearsal.\"",
+    "choices": ["is", "are", "were", "have been"],
+    "answer": "A",
+    "hints": [
+      "With \"either/or\" and \"neither/nor,\" the verb matches the subject NEARER to it, not both subjects together.",
+      "The nearer subject is \"the singer,\" which is one person, so the verb is singular. The plural \"drummers\" earlier in the sentence is bait."
+    ]
+  },
+  {
+    "id": "m7ela-subject-verb-agreement-005",
+    "loId": "m7ela.subject-verb-agreement",
+    "cedCode": "M7ELA-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly?",
+    "choices": [
+      "The bunch of grapes were sitting on the counter all afternoon.",
+      "Our whole class are decorating the hallway for spirit week.",
+      "There is two pencils and an eraser in my backpack.",
+      "Neither the coaches nor the referee wants to cancel the game."
+    ],
+    "answer": "D",
+    "hints": [
+      "Three of these break a rule from this lesson. Check each one for a prepositional phrase between the subject and the verb, a collective noun, and inverted order.",
+      "The true subject of the first is \"bunch\"; \"class\" is a collective noun and takes a singular verb in US English; \"two pencils and an eraser\" is a plural compound subject sitting after the verb. Only the neither/nor sentence matches its nearer subject correctly."
+    ]
+  },
+  {
+    "id": "m7ela-subject-verb-agreement-006",
+    "loId": "m7ela.subject-verb-agreement",
+    "cedCode": "M7ELA-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the question? \"___ the folder of permission slips and the box of extra pencils still in the front office right now?\"",
+    "choices": ["Is", "Are", "Was", "Were"],
+    "answer": "B",
+    "hints": [
+      "A question is inverted, so the subject comes after the verb. Find the whole subject before you pick, and cross out both of the prepositional phrases.",
+      "What is left is \"the folder ... and the box ...\" - two things joined by \"and,\" which makes a plural compound subject. The words \"right now\" also rule out any past-tense choice."
+    ]
+  },
+  {
+    "id": "m7ela-pronouns-and-antecedents-001",
+    "loId": "m7ela.pronouns-and-antecedents",
+    "cedCode": "M7ELA-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the sentence \"Priya tightened her chin strap before the ride down the canal path,\" what is the antecedent of the pronoun \"her\"?",
+    "choices": ["chin strap", "the ride", "Priya", "the canal path"],
+    "answer": "C",
+    "hints": [
+      "The antecedent is the noun the pronoun is standing in for, and it almost always comes earlier in the sentence.",
+      "Ask whose chin strap it is. Swap the pronoun out for the name and read it back: the sentence still means the same thing."
+    ]
+  },
+  {
+    "id": "m7ela-pronouns-and-antecedents-002",
+    "loId": "m7ela.pronouns-and-antecedents",
+    "cedCode": "M7ELA-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"Somebody left ___ water bottle on the bleachers after the game.\"",
+    "choices": ["their", "its", "them", "theirs"],
+    "answer": "A",
+    "hints": [
+      "The antecedent is \"Somebody,\" which means one person whose name and gender nobody knows yet.",
+      "Singular \"they\" and \"their\" are the correct, standard choice for one person you have not been told about, and after words like somebody, everyone and nobody. Never use \"it\" for a person, and the word before a noun has to be the possessive form that can sit in front of \"water bottle.\""
+    ]
+  },
+  {
+    "id": "m7ela-pronouns-and-antecedents-003",
+    "loId": "m7ela.pronouns-and-antecedents",
+    "cedCode": "M7ELA-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In which sentence is it impossible to tell who \"she\" stands for?",
+    "choices": [
+      "Nadia found the missing scorebook, and she carried it straight to the coach.",
+      "When Talia sat down next to Bree, she opened the sketchbook.",
+      "Bree waved at her uncle before she climbed the bus steps.",
+      "Talia promised that she would bring the extra folding chairs."
+    ],
+    "answer": "B",
+    "hints": [
+      "Run the point-at-it test on each sentence: try to put your finger on the one noun \"she\" stands for.",
+      "In three of the sentences only one candidate is available. In one of them two girls are named before the pronoun arrives, and nothing in the sentence tells you which one is meant - nearness is not a rule."
+    ]
+  },
+  {
+    "id": "m7ela-pronouns-and-antecedents-004",
+    "loId": "m7ela.pronouns-and-antecedents",
+    "cedCode": "M7ELA-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes this line in a story: \"Omar showed the sketch to Dev while he was still eating lunch.\" The writer means that DEV was still eating lunch. Which revision makes that clear?",
+    "choices": [
+      "Omar showed the sketch to Dev while Omar was still eating lunch.",
+      "He showed the sketch to Dev while he was still eating lunch.",
+      "Omar showed the sketch to Dev while he himself was still eating lunch.",
+      "Omar showed the sketch to Dev while Dev was still eating lunch."
+    ],
+    "answer": "D",
+    "hints": [
+      "List every noun the word \"he\" could point at. If you find two, the reader is guessing, and the repair is to name the person you mean.",
+      "Check two things about each revision: does it name exactly one person, and is that the person the writer said they meant? A revision can be perfectly clear and still report the wrong fact."
+    ]
+  },
+  {
+    "id": "m7ela-pronouns-and-antecedents-005",
+    "loId": "m7ela.pronouns-and-antecedents",
+    "cedCode": "M7ELA-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph ends like this: \"I forgot my lunch and left my math folder on the bus. This made the whole morning harder.\" Which revision fixes the vague pronoun?",
+    "choices": [
+      "I forgot my lunch and left my math folder on the bus. It made the whole morning harder.",
+      "I forgot my lunch and left my math folder on the bus. That made the whole morning harder.",
+      "I forgot my lunch and left my math folder on the bus. Those two mistakes made the whole morning harder.",
+      "I forgot my lunch and left my math folder on the bus, which made the whole morning harder."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what noun \"This\" points back at. A whole sentence is not a noun, so there is nothing there to point at.",
+      "Swapping in \"it,\" \"that\" or \"which\" leaves exactly the same empty reference. The only real repair names the thing the pronoun was trying to stand for."
+    ]
+  },
+  {
+    "id": "m7ela-pronouns-and-antecedents-006",
+    "loId": "m7ela.pronouns-and-antecedents",
+    "cedCode": "M7ELA-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses its pronoun correctly and clearly?",
+    "choices": [
+      "Everyone in the cooking club should bring their own apron.",
+      "My two goldfish knocked over its plastic castle again this morning.",
+      "When Jonah met Ruben at the ticket booth, he had already bought the tickets.",
+      "The new student left its jacket on the back of a lab stool."
+    ],
+    "answer": "A",
+    "hints": [
+      "Run both checks on every option. Does the pronoun match its antecedent in number, and can a reader point at exactly one noun it stands for?",
+      "Watch for a plural antecedent handed a singular pronoun, an \"it\" used for a person, and a \"he\" with two boys' names in front of it. Remember that singular \"their\" after a word like everyone is correct and standard."
+    ]
+  },
+  {
+    "id": "m7ela-verb-tense-consistency-001",
+    "loId": "m7ela.verb-tense-consistency",
+    "cedCode": "M7ELA-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"By the end of July, my sister had ___ to the same lake three times.\"",
+    "choices": ["went", "go", "gone", "going"],
+    "answer": "C",
+    "hints": [
+      "The helper \"had\" is already sitting there, and a helper needs the third shape of the verb after it.",
+      "Go, went, gone. The middle shape stands alone, and the third shape is the one that follows have, has or had."
+    ]
+  },
+  {
+    "id": "m7ela-verb-tense-consistency-002",
+    "loId": "m7ela.verb-tense-consistency",
+    "cedCode": "M7ELA-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the passage? \"Last Saturday we cleaned out the garage. We stacked the paint cans, swept the floor, and ___ the old bikes out to the curb.\"",
+    "choices": ["roll", "have rolled", "are rolling", "rolled"],
+    "answer": "D",
+    "hints": [
+      "Look at the verbs describing the same stretch of time: \"cleaned,\" \"stacked\" and \"swept.\"",
+      "\"Last Saturday\" fixes the whole passage in finished past time, and nothing signals a change of time, so the last verb stays in the same simple past tense as the others."
+    ]
+  },
+  {
+    "id": "m7ela-verb-tense-consistency-003",
+    "loId": "m7ela.verb-tense-consistency",
+    "cedCode": "M7ELA-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"My cousin ___ the whole thing from the top of the hill.\"",
+    "choices": ["seen", "saw", "sawed", "have saw"],
+    "answer": "B",
+    "hints": [
+      "There is no helping verb in this sentence, so you need the shape of the verb that can stand alone.",
+      "See, saw, seen. Only the middle shape stands by itself; \"seen\" needs have, has or had in front of it, and this verb does not take -ed."
+    ]
+  },
+  {
+    "id": "m7ela-verb-tense-consistency-004",
+    "loId": "m7ela.verb-tense-consistency",
+    "cedCode": "M7ELA-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Each of these sentences changes tense partway through. In which one is the change correct, because the time really does change?",
+    "choices": [
+      "Marisol turned in her science project yesterday, so she will start the poster tonight.",
+      "We raked the yard all morning, and then we walk down to the creek.",
+      "I opened my locker, and three notebooks slide onto the floor.",
+      "The last bell rang, and the whole hallway fills with noise."
+    ],
+    "answer": "A",
+    "hints": [
+      "Do not ask whether the tense changed - all four of these change tense. Ask whether the TIME changed.",
+      "Three sentences describe two things happening at the same past moment, so the verbs should match. One names two different times out loud, so past plus future is exactly right."
+    ]
+  },
+  {
+    "id": "m7ela-verb-tense-consistency-005",
+    "loId": "m7ela.verb-tense-consistency",
+    "cedCode": "M7ELA-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly?",
+    "choices": [
+      "My neighbor brung her tall ladder over before the storm.",
+      "We had went to that same campground for four summers in a row.",
+      "The wind had taken the tarp halfway across the yard.",
+      "I done my part of the poster on Thursday night."
+    ],
+    "answer": "C",
+    "hints": [
+      "Three of these put an irregular verb in the wrong shape. Say each verb in all three of its shapes before you decide.",
+      "Bring, brought, brought - there is no such word as \"brung.\" Go, went, gone. Do, did, done. Take, took, taken. The third shape needs have, has or had in front of it, and the middle shape stands alone."
+    ]
+  },
+  {
+    "id": "m7ela-verb-tense-consistency-006",
+    "loId": "m7ela.verb-tense-consistency",
+    "cedCode": "M7ELA-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph reads: \"Last October our class hiked the ridge trail. Near the last switchback the wind picks up so hard that Jonah's hat blew off. We ate lunch behind a boulder and started down early, because cold air always sinks into that valley after sunset.\" Which change fixes the one tense error in this paragraph?",
+    "choices": [
+      "Change \"sinks\" to \"sank.\"",
+      "Change \"picks\" to \"picked.\"",
+      "Change \"blew\" to \"blows.\"",
+      "Change \"picks\" to \"picked\" and \"sinks\" to \"sank.\""
+    ],
+    "answer": "B",
+    "hints": [
+      "The paragraph tells what happened last October, so find the verb that slid into the present while describing that same past moment.",
+      "\"Cold air always sinks into that valley after sunset\" was true last October and is still true today, so that general truth belongs in the present and must not be moved. Only one verb is describing a single past event in the wrong tense."
+    ]
+  }
+]
