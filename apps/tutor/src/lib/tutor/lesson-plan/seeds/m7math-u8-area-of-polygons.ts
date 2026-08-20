@@ -36,7 +36,7 @@ export const SEED_M7MATH_U8_AREA_OF_POLYGONS: LessonPlan = {
       kind: 'hook',
       goal: 'Make area feel like a shopping question the student actually has to answer.',
       script:
-        'Your class is making a banner for the school dance. It is a big triangle of poster paper, and the paper costs money, so somebody has to say how much of it you need. Not how long the edges are — how much SURFACE the banner covers. That is area, and it gets measured in squares: square centimetres, square feet, square metres. Today we find the area of triangles, parallelograms and trapezoids, and then we handle a weird lopsided shape by chopping it into pieces we already know.',
+        'Your class is making a banner for the school dance. It is a big triangle of poster paper, and the paper costs money, so somebody has to say how much of it you need. Not how long the edges are — how much SURFACE the banner covers. That is area, and it gets measured in squares: square centimeters, square feet, square meters. Today we find the area of triangles, parallelograms and trapezoids, and then we handle a weird lopsided shape by chopping it into pieces we already know.',
       estimatedMinutes: 1,
     },
     {
@@ -63,7 +63,7 @@ export const SEED_M7MATH_U8_AREA_OF_POLYGONS: LessonPlan = {
     {
       id: 'worked-triangle-perpendicular-height',
       kind: 'worked_example',
-      problem: 'A triangle has a base of 10 cm. The dashed height drawn straight down to that base is 6 cm. One slanted side is labelled 7 cm. Find the area.',
+      problem: 'A triangle has a base of 10 cm. The dashed height drawn straight down to that base is 6 cm. One slanted side is labeled 7 cm. Find the area.',
       steps: [
         'Three numbers are on the picture, and the formula only wants two of them. Pick carefully.',
         'The base is 10 cm. The height must be perpendicular to that base, and the dashed 6 cm segment is the one meeting the base at a square corner. So the height is 6 cm.',
@@ -129,7 +129,7 @@ export const SEED_M7MATH_U8_AREA_OF_POLYGONS: LessonPlan = {
     {
       id: 'try-numeric-decompose',
       kind: 'try_yourself',
-      problem: 'A patio is shaped like the letter L. The whole shape fits inside a 10 m by 8 m rectangle, but a 4 m by 3 m rectangle is missing from one corner. What is the area of the patio in square metres? Type your answer as a number.',
+      problem: 'A patio is shaped like the letter L. The whole shape fits inside a 10 m by 8 m rectangle, but a 4 m by 3 m rectangle is missing from one corner. What is the area of the patio in square meters? Type your answer as a number.',
       responseFormat: 'numeric',
       expectedAnswer: '68',
       hints: [

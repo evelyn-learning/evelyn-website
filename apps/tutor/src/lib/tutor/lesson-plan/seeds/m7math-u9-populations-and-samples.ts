@@ -117,7 +117,7 @@ export const SEED_M7MATH_U9_POPULATIONS_AND_SAMPLES: LessonPlan = {
       id: 'try-representative-sample',
       kind: 'try_yourself',
       problem:
-        'Maya wants to know the favourite sport of all 500 students at her school. Which sample is most likely to be representative?',
+        'Maya wants to know the favorite sport of all 500 students at her school. Which sample is most likely to be representative?',
       responseFormat: 'mcq',
       choices: [
         { id: 'a', text: 'The 15 players on the school basketball team' },
@@ -149,7 +149,7 @@ export const SEED_M7MATH_U9_POPULATIONS_AND_SAMPLES: LessonPlan = {
       id: 'misconception-convenience-sample',
       kind: 'misconception_check',
       question:
-        'A student says: I asked all 22 kids in my math class what their favourite school subject is, so my results represent the whole school of 600 students. What went wrong?',
+        'A student says: I asked all 22 kids in my math class what their favorite school subject is, so my results represent the whole school of 600 students. What went wrong?',
       commonErrors: [
         {
           answer: 'The 22 students in my math class represent all 600 students in the school.',

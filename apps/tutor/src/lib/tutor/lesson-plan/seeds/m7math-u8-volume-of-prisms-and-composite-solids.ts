@@ -36,7 +36,7 @@ export const SEED_M7MATH_U8_VOLUME_OF_PRISMS_AND_COMPOSITE_SOLIDS: LessonPlan = 
       kind: 'hook',
       goal: 'Separate filling a solid from wrapping it, using a container the student can picture filling.',
       script:
-        'Last lesson you wrapped a box. Today you fill it. Think about a fish tank: the glass is the outside, but the water is the inside, and nobody buys water by the square metre. Volume answers the question how much fits in here, and it gets counted in little cubes, so the units are cubic — cm³, m³, cubic inches. Here is the good news. There is not a different formula for every prism. There is one, and it works for a cereal box, a Toblerone and a hexagonal pencil all the same way.',
+        'Last lesson you wrapped a box. Today you fill it. Think about a fish tank: the glass is the outside, but the water is the inside, and nobody buys water by the square meter. Volume answers the question how much fits in here, and it gets counted in little cubes, so the units are cubic — cm³, m³, cubic inches. Here is the good news. There is not a different formula for every prism. There is one, and it works for a cereal box, a Toblerone and a hexagonal pencil all the same way.',
       estimatedMinutes: 1,
     },
     {
@@ -47,7 +47,7 @@ export const SEED_M7MATH_U8_VOLUME_OF_PRISMS_AND_COMPOSITE_SOLIDS: LessonPlan = 
         'VOLUME COUNTS CUBES — volume is how many unit cubes fit inside a solid, so every volume answer ends in cubic units: cm³, m³, in³. Surface area wraps the outside and stays in square units. Same solid, two completely different questions, and the units are how you tell your reader which one you answered. A volume answer written in cm² is wrong even when the number is right.',
         'ONE FORMULA FOR EVERY PRISM — V = Bh. The capital B is the AREA OF THE BASE, and the little h is how far the solid stretches from one base to the other. Fill the base with a single layer of cubes, then stack h of those layers. That is the whole idea, and it does not care whether the base is a rectangle, a triangle or a hexagon.',
         'FINDING B IS THE REAL WORK — the base is one of the two identical parallel faces. Work out its area with whatever 2-D formula fits: a rectangle base is l × w, a triangle base is ½bh, and so on. B is an AREA, so write it with square units, and it becomes cubic units only after you multiply by the height.',
-        'A RECTANGULAR PRISM IS THE FAMILIAR CASE — with a rectangle base, V = Bh becomes length × width × height. That is not a separate rule to memorise. It is V = Bh with B = l × w already multiplied out.',
+        'A RECTANGULAR PRISM IS THE FAMILIAR CASE — with a rectangle base, V = Bh becomes length × width × height. That is not a separate rule to memorize. It is V = Bh with B = l × w already multiplied out.',
         'THE HEIGHT IS PERPENDICULAR, AND IT MAY LIE ON ITS SIDE — h is the straight-across distance between the two bases, never a slanted edge. For a triangular prism lying down like a tent, the two triangles are the ends, so B is the triangle area and h is how LONG the tent is. Do not be fooled because that measurement runs sideways.',
         'COMPOSITE SOLIDS GET CHOPPED UP — a solid built from more than one prism has no formula of its own. Slice it into ordinary prisms, find V = Bh for each piece, and add the results. If a chunk has been hollowed out instead, find the whole solid and subtract the missing chunk. Keep the units on every line so the pieces add up honestly.',
       ],
@@ -85,7 +85,7 @@ export const SEED_M7MATH_U8_VOLUME_OF_PRISMS_AND_COMPOSITE_SOLIDS: LessonPlan = 
         'V of the bottom block = Bh = 40 × 3 = 120 cm³.',
         'Top block next. Its base is 4 cm by 4 cm, so B = 4 × 4 = 16 cm². Its height is 5 cm.',
         'V of the top block = Bh = 16 × 5 = 80 cm³.',
-        'Add the pieces: 120 + 80 = 200 cm³. Both pieces were already in cubic centimetres, so they add directly. If one piece had been hollowed OUT of the other instead of stacked on top, the only change would be subtracting instead of adding.',
+        'Add the pieces: 120 + 80 = 200 cm³. Both pieces were already in cubic centimeters, so they add directly. If one piece had been hollowed OUT of the other instead of stacked on top, the only change would be subtracting instead of adding.',
       ],
       answer: '200 cm³',
       estimatedMinutes: 3,
@@ -129,12 +129,12 @@ export const SEED_M7MATH_U8_VOLUME_OF_PRISMS_AND_COMPOSITE_SOLIDS: LessonPlan = 
     {
       id: 'try-numeric-container',
       kind: 'try_yourself',
-      problem: 'A juice carton is a rectangular prism. Its base measures 8 cm by 6 cm and it stands 20 cm tall. How many cubic centimetres of juice does it hold when full? Type your answer as a number.',
+      problem: 'A juice carton is a rectangular prism. Its base measures 8 cm by 6 cm and it stands 20 cm tall. How many cubic centimeters of juice does it hold when full? Type your answer as a number.',
       responseFormat: 'numeric',
       expectedAnswer: '960',
       hints: [
         'Find the base area first: B = 8 × 6.',
-        'Then use V = Bh with the 20 cm height. As a bonus, 1 cm³ of juice is 1 millilitre, so your number is also the millilitres on the label.',
+        'Then use V = Bh with the 20 cm height. As a bonus, 1 cm³ of juice is 1 milliliter, so your number is also the milliliters on the label.',
       ],
       estimatedMinutes: 2,
     },

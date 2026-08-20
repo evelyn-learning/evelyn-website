@@ -70,7 +70,7 @@ export const SEED_M7MATH_U8_SURFACE_AREA_OF_PRISMS_AND_PYRAMIDS: LessonPlan = {
         'Front and back: each is 8 cm × 3 cm = 24 cm². Two of them give 48 cm².',
         'Left and right ends: each is 5 cm × 3 cm = 15 cm². Two of them give 30 cm².',
         'Add the three pairs: 80 + 48 + 30 = 158 cm². Six faces were counted, which matches the box, so nothing got lost.',
-        'The formula does the same thing faster: SA = 2(lw + lh + wh) = 2(40 + 24 + 15) = 2 × 79 = 158 cm². Same answer, and the units are square centimetres because cardboard is flat.',
+        'The formula does the same thing faster: SA = 2(lw + lh + wh) = 2(40 + 24 + 15) = 2 × 79 = 158 cm². Same answer, and the units are square centimeters because cardboard is flat.',
       ],
       answer: '158 cm²',
       estimatedMinutes: 3,
@@ -129,7 +129,7 @@ export const SEED_M7MATH_U8_SURFACE_AREA_OF_PRISMS_AND_PYRAMIDS: LessonPlan = {
     {
       id: 'try-numeric-cube',
       kind: 'try_yourself',
-      problem: 'A number cube has edges 7 cm long. What is its surface area in square centimetres? Type your answer as a number.',
+      problem: 'A number cube has edges 7 cm long. What is its surface area in square centimeters? Type your answer as a number.',
       responseFormat: 'numeric',
       expectedAnswer: '294',
       hints: [

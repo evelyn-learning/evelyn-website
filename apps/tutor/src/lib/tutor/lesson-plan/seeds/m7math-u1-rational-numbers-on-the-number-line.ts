@@ -144,7 +144,7 @@ export const SEED_M7MATH_U1_RATIONAL_NUMBERS_ON_THE_NUMBER_LINE: LessonPlan = {
         {
           answer: 'between 0 and −1',
           misconception: 'Looking only at the digits after the decimal point and ignoring the whole 1 in front of them, so −1.25 gets treated as if it were −0.25.',
-          correctsTo: '−1.25 is one whole unit and a quarter away from zero. That first whole unit already carries you all the way to −1, and the extra 0.25 keeps travelling left from there. So −1.25 sits between −1 and −2, a quarter of the way from −1 toward −2. Say the number out loud as "one and a quarter, on the negative side" and the whole unit stops disappearing.',
+          correctsTo: '−1.25 is one whole unit and a quarter away from zero. That first whole unit already carries you all the way to −1, and the extra 0.25 keeps traveling left from there. So −1.25 sits between −1 and −2, a quarter of the way from −1 toward −2. Say the number out loud as "one and a quarter, on the negative side" and the whole unit stops disappearing.',
         },
         {
           answer: '−1.75',

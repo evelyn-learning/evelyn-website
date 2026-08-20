@@ -34,7 +34,7 @@ export const SEED_M7MATH_U2_SUBTRACTING_RATIONAL_NUMBERS: LessonPlan = {
     {
       id: 'hook',
       kind: 'hook',
-      goal: 'Make "subtracting a negative" feel obvious by cancelling a debt the student can picture.',
+      goal: 'Make "subtracting a negative" feel obvious by canceling a debt the student can picture.',
       script:
         'Your group chat is splitting a pizza order. You never had cash on you, so the spreadsheet says you owe 3 dollars. That is negative 3. Then the friend who paid says forget it, we are square. Something got taken AWAY from you, and yet you ended up 3 dollars better off. That is not a trick, and it is not a typo. Taking away a negative leaves you higher than you were. Today we turn that into one rule that handles every subtraction in this course.',
       suggestedTools: ['show_number_line'],

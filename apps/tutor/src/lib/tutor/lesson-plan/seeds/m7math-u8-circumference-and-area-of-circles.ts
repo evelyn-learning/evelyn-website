@@ -45,7 +45,7 @@ export const SEED_M7MATH_U8_CIRCUMFERENCE_AND_AREA_OF_CIRCLES: LessonPlan = {
       kind: 'concept',
       goal: 'Define radius, diameter and π, then separate circumference from area by what each one measures and what units it gets.',
       keyIdeas: [
-        'RADIUS AND DIAMETER — the radius r runs from the centre of the circle out to the edge. The diameter d runs all the way across, through the centre, so it is exactly two radii: d = 2r, and r = d ÷ 2. Almost every circle mistake starts by mixing these two up, so name which one you have been given before you touch a formula.',
+        'RADIUS AND DIAMETER — the radius r runs from the center of the circle out to the edge. The diameter d runs all the way across, through the center, so it is exactly two radii: d = 2r, and r = d ÷ 2. Almost every circle mistake starts by mixing these two up, so name which one you have been given before you touch a formula.',
         'π IS ONE FIXED NUMBER — wrap a string around any circle and compare it to the distance across. The string is always about 3.14 times as long, for every circle that has ever existed. That ratio is π. We will use π ≈ 3.14 in this lesson, and because it is rounded, our answers are approximate too — use ≈ instead of = when you round, and give two decimal places when the answer does not stop on its own.',
         'CIRCUMFERENCE IS A DISTANCE AROUND — C = πd, and since d = 2r you can also write C = 2πr. Both give the same number. Circumference is a length, like the length of a piece of string, so it gets plain units: cm, m, in. Never square units.',
         'AREA IS THE SURFACE INSIDE — A = πr². The little 2 means r × r, so square the radius FIRST and then multiply by π. Area gets square units: cm², m², in². Circumference is the crust, area is the cheese.',
@@ -53,8 +53,8 @@ export const SEED_M7MATH_U8_CIRCUMFERENCE_AND_AREA_OF_CIRCLES: LessonPlan = {
         'YOU CAN RUN THE FORMULA BACKWARDS — if you know the circumference and want the radius, undo the multiplication: C = 2πr means r = C ÷ (2π), so divide by 6.28. A circumference of 62.8 ft gives r = 62.8 ÷ 6.28 = 10 ft. Check it by going forwards again.',
       ],
       vocabulary: [
-        { term: 'radius', definition: 'the distance from the centre of a circle to its edge; half the diameter.' },
-        { term: 'diameter', definition: 'the distance straight across a circle through the centre; twice the radius.' },
+        { term: 'radius', definition: 'the distance from the center of a circle to its edge; half the diameter.' },
+        { term: 'diameter', definition: 'the distance straight across a circle through the center; twice the radius.' },
         { term: 'circumference', definition: 'the distance all the way around a circle, measured in plain units of length.' },
         { term: 'π', definition: 'the number you get when you divide any circle circumference by its diameter, about 3.14.' },
       ],
@@ -67,10 +67,10 @@ export const SEED_M7MATH_U8_CIRCUMFERENCE_AND_AREA_OF_CIRCLES: LessonPlan = {
       problem: 'A round clock face has a diameter of 10 cm. Find its circumference and its area. Use π ≈ 3.14.',
       steps: [
         'Write down what you were given: d = 10 cm. That is the diameter, not the radius. Say it out loud so you do not forget it later.',
-        'Circumference first, because C = πd takes the diameter exactly as it is: C ≈ 3.14 × 10 = 31.4 cm. Plain centimetres, because that is a distance around.',
+        'Circumference first, because C = πd takes the diameter exactly as it is: C ≈ 3.14 × 10 = 31.4 cm. Plain centimeters, because that is a distance around.',
         'Now switch to area, and area needs the radius. Halve the diameter: r = 10 ÷ 2 = 5 cm.',
         'Apply A = πr². Square the radius first: 5² = 5 × 5 = 25.',
-        'Then multiply by π: A ≈ 3.14 × 25 = 78.5 cm². Square centimetres, because that is a surface.',
+        'Then multiply by π: A ≈ 3.14 × 25 = 78.5 cm². Square centimeters, because that is a surface.',
         'So C ≈ 31.4 cm and A ≈ 78.5 cm². WRONG answer to avoid: 3.14 × 10² = 314 cm², which comes from dropping the diameter into the area formula. RIGHT answer: 78.5 cm². That wrong answer is four times too big, every single time.',
       ],
       answer: 'C ≈ 31.4 cm and A ≈ 78.5 cm²',
@@ -122,7 +122,7 @@ export const SEED_M7MATH_U8_CIRCUMFERENCE_AND_AREA_OF_CIRCLES: LessonPlan = {
       ],
       expectedAnswer: '37.68 m',
       hints: [
-        'A fence around the edge is a distance around, so this is circumference, not area. The answer gets plain metres.',
+        'A fence around the edge is a distance around, so this is circumference, not area. The answer gets plain meters.',
         'You have the radius, so use C = 2πr: multiply 2 × 3.14 × 6.',
       ],
       estimatedMinutes: 2,

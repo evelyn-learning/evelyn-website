@@ -143,7 +143,7 @@ export const SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY: LessonPlan
         {
           answer: 'tails is more likely now',
           misconception: 'The gambler\'s fallacy: believing that a run of one result builds up pressure that the next trial has to release, as if the coin were keeping score.',
-          correctsTo: 'No. The coin has no memory. Flip six is a brand new trial, so P(tails) is still 1/2, exactly as it was on flip one. What the law of large numbers actually says is that the extra heads get DILUTED by the flips still to come, not cancelled out by tails owed back. WRONG answer to avoid: tails is more likely. RIGHT answer: P(tails) = 1/2.',
+          correctsTo: 'No. The coin has no memory. Flip six is a brand new trial, so P(tails) is still 1/2, exactly as it was on flip one. What the law of large numbers actually says is that the extra heads get DILUTED by the flips still to come, not canceled out by tails owed back. WRONG answer to avoid: tails is more likely. RIGHT answer: P(tails) = 1/2.',
         },
         {
           answer: 'P(heads) = 1, because heads won every trial so far',

@@ -64,7 +64,7 @@ export const SEED_M7MATH_U9_RANDOM_SAMPLING_AND_INFERENCES: LessonPlan = {
       id: 'worked-scale-up-tacos',
       kind: 'worked_example',
       problem:
-        'A school has 600 students. In a random sample of 50 students, 12 said tacos are their favourite lunch. About how many of the 600 students would say tacos?',
+        'A school has 600 students. In a random sample of 50 students, 12 said tacos are their favorite lunch. About how many of the 600 students would say tacos?',
       steps: [
         'Check the sample first. It was random, so it is fair to generalize from it. If it had been the 50 students in the cafeteria line at the taco stand, this whole calculation would be worthless.',
         'Write the sample proportion: 12 out of 50. As a decimal that is 12 divided by 50, which is 0.24, and as a percent it is 24 percent.',
@@ -133,7 +133,7 @@ export const SEED_M7MATH_U9_RANDOM_SAMPLING_AND_INFERENCES: LessonPlan = {
       id: 'try-numeric-pizza-estimate',
       kind: 'try_yourself',
       problem:
-        'Pine Middle School has 500 students. In a random sample of 25 students, 8 said pizza is their favourite lunch. About how many of the 500 students would say pizza? Type your answer as a number.',
+        'Pine Middle School has 500 students. In a random sample of 25 students, 8 said pizza is their favorite lunch. About how many of the 500 students would say pizza? Type your answer as a number.',
       responseFormat: 'numeric',
       expectedAnswer: '160',
       hints: [
@@ -153,7 +153,7 @@ export const SEED_M7MATH_U9_RANDOM_SAMPLING_AND_INFERENCES: LessonPlan = {
           misconception:
             'Treating an estimate built from a sample as though it were a counted total, so the word about disappears from the conclusion.',
           correctsTo:
-            'The scaling itself is right: 400 divided by 10 is 40, and 3 times 40 is 120. What is wrong is the word exactly. A different random sample of 10 might have held 2 instrument players, giving 80, or 5, giving 200. The sample tells you the neighbourhood, not the address. Say about 120 students.',
+            'The scaling itself is right: 400 divided by 10 is 40, and 3 times 40 is 120. What is wrong is the word exactly. A different random sample of 10 might have held 2 instrument players, giving 80, or 5, giving 200. The sample tells you the neighborhood, not the address. Say about 120 students.',
         },
         {
           answer: 'The sample was random, so 10 students is enough to be sure.',

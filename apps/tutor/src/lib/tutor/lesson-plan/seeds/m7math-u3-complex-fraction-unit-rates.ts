@@ -101,7 +101,7 @@ export const SEED_M7MATH_U3_COMPLEX_FRACTION_UNIT_RATES: LessonPlan = {
         { id: 'a', text: '2 1/4 miles per hour', correct: true },
         { id: 'b', text: '1/4 mile per hour' },
         { id: 'c', text: '4/9 mile per hour' },
-        { id: 'd', text: '9/12 mile per hour' },
+        { id: 'd', text: '4 miles per hour' },
       ],
       expectedAnswer: '2 1/4 miles per hour',
       hints: [
@@ -119,7 +119,7 @@ export const SEED_M7MATH_U3_COMPLEX_FRACTION_UNIT_RATES: LessonPlan = {
         { id: 'a', text: '2 1/2 tubs per hour', correct: true },
         { id: 'b', text: '2/5 of a tub per hour' },
         { id: 'c', text: '5/32 of a tub per hour' },
-        { id: 'd', text: '5/8 of a tub per hour' },
+        { id: 'd', text: '6 2/5 tubs per hour' },
       ],
       expectedAnswer: '2 1/2 tubs per hour',
       hints: [
