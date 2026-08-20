@@ -43,6 +43,13 @@ const HS_COURSE_NAMES: Record<string, string> = {
   act: 'ACT',
 };
 
+// Course slug (from `evelyn.ms.<slug>.`) → exact portal course-title string.
+// Same byte-match requirement as HS_COURSE_NAMES above. Extend as new MS
+// (middle-school) courses are backfilled.
+const MS_COURSE_NAMES: Record<string, string> = {
+  m7math: 'Grade 7 Math',
+};
+
 interface BaselineDraft {
   baselineId: string;
   course: string;
@@ -229,6 +236,8 @@ function courseFor(plan: LessonPlan): string {
   if (plan.id.startsWith('evelyn.ap.research.')) return 'AP Research';
   const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
   if (hsMatch && HS_COURSE_NAMES[hsMatch[1]]) return HS_COURSE_NAMES[hsMatch[1]];
+  const msMatch = plan.id.match(/^evelyn\.ms\.([a-z0-9]+)\./);
+  if (msMatch && MS_COURSE_NAMES[msMatch[1]]) return MS_COURSE_NAMES[msMatch[1]];
   return plan.title;
 }
 
@@ -373,6 +382,15 @@ function constNameFor(planId: string, cedUnit: number): string {
     const slug = planId.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
     return `BASELINE_${courseSlug.toUpperCase()}_U${cedUnit}_${slug.toUpperCase().replace(/-/g, '_')}`;
   }
+  const msMatch = planId.match(/^evelyn\.ms\.([a-z0-9]+)\./);
+  if (msMatch) {
+    // 'evelyn.ms.m7math.integers-and-absolute-value.v1' + unit 1 →
+    // 'BASELINE_M7MATH_U1_INTEGERS_AND_ABSOLUTE_VALUE' — mirrors the
+    // lesson-plan seed's own const naming (SEED_M7MATH_U1_...).
+    const courseSlug = msMatch[1];
+    const slug = planId.replace(/^evelyn\.ms\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `BASELINE_${courseSlug.toUpperCase()}_U${cedUnit}_${slug.toUpperCase().replace(/-/g, '_')}`;
+  }
   const stripped = planId.replace(/^evelyn\./, '').replace(/\.v\d+$/, '');
   return 'BASELINE_' + stripped.toUpperCase().replace(/[.-]/g, '_');
 }
@@ -398,6 +416,13 @@ function fileNameFor(plan: LessonPlan): string {
     // 'dsat-u1-linear-equations-one-var.ts').
     const slugFromId = plan.id.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
     return `${hsMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
+  const msMatch = plan.id.match(/^evelyn\.ms\.([a-z0-9]+)\./);
+  if (msMatch) {
+    // '<course>-u<N>-<slug>.ts' — mirrors the source lesson-plan filename
+    // exactly (e.g. 'm7math-u1-integers-and-absolute-value.ts').
+    const slugFromId = plan.id.replace(/^evelyn\.ms\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `${msMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
   }
   const fallbackSlug = plan.id.replace(/^evelyn\./, '').replace(/\.v\d+$/, '').replace(/\./g, '-');
   return `${fallbackSlug}.ts`;

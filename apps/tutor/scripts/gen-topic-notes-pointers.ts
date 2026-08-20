@@ -56,8 +56,22 @@ const HS_COURSE_NAMES: Record<string, string> = {
   act: 'ACT',
 };
 
+// Course slug (from `evelyn.ms.<slug>.`) → exact portal course-title string.
+// Kept in sync with the same map in extract-topic-notes-baselines.ts.
+const MS_COURSE_NAMES: Record<string, string> = {
+  m7math: 'Grade 7 Math',
+};
+
 function isHS(plan: LessonPlan): boolean {
   return plan.id.startsWith('evelyn.hs.');
+}
+
+// Middle-school (MS) courses get their own system prompt variant — same
+// "ordinary class work, no exam framing" posture as SYSTEM_HS, but with a
+// middle-school teacher persona instead of a high-school one (see
+// SYSTEM_MS below).
+function isMS(plan: LessonPlan): boolean {
+  return plan.id.startsWith('evelyn.ms.');
 }
 
 // Digital SAT (and future test-prep courses) get their own system prompt —
@@ -81,6 +95,8 @@ function courseFor(plan: LessonPlan): string {
   if (plan.id.startsWith('evelyn.ap.macro.')) return 'AP Macroeconomics';
   const hsMatch = plan.id.match(/^evelyn\.(?:hs|testprep)\.([a-z0-9]+)\./);
   if (hsMatch && HS_COURSE_NAMES[hsMatch[1]]) return HS_COURSE_NAMES[hsMatch[1]];
+  const msMatch = plan.id.match(/^evelyn\.ms\.([a-z0-9]+)\./);
+  if (msMatch && MS_COURSE_NAMES[msMatch[1]]) return MS_COURSE_NAMES[msMatch[1]];
   return plan.title;
 }
 
@@ -128,6 +144,34 @@ Cover a mix of kinds. Prioritize:
   - Precise vocabulary/notation students get wrong or use loosely (e.g. sign errors, notation students drop or mix up).
   - Common errors this specific topic invites (the ones a teacher sees every year).
   - Edge cases the lesson touches but doesn't emphasize.
+  - Conceptual confusions with adjacent topics in the same unit.
+
+Avoid:
+  - Restating theory that's already in the lesson content.
+  - Any mention of SAT, ACT, AP, standardized tests, exam strategy, FRQs, or rubrics — this is core class content, not test prep.
+  - Generic study advice ("review before the test"). Pointers must be CONTENT-specific.
+  - Anything > 300 chars. Tighten.
+
+Return ONLY the JSON array. No prose, no code fences, no preamble.`;
+
+// Middle-school (MS) variant: same "ordinary class work, no exam framing"
+// posture as SYSTEM_HS, but the persona and register are for a 7th
+// grader, not a high-schooler — plainer vocabulary, shorter sentences,
+// concrete framing over abstraction. Same SAT/ACT/AP/exam-vocabulary ban
+// applies (this is core class content, not test prep).
+const SYSTEM_MS = `You are an experienced middle-school math teacher producing study-notes "pointers" for a single topic in a 7th-grade math course.
+
+Pointers are tactical reminders students actually need — gotchas, precise vocabulary/notation students misuse, edge cases, common errors, and quick self-check tips. They are NOT theory (definitions/formulas/rules) and NOT methods (procedural recipes). They sit alongside theory + methods in the student's notes; they're the things a 7th grader needs to remember to avoid the mistakes this class makes over and over.
+
+Given a topic + the lesson content (theory key ideas, worked examples, recap takeaways), produce 4-8 pointers as a JSON array. Each pointer has:
+  - "content":   the pointer text. Markdown allowed. ≤300 chars. Imperative voice preferred ("Don't confuse X with Y", "Always check the sign before you Y"). Plain, concrete language a 12-year-old reads easily — short sentences, no jargon beyond what the lesson itself introduces.
+  - "kind":      one of "gotcha" | "vocab-note" | "edge-case" | "common-error" | "tip".
+  - "rationale": 1-2 sentences explaining why this pointer is worth remembering. (Not persisted — for human review only.)
+
+Cover a mix of kinds. Prioritize:
+  - Precise vocabulary/notation students get wrong or use loosely (e.g. sign errors, mixing up related terms, dropping units).
+  - Common errors this specific topic invites (the ones a teacher sees every year at this age).
+  - Edge cases the lesson touches but doesn't emphasize (e.g. zero, negative numbers, non-integer answers).
   - Conceptual confusions with adjacent topics in the same unit.
 
 Avoid:
@@ -257,6 +301,11 @@ function fileNameFor(plan: LessonPlan): string {
     const slugFromId = plan.id.replace(/^evelyn\.(?:hs|testprep)\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
     return `${hsMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
   }
+  const msMatch = plan.id.match(/^evelyn\.ms\.([a-z0-9]+)\./);
+  if (msMatch) {
+    const slugFromId = plan.id.replace(/^evelyn\.ms\.[a-z0-9]+\./, '').replace(/\.v\d+$/, '');
+    return `${msMatch[1]}-u${cedUnit}-${slugFromId}.ts`;
+  }
   const fallbackSlug = plan.id.replace(/^evelyn\./, '').replace(/\.v\d+$/, '').replace(/\./g, '-');
   return `${fallbackSlug}.ts`;
 }
@@ -328,7 +377,15 @@ function buildUserMessage(plan: LessonPlan): string {
 
 async function genPointers(plan: LessonPlan): Promise<PointerProposal[]> {
   const userMessage = buildUserMessage(plan);
-  const system = isDSAT(plan) ? SYSTEM_DSAT : isACT(plan) ? SYSTEM_ACT : isHS(plan) ? SYSTEM_HS : SYSTEM_AP;
+  const system = isDSAT(plan)
+    ? SYSTEM_DSAT
+    : isACT(plan)
+      ? SYSTEM_ACT
+      : isHS(plan)
+        ? SYSTEM_HS
+        : isMS(plan)
+          ? SYSTEM_MS
+          : SYSTEM_AP;
   const response = await anthropic.messages.create({
     model: MODEL,
     max_tokens: 4000,
