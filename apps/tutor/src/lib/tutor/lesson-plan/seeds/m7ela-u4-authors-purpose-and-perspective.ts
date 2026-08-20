@@ -109,9 +109,9 @@ export const SEED_M7ELA_U4_AUTHORS_PURPOSE_AND_PERSPECTIVE: LessonPlan = {
         'Read this notice from a school website, then choose its primary purpose.\n\n"The library will be closed for floor repairs from the ninth to the twelfth. Books due during those days can be dropped in the return box by the gym doors. The reading room opens again on the thirteenth."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'To inform readers about the closing dates and where to return books', correct: true },
+        { id: 'a', text: 'To explain how a damaged library floor gets repaired' },
         { id: 'b', text: 'To persuade readers that the library should stay open during the repairs' },
-        { id: 'c', text: 'To explain how a damaged library floor gets repaired' },
+        { id: 'c', text: 'To inform readers about the closing dates and where to return books', correct: true },
         { id: 'd', text: 'To entertain readers with a story about the school library' },
       ],
       expectedAnswer: 'To inform readers about the closing dates and where to return books',

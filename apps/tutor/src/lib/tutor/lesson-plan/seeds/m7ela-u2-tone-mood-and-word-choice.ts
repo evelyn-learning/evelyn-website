@@ -104,10 +104,10 @@ export const SEED_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE: LessonPlan = {
         'Two writers describe the exact same moment.\n\nVersion 1: "At 3:15, forty students moved toward the gym doors. They went inside and sat down."\n\nVersion 2: "At 3:15, forty students swarmed the gym doors. They poured inside and grabbed seats."\n\nWhat changed between the two versions?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The events are the same, but the word choice in Version 2 gives the scene a wild, out-of-control mood.', correct: true },
+        { id: 'a', text: 'Version 2 is written in a more formal way than Version 1 is.' },
         { id: 'b', text: 'The events are the same, but the word choice in Version 2 gives the scene a calm, orderly mood.' },
         { id: 'c', text: 'Version 2 describes a bigger group of students than Version 1 describes.' },
-        { id: 'd', text: 'Version 2 is written in a more formal way than Version 1 is.' },
+        { id: 'd', text: 'The events are the same, but the word choice in Version 2 gives the scene a wild, out-of-control mood.', correct: true },
       ],
       expectedAnswer: 'The events are the same, but the word choice in Version 2 gives the scene a wild, out-of-control mood.',
       hints: [
@@ -123,10 +123,10 @@ export const SEED_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE: LessonPlan = {
         'Read the passage, then choose the best description of the NARRATOR\'S tone.\n\n"Dad calls his ancient blue van the Blueberry. It rattles at every stop sign and the radio only plays one station. He washes it every Saturday, humming, like it is a race car. I have never once asked him to park around the corner."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Affectionate and amused — the narrator teases the van but has never asked Dad to hide it.', correct: true },
+        { id: 'a', text: 'Neutral — the narrator only reports facts about the van and takes no attitude at all.' },
         { id: 'b', text: 'Proud — Dad is proud of the van, since he washes it every Saturday and hums while he does it.' },
         { id: 'c', text: 'Embarrassed — the narrator is ashamed of the rattling and the one radio station.' },
-        { id: 'd', text: 'Neutral — the narrator only reports facts about the van and takes no attitude at all.' },
+        { id: 'd', text: 'Affectionate and amused — the narrator teases the van but has never asked Dad to hide it.', correct: true },
       ],
       expectedAnswer: 'Affectionate and amused — the narrator teases the van but has never asked Dad to hide it.',
       hints: [
@@ -142,10 +142,10 @@ export const SEED_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE: LessonPlan = {
         'Which word best names the MOOD of this passage — the feeling it gives the reader?\n\n"Nadia read her sister\'s message twice, then once more. The 4:40 bus had come and gone eleven minutes ago, and her sister had not been on it. Nadia stayed at the window with the phone still in her hand."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Uneasy', correct: true },
+        { id: 'a', text: 'Bored' },
         { id: 'b', text: 'Impatient' },
         { id: 'c', text: 'Relieved' },
-        { id: 'd', text: 'Bored' },
+        { id: 'd', text: 'Uneasy', correct: true },
       ],
       expectedAnswer: 'Uneasy',
       hints: [

@@ -111,10 +111,10 @@ export const SEED_M7ELA_U10_CITING_SOURCES: LessonPlan = {
         'These four sentences all come from one student\'s research paper about animal shelters. Which sentence does NOT need a citation?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'An animal shelter is a place that takes in pets who do not have a home.', correct: true },
+        { id: 'a', text: 'The shelter on Trellis Road started taking in rabbits three years ago.' },
         { id: 'b', text: 'More dogs are returned to the shelter in the weeks right after winter break than at any other time of year.' },
         { id: 'c', text: 'Shy dogs settle faster in a quiet room than in a hallway where people keep walking past.' },
-        { id: 'd', text: 'The shelter on Trellis Road started taking in rabbits three years ago.' },
+        { id: 'd', text: 'An animal shelter is a place that takes in pets who do not have a home.', correct: true },
       ],
       expectedAnswer: 'An animal shelter is a place that takes in pets who do not have a home.',
       hints: [
@@ -130,10 +130,10 @@ export const SEED_M7ELA_U10_CITING_SOURCES: LessonPlan = {
         'A student copied one sentence into her notes and wrote this beside it. TITLE: "Why Rain Gardens Work." WHERE IT WAS PUBLISHED: a website called Green Block. WHEN IT WAS PUBLISHED: March of last year. WHERE I FOUND IT: greenblock.example/rain-gardens. Which piece of a citation is still missing?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Who made it - the author, or the group that published it.', correct: true },
+        { id: 'a', text: 'Nothing is missing, because she already wrote down the exact sentence.' },
         { id: 'b', text: 'What it is called - the title of the article.' },
         { id: 'c', text: 'When it came out - the date it was published.' },
-        { id: 'd', text: 'Nothing is missing, because she already wrote down the exact sentence.' },
+        { id: 'd', text: 'Who made it - the author, or the group that published it.', correct: true },
       ],
       expectedAnswer: 'Who made it - the author, or the group that published it.',
       hints: [

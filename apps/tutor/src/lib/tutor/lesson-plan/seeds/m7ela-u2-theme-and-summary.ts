@@ -129,10 +129,10 @@ export const SEED_M7ELA_U2_THEME_AND_SUMMARY: LessonPlan = {
         'Read the story, then choose the theme the story actually supports.\n\n"Kiran ran his trumpet solo in the garage for six weeks so nobody would hear him miss notes. On concert night he missed one anyway. Afterward his sister said she had not noticed. Kiran had spent six weeks afraid of an audience that was not listening that closely."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The fear of being judged is usually bigger than the judging that actually happens.', correct: true },
+        { id: 'a', text: 'Never let anyone hear you make a mistake.' },
         { id: 'b', text: 'Practicing alone is the fastest way to get good at something.' },
         { id: 'c', text: 'Music.' },
-        { id: 'd', text: 'Never let anyone hear you make a mistake.' },
+        { id: 'd', text: 'The fear of being judged is usually bigger than the judging that actually happens.', correct: true },
       ],
       expectedAnswer: 'The fear of being judged is usually bigger than the judging that actually happens.',
       hints: [
@@ -148,10 +148,10 @@ export const SEED_M7ELA_U2_THEME_AND_SUMMARY: LessonPlan = {
         'Read the story, then choose the best OBJECTIVE SUMMARY.\n\n"Tessa found a stray dog behind the gym on Monday. She fed it half a granola bar and kept it a secret all week, hiding it in the storage shed. On Friday the custodian found the shed door open and the dog gone. Tessa put up eleven posters around the neighborhood, and on Sunday a neighbor called to say the dog was on her porch."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Tessa hides a stray dog in a storage shed for a week. On Friday the shed door is open and the dog is gone. She puts up posters, and on Sunday a neighbor calls to say the dog is on her porch.', correct: true },
+        { id: 'a', text: 'Kids should tell an adult right away when they find a stray animal.' },
         { id: 'b', text: 'Tessa is a really kind person, and the best part is that she never gave up looking for the dog.' },
         { id: 'c', text: 'Tessa found a dog behind the gym. She fed it half a granola bar. She hid it in the storage shed. The shed door was open. She made eleven posters.' },
-        { id: 'd', text: 'Kids should tell an adult right away when they find a stray animal.' },
+        { id: 'd', text: 'Tessa hides a stray dog in a storage shed for a week. On Friday the shed door is open and the dog is gone. She puts up posters, and on Sunday a neighbor calls to say the dog is on her porch.', correct: true },
       ],
       expectedAnswer: 'Tessa hides a stray dog in a storage shed for a week. On Friday the shed door is open and the dog is gone. She puts up posters, and on Sunday a neighbor calls to say the dog is on her porch.',
       hints: [

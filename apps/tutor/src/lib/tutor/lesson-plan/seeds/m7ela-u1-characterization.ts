@@ -107,10 +107,10 @@ export const SEED_M7ELA_U1_CHARACTERIZATION: LessonPlan = {
         'Read the passage, then choose the best description of Nadia.\n\n"Nadia read the instructions twice before she opened the box. Then she laid every piece out in rows and counted them against the list."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Nadia is careful.', correct: true },
+        { id: 'a', text: 'Nadia is impatient.' },
         { id: 'b', text: 'Nadia is bored.' },
         { id: 'c', text: 'Nadia does not understand how the model works.' },
-        { id: 'd', text: 'Nadia is impatient.' },
+        { id: 'd', text: 'Nadia is careful.', correct: true },
       ],
       expectedAnswer: 'Nadia is careful.',
       hints: [
@@ -126,10 +126,10 @@ export const SEED_M7ELA_U1_CHARACTERIZATION: LessonPlan = {
         'What does the detail about the shoelace tell you?\n\n"\'I\'m not nervous,\' Sam told his sister. He had tied and retied his left shoelace four times."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Sam is nervous, even though he says he is not.', correct: true },
+        { id: 'a', text: 'Sam does not take care of his clothes.' },
         { id: 'b', text: 'Sam is telling the truth and feels calm.' },
         { id: 'c', text: 'Sam\'s shoelace is broken.' },
-        { id: 'd', text: 'Sam does not take care of his clothes.' },
+        { id: 'd', text: 'Sam is nervous, even though he says he is not.', correct: true },
       ],
       expectedAnswer: 'Sam is nervous, even though he says he is not.',
       hints: [
@@ -145,10 +145,10 @@ export const SEED_M7ELA_U1_CHARACTERIZATION: LessonPlan = {
         'Which detail best shows that Ben thinks about other people, not only himself?\n\n"Every morning Ben got to the bus stop ten minutes early. He carried a spare pencil in case someone forgot one. His backpack held an umbrella even in July."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'He carries a spare pencil in case someone forgets one.', correct: true },
+        { id: 'a', text: 'He carries a backpack every morning.' },
         { id: 'b', text: 'He gets to the bus stop ten minutes early.' },
         { id: 'c', text: 'He keeps an umbrella in his backpack even in July.' },
-        { id: 'd', text: 'He carries a backpack every morning.' },
+        { id: 'd', text: 'He carries a spare pencil in case someone forgets one.', correct: true },
       ],
       expectedAnswer: 'He carries a spare pencil in case someone forgets one.',
       hints: [

@@ -111,10 +111,10 @@ export const SEED_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS: LessonPlan = {
         'A page of an invented community newsletter has a paragraph and a table beside it, both described here in words.\n\nThe paragraph reads: "The library is the quietest place in town to do homework after school. A librarian sits at the front desk whenever the doors are open, and anyone may ask for help finding a book."\n\nThe table is titled "Library Hours" and has two columns, Day and Hours. The rows read: Monday, 9 to 5. Tuesday, 9 to 8. Saturday, 10 to 2.\n\nA student wants to know the latest they can stay in the library on a Tuesday. Where is the answer, and why?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'In the table, because the closing times appear there and nowhere else on the page.', correct: true },
+        { id: 'a', text: 'In both, because any fact printed in a table is also stated somewhere in the paragraph.' },
         { id: 'b', text: 'In the paragraph, because the paragraph is about doing homework after school.' },
         { id: 'c', text: 'The page does not answer it, so the student would have to ask the librarian.' },
-        { id: 'd', text: 'In both, because any fact printed in a table is also stated somewhere in the paragraph.' },
+        { id: 'd', text: 'In the table, because the closing times appear there and nowhere else on the page.', correct: true },
       ],
       expectedAnswer: 'In the table, because the closing times appear there and nowhere else on the page.',
       hints: [
@@ -130,9 +130,9 @@ export const SEED_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS: LessonPlan = {
         'A photograph in an invented school newsletter is described this way: a line of students kneel along a wire fence, each holding a small leafy plant, with a pile of soil behind them.\n\nThe caption under the photograph reads: "Seventh graders plant the new hedge along the field fence, three weeks before the first frost."\n\nWhich piece of information does the caption give that the photograph alone could not?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The time of year the planting happened.', correct: true },
+        { id: 'a', text: 'That there is a fence next to the students.' },
         { id: 'b', text: 'That the students are putting plants into the ground.' },
-        { id: 'c', text: 'That there is a fence next to the students.' },
+        { id: 'c', text: 'The time of year the planting happened.', correct: true },
         { id: 'd', text: 'How tall the hedge will grow once it is finished.' },
       ],
       expectedAnswer: 'The time of year the planting happened.',
@@ -149,9 +149,9 @@ export const SEED_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS: LessonPlan = {
         'An invented book about weather has three finding tools, described here in words. At the front is a table of contents listing five chapters in this order: "Clouds", "Rain", "Snow", "Wind", "Storms". At the back is a glossary that gives the meaning of the weather terms used in the book. Also at the back is an index that lists words in alphabetical order with the page numbers where each word appears.\n\nA reader wants to find every page in the book that mentions hail. Which tool should the reader use?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The index, because it lists the exact word alphabetically with every page number where it appears.', correct: true },
+        { id: 'a', text: 'The glossary, because it will explain what hail is.' },
         { id: 'b', text: 'The table of contents, because hail is a kind of weather and so it will be one of the chapters.' },
-        { id: 'c', text: 'The glossary, because it will explain what hail is.' },
+        { id: 'c', text: 'The index, because it lists the exact word alphabetically with every page number where it appears.', correct: true },
         { id: 'd', text: 'The chapter called Storms, because hail falls during storms.' },
       ],
       expectedAnswer: 'The index, because it lists the exact word alphabetically with every page number where it appears.',

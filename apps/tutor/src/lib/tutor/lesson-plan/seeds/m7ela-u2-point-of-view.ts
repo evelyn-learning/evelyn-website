@@ -126,10 +126,10 @@ export const SEED_M7ELA_U2_POINT_OF_VIEW: LessonPlan = {
         'Read the excerpt, then choose what this narrator lets the reader know.\n\n"I told Jamal that losing the match did not bother me. He laughed once, then walked ahead of me the whole way home and did not say another word."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'You learn what the narrator says and notices, but you can only guess what Jamal is thinking.', correct: true },
+        { id: 'a', text: 'You learn everything that happens in the story, including the parts the narrator is not there for.' },
         { id: 'b', text: 'You learn what the narrator is thinking and what Jamal is thinking.' },
         { id: 'c', text: 'You learn what Jamal is thinking, but not what the narrator is thinking.' },
-        { id: 'd', text: 'You learn everything that happens in the story, including the parts the narrator is not there for.' },
+        { id: 'd', text: 'You learn what the narrator says and notices, but you can only guess what Jamal is thinking.', correct: true },
       ],
       expectedAnswer: 'You learn what the narrator says and notices, but you can only guess what Jamal is thinking.',
       hints: [

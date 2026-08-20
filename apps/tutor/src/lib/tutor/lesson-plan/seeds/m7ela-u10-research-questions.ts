@@ -131,10 +131,10 @@ export const SEED_M7ELA_U10_RESEARCH_QUESTIONS: LessonPlan = {
         'Devon is writing three pages about thunderstorms. Which of these four is the best research question for that assignment?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Why does thunder sometimes sound like one sharp crack and sometimes like a long rumble?', correct: true },
+        { id: 'a', text: 'What is the scariest kind of weather?' },
         { id: 'b', text: 'Thunderstorms in our state.' },
         { id: 'c', text: 'Is thunder caused by lightning?' },
-        { id: 'd', text: 'What is the scariest kind of weather?' },
+        { id: 'd', text: 'Why does thunder sometimes sound like one sharp crack and sometimes like a long rumble?', correct: true },
       ],
       expectedAnswer: 'Why does thunder sometimes sound like one sharp crack and sometimes like a long rumble?',
       hints: [

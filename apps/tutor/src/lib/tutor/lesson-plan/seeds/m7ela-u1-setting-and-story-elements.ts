@@ -109,10 +109,10 @@ export const SEED_M7ELA_U1_SETTING_AND_STORY_ELEMENTS: LessonPlan = {
         'Read the passage, then choose the best explanation of how the setting affects the story.\n\n"The bus for the science fair was leaving at seven. The storm had dropped so much snow overnight that the school lot was buried to the top of the curb. Priya stood at the window holding her project box and watched the plow go past the end of her street without turning in."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The overnight snow buries the lot and the plow does not come, which creates Priya\'s problem: her ride to the science fair may never leave.', correct: true },
+        { id: 'a', text: 'The snow is background description. The story would happen the same way on a clear day.' },
         { id: 'b', text: 'The setting is a snowy morning at a school in winter.' },
         { id: 'c', text: 'The snow proves that Priya is careless, because she did not check the weather before building her project.' },
-        { id: 'd', text: 'The snow is background description. The story would happen the same way on a clear day.' },
+        { id: 'd', text: 'The overnight snow buries the lot and the plow does not come, which creates Priya\'s problem: her ride to the science fair may never leave.', correct: true },
       ],
       expectedAnswer: 'The overnight snow buries the lot and the plow does not come, which creates Priya\'s problem: her ride to the science fair may never leave.',
       hints: [
@@ -128,10 +128,10 @@ export const SEED_M7ELA_U1_SETTING_AND_STORY_ELEMENTS: LessonPlan = {
         'What does the setting reveal about Omar?\n\n"The rented cabin had no phone signal and the nearest neighbor was four miles down a dirt road. When the generator died at midnight, Omar did not wake his little sister. He carried the camp lantern to her side of the room, set it burning by her bed, and then sat down in the dark by the door until the sky went gray."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'With no signal and no neighbor close by, Omar cannot call anyone for help, so he handles the dark himself and keeps his sister calm — he is steady in a crisis.', correct: true },
+        { id: 'a', text: 'Omar is unkind to his sister, because he leaves her alone instead of waking her up.' },
         { id: 'b', text: 'Omar is afraid of the dark, because the first thing he does is light a lantern.' },
         { id: 'c', text: 'The setting is a cabin at midnight with the power off.' },
-        { id: 'd', text: 'Omar is unkind to his sister, because he leaves her alone instead of waking her up.' },
+        { id: 'd', text: 'With no signal and no neighbor close by, Omar cannot call anyone for help, so he handles the dark himself and keeps his sister calm — he is steady in a crisis.', correct: true },
       ],
       expectedAnswer: 'With no signal and no neighbor close by, Omar cannot call anyone for help, so he handles the dark himself and keeps his sister calm — he is steady in a crisis.',
       hints: [
@@ -147,10 +147,10 @@ export const SEED_M7ELA_U1_SETTING_AND_STORY_ELEMENTS: LessonPlan = {
         'Which statement best explains how the setting shapes what Rosalind does?\n\n"In 1925 the only telephone in the village sat behind the counter of the general store, and the store locked its doors at six. Rosalind\'s brother\'s fever climbed at nine that night, so she took the lantern off its hook and ran the two miles to the doctor\'s house herself."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The setting causes the problem — in 1925 the village\'s one telephone is shut inside a closed store at nine at night — which forces Rosalind to run two miles for the doctor herself.', correct: true },
+        { id: 'a', text: 'The setting does not really matter, because a brother with a fever would be an emergency in any time or place.' },
         { id: 'b', text: 'The setting is a small village in 1925.' },
         { id: 'c', text: 'Only the place is setting. The year and the hour of the night are not part of the setting.' },
-        { id: 'd', text: 'The setting does not really matter, because a brother with a fever would be an emergency in any time or place.' },
+        { id: 'd', text: 'The setting causes the problem — in 1925 the village\'s one telephone is shut inside a closed store at nine at night — which forces Rosalind to run two miles for the doctor herself.', correct: true },
       ],
       expectedAnswer: 'The setting causes the problem — in 1925 the village\'s one telephone is shut inside a closed store at nine at night — which forces Rosalind to run two miles for the doctor herself.',
       hints: [

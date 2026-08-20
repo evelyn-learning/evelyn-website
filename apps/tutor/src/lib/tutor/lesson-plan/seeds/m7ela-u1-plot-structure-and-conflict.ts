@@ -107,10 +107,10 @@ export const SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT: LessonPlan = {
         'Read the excerpt, then name the central conflict.\n\n"Nina had one spare concert ticket. She had promised it to Rosa weeks ago, before Jae moved to town and told her the band was the only thing he liked about his old city. Nina held her phone for twenty minutes and did not type anything."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Character vs self — Nina is pulled between two things she wants.', correct: true },
+        { id: 'a', text: 'There is no conflict here, because nobody argues or fights.' },
         { id: 'b', text: 'Character vs character — Nina and Rosa are fighting over the ticket.' },
         { id: 'c', text: 'Character vs society — a rule about tickets is stopping Nina.' },
-        { id: 'd', text: 'There is no conflict here, because nobody argues or fights.' },
+        { id: 'd', text: 'Character vs self — Nina is pulled between two things she wants.', correct: true },
       ],
       expectedAnswer: 'Character vs self — Nina is pulled between two things she wants.',
       hints: [
@@ -126,10 +126,10 @@ export const SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT: LessonPlan = {
         'Read the story summary, then choose the climax.\n\n"Omar wanted to take the class hamster home for winter break. His mother said no pets in the apartment, and she said it three times. Then a storm knocked out the school power for a whole day, and the fire alarms blared until a technician shut them off. That evening Omar\'s teacher called and explained that the building would be locked and empty for two weeks. Omar\'s mother listened, and then she told Omar to go and get the cage. Omar carried it upstairs and set it by the sunny window."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Omar\'s mother tells him to go and get the cage.', correct: true },
+        { id: 'a', text: 'Omar carries the cage upstairs and sets it by the sunny window.' },
         { id: 'b', text: 'The storm knocks out the school power and the fire alarms blare all day.' },
         { id: 'c', text: 'Omar\'s mother says no pets in the apartment for the first time.' },
-        { id: 'd', text: 'Omar carries the cage upstairs and sets it by the sunny window.' },
+        { id: 'd', text: 'Omar\'s mother tells him to go and get the cage.', correct: true },
       ],
       expectedAnswer: 'Omar\'s mother tells him to go and get the cage.',
       hints: [
@@ -145,10 +145,10 @@ export const SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT: LessonPlan = {
         'Read the story summary. Which event is part of the RISING ACTION of the central conflict?\n\n"Talia has wanted a spot on the school garden crew since fifth grade. She lives on Pine Street with her aunt and two cats. In March she fills out the application. The office loses it and the deadline passes. Talia offers to come in on Saturdays and do the watering nobody else wants. The teacher says yes and adds a seventh name to the list."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The office loses the application and the deadline passes.', correct: true },
+        { id: 'a', text: 'Talia has wanted a spot on the garden crew since fifth grade.' },
         { id: 'b', text: 'Talia lives on Pine Street with her aunt and two cats.' },
         { id: 'c', text: 'The teacher says yes and adds a seventh name to the list.' },
-        { id: 'd', text: 'Talia has wanted a spot on the garden crew since fifth grade.' },
+        { id: 'd', text: 'The office loses the application and the deadline passes.', correct: true },
       ],
       expectedAnswer: 'The office loses the application and the deadline passes.',
       hints: [

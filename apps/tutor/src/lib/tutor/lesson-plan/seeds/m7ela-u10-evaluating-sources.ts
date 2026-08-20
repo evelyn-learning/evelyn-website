@@ -109,10 +109,10 @@ export const SEED_M7ELA_U10_EVALUATING_SOURCES: LessonPlan = {
         'Your research question is: "Does listening to music while studying help students remember more?" Which source is the most credible for THAT question?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'An article in a science magazine for young readers, written by a named memory researcher, that lists the studies it used.', correct: true },
+        { id: 'a', text: 'A neatly designed site with a serious-sounding name that gives no author and no sources.' },
         { id: 'b', text: 'A page on the site of a company that sells study playlists, with no author listed.' },
         { id: 'c', text: 'A forum thread where nine students describe how music affects their own homework.' },
-        { id: 'd', text: 'A neatly designed site with a serious-sounding name that gives no author and no sources.' },
+        { id: 'd', text: 'An article in a science magazine for young readers, written by a named memory researcher, that lists the studies it used.', correct: true },
       ],
       expectedAnswer: 'An article in a science magazine for young readers, written by a named memory researcher, that lists the studies it used.',
       hints: [
@@ -128,10 +128,10 @@ export const SEED_M7ELA_U10_EVALUATING_SOURCES: LessonPlan = {
         'You find a page on the website of the company that makes and sells a brand of bike helmet. Which research question is this page a good source for?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'What sizes and colors this brand of helmet comes in.', correct: true },
+        { id: 'a', text: 'Which brand of helmet most riders in the country choose.' },
         { id: 'b', text: 'Whether this brand of helmet is the safest helmet a rider can buy.' },
         { id: 'c', text: 'Whether wearing a helmet lowers the chance of injury in a bike crash.' },
-        { id: 'd', text: 'Which brand of helmet most riders in the country choose.' },
+        { id: 'd', text: 'What sizes and colors this brand of helmet comes in.', correct: true },
       ],
       expectedAnswer: 'What sizes and colors this brand of helmet comes in.',
       hints: [
@@ -147,10 +147,10 @@ export const SEED_M7ELA_U10_EVALUATING_SOURCES: LessonPlan = {
         'A student finds a booklet printed in 1962 by a town parks department. It lists the trees planted in the town park that year and names the families who paid for them. Which research question is this booklet a strong source for?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Which trees were planted in the town park in 1962, and who paid for them.', correct: true },
+        { id: 'a', text: 'Whether the town park is a good place to watch birds this spring.' },
         { id: 'b', text: 'Which kinds of trees grow in the town park today.' },
         { id: 'c', text: 'Which kinds of trees are the best choice to plant in the town now.' },
-        { id: 'd', text: 'Whether the town park is a good place to watch birds this spring.' },
+        { id: 'd', text: 'Which trees were planted in the town park in 1962, and who paid for them.', correct: true },
       ],
       expectedAnswer: 'Which trees were planted in the town park in 1962, and who paid for them.',
       hints: [

@@ -107,10 +107,10 @@ export const SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE: LessonPlan = {
         'Read the passage, then choose the inference the passage supports.\n\n"Rosa leaned her bike against the fence and pulled off her helmet. Her shirt was stuck to her back with sweat, and she drank the whole water bottle without stopping."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Rosa has just finished a hard ride.', correct: true },
+        { id: 'a', text: 'Rosa won a race that afternoon.' },
         { id: 'b', text: 'Rosa was wearing a helmet.' },
         { id: 'c', text: 'Rosa does not enjoy riding her bike.' },
-        { id: 'd', text: 'Rosa won a race that afternoon.' },
+        { id: 'd', text: 'Rosa has just finished a hard ride.', correct: true },
       ],
       expectedAnswer: 'Rosa has just finished a hard ride.',
       hints: [
@@ -126,10 +126,10 @@ export const SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE: LessonPlan = {
         'Claim: Pepper the dog has started to trust Marcus. Which line from the passage best supports that claim?\n\n"The new dog, Pepper, hid under the kitchen table for her first two days. Marcus sat on the floor nearby and read out loud without ever looking at her. By Saturday, Pepper was asleep against his shoe."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: '"By Saturday, Pepper was asleep against his shoe."', correct: true },
+        { id: 'a', text: '"Pepper followed Marcus to the bus stop every morning."' },
         { id: 'b', text: '"The new dog, Pepper, hid under the kitchen table for her first two days."' },
         { id: 'c', text: '"Marcus sat on the floor nearby and read out loud without ever looking at her."' },
-        { id: 'd', text: '"Pepper followed Marcus to the bus stop every morning."' },
+        { id: 'd', text: '"By Saturday, Pepper was asleep against his shoe."', correct: true },
       ],
       expectedAnswer: '"By Saturday, Pepper was asleep against his shoe."',
       hints: [
@@ -145,10 +145,10 @@ export const SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE: LessonPlan = {
         'Read the passage. Three of these are guesses or are contradicted by the words. Which claim does the passage actually support?\n\n"The rain started during second period. At lunch, Dev pushed his tray away and stared out the window. His soccer bag sat zipped beside his chair."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Dev is worried the rain will stop his soccer game.', correct: true },
+        { id: 'a', text: 'Dev does not like rainy weather in general.' },
         { id: 'b', text: 'Dev left his soccer bag at home this morning.' },
         { id: 'c', text: 'Dev has been told that his game is cancelled.' },
-        { id: 'd', text: 'Dev does not like rainy weather in general.' },
+        { id: 'd', text: 'Dev is worried the rain will stop his soccer game.', correct: true },
       ],
       expectedAnswer: 'Dev is worried the rain will stop his soccer game.',
       hints: [

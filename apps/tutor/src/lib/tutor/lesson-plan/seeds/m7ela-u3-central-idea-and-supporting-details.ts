@@ -127,10 +127,10 @@ export const SEED_M7ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS: LessonPlan = {
         'An article has this central idea: sleep is when your brain stores what you learned during the day. Which detail actually SUPPORTS that idea?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'People who practice something new and then sleep usually do it better the next day than people who stay up instead.', correct: true },
+        { id: 'a', text: 'Some people remember their dreams and some people almost never do.' },
         { id: 'b', text: 'Middle schoolers need more sleep each night than adults do.' },
         { id: 'c', text: 'A bedroom that is dark and cool makes falling asleep easier.' },
-        { id: 'd', text: 'Some people remember their dreams and some people almost never do.' },
+        { id: 'd', text: 'People who practice something new and then sleep usually do it better the next day than people who stay up instead.', correct: true },
       ],
       expectedAnswer: 'People who practice something new and then sleep usually do it better the next day than people who stay up instead.',
       hints: [

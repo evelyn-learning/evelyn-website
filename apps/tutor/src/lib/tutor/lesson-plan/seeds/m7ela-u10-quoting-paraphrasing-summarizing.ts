@@ -127,10 +127,10 @@ export const SEED_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING: LessonPlan = {
         'You are writing a report about the new skate park. A sign at the entrance says, "Helmets required. No exceptions, no excuses." You want your reader to hear exactly how strict that rule sounds. Which move fits?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Quote the line, because the exact words are what make the rule sound strict.', correct: true },
+        { id: 'a', text: 'Copy the words into your own sentence without quotation marks, since a sign is not something a person said out loud.' },
         { id: 'b', text: 'Paraphrase the line, because paraphrasing is always the safer choice.' },
         { id: 'c', text: 'Summarize everything else written on the sign so the reader gets the full picture.' },
-        { id: 'd', text: 'Copy the words into your own sentence without quotation marks, since a sign is not something a person said out loud.' },
+        { id: 'd', text: 'Quote the line, because the exact words are what make the rule sound strict.', correct: true },
       ],
       expectedAnswer: 'Quote the line, because the exact words are what make the rule sound strict.',
       hints: [

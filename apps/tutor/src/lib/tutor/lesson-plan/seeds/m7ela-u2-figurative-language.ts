@@ -111,10 +111,10 @@ export const SEED_M7ELA_U2_FIGURATIVE_LANGUAGE: LessonPlan = {
         'Read the sentence, then choose what the metaphor tells you.\n\n"By the fourth quarter, our ten-point lead was an ice cube in July."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The lead was shrinking fast and was not going to last.', correct: true },
+        { id: 'a', text: 'The team stopped trying in the fourth quarter.' },
         { id: 'b', text: 'The game was played outdoors in hot weather.' },
         { id: 'c', text: 'The lead was small from the very beginning.' },
-        { id: 'd', text: 'The team stopped trying in the fourth quarter.' },
+        { id: 'd', text: 'The lead was shrinking fast and was not going to last.', correct: true },
       ],
       expectedAnswer: 'The lead was shrinking fast and was not going to last.',
       hints: [
