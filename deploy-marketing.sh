@@ -115,11 +115,20 @@ handle_error() {
   # "does a backup exist" test is true of a backup made by ANOTHER deploy
   # running in this same checkout, and acting on it would overwrite that
   # deploy's production .env.local mid-build. Unreachable cross-process today
-  # — nothing executable runs between the ERR trap install below and
-  # acquire_local_lock — but that is correct by distance, not by
-  # construction, and one inserted command would reopen it. (Before the lock
-  # block initialises it, $RESTORE_ENV is unset and this is a no-op, which is
-  # the right answer: no backup can exist that early.)
+  # — but no longer by distance: the root-deploy guard now runs between the
+  # ERR trap install below and acquire_local_lock, which is exactly the
+  # "one inserted command" the previous version of this comment warned about.
+  # It is still safe, and now by construction rather than by luck:
+  #   - the guard leaves via an explicit `exit 1`, and an explicit exit does
+  #     not fire an ERR trap, so handle_error is not reached on refusal;
+  #   - its only failure-capable command, `git rev-parse --git-dir`, is
+  #     wrapped in `|| echo 'not-a-repo'`, so it cannot fail unchecked;
+  #   - and even if handle_error did run, $RESTORE_ENV is still unset that
+  #     early, so both branches below are no-ops.
+  # Anything else inserted above acquire_local_lock must re-establish those
+  # three properties. (Before the lock block initialises it, $RESTORE_ENV is
+  # unset and this is a no-op, which is the right answer: no backup can exist
+  # that early.)
   if [ "$RESTORE_ENV" = true ] && [ -f ".env.local.dev.bak" ]; then
     mv .env.local.dev.bak .env.local
     log_message "INFO" "Restored local dev .env.local"
@@ -217,6 +226,51 @@ trap 'handle_error $LINENO' ERR
 # message, and the message names $LOCK_DIR either way. A start-time check
 # would close it and is more machinery than the risk warrants.
 # ---------------------------------------------------------------------------
+# ── GUARD: never deploy from a repo ROOT. ────────────────────────────────
+# Ported from deploy-tutor.sh (b49e77c1) after the 2026-08-21 incident, where
+# a verified engine deploy was silently destroyed by running that script from
+# the shared repo root: the root sat on `main`, main did not carry the round,
+# so the deploy shipped the root's branch and dropped the round — while nine
+# feature flags stayed ON in the server env, so every check read healthy for
+# ten hours against code that could not read them.
+#
+# This script has the same shape and therefore the same exposure: it ships the
+# WORKING TREE, and four agent sessions share this repo. The deploy lock is no
+# defence — it exists only DURING a deploy, so a free lock proves nothing about
+# undeployed work on another branch.
+#
+# Placement is load-bearing: this sits BEFORE $LOCK_DIR is defined and before
+# the EXIT trap is installed, so a refusal cannot acquire, or strand, the
+# global lock on its way out. deploy-tutor.sh's first revision sat in preflight
+# AFTER acquisition and stranded the lock for every other session when it
+# refused. Do not move this below the trap.
+#
+# A worktree's git-dir is `<repo>/.git/worktrees/<name>`; a root checkout's is
+# plain `.git`. That is the whole test.
+#
+# Escape hatch, deliberately awkward: ALLOW_ROOT_DEPLOY=1. If you reach for it,
+# first ask what is on the root's branch that is NOT in yours.
+GIT_DIR_REL="$(git rev-parse --git-dir 2>/dev/null || echo 'not-a-repo')"
+case "$GIT_DIR_REL" in
+  */.git/worktrees/*) : ;;                       # linked worktree — correct
+  not-a-repo)
+    log_message "ERROR" "Not a git repository — refusing to deploy from an unknown tree."
+    exit 1 ;;
+  *)
+    if [ "${ALLOW_ROOT_DEPLOY:-}" = "1" ]; then
+      log_message "INFO" "ALLOW_ROOT_DEPLOY=1 — deploying from the repo ROOT by explicit override."
+    else
+      log_message "ERROR" "REFUSING TO DEPLOY FROM THE REPO ROOT (git-dir: $GIT_DIR_REL, branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null))."
+      log_message "ERROR" "  This script ships the WORKING TREE. The root is shared by every agent session,"
+      log_message "ERROR" "  so deploying from it ships whatever branch the root happens to be on and"
+      log_message "ERROR" "  silently drops any work that lives on another branch (2026-08-21 incident)."
+      log_message "ERROR" "  Deploy from your own worktree instead:  .claude/worktrees/<yours>"
+      log_message "ERROR" "  Override only if you know what root carries that your worktree does not:"
+      log_message "ERROR" "      ALLOW_ROOT_DEPLOY=1 ./deploy-marketing.sh"
+      exit 1
+    fi ;;
+esac
+
 LOCK_DIR="/tmp/evelyn-deploy.lock"
 LOCK_HELD=false
 # Initialised here, not just at Step 1, because the EXIT trap below can fire
