@@ -2,6 +2,12 @@ import type { NextConfig } from 'next';
 import path from 'path';
 
 const nextConfig: NextConfig = {
+  // NEXT_DIST_DIR was the staged-build override for deploy-update.sh, which
+  // built on the server and swapped a staging dir into .next atomically.
+  // That script was DELETED 2026-08-21 and nothing sets this variable any
+  // more, so this always resolves to '.next'. Kept rather than inlined
+  // because it is a harmless escape hatch, but do not assume a reader can
+  // find the mechanism it was written for — it is gone.
   distDir: process.env.NEXT_DIST_DIR || '.next',
   // Pin the Turbopack workspace root to the repo root (two levels up from
   // this app, which lives at apps/tutor/) — see apps/marketing/next.config.ts
