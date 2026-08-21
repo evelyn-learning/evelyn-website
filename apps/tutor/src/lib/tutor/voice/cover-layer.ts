@@ -68,7 +68,7 @@ function words(t: string): string[] {
  *  optional fraction tail ("/6", itself optionally signed). R36 (live
  *  2026-07-30): the old extractor grabbed only the last digit RUN, so
  *  "-3/6" echoed as "ok 6" and "m is 4 and b is -2" as "ok 2". */
-const ANSWER_EXPR_RE = /(?:-|\b(?:minus|negative)\s+)?\d+(?:\.\d+)?(?:\s*\/\s*-?\d+(?:\.\d+)?)?/gi;
+const ANSWER_EXPR_RE = /(?:-|\b(?:minus|negative)\s+)?(?:\d+(?:\.\d+)?|\.\d+)(?:\s*\/\s*-?\d+(?:\.\d+)?)?/gi;
 
 /** R45 T7 (live): "i over 1 + x" (ASR for "1/(1+x)") echoed as "1 over 1" —
  *  the fraction capture stopped at the "+". Per R36's precedent (multi-number
@@ -126,7 +126,17 @@ const ANSWER_PREFIX_ALLOWED = new Set([
  *  are the live cases (66.6 vs 66.6-repeating); the fraction-denominator
  *  words cover "3 fourths" echoing as "3". */
 const VALUE_MODIFIER_TRAIL_RE =
-  /^\s*(?:bar|repeating|recurring|repeated|percent|percentage|squared|cubed|root|halves|thirds|fourths|quarters|fifths|sixths|sevenths|eighths|ninths|tenths)\b/i;
+  /^\s*(?:%|(?:bar|repeating|recurring|repeated|percent|percentage|squared|cubed|root|halves|thirds|fourths|quarters|fifths|sixths|sevenths|eighths|ninths|tenths)\b)/i;
+
+/** R50b (live, portal-d7825123): ASR writes a bare decimal as ".6", and the
+ *  original expression matched only the digit RUN — so ".6" echoed as "6",
+ *  stating a value ten times too large. The word form ("point 6") was already
+ *  refused by the prefix rule; the SYMBOL form slipped straight through.
+ *  Normalised rather than refused, because ".6" IS the student's whole answer
+ *  and "point six" is a useful, correct echo. */
+function normaliseLeadingDot(token: string): string {
+  return token.replace(/(^|[^\d])\.(\d)/g, '$10.$2');
+}
 
 /** Lowercased word directly before `index`, apostrophes normalised to ASCII.
  *  Empty string when the number opens the utterance (always allowed). */
@@ -164,7 +174,7 @@ export function extractAnswerToken(t: string): string | null {
   if (before && !ANSWER_PREFIX_ALLOWED.has(before)) return null;
   if (VALUE_MODIFIER_TRAIL_RE.test(t.slice((m.index ?? 0) + raw.length))) return null;
 
-  return raw
+  return normaliseLeadingDot(raw)
     .replace(/\s*\/\s*/, ' over ')
     .replace(/-\s*/g, 'minus ')
     .replace(/\bnegative\b/gi, 'minus')

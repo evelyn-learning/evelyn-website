@@ -516,7 +516,15 @@ export default function TutorSession(props: TutorSessionProps) {
         realtimeHandleRef.current?.speakText(
           type === 'drawing'
             ? 'Got your drawing — one sec while I take a look.'
-            : 'Got your upload — one sec while I read it.',
+            // R50b (live, portal-d7825123): "read" is a HOMOGRAPH and Cartesia
+            // spoke the PAST tense — "one sec while I *red* it". The drawing
+            // variant never had the problem because "take a look" has no
+            // ambiguous pronunciation, so the fix is to match it rather than
+            // to fight the TTS. Avoid read/lead/live/tear/wind/row/bow in any
+            // future ack copy: the engine picks a pronunciation and there is
+            // no in-band way to tell it which, so different words are the
+            // only reliable fix.
+            : 'Got your upload — one sec while I look it over.',
         );
         (async () => {
           try {
@@ -562,7 +570,7 @@ export default function TutorSession(props: TutorSessionProps) {
    *
    * Routed into `handleStudentInput('image', …)` rather than reimplemented,
    * because that path already does what an upload should: it speaks an
-   * instant "Got your upload — one sec while I read it.", puts the image on
+   * instant "Got your upload — one sec while I look it over.", boards it
    * the board, extracts it, and hands the brain the extracted text. The
    * default is deliberately NOT a no-op — a prop that silently does nothing
    * is what made this invisible for the life of the embed.

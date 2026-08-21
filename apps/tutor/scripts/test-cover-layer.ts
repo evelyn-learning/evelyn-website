@@ -194,5 +194,27 @@ check('r50-keep-curly-apos',   extractAnswerToken('Yeah, that\u2019s 16.') === '
 check('r50-keep-agreement-cat', cat("Yeah, that's 16.") === 'numeric-echo');
 check('r50-keep-filler-cat',    cat("Uh, it'll be uh 6.") === 'numeric-echo');
 
+// --- R50b: the SYMBOL forms of the same two defects R50 fixed in WORD form.
+// Live session portal-d7825123, on the R50 build — so these are gaps in the
+// R50 fix, not regressions of it. R50 refused "point 6" and "60 percent";
+// ASR had written ".6" and "60%", which slipped straight through.
+// The lesson is Rule 23(b) turned on myself: I built the guard from the exact
+// surface forms in one session's transcript and never enumerated the class,
+// so it covered the spellings I had seen and missed their siblings.
+check('r50b-leading-dot-token',   extractAnswerToken('Uh, .6.') === '0.6');   // was "6" — ten times too large
+check('r50b-leading-dot-bare',    extractAnswerToken('.6') === '0.6');
+check('r50b-percent-symbol',      extractAnswerToken('60%.') === null);       // was "60"
+check('r50b-percent-symbol-cat',  cat('60%.') !== 'numeric-echo');
+check('r50b-percent-spaced',      extractAnswerToken('60 %') === null);
+// The word forms R50 already handled must still hold.
+check('r50b-word-point-still',    extractAnswerToken('point 6') === null);
+check('r50b-word-percent-still',  extractAnswerToken('60 percent') === null);
+// And plain numbers must still echo — the fix must not swallow the feature.
+check('r50b-plain-int-still',     extractAnswerToken('Um, 64.') === '64');
+check('r50b-plain-dec-still',     extractAnswerToken('0.6') === '0.6');
+check('r50b-neg-still',           extractAnswerToken("it's -2.") === 'minus 2');
+check('r50b-frac-still',          extractAnswerToken('1/2') === '1 over 2');
+check('r50b-plain-int-cat',       cat('Um, 64.') === 'numeric-echo');
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');
