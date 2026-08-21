@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-types-of-government-001",
+    "loId": "m7geo.types-of-government",
+    "cedCode": "M7GEO-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a monarchy, how does the ruler come to hold the position?",
+    "choices": [
+      "By inheriting it, usually from a parent",
+      "By winning a free election",
+      "By being chosen by a council of religious leaders",
+      "By being appointed by the courts"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what makes a king or a queen different from an elected leader.",
+      "The word describes how someone got the job, not how much power the job carries. In a monarchy the position passes down within a family."
+    ]
+  },
+  {
+    "id": "m7geo-types-of-government-002",
+    "loId": "m7geo.types-of-government",
+    "cedCode": "M7GEO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Rennick, adults gather several times a year and vote themselves on each proposed law. No assembly votes on the laws for them. Which term fits Rennick best?",
+    "choices": [
+      "A representative democracy",
+      "A direct democracy",
+      "A theocracy",
+      "A federal system"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both kinds of democracy involve voting. The difference is what people are voting ON.",
+      "Rennickers vote on the laws themselves rather than electing officials to do it, which is the direct kind. Watch for a choice that answers a different question: federal describes where power sits, not who holds it."
+    ]
+  },
+  {
+    "id": "m7geo-types-of-government-003",
+    "loId": "m7geo.types-of-government",
+    "cedCode": "M7GEO-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Delvara, almost every decision -- school rules, road spending, policing -- is made by the national government in the capital. Delvara's twelve districts carry those decisions out but cannot change them. How is power distributed in Delvara?",
+    "choices": [
+      "Federal, because Delvara is divided into twelve districts",
+      "Federal, because the districts are the ones carrying out the decisions",
+      "Unitary, because almost all power sits with the central government",
+      "Direct democracy, because the capital decides everything"
+    ],
+    "answer": "C",
+    "hints": [
+      "Every country has regions inside it, so having districts does not settle this question on its own. Ask whether the regions control anything of their own.",
+      "In Delvara the districts only carry out what the center decides. Power that is concentrated at the center is the unitary arrangement."
+    ]
+  },
+  {
+    "id": "m7geo-types-of-government-004",
+    "loId": "m7geo.types-of-government",
+    "cedCode": "M7GEO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Corrin, the head of state is a king who inherited the throne. He opens the national assembly, signs finished laws and greets visitors from other countries, but he does not decide what the laws say. Corrin's voters elect the assembly members who write and pass them. Which pair of labels fits Corrin?",
+    "choices": [
+      "An absolute monarchy, and not a democracy",
+      "A theocracy and a direct democracy",
+      "An absolute monarchy and a representative democracy",
+      "A constitutional monarchy and a representative democracy"
+    ],
+    "answer": "D",
+    "hints": [
+      "Inheriting the throne settles that Corrin is a monarchy. A second question decides which kind: does the monarch actually govern, or is the role ceremonial?",
+      "The king signs laws he did not write, so he is ceremonial, which is the constitutional kind. Voters elect the officials who make the decisions, which is the representative kind of democracy. Both labels can be true of the same country."
+    ]
+  },
+  {
+    "id": "m7geo-types-of-government-005",
+    "loId": "m7geo.types-of-government",
+    "cedCode": "M7GEO-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Wexley, one leader took control after the previous government collapsed. No free election has been held since, and all major decisions are made by that leader and a small circle of officials. Which label fits Wexley, and what is the clue that decides it?",
+    "choices": [
+      "Dictatorship, also called authoritarian rule, because power is held by a leader and a small group who were not chosen in a free election",
+      "Monarchy, because one person holds most of the power",
+      "Theocracy, because a small circle of officials works alongside the leader",
+      "Unitary system, because the decisions are all made in one place"
+    ],
+    "answer": "A",
+    "hints": [
+      "Run the one question that sorts every type: who holds power, and how did they come to hold it?",
+      "A monarch inherits the position and a theocracy is governed by religious leaders, and neither is described here. The deciding clue is the absence of a free election."
+    ]
+  },
+  {
+    "id": "m7geo-types-of-government-006",
+    "loId": "m7geo.types-of-government",
+    "cedCode": "M7GEO-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student reads that the invented country of Tarnick is a federal representative democracy and then writes: \"So the people of Tarnick must be friendly, hard-working and fond of arguing.\" What has gone wrong?",
+    "choices": [
+      "The word federal is the problem, because a democracy cannot also be federal",
+      "The label is the problem, because Tarnick should have been called a republic instead",
+      "Treating a description of a system as though it were a description of the people who live under it",
+      "The problem is the word representative, because only a direct democracy tells you anything about a country"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what those two labels actually describe. Do they describe a way of making decisions, or millions of individual people?",
+      "A type of government tells you how decisions get made, and nothing more. Populations everywhere contain enormous variety, and people do not usually choose the system they are born into."
+    ]
+  },
+  {
+    "id": "m7geo-citizenship-and-rights-001",
+    "loId": "m7geo.citizenship-and-rights",
+    "cedCode": "M7GEO-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does it mean to say that a person is a citizen of a country?",
+    "choices": [
+      "That the person is currently living inside that country",
+      "That the person holds legal membership in that country under its own laws",
+      "That the person speaks the language most widely used in that country",
+      "That the person's family has lived in the area for many generations"
+    ],
+    "answer": "B",
+    "hints": [
+      "Citizenship is a status that is written down somewhere. Ask what kind of thing decides it.",
+      "Living in a place, speaking its language and having family from the area are all real things, but none of them is the legal test. Citizenship is a status a country grants under its own laws."
+    ]
+  },
+  {
+    "id": "m7geo-citizenship-and-rights-002",
+    "loId": "m7geo.citizenship-and-rights",
+    "cedCode": "M7GEO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marovia is an invented country. Dara was born somewhere else and later moved to Marovia. She lived there for the period Marovian law requires, met the other requirements Marovia sets, took the oath Marovia asks for, and was recognized as a Marovian citizen. Which route to citizenship does this describe?",
+    "choices": [
+      "Citizenship by being born inside the country's territory",
+      "Citizenship by descent from a parent who is already a citizen",
+      "Citizenship gained automatically by living in a country for a number of years",
+      "Naturalization"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two of the three general routes are facts about a person's birth. Only one of them is a legal process a person completes later.",
+      "Look at what Dara actually did: requirements, an oath, and then a decision by Marovia to recognize her. Living there was one of the requirements, not the whole thing on its own."
+    ]
+  },
+  {
+    "id": "m7geo-citizenship-and-rights-003",
+    "loId": "m7geo.citizenship-and-rights",
+    "cedCode": "M7GEO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Calenda is an invented country. Which item from a Calendan civics booklet is best described as a RESPONSIBILITY rather than a right?",
+    "choices": [
+      "Paying the taxes Calendan law requires",
+      "Being treated equally under Calendan law",
+      "Speaking and writing freely about what the Calendan government does",
+      "Receiving a fair hearing in a Calendan court"
+    ],
+    "answer": "A",
+    "hints": [
+      "Run one test on each choice: is this something the citizen is entitled to, or something membership asks of the citizen?",
+      "Three of these describe protection the country owes the citizen. One describes something the citizen owes in return."
+    ]
+  },
+  {
+    "id": "m7geo-citizenship-and-rights-004",
+    "loId": "m7geo.citizenship-and-rights",
+    "cedCode": "M7GEO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented countries. Marovia treats a baby born inside Marovian territory as a Marovian citizen. Terenne treats a baby as a Terennian citizen when at least one parent is already a Terennian citizen, wherever the birth happens. A baby is born outside Terenne to a mother who is a Terennian citizen. Under Terenne's rule, is that baby a Terennian citizen?",
+    "choices": [
+      "No, because the birth did not happen inside Terennian territory",
+      "No, because every person has to be naturalized before becoming a citizen of anywhere",
+      "Yes, because Terenne's rule looks at who the parent is rather than at where the birth happened",
+      "Yes, but only once the family moves to Terenne"
+    ],
+    "answer": "C",
+    "hints": [
+      "Read Terenne's rule again and ask which fact it uses: the place of the birth, or the status of a parent?",
+      "Terenne uses descent. Where the birth happened is the fact Marovia's rule uses, and borrowing one country's rule to answer a question about another country is the error to avoid here."
+    ]
+  },
+  {
+    "id": "m7geo-citizenship-and-rights-005",
+    "loId": "m7geo.citizenship-and-rights",
+    "cedCode": "M7GEO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Marovia decides citizenship at birth mainly by where the birth happened. Terenne decides it mainly by whether a parent is already a citizen. Each of the two also runs its own legal process for adults and sets its own requirements for it. What does this pair of invented countries best show?",
+    "choices": [
+      "One of the two must have made a mistake, because a rule this important should be the same everywhere",
+      "Citizenship works the same way everywhere, so the two rules must mean the same thing underneath",
+      "Terenne's rule means there is no way at all for anyone else to become Terennian",
+      "Countries build their citizenship rules out of different combinations, so who counts as a citizen can change as you cross a border"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether there is a single worldwide citizenship rule that every country has to follow.",
+      "Check the third choice against what you know about naturalization. A country that uses descent at birth can still run a legal process for adults."
+    ]
+  },
+  {
+    "id": "m7geo-citizenship-and-rights-006",
+    "loId": "m7geo.citizenship-and-rights",
+    "cedCode": "M7GEO-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Terenne is an invented country. A student writes: \"Ana speaks Terennian fluently and her family has lived in that area for generations, so she must be a Terennian citizen.\" What is wrong with that reasoning?",
+    "choices": [
+      "Nothing is wrong, because language and long family ties are how countries decide citizenship",
+      "Language and family history are not the legal test; whether Ana is a citizen depends on what Terennian law says about birth in the territory, descent and naturalization",
+      "Ana cannot be a citizen, because only people born outside a country are able to become citizens of it",
+      "Ana is a citizen of wherever she happens to live, because residence decides citizenship everywhere"
+    ],
+    "answer": "B",
+    "hints": [
+      "Citizenship is a legal status. Ask whether the two facts in the student's sentence are legal facts.",
+      "A country's citizens usually come from many backgrounds and speak many languages, and many people speak a language fluently without being a citizen of any country where it is spoken. The test is the country's own law."
+    ]
+  },
+  {
+    "id": "m7geo-borders-and-conflict-001",
+    "loId": "m7geo.borders-and-conflict",
+    "cedCode": "M7GEO-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The boundary between two invented states runs along a mountain range. What type of boundary is that?",
+    "choices": [
+      "A geometric boundary",
+      "A cultural boundary",
+      "A natural boundary, also called a physical boundary",
+      "A sovereign boundary"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what the line follows. Is a mountain range a landform, a straight line, or a difference between people?",
+      "Boundaries that follow landforms such as rivers, lakes, mountain ranges and coastlines are the natural, or physical, kind."
+    ]
+  },
+  {
+    "id": "m7geo-borders-and-conflict-002",
+    "loId": "m7geo.borders-and-conflict",
+    "cedCode": "M7GEO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Cross the boundary between two states and you are under a different set of laws, a different currency and a different government, even though the ground on both sides looks exactly the same. Which idea explains that?",
+    "choices": [
+      "Sovereignty: each state makes its own laws inside its own territory, and no outside state makes them for it",
+      "Territory: the ground on one side is a different kind of land from the ground on the other",
+      "A cultural boundary: laws always change wherever one language gives way to another",
+      "A geometric boundary: laws change only at straight lines such as lines of latitude"
+    ],
+    "answer": "A",
+    "hints": [
+      "The ground did not change, so whatever changed has to be about authority rather than about land.",
+      "Territory is the area a state controls. The word you want names a state's power to make its own laws inside that area."
+    ]
+  },
+  {
+    "id": "m7geo-borders-and-conflict-003",
+    "loId": "m7geo.borders-and-conflict",
+    "cedCode": "M7GEO-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The boundary between the invented states of Norlund and Cordia runs exactly along one line of latitude, straight from the eastern coast to the western coast, crossing plains, a forest and a range of hills without bending. What type of boundary is it?",
+    "choices": [
+      "A natural boundary, because a line of latitude is a feature of the Earth",
+      "A natural boundary, because it crosses plains, a forest and hills",
+      "A cultural boundary, because the two states have separate governments",
+      "A geometric boundary, because it follows a straight line such as a line of latitude"
+    ],
+    "answer": "D",
+    "hints": [
+      "The test is what the line FOLLOWS, not what it happens to pass through.",
+      "A natural boundary follows a landform you could stand on. A line of latitude can be surveyed and marked, but it is not a landform, and nothing about the ground changes as you cross it."
+    ]
+  },
+  {
+    "id": "m7geo-borders-and-conflict-004",
+    "loId": "m7geo.borders-and-conflict",
+    "cedCode": "M7GEO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Verano and Silt are invented states. They agreed many years ago that their boundary would run down the middle of the channel of the river between them. Since then the river has slowly shifted its channel westward. Why can that lead to a disagreement?",
+    "choices": [
+      "Because the boundary stops being a natural boundary and turns into a geometric one",
+      "Because the boundary was defined by a feature that has moved, so the same old wording can now be read as pointing at two different lines",
+      "Because the boundary disappears once the river moves, leaving the two states with no boundary at all",
+      "Because a boundary is not allowed to follow a river unless the river never moves"
+    ],
+    "answer": "B",
+    "hints": [
+      "The agreement did not change and the farmland did not walk anywhere. Work out what actually moved.",
+      "One state can read the boundary as the channel today; the other can read it as the channel on the day they signed. Both readings are reasonable, which is exactly what makes it hard."
+    ]
+  },
+  {
+    "id": "m7geo-borders-and-conflict-005",
+    "loId": "m7geo.borders-and-conflict",
+    "cedCode": "M7GEO-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: \"Borders are the places where countries fight, so a state with a lot of neighbors is in constant trouble.\" Which response is most accurate?",
+    "choices": [
+      "Accurate, because the states on either side of a boundary always disagree about where it lies",
+      "Accurate, but only for boundaries that follow rivers",
+      "Not accurate: most boundaries are settled, marked and quiet, kept that way by treaties and joint commissions, and neighboring states cooperate across them every day",
+      "Not accurate, because states with many neighbors agree with each other about everything"
+    ],
+    "answer": "C",
+    "hints": [
+      "Disagreements are the newsworthy cases, so they are the only ones a student ever hears about. Ask which kind of boundary is actually more common.",
+      "Across ordinary boundaries neighbors share river water, keep roads and rail lines connected, run crossings so trade and travel work, and coordinate on floods and wildfires. Having many neighbors mostly means having many agreements to maintain."
+    ]
+  },
+  {
+    "id": "m7geo-borders-and-conflict-006",
+    "loId": "m7geo.borders-and-conflict",
+    "cedCode": "M7GEO-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "As a general pattern, boundaries that outside powers drew without regard to the people living there have caused lasting difficulty. Here is an invented case that shows why. Mapmakers who had never visited the area drew a straight boundary between Aldoria and Bracken, and a community that shares one language now lives on both sides of that line. Which statement best explains the geographic problem?",
+    "choices": [
+      "The line is geometric, and the known weakness of a geometric boundary is that a straight line takes no notice of who lives on either side, so one community is now split between two states",
+      "The line is a cultural boundary, because a language community is involved in the problem",
+      "The line is not a real boundary, because a boundary has to follow a river or a mountain range",
+      "The two states will not be able to cooperate, because a divided community always leads to fighting"
+    ],
+    "answer": "A",
+    "hints": [
+      "Classify the line first by asking what it follows. Mapmakers drew it straight, so which of the three types is it?",
+      "Check the last choice against the concept. Is it true that a divided community ALWAYS leads to fighting, or are most boundaries managed peacefully by agreement?"
+    ]
+  },
+  {
+    "id": "m7geo-international-cooperation-001",
+    "loId": "m7geo.international-cooperation",
+    "cedCode": "M7GEO-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is a treaty?",
+    "choices": [
+      "A meeting at which one country tells another country what to do",
+      "An organization that is not run by any government and raises its own money",
+      "A law passed by a world government that every country has to follow",
+      "A written agreement between two or more countries about what each of them will do"
+    ],
+    "answer": "D",
+    "hints": [
+      "The word names something written down, and it is made BETWEEN countries rather than handed to them.",
+      "An organization run by no government is a non-governmental organization. There is no world government passing laws for every country."
+    ]
+  },
+  {
+    "id": "m7geo-international-cooperation-002",
+    "loId": "m7geo.international-cooperation",
+    "cedCode": "M7GEO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this description, then choose the form of cooperation it matches. \"A group of scientists and volunteers from many countries raises its own money from donations. It sends teams to study sea turtles and to protect the beaches where they nest. No government runs it and no government pays for it.\"",
+    "choices": [
+      "A treaty between countries",
+      "A regional organization of neighboring countries",
+      "A non-governmental organization",
+      "An international organization whose members are member states"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask the first of the two questions you ask about any organization: who are its members?",
+      "Read the last sentence of the description again. It rules out three of these four answers on its own."
+    ]
+  },
+  {
+    "id": "m7geo-international-cooperation-003",
+    "loId": "m7geo.international-cooperation",
+    "cedCode": "M7GEO-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An international organization is a standing body whose members are countries, called member states. Which of these is the best known example of a broad one, with member states from around the world?",
+    "choices": [
+      "A group of volunteers that raises money from donations to protect wildlife",
+      "The United Nations",
+      "A treaty signed by two neighboring countries about a shared road crossing",
+      "A river commission whose members are the three countries a single river runs through"
+    ],
+    "answer": "B",
+    "hints": [
+      "You are looking for a standing body whose members are countries, and whose membership reaches around the world rather than around one river or one region.",
+      "A treaty is an agreement rather than a standing body, a group of volunteers is not made of countries, and a river commission is a narrow example whose membership was set by one river."
+    ]
+  },
+  {
+    "id": "m7geo-international-cooperation-004",
+    "loId": "m7geo.international-cooperation",
+    "cedCode": "M7GEO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three invented countries share one river. The Kestrel River begins in the mountains of Nera, crosses the plains of Solva and reaches the sea in Tamir. Nera plans to build a dam high in the mountains. Why is this not something Nera can settle on its own?",
+    "choices": [
+      "Because the river is one system that all three countries depend on, while each country controls only its own stretch of it",
+      "Because a country is not allowed to build anything on a river that runs inside its own borders",
+      "Because Solva and Tamir can order Nera to stop building the dam",
+      "Because the three countries stopped being separate countries once they agreed to share the river"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the size of the problem with the size of what each country actually controls.",
+      "Nera can build the dam legally inside its own borders and still change what reaches Solva and Tamir. And no country can decide for another, because each one governs itself inside its own borders."
+    ]
+  },
+  {
+    "id": "m7geo-international-cooperation-005",
+    "loId": "m7geo.international-cooperation",
+    "cedCode": "M7GEO-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Five invented countries -- Aldoria, Brenn, Coval, Dressa and Elm -- all have coastline on the same inland sea, the Corran Sea, and together they agree on rules for fishing in it. A sixth invented country, Farlow, lies far inland on another continent and is not part of the group. What best explains who ended up in the group and who did not?",
+    "choices": [
+      "Groups like this form only after countries have fought each other, and Farlow has not",
+      "All five border the same sea, so the fishing rules affect every one of them and do not affect Farlow",
+      "The five countries voted to order Farlow to stay out of the group",
+      "The five countries gave up being separate countries when they joined, and Farlow refused to do that"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the thing the five countries physically share that the sixth does not. Cooperation usually forms around something shared.",
+      "Check the other three against what you know: cooperation does not require a conflict first, no country can order another to stay out, and joining a group does not end a country."
+    ]
+  },
+  {
+    "id": "m7geo-international-cooperation-006",
+    "loId": "m7geo.international-cooperation",
+    "cedCode": "M7GEO-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The members of the invented Kestrel River commission are the three countries the river runs through. A student writes: \"The commission ordered Solva to cut the waste it puts in the river, so Solva is not really an independent country anymore.\" Which is the accurate account?",
+    "choices": [
+      "The student is right, because an international organization is a government one level above its member countries",
+      "The student is right about the order but wrong about independence, because a commission has its own courts and police",
+      "The student is wrong about the order but right about independence, because a country that signs an agreement gives up its own laws",
+      "Solva helped write the rule and chose to keep it; the commission has no territory, courts or police, and Solva still has its own government, borders and laws"
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the commission with a national government. What does a national government have inside its territory that the commission does not have anywhere?",
+      "The commission's members are the three countries themselves, so one of its rules is a rule those countries negotiated. Making an agreement is something a country does with its power, not something that takes that power away."
+    ]
+  }
+]

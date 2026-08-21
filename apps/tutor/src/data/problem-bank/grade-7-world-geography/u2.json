@@ -1,0 +1,423 @@
+[
+  {
+    "id": "m7geo-landforms-and-water-features-001",
+    "loId": "m7geo.landforms-and-water-features",
+    "cedCode": "M7GEO-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A smaller river flows into a larger river instead of reaching the sea on its own. What is the smaller river called?",
+    "choices": ["A tributary", "A delta", "A strait", "An isthmus"],
+    "answer": "A",
+    "hints": [
+      "The word you want describes a river that joins another river rather than joining an ocean.",
+      "A delta is flat land built at the mouth of a river. A strait is narrow water between two larger waters, and an isthmus is narrow land between two larger lands. None of those three is a river."
+    ]
+  },
+  {
+    "id": "m7geo-landforms-and-water-features-002",
+    "loId": "m7geo.landforms-and-water-features",
+    "cedCode": "M7GEO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A large area of land is flat or gently rolling, with almost no change in elevation anywhere across it. It does not stand high above the land around it. What is this landform called?",
+    "choices": ["A canyon", "A plateau", "A plain", "A valley"],
+    "answer": "C",
+    "hints": [
+      "Two facts are given about this land: the surface is flat, and it is not high compared with its surroundings. Find the word that needs both.",
+      "A plateau is also flat on top, but a plateau has to stand high above the land around it. A canyon and a valley are both low ground between higher land."
+    ]
+  },
+  {
+    "id": "m7geo-landforms-and-water-features-003",
+    "loId": "m7geo.landforms-and-water-features",
+    "cedCode": "M7GEO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A narrow channel of water joins two larger bodies of water, with land on both sides of the channel. Ships use it as a shortcut between the two. What is the narrow channel called?",
+    "choices": ["An isthmus", "A gulf", "A bay", "A strait"],
+    "answer": "D",
+    "hints": [
+      "A strait and an isthmus are opposites of each other. One is narrow water between two larger bodies of water; the other is narrow land between two larger land areas. Which one is narrow here?",
+      "A gulf and a bay are both parts of an ocean or sea that reach into the land, so neither one joins two separate bodies of water together."
+    ]
+  },
+  {
+    "id": "m7geo-landforms-and-water-features-004",
+    "loId": "m7geo.landforms-and-water-features",
+    "cedCode": "M7GEO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A river runs fast through steep hills, cutting its channel deeper and carrying sand and mud away with it. Where the river reaches the sea it slows down, splits into many channels, and spreads that sand and mud out as new flat land. Which pair of processes is described, in order?",
+    "choices": [
+      "Deposition in the hills, then erosion at the sea",
+      "Erosion in the hills, then deposition at the sea",
+      "Erosion in both places",
+      "Deposition in both places"
+    ],
+    "answer": "B",
+    "hints": [
+      "Erosion carries rock and soil away. Deposition drops that material wherever the water slows down.",
+      "The river picks material up where it is moving fast and lets go of it where it is moving slowly. Match each half of the sentence to the right word, in the order the river meets them."
+    ]
+  },
+  {
+    "id": "m7geo-landforms-and-water-features-005",
+    "loId": "m7geo.landforms-and-water-features",
+    "cedCode": "M7GEO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An invented country has a wide, flat river valley running across its middle, a range of high, steep mountains along its northern edge, and a dry, rocky plateau in the south. Where would you expect most of the farmland and the largest towns to be, and why?",
+    "choices": [
+      "On the mountain slopes, because steep ground drains well",
+      "In the river valley, because it offers flat ground, deep soil and fresh water",
+      "On the dry plateau, because high land is always cooler",
+      "Spread evenly across the country, because landforms do not affect where people settle"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask the land the questions a farmer and a builder would ask. Is it flat enough to plow and to build on? Is the soil deep? Is there fresh water? Can goods move through easily?",
+      "Steep mountain slopes fail nearly all of those tests, and the plateau in this country is described as dry and rocky."
+    ]
+  },
+  {
+    "id": "m7geo-landforms-and-water-features-006",
+    "loId": "m7geo.landforms-and-water-features",
+    "cedCode": "M7GEO-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Isthmus of Panama is a narrow strip of land that joins North America to South America. Before a canal was cut across it, ships sailing between the ocean on one side and the ocean on the other had to travel all the way around a continent. Ports, roads and trade tend to collect at narrow features like this one, and at straits as well. Which statement best explains why?",
+    "choices": [
+      "Because narrow land is always the flattest land in a region",
+      "Because narrow strips of land have the deepest soil for farming",
+      "Because narrow features are the only places where ships can safely anchor",
+      "Because traffic moving between the two larger areas has to squeeze through the narrow gap"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what happens to a wide road when it narrows to a single lane.",
+      "A strait does this for ships and an isthmus does it for land travel: everything moving between the two larger areas is funneled into one place, so whoever controls that place sits on the traffic."
+    ]
+  },
+  {
+    "id": "m7geo-plate-tectonics-and-natural-hazards-001",
+    "loId": "m7geo.plate-tectonics-and-natural-hazards",
+    "cedCode": "M7GEO-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two plates are moving apart from each other, and hot rock rises to fill the gap so that new crust is added. What kind of plate boundary is this?",
+    "choices": ["A convergent boundary", "A transform boundary", "A divergent boundary", "A mid-ocean ridge"],
+    "answer": "C",
+    "hints": [
+      "Three directions, three names. Match the motion to the word: toward, apart, or past.",
+      "A mid-ocean ridge is a landform that this kind of boundary builds under the sea. It is not the name of the boundary type itself."
+    ]
+  },
+  {
+    "id": "m7geo-plate-tectonics-and-natural-hazards-002",
+    "loId": "m7geo.plate-tectonics-and-natural-hazards",
+    "cedCode": "M7GEO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Where a plate carrying ocean floor meets another plate, the ocean plate is pushed down underneath the other one. The Andes, running down the western edge of South America, sit on a boundary like this. Which set of features does this kind of boundary produce?",
+    "choices": [
+      "A deep ocean trench and a line of volcanoes",
+      "A mid-ocean ridge where new crust is added",
+      "A rift valley that keeps getting wider",
+      "A long sideways crack with no volcanoes along it"
+    ],
+    "answer": "A",
+    "hints": [
+      "The plates here are moving toward each other, so name the boundary type first and then ask what it builds.",
+      "Ridges and rift valleys are both built where plates move apart, and a sideways crack is a third boundary type altogether."
+    ]
+  },
+  {
+    "id": "m7geo-plate-tectonics-and-natural-hazards-003",
+    "loId": "m7geo.plate-tectonics-and-natural-hazards",
+    "cedCode": "M7GEO-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Along a long crack in the ground, the land on one side is creeping sideways past the land on the other side. Earthquakes are common there, but no new crust is forming and no line of volcanoes follows the crack. What kind of boundary is this, and which real example matches it?",
+    "choices": [
+      "Divergent, like the Mid-Atlantic Ridge",
+      "Convergent, like the Himalayas",
+      "Transform, like the San Andreas Fault in California",
+      "Divergent, like the East African Rift"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start with the direction of motion. The two sides are moving neither toward each other nor apart, but past each other.",
+      "No new crust rules out the boundaries where plates move apart, and no chain of volcanoes is the clue that nothing is sinking beneath anything."
+    ]
+  },
+  {
+    "id": "m7geo-plate-tectonics-and-natural-hazards-004",
+    "loId": "m7geo.plate-tectonics-and-natural-hazards",
+    "cedCode": "M7GEO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two schools handle earthquake drills very differently. One sits on the rim of the Pacific Ocean and practices a drill every year. The other sits near the middle of a large plate, far from any plate edge, and has never held one. Which statement best explains the difference?",
+    "choices": [
+      "Earthquakes are spread evenly over the globe, so the first school is simply being more careful than the second",
+      "Earthquakes cluster in long belts along plate boundaries, and the first school sits inside one of those belts",
+      "Earthquakes happen mostly near the equator, and the first school is closer to it",
+      "Earthquakes only happen next to oceans, so no inland place ever needs to prepare"
+    ],
+    "answer": "B",
+    "hints": [
+      "Almost all of the movement between plates happens in one kind of place. Where is it?",
+      "The belt around the rim of the Pacific Ocean, where earthquakes and volcanic eruptions are frequent, even has a name: the Ring of Fire."
+    ]
+  },
+  {
+    "id": "m7geo-plate-tectonics-and-natural-hazards-005",
+    "loId": "m7geo.plate-tectonics-and-natural-hazards",
+    "cedCode": "M7GEO-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In one part of a continent the ground is slowly being pulled apart. A long, steep-sided valley has dropped down between the two sides, and the valley is slowly getting wider. The East African Rift is a real example of this. What is happening?",
+    "choices": [
+      "Two plates are sliding past each other sideways",
+      "Two plates are pushing together and folding the rock upward",
+      "A river has slowly eroded the valley down into the rock",
+      "The land is being pulled apart at a divergent boundary, which drops a rift valley between the two sides"
+    ],
+    "answer": "D",
+    "hints": [
+      "The words pulled apart and getting wider hand you the direction of motion. Name the boundary type from that.",
+      "A river cuts a valley by carrying rock away downhill. Here the valley floor has dropped between two sides that are moving apart, which is a completely different cause."
+    ]
+  },
+  {
+    "id": "m7geo-plate-tectonics-and-natural-hazards-006",
+    "loId": "m7geo.plate-tectonics-and-natural-hazards",
+    "cedCode": "M7GEO-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A town sits close to a fault and knows the ground will shake there sooner or later. Nobody can stop the shaking itself. Which change would do the most to keep a future earthquake from turning into a disaster for that town?",
+    "choices": [
+      "Requiring new buildings to be designed to sway instead of collapse, and having everyone practice what to do",
+      "Moving the fault line farther away from the town",
+      "Waiting to see how strong the next earthquake is before making any plans",
+      "Deciding that earthquakes are simply bad luck that nobody can prepare for"
+    ],
+    "answer": "A",
+    "hints": [
+      "The earthquake is the natural hazard, and no one controls it. What turns a hazard into a disaster is what it runs into.",
+      "One of these choices is impossible, and two of them are decisions to do nothing at all."
+    ]
+  },
+  {
+    "id": "m7geo-weather-climate-and-factors-001",
+    "loId": "m7geo.weather-climate-and-factors",
+    "cedCode": "M7GEO-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these statements describes CLIMATE rather than weather?",
+    "choices": [
+      "A storm is expected here tonight.",
+      "The temperature fell ten degrees between lunch and dinner.",
+      "It has been unusually foggy every morning this week.",
+      "This coast is mild all year, with warm summers and cool winters, year after year."
+    ],
+    "answer": "D",
+    "hints": [
+      "Do not sort by whether a statement mentions rain or heat. Sort by time: how long a stretch does each one cover?",
+      "Hours or days is weather. The usual pattern across many years is climate. One of these choices says year after year."
+    ]
+  },
+  {
+    "id": "m7geo-weather-climate-and-factors-002",
+    "loId": "m7geo.weather-climate-and-factors",
+    "cedCode": "M7GEO-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student says that places near the equator are hot because they are closer to the sun. That is not the reason. What actually makes low latitudes warmer on average than high latitudes?",
+    "choices": [
+      "Sunlight arrives almost straight down near the equator, so its energy is concentrated on a small patch of ground",
+      "The equator really is thousands of miles closer to the sun than the poles are",
+      "The equator sits at a lower elevation than the poles, so its air is warmer",
+      "Ocean currents carry all of the warm water in the world to the equator"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare a flashlight pointed straight down at a table with the same flashlight tilted at a slant. The light is the same; the patch it lands on is not.",
+      "The top of a tall mountain is closer to the sun than the beach below it, and the mountain top is colder. So distance from the sun cannot be the explanation."
+    ]
+  },
+  {
+    "id": "m7geo-weather-climate-and-factors-003",
+    "loId": "m7geo.weather-climate-and-factors",
+    "cedCode": "M7GEO-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Mount Kilimanjaro in East Africa stands close to the equator, yet the land at its foot is warm while its summit is freezing. Which control on climate explains that difference?",
+    "choices": ["Latitude", "Elevation", "Ocean currents", "Distance from the ocean"],
+    "answer": "B",
+    "hints": [
+      "The summit and the land at the foot of the mountain are at nearly the same latitude and nearly the same distance from the sea, so neither of those can be what makes them different.",
+      "The one thing that changes as you climb the mountain is how high you are, and air gets colder the higher you go."
+    ]
+  },
+  {
+    "id": "m7geo-weather-climate-and-factors-004",
+    "loId": "m7geo.weather-climate-and-factors",
+    "cedCode": "M7GEO-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented towns sit at the same latitude and at the same low elevation. Seabright is on the coast of a large ocean. Hollowmere is deep inside a wide continent, far from any large body of water. Which town is more likely to have very hot summers and very cold winters, and why?",
+    "choices": [
+      "Seabright, because ocean air changes temperature quickly",
+      "Hollowmere, because it must be farther from the equator",
+      "Hollowmere, because land heats up and cools down faster than water does",
+      "Seabright, because coasts are always at a higher elevation"
+    ],
+    "answer": "C",
+    "hints": [
+      "The only difference the problem gives you is how close each town is to a large body of water, so that is the control being tested.",
+      "Water heats up and cools down slowly, so it acts like a brake on the temperature of the place beside it. The town without that brake gets the bigger swings between summer and winter."
+    ]
+  },
+  {
+    "id": "m7geo-weather-climate-and-factors-005",
+    "loId": "m7geo.weather-climate-and-factors",
+    "cedCode": "M7GEO-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Here is everything you know about the invented town of Coldharbor. It sits on the western coast of a continent, at a low elevation right beside the sea. A cold ocean current runs north along that coast just offshore. A high mountain range stands to the east of the town, and steady winds blow in off the ocean. Coldharbor is cool and often foggy, and the land just east of the mountains is a desert. Which control best explains why COLDHARBOR ITSELF is cooler than you would expect for its latitude?",
+    "choices": [
+      "The rain shadow of the mountain range to its east",
+      "The cold ocean current running along its coast",
+      "Its elevation, because it stands high above sea level",
+      "Its distance from the ocean"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two different things need explaining in this description: why the town is cool, and why the land beyond the mountains is dry. Work out which control does which job.",
+      "The rain shadow explains the DESERT on the far side of the range. Coldharbor is at low elevation and sits right on the coast, so only one control is left that could be cooling it."
+    ]
+  },
+  {
+    "id": "m7geo-weather-climate-and-factors-006",
+    "loId": "m7geo.weather-climate-and-factors",
+    "cedCode": "M7GEO-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Steady winds blow in off an ocean and hit the western side of a long mountain range that runs along the coast. West of the range, the invented town of Greenmouth is rainy and green. East of the range, the invented town of Stonebank is dry. Stonebank sits at the same latitude as Greenmouth and at the same low elevation. A family in Stonebank wants to know why their side of the range gets so little rain. What is the best answer?",
+    "choices": [
+      "The air rose over the range and dropped most of its moisture on the western side, so little is left by the time it reaches Stonebank",
+      "Stonebank is farther from the equator, so less rain falls there",
+      "A mountain range traps rain evenly on both of its sides, so the two towns should really get the same amount",
+      "Stonebank is at a much higher elevation, and high places are always dry"
+    ],
+    "answer": "A",
+    "hints": [
+      "Follow the air in order: it arrives moist off the ocean, it is forced to rise over the range, it cools, and cool air cannot hold as much water vapor.",
+      "The dry strip of land behind a mountain range has a name: a rain shadow. Then check the reasons in the other choices against the facts you were given, because the two towns share a latitude and an elevation."
+    ]
+  },
+  {
+    "id": "m7geo-climate-zones-and-biomes-001",
+    "loId": "m7geo.climate-zones-and-biomes",
+    "cedCode": "M7GEO-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The tropical zone is the band of Earth lying between which two lines of latitude?",
+    "choices": [
+      "The Arctic Circle and the Antarctic Circle",
+      "The Tropic of Cancer, at about 23.5 degrees north, and the Tropic of Capricorn, at about 23.5 degrees south",
+      "The Prime Meridian and the equator",
+      "The equator and the Tropic of Cancer only"
+    ],
+    "answer": "B",
+    "hints": [
+      "The equator runs through the middle of this zone, so the zone must have a boundary in the northern hemisphere and another one in the southern hemisphere.",
+      "The Arctic and Antarctic Circles, at about 66.5 degrees, mark the edges of the POLAR zones. And the Prime Meridian is a line of longitude, not latitude."
+    ]
+  },
+  {
+    "id": "m7geo-climate-zones-and-biomes-002",
+    "loId": "m7geo.climate-zones-and-biomes",
+    "cedCode": "M7GEO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A research station writes out its year in plain words. Every month is warm. From May through October, heavy rain falls almost every day. From November through April, almost no rain falls at all. Grass covers the ground, and trees stand scattered far apart. Which biome is this?",
+    "choices": ["Tropical rainforest", "Temperate grassland", "Savanna, also called tropical grassland", "Tropical desert"],
+    "answer": "C",
+    "hints": [
+      "Read the record in two passes. First the temperature, which tells you the zone. Then the rain, which tells you which biome inside that zone.",
+      "Rainforest has no dry season at all, and a desert never gets heavy daily rain. Temperate grassland has a cold part of the year, and this record has no cold month."
+    ]
+  },
+  {
+    "id": "m7geo-climate-zones-and-biomes-003",
+    "loId": "m7geo.climate-zones-and-biomes",
+    "cedCode": "M7GEO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Much of Antarctica is counted as a desert, even though it is one of the coldest places on Earth. How can that be?",
+    "choices": [
+      "A desert is defined by very low precipitation, not by heat",
+      "A desert is defined by having sand, and Antarctica has sand underneath its ice",
+      "Antarctica was hot long ago, so it kept the name",
+      "Any place with very few people living in it counts as a desert"
+    ],
+    "answer": "A",
+    "hints": [
+      "Write down the definition of a desert before you look at the choices. Which measurement is actually in that definition?",
+      "The Sahara in North Africa is a hot desert and Antarctica is a cold one. What those two places share is not their temperature."
+    ]
+  },
+  {
+    "id": "m7geo-climate-zones-and-biomes-004",
+    "loId": "m7geo.climate-zones-and-biomes",
+    "cedCode": "M7GEO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Another station writes out its year like this. January: mild, with rain most weeks. April: mild, with some rain. July: hot, with almost no rain. October: mild, with rain returning. The station is far from the poles and stands near a sea. Which biome best matches this record?",
+    "choices": ["Tropical rainforest", "Tundra", "Taiga", "Mediterranean"],
+    "answer": "D",
+    "hints": [
+      "Compare when the rain arrives with when the heat arrives. In this record they land in opposite halves of the year.",
+      "This is the biome with dry summers and mild, wetter winters. It is named for the land around the Mediterranean Sea, and the same climate turns up in a few other places, including parts of California."
+    ]
+  },
+  {
+    "id": "m7geo-climate-zones-and-biomes-005",
+    "loId": "m7geo.climate-zones-and-biomes",
+    "cedCode": "M7GEO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: Africa is a biome. Why is that wrong?",
+    "choices": [
+      "Because a biome has to be smaller than a country",
+      "Because only islands can be biomes",
+      "Because Africa has no plants that repeat anywhere else in the world",
+      "Because Africa is a continent that contains several biomes, including rainforest, savanna and desert"
+    ],
+    "answer": "D",
+    "hints": [
+      "A biome is a kind of place, not a place. It is defined by a climate and by the plants that grow in that climate, and the same biome turns up on several continents.",
+      "Ask whether every part of Africa has the same climate and the same plants. The Sahara in the north and the rainforest near the equator answer that question for you."
+    ]
+  },
+  {
+    "id": "m7geo-climate-zones-and-biomes-006",
+    "loId": "m7geo.climate-zones-and-biomes",
+    "cedCode": "M7GEO-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An invented country has three regions inside its borders. The North is tundra: cold and treeless, with a growing season too short for crops. The Center is temperate grassland: warm summers, enough rain for deep grass, and deep soil. The South is desert, with almost no rain in any month. Which statement is best supported by geography?",
+    "choices": [
+      "The three regions should hold about the same number of people, because biome does not affect where people settle",
+      "Most people are likely to live in the North, because cold land is empty and there is more room",
+      "Most of the farmland and most of the people of this country are likely to be in the Center",
+      "The South is likely to hold the best farmland, because deserts get plenty of sunshine"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask the farming question about each region in turn: is the growing season long enough, and is there enough water?",
+      "Sunshine on its own does not grow crops. Tundra fails the growing-season test and desert fails the water test, so only one region passes both."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-economic-systems-001",
+    "loId": "m7geo.economic-systems",
+    "cedCode": "M7GEO-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Every economy has to answer the same three basic questions. Two of them are 'What should be produced?' and 'How should it be produced?' What is the third question?",
+    "choices": [
+      "Who receives the goods and services once they exist",
+      "When during the year the goods should be produced",
+      "Where inside the country the goods should be stored",
+      "Why people want the goods in the first place"
+    ],
+    "answer": "A",
+    "hints": [
+      "The first two questions are about making something. The third one is about what happens after it exists.",
+      "There is never enough of everything for everyone, so every group has to settle which people end up with what was produced."
+    ]
+  },
+  {
+    "id": "m7geo-economic-systems-002",
+    "loId": "m7geo.economic-systems",
+    "cedCode": "M7GEO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Talmere, a village plants barley every spring because barley is what the village has planted for as long as anyone there can remember. Most of the crop is eaten by the households that grew it. Which kind of economy do these decisions describe?",
+    "choices": [
+      "A command economy, because somebody must have ordered the village to plant barley",
+      "A traditional economy, because the answers come from custom and long practice",
+      "A market economy, because barley has a price when it is sold",
+      "A mixed economy, because the village both grows food and eats it"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask the one question that sorts the systems apart: who is doing the deciding here, and what are they deciding with -- custom, an authority, or prices?",
+      "Nobody gave an order and no price was consulted. The answer came from long practice, and most of what is grown is used by the household that grew it, which is called subsistence."
+    ]
+  },
+  {
+    "id": "m7geo-economic-systems-003",
+    "loId": "m7geo.economic-systems",
+    "cedCode": "M7GEO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a market economy, what carries the choices of buyers and sellers, so that producers can tell what to make more of?",
+    "choices": [
+      "Instructions published by a national planning office",
+      "Customs handed down from earlier generations",
+      "Prices, which tend to rise when many people want something scarce",
+      "A vote taken by everyone in the country once a year"
+    ],
+    "answer": "C",
+    "hints": [
+      "When a lot of people want something there is not much of, what happens to what it costs?",
+      "Two of the wrong choices belong to the other two systems -- an authority deciding, and custom deciding. And remember that a market always runs inside a set of laws, so it is prices, not the absence of rules, that carry the information."
+    ]
+  },
+  {
+    "id": "m7geo-economic-systems-004",
+    "loId": "m7geo.economic-systems",
+    "cedCode": "M7GEO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Kestria, a national planning office decides each year how many buses the factories will build, which cities will receive them, and what they will cost. What makes this a command economy?",
+    "choices": [
+      "Buses are being produced and sold, which only happens under a command system",
+      "The same process happens every year, which makes it a custom",
+      "Kestria has both factories and cities",
+      "What to make, how many to make, and who receives them are all decided by one central authority"
+    ],
+    "answer": "D",
+    "hints": [
+      "The systems are sorted by one thing only: who does the deciding, and with what information.",
+      "Check the wrong ideas too. Repeating something every year is not the same as custom, having factories and cities is not the same as mixing systems, and something being sold does not mean a price decided it."
+    ]
+  },
+  {
+    "id": "m7geo-economic-systems-005",
+    "loId": "m7geo.economic-systems",
+    "cedCode": "M7GEO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Oravia, privately owned businesses decide what to make and what to charge for it. The government builds the roads, runs the schools and the fire service, and inspects food for safety. In one mountain valley, families herd sheep the way earlier generations herded and use most of the wool themselves. Which sentence describes Oravia most accurately?",
+    "choices": [
+      "Oravia is a market economy, because inspecting food is not an economic decision",
+      "Oravia is a mixed economy in which most production decisions are left to buyers and sellers",
+      "Oravia is a command economy, because its government runs the roads and the schools",
+      "Oravia is a traditional economy, because one of its valleys herds sheep by custom"
+    ],
+    "answer": "B",
+    "hints": [
+      "Go through the case one decision at a time and mark who is making each one. How many different kinds of decider show up in the same country?",
+      "All three mechanisms are present at once, and there is a word for that. The honest sentence also names which mechanism does most of the deciding."
+    ]
+  },
+  {
+    "id": "m7geo-economic-systems-006",
+    "loId": "m7geo.economic-systems",
+    "cedCode": "M7GEO-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Talmere and Oravia are neighbors, and both are mixed economies. Talmere is mountainous, with short cool summers and thin soil. Oravia is mostly flat, with long warm summers, deep soil, and a river that runs down to a deep harbor. Oravia grows and ships far more grain than Talmere does. What does this comparison best show?",
+    "choices": [
+      "Oravia must really be a market economy while Talmere must really be a command economy",
+      "The resources a place has decide which economic system that place will use",
+      "The economic system says who decides, while the land, climate and location shape what there is to decide about",
+      "Places with mountains are unable to take part in trade"
+    ],
+    "answer": "C",
+    "hints": [
+      "Both countries were given the SAME economic system in the case, so the system cannot be what explains the difference between them. What else is different?",
+      "Reread the physical description of each country -- soil, length of summer, and how grain can reach a harbor."
+    ]
+  },
+  {
+    "id": "m7geo-resources-and-economic-activity-001",
+    "loId": "m7geo.resources-and-economic-activity",
+    "cedCode": "M7GEO-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is a NONRENEWABLE resource?",
+    "choices": [
+      "A forest of trees",
+      "Fresh water in a river",
+      "Coal in a seam under a hillside",
+      "Wind blowing across a plain"
+    ],
+    "answer": "C",
+    "hints": [
+      "Nonrenewable means nature is not replacing it at any speed that matters to people.",
+      "Three of these are replaced while we watch. One of them formed over millions of years out of buried plant material, and nothing is making more of it now."
+    ]
+  },
+  {
+    "id": "m7geo-resources-and-economic-activity-002",
+    "loId": "m7geo.resources-and-economic-activity",
+    "cedCode": "M7GEO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is a PRIMARY economic activity?",
+    "choices": [
+      "Turning logs into boards at a sawmill",
+      "Driving a delivery van from a warehouse to a store",
+      "Designing software that keeps track of shipments",
+      "Cutting logs in a forest"
+    ],
+    "answer": "D",
+    "hints": [
+      "Primary activity takes a resource straight from the earth, the forest or the sea, before anything has been made out of it.",
+      "Look at what the other three do. One changes a material into a different thing, one moves something that already exists, and one produces information."
+    ]
+  },
+  {
+    "id": "m7geo-resources-and-economic-activity-003",
+    "loId": "m7geo.resources-and-economic-activity",
+    "cedCode": "M7GEO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Petroleum lay under the ground for a very long time before anyone used it, because no engine had been built that ran on it. Ordinary sand was just sand until people learned to pull silicon out of it for computer chips. What do these two examples show?",
+    "choices": [
+      "Something counts as a natural resource once people have a use for it and a way to obtain it",
+      "Every material found in nature has always been a natural resource",
+      "A material becomes renewable once people work out a way to use it",
+      "A material stops being a natural resource as soon as it is dug up"
+    ],
+    "answer": "A",
+    "hints": [
+      "Nothing about the oil or about the sand itself changed during all those years. Something about the people changed. Which choice puts the change in the right place?",
+      "That is why the list of what counts as a resource is different in every century -- uses and methods change, while the rock stays the same."
+    ]
+  },
+  {
+    "id": "m7geo-resources-and-economic-activity-004",
+    "loId": "m7geo.resources-and-economic-activity",
+    "cedCode": "M7GEO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Boats have fished the same bay for many years. Lately they catch more fish each year than are born in the bay that year. Which statement is correct?",
+    "choices": [
+      "Fish are a renewable resource, so the number of fish in the bay cannot fall",
+      "Fish are a renewable resource, but their number can still fall when they are caught faster than they replace themselves",
+      "Fish are a nonrenewable resource, because a fish that has been caught is gone for good",
+      "Fish stop being a natural resource once people catch too many of them"
+    ],
+    "answer": "B",
+    "hints": [
+      "Renewable tells you that a resource is being replaced. It does not tell you how fast. Compare the two rates named in the case.",
+      "Picture a bucket with a slow tap running into it. The water is renewable, and the bucket still empties if you scoop faster than the tap fills it."
+    ]
+  },
+  {
+    "id": "m7geo-resources-and-economic-activity-005",
+    "loId": "m7geo.resources-and-economic-activity",
+    "cedCode": "M7GEO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a coastal town, boats bring in fish every morning, a plant beside the dock cleans and freezes them into packs, a trucking company carries the packs to stores inland, and a small office counts how many fish are in the bay each year and advises the boat owners on how much they can safely catch. Which job is QUATERNARY activity?",
+    "choices": [
+      "The boats bringing in the fish",
+      "The plant cleaning and freezing the fish",
+      "The trucking company carrying packs inland",
+      "The office counting fish and advising the boat owners"
+    ],
+    "answer": "D",
+    "hints": [
+      "Quaternary work produces information -- research, data, advice, design -- rather than an object or a delivery.",
+      "Three of these produce a catch, a product, or a trip. Only one produces a count and a piece of advice."
+    ]
+  },
+  {
+    "id": "m7geo-resources-and-economic-activity-006",
+    "loId": "m7geo.resources-and-economic-activity",
+    "cedCode": "M7GEO-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a valley town, orchards grow apples, a small factory cooks the apples into jam, a bus company carries workers and shoppers around the valley, and an office studies weather records and advises the orchards on when to plant. Which statement about these four kinds of work is correct?",
+    "choices": [
+      "They are four categories of work that depend on one another -- without the orchards the factory has nothing to cook",
+      "Only the jam factory counts as economic activity, because it is the only step that makes a product",
+      "The bus company and the weather office are not economic activities, because neither one produces an object",
+      "The four make up an order of importance, with the weather office at the top and the orchards at the bottom"
+    ],
+    "answer": "A",
+    "hints": [
+      "Name each kind of work first: which one takes from the earth, which one makes a thing, which one provides a service, and which one produces information?",
+      "Then ask the question the lesson insisted on. Are these four rungs of a ladder, or four different kinds of work that an economy needs all of at once?"
+    ]
+  },
+  {
+    "id": "m7geo-levels-of-development-001",
+    "loId": "m7geo.levels-of-development",
+    "cedCode": "M7GEO-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is an indicator that geographers use when they measure development?",
+    "choices": [
+      "The total land area of a country",
+      "Life expectancy, meaning how long people born in a country tend to live",
+      "The number of mountain ranges inside a country",
+      "How many years ago the country was founded"
+    ],
+    "answer": "B",
+    "hints": [
+      "Development asks how easily people in a country can get things such as schooling, health care, clean water and electricity.",
+      "One of these is something measured and reported about people's lives. The other three describe the land or the calendar."
+    ]
+  },
+  {
+    "id": "m7geo-levels-of-development-002",
+    "loId": "m7geo.levels-of-development",
+    "cedCode": "M7GEO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Kestria and Tolara are invented countries. Which statement below is a MEASUREMENT of development rather than a judgement about a country?",
+    "choices": [
+      "Tolara is a worse place than Kestria",
+      "Tolara will always be a lower-income country",
+      "Fewer households in Tolara have electricity in the home than in Kestria",
+      "Knowing that Tolara is a lower-income country tells you everything about life there"
+    ],
+    "answer": "C",
+    "hints": [
+      "A measurement names one thing that was counted and reports it. A judgement decides that a place, or the people in it, are better or worse.",
+      "Check the other three against the lesson: one ranks a place, one treats a measurement as permanent, and one claims a single indicator tells the whole story."
+    ]
+  },
+  {
+    "id": "m7geo-levels-of-development-003",
+    "loId": "m7geo.levels-of-development",
+    "cedCode": "M7GEO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Geographers often use a composite measure instead of relying on income per person by itself. Why?",
+    "choices": [
+      "Because income per person is always measured incorrectly",
+      "Because a composite measure gives a country a permanent place on a list",
+      "Because money is the only thing worth measuring, so it should be measured twice",
+      "Because a composite measure combines several indicators, so no single one decides the whole result"
+    ],
+    "answer": "D",
+    "hints": [
+      "Money on its own misses things like health and schooling. What kind of measure would fix that?",
+      "A composite measure is better than any one indicator alone. It is still a summary, though, and a summary is still not the place itself."
+    ]
+  },
+  {
+    "id": "m7geo-levels-of-development-004",
+    "loId": "m7geo.levels-of-development",
+    "cedCode": "M7GEO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The invented country of Vellamar reports one national number for income per person. Vellamar has a coastal city with reliable electricity and clean water, and an inland region where many households have neither. What does that single national number tell you?",
+    "choices": [
+      "It summarizes the whole country and describes neither the coastal city nor the inland region",
+      "It tells you that households across Vellamar are all in roughly the same situation",
+      "It tells you that the inland region is close to that number",
+      "It tells you that Vellamar has no well-off areas at all"
+    ],
+    "answer": "A",
+    "hints": [
+      "The number was made by dividing everything earned in the country by everybody who lives in the country. What does that division do to the difference between the two regions?",
+      "An average sits between the parts it was made from, so it can describe a country while describing no place inside it."
+    ]
+  },
+  {
+    "id": "m7geo-levels-of-development-005",
+    "loId": "m7geo.levels-of-development",
+    "cedCode": "M7GEO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For the invented country of Ambel, income per person is lower than for its neighbor Norvane. In Ambel, nearly all children finish school, people born there tend to live a long time, and almost every home has clean water. What is the best conclusion to draw?",
+    "choices": [
+      "Different indicators can point in different directions, so one indicator alone does not describe a country",
+      "The income measurement for Ambel must have been taken incorrectly",
+      "Schooling, life expectancy and clean water are not really development indicators",
+      "Ambel should be placed above Norvane on a list of countries"
+    ],
+    "answer": "A",
+    "hints": [
+      "Nothing in the item says that any measurement is wrong. Everything described can be true at the same time.",
+      "One of the wrong choices tries to settle which country comes out on top, and the lesson said a measurement is not a ranking."
+    ]
+  },
+  {
+    "id": "m7geo-levels-of-development-006",
+    "loId": "m7geo.levels-of-development",
+    "cedCode": "M7GEO-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student reads that one country has a lower income per person than its neighbor and writes: 'So it is a worse place, and people there are worse off in every way.' Which response corrects this best?",
+    "choices": [
+      "The student is right, because income per person is the one indicator that covers all the others",
+      "The student is right for a small country, and wrong only for a large one",
+      "The student is wrong, because income per person is not worth measuring at all",
+      "Income per person is one indicator among several, and it measures an economy -- it does not measure how good a place is or what the people who live there are like"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count the indicators the lesson listed. Does income per person tell you anything about schooling, life expectancy, or access to clean water and electricity?",
+      "Then ask what an income measurement is a measurement OF. It describes an economy, and development is measured, never judged."
+    ]
+  },
+  {
+    "id": "m7geo-trade-and-interdependence-001",
+    "loId": "m7geo.trade-and-interdependence",
+    "cedCode": "M7GEO-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is an export?",
+    "choices": [
+      "A good brought into a place from somewhere else",
+      "A good that is produced and used inside the same town",
+      "A natural material that has not been turned into anything yet",
+      "A good or service sent out of a place to be sold somewhere else"
+    ],
+    "answer": "D",
+    "hints": [
+      "One of the two trade words means leaving, and the other means arriving. Which one is this?",
+      "The wrong choices include the definition of an import and the definition of a raw material."
+    ]
+  },
+  {
+    "id": "m7geo-trade-and-interdependence-002",
+    "loId": "m7geo.trade-and-interdependence",
+    "cedCode": "M7GEO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A country lies near the equator and is warm and rainy all year. It grows far more coffee than the people who live there could ever drink, and it sells the extra abroad. It also buys wheat from cooler countries, because wheat does not grow well in its climate. Which statement uses the words import and export correctly for that country?",
+    "choices": [
+      "Coffee is an export and wheat is an import",
+      "Coffee is an import and wheat is an export",
+      "Coffee and wheat are both imports, because both of them cross a border",
+      "Neither one counts as trade, because trade means only manufactured goods"
+    ],
+    "answer": "A",
+    "hints": [
+      "Stand inside the country described and ask, for each good, which way it is moving. Is it leaving, or is it arriving?",
+      "An export leaves and an import arrives. Crops are traded exactly like anything else, so both goods here are trade."
+    ]
+  },
+  {
+    "id": "m7geo-trade-and-interdependence-003",
+    "loId": "m7geo.trade-and-interdependence",
+    "cedCode": "M7GEO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The invented country of Ferrane sells machinery to the invented country of Sorbay and buys tea from it. Geographers call a relationship like this interdependence. What does interdependence mean?",
+    "choices": [
+      "Ferrane depends on Sorbay, while Sorbay depends on nobody",
+      "The two countries rely on each other, each supplying something the other cannot easily produce for itself",
+      "The two countries produce exactly the same goods as each other",
+      "The two countries have stopped trading with anyone else"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at the shape of the word. There is a reason 'inter' sits in front of 'dependence'.",
+      "Tea needs a climate and a hillside that machinery factories do not need. Each country is producing what it is suited to and getting the rest from the other one."
+    ]
+  },
+  {
+    "id": "m7geo-trade-and-interdependence-004",
+    "loId": "m7geo.trade-and-interdependence",
+    "cedCode": "M7GEO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Country A is warm and wet all year. Country B is cooler, with wide flat plains and factories that build tractors. Country A sends bananas to Country B, and Country B sends tractors to Country A. Which statement is correct?",
+    "choices": [
+      "Bananas are an export for both countries, because the bananas crossed a border",
+      "Bananas are an import for Country A, and tractors are an export for Country A",
+      "Bananas are an export for Country A and an import for Country B, while tractors are an export for Country B and an import for Country A",
+      "Only Country B is really trading, because tractors are manufactured and bananas are only grown"
+    ],
+    "answer": "C",
+    "hints": [
+      "The same shipment gets two different labels, depending on which country you are standing in when you name it.",
+      "Bananas leave Country A and arrive in Country B. Now do the tractors the same way, in the opposite direction."
+    ]
+  },
+  {
+    "id": "m7geo-trade-and-interdependence-005",
+    "loId": "m7geo.trade-and-interdependence",
+    "cedCode": "M7GEO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The box of a tablet computer says 'Assembled in Country R.' The glass for its screen was made in Country S, the cells in its battery were made in Country T, and the design work was done in Country U. Which statement best describes where the tablet comes from?",
+    "choices": [
+      "It comes only from Country R, because that is the country printed on the box",
+      "It comes from Country U, because the country that designs a product is the country that makes it",
+      "It comes from a supply chain: parts made in several countries were brought together and assembled in Country R",
+      "It has no country of origin at all, because the parts crossed borders on the way"
+    ],
+    "answer": "C",
+    "hints": [
+      "The word 'assembled' is doing a lot of work on that box. Assembling means putting existing parts together, so ask where those parts were before.",
+      "Count how many countries the question actually names. Any single-country answer has to ignore some of them."
+    ]
+  },
+  {
+    "id": "m7geo-trade-and-interdependence-006",
+    "loId": "m7geo.trade-and-interdependence",
+    "cedCode": "M7GEO-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two towns sit on the same large island. Town A stands on a deep, sheltered bay where big ships can dock, and a wide river that boats can travel runs inland from the bay. Town B stands in a high valley reached only by one steep, narrow road. Which town is more likely to grow into a trading center, and for what reason?",
+    "choices": [
+      "Town B, because goods are worth more in places that are harder to reach",
+      "Town A, because a deep sheltered harbor and a river that boats can travel make it cheap and easy to move goods in and out",
+      "Town A, because towns beside water always sit on more natural resources than inland towns do",
+      "Town B, because a valley is more sheltered from storms than a coast is"
+    ],
+    "answer": "B",
+    "hints": [
+      "Trade collects wherever moving heavy goods is easy and cheap, and water is the cheapest way there is to move heavy goods.",
+      "Two of these choices pick Town A. Read their reasons carefully -- only one of the two reasons is actually true."
+    ]
+  }
+]

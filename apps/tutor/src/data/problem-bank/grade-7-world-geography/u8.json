@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-europe-physical-geography-001",
+    "loId": "m7geo.europe-physical-geography",
+    "cedCode": "M7GEO-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Geographers often describe Europe as a peninsula of peninsulas, because large arms of land such as the Scandinavian, Iberian, Italian and Balkan peninsulas reach out from it. What is a peninsula?",
+    "choices": [
+      "A piece of land with water on most of its sides",
+      "A large area of flat or gently rolling land",
+      "A narrow channel of water that joins two seas",
+      "A chain of mountains that separates two regions"
+    ],
+    "answer": "A",
+    "hints": [
+      "The four examples named in the question all reach out into the sea. Ask which choice describes land, and which choices describe water or a mountain range.",
+      "One of the choices defines a plain and one defines a strait. The word you want names land with water almost all the way around it."
+    ]
+  },
+  {
+    "id": "m7geo-europe-physical-geography-002",
+    "loId": "m7geo.europe-physical-geography",
+    "cedCode": "M7GEO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The coastline of Europe bends in and out constantly, with bays, inlets and peninsulas everywhere, and few places in western Europe lie far from salt water. Which result follows most directly from that shape?",
+    "choices": [
+      "The whole region has one single climate from one end to the other",
+      "The region has no plains, because a bent coastline leaves no room for flat land",
+      "A great many places sit within reach of a port, so goods can move by sea to and from a large share of the land",
+      "The rivers of the region all flow toward the same sea"
+    ],
+    "answer": "C",
+    "hints": [
+      "A coastline that bends in and out brings salt water close to a lot of land. Ask what people can do with land that sits near the water.",
+      "Three of the choices claim that the shape of a coastline controls the climate, the landforms, or the direction rivers flow. The shape of a coast decides none of those."
+    ]
+  },
+  {
+    "id": "m7geo-europe-physical-geography-003",
+    "loId": "m7geo.europe-physical-geography",
+    "cedCode": "M7GEO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A barge is loaded with steel at a river port in western Europe and follows the Rhine downstream, in the direction the river flows, until it reaches the sea. Which sea does the barge reach?",
+    "choices": [
+      "The Mediterranean Sea",
+      "The Black Sea",
+      "The North Sea",
+      "The Caspian Sea"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Rhine flows north. Rule out the seas that lie to the south and the southeast of the continent.",
+      "Sort the three rivers of this lesson by where each one ends: the Danube flows east to the Black Sea, and the Volga ends in the Caspian Sea. That leaves one sea for the Rhine."
+    ]
+  },
+  {
+    "id": "m7geo-europe-physical-geography-004",
+    "loId": "m7geo.europe-physical-geography",
+    "cedCode": "M7GEO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Europe and Asia sit on one unbroken landmass with no ocean between them, yet maps show two continents divided by a line that is most often drawn along the Ural Mountains. Geographers call that line a convention. What does that mean here?",
+    "choices": [
+      "The line marks a border between two countries, so it moves whenever countries change",
+      "People agreed on a useful line, because the land itself runs on with no break between the two",
+      "The line was measured with instruments, so it is exact down to the meter",
+      "The line is drawn wherever one ocean meets another ocean"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask which choice describes an agreement, rather than a measurement, a country border, or a meeting of oceans.",
+      "A convention is a rule people settled on because it is useful. If everyone agreed on a different line tomorrow, nothing about the rocks or the rivers would change."
+    ]
+  },
+  {
+    "id": "m7geo-europe-physical-geography-005",
+    "loId": "m7geo.europe-physical-geography",
+    "cedCode": "M7GEO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two harbor towns lie at the same latitude, far north of the Equator. Westport sits on the northwestern coast of Europe, facing the open Atlantic. Deepland sits far inland, with no ocean near it. Westport harbor stays free of ice all winter, while Deepland freezes hard for months. Which explanation fits best?",
+    "choices": [
+      "Westport lies much closer to the Equator than Deepland does",
+      "Westport sits at a much higher elevation, and air grows warmer as you climb",
+      "Westport is farther from the ocean, and land holds its heat better than water does",
+      "A warm ocean current, the North Atlantic Drift, reaches the coast, and winds blowing off the ocean carry that milder air onto the land"
+    ],
+    "answer": "D",
+    "hints": [
+      "The question hands you one fact on purpose: the two towns share a latitude. Cross out any answer whose reason is about being nearer the Equator.",
+      "Keeping a coast mild takes two things working together: warmer water arriving, and a wind that pushes that ocean air over the land."
+    ]
+  },
+  {
+    "id": "m7geo-europe-physical-geography-006",
+    "loId": "m7geo.europe-physical-geography",
+    "cedCode": "M7GEO-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three towns lie at the same latitude on an invented continent. Seaton sits on the west coast, where the prevailing winds blow in off the ocean. Midvale lies several hundred miles inland. Farvale lies far inland, near the eastern edge of the landmass. Their records read: Seaton, January cool and July mild. Midvale, January cold and July warm. Farvale, January very cold and July hot. What best explains the pattern?",
+    "choices": [
+      "The farther a town sits from the ocean, the larger the gap between its summer and its winter becomes",
+      "The farther east a town sits, the closer it is to the Equator",
+      "Towns beside an ocean receive more hours of daylight in a year than inland towns do",
+      "Coastal towns are warmer than inland towns in every month of the year"
+    ],
+    "answer": "A",
+    "hints": [
+      "Do not compare the towns one month at a time. For each town, measure the distance between its January and its July, then line those distances up from west to east.",
+      "Ocean water heats and cools slowly, so it steadies the temperature of the land beside it. Land on its own heats fast and cools fast. Which town has the least ocean near it?"
+    ]
+  },
+  {
+    "id": "m7geo-europe-history-and-culture-001",
+    "loId": "m7geo.europe-history-and-culture",
+    "cedCode": "M7GEO-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Spanish, Portuguese, French, Italian and Romanian all descended from Latin, the language that spread across the Roman Empire. What is this group of related languages called?",
+    "choices": [
+      "Slavic languages",
+      "Germanic languages",
+      "Romance languages",
+      "Uralic languages"
+    ],
+    "answer": "C",
+    "hints": [
+      "The name of this group comes from the empire whose language they all descended from.",
+      "Germanic languages such as German and Swedish sit across the north and northwest, and Slavic languages such as Polish and Russian sit across the east. Neither group descended from Latin."
+    ]
+  },
+  {
+    "id": "m7geo-europe-history-and-culture-002",
+    "loId": "m7geo.europe-history-and-culture",
+    "cedCode": "M7GEO-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student sorts languages into the three large branches that most European languages belong to. Swedish and Dutch go in the Germanic pile, Portuguese and Italian in the Romance pile, and Polish in the Slavic pile. Then the student picks up Finnish and cannot place it anywhere. Why not?",
+    "choices": [
+      "Finnish is a Romance language, so it belongs with Portuguese and Italian",
+      "Finnish is not an Indo-European language at all; it belongs to the Uralic family, along with Estonian and Hungarian",
+      "Finnish is spoken in the north, and northern languages are never sorted into branches",
+      "Finnish is a blend of Swedish and Polish, so it belongs in two piles at once"
+    ],
+    "answer": "B",
+    "hints": [
+      "The three branches cover most European languages, not all of them. Ask whether a language could sit outside the whole family.",
+      "Estonian and Hungarian give a sorter the same trouble that Finnish does, and all three belong to the same family as each other."
+    ]
+  },
+  {
+    "id": "m7geo-europe-history-and-culture-003",
+    "loId": "m7geo.europe-history-and-culture",
+    "cedCode": "M7GEO-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The three large language branches of Europe sit in geographic clumps rather than scattered about. Germanic languages such as German, Dutch and Swedish are spoken across the north and northwest. Romance languages such as Spanish and Italian are spoken across the southwest and south. Where are Slavic languages such as Russian, Polish and Czech mainly spoken?",
+    "choices": [
+      "Across the east of the region",
+      "On the islands of the far west",
+      "Along the Mediterranean coast and nowhere else",
+      "Across the Scandinavian Peninsula"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two of the three clumps are named for you already. Which part of the region is still unclaimed?",
+      "Poland and Russia both lie in the eastern part of the region, and the languages spoken in them are both Slavic."
+    ]
+  },
+  {
+    "id": "m7geo-europe-history-and-culture-004",
+    "loId": "m7geo.europe-history-and-culture",
+    "cedCode": "M7GEO-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Polish and Russian are closely related Slavic languages, yet Polish is written with the Latin alphabet, the letters on your keyboard, and Russian is written with the Cyrillic alphabet. What best explains that difference?",
+    "choices": [
+      "Cyrillic is an early form of the Latin alphabet that the east kept and the west replaced",
+      "The two languages belong to different language families, and each family writes with its own alphabet",
+      "An alphabet is chosen to match how a language sounds, and these two languages sound too different to share letters",
+      "The two alphabets spread with different branches of Christianity: Latin letters where Roman Catholic Christianity spread from Rome, and Cyrillic where Eastern Orthodox Christianity spread from the Greek-speaking Byzantine world"
+    ],
+    "answer": "D",
+    "hints": [
+      "The question already tells you the two languages are closely related, so the reason cannot be that they come from different families.",
+      "A set of letters usually arrives in a place because somebody carried it there. Ask what was traveling into Europe from Rome, and what was traveling in from the Greek-speaking Byzantine world."
+    ]
+  },
+  {
+    "id": "m7geo-europe-history-and-culture-005",
+    "loId": "m7geo.europe-history-and-culture",
+    "cedCode": "M7GEO-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An invented European city has a district of long brick buildings that were once textile factories, standing beside a canal that used to carry coal. Which explanation of why factories grew in that spot fits what geographers say about the Industrial Revolution?",
+    "choices": [
+      "Factories were placed wherever the oldest cathedrals already stood",
+      "Factories using powered machines took hold near coal fields, rivers and ports, because that is where the fuel and the shipping were",
+      "Factories were built only in places with a Mediterranean climate",
+      "Factories were spread out evenly, so that every part of the region received the same number"
+    ],
+    "answer": "B",
+    "hints": [
+      "The canal in the description is doing a job. Ask what it was carrying, and what a factory of that time needed in order to run.",
+      "Look for the choice that gives a reason of location -- fuel and a way to ship goods out -- rather than a reason about old buildings, climate or fairness."
+    ]
+  },
+  {
+    "id": "m7geo-europe-history-and-culture-006",
+    "loId": "m7geo.europe-history-and-culture",
+    "cedCode": "M7GEO-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: \"The Renaissance began in the Italian city-states and the Industrial Revolution began in Britain, so Europe was ahead of every other part of the world.\" Which correction is best?",
+    "choices": [
+      "The student is right, because both of those movements changed daily life",
+      "Neither movement really changed anything, so no comparison can be made either way",
+      "The student should make the same claim about a different region instead, because each region takes its turn at being ahead",
+      "Geography explains where something happened and why it happened in that spot, and stops there; every world region has its own long record of art, learning, building and invention, and ranking regions is not a geographic finding"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what kind of question a geographer is allowed to answer. Where did this happen, and why here rather than there, are geography questions. Who is better is not.",
+      "The Industrial Revolution took hold near coal fields, rivers and ports. That is a statement about fuel and location, not a statement about the people who lived there."
+    ]
+  },
+  {
+    "id": "m7geo-europe-economy-and-union-001",
+    "loId": "m7geo.europe-economy-and-union",
+    "cedCode": "M7GEO-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The member states of the European Union agreed to a single market. What does a single market do?",
+    "choices": [
+      "It lets goods, services, money and people move among member states with far less friction than between countries generally",
+      "It sets one price for every product sold in every member state",
+      "It joins the member states together into one country with one government",
+      "It stops member states from trading with any country outside the union"
+    ],
+    "answer": "A",
+    "hints": [
+      "The word market here is about moving and selling things across borders, not about the price on a shelf tag.",
+      "Four things move in a single market: goods, services, money and people. Look for the choice that is about movement."
+    ]
+  },
+  {
+    "id": "m7geo-europe-economy-and-union-002",
+    "loId": "m7geo.europe-economy-and-union",
+    "cedCode": "M7GEO-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about the euro is correct?",
+    "choices": [
+      "Every country on the continent of Europe uses the euro",
+      "The euro is used by many member states of the European Union, but not by all of them",
+      "Every member state of the European Union is required to use the euro",
+      "The euro is used only by countries that are not members of the European Union"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two different words are being mixed together here: Europe is a continent, and the European Union is an organization with member states.",
+      "Being a member state and using the shared currency are two separate questions. Some member states kept their own national currency and are full members all the same."
+    ]
+  },
+  {
+    "id": "m7geo-europe-economy-and-union-003",
+    "loId": "m7geo.europe-economy-and-union",
+    "cedCode": "M7GEO-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student says that Europe and the European Union are two names for the same thing. What is the clearest correction?",
+    "choices": [
+      "They are the same thing, and the shorter name is simply the one used in conversation",
+      "The European Union is the continent, and Europe is the organization",
+      "Europe is a continent, a piece of the Earth surface with many countries on it, while the European Union is a regional organization whose members are countries, and not every country in Europe is a member of it",
+      "Europe is the name of the continent, and the European Union is the name of its shared currency"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what kind of thing each name points at. One names a piece of land. The other names an agreement among countries.",
+      "If the two names meant the same thing, then the sentence every country in Europe is a member would have to be true. It is not."
+    ]
+  },
+  {
+    "id": "m7geo-europe-economy-and-union-004",
+    "loId": "m7geo.europe-economy-and-union",
+    "cedCode": "M7GEO-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Norvia and Castel are two invented countries, and both are member states of a union with a single market. A furniture workshop in Norvia sells wooden chairs to stores in Castel. Which choice best describes what the single market changes about that sale?",
+    "choices": [
+      "The chairs were made to product rules both members share and cross the border without a charge being collected on them, so selling into Castel involves far less friction than selling into a country outside the union",
+      "The chairs must be sold for exactly the same price in Norvia and in Castel",
+      "Norvia and Castel are now one country, so the sale never crosses a border at all",
+      "The chairs may be sold only inside Norvia, because each member state keeps its own separate market"
+    ],
+    "answer": "A",
+    "hints": [
+      "A single market is about friction at a border: charges collected there, separate product rules on each side, extra paperwork every time. Which choice is about friction?",
+      "Two of the wrong choices claim something a single market never promised to do -- set prices, and merge countries. The remaining one describes the opposite of a single market."
+    ]
+  },
+  {
+    "id": "m7geo-europe-economy-and-union-005",
+    "loId": "m7geo.europe-economy-and-union",
+    "cedCode": "M7GEO-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about membership in the European Union is accurate?",
+    "choices": [
+      "Once a country has joined, its membership can never change again",
+      "Every country located on the continent of Europe is a member automatically",
+      "Membership is a choice each country makes, and the list has changed over time: countries have joined, and a country has left",
+      "The organization decides which countries must join and then adds them to the list"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether the list of members is fixed forever, or whether it is a list that can change.",
+      "A member state is still a country, with its own government and its own laws in most areas. That makes joining something a country chooses, not something done to it."
+    ]
+  },
+  {
+    "id": "m7geo-europe-economy-and-union-006",
+    "loId": "m7geo.europe-economy-and-union",
+    "cedCode": "M7GEO-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two member states of a union with a single market disagree about a proposed shared rule, and the members spend years negotiating before they reach an agreement. A student concludes that the union has stopped working. What is the better way to describe what happened?",
+    "choices": [
+      "The union is a government over its members, so it should simply have ordered them to obey",
+      "A member state that disagrees has stopped being a country",
+      "Shared rules are decided by whichever member state has the largest area",
+      "The union works by agreement among members who often disagree, so a long negotiation is what cooperation looks like rather than a sign that anything broke"
+    ],
+    "answer": "D",
+    "hints": [
+      "Start from what kind of thing the union is. An organization whose members are countries has no territory of its own and no country of its own.",
+      "If the shared rules are rules the members negotiated and agreed to follow, what has to happen before a new rule can exist?"
+    ]
+  },
+  {
+    "id": "m7geo-russia-and-eurasia-001",
+    "loId": "m7geo.russia-and-eurasia",
+    "cedCode": "M7GEO-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Across the far north of Eurasia the soil stays frozen all year round, including right through the summer. What do geographers call ground like that?",
+    "choices": [
+      "Permafrost",
+      "Tundra",
+      "Taiga",
+      "Steppe"
+    ],
+    "answer": "A",
+    "hints": [
+      "The word is built out of two pieces: permanent, and frost.",
+      "Two of the other choices name plant zones -- the treeless cold zone, and the vast evergreen forest -- and one names dry grassland. This question is about the ground itself."
+    ]
+  },
+  {
+    "id": "m7geo-russia-and-eurasia-002",
+    "loId": "m7geo.russia-and-eurasia",
+    "cedCode": "M7GEO-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Ob, the Yenisei and the Lena are enormous rivers that flow north across Siberia and empty into the Arctic Ocean. Why do they carry far less trade than their size would suggest?",
+    "choices": [
+      "A river flowing north is flowing uphill, so boats cannot travel along it",
+      "They are too wide, and a wide river cannot carry boats",
+      "They carry goods away from where most people and most markets are, and they are frozen over for a large part of the year",
+      "A river can be used for trade only if it crosses a border between two countries"
+    ],
+    "answer": "C",
+    "hints": [
+      "North on a map is not up a hill. Water runs downhill, and downhill can point in any direction on the compass.",
+      "Ask the two questions that decide whether a river is useful for trade: where does it take goods, and can boats use it all year?"
+    ]
+  },
+  {
+    "id": "m7geo-russia-and-eurasia-003",
+    "loId": "m7geo.russia-and-eurasia",
+    "cedCode": "M7GEO-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A country in Central Asia is landlocked. It mines metals that buyers on other continents want to buy. What constraint does being landlocked place on that country?",
+    "choices": [
+      "It cannot trade with other countries at all",
+      "It has no rivers or lakes of any kind inside its borders",
+      "It shares no land border with any neighboring country",
+      "Its exports have to cross at least one neighboring country to reach a seaport, which adds cost, paperwork and delay"
+    ],
+    "answer": "D",
+    "hints": [
+      "Landlocked means having no coastline on an ocean. It says nothing about the water inside a country, and nothing about whether trade is possible.",
+      "Goods traveling between distant parts of the world usually spend part of the journey on a ship. Ask how a load reaches a ship from a country with no coast."
+    ]
+  },
+  {
+    "id": "m7geo-russia-and-eurasia-004",
+    "loId": "m7geo.russia-and-eurasia",
+    "cedCode": "M7GEO-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Across northern Eurasia most people live in the western part of the region, while the far north and much of the east are sparsely populated. Which is the best geographic explanation for those sparsely populated areas?",
+    "choices": [
+      "They are hot deserts, too dry for farming or for settlement",
+      "They hold no natural resources, so there was never any reason to go there",
+      "They are cut off from the west by an ocean, so nobody can reach them by land",
+      "They are extremely cold, and permafrost makes roads, pipes and building foundations difficult and expensive to build"
+    ],
+    "answer": "D",
+    "hints": [
+      "Population is almost never spread out evenly, and physical conditions usually explain where the clusters are. Which choice names a condition of the climate and the ground?",
+      "Check the other three against what you know. The far north is cold rather than hot and dry, the region holds very large reserves of oil, natural gas, minerals and timber, and the Ural Mountains are a range inside one landmass rather than an ocean."
+    ]
+  },
+  {
+    "id": "m7geo-russia-and-eurasia-005",
+    "loId": "m7geo.russia-and-eurasia",
+    "cedCode": "M7GEO-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A large mineral deposit is found in a far northern area. The nearest rail line is hundreds of miles away, the ground is permafrost, and no port within reach stays free of ice all year. A mining company studies the site and decides not to open a mine. Which geographic explanation fits that decision?",
+    "choices": [
+      "The deposit must be a small one, because large deposits are always mined",
+      "Something in the ground becomes a usable resource only when it can be reached and moved, and here the building, the hauling and the shipping all cost more than the ore is worth",
+      "The far north holds no minerals that anyone would want",
+      "Cold weather makes metal lose its value"
+    ],
+    "answer": "B",
+    "hints": [
+      "The minerals are clearly useful to somebody. The question is about the other half of what makes something a resource.",
+      "Add up the three separate costs the description hands you: building on frozen ground, the distance to the nearest rail line, and a coast that ice closes for part of every year."
+    ]
+  },
+  {
+    "id": "m7geo-russia-and-eurasia-006",
+    "loId": "m7geo.russia-and-eurasia",
+    "cedCode": "M7GEO-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a far northern town, a heated warehouse is set straight onto the frozen ground. A year later its floor has sagged and the road beside it has buckled. What most likely happened, and what do builders in that area do instead?",
+    "choices": [
+      "The frozen ground grew colder and pushed upward; builders pour a thicker slab of concrete on top of it",
+      "Heat from the building thawed the frozen ground underneath, and thawed ground shifts; builders raise structures on piles driven down into the layer that stays frozen",
+      "Wind slowly moved the building; builders anchor the walls with heavier bricks",
+      "The heat dried the soil out; builders water the ground around the walls each summer"
+    ],
+    "answer": "B",
+    "hints": [
+      "Permafrost stays frozen because it stays cold. Ask what a heated building sitting on top of it changes.",
+      "Frozen ground is firm. Thawed ground is soft and moves. A foundation there needs to reach down to something that is not going to move."
+    ]
+  }
+]
