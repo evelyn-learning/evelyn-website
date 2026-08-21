@@ -624,6 +624,16 @@ fi
 # The other app's workspace is deliberately absent: `npm ci` tolerates a
 # missing sibling workspace (verified locally — it simply creates one fewer
 # node_modules link), which is what keeps the two deploys independent.
+# ── THE ALLOW-LIST BELOW IS LOAD-BEARING. DO NOT "SIMPLIFY" IT TO AN RSYNC. ──
+# This zip names exactly what production needs. The tempting refactor — rsync
+# the tree with a few --exclude patterns — is a denylist, and a denylist is
+# only as good as the things you remembered to name. As of 2026-08-21 this
+# repo's root `.claude` is 48 GB of agent worktrees and session state; the
+# sibling academy repo's is 6.8 GB, and its deploy script DOES rsync with
+# `--exclude node_modules .next .git .env* .superpowers` — which does not
+# exclude `.claude`. Nothing has shipped 48 GB to production only because
+# THIS script enumerates its inputs instead of subtracting from everything.
+# Add new inputs by name here; never invert the list.
 zip -qr "$ZIP_FILE" \
   "$APP_DIR/.next" \
   "$APP_DIR/public" \
