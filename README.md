@@ -26,8 +26,9 @@ Each script builds and ships **only its own app**; nothing else is rebuilt.
 - `./deploy-marketing.sh` — site → pm2 `evelyn-marketing` on :3001.
 
 `deploy-to-production.sh` **no longer exists** — it deployed the pre-split single app and
-was replaced by the two scripts above. `deploy-update.sh` is **banned**: it builds on the
-server, which takes ~30 minutes.
+was replaced by the two scripts above. `deploy-update.sh` has been **deleted** (2026-08-21):
+it built on the server, which took ~30 minutes, and was long banned in practice. The two
+scripts above are the only supported deploys, and both refuse to run from a repo root.
 
 nginx sends `/tutor`, `/tutor-portal/*`, `/api/tutor/*`, `/api/portal/v1/*`, `/ketcher/*`
 and the tutor-owned admin routes to :3007; everything else falls through to :3001
