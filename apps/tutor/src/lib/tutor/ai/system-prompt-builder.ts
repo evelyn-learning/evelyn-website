@@ -149,6 +149,11 @@ export interface SystemPromptContext {
    *  "the board may sit bare through the opening sentences" licence. Absent
    *  or false ⇒ prompt byte-identical to pre-R49. */
   firstTurnV2?: boolean;
+  /** R49b answer-reveal guard (2026-08-20), gated by
+   *  NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD. Appends the rule forbidding the
+   *  board (or the same breath) from carrying the answer to the question
+   *  being asked. Absent/false ⇒ prompt byte-identical. */
+  answerRevealGuard?: boolean;
   /** How the session started: a UI button press, the student typing a
    *  real question/statement first, or the student typing just a bare
    *  greeting ('hi'). */
@@ -1872,6 +1877,21 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   // Additive + gated, so an absent flag keeps the prompt byte-identical.
   if (context.firstTurnV2) {
     prompt += `\n\n**The FIRST turn of the session is the one exception to the bare-board rule.** Everywhere else, a render waits for the sentence that introduces it — including through your opening sentences. Not on turn one. The student is looking at an empty board and deciding whether anything is really happening here, and a voice talking over nothing reads as a recording, not a teacher. So on your FIRST turn get ONE visual up inside the first two sentences — the problem, the scenario, the object you are about to talk about — and structure the turn so that visual has a sentence to sit beside that early. Do not save it for the sentence where it would naturally land. Every render AFTER that first one goes back to normal anchor discipline for the rest of the session.\n`;
+  }
+
+  // R49b — the board must not answer the question you are about to ask.
+  // Live: portal-2d53e403 at 481.5s. The tutor announced a SECOND method
+  // ("let's watch it as one tug of war instead of four separate hops"),
+  // drew a fresh page, and put the previous method's ANSWER on it — a green
+  // filled point at 3.75 labelled "Wednesday: $3.75" — then asked "who
+  // wins, and by how much?". The student had the answer in front of them
+  // before the question finished. The judge caught the SPOKEN sibling in
+  // the same turn ("Team Plus's total pull is fifteen", judge_advisory_flag)
+  // but advisory only, and nothing inspects the board for this at all.
+  // Prompt-side because the brain CHOSE to draw it: no runtime check could
+  // know 3.75 was the answer to an improvised question.
+  if (context.answerRevealGuard) {
+    prompt += `\n\n**Never put the answer on the board for a question you are about to ask (HARD RULE).** Before you render anything, check what you are about to ASK. If the value, label, or result you are asking the student to produce would be visible on the board when the question lands, do not render it — render the setup and leave the result blank or as "?". A live session failed this: the tutor moved to a SECOND method to re-derive a balance, drew the new page with the previous method's answer already marked on it in green ("Wednesday: $3.75"), and then asked "who wins, and by how much?" — whose answer was that number. **Re-deriving by another method means the answer is unknown again for the purposes of that derivation.** The whole value of a second method is the student reaching the same place by a different route; carrying the first method's result onto the second method's board deletes the exercise. The same rule governs speech: do not state one part of an answer in the same breath as asking for the rest ("Team Plus's total pull is fifteen — what does Team Minus add up to?" hands over half the work). Give the setup, ask the question, and let the board fill in as they answer.\n`;
   }
 
   return prompt;

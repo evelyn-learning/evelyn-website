@@ -19,6 +19,7 @@ import {
   IDLE_NUDGE_MAX_PER_STRETCH,
   IDLE_NUDGE_MAX_PER_SESSION,
   IDLE_NUDGE_DIRECTIVE,
+  idleNudgeDirective,
 } from '../src/lib/tutor/voice/idle-nudge';
 
 let failures = 0;
@@ -96,6 +97,36 @@ function check(name: string, cond: boolean, got?: unknown) {
 // and stays one instruction, not a script.
 check('directive-bracketed', /^\[System note:/.test(IDLE_NUDGE_DIRECTIVE) && IDLE_NUDGE_DIRECTIVE.endsWith(']'));
 check('directive-no-nested-brackets', !IDLE_NUDGE_DIRECTIVE.slice(1, -1).includes('['));
+
+// ── R49b: a nudge must not ANSWER the question it is nudging about ──────
+// Live portal-2d53e403 at 1003.4s. The tutor had asked "What's a common
+// denominator for fourths and halves?" at 911.2s. 95 seconds of silence,
+// idle_nudge_sent fires, and the tutor says: "Fourths — since half is just
+// two fourths. No rush, Praveen — take a look at that. Once both sides
+// speak 'fourths,' who's pulling harder...". It answered its own question,
+// then moved on to the NEXT one — so the student was skipped entirely on a
+// question they were still thinking about. Six idle_nudge_sent that session.
+//
+// v1's intent was already right ("softly check in or offer a choice — a
+// hint, or more time"), which is the point: the brain read "a hint" as
+// licence to supply the answer. v2 has to say the quiet part explicitly.
+//
+// NOTE: check() takes a BOOLEAN, not a thunk. An arrow function here is
+// always truthy and the assertion silently passes — which is exactly what
+// happened on the first draft of this block.
+const V2 = idleNudgeDirective({ v2: true });
+check('v2: forbids answering the outstanding question',
+  /do not answer/i.test(V2) && /still (?:outstanding|theirs|unanswered)/i.test(V2), V2);
+check('v2: a hint must narrow, not resolve',
+  /narrow/i.test(V2) && /not (?:give|supply|state) (?:it|the answer)/i.test(V2), V2);
+check('v2: must not advance to a new question',
+  /new question/i.test(V2) || /move on/i.test(V2), V2);
+check('v2: keeps the ONE short sentence cap', /ONE short sentence/.test(V2), V2);
+check('v2: keeps the bracketed synthetic shape',
+  /^\[System note:/.test(V2) && V2.endsWith(']') && !V2.slice(1, -1).includes('['), V2);
+check('v1 unchanged when flag off — byte-identical to the exported constant',
+  idleNudgeDirective({ v2: false }) === IDLE_NUDGE_DIRECTIVE && idleNudgeDirective({}) === IDLE_NUDGE_DIRECTIVE);
+check('v2 actually differs from v1', V2 !== IDLE_NUDGE_DIRECTIVE);
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('test:idle-nudge PASS');

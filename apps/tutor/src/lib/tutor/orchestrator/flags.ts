@@ -176,6 +176,35 @@ export const TUTOR_META_NARRATION_STRIP =
 export const TUTOR_QUANTITY_ANCHOR = 
   process.env.NEXT_PUBLIC_TUTOR_QUANTITY_ANCHOR === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_QUANTITY_ANCHOR === 'true';
+// R49b idle-nudge v2 (2026-08-20, portal-2d53e403 1003.4s). The nudge
+// ANSWERED the tutor's own outstanding question ("Fourths — since half is
+// just two fourths") 95s after asking it, then advanced to the next
+// question — skipping the student on a question they were still thinking
+// about. v1's intent was right; "offer a hint" was read as licence to
+// supply the answer. v2 states the prohibition outright and bans advancing.
+// Directive in voice/idle-nudge.ts (test:idle-nudge). Default OFF.
+export const TUTOR_IDLE_NUDGE_V2 =
+  process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE_V2 === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE_V2 === 'true';
+// R49b answer-reveal guard (2026-08-20, portal-2d53e403 481.5s). The tutor
+// moved to a SECOND method and drew the FIRST method's answer onto the new
+// page in green ("Wednesday: $3.75"), then asked the question that answer
+// answered. Same class as define-before-quiz, for answers. Prompt-side —
+// the brain chose to draw it, and no runtime check could know 3.75 was the
+// answer to an improvised question. Default OFF.
+export const TUTOR_ANSWER_REVEAL_GUARD =
+  process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'true';
+// R49b dedup-retry awareness (2026-08-20, portal-2d53e403 1429.1s). The
+// student asked for ANOTHER fraction problem; the brain re-posed the
+// identical one; dedup dropped the render; and the retry reason — which
+// opens "The student is still looking at the previous problem" — led the
+// brain to narrate the OLD card verbatim instead of making a new one. When
+// on, the reason carries what the student actually asked for. Detector in
+// voice/another-problem-request.ts (test:another-problem). Default OFF.
+export const TUTOR_DEDUP_RETRY_CONTEXT =
+  process.env.NEXT_PUBLIC_TUTOR_DEDUP_RETRY_CONTEXT === 'on' ||
+  process.env.NEXT_PUBLIC_TUTOR_DEDUP_RETRY_CONTEXT === 'true';
 // A command that paints teaching content on the board (vs meta nav like
 // newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
 // tell whether the brain drew anything this turn.

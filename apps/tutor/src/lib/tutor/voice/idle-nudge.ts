@@ -102,3 +102,53 @@ export const IDLE_NUDGE_DIRECTIVE =
   'time to read or work, ask how it\'s going. If it ended without a question, ' +
   'offer the next small step. Do not repeat or summarize earlier content, and ' +
   'never scold the silence.]';
+
+/**
+ * R49b nudge directive v2 (live 2026-08-20, portal-2d53e403 at 1003.4s).
+ *
+ * The tutor asked "What's a common denominator for fourths and halves?" at
+ * 911.2s. After 95 seconds of student silence the idle nudge fired and the
+ * tutor said:
+ *
+ *   "Fourths — since half is just two fourths. No rush, Praveen — take a
+ *    look at that. Once both sides speak 'fourths,' who's pulling harder —
+ *    negative one fourth or positive two fourths?"
+ *
+ * It answered its own outstanding question and then advanced to the next
+ * one. The student, who was still working on the first, was skipped
+ * entirely — and this happened on a session with six nudges.
+ *
+ * What makes this worth a rule rather than a tweak: v1's intent was ALREADY
+ * correct. It says "If your last turn asked a question, softly check in or
+ * offer a choice — a hint, or more time." The brain read "a hint" as
+ * licence to supply the answer, because a hint that gives the answer is
+ * still, technically, a hint. The failure was not a missing instruction but
+ * an under-specified one, so v2 states the prohibition directly instead of
+ * relying on "hint" carrying it by implication.
+ *
+ * v2 also forbids advancing to a new question. A nudge that moves the
+ * lesson forward is not a nudge — it is a turn the student never got to
+ * take, and it converts their thinking time into a skipped question.
+ */
+export interface IdleNudgeDirectiveOpts {
+  /** TUTOR_IDLE_NUDGE_V2. Absent/false ⇒ IDLE_NUDGE_DIRECTIVE verbatim. */
+  v2?: boolean;
+}
+
+export function idleNudgeDirective(opts: IdleNudgeDirectiveOpts): string {
+  if (!opts?.v2) return IDLE_NUDGE_DIRECTIVE;
+  return (
+    '[System note: the student has been quiet for a while since your last turn. ' +
+    'Re-engage gently in ONE short sentence. The question you last asked is ' +
+    'STILL OUTSTANDING and still theirs to answer — DO NOT ANSWER IT, and do not ' +
+    'say the word, value, or term you asked them for. Silence means they are ' +
+    'thinking, not that they have given up. Offer a choice: more time, or a hint. ' +
+    'A hint must NARROW the search — point at what to look at, or rule something ' +
+    'out — and must not give the answer inside it. Do not ask a NEW question and ' +
+    'do not move on to the next step; this turn exists only to hand the same ' +
+    'question back warmly. If your last turn handed them something to read or ' +
+    "work through, ask how it's going. If it ended without a question, offer the " +
+    'next small step. Do not repeat or summarize earlier content, and never scold ' +
+    'the silence.]'
+  );
+}

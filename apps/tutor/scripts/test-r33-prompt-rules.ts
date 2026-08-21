@@ -160,5 +160,62 @@ test('first-turn v2 ON: names the concrete requirement — a visual inside the o
   assert.match(p2, /first two sentences/i);
 });
 
+// ── R49b: the board must not pre-reveal the answer (portal-2d53e403, 481.5s) ──
+// The tutor said "let's watch it as one tug of war instead of four separate
+// hops" and drew a fresh page whose payload was:
+//   points:   0 "Start" (open)
+//             3.75 "Wednesday: $3.75"  filled  #16a34a   <- THE ANSWER
+//   segments: +12 Saturday (green), +3 Tuesday (green),
+//             -4.50 Monday (red), -6.75 Wednesday (red)
+// ...and then asked "Team Plus pulls with 15, Team Minus with 11.25. Since
+// Plus is bigger, who wins, and by how much?" — a question whose answer was
+// already sitting on the board in green. The student noticed.
+//
+// Not a stray leftover: the brain deliberately carried the previous method's
+// result onto the new page. The judge caught the SPOKEN sibling in the same
+// turn (`judge_advisory_flag: "Team Plus's total pull is fifteen."`) but
+// advisory only, and nothing looks at the board for this at all.
+//
+// There is already a define-before-quiz guard for TERMS. This is the same
+// class for ANSWERS, and it is prompt-side because the brain chose to draw
+// it — no runtime check would have known 3.75 was the answer to an
+// improvised question.
+test('answer-reveal rule OFF: prompt byte-identical without the field', () => {
+  assert.equal(buildSystemPrompt({ ...baseCtx, answerRevealGuard: false }), prompt);
+  assert.equal(buildSystemPrompt({ ...baseCtx }), prompt);
+});
+
+// These assert against the ADDED text only. Asserting against the whole
+// prompt is vacuous here: phrases like "same turn" and "different method"
+// already occur in other rules, so a naive assert.match(p2, ...) passes
+// before the feature exists and proves nothing. (First draft did exactly
+// that — two of four assertions were green against an unimplemented rule.)
+const addedAnswerRule = (): string => {
+  const p2 = buildSystemPrompt({ ...baseCtx, answerRevealGuard: true });
+  assert.ok(p2.startsWith(prompt), 'rule must be appended, so the delta is a clean suffix');
+  return p2.slice(prompt.length);
+};
+
+test('answer-reveal rule ON: the added block forbids rendering the answer being asked for', () => {
+  const added = addedAnswerRule();
+  assert.ok(added.length > 0, 'flag must add text');
+  assert.match(added, /never (?:render|write|draw|put)[^.]{0,80}answer/i);
+});
+
+test('answer-reveal rule ON: the added block covers carrying method 1 answer to method 2', () => {
+  const added = addedAnswerRule();
+  assert.match(added, /second method|different method|another method|re-?derive/i);
+});
+
+test('answer-reveal rule ON: the added block covers the spoken sibling the judge only flagged', () => {
+  const added = addedAnswerRule();
+  assert.match(added, /same breath|same turn/i);
+});
+
+test('answer-reveal rule ON: cites the live evidence so the rule is not folklore', () => {
+  const added = addedAnswerRule();
+  assert.match(added, /3\.75|tug of war/i);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);

@@ -150,6 +150,7 @@ import {
   recordStudentEngagement,
   IDLE_NUDGE_RECHECK_MS,
   IDLE_NUDGE_DIRECTIVE,
+  idleNudgeDirective,
 } from '@/lib/tutor/voice/idle-nudge';
 import { decideKillKeep, type KillRenderDesc } from '@/lib/tutor/whiteboard/kill-keep';
 import { decidePageForBatch, isTeachingRender as isTeachingRenderAction, weightOfAction, STALE_TURNS } from '@/lib/tutor/whiteboard/page-grouping';
@@ -178,6 +179,9 @@ import {
   TUTOR_SPOKEN_MONEY,
   TUTOR_DOCK_STATE_ONLY,
   TUTOR_QUANTITY_ANCHOR,
+  TUTOR_IDLE_NUDGE_V2,
+  TUTOR_ANSWER_REVEAL_GUARD,
+  TUTOR_DEDUP_RETRY_CONTEXT,
   TUTOR_AGENDA_RAIL,
   TUTOR_VALIDATE_BEFORE_SPEAK,
   TUTOR_KEEP_VALIDATED_ON_KILL,
@@ -217,6 +221,7 @@ import {
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
@@ -12148,11 +12153,33 @@ export function VoiceTutorRealtime({
                       // is futile. Push the brain toward improvise-with-
                       // disclaimer or wrap-up first.
                       const noProblemObserved = noProblemAvailableObservedRef.current;
-                      const reason = activeIsOffSegment
+                      // R49b: the dedup reason used to be blind to what the
+                      // student had just asked. Its stock opener ("The
+                      // student is still looking at the previous problem")
+                      // reads as an invitation to talk about that card —
+                      // which is precisely what the brain did, replaying a
+                      // 7-minute-old turn verbatim, when the student had
+                      // asked for a NEW problem. Lead with the ask when
+                      // there is one.
+                      // Same reverse-scan idiom the perception classifier
+                      // uses for lastStudentTurn — no new ref to keep in
+                      // sync, and it reads the transcript the brain saw.
+                      const lastStudentText = ([...transcriptRef.current]
+                        .reverse()
+                        .find((e) => e.role === 'student')?.text ?? '');
+                      const askedForAnother = TUTOR_DEDUP_RETRY_CONTEXT
+                        && detectAnotherProblemRequest(lastStudentText);
+                      const anotherPrefix = askedForAnother
+                        ? `THE STUDENT JUST ASKED FOR A NEW PROBLEM ("${lastStudentText.slice(0, 80)}"). They are NOT waiting on the previous card — re-showing it, re-introducing it, or narrating it again is a FAILURE, not a recovery. You must produce DIFFERENT content this attempt. `
+                        : '';
+                      if (askedForAnother) {
+                        onDebugEvent?.('dedup_retry_wants_new', `"${lastStudentText.slice(0, 60)}"`);
+                      }
+                      const reason = anotherPrefix + (activeIsOffSegment
                         ? `Your ${name} call was suppressed because the active card is already on the board. NOTE: the active card is BRAIN-IMPROVISED / off-segment — the student is currently working on "${activeStatement.slice(0, 200)}", which differs from segment "${segId}"'s authored content. Do NOT try to re-render the segment's authored card; the student's focus is on the improvised one. RECOVERY: just continue the conversation against the active card — verify the student's answer, give a hint, or wait for their next attempt. If the student is genuinely done with the active card and wants to move on, call advance_lesson or ask them what they want next; do NOT silently render a different problem.`
                         : noProblemObserved
                         ? `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup) AND you've already received no_problem_available from generate_problem earlier this session — the bank/plan is exhausted for this concept. RETRY this attempt with ONE of: (1) PREFERRED — improvise an ad-hoc show_problem with clearly different content from anything previously rendered, prefixed by a disclaimer in narration ("here's one off the top of my head, not from the standard bank…"); or (2) ask the student whether they want to switch topic or wrap up. DO NOT call generate_problem again for this anchor — you've already exhausted it. DO NOT re-emit show_segment_card / show_problem with content matching any prior board card. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`
-                        : `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup hit). The student is still looking at the previous problem. Do NOT re-emit show_segment_card or show_problem for an already-completed segment. Recovery options, in order: (1) call generate_problem if you haven't already exhausted it for this anchor; (2) improvise an ad-hoc show_problem with clearly different content + explicit "off-the-cuff" disclaimer in narration; (3) ask the student whether to switch topic or wrap up. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`;
+                        : `Your ${name} call was suppressed because the same problem is already on the board (session-scoped dedup hit). The student is still looking at the previous problem. Do NOT re-emit show_segment_card or show_problem for an already-completed segment. Recovery options, in order: (1) call generate_problem if you haven't already exhausted it for this anchor; (2) improvise an ad-hoc show_problem with clearly different content + explicit "off-the-cuff" disclaimer in narration; (3) ask the student whether to switch topic or wrap up. Suppressed: ${JSON.stringify({ name, segId }).slice(0, 200)}.`);
                       rejectionsThisAttempt.push({ action: name, reason });
                       await performKill();
                       onDebugEvent?.('dedup_surfaced_as_rejection', `${name} → ${segId}${activeIsOffSegment ? ' (off-segment)' : ''}`);
@@ -15783,7 +15810,7 @@ export function VoiceTutorRealtime({
         'idle_nudge_sent',
         `stretch=${idleNudgeStateRef.current.stretchCount} session=${idleNudgeStateRef.current.sessionCount}`,
       );
-      void handleStudentTranscriptForBrain(IDLE_NUDGE_DIRECTIVE, { silent: true, bypassPerceptionDedupe: true });
+      void handleStudentTranscriptForBrain(idleNudgeDirective({ v2: TUTOR_IDLE_NUDGE_V2 }), { silent: true, bypassPerceptionDedupe: true });
     };
     idleNudgeTimerRef.current = setTimeout(fireOrRecheck, idleNudgeArmDelayMs(idleNudgeStateRef.current));
   }, [handleStudentTranscriptForBrain, onDebugEvent]);
@@ -18145,6 +18172,7 @@ export function VoiceTutorRealtime({
           // R49: withdraw the bare-board licence for the OPENING turn only.
           // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
           ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
+          ...(TUTOR_ANSWER_REVEAL_GUARD ? { answerRevealGuard: true } : {}),
           ...openerFields,
         });
 
