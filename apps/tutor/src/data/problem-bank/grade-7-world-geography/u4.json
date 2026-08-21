@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-what-culture-is-001",
+    "loId": "m7geo.what-culture-is",
+    "cedCode": "M7GEO-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Geographers use one word for the shared way of life of a group of people -- their language, beliefs, food, music, dress, customs and technology, all of it together. What is that word?",
+    "choices": [
+      "Culture",
+      "Cultural trait",
+      "Cultural region",
+      "Cultural diffusion"
+    ],
+    "answer": "A",
+    "hints": [
+      "One single dish, or one single greeting, is only a piece of the answer. The question asks for the word that covers all the pieces at once.",
+      "Cultural region names an area, and cultural diffusion names a spreading. The word you want names the whole shared way of life."
+    ]
+  },
+  {
+    "id": "m7geo-what-culture-is-002",
+    "loId": "m7geo.what-culture-is",
+    "cedCode": "M7GEO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "All four of these statements about the invented town of Willow Bend are true. Which one describes a CULTURAL TRAIT?",
+    "choices": [
+      "The wide river that curves past the town",
+      "The natural hair color that people there are born with",
+      "A style of paper lantern that families teach their children to fold before the autumn market",
+      "The number of hours of daylight there in December"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask two questions about each choice: did people LEARN this from other people, and do they SHARE it?",
+      "Two of these choices describe the physical environment of the place, and one describes bodies that people are born with. Only one describes something that is taught."
+    ]
+  },
+  {
+    "id": "m7geo-what-culture-is-003",
+    "loId": "m7geo.what-culture-is",
+    "cedCode": "M7GEO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A language is spoken in the towns on both sides of the border between two countries. The area where it is spoken has no sharp edge -- it fades out gradually as you travel away from the border. What is a geographer describing?",
+    "choices": [
+      "A cultural trait",
+      "A cultural region",
+      "A political border",
+      "Cultural diffusion"
+    ],
+    "answer": "B",
+    "hints": [
+      "The question is about the AREA where the trait is common, not about the trait itself.",
+      "The description says the edge is blurry and that it crosses a border. A political border is a sharp line drawn by governments, so you need the word for the area."
+    ]
+  },
+  {
+    "id": "m7geo-what-culture-is-004",
+    "loId": "m7geo.what-culture-is",
+    "cedCode": "M7GEO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented towns each pick up the same style of embroidery from the town of Perrin Falls. In Aldgate, a family from Perrin Falls moved in for good and kept stitching it, and neighbors asked to be taught. In Corby, nobody moved: a shopkeeper saw the embroidery at a market on a trade road and started stitching it at home. Which statement about the two towns is correct?",
+    "choices": [
+      "Only Aldgate shows cultural diffusion, because a person carried the trait there",
+      "Only Corby shows cultural diffusion, because the trait spread without anyone moving",
+      "Neither town shows cultural diffusion, because embroidery is not a cultural trait",
+      "Both towns show cultural diffusion: Aldgate shows a trait carried by people who moved, and Corby shows a trait adopted after trade contact"
+    ],
+    "answer": "D",
+    "hints": [
+      "First ask whether a cultural trait moved from one place to a new place. If it did, both towns are diffusion -- then ask HOW each one got it.",
+      "In one town the trait rode along with people who changed where they live. In the other, the shopkeeper stayed exactly where the shopkeeper already lived and picked the trait up after contact."
+    ]
+  },
+  {
+    "id": "m7geo-what-culture-is-005",
+    "loId": "m7geo.what-culture-is",
+    "cedCode": "M7GEO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A dance invented in one town shows up six months later in a city on the far side of the country, while the towns along the road in between have not picked it up at all. Which kind of cultural diffusion best explains that pattern?",
+    "choices": [
+      "Diffusion by people moving, because someone must have carried the dance to the city",
+      "Diffusion by trade and contact, because goods travel along the road between them",
+      "Diffusion through communication and media, which can jump over the places in between",
+      "This is not diffusion at all, because the two places are not next to each other"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at the odd part of the pattern: the places in between were skipped.",
+      "People moving and goods trading both travel through the towns along the way. Which way of spreading does not have to?"
+    ]
+  },
+  {
+    "id": "m7geo-what-culture-is-006",
+    "loId": "m7geo.what-culture-is",
+    "cedCode": "M7GEO-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'Now that I know one recipe, one holiday and one style of music from a country, I know what the culture of that country is.' Which response corrects this best?",
+    "choices": [
+      "The student is right, as long as those three traits are the most common ones in that country",
+      "A whole culture is thousands of traits at once, and every country holds many cultures, so a short list of traits never describes the way of life of a whole country",
+      "The student is right for a small country, and wrong only for a large one",
+      "Traits from another country cannot be studied at all, because culture is not something geographers can describe"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count what a culture actually contains. Is three traits anywhere close to all of it?",
+      "Then ask whether everybody inside one border lives the same way. Cultural regions have blurry edges and do not follow country borders."
+    ]
+  },
+  {
+    "id": "m7geo-language-families-and-diffusion-001",
+    "loId": "m7geo.language-families-and-diffusion",
+    "cedCode": "M7GEO-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does it mean to say that a group of languages belongs to the same language family?",
+    "choices": [
+      "They are all spoken inside the same country",
+      "They all descended from one earlier ancestor language",
+      "They are all written with the same alphabet",
+      "They have all borrowed words from each other"
+    ],
+    "answer": "B",
+    "hints": [
+      "The word family is the clue. Think about how a family tree works.",
+      "An alphabet is a writing system, and borrowing words happens all the time between languages that are not related at all."
+    ]
+  },
+  {
+    "id": "m7geo-language-families-and-diffusion-002",
+    "loId": "m7geo.language-families-and-diffusion",
+    "cedCode": "M7GEO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The word for night is night in English, Nacht in German, noche in Spanish, notte in Italian and noch in Russian. All five of those languages are in the Indo-European family, and all five of those words came down from the same ancestor word. What are words like these called?",
+    "choices": [
+      "Dialects",
+      "A lingua franca",
+      "Loanwords",
+      "Cognates"
+    ],
+    "answer": "D",
+    "hints": [
+      "The question tells you these words all came down from the same ancestor word. There is one term for exactly that.",
+      "A dialect is a variety of one language, and a lingua franca is a shared language between groups. Neither of those names a WORD. A loanword is borrowed rather than inherited."
+    ]
+  },
+  {
+    "id": "m7geo-language-families-and-diffusion-003",
+    "loId": "m7geo.language-families-and-diffusion",
+    "cedCode": "M7GEO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On an international flight, a pilot and an air traffic controller who grew up speaking different languages at home talk to each other in English. What is English being used as here?",
+    "choices": [
+      "A lingua franca",
+      "A cognate",
+      "A dialect",
+      "A language family"
+    ],
+    "answer": "A",
+    "hints": [
+      "The important detail is that their first languages are different and they still need to understand each other.",
+      "A cognate is a word, a dialect is a variety of one language, and a language family is a group of related languages. None of those names a shared bridge language."
+    ]
+  },
+  {
+    "id": "m7geo-language-families-and-diffusion-004",
+    "loId": "m7geo.language-families-and-diffusion",
+    "cedCode": "M7GEO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Swahili uses a large number of words that came from Arabic, most of them words for goods, tools and ideas that arrived along trading routes. The everyday core of Swahili -- its words for numbers and family members -- and its grammar did not come from Arabic. Swahili belongs to the Niger-Congo family and Arabic belongs to the Afro-Asiatic family. What does this case show?",
+    "choices": [
+      "Two languages that share a large number of words must belong to the same family",
+      "Words for traded goods and tools are the best evidence that two languages are related",
+      "Borrowing words is not the same as descending from a shared ancestor, so two languages can trade words for centuries and still sit in different families",
+      "A language that borrows words from a neighbor is on its way to becoming that neighbor's language"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at WHICH words moved. Words for traded goods travel easily between languages. Words for numbers and family members almost never do.",
+      "Relatedness means descent from one ancestor language. Ask whether this case describes descent, or describes contact."
+    ]
+  },
+  {
+    "id": "m7geo-language-families-and-diffusion-005",
+    "loId": "m7geo.language-families-and-diffusion",
+    "cedCode": "M7GEO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Families cross an ocean, settle in a new region, and their children grow up speaking the language the families brought with them. Spanish and Portuguese came to be widely spoken across much of the Americas in this way. Which kind of language spread does this describe?",
+    "choices": [
+      "Spread by migration, because the speakers themselves moved and stayed",
+      "Spread by trade, because merchants carried the language along a route",
+      "Spread by administration and schooling, because offices and schools ran on the language",
+      "This is not language spread, because the children were born in the new region"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what actually moved: goods along a trade route, official paperwork, or the speakers themselves?",
+      "Nobody in this case is trading or running a school. Families settled, and their children grew up speaking the language."
+    ]
+  },
+  {
+    "id": "m7geo-language-families-and-diffusion-006",
+    "loId": "m7geo.language-families-and-diffusion",
+    "cedCode": "M7GEO-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'A country has one real language, and the other ways of speaking there are simpler versions of it.' Which response corrects this best?",
+    "choices": [
+      "The student is right whenever the country has one official language",
+      "Only very large countries have more than one language spoken inside them",
+      "The student is right, because the language used in schools has more rules than the others",
+      "Most countries have several languages spoken inside their borders, and no language or dialect is a simpler version of another -- each one follows its own rules consistently"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two separate things are wrong in that sentence: the number of languages, and the ranking. A good correction has to fix both.",
+      "A dialect follows its own rules consistently, which is what makes it a variety rather than a mistake. And a language used in government and schools is not the only language people use at home."
+    ]
+  },
+  {
+    "id": "m7geo-world-religions-001",
+    "loId": "m7geo.world-religions",
+    "cedCode": "M7GEO-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Christianity and Judaism both began in the same part of the world: the eastern Mediterranean region of Southwest Asia. Geographers have a word for the area where a religion first developed. Which word is it?",
+    "choices": [
+      "Its diffusion",
+      "Its adherents",
+      "Its hearth",
+      "Its branches"
+    ],
+    "answer": "C",
+    "hints": [
+      "The word is also used for the spot in a house where a fire is kept -- the place where something starts.",
+      "Diffusion is the spreading itself. Adherents are the people who follow a religion. You need the word for the area where a tradition first developed."
+    ]
+  },
+  {
+    "id": "m7geo-world-religions-002",
+    "loId": "m7geo.world-religions",
+    "cedCode": "M7GEO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Buddhism began about twenty five hundred years ago with the teachings of Siddhartha Gautama, who is called the Buddha, in the area of present day Nepal and northern India. In which world region did Buddhism begin?",
+    "choices": [
+      "South Asia",
+      "East Asia",
+      "Southwest Asia",
+      "Southeast Asia"
+    ],
+    "answer": "A",
+    "hints": [
+      "Nepal and northern India sit in the same world region as the rest of the Indian subcontinent.",
+      "Buddhism is widely practiced today in parts of East and Southeast Asia, but where a religion is practiced today is a different question from where it began."
+    ]
+  },
+  {
+    "id": "m7geo-world-religions-003",
+    "loId": "m7geo.world-religions",
+    "cedCode": "M7GEO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Hinduism developed in South Asia over thousands of years and has no single founder. It is widely practiced today in India and Nepal, and also by communities in many other countries where families from South Asia settled -- it spread mainly through families migrating rather than through seeking new members. Which term do geographers use for a religion that spreads this way?",
+    "choices": [
+      "A universalizing religion",
+      "A hearth",
+      "Cultural diffusion",
+      "An ethnic religion"
+    ],
+    "answer": "D",
+    "hints": [
+      "Universalizing and ethnic are a pair of labels, and both of them answer the same question: how does this religion travel?",
+      "A religion whose adherents understand its message as meant for all people, and who share it wherever they go, gets the other label in the pair."
+    ]
+  },
+  {
+    "id": "m7geo-world-religions-004",
+    "loId": "m7geo.world-religions",
+    "cedCode": "M7GEO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'Islam began on the Arabian Peninsula, so that is where Muslims live.' The hearth in that sentence is correct, but the conclusion is not. Which response corrects it best?",
+    "choices": [
+      "The student has named where Islam is widely practiced today rather than where it began",
+      "The Arabian Peninsula is the hearth of Islam, and Islam is widely practiced today across many regions, including Southwest Asia, North Africa, West Africa, Central Asia, and South and Southeast Asia",
+      "A religion is always practiced only in the region where it began",
+      "Naming a hearth tells you which country a religion belongs to"
+    ],
+    "answer": "B",
+    "hints": [
+      "A hearth tells you where a tradition started. Ask whether it also tells you where its adherents live now.",
+      "Islam is a universalizing religion, and it diffused far from its hearth. A good correction keeps the hearth and fixes the conclusion."
+    ]
+  },
+  {
+    "id": "m7geo-world-religions-005",
+    "loId": "m7geo.world-religions",
+    "cedCode": "M7GEO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two families living in different countries both say they follow the same religion. Their holidays are not all the same, the language used at their services is different, and their customs at home are different. What is the best explanation?",
+    "choices": [
+      "The two families must actually follow two different religions",
+      "A religion never changes after it begins, so one of the families must be remembering it wrong",
+      "A religion belongs to the country where it began, so only one of the families really follows it",
+      "Every tradition holds many branches and many communities, and adherents do not all practice in identical ways"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what happens to a tradition that has been carried to many places over many centuries.",
+      "Check whether a choice treats a religion as one single unchanging thing. That assumption is the mistake this question is about."
+    ]
+  },
+  {
+    "id": "m7geo-world-religions-006",
+    "loId": "m7geo.world-religions",
+    "cedCode": "M7GEO-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'Ethnic religion must mean that only one group of people is allowed to join that religion.' Which response corrects this best?",
+    "choices": [
+      "Ethnic describes how a religion spreads -- mainly through families migrating rather than through seeking new members -- and it is not a rule about who may join, since people do join these traditions",
+      "The student is right, because a religion belongs to the country where it began",
+      "Ethnic describes what a religion teaches, rather than how it spreads",
+      "Ethnic means a religion is practiced in only one country"
+    ],
+    "answer": "A",
+    "hints": [
+      "Universalizing and ethnic are geographers' labels for one thing only: the way a religion travels from place to place.",
+      "Ask what the label is built out of. Is it built out of a rule about membership, or out of a pattern of spreading?"
+    ]
+  },
+  {
+    "id": "m7geo-cultural-change-and-globalization-001",
+    "loId": "m7geo.cultural-change-and-globalization",
+    "cedCode": "M7GEO-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Cargo ships, airplanes, phone calls and videos posted online all do the same basic job: they shorten the distance between one place and another. Geographers have a word for places becoming more connected through trade, travel, migration and communication. What is it?",
+    "choices": [
+      "Cultural divergence",
+      "Cultural landscape",
+      "Cultural region",
+      "Globalization"
+    ],
+    "answer": "D",
+    "hints": [
+      "The word you want has the word globe inside it.",
+      "Cultural divergence names what happens to a trait after it arrives somewhere, and cultural landscape names what culture looks like on the ground. You need the word for the connecting itself."
+    ]
+  },
+  {
+    "id": "m7geo-cultural-change-and-globalization-002",
+    "loId": "m7geo.cultural-change-and-globalization",
+    "cedCode": "M7GEO-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A visitor walks through a town and writes four short notes. Which note describes part of the CULTURAL LANDSCAPE?",
+    "choices": [
+      "The hills that rise behind the town",
+      "The shop signs, which are written in two languages",
+      "The river that curves along the edge of town",
+      "The afternoon turning hot and cloudless"
+    ],
+    "answer": "B",
+    "hints": [
+      "The cultural landscape is the part of a place that people made, arranged or chose. Which of these did somebody put there?",
+      "The hills and the river were there before the town was, and nobody builds the weather."
+    ]
+  },
+  {
+    "id": "m7geo-cultural-change-and-globalization-003",
+    "loId": "m7geo.cultural-change-and-globalization",
+    "cedCode": "M7GEO-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A style of music that began in one country becomes popular in many others. In one of those countries, musicians begin performing that style in their own language and add instruments used in the traditional music of their region. Which term best describes what those musicians did?",
+    "choices": [
+      "Cultural convergence, because the two countries are now alike in every way",
+      "Migration, because a cultural trait moved from one country to another",
+      "Cultural divergence, because the trait was changed to fit the place it arrived in",
+      "Cultural landscape, because the music can be heard in the streets"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what happened to the trait AFTER it arrived. Did it stay exactly as it was, or did the musicians change it?",
+      "Migration names the movement of people, and cultural landscape names the visible imprint of culture on a place. Neither one names a change made to a trait."
+    ]
+  },
+  {
+    "id": "m7geo-cultural-change-and-globalization-004",
+    "loId": "m7geo.cultural-change-and-globalization",
+    "cedCode": "M7GEO-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A restaurant chain that started in one country opens restaurants in another country. It keeps its logo, its fries and its paper cups, and it adds a spiced rice bowl that it sells nowhere else. Which statement describes this best?",
+    "choices": [
+      "Both are happening at once: the shared logo, fries and cups are cultural convergence, and the spiced rice bowl built for local tastes is cultural divergence",
+      "Only convergence, because it is the same chain in both countries",
+      "Only divergence, because the two menus are not identical",
+      "Neither, because what a restaurant puts on its menu is not a cultural trait"
+    ],
+    "answer": "A",
+    "hints": [
+      "List what is the same in both countries, and then list what is different. Do you need one term for this case, or two?",
+      "Convergence and divergence run at the same time. One case can show both, in the same restaurant on the same afternoon."
+    ]
+  },
+  {
+    "id": "m7geo-cultural-change-and-globalization-005",
+    "loId": "m7geo.cultural-change-and-globalization",
+    "cedCode": "M7GEO-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Cooks in one country begin using a spice that first came from far away, and they use it in dishes their families have cooked for generations. Around the same time, a dish from that same country becomes popular in restaurants in other countries. Which statement best describes what is happening?",
+    "choices": [
+      "The country has lost its own food culture, because a culture that adopts an outside trait gives up its own",
+      "Cultural traits are moving in both directions, and taking up an outside trait does not erase the traits a place already had",
+      "Cultural influence moves in one direction only, outward from a few countries to everybody else",
+      "This kind of change only became possible after airplanes and the internet were invented"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the directions in this case. Something came in, and something went out. Which choice accounts for both?",
+      "Traders were already carrying spices and ideas across continents long before any engine existed, which rules one of these choices out on its own."
+    ]
+  },
+  {
+    "id": "m7geo-cultural-change-and-globalization-006",
+    "loId": "m7geo.cultural-change-and-globalization",
+    "cedCode": "M7GEO-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geographer walks through a town and writes down what she can see: a bakery selling a bread that is common in that country beside a pastry that came from another country, shop signs written in two languages, and a yard of shipping containers near the water. A student reads her notes and writes: 'This proves the local culture there has been replaced.' What is the best response?",
+    "choices": [
+      "The student is right, because traits from other places are present in the town",
+      "The notes prove the opposite: they show that nothing in the town has changed",
+      "The notes are evidence that this place is connected to other places, with traits from more than one place in use side by side; whether that counts as a loss or a gain is something people genuinely disagree about, and these notes do not settle it",
+      "A geographer should not write down what is present in a town, because people disagree about globalization"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask exactly what the notes show. They show what is present in the town today. Do they show what used to be there?",
+      "Thoughtful people land on different sides of this argument. Your job in geography is to describe accurately what is happening in a place, not to hand in a verdict."
+    ]
+  }
+]

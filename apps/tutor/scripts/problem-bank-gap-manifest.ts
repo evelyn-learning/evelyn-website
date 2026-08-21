@@ -34,6 +34,9 @@ export const COURSE_PREFIX: Record<string, string> = {
   'hs-english': 'engl',
   'world-history': 'whist',
   'grade-7-math': 'm7math',
+  'grade-7-ela': 'm7ela',
+  'grade-7-life-science': 'm7sci',
+  'grade-7-world-geography': 'm7geo',
 };
 
 const FRQ_FILE_RE = /-(frq|saq|dbq|leq)-/;
@@ -86,6 +89,11 @@ export function collectPlanLos(seedsDir: string, prefix: string): PlanLo[] {
 
 export function collectBankCounts(courseDir: string): Map<string, BankCount> {
   const counts = new Map<string, BankCount>();
+  // A registered course whose bank dir does not exist yet has zero items --
+  // which is exactly what a GAP manifest should report. Throwing ENOENT here
+  // made the all-courses run unusable for the whole window between
+  // registering a course and authoring its first unit file.
+  if (!fs.existsSync(courseDir)) return counts;
   for (const f of fs.readdirSync(courseDir).filter((f) => f.endsWith('.json'))) {
     const items = JSON.parse(fs.readFileSync(path.join(courseDir, f), 'utf8')) as Array<{ loId: string; difficulty: 1 | 2 | 3 | 4 }>;
     for (const it of items) {

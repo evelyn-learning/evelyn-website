@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-energy-for-living-things-001",
+    "loId": "m7sci.energy-for-living-things",
+    "cedCode": "M7SCI-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly describes what a producer does?",
+    "choices": [
+      "It produces the energy that every other living thing in its ecosystem uses.",
+      "It captures light energy and stores that energy in food it makes.",
+      "It takes in its food from the soil through its roots.",
+      "It obtains its energy by eating other living things."
+    ],
+    "answer": "B",
+    "hints": [
+      "The word producer is a claim about food, not a claim about energy.",
+      "Nothing alive brings new energy into existence. A plant catches energy that is already streaming from the Sun and locks it into the food it builds."
+    ]
+  },
+  {
+    "id": "m7sci-energy-for-living-things-002",
+    "loId": "m7sci.energy-for-living-things",
+    "cedCode": "M7SCI-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fungus is growing on a pile of dead leaves in a shady corner behind the school. How is that fungus obtaining energy?",
+    "choices": [
+      "By breaking down the dead leaves and using the energy still stored in them.",
+      "By capturing sunlight in its cells and building its own food, the way the leaves once did.",
+      "By absorbing food directly out of the soil beneath the leaf pile.",
+      "By taking in the warmth of the leaf pile and using that heat as its energy supply."
+    ],
+    "answer": "A",
+    "hints": [
+      "Sort the fungus first. It does not build its own food, and it is not eating a living thing, so which of the three groups is left?",
+      "Those leaves spent a whole summer in the sunlight. Ask whether the energy stored in them disappeared the moment they fell."
+    ]
+  },
+  {
+    "id": "m7sci-energy-for-living-things-003",
+    "loId": "m7sci.energy-for-living-things",
+    "cedCode": "M7SCI-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes this sentence, and it is wrong: \"The chicken makes energy from the corn it eats, and the corn plant makes energy from sunlight.\" The order of living things is right, so only the verbs need repairing. Which rewrite is correct?",
+    "choices": [
+      "The corn plant takes its energy from the soil, and the chicken makes energy from the corn it eats.",
+      "The corn plant passes sunlight straight into the chicken when the chicken eats the corn.",
+      "The corn plant produces energy for the chicken, and the chicken stores that energy in its muscles.",
+      "The corn plant captures light energy and stores it in the food it makes, and the chicken takes in that stored energy by eating the corn, where its cells release it."
+    ],
+    "answer": "D",
+    "hints": [
+      "Sunlight, then corn, then chicken is the right order, so the problem is not which living thing comes where. Look hard at the verb in each half.",
+      "The honest verbs for energy are captured, stored, released, transferred and transformed. A plant is allowed to make food, never energy."
+    ]
+  },
+  {
+    "id": "m7sci-energy-for-living-things-004",
+    "loId": "m7sci.energy-for-living-things",
+    "cedCode": "M7SCI-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hawk eats a snake. The snake had eaten a mouse, and the mouse had eaten grass seeds. Where did the energy now stored in the hawk originally come from, and what form was it in first?",
+    "choices": [
+      "From minerals in the soil, which the grass pulled up through its roots.",
+      "From the hawk itself, which supplies its own energy as it grows.",
+      "From sunlight, which the grass captured and stored as chemical energy in its seeds.",
+      "From the oxygen the hawk breathes in, which is the energy supply for every animal."
+    ],
+    "answer": "C",
+    "hints": [
+      "Walk backwards along the chain until you reach a living thing that is not eating anything at all.",
+      "That last living thing is a producer. Ask what it takes in, and what form the energy is in once the producer has stored it."
+    ]
+  },
+  {
+    "id": "m7sci-energy-for-living-things-005",
+    "loId": "m7sci.energy-for-living-things",
+    "cedCode": "M7SCI-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A bean plant sits on a sunny windowsill and grows for several weeks. A rabbit gets out of its hutch and eats the plant, then hops across the yard. Which list gives the energy changes in the correct order?",
+    "choices": [
+      "Light energy -> chemical energy stored in the bean plant -> chemical energy in the rabbit -> motion and warmth",
+      "Chemical energy stored in the bean plant -> light energy -> chemical energy in the rabbit -> motion and warmth",
+      "Light energy -> heat energy in the soil -> chemical energy in the rabbit -> motion and warmth",
+      "Light energy -> chemical energy in the rabbit -> chemical energy stored in the bean plant -> motion and warmth"
+    ],
+    "answer": "A",
+    "hints": [
+      "Energy travels along the chain in the same direction as the eating: the one that is eaten passes it to the one that eats.",
+      "A producer stores what it captures, so the form right after the capture is chemical energy held in the plant."
+    ]
+  },
+  {
+    "id": "m7sci-energy-for-living-things-006",
+    "loId": "m7sci.energy-for-living-things",
+    "cedCode": "M7SCI-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A fallen oak log lies on the floor of a thick forest where almost no sunlight reaches. Mushrooms grow on the log, and a beetle eats some of the mushrooms. A student says the beetle's energy has nothing to do with sunlight, because no sunlight reaches that spot. Which response is correct?",
+    "choices": [
+      "The student is right, because the mushrooms make their own energy inside the dead wood.",
+      "The student is right, because decomposers draw their energy supply from the soil rather than from sunlight.",
+      "The student is wrong, because the mushrooms capture the small amount of light that reaches the forest floor and store it in food.",
+      "The student is wrong, because the energy in that wood was captured from sunlight by the oak years ago and is still stored in the log."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask when the energy in that wood arrived, not where the log happens to be lying now.",
+      "A decomposer collects energy that a producer stored earlier. The oak stood in the sunlight for years before it fell."
+    ]
+  },
+
+  {
+    "id": "m7sci-photosynthesis-001",
+    "loId": "m7sci.photosynthesis",
+    "cedCode": "M7SCI-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which word equation correctly shows photosynthesis?",
+    "choices": [
+      "glucose + oxygen -> carbon dioxide + water + released energy",
+      "carbon dioxide + water -> glucose + oxygen + light energy",
+      "carbon dioxide + water + light energy -> glucose + oxygen",
+      "oxygen + water + minerals -> glucose + carbon dioxide"
+    ],
+    "answer": "C",
+    "hints": [
+      "Whatever sits on the left of the arrow went in, and whatever sits on the right came out. Light is one of the things going in.",
+      "One of these choices is the equation for cellular respiration, and one has the plant giving out light instead of taking it in."
+    ]
+  },
+  {
+    "id": "m7sci-photosynthesis-002",
+    "loId": "m7sci.photosynthesis",
+    "cedCode": "M7SCI-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A tomato plant has green leaves and a green stem. Where in this plant does photosynthesis take place, and what actually captures the light?",
+    "choices": [
+      "In the mitochondria, and the green pigment chlorophyll captures the light.",
+      "In the chloroplasts of the green parts, and the green pigment chlorophyll captures the light.",
+      "In the roots, because the roots are where water enters the plant.",
+      "In the chloroplasts of the leaves only, because a stem never contains chloroplasts."
+    ],
+    "answer": "B",
+    "hints": [
+      "Green means chloroplasts, and a green stem is green for exactly the same reason a leaf is.",
+      "One choice names the organelle for a different process, and one wrongly rules out a green part of the plant."
+    ]
+  },
+  {
+    "id": "m7sci-photosynthesis-003",
+    "loId": "m7sci.photosynthesis",
+    "cedCode": "M7SCI-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student says the wood of a tree is partly built out of sunlight, since sunlight is what the tree took in for years. Why is that wrong?",
+    "choices": [
+      "Light carries energy but is not matter, so no part of the sugar is built from light. Every atom in the sugar arrived as carbon dioxide or as water.",
+      "Light does become part of the sugar, but only a very small part of it.",
+      "The tree does not take in light at all. It takes in only water and minerals.",
+      "The atoms in the wood came up out of the soil, and light plays no part in building them."
+    ],
+    "answer": "A",
+    "hints": [
+      "Split the question in two: which input supplies the atoms, and which input supplies the energy?",
+      "Light is not an ingredient. It powers the building, and the energy it carried ends up stored in the sugar."
+    ]
+  },
+  {
+    "id": "m7sci-photosynthesis-004",
+    "loId": "m7sci.photosynthesis",
+    "cedCode": "M7SCI-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gardener dries and weighs the soil in a large pot, plants a small seedling in it, and waters the plant for five years without adding fertilizer. She then lifts the tree out, dries the soil again and weighs it. The soil weighs only slightly less than it did at the start, while the tree weighs many kilograms. What does this experiment show?",
+    "choices": [
+      "The tree built its mass out of minerals from the soil, so the second soil weighing must be inaccurate.",
+      "The tree built its mass out of the sunlight its leaves absorbed over the five years.",
+      "Water alone accounts for all of the tree's mass, since water was the only thing added.",
+      "Most of the tree's mass came from carbon dioxide in the air and from water, because the soil barely changed."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the two soil weighings first. What does that measurement rule out?",
+      "List the only ways matter can get into a plant: out of the soil, in the water, or in through the leaves from the air."
+    ]
+  },
+  {
+    "id": "m7sci-photosynthesis-005",
+    "loId": "m7sci.photosynthesis",
+    "cedCode": "M7SCI-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A healthy potted houseplant is moved into a dark closet with ordinary air in it. It is watered on schedule the whole time. After three weeks the plant is pale, thin and dying. Which explanation is correct?",
+    "choices": [
+      "It died because it could not breathe inside the closet.",
+      "One input, light energy, was missing, so it could build no new food while its cells kept spending the food it had already stored.",
+      "It died because cellular respiration stopped in the dark, so its cells could not release any energy.",
+      "It died because plants take their food from the soil, and the soil in the pot had run out of food."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check the three inputs of photosynthesis one at a time against what the closet actually had.",
+      "Then ask the question people skip: while it sat in the dark, was the plant still spending stored food?"
+    ]
+  },
+  {
+    "id": "m7sci-photosynthesis-006",
+    "loId": "m7sci.photosynthesis",
+    "cedCode": "M7SCI-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A leafy plant is sealed inside a clear glass jar of air and left on a sunny windowsill. Over a bright afternoon, a sensor shows the amount of oxygen in the jar going up. Which statement best explains that measurement?",
+    "choices": [
+      "Photosynthesis is running and cellular respiration is not, because a plant only respires at night.",
+      "Cellular respiration is running faster than photosynthesis, and cellular respiration releases oxygen.",
+      "Both processes are running at once, and in bright light photosynthesis releases oxygen faster than cellular respiration uses it up.",
+      "The plant is breathing out oxygen, in the same way an animal breathes out carbon dioxide."
+    ],
+    "answer": "C",
+    "hints": [
+      "Do not assume that a rise in oxygen means only one process is happening in the jar.",
+      "One of the two processes releases oxygen and the other uses oxygen. The sensor is showing the result of both running at the same time."
+    ]
+  },
+
+  {
+    "id": "m7sci-cellular-respiration-001",
+    "loId": "m7sci.cellular-respiration",
+    "cedCode": "M7SCI-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In which organelle does most of cellular respiration take place?",
+    "choices": [
+      "The chloroplast",
+      "The nucleus",
+      "The cell wall",
+      "The mitochondrion"
+    ],
+    "answer": "D",
+    "hints": [
+      "Cells that work hard, such as muscle cells, hold very large numbers of this organelle.",
+      "You want the organelle that releases energy from food, not the green one that captures light."
+    ]
+  },
+  {
+    "id": "m7sci-cellular-respiration-002",
+    "loId": "m7sci.cellular-respiration",
+    "cedCode": "M7SCI-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An earthworm has no lungs and never breathes. A student concludes that an earthworm's cells therefore cannot carry out cellular respiration. Why is the student wrong?",
+    "choices": [
+      "Cellular respiration and breathing are the same process, and the worm simply breathes through its skin instead of through lungs.",
+      "Only animals with lungs release energy from food. A worm takes its energy supply directly from the soil.",
+      "Breathing moves air into and out of lungs, while cellular respiration is a chemical process inside cells, so an animal with no lungs can still carry it out.",
+      "The worm's cells carry out photosynthesis instead, which is why it can live underground."
+    ],
+    "answer": "C",
+    "hints": [
+      "The first word of the term tells you where the process happens, and it is not the lungs.",
+      "Breathing is the delivery service that brings oxygen to the cells and carries the waste gas away. Delivering a package is not the same as opening it."
+    ]
+  },
+  {
+    "id": "m7sci-cellular-respiration-003",
+    "loId": "m7sci.cellular-respiration",
+    "cedCode": "M7SCI-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mouse cell is carrying out cellular respiration. Which statement describes it correctly?",
+    "choices": [
+      "Carbon dioxide and water go in, and glucose and oxygen come out.",
+      "Glucose and oxygen go in, carbon dioxide and water come out, and the energy already stored in the glucose is released.",
+      "Glucose and oxygen go in, carbon dioxide and water come out, and the mitochondria create new energy for the cell.",
+      "Glucose and carbon dioxide go in, and oxygen and water come out."
+    ],
+    "answer": "B",
+    "hints": [
+      "Say the word equation to yourself first: glucose + oxygen -> carbon dioxide + water + released energy.",
+      "Two choices name the same inputs and outputs and differ only in what they say about the energy. One of those two breaks a rule you already know."
+    ]
+  },
+  {
+    "id": "m7sci-cellular-respiration-004",
+    "loId": "m7sci.cellular-respiration",
+    "cedCode": "M7SCI-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "It is two in the morning and a cornfield is completely dark. What are the cells of the corn plants doing?",
+    "choices": [
+      "Carrying out cellular respiration, releasing energy from glucose the plants built earlier, just as they were doing during the day.",
+      "Carrying out photosynthesis, using light energy the plants saved up during the day.",
+      "Carrying out cellular respiration for the first time that day, because plants photosynthesize by day and respire by night.",
+      "Doing nothing with energy at all, because a plant pauses until the sun comes up."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which of the two processes needs light. Then ask what happens to the other one when the light goes away.",
+      "The corn still has to grow and repair itself overnight, and that costs energy the plant has to release from food."
+    ]
+  },
+  {
+    "id": "m7sci-cellular-respiration-005",
+    "loId": "m7sci.cellular-respiration",
+    "cedCode": "M7SCI-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student says: \"I only do cellular respiration when I exercise. When I sit still on the couch it stops.\" Which correction is right?",
+    "choices": [
+      "The student is correct, because cells at rest do not need any energy.",
+      "It stops in the muscle cells at rest but continues in the lungs, which never rest.",
+      "Cellular respiration runs in every living cell all the time. Exercise makes an already running process run faster.",
+      "It runs only while you are breathing hard, because breathing hard is what releases the energy from food."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether staying alive costs energy while you sit still: a beating heart, a body kept warm, cells repairing themselves.",
+      "Breathing harder is a result of the process speeding up, not the process itself."
+    ]
+  },
+  {
+    "id": "m7sci-cellular-respiration-006",
+    "loId": "m7sci.cellular-respiration",
+    "cedCode": "M7SCI-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes this sentence, and two separate things in it are wrong: \"Cellular respiration is the reverse of photosynthesis, so animals do the one and plants do the other.\" Which choice corrects both mistakes?",
+    "choices": [
+      "Plants carry out both processes, and cellular respiration really is the reverse of photosynthesis, run backwards inside the mitochondria.",
+      "Plants carry out both processes, and the two are complements rather than opposites: the inputs of one are the outputs of the other.",
+      "Animals carry out both processes, while plants carry out photosynthesis only.",
+      "The two processes are opposites, but plants and animals both carry out photosynthesis."
+    ],
+    "answer": "B",
+    "hints": [
+      "Start with the second half of the sentence. Does an oak tree have mitochondria, and does it use them?",
+      "Now set the two word equations side by side. What one process takes in, the other gives out, but that is a relationship between the substances, not one process run backwards."
+    ]
+  },
+
+  {
+    "id": "m7sci-matter-and-energy-in-organisms-001",
+    "loId": "m7sci.matter-and-energy-in-organisms",
+    "cedCode": "M7SCI-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement follows the rule that matter is conserved in a living thing?",
+    "choices": [
+      "The atoms in food are rearranged into new molecules, and every one of those atoms is still somewhere.",
+      "Food is used up by the body and then disappears.",
+      "Food is turned into energy, which is why the food is gone.",
+      "The body destroys the atoms in food in order to get at the energy inside them."
+    ],
+    "answer": "A",
+    "hints": [
+      "Conserved means the total stays the same: none is created and none is destroyed.",
+      "Refuse the words used up in a trace, and ask instead where that atom is right now."
+    ]
+  },
+  {
+    "id": "m7sci-matter-and-energy-in-organisms-002",
+    "loId": "m7sci.matter-and-energy-in-organisms",
+    "cedCode": "M7SCI-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student eats a bowl of oatmeal. Which choice correctly names where the atoms from that oatmeal end up?",
+    "choices": [
+      "All of them are built into new body tissue, which is how a person grows.",
+      "All of them are burned away, leaving nothing behind.",
+      "Some are built into the body, and the rest are turned into the energy used for walking to school.",
+      "Some are rearranged into new molecules that build the body, some leave as carbon dioxide that is breathed out, and some leave in water and waste."
+    ],
+    "answer": "D",
+    "hints": [
+      "A full trace names every destination, and no atom is allowed to vanish along the way.",
+      "One of these choices lets atoms become energy, and that never happens in a living thing."
+    ]
+  },
+  {
+    "id": "m7sci-matter-and-energy-in-organisms-003",
+    "loId": "m7sci.matter-and-energy-in-organisms",
+    "cedCode": "M7SCI-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Where does the energy from a student's lunch finally end up?",
+    "choices": [
+      "It is recycled inside the body over and over, in the same way the atoms are.",
+      "It is destroyed once the body has finished using it.",
+      "It is transferred to movement and to building new molecules, and it leaves the body as heat spreading into the surroundings.",
+      "It is stored in the body permanently as new matter."
+    ],
+    "answer": "C",
+    "hints": [
+      "Energy is never destroyed, so \"it is gone\" cannot be the whole story. Ask where it went instead.",
+      "Matter cycles. Energy flows one way through an organism and leaves in one particular form."
+    ]
+  },
+  {
+    "id": "m7sci-matter-and-energy-in-organisms-004",
+    "loId": "m7sci.matter-and-energy-in-organisms",
+    "cedCode": "M7SCI-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cat is put on smaller meals and slowly loses weight over several months. Its owner wants to know where the lost matter actually went. What is the correct answer?",
+    "choices": [
+      "The matter was destroyed, which is what losing weight means.",
+      "Most of it left the cat as carbon dioxide breathed out, and the rest left as water.",
+      "The matter was changed into the energy the cat spent on its daily prowl.",
+      "All of it left the cat as heat given off into the air."
+    ],
+    "answer": "B",
+    "hints": [
+      "Matter is conserved, so the lost mass had to leave the body as something you could weigh.",
+      "Heat is energy, not matter, so heat cannot carry atoms out. Stored fat molecules are rearranged during cellular respiration into two things that leave the body."
+    ]
+  },
+  {
+    "id": "m7sci-matter-and-energy-in-organisms-005",
+    "loId": "m7sci.matter-and-energy-in-organisms",
+    "cedCode": "M7SCI-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "One carbon atom is part of a carbon dioxide molecule floating in the air. A corn plant takes that molecule in, and months later a chicken eats the kernel the atom ended up in. Which trace of that single atom is correct?",
+    "choices": [
+      "The atom is changed into energy inside the corn plant, and the chicken later spends that energy.",
+      "The atom stays in the air the whole time, because carbon dioxide cannot get into a plant.",
+      "The atom settles into the soil first, and the corn plant takes it up through its roots.",
+      "The atom is built into glucose during photosynthesis and becomes part of the kernel, and inside the chicken it is either built into the chicken's body or leaves in carbon dioxide the chicken breathes out."
+    ],
+    "answer": "D",
+    "hints": [
+      "Photosynthesis builds sugar out of carbon dioxide and water, so follow the atom into the sugar first.",
+      "Once the atom is inside the chicken it has two possible destinations, and neither of them is turning into energy."
+    ]
+  },
+  {
+    "id": "m7sci-matter-and-energy-in-organisms-006",
+    "loId": "m7sci.matter-and-energy-in-organisms",
+    "cedCode": "M7SCI-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A sealed glass terrarium holds soil, a small fern and a few snails. The lid is never opened, so no matter can get in or out, yet the terrarium sits in a window and everything inside stays alive for months. Which statement best explains how that works?",
+    "choices": [
+      "The atoms inside are used again and again by the fern and the snails, while energy keeps entering as light through the glass and leaving as heat.",
+      "Both the matter and the energy inside are used again and again, so nothing at all has to enter or leave the jar.",
+      "The fern supplies the energy the snails need, so no energy has to come in from outside the jar.",
+      "The snails supply matter and energy to the fern and the fern supplies both back, so the terrarium does not need sunlight."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask the two questions separately: can the atoms be used again, and can the energy be used again?",
+      "The jar is sealed to matter but not to light and heat, and that difference is the whole answer."
+    ]
+  }
+]

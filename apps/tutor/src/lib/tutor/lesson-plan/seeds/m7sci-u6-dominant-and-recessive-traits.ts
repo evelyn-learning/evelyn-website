@@ -1,0 +1,207 @@
+/**
+ * Grade 7 Science (Life Science) — Heredity: Dominant & Recessive Traits.
+ *
+ * Row 6.2 (NGSS MS-LS3-2). This is the vocabulary row that row 6.3 (Punnett
+ * Squares) stands on: allele, genotype, phenotype, homozygous, heterozygous,
+ * and the same-letter convention (T and t, never T and s). Every term is
+ * defined here exactly as 6.3 uses it.
+ *
+ * THE MISCONCEPTION THIS ROW OWNS: "dominant" does not mean better, stronger,
+ * more common, or more likely to be inherited. It means the trait shows
+ * whenever the allele is present. A recessive trait can be far more common in
+ * a population than a dominant one. That is why 6.2 exists separately from 6.3.
+ *
+ * NOTE FOR FUTURE AUTHORS: there are NO IMAGES in this course. Every item is
+ * solvable from the words printed inside it. Note also that the familiar human
+ * textbook examples -- tongue rolling, attached earlobes, widow's peak, eye
+ * color -- are NOT single-gene dominant/recessive traits and are deliberately
+ * absent. Use pea plants, guinea pigs, or invented organisms instead.
+ */
+
+import type { LessonPlan } from '../types';
+import { MS_PACING_THRESHOLDS, MS_SOURCE } from './_ms-shared';
+
+export const SEED_M7SCI_U6_DOMINANT_AND_RECESSIVE_TRAITS: LessonPlan = {
+  id: 'evelyn.ms.m7sci.dominant-and-recessive-traits.v1',
+  title: 'Dominant & Recessive Traits',
+  curriculum: 'MS',
+  grade: '7',
+  subject: 'science',
+  topic: 'grade-7-life-science',
+  locale: 'en',
+  los: [
+    {
+      id: 'm7sci.dominant-and-recessive-traits',
+      standard: 'M7SCI-6.2',
+      description:
+        'Explain how the two alleles of a gene, one inherited from each parent, combine to produce a trait; tell genotype from phenotype and homozygous from heterozygous; and explain that a dominant allele shows whenever it is present while saying nothing about how common a trait is in a population (NGSS MS-LS3-2).',
+    },
+  ],
+  prerequisites: ['m7sci.genes-chromosomes-and-dna'],
+  followUps: ['m7sci.punnett-squares'],
+  estimatedMinutes: 21,
+  segments: [
+    {
+      id: 'hook',
+      kind: 'hook',
+      goal: 'Set up the row-owning misconception immediately: common does not mean dominant.',
+      script:
+        'Picture the pea plants along the fence behind the school. Suppose you count them and almost every plant is short. Only a few are tall. It feels obvious that short must be the winning version of the trait, the strong one, the one that takes over. That guess is wrong, and it is wrong in an interesting way. In genetics the word dominant does not mean common, and it does not mean better. It means something much narrower, and much more useful: the trait shows up whenever that version of the gene is present, even in a plant that is also carrying the other version. Today we sort out what those versions are, how they pair up, and why a trait can fill a whole fence line and still be the recessive one.',
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'concept-alleles-dominance',
+      kind: 'concept',
+      goal: 'Install allele, dominant, recessive, genotype, phenotype, homozygous, heterozygous and the same-letter convention, and kill the dominant-means-common idea.',
+      keyIdeas: [
+        'AN ALLELE IS ONE VERSION OF A GENE. A gene is the instruction for a trait, such as fur color in a guinea pig. Most genes come in more than one version, and those versions are the alleles. You carry TWO alleles for the gene, because you inherited one from each parent. Not one parent. Each parent. Every organism that has two parents gets exactly one allele of each gene from each of them.',
+        'WE WRITE THE TWO ALLELES WITH THE SAME LETTER. The capital letter stands for the dominant version and the same letter in lowercase stands for the recessive version. So T and t are the two alleles of one gene. Writing T and s is always wrong, because different letters mean different genes. Pick the letter from the dominant trait, then reuse it in lowercase for the recessive one.',
+        'DOMINANT MEANS IT SHOWS WHEN PRESENT. If a dominant allele is there at all, even just one copy, you see its trait. The recessive trait appears only when BOTH alleles are recessive, because there is no dominant allele there to show instead. That is the whole rule, and it is a rule about what happens inside one organism.',
+        'DOMINANT DOES NOT MEAN BETTER, STRONGER, MORE COMMON, OR MORE LIKELY TO BE INHERITED. This is the mistake almost everyone makes, so read it twice. Dominance says nothing about how many organisms have the trait. A plant carrying one of each allele passes on the dominant one about half the time and the recessive one about half the time, so being dominant gives an allele no head start at all. How common a trait is in a population depends on which parents that population started with and which offspring survive and reproduce there. WRONG: "Short pea plants are everywhere in this garden, so short must be dominant." CORRECT: "Short pea plants are everywhere in this garden, so the recessive allele is simply the common one here."',
+        'GENOTYPE IS THE LETTERS; PHENOTYPE IS WHAT YOU SEE. If black fur B is dominant over white fur b, then BB and Bb are two different GENOTYPES that give the same PHENOTYPE, because the dominant B shows either way. You cannot tell a BB guinea pig from a Bb guinea pig by looking at it. Only bb looks white.',
+        'HOMOZYGOUS MEANS TWO OF THE SAME; HETEROZYGOUS MEANS TWO DIFFERENT. BB and bb are homozygous. Bb is heterozygous, and a heterozygous organism is a CARRIER: it shows the dominant trait while carrying a recessive allele that is still whole and can still be passed on. Nothing blends. The hidden allele is not watered down, which is exactly why a recessive trait can vanish for a generation and then come straight back. (A few genes do not follow this simple pattern of one allele fully covering the other, and you will meet those later.)',
+      ],
+      vocabulary: [
+        { term: 'allele', definition: 'one version of a gene; an organism carries two, one inherited from each parent.' },
+        { term: 'dominant allele', definition: 'an allele whose trait shows whenever the allele is present, written as a capital letter.' },
+        { term: 'recessive allele', definition: 'an allele whose trait shows only when both alleles are recessive, written as the same letter in lowercase.' },
+        { term: 'genotype', definition: 'the pair of alleles an organism carries, written as letters such as Bb.' },
+        { term: 'phenotype', definition: 'the trait you can actually observe, such as black fur or white fur.' },
+        { term: 'homozygous', definition: 'having two identical alleles for a gene, such as BB or bb.' },
+        { term: 'heterozygous', definition: 'having two different alleles for a gene, such as Bb.' },
+      ],
+      estimatedMinutes: 6,
+    },
+    {
+      id: 'worked-genotype-to-phenotype',
+      kind: 'worked_example',
+      problem:
+        'In guinea pigs, black fur (B) is dominant over white fur (b). Three guinea pigs have the genotypes BB, Bb, and bb. For each one, say whether it is homozygous or heterozygous, and say what color its fur is.',
+      steps: [
+        'Read the letters first. B and b are the same letter, so they are the two alleles of ONE gene, the fur color gene. Capital B is the dominant version and means black. Lowercase b is the recessive version and means white.',
+        'Take BB. The two alleles are identical, so this guinea pig is homozygous. Both alleles are dominant, so the fur is black.',
+        'Take Bb. The two alleles are different, so this guinea pig is heterozygous. A dominant allele shows whenever it is present, and there is a B present, so the fur is black. The b is still there, still whole, and can still be passed on to offspring. This guinea pig is a carrier of the white allele.',
+        'Take bb. The two alleles are identical again, so this guinea pig is homozygous as well. There is no dominant allele here to show instead, so the recessive trait finally appears and the fur is white. This is the only genotype that looks white.',
+        'Now compare BB with Bb. Different genotypes, same phenotype. Two of these guinea pigs look exactly the same and are carrying different alleles, which is why you can never read a genotype straight off an animal that shows the dominant trait.',
+      ],
+      answer:
+        'BB is homozygous with black fur. Bb is heterozygous with black fur, and it carries a hidden white allele. bb is homozygous with white fur. BB and Bb have different genotypes but the same phenotype.',
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'worked-dominant-is-not-common',
+      kind: 'worked_example',
+      problem:
+        'In pea plants, tall (T) is dominant over short (t). A gardener looks at one greenhouse and finds that most of the plants in it are short. A student says this must be a mistake, because the dominant trait should be the common one. Explain why the greenhouse is perfectly possible, and say what the genotype of nearly every plant in it must be.',
+      steps: [
+        'Write down what dominant actually claims. A T allele shows its trait whenever it is present, so any plant with a T is tall. That is a statement about what happens inside one plant. It is not a statement about how many T alleles exist in the greenhouse.',
+        'Work out the genotype of a short plant. Short is the recessive trait, so it shows only when both alleles are recessive. A short plant must be tt. A single T would have made it tall instead.',
+        'Put those together. A greenhouse that is mostly short plants is a greenhouse that is mostly tt plants, which means the t allele is simply the common one there. Nothing about that breaks any rule.',
+        'Check whether dominance could push T to spread. A Tt plant passes T to about half of its offspring and t to about the other half. Being dominant does not make an allele get passed on more often. Dominance changes what you SEE, never how often an allele is handed down.',
+        'Name what actually sets how common a trait is. It depends on which plants that greenhouse started with and which plants survive and reproduce there. If the gardener planted mostly tt seeds, the greenhouse is mostly short, and it will stay that way.',
+        'State the correction cleanly. WRONG: "Most of the plants are short, so short must be dominant." CORRECT: "Most of the plants are short, so tt is the common genotype here. Dominant and common are two separate questions."',
+      ],
+      answer:
+        'The greenhouse is possible because dominance describes what shows inside one plant, not how common an allele is in a group. Nearly every plant in it is tt, so the recessive allele t is the common one there.',
+      estimatedMinutes: 3,
+    },
+    {
+      id: 'try-carrier-genotype',
+      kind: 'try_yourself',
+      problem:
+        'In pea plants, purple flowers (P) are dominant over white flowers (p). You find a pea plant with purple flowers. What can you say for certain about its genotype?',
+      responseFormat: 'mcq',
+      choices: [
+        { id: 'a', text: 'It must be PP, because it is showing the dominant trait' },
+        { id: 'b', text: 'It is either PP or Pp, because one P is enough to make the flowers purple', correct: true },
+        { id: 'c', text: 'It must be Pp, because every organism carries one of each allele' },
+        { id: 'd', text: 'It could be PP, Pp, or pp, because a genotype can never be narrowed down by looking' },
+      ],
+      expectedAnswer: 'It is either PP or Pp, because one P is enough to make the flowers purple',
+      hints: [
+        'Ask which genotypes would produce purple flowers. Go through PP, Pp, and pp one at a time and decide what each one would look like.',
+        'A dominant allele shows whenever it is present, so both PP and Pp are purple. Only pp is white, so seeing purple does rule one genotype out.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'try-recessive-can-be-common',
+      kind: 'try_yourself',
+      problem:
+        'In a kind of beetle, smooth wing covers (S) are dominant over ridged wing covers (s). On one island, almost every beetle has ridged wing covers. Which statement is correct?',
+      responseFormat: 'mcq',
+      choices: [
+        { id: 'a', text: 'The ridged allele must really be the dominant one, since the ridged trait is the common one here' },
+        { id: 'b', text: 'The ridged beetles are ss, and a recessive trait can be the common one in a population', correct: true },
+        { id: 'c', text: 'The smooth allele will spread until most beetles are smooth, because a dominant allele takes over' },
+        { id: 'd', text: 'The ridged beetles must be Ss, since every beetle gets one allele from each parent' },
+      ],
+      expectedAnswer: 'The ridged beetles are ss, and a recessive trait can be the common one in a population',
+      hints: [
+        'Dominant tells you what shows inside one beetle. It does not tell you how many of each allele are on the island.',
+        'A beetle with ridged wing covers is showing the recessive trait, so work out what both of its alleles have to be.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'try-letter-convention',
+      kind: 'try_yourself',
+      problem:
+        'A student is choosing letters for the two alleles of the fur length gene in a rabbit. Short fur is dominant and long fur is recessive. Which way of writing the two alleles is correct?',
+      responseFormat: 'mcq',
+      choices: [
+        { id: 'a', text: 'S for short fur and L for long fur, so that each letter matches its trait name' },
+        { id: 'b', text: 'S for short fur and s for long fur, using one letter with the capital for the dominant version', correct: true },
+        { id: 'c', text: 's for short fur and S for long fur, because the capital letter marks the rarer version' },
+        { id: 'd', text: 'S for short fur and S for long fur, because both alleles belong to the same gene' },
+      ],
+      expectedAnswer: 'S for short fur and s for long fur, using one letter with the capital for the dominant version',
+      hints: [
+        'Both alleles are versions of the SAME gene, so they have to share a letter. Two different letters would mean two different genes.',
+        'The capital always marks the dominant version and the lowercase marks the recessive version, and the two still have to look different from each other.',
+      ],
+      estimatedMinutes: 2,
+    },
+    {
+      id: 'misconception-dominant-means-stronger',
+      kind: 'misconception_check',
+      question:
+        'A student says: "Black fur is dominant in guinea pigs, so B is the stronger allele. That means most guinea pigs everywhere must be black, and a Bb guinea pig should come out a gray shade partway between black and white." What went wrong?',
+      commonErrors: [
+        {
+          answer: 'The dominant allele is stronger, so the dominant trait is the more common one.',
+          misconception:
+            'Treating dominance as a contest between alleles, and then reading the winner as the trait you will see most often in a population. Dominance and frequency are being run together as one idea.',
+          correctsTo:
+            'Dominant means one thing only: the trait shows whenever the allele is present. It carries no advantage in being passed on. A Bb guinea pig hands down B about half the time and b about half the time, so a dominant allele gets no head start. How common a trait is depends on which parents a population started with and which offspring survive and reproduce there. WRONG: "White fur is common in this group, so white must be dominant." CORRECT: "White fur is common in this group, so bb is the common genotype here." A recessive trait can be the most common trait around, and a dominant trait can be rare.',
+        },
+        {
+          answer: 'A Bb guinea pig should look partway between black and white.',
+          misconception:
+            'Blending. The student is imagining the two alleles mixing like paint, so a heterozygote comes out halfway between the two parent traits.',
+          correctsTo:
+            'Alleles do not mix. For a gene with simple dominance, a Bb guinea pig is black, and it is exactly as black as a BB guinea pig, because the dominant allele shows whenever it is present. The b allele stays whole the entire time and can be passed on to offspring, which is why white fur can disappear for a generation and then reappear. That reappearance is the proof that nothing blended.',
+        },
+      ],
+      estimatedMinutes: 1,
+    },
+    {
+      id: 'recap',
+      kind: 'recap',
+      mustRemember: [
+        'An allele is one version of a gene. An organism carries two, one inherited from EACH parent.',
+        'Use the same letter for both alleles: a capital for the dominant version, the same letter in lowercase for the recessive one. T and t, never T and s.',
+        'Dominant means the trait shows whenever the allele is present. The recessive trait shows only when BOTH alleles are recessive.',
+        'Dominant does NOT mean better, stronger, more common, or more likely to be inherited. A recessive trait can be the most common trait in a whole population.',
+        'Genotype is the letters an organism carries. Phenotype is the trait you can see. BB and Bb are different genotypes with the same phenotype.',
+        'Homozygous is two of the same allele (BB or bb). Heterozygous is two different alleles (Bb).',
+        'A heterozygous organism is a carrier: it shows the dominant trait while carrying an intact recessive allele it can pass on. Nothing blends.',
+      ],
+      estimatedMinutes: 1,
+    },
+  ],
+  source: MS_SOURCE,
+  schemaVersion: 1,
+  metadata: { cedUnit: '6', cedTopic: '6.2', cedTitle: 'Dominant & Recessive Traits' },
+  pacingThresholds: MS_PACING_THRESHOLDS,
+};

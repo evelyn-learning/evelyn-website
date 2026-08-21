@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-asia-physical-geography-001",
+    "loId": "m7geo.asia-physical-geography",
+    "cedCode": "M7GEO-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In geography, what does the word monsoon mean?",
+    "choices": [
+      "A wind system that reverses direction between the seasons, bringing a wet season and a dry season",
+      "A single powerful storm that strikes a coast once a year and then is gone",
+      "A large area of fairly level land raised well above the land around it",
+      "The dry area on the far side of a mountain range from the wind"
+    ],
+    "answer": "A",
+    "hints": [
+      "The word names a WIND pattern, not the rain by itself. Rain is what the wind delivers for part of the year.",
+      "Two of these choices define other terms you know: one defines a plateau and one defines a rain shadow. Cross those out first."
+    ]
+  },
+  {
+    "id": "m7geo-asia-physical-geography-002",
+    "loId": "m7geo.asia-physical-geography",
+    "cedCode": "M7GEO-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Himalayas are the highest mountain range on Earth, and they are still slowly rising today. Which explanation fits BOTH of those facts?",
+    "choices": [
+      "Two tectonic plates collided and crumpled the crust between them upward, and they are still pressing together",
+      "Two tectonic plates pulled away from each other, and the land between them dropped and left peaks standing",
+      "Rivers cut deep valleys into flat land, and the ground left standing between the valleys became the range",
+      "The range was pushed up all at once a very long time ago, and nothing has moved there since"
+    ],
+    "answer": "A",
+    "hints": [
+      "There are two things to explain, not one: how the range got so high, and why it is STILL getting higher. Cross out any choice that only explains one of them.",
+      "Think back to plate boundaries. When two plates push toward each other, what happens to the crust caught in between?"
+    ]
+  },
+  {
+    "id": "m7geo-asia-physical-geography-003",
+    "loId": "m7geo.asia-physical-geography",
+    "cedCode": "M7GEO-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Japan, the Philippines and Indonesia all have frequent earthquakes and volcanic eruptions. Which fact best explains that?",
+    "choices": [
+      "They are islands, and every island in the world has volcanoes on it",
+      "They lie in warm tropical air, and heat from the air melts rock underground",
+      "They sit close to boundaries between tectonic plates, in the belt called the Ring of Fire",
+      "They lie in the rain shadow of a mountain range, and dry rock breaks more easily than wet rock"
+    ],
+    "answer": "C",
+    "hints": [
+      "Earthquakes and volcanoes are not scattered at random across the planet. They cluster in long belts. What decides where those belts run?",
+      "One choice offers a climate reason and one offers a rainfall reason for something that happens deep underground. Those are the wrong category of cause."
+    ]
+  },
+  {
+    "id": "m7geo-asia-physical-geography-004",
+    "loId": "m7geo.asia-physical-geography",
+    "cedCode": "M7GEO-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A place lies deep in the interior of a continent, a very long way from any ocean in every direction, with a high mountain range standing between it and the nearest sea. Almost no rain falls there. Which explanation of its dryness is best?",
+    "choices": [
+      "It is too cold for any rain or snow to form there at any time of year",
+      "It lies on the Equator, where the air is always too warm to hold water",
+      "The mountains block the sunlight, so no water can evaporate anywhere near it",
+      "Air arriving there has already dropped most of its moisture on the long journey overland, and the mountains wring out the rest, leaving the place in a rain shadow"
+    ],
+    "answer": "D",
+    "hints": [
+      "Nearly all rain starts as water evaporating from an ocean. So ask how much ocean moisture can still be in the air by the time it arrives.",
+      "The description gives you TWO obstacles: a very long overland journey and a mountain range in the way. The best answer uses both of them."
+    ]
+  },
+  {
+    "id": "m7geo-asia-physical-geography-005",
+    "loId": "m7geo.asia-physical-geography",
+    "cedCode": "M7GEO-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reads that a large desert sits deep in the interior of Asia and that its winters are freezing cold. The student says, \"That cannot be a desert, because deserts are hot.\" What is the best response?",
+    "choices": [
+      "A desert is defined by how dry it is, not by how hot it is, so a desert can have freezing winters",
+      "The student is right, and a dry place with cold winters should be called a plateau instead",
+      "The student is right, because deserts must be hot all year, so this place is really a grassland",
+      "A desert is defined by how dry it is, but only places close to the Equator can be dry enough to count"
+    ],
+    "answer": "A",
+    "hints": [
+      "Go back to the definition. Which measurement decides whether a place counts as a desert: how much precipitation it gets, or how warm it gets?",
+      "Two choices start correctly and then add a condition that is not part of the definition. Read the second half of every choice before you pick."
+    ]
+  },
+  {
+    "id": "m7geo-asia-physical-geography-006",
+    "loId": "m7geo.asia-physical-geography",
+    "cedCode": "M7GEO-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The invented town of Suran sits on a southern coast facing the open ocean. From June through September the wind blows in off the ocean toward the land. From December through February the wind blows out from the land toward the ocean. Which months are the wet ones, and why?",
+    "choices": [
+      "December through February, because air moving away from land has more room to rise and cool",
+      "June through September, because the wind arrives from over the ocean carrying moisture, which falls as rain once that air is pushed inland and cools",
+      "December through February, because the land is cooler then, and cool land always produces rain",
+      "Both periods are equally wet, because the wind is blowing strongly in both of them"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask one question about each wind: where has this air just been? Air picks up moisture over water and loses it over land.",
+      "The rain follows the direction the wind comes FROM, not the direction it is heading. Which season has wind coming from the ocean?"
+    ]
+  },
+  {
+    "id": "m7geo-south-and-east-asia-culture-001",
+    "loId": "m7geo.south-and-east-asia-culture",
+    "cedCode": "M7GEO-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Wet-rice farming is common in the river valleys and deltas of monsoon Asia. What does wet-rice farming mean?",
+    "choices": [
+      "Growing rice on steep, dry mountain slopes above the tree line",
+      "Growing rice in fields that are flooded with shallow water for part of the growing season",
+      "Growing rice one year and then leaving the field empty the next year",
+      "Growing rice under plastic covers that hold in heat during a cold season"
+    ],
+    "answer": "B",
+    "hints": [
+      "The clue is in the name. What is the field itself like while the rice is growing?",
+      "This kind of farming needs three things: flat land, plenty of water and a warm season. Which choice describes a field that has all three?"
+    ]
+  },
+  {
+    "id": "m7geo-south-and-east-asia-culture-002",
+    "loId": "m7geo.south-and-east-asia-culture",
+    "cedCode": "M7GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Buddhism began in South Asia. Today it is widely practiced in parts of East and Southeast Asia, thousands of miles from where it began. Which explanation best fits the way geographers describe that pattern?",
+    "choices": [
+      "It must really have begun in East Asia, because a tradition is always most widely practiced in the region where it started",
+      "It reached East Asia only in recent times, once fast modern travel made long journeys possible",
+      "It spread along the overland routes across Central Asia and the sea routes across the Indian Ocean, carried by travelers, traders and teachers, and different schools developed in the places it reached",
+      "A tradition can only reach a new region if nearly everyone living there moved from the place it began"
+    ],
+    "answer": "C",
+    "hints": [
+      "The place where something begins and the places where it is practiced today can be very far apart. Do not let one of those facts overwrite the other.",
+      "Think about what else was moving along long-distance trade routes. Goods were not the only cargo, and cultural change did not start with engines."
+    ]
+  },
+  {
+    "id": "m7geo-south-and-east-asia-culture-003",
+    "loId": "m7geo.south-and-east-asia-culture",
+    "cedCode": "M7GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Hindi, Bengali and Urdu are widely spoken across the northern part of South Asia and belong to the Indo-European language family, the same family as English and Spanish. Tamil and Telugu are widely spoken across southern India and belong to the Dravidian family, a completely different one. What does this show about the region?",
+    "choices": [
+      "One region can hold languages from more than one language family at the same time",
+      "Languages spoken in the same region always descend from one shared ancestor language",
+      "Dravidian languages are older forms of the Indo-European languages",
+      "A language family is decided by which country a language is spoken in, not by what it descends from"
+    ],
+    "answer": "A",
+    "hints": [
+      "A language family is a family tree: it groups languages that descend from the same ancestor. The question tells you these two groups do NOT share one.",
+      "Two of the wrong choices assume that living in the same place makes languages related. Being neighbors and being relatives are different things."
+    ]
+  },
+  {
+    "id": "m7geo-south-and-east-asia-culture-004",
+    "loId": "m7geo.south-and-east-asia-culture",
+    "cedCode": "M7GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Japanese, Korean and Vietnamese are not in the same language family as the Chinese languages. Even so, all three were written with Chinese characters for a very long time. What best explains that?",
+    "choices": [
+      "Sharing a writing system proves the languages are in the same family after all",
+      "Each of those languages slowly changed over many generations until it became a form of Chinese",
+      "The characters were invented separately in each place and only happen to look similar",
+      "A writing system can be borrowed by a language it is not related to, and this one spread through long contact -- trade, travel and scholars reading the same books -- and was then adapted in each place"
+    ],
+    "answer": "D",
+    "hints": [
+      "The question already tells you the languages are not related, so the answer cannot be that they are. Something other than the language itself traveled from place to place.",
+      "Use the descent-versus-borrowing test. Descent means two things came from the same ancestor. Borrowing means one thing was picked up from somebody else. Which one is a set of signs on a page?"
+    ]
+  },
+  {
+    "id": "m7geo-south-and-east-asia-culture-005",
+    "loId": "m7geo.south-and-east-asia-culture",
+    "cedCode": "M7GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "All four of these languages were written with Chinese characters at some point. Today, Chinese is written with those characters. Japanese is written with those characters plus two sets of syllable signs developed in Japan. Korean is written mainly with an alphabet developed on the Korean Peninsula in the fourteen hundreds. Vietnamese is written with an alphabet built from Latin letters. Which statement describes this pattern best?",
+    "choices": [
+      "Every place copied the system exactly, so all four are written the same way today",
+      "The four were never connected at all, and any resemblance between them is a coincidence",
+      "One writing system spread through contact and was then adapted differently in each place it reached",
+      "A writing system can only change when the language itself changes into a different language"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two things are true at once here: a shared starting point, and four different results. Look for the choice that keeps both.",
+      "Something spread and made places more alike, and then each place changed it to fit its own language. Those are convergence and divergence happening together, not a contradiction."
+    ]
+  },
+  {
+    "id": "m7geo-south-and-east-asia-culture-006",
+    "loId": "m7geo.south-and-east-asia-culture",
+    "cedCode": "M7GEO-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In the invented delta of the Kesh River, the land is flat, the river floods most years and leaves fine mud behind, heavy rain falls for several months and then almost none falls for several more. Villages sit close together, each ringed by flooded fields of rice. That countryside holds far more people per square mile than the dry uplands 50 miles inland, and those people live in farming villages rather than in cities. Which explanation fits the pattern best?",
+    "choices": [
+      "Settlement is only ever dense in cities, so these villages must really be city neighborhoods",
+      "Wet-rice farming on flat, well-watered land produces a great deal of food from a small area, so the same land supports many more people",
+      "Rivers make land flat, and flat land is the only kind of land where a house can be built",
+      "Wet-rice farming needs very few workers, so most of the land is left free for houses"
+    ],
+    "answer": "B",
+    "hints": [
+      "Population density is people divided by area. To get a high number in the COUNTRYSIDE, you need a lot of food coming off every acre.",
+      "Test the others against what you know. Are all crowded places cities? Can houses only stand on flat land? Does a flooded rice field sound like it needs fewer workers or more?"
+    ]
+  },
+  {
+    "id": "m7geo-asia-population-and-economy-001",
+    "loId": "m7geo.asia-population-and-economy",
+    "cedCode": "M7GEO-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When a river floods, it spreads over the flat land beside it and drops the fine mud it was carrying. Farmers value that mud because it makes the land fertile. What is this soil called?",
+    "choices": [
+      "Alluvial soil",
+      "A delta",
+      "A floodplain",
+      "A rain shadow"
+    ],
+    "answer": "A",
+    "hints": [
+      "The question asks for the name of the SOIL, not the name of a landform.",
+      "A delta and a floodplain are places. A rain shadow is a dry area. Only one choice names a kind of soil."
+    ]
+  },
+  {
+    "id": "m7geo-asia-population-and-economy-002",
+    "loId": "m7geo.asia-population-and-economy",
+    "cedCode": "M7GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Across South and East Asia, the heaviest clusters of people sit on river valleys, floodplains and deltas. Which set of physical conditions best explains why?",
+    "choices": [
+      "Steep slopes, thin rocky soil and thin cold air",
+      "Flat land, fertile soil left behind by floods, fresh water close at hand, and a wet season that supports farming",
+      "High elevation, a short growing season and long freezing winters",
+      "Great distance from any ocean, which keeps the weather the same all year"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what a farmer needs from the land: somewhere flat, good soil, and reliable water. Which choice supplies all three?",
+      "Two of the wrong choices describe high mountain country and one describes a dry interior. Those are the THIN parts of Asia, not the crowded ones."
+    ]
+  },
+  {
+    "id": "m7geo-asia-population-and-economy-003",
+    "loId": "m7geo.asia-population-and-economy",
+    "cedCode": "M7GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Wide stretches of Asia hold very few people, among them the high Tibetan Plateau and the dry Gobi Desert. Which statement explains that pattern the way a geographer would?",
+    "choices": [
+      "They are thinly settled because they lie on plate boundaries, and people move away from earthquakes",
+      "They are thinly settled because the monsoon brings them so much rain that farming is impossible",
+      "They are thinly settled for physical reasons: cold air and a short growing season at high elevation, and too little water in a dry interior",
+      "They are thinly settled only because they are far from a coast, and distance from the ocean is the one thing that decides where people live"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start with what farming needs. What is missing on a very high plateau, and what is missing in a dry interior?",
+      "One wrong choice gives a hazard as the reason, one gives too MUCH rain as the reason, and one insists a single cause explains everything everywhere."
+    ]
+  },
+  {
+    "id": "m7geo-asia-population-and-economy-004",
+    "loId": "m7geo.asia-population-and-economy",
+    "cedCode": "M7GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The invented country of Tavani reports a fairly low overall population density. A geographer then reports that nearly everyone in Tavani lives along one narrow river valley, and that most of the country is high, cold mountain land. Which statement is best supported?",
+    "choices": [
+      "The two reports disagree, so one of them must be a mistake",
+      "Because the overall density is low, people in Tavani must be spread evenly and thinly everywhere",
+      "The low overall density proves that Tavani has only a small number of people in total",
+      "Both reports can be true, because an overall density is an average that can hide a crowded valley inside a thinly settled country"
+    ],
+    "answer": "D",
+    "hints": [
+      "Density divides the whole population by the whole land area. Ask what happens to a crowded valley when it is averaged in with a large area of empty mountains.",
+      "Two of the wrong choices swap density for something else: one for an even spread, one for total population size. Those are different questions."
+    ]
+  },
+  {
+    "id": "m7geo-asia-population-and-economy-005",
+    "loId": "m7geo.asia-population-and-economy",
+    "cedCode": "M7GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Meralon is not a real country. It has 60,000,000 people and 300,000 square miles of land. Of that land, 30,000 square miles is the floodplain of one large river, and 48,000,000 people live on that floodplain. Which pair of numbers is correct?",
+    "choices": [
+      "Overall density 200 people per square mile, and floodplain density 200 people per square mile",
+      "Overall density 200 people per square mile, and floodplain density 1,600 people per square mile",
+      "Overall density 1,600 people per square mile, and floodplain density 200 people per square mile",
+      "Overall density 2,000 people per square mile, and floodplain density 16,000 people per square mile"
+    ],
+    "answer": "B",
+    "hints": [
+      "Density is population divided by land area. Do the whole country first: 60,000,000 divided by 300,000.",
+      "For the floodplain, use only the floodplain's people and only the floodplain's land: 48,000,000 divided by 30,000. It should come out much HIGHER than the overall number, not the same and not lower."
+    ]
+  },
+  {
+    "id": "m7geo-asia-population-and-economy-006",
+    "loId": "m7geo.asia-population-and-economy",
+    "cedCode": "M7GEO-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two invented towns want the same new factory, which will make goods to sell in countries across the ocean. Marrow Bay sits on the coast, on a bay with water deep enough for the largest ocean ships to tie up at the dock. Elden Cross sits 200 miles inland on a shallow river, and has more people than Marrow Bay. Workers, electricity and raw materials are the same in both. Which reason best explains choosing Marrow Bay?",
+    "choices": [
+      "A shallow river works the same way as a deep harbor, so either town would do equally well",
+      "Marrow Bay is farther from the ocean, and being farther from a coast lowers shipping costs",
+      "Its deep harbor lets large container ships load right at the dock, so the goods do not have to travel hundreds of miles overland before they reach a ship",
+      "A factory is always built in whichever town has more people living in it"
+    ],
+    "answer": "C",
+    "hints": [
+      "Workers, electricity and raw materials are equal in the two towns, so the answer has to be the one thing that is different.",
+      "Ask what a loaded ocean ship needs from the water it sits in, and which way shipping costs move when goods must go overland first."
+    ]
+  },
+  {
+    "id": "m7geo-oceania-and-antarctica-001",
+    "loId": "m7geo.oceania-and-antarctica",
+    "cedCode": "M7GEO-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Some islands in the Pacific Ocean are a ring of coral built up around a lagoon, lying only slightly above the sea. What is that landform called?",
+    "choices": [
+      "An atoll",
+      "A plateau",
+      "A delta",
+      "A peninsula"
+    ],
+    "answer": "A",
+    "hints": [
+      "You are looking for the word that names a low, ring-shaped coral island.",
+      "The other three choices name landforms you met earlier: raised level land, land built by a river at its mouth, and land reaching out into the water from a larger landmass."
+    ]
+  },
+  {
+    "id": "m7geo-oceania-and-antarctica-002",
+    "loId": "m7geo.oceania-and-antarctica",
+    "cedCode": "M7GEO-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "All four statements below about Antarctica are true. Which one is the reason geographers call Antarctica a desert?",
+    "choices": [
+      "It is the coldest continent on Earth",
+      "It is almost entirely covered by a thick ice sheet",
+      "It has no permanent population, only people who stay a while at research stations",
+      "Very little precipitation falls there"
+    ],
+    "answer": "D",
+    "hints": [
+      "Every choice is a true fact. The question is which fact matches the DEFINITION of a desert.",
+      "Say the definition of a desert to yourself before choosing. Does it mention heat, ice or people at all?"
+    ]
+  },
+  {
+    "id": "m7geo-oceania-and-antarctica-003",
+    "loId": "m7geo.oceania-and-antarctica",
+    "cedCode": "M7GEO-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Aboriginal and Torres Strait Islander peoples have lived in Australia for tens of thousands of years and live there today, in many distinct communities with many different languages. Australia also has a large interior with very few settlements, while most people live along the eastern and southeastern coasts. Which fact best explains that population pattern?",
+    "choices": [
+      "The interior is covered by a thick ice sheet, so nobody can settle there",
+      "The interior is too mountainous to build on, which pushes settlement out to flat coastal land",
+      "The interior is largely arid, while the eastern and southeastern coasts get far more reliable rainfall",
+      "People always settle along coasts, whatever the land inland happens to be like"
+    ],
+    "answer": "C",
+    "hints": [
+      "This is the population-distribution question again: which physical factor makes a place easy or hard to live in? Start with water.",
+      "One of these choices belongs to a different continent entirely, and one is a rule that is not true -- plenty of people live far inland elsewhere in the world."
+    ]
+  },
+  {
+    "id": "m7geo-oceania-and-antarctica-004",
+    "loId": "m7geo.oceania-and-antarctica",
+    "cedCode": "M7GEO-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "New Zealand is mountainous and cooler than most of Oceania, and it has both volcanoes and earthquakes. Maori are the indigenous people of New Zealand and live there today. Which fact best explains the volcanoes and the earthquakes?",
+    "choices": [
+      "New Zealand lies close to the Equator, where the crust of Earth is thinner",
+      "New Zealand sits near a boundary between two tectonic plates",
+      "New Zealand is built of coral, and coral cracks easily under its own weight",
+      "New Zealand is surrounded by deep ocean, and deep water presses down hard on the land"
+    ],
+    "answer": "B",
+    "hints": [
+      "Volcanoes and earthquakes are not scattered at random. They cluster along particular lines on the planet.",
+      "Two of the wrong choices blame the ocean or the Equator for something that happens in the crust. Ask what is moving underneath instead."
+    ]
+  },
+  {
+    "id": "m7geo-oceania-and-antarctica-005",
+    "loId": "m7geo.oceania-and-antarctica",
+    "cedCode": "M7GEO-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented Pacific islands lie the same distance from the Equator, in the same ocean, a short flight apart. Island K is a steep mountain rising out of the sea, with dark rocky soil, forest on its slopes and several small streams. Island L is a narrow ring of low land curving around a shallow lagoon, only slightly above the sea, with thin sandy soil and no streams at all. Which explanation of the difference is best?",
+    "choices": [
+      "Island K lies closer to the Equator, so it receives more rainfall than Island L",
+      "Island K is larger, and larger islands always have cooler, wetter climates than smaller ones",
+      "Island L is newer, and an island grows streams and soil only after people settle on it",
+      "Island K is a volcanic high island, so its high ground forces moist air upward and catches rain, and its broken-down volcanic rock makes richer soil, while Island L is a low coral atoll with no high ground"
+    ],
+    "answer": "D",
+    "hints": [
+      "The question tells you both islands are the same distance from the Equator, so latitude cannot be the difference. Look at how each island was BUILT instead.",
+      "Ask what high ground does to moist air moving across an island, and where a stream has to come from in the first place."
+    ]
+  },
+  {
+    "id": "m7geo-oceania-and-antarctica-006",
+    "loId": "m7geo.oceania-and-antarctica",
+    "cedCode": "M7GEO-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The invented island of Talu is a coral atoll: a low ring of land around a lagoon, only slightly above the sea, with thin sandy soil, no hills and no streams. Ocean stretches away in every direction. Which resource most limits daily life on Talu, and why?",
+    "choices": [
+      "Building stone, because a ring of coral and sand contains nothing solid enough to use",
+      "Sunlight, because the low ring of land sits in the shadow of its own lagoon",
+      "Flat land, because a ring of coral is far too steep to walk across or build on",
+      "Fresh water, because the sea around it is salty and the island has no streams, so people depend on rain they catch and store and on a thin layer of fresh groundwater"
+    ],
+    "answer": "D",
+    "hints": [
+      "The island is surrounded by water, and yet water is still the problem. Ask what is wrong with seawater when you want a drink or a crop.",
+      "On the high island next door, rain lands on the mountain and runs down as streams. Talu has no high ground and no streams, so where can its water possibly come from?"
+    ]
+  }
+]

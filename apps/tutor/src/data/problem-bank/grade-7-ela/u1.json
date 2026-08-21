@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-text-evidence-and-inference-001",
+    "loId": "m7ela.text-evidence-and-inference",
+    "cedCode": "M7ELA-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which detail is stated EXPLICITLY in this passage? \"The storm had knocked a branch onto the shed roof. Jonah found the ladder behind the garage and carried it across the wet grass.\"",
+    "choices": [
+      "A branch landed on the shed roof.",
+      "Jonah plans to repair the shed roof.",
+      "Jonah has climbed onto a roof before.",
+      "Jonah is annoyed about the storm."
+    ],
+    "answer": "A",
+    "hints": [
+      "Explicit means you can put your finger on a sentence and read the answer straight off the page. Three of these ask you to work something out.",
+      "The first sentence says the storm \"knocked a branch onto the shed roof\" in those words. Nothing in the passage states a plan, a past climb, or a feeling."
+    ]
+  },
+  {
+    "id": "m7ela-text-evidence-and-inference-002",
+    "loId": "m7ela.text-evidence-and-inference",
+    "cedCode": "M7ELA-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which inference does this passage support? \"Nita's bike was leaning against the porch rail at four o'clock, and her helmet was still buckled to the handlebars. Her library books sat by the front door in the same stack her mom had made that morning.\"",
+    "choices": [
+      "Nita's bike has a flat tire.",
+      "Nita does not like reading.",
+      "Nita has not made the trip to the library yet.",
+      "Nita rode to the library and came home again."
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the detail doing the most work. The books are described as being in the SAME stack from the morning - why would a writer say that?",
+      "An untouched stack of library books plus a helmet still buckled to the handlebars means the trip has not happened. Nothing in the passage mentions a tire or how Nita feels about reading, and an unchanged stack rules out a completed trip."
+    ]
+  },
+  {
+    "id": "m7ela-text-evidence-and-inference-003",
+    "loId": "m7ela.text-evidence-and-inference",
+    "cedCode": "M7ELA-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Claim: Ravi is nervous about the tryout. Which line from the passage BEST supports that claim? \"Ravi got to the field twenty minutes early. He retied both cleats, then untied them and did it again. His older brother had made the team in seventh grade too. The coach blew a whistle and called the first group.\"",
+    "choices": [
+      "\"His older brother had made the team in seventh grade too.\"",
+      "\"He retied both cleats, then untied them and did it again.\"",
+      "\"The coach blew a whistle and called the first group.\"",
+      "\"Ravi jogged a lap to warm up before the drills.\""
+    ],
+    "answer": "B",
+    "hints": [
+      "Read each line ALONE and ask whether that line by itself makes the claim true. Also check that each line is really in the passage.",
+      "Repeating a small action you have already finished is what nerves look like. The brother line is true but tells you nothing about Ravi's feelings, the whistle line is about the coach, and one option never appears in the passage at all."
+    ]
+  },
+  {
+    "id": "m7ela-text-evidence-and-inference-004",
+    "loId": "m7ela.text-evidence-and-inference",
+    "cedCode": "M7ELA-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which claim does this passage support? \"The rain started before the first inning. Coach Ellis kept checking her phone and then the sky. At the end of the third inning she called both teams into the dugouts and did not say when they would come back out.\"",
+    "choices": [
+      "Coach Ellis has already decided to cancel the game.",
+      "Coach Ellis does not care whether the game is finished.",
+      "Coach Ellis is checking her phone for a message from her family.",
+      "Coach Ellis is watching the weather to decide what to do about the game."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask of each choice: do the words on the page make me say this, or did I add it myself?",
+      "Checking the phone and then the sky, over and over, is weather watching. The passage says outright that she did not say when they would return, so nothing is decided yet; the reason behind the phone is invented; and a coach who did not care would not keep checking."
+    ]
+  },
+  {
+    "id": "m7ela-text-evidence-and-inference-005",
+    "loId": "m7ela.text-evidence-and-inference",
+    "cedCode": "M7ELA-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the passage, then choose the answer that makes a claim AND backs it with a line that actually supports THAT claim. \"Nadia arrived at the food drive an hour before it opened. She sorted the cans by expiration date and threw out three dented ones. When a younger volunteer could not lift a crate, Nadia took the other end without being asked.\"",
+    "choices": [
+      "Nadia notices when other people need help, because she \"arrived at the food drive an hour before it opened.\"",
+      "Nadia notices when other people need help, because she \"sorted the cans by expiration date and threw out three dented ones.\"",
+      "Nadia notices when other people need help, because when a younger volunteer could not lift a crate she \"took the other end without being asked.\"",
+      "Nadia notices when other people need help, because she is a kind person who always helps everybody."
+    ],
+    "answer": "C",
+    "hints": [
+      "Every option makes the same claim, so the claim is not what you are judging. Cover the rest of the passage and test each quoted line on its own.",
+      "Arriving early shows commitment and sorting cans shows care with the cans - neither one involves noticing a person. One option quotes no line at all, which is a guess dressed up as an answer. Only the crate line shows Nadia seeing someone struggle and moving."
+    ]
+  },
+  {
+    "id": "m7ela-text-evidence-and-inference-006",
+    "loId": "m7ela.text-evidence-and-inference",
+    "cedCode": "M7ELA-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Passage: \"Ms. Okafor handed back the essays face down. Julian turned his over, looked at it for a second, and slid it into the very back of his folder. For the rest of the period he answered every question she asked.\" A student writes: \"Julian got a bad grade and is embarrassed, so he stopped participating for the rest of class.\" Which part of that answer is CONTRADICTED by the passage?",
+    "choices": [
+      "That Julian got a bad grade.",
+      "That Julian stopped participating for the rest of class.",
+      "That Julian is embarrassed.",
+      "That Julian put the essay in the back of his folder."
+    ],
+    "answer": "B",
+    "hints": [
+      "Break the student's answer into its separate pieces and test each piece against the words. You are not looking for the weakest piece - you are looking for the one the text argues against.",
+      "The last sentence says he \"answered every question she asked\" for the rest of the period, which is the opposite of not participating. The folder detail is explicit, and the bad grade and the embarrassment are inferences the hiding move supports."
+    ]
+  },
+  {
+    "id": "m7ela-plot-structure-and-conflict-001",
+    "loId": "m7ela.plot-structure-and-conflict",
+    "cedCode": "M7ELA-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which plot stage shows normal life before the trouble starts, and introduces the characters and the place?",
+    "choices": [
+      "rising action",
+      "exposition",
+      "climax",
+      "resolution"
+    ],
+    "answer": "B",
+    "hints": [
+      "Put the five stages in order and ask which one comes first.",
+      "The opening part, before any problem shows up, is the exposition. Rising action is the trouble getting worse, the climax is the turning point, and the resolution is the new normal at the end."
+    ]
+  },
+  {
+    "id": "m7ela-plot-structure-and-conflict-002",
+    "loId": "m7ela.plot-structure-and-conflict",
+    "cedCode": "M7ELA-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Name the central conflict in this excerpt. \"The tide had come in behind Kofi while he was hunting for shells, and the strip of sand back to the stairs was gone. The water was already past his knees and still climbing.\"",
+    "choices": [
+      "character vs character",
+      "character vs society",
+      "character vs self",
+      "character vs nature"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what Kofi wants and what is stopping him from getting it.",
+      "Nobody is opposing Kofi, no rule is in his way, and he is not torn between two wants. The rising water is doing all the pushing, and water is nature."
+    ]
+  },
+  {
+    "id": "m7ela-plot-structure-and-conflict-003",
+    "loId": "m7ela.plot-structure-and-conflict",
+    "cedCode": "M7ELA-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Name the central conflict in this excerpt. \"Jonah knew who had cracked the aquarium lid, and it was his best friend. He wrote the note to Mr. Pratt three times and threw all three away.\"",
+    "choices": [
+      "Character vs self - Jonah is pulled between telling the truth and protecting his friend.",
+      "There is no conflict here, because nobody argues or fights.",
+      "Character vs character - Jonah and his best friend are fighting.",
+      "Character vs society - a school rule is stopping Jonah from writing the note."
+    ],
+    "answer": "A",
+    "hints": [
+      "A conflict does not need a fight. Ask where the struggle is actually happening in this excerpt.",
+      "Jonah writes the note three times and throws all three away, so the thing stopping him is his own divided wanting. No rule blocks him and his friend never opposes him - the friend does not even appear."
+    ]
+  },
+  {
+    "id": "m7ela-plot-structure-and-conflict-004",
+    "loId": "m7ela.plot-structure-and-conflict",
+    "cedCode": "M7ELA-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the story summary, then choose the CLIMAX. \"Ravi had never entered the chess club ladder, because he was sure he would lose in front of everybody. In October he practiced openings on his phone at lunch. On the first day of the ladder a pipe burst in the hallway and the whole club had to move to the cafeteria in the middle of a game. Ravi put his name on the sign-up sheet and sat down across from the club champion. He lost in nineteen moves. He signed up again in November.\"",
+    "choices": [
+      "A pipe bursts and the whole club has to move to the cafeteria.",
+      "Ravi loses to the club champion in nineteen moves.",
+      "Ravi puts his name on the sign-up sheet and sits down across from the champion.",
+      "Ravi practices chess openings on his phone at lunch in October."
+    ],
+    "answer": "C",
+    "hints": [
+      "Do not use the volume test. Run the turning-point test: could the story still go either way before this moment, and is it settled after it?",
+      "The burst pipe is the loudest event and it decides nothing - Ravi could still walk away afterward. Once he signs the sheet and sits down, the thing he was afraid of is happening and cannot be avoided, so that is the turning point. Losing in nineteen moves happens because of that choice, which makes it falling action."
+    ]
+  },
+  {
+    "id": "m7ela-plot-structure-and-conflict-005",
+    "loId": "m7ela.plot-structure-and-conflict",
+    "cedCode": "M7ELA-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which event belongs to the RISING ACTION of the central conflict? \"Marisol wants to run the used-book table at the spring fair. She is the middle of three sisters and she rides a green bike. In February the fair committee tells her the table needs an adult sponsor. Every teacher she asks is already sponsoring something else. She writes to the retired librarian who lives on her street, and the librarian says yes.\"",
+    "choices": [
+      "Marisol is the middle of three sisters and rides a green bike.",
+      "The retired librarian says yes.",
+      "Marisol wants to run the used-book table at the spring fair.",
+      "Every teacher she asks is already sponsoring something else."
+    ],
+    "answer": "D",
+    "hints": [
+      "Rising action is not everything before the end. Test each event with one question: does this make the main problem HARDER?",
+      "The sisters and the bike are background that existed before any trouble, and wanting the table is the goal the story starts from - both are exposition. The librarian saying yes solves the problem instead of tightening it. Only the teachers all being taken makes the sponsor harder to find."
+    ]
+  },
+  {
+    "id": "m7ela-plot-structure-and-conflict-006",
+    "loId": "m7ela.plot-structure-and-conflict",
+    "cedCode": "M7ELA-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the story, then choose the statement that correctly names BOTH the climax and the central conflict. \"The rule at Hillside Middle School was that only eighth graders could speak at the winter assembly, and Priya was in seventh. She asked the assembly committee twice, and both times they read the rule out loud to her. She wrote a two-page letter to the principal explaining why the rule left out half the school. The principal read the letter at the next staff meeting, and the rule was changed to allow one seventh-grade speaker. Priya spoke for four minutes in December, and a seventh grader has spoken every year since.\"",
+    "choices": [
+      "Climax: the principal reads the letter and the rule is changed. Conflict: character vs society.",
+      "Climax: Priya speaks for four minutes in December. Conflict: character vs society.",
+      "Climax: the committee reads the rule out loud to Priya for the second time. Conflict: character vs character.",
+      "Climax: the principal reads the letter and the rule is changed. Conflict: character vs self."
+    ],
+    "answer": "A",
+    "hints": [
+      "Answer the two halves separately. Use the turning-point test for the climax, then ask what is actually pushing against Priya.",
+      "Until the rule changes, Priya might speak and might not; once it changes, her four minutes are certain, so the speech is falling action and the rule change is the turning point. What blocks her is a rule about how things are done, not a person and not her own doubt, so the conflict is character vs society. The committee members are only enforcing the rule, not opposing her personally."
+    ]
+  },
+  {
+    "id": "m7ela-characterization-001",
+    "loId": "m7ela.characterization",
+    "cedCode": "M7ELA-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses DIRECT characterization?",
+    "choices": [
+      "Deshawn checked the bus schedule three times before he left the house.",
+      "Deshawn's sister rolled her eyes every time he repacked his bag.",
+      "Deshawn was a cautious boy.",
+      "Deshawn kept a spare umbrella in his locker all year."
+    ],
+    "answer": "C",
+    "hints": [
+      "Direct characterization is the writer TELLING you a trait outright. Indirect characterization shows you a detail and makes you work the trait out.",
+      "Three of these show an action or another person's reaction and leave the trait for you to name. Only one prints the trait word itself: \"was a cautious boy.\""
+    ]
+  },
+  {
+    "id": "m7ela-characterization-002",
+    "loId": "m7ela.characterization",
+    "cedCode": "M7ELA-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What does this detail tell you about Tavi? \"When the new student could not find the science wing, Tavi walked her all the way there and was late to his own class without mentioning it.\"",
+    "choices": [
+      "Tavi is kind.",
+      "Tavi walked the new student to the science wing.",
+      "Tavi has trouble keeping track of time.",
+      "Tavi does not like his own class."
+    ],
+    "answer": "A",
+    "hints": [
+      "The question asks what Tavi is LIKE, not what happened. Cross off any choice that just retells the event.",
+      "Taking a cost yourself - being late - so a stranger is not lost, and then not mentioning it, is what kind looks like. Being late here is a choice he makes on purpose, not a sign that he loses track of time, and nothing tells you how he feels about his class."
+    ]
+  },
+  {
+    "id": "m7ela-characterization-003",
+    "loId": "m7ela.characterization",
+    "cedCode": "M7ELA-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is really going on with Rowan? \"'It's fine, I didn't even want the part,' Rowan said, and she laughed. She had not put the cast list down, and she read it again on the way to the bus.\"",
+    "choices": [
+      "Rowan is telling the truth and did not want the part.",
+      "Rowan has trouble reading the cast list.",
+      "Rowan thinks the cast list is funny.",
+      "Rowan is disappointed, even though she says she is not."
+    ],
+    "answer": "D",
+    "hints": [
+      "Rowan says one thing and does another. When a character's words and actions disagree, which one should a reader trust?",
+      "Somebody who truly did not want the part would have put the list down. Still holding it, and reading it again, is what disappointment looks like - so believe the actions, not the line about being fine."
+    ]
+  },
+  {
+    "id": "m7ela-characterization-004",
+    "loId": "m7ela.characterization",
+    "cedCode": "M7ELA-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which of the five indirect moves does the writer use to show that the team does not trust Ellis? \"Ellis said he would bring the cones. At practice the goalie glanced at the empty trunk of Ellis's mom's car and then, without a word, went to the shed for the spare set.\"",
+    "choices": [
+      "what Ellis thinks",
+      "how another character reacts to Ellis",
+      "how Ellis looks",
+      "what Ellis says"
+    ],
+    "answer": "B",
+    "hints": [
+      "The five moves are what a character says, does, thinks, looks like, and how others react to them. Find the sentence that carries the DISTRUST, then ask which move it is.",
+      "Ellis's promise is what he says, and it is not the part that shows distrust. The distrust arrives when the goalie checks the trunk and heads for the spares without a word - that is another character's reaction doing the work."
+    ]
+  },
+  {
+    "id": "m7ela-characterization-005",
+    "loId": "m7ela.characterization",
+    "cedCode": "M7ELA-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which detail BEST shows that Hana plans for other people, not only for herself? \"Hana keeps her pencils sharpened to the same length. She carries a second pair of gloves in her coat pocket for whoever forgets. She arrives before the doors open and reads until the custodian comes. She writes her homework list on the back of her hand.\"",
+    "choices": [
+      "She carries a second pair of gloves in her coat pocket for whoever forgets.",
+      "She keeps her pencils sharpened to the same length.",
+      "She arrives before the doors open and reads until the custodian comes.",
+      "She writes her homework list on the back of her hand."
+    ],
+    "answer": "A",
+    "hints": [
+      "Every detail here shows Hana planning ahead. Ask a second question of each one: who does this plan help?",
+      "The pencils, the early arrival, and the list on her hand are all planning for Hana. The spare gloves are the only thing she cannot use herself, so they are the only detail about somebody else."
+    ]
+  },
+  {
+    "id": "m7ela-characterization-006",
+    "loId": "m7ela.characterization",
+    "cedCode": "M7ELA-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The narrator tells us that Uncle Ray is the most generous man in the county. At the fundraiser he announced the size of his donation twice into the microphone. When the organizer asked for four people to stay and fold the tables, he checked his watch and said he had an early morning. What is the best reading of Uncle Ray?",
+    "choices": [
+      "Uncle Ray is generous, because the narrator says he is the most generous man in the county.",
+      "Uncle Ray is tired, because he said he had an early morning.",
+      "Uncle Ray gave money at a fundraiser.",
+      "Uncle Ray wants to be seen as generous more than he wants to help, because he announced his donation twice but left as soon as the work started."
+    ],
+    "answer": "D",
+    "hints": [
+      "Two kinds of characterization are pulling against each other here: what the narrator states outright, and what the scene shows him doing. Line them up.",
+      "Announcing an amount twice is about being heard, and leaving the moment unpaid work appears is the test he does not pass. A stated reason from the character - the early morning - is exactly the kind of line that can be a cover, and simply repeating that he gave money names the event instead of the trait."
+    ]
+  },
+  {
+    "id": "m7ela-setting-and-story-elements-001",
+    "loId": "m7ela.setting-and-story-elements",
+    "cedCode": "M7ELA-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which detail is part of this story's SETTING? \"It was the last Friday before winter break, and freezing rain had been falling on the parking lot since noon. Elena zipped her coat and stared at the empty curb where the bus should have been.\"",
+    "choices": [
+      "Elena zips her coat.",
+      "Elena stares at the empty curb.",
+      "The bus is not there.",
+      "Freezing rain has been falling since noon."
+    ],
+    "answer": "D",
+    "hints": [
+      "Setting is when and where, and \"when\" includes the season, the weather and the time of day.",
+      "Three of these are things Elena does or things that have happened in the plot. The freezing rain since noon is weather plus time of day, which is setting."
+    ]
+  },
+  {
+    "id": "m7ela-setting-and-story-elements-002",
+    "loId": "m7ela.setting-and-story-elements",
+    "cedCode": "M7ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best explains what the setting DOES in this passage? \"The community pool closed at eight, and at ten minutes to, Rosa's name was the only one left on the swim-test list. The lifeguard had already started coiling the lane ropes. Rosa pulled off her sweatshirt and asked him for one more lane before he finished.\"",
+    "choices": [
+      "The setting is a community pool on a summer evening.",
+      "The eight o'clock closing time causes Rosa to nearly miss her swim test, which forces her to speak up and ask for a lane before the ropes come in.",
+      "The setting shows that Rosa is a strong swimmer.",
+      "The pool is only background here, and the story would go the same way at noon."
+    ],
+    "answer": "B",
+    "hints": [
+      "Naming the setting is not explaining it. Look for the choice that fills in both halves: the setting causes X, which forces the character to Y.",
+      "Move the scene to noon and the pressure disappears completely, so the setting is not background. Nothing in the passage says how well Rosa swims. The closing time is what creates the squeeze and pushes her to ask."
+    ]
+  },
+  {
+    "id": "m7ela-setting-and-story-elements-003",
+    "loId": "m7ela.setting-and-story-elements",
+    "cedCode": "M7ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about the setting of this passage is correct? \"At four in the morning the only light on Cedar Street came from the bakery window, and the sidewalk still held the cold from the night.\"",
+    "choices": [
+      "The setting is only Cedar Street, because the hour is not part of the setting.",
+      "This passage has no setting, because no year is given.",
+      "The setting includes both the place, Cedar Street, and the time, four in the morning on a cold night.",
+      "The setting is the bakery window."
+    ],
+    "answer": "C",
+    "hints": [
+      "Setting is when AND where. Ask what the passage tells you about each half.",
+      "The hour and the cold are the \"when\" half, and Cedar Street is the \"where\" half, so both belong to the setting. A story does not need a stated year to have a setting, and the bakery window is one object inside the place, not the place itself."
+    ]
+  },
+  {
+    "id": "m7ela-setting-and-story-elements-004",
+    "loId": "m7ela.setting-and-story-elements",
+    "cedCode": "M7ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best explains how the setting shapes what Amara does? \"The ferry to the mainland ran twice a day, and the second one had left at four. When the clinic called at five to say the medicine was ready, Amara took the keys to her grandfather's rowboat off the nail by the door and checked the oarlocks one at a time.\"",
+    "choices": [
+      "The ferry schedule takes away Amara's easy way across, which forces her to row herself - and checking the oarlocks one at a time shows she does not panic.",
+      "The setting is an island with a ferry service.",
+      "Amara is reckless, because she takes a rowboat out instead of waiting for the morning ferry.",
+      "The setting does not matter here, because anyone would go and get the medicine."
+    ],
+    "answer": "A",
+    "hints": [
+      "List what the setting takes away from Amara. Then look at HOW she responds, not only what she does.",
+      "Two ferries a day and the last one gone at four means there is no easy crossing left, so rowing is what is left to her. Checking the oarlocks one at a time is careful, not reckless, and naming the island explains nothing about the story."
+    ]
+  },
+  {
+    "id": "m7ela-setting-and-story-elements-005",
+    "loId": "m7ela.setting-and-story-elements",
+    "cedCode": "M7ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best explains the effect of the setting? \"On the first day at Northgate, the eighth graders sat on the low wall by the gym and nobody else did. Tomas carried his lunch past the wall three times and then ate on the steps by the band room.\"",
+    "choices": [
+      "The setting is a school courtyard at lunchtime.",
+      "The unwritten rule about who sits on the wall limits where Tomas can go, which forces him to eat alone on the band room steps and shows he would rather withdraw than risk being told to move.",
+      "There is no setting here, because a rule is not a place or a time.",
+      "Tomas does not like eating outdoors, so he goes to the band room."
+    ],
+    "answer": "B",
+    "hints": [
+      "There is no weather and no disaster in this passage. The setting doing the work is a social one - the rules and expectations of the place.",
+      "Walking past three times shows Tomas knows the wall is not his to sit on, and the steps are still outdoors, so the weather is not the reason. Social rules are part of the setting, and naming the courtyard is a label that never mentions Tomas."
+    ]
+  },
+  {
+    "id": "m7ela-setting-and-story-elements-006",
+    "loId": "m7ela.setting-and-story-elements",
+    "cedCode": "M7ELA-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer has this opening: \"Devi needed to return the library book by closing time. She walked to the library.\" She wants the setting to CREATE the story's problem rather than decorate it. Which revision does that?",
+    "choices": [
+      "Devi needed to return the library book by closing time. She walked to the library, a tall brick building with green doors and a stone lion on each step.",
+      "Devi needed to return the library book by closing time. She was a determined person who never gave up on anything.",
+      "The library closed at six on Sundays, and the footbridge over the creek had washed out in the storm, so the walk was forty minutes now instead of ten. Devi had the book in her bag at twenty past five.",
+      "Devi needed to return the library book by closing time. It was a Sunday, and she remembered the last time she had been late."
+    ],
+    "answer": "C",
+    "hints": [
+      "Try the moving test on each revision. Change the day, the hour or the route and ask whether the problem survives.",
+      "Brick, green doors and a stone lion are scenery you can delete without changing anything, and a line about Devi being determined is characterization, not setting. One revision mentions Sunday but the day never does any work. Only one makes the clock and the washed-out bridge collide so that the trip may not be possible at all."
+    ]
+  }
+]

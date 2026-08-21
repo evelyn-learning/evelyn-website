@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-genes-chromosomes-and-dna-001",
+    "loId": "m7sci.genes-chromosomes-and-dna",
+    "cedCode": "M7SCI-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best describes what a gene is?",
+    "choices": [
+      "A long strand of DNA, packed tightly, that carries many genes",
+      "The organelle of a plant or animal cell that holds the chromosomes and directs the cell",
+      "A section of DNA that carries the instructions for a trait",
+      "One rung of the DNA ladder, made of two bases paired together"
+    ],
+    "answer": "C",
+    "hints": [
+      "Three of these choices are real things, but each one names a different level of the nesting. Decide which level the word gene belongs to.",
+      "A chromosome carries many genes along its length, and each gene is a stretch of the same DNA molecule."
+    ]
+  },
+  {
+    "id": "m7sci-genes-chromosomes-and-dna-002",
+    "loId": "m7sci.genes-chromosomes-and-dna",
+    "cedCode": "M7SCI-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "One rail of a DNA ladder reads A, C, G, T going down. Each of those bases is joined by a rung to a base on the matching rail. Reading down the matching rail in the same order, what does it say?",
+    "choices": [
+      "T, G, C, A",
+      "A, C, G, T",
+      "G, T, A, C",
+      "T, C, G, A"
+    ],
+    "answer": "A",
+    "hints": [
+      "There are only two kinds of rung allowed in DNA: A joined to T, and C joined to G.",
+      "Take the bases one at a time. A pairs with T. C pairs with G. G pairs with C. T pairs with A."
+    ]
+  },
+  {
+    "id": "m7sci-genes-chromosomes-and-dna-003",
+    "loId": "m7sci.genes-chromosomes-and-dna",
+    "cedCode": "M7SCI-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Put these four things in order from LARGEST to SMALLEST: a gene, a base pair, a chromosome, the nucleus of a cell. Which ordering is correct?",
+    "choices": [
+      "gene, chromosome, nucleus, base pair",
+      "chromosome, nucleus, gene, base pair",
+      "nucleus, gene, chromosome, base pair",
+      "nucleus, chromosome, gene, base pair"
+    ],
+    "answer": "D",
+    "hints": [
+      "Start with the biggest container instead of guessing the whole list at once. Which one of these holds all the others inside it?",
+      "Many genes fit along one chromosome, and a gene is made of many base pairs, so a gene sits between those two in size."
+    ]
+  },
+  {
+    "id": "m7sci-genes-chromosomes-and-dna-004",
+    "loId": "m7sci.genes-chromosomes-and-dna",
+    "cedCode": "M7SCI-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A human body cell contains 46 chromosomes, arranged as 23 pairs. Which statement about those pairs is correct?",
+    "choices": [
+      "The cell has 46 genes, one on each chromosome.",
+      "One chromosome of each pair came from each parent, so the cell carries two copies of every gene on them.",
+      "All 46 chromosomes came from the mother, and the father's chromosomes are added later.",
+      "The cell copied each of its 23 chromosomes, so both members of a pair came from the same parent."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about where a pair comes from. A sex cell from each parent carried one chromosome out of each pair, and the two joined.",
+      "One wrong choice treats a chromosome as if it were a single gene. A chromosome carries many genes, so 46 chromosomes are nowhere near 46 genes."
+    ]
+  },
+  {
+    "id": "m7sci-genes-chromosomes-and-dna-005",
+    "loId": "m7sci.genes-chromosomes-and-dna",
+    "cedCode": "M7SCI-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scientist compares the DNA in a skin cell with the DNA in a muscle cell taken from the same person. What will she find?",
+    "choices": [
+      "The muscle cell carries extra chromosomes, because muscle does harder work.",
+      "The skin cell carries only skin genes and the muscle cell carries only muscle genes.",
+      "Both cells carry the same DNA, and each kind of cell uses a different part of it.",
+      "Only one of the two cells carries DNA, because DNA is stored in special cells."
+    ],
+    "answer": "C",
+    "hints": [
+      "Both cells grew from the same starting cell, and every copy carried the whole set of instructions along with it.",
+      "Two cooks working from the same cookbook can still make two different meals. What differs is which pages get used, not which book they own."
+    ]
+  },
+  {
+    "id": "m7sci-genes-chromosomes-and-dna-006",
+    "loId": "m7sci.genes-chromosomes-and-dna",
+    "cedCode": "M7SCI-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A pea plant has a gene for stem height, and that gene sits at one particular place on one particular chromosome. The plant carries two alleles for stem height. Which explanation of why it has two is correct?",
+    "choices": [
+      "The plant copies the height gene once before using it, so a spare is always kept nearby.",
+      "The height gene matters so much that the plant stores it on two different chromosomes for safety.",
+      "Each gene is built out of two halves, and each half counts as one allele.",
+      "Chromosomes come in pairs with one member of each pair inherited from each parent, and both members carry the height gene at the same place."
+    ],
+    "answer": "D",
+    "hints": [
+      "Start with how chromosomes are stored in the cell, not with the gene itself.",
+      "The two chromosomes of a pair carry the same genes, in the same order, in the same places, and one of them came from each parent."
+    ]
+  },
+
+  {
+    "id": "m7sci-dominant-and-recessive-traits-001",
+    "loId": "m7sci.dominant-and-recessive-traits",
+    "cedCode": "M7SCI-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does it mean to say that an allele is dominant?",
+    "choices": [
+      "Its trait is the most common one in the population.",
+      "Its trait shows whenever that allele is present, even when the other allele is the recessive one.",
+      "It is passed on to offspring more often than the recessive allele is.",
+      "It makes the organism stronger and more likely to survive."
+    ],
+    "answer": "B",
+    "hints": [
+      "The definition is a rule about what happens inside ONE organism, not about a whole group of them.",
+      "Ask what you would see in an organism carrying one dominant allele and one recessive allele."
+    ]
+  },
+  {
+    "id": "m7sci-dominant-and-recessive-traits-002",
+    "loId": "m7sci.dominant-and-recessive-traits",
+    "cedCode": "M7SCI-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In guinea pigs, black fur (B) is dominant over white fur (b). Three guinea pigs have the genotypes BB, Bb, and bb. Which of them has white fur?",
+    "choices": [
+      "Only the bb guinea pig",
+      "Both the bb and the Bb guinea pigs, because each one carries a b allele",
+      "Only the Bb guinea pig, because its two different alleles blend into a lighter color",
+      "None of them, because fur color can never be worked out from a genotype"
+    ],
+    "answer": "A",
+    "hints": [
+      "Take the genotypes one at a time and ask whether a dominant B is present anywhere in the pair.",
+      "The recessive trait shows only when BOTH alleles are recessive, and nothing blends, so a single B still means black fur."
+    ]
+  },
+  {
+    "id": "m7sci-dominant-and-recessive-traits-003",
+    "loId": "m7sci.dominant-and-recessive-traits",
+    "cedCode": "M7SCI-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is choosing letters for the two alleles of the fur length gene in a rabbit. Short fur is dominant and long fur is recessive. Which way of writing the two alleles is correct?",
+    "choices": [
+      "S for short fur and L for long fur, so that each letter matches its trait name",
+      "s for short fur and S for long fur, because the capital letter marks the rarer version",
+      "S for short fur and s for long fur, using one letter with the capital for the dominant version",
+      "S for short fur and S for long fur, because both alleles belong to the same gene"
+    ],
+    "answer": "C",
+    "hints": [
+      "Both alleles are versions of the SAME gene, so they have to share a letter. Two different letters would mean two different genes.",
+      "The capital always marks the dominant version and the lowercase marks the recessive version, and the two still have to look different from each other."
+    ]
+  },
+  {
+    "id": "m7sci-dominant-and-recessive-traits-004",
+    "loId": "m7sci.dominant-and-recessive-traits",
+    "cedCode": "M7SCI-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, purple flowers (P) are dominant over white flowers (p). You find a pea plant with purple flowers. What can you say for certain about its genotype?",
+    "choices": [
+      "It must be PP, because it is showing the dominant trait.",
+      "It must be Pp, because every organism carries one of each allele.",
+      "It could be PP, Pp, or pp, because a genotype can never be narrowed down by looking.",
+      "It is either PP or Pp, because one P is enough to make the flowers purple."
+    ],
+    "answer": "D",
+    "hints": [
+      "Go through PP, Pp, and pp one at a time and decide what color each one would look.",
+      "Both PP and Pp are purple, so seeing purple does rule one genotype out, but it cannot tell the other two apart."
+    ]
+  },
+  {
+    "id": "m7sci-dominant-and-recessive-traits-005",
+    "loId": "m7sci.dominant-and-recessive-traits",
+    "cedCode": "M7SCI-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a kind of beetle, smooth wing covers (S) are dominant over ridged wing covers (s). On one island, almost every beetle has ridged wing covers. Which statement is correct?",
+    "choices": [
+      "The ridged beetles are ss, and a recessive trait can be the common trait in a population.",
+      "The ridged allele must really be the dominant one, since ridged is the common trait here.",
+      "The smooth allele will spread until most beetles are smooth, because a dominant allele takes over.",
+      "The ridged beetles must be Ss, since every beetle gets one allele from each parent."
+    ],
+    "answer": "A",
+    "hints": [
+      "Dominant tells you what shows inside one beetle. It says nothing about how many of each allele are on the island.",
+      "A beetle with ridged wing covers is showing the recessive trait, so work out what BOTH of its alleles have to be."
+    ]
+  },
+  {
+    "id": "m7sci-dominant-and-recessive-traits-006",
+    "loId": "m7sci.dominant-and-recessive-traits",
+    "cedCode": "M7SCI-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, purple flowers (P) are dominant over white flowers (p). A gardener plants only purple-flowered plants and lets them pollinate one another, year after year. A few white-flowered plants still appear every year. A student says the white allele should have been watered down and disappeared by now. Which statement best explains what is really happening?",
+    "choices": [
+      "Each year the purple plants create a brand-new white allele by chance.",
+      "Alleles never blend. Many of the purple plants are Pp and carry a whole p allele, so two of them can produce a pp offspring with white flowers.",
+      "The white-flowered plants are Pp, because they received one allele from each parent.",
+      "White must be the dominant trait after all, since a recessive trait would have disappeared by now."
+    ],
+    "answer": "B",
+    "hints": [
+      "A purple plant is not always PP. Ask what a purple plant could be hiding, and what it can still pass on.",
+      "A white-flowered plant must be pp, so it got a p from each purple parent. Nothing was watered down along the way."
+    ]
+  },
+
+  {
+    "id": "m7sci-punnett-squares-001",
+    "loId": "m7sci.punnett-squares",
+    "cedCode": "M7SCI-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does a Punnett square predict?",
+    "choices": [
+      "Exactly which trait each offspring will end up with.",
+      "How many offspring a pair of parents will have.",
+      "The chance of each combination of alleles turning up in an offspring.",
+      "Which parent has the stronger traits."
+    ],
+    "answer": "C",
+    "hints": [
+      "The square works the way a chart of coin-flip outcomes works.",
+      "It tells you the chances for each offspring, not a guaranteed result and not a number of offspring."
+    ]
+  },
+  {
+    "id": "m7sci-punnett-squares-002",
+    "loId": "m7sci.punnett-squares",
+    "cedCode": "M7SCI-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, tall (T) is dominant over short (t). A Tt plant is crossed with a tt plant. The alleles across the top are T and t. The alleles down the left side are t and t. The four boxes come out Tt, tt, Tt, tt. What is the PHENOTYPE ratio?",
+    "choices": [
+      "3 tall : 1 short",
+      "1 TT : 2 Tt : 1 tt",
+      "2 Tt : 2 tt",
+      "1 tall : 1 short"
+    ],
+    "answer": "D",
+    "hints": [
+      "Phenotype means what you can see, so go box by box and write tall or short instead of copying the letters.",
+      "A box with a T in it is tall. Only tt is short. Two boxes are Tt and two boxes are tt, so count how many of each look."
+    ]
+  },
+  {
+    "id": "m7sci-punnett-squares-003",
+    "loId": "m7sci.punnett-squares",
+    "cedCode": "M7SCI-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In pea plants, tall (T) is dominant over short (t). Two Tt plants are crossed. The alleles across the top are T and t. The alleles down the left side are T and t. The four boxes come out TT, Tt, Tt, tt. What is the GENOTYPE ratio?",
+    "choices": [
+      "1 TT : 2 Tt : 1 tt",
+      "3 tall : 1 short",
+      "1 tall : 1 short",
+      "2 TT : 2 tt"
+    ],
+    "answer": "A",
+    "hints": [
+      "Genotype means the letters an offspring carries, so count the boxes exactly as they are written.",
+      "Sort the four boxes into groups by their letters: how many TT, how many Tt, how many tt?"
+    ]
+  },
+  {
+    "id": "m7sci-punnett-squares-004",
+    "loId": "m7sci.punnett-squares",
+    "cedCode": "M7SCI-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In guinea pigs, black fur (B) is dominant over white fur (b). Two Bb guinea pigs are crossed. The alleles across the top are B and b. The alleles down the left side are B and b. The four boxes come out BB, Bb, Bb, bb. What is the PHENOTYPE ratio?",
+    "choices": [
+      "1 BB : 2 Bb : 1 bb",
+      "3 black : 1 white",
+      "1 black : 3 white",
+      "2 black : 2 white"
+    ],
+    "answer": "B",
+    "hints": [
+      "Underline the word PHENOTYPE in the question first, then decide what each of the four boxes would LOOK like.",
+      "BB is black. Both Bb boxes are black, because the dominant B shows whenever it is present. Only bb is white."
+    ]
+  },
+  {
+    "id": "m7sci-punnett-squares-005",
+    "loId": "m7sci.punnett-squares",
+    "cedCode": "M7SCI-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cross between two guinea pigs gives a phenotype ratio of 3 black to 1 white. The pair then has a litter of four. What can the owner correctly expect?",
+    "choices": [
+      "Exactly three of the four will be black and exactly one will be white.",
+      "The first three born will be black and the fourth will be white.",
+      "Each offspring has a 3 in 4 chance of being black, so all four could turn out black.",
+      "Each offspring will be three quarters black fur and one quarter white fur."
+    ],
+    "answer": "C",
+    "hints": [
+      "A Punnett square predicts chances, the way a coin flip has a one in two chance of heads. Do four coin flips have to give exactly two heads?",
+      "The ratio applies to each offspring separately, and nothing keeps count of what the earlier offspring were."
+    ]
+  },
+  {
+    "id": "m7sci-punnett-squares-006",
+    "loId": "m7sci.punnett-squares",
+    "cedCode": "M7SCI-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a certain plant, purple flowers (P) are dominant over white flowers (p). Two purple-flowered plants are crossed, and one of their offspring has white flowers. What are the genotypes of the two parents?",
+    "choices": [
+      "One parent is PP and the other is pp.",
+      "Both parents are PP.",
+      "One parent is Pp and the other is pp.",
+      "Both parents are Pp."
+    ],
+    "answer": "D",
+    "hints": [
+      "Start with the white offspring, because it is the most informative thing in the problem. What genotype must a white-flowered plant have?",
+      "That white offspring received one allele from each parent, and both of them were p. Since both parents are purple, each must also carry a P."
+    ]
+  },
+
+  {
+    "id": "m7sci-mutations-and-variation-001",
+    "loId": "m7sci.mutations-and-variation",
+    "cedCode": "M7SCI-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is a mutation?",
+    "choices": [
+      "A change in the sequence of DNA in a cell.",
+      "A trait an organism develops during its life because it needs that trait.",
+      "A change in the body of an organism caused by exercise or by an injury.",
+      "Any gene that is passed from a parent to a child."
+    ],
+    "answer": "A",
+    "hints": [
+      "The definition is about the instructions themselves, not about the body of the organism.",
+      "DNA is written as a very long line of chemical letters, and a mutation is a spot where those letters differ from the ones the parent cell carried."
+    ]
+  },
+  {
+    "id": "m7sci-mutations-and-variation-002",
+    "loId": "m7sci.mutations-and-variation",
+    "cedCode": "M7SCI-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about mutations is the most accurate?",
+    "choices": [
+      "Every mutation is harmful, because any change to DNA damages the organism.",
+      "Most mutations are neutral and make no real difference to the organism.",
+      "Every mutation produces a change you can see from the outside.",
+      "Mutations happen only in organisms exposed to chemicals or radiation."
+    ],
+    "answer": "B",
+    "hints": [
+      "Two of these choices claim that EVERY mutation does something. Ask what happens when a change lands in a stretch of DNA that is not an instruction for any protein.",
+      "One choice forgets the more ordinary cause of mutations, which is a copying error when a cell copies its DNA before dividing."
+    ]
+  },
+  {
+    "id": "m7sci-mutations-and-variation-003",
+    "loId": "m7sci.mutations-and-variation",
+    "cedCode": "M7SCI-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A dog has a mutation in one skin cell on its back, caused by strong sunlight. A second dog has a mutation in one of the cells that make its egg cells, caused by a copying error. Which mutation can show up in puppies?",
+    "choices": [
+      "Both of them, because a mutation in any cell of the body is passed to offspring.",
+      "Only the skin mutation, because something outside the body caused it.",
+      "Only the mutation in the cell that makes egg cells.",
+      "Neither one, because a mutation that appears during a life is never passed on."
+    ],
+    "answer": "C",
+    "hints": [
+      "A puppy grows from two cells and two cells only. Ask which of these two mutations is sitting in one of them.",
+      "A mutation in a skin cell is copied into the new skin cells that replace it, and no further than that."
+    ]
+  },
+  {
+    "id": "m7sci-mutations-and-variation-004",
+    "loId": "m7sci.mutations-and-variation",
+    "cedCode": "M7SCI-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A dish holds many bacteria. In one of them, a copying error changes a protein, and the changed protein is not affected by a certain medicine. The medicine is then added to the dish. Which statement describes what happened correctly?",
+    "choices": [
+      "The bacterium sensed the medicine and changed its own DNA in order to survive.",
+      "The medicine taught the other bacteria how to build the changed protein.",
+      "The change must be helpful everywhere, because it turned out helpful in this dish.",
+      "The change was already there before the medicine arrived, and the medicine then left that bacterium growing while the others stopped."
+    ],
+    "answer": "D",
+    "hints": [
+      "Put the two events in order. Read the problem again and note which one is described as happening first.",
+      "A mutation cannot be ordered up and cannot be handed from one organism to another. Helpful is also a decision about where the organism lives, not a property the change carries around."
+    ]
+  },
+  {
+    "id": "m7sci-mutations-and-variation-005",
+    "loId": "m7sci.mutations-and-variation",
+    "cedCode": "M7SCI-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A copying error gives one mouse a much paler coat than the other mice. This mouse lives on pale desert sand, where a pale coat is harder for a hawk to pick out. The mouse is then moved to a field of dark volcanic rock, and nothing about its DNA changes. Which statement is correct?",
+    "choices": [
+      "The same mutation is helpful on the pale sand and harmful on the dark rock, because the surroundings settle which label applies.",
+      "The mutation is helpful in both places, because helpful is a property the change carries with it.",
+      "The mouse turned pale because it needed camouflage on the sand.",
+      "The mutation will reverse itself on the dark rock, so the coat will turn dark again."
+    ],
+    "answer": "A",
+    "hints": [
+      "The mouse and its DNA are exactly the same in both places. Only one thing changed, so ask what that was.",
+      "Harmful and helpful are not labels a mutation carries around with it. They depend on where the organism happens to live."
+    ]
+  },
+  {
+    "id": "m7sci-mutations-and-variation-006",
+    "loId": "m7sci.mutations-and-variation",
+    "cedCode": "M7SCI-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Sexual reproduction shuffles the versions of genes that the parents already carry, the way shuffling rearranges cards a deck already holds. Shuffling never invents a new card. So where do brand-new versions of genes come from in the first place?",
+    "choices": [
+      "From sexual reproduction, because combining two parents always makes versions that never existed before.",
+      "From mutation, because a change in the DNA sequence is the only way a version that never existed before can appear.",
+      "From the environment, which supplies an organism with the version of the gene it needs.",
+      "From an organism using a body part more, which changes the gene for that part."
+    ],
+    "answer": "B",
+    "hints": [
+      "The card comparison in the question already rules one choice out. Reread what shuffling can and cannot do.",
+      "Only one process actually changes the sequence of DNA, so only one process can produce a version of a gene that did not exist before."
+    ]
+  }
+]

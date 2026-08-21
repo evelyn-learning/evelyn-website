@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-africa-physical-geography-001",
+    "loId": "m7geo.africa-physical-geography",
+    "cedCode": "M7GEO-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "One desert stretches all the way across the north of Africa, from the Atlantic coast in the west to the Red Sea in the east, and it is the largest hot desert on Earth. What is it called?",
+    "choices": [
+      "The Sahara",
+      "The Sahel",
+      "The Kalahari",
+      "The Namib"
+    ],
+    "answer": "A",
+    "hints": [
+      "The question tells you where the desert is: across the NORTH of the continent, touching two different bodies of water.",
+      "Two of these choices are deserts in southern Africa. One of them is not a desert at all -- it is the semi-arid belt that lies just south of the desert you are looking for."
+    ]
+  },
+  {
+    "id": "m7geo-africa-physical-geography-002",
+    "loId": "m7geo.africa-physical-geography",
+    "cedCode": "M7GEO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'Africa is mostly desert, so the whole continent is dry.' All four statements below are true. Which one best shows that the student is wrong?",
+    "choices": [
+      "The Sahara is the largest hot desert on Earth",
+      "The Congo Basin at the Equator holds a large tropical rainforest that is warm and wet through the whole year, and savanna with a pronounced wet season covers large areas on both sides of the Equator",
+      "The Kalahari and the Namib are deserts in southern Africa",
+      "The Sahara reaches from the Atlantic coast in the west to the Red Sea in the east"
+    ],
+    "answer": "B",
+    "hints": [
+      "All four statements are true, so the question is not which one is true. It is which one ARGUES AGAINST the student.",
+      "Three of these choices name deserts, which is what the student already believes. Look for the choice that names parts of Africa that are not dry."
+    ]
+  },
+  {
+    "id": "m7geo-africa-physical-geography-003",
+    "loId": "m7geo.africa-physical-geography",
+    "cedCode": "M7GEO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A long valley runs through eastern Africa in a place where the crust of Earth is pulling apart, and a chain of long, deep lakes lies along it. What is this feature called?",
+    "choices": [
+      "The Sahel",
+      "The Atlas Mountains",
+      "The Great Rift Valley",
+      "The Congo Basin"
+    ],
+    "answer": "C",
+    "hints": [
+      "Crust pulling apart is the divergent plate boundary from Unit 2. The name of this feature says what the land is doing.",
+      "The Atlas Mountains run across the northwest of Africa and the Congo Basin is the land drained by the Congo River at the Equator. Neither one is a place where the crust is splitting."
+    ]
+  },
+  {
+    "id": "m7geo-africa-physical-geography-004",
+    "loId": "m7geo.africa-physical-geography",
+    "cedCode": "M7GEO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A traveler drives from north to south across a country that lies just south of the Sahara. In the far north the ground is bare and dry, with scattered thorny shrubs. Mile after mile southward the ground cover thickens, grasses appear, and by the south of the country there is grassland with scattered trees. Nowhere on the drive is there a point where the desert stops and the grassland starts. What does this drive show?",
+    "choices": [
+      "The traveler drove in the wrong direction, since the desert lies to the south",
+      "The change happened overnight while the traveler was asleep, so the line was simply missed",
+      "This country has no climate boundary at all, because climate boundaries exist only between continents",
+      "The traveler crossed the Sahel, a semi-arid transition zone where desert grades into savanna across a wide band rather than at a line"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember from Unit 1 that some boundaries are bands rather than lines. The traveler is looking for a line that was never there.",
+      "The belt between the Sahara and the savanna has a name, and it is drier toward the desert in the north and wetter toward the savanna in the south, changing gradually the whole way across."
+    ]
+  },
+  {
+    "id": "m7geo-africa-physical-geography-005",
+    "loId": "m7geo.africa-physical-geography",
+    "cedCode": "M7GEO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Traveling north from the Equator in Africa, you pass tropical rainforest, then savanna, then a semi-arid belt, then desert. What will you most likely pass traveling SOUTH from the Equator, and why?",
+    "choices": [
+      "The same sequence in the same order -- rainforest, then savanna, then semi-arid land, then desert -- because latitude controls climate the same way on both sides of the Equator",
+      "The same sequence in reverse -- desert first, then semi-arid land, then savanna, then rainforest -- because everything is flipped south of the Equator",
+      "Rainforest the whole way to the southern tip, because land south of the Equator stays warm and wet",
+      "Snow and ice, because the seasons are opposite in the Southern Hemisphere"
+    ],
+    "answer": "A",
+    "hints": [
+      "The bands are arranged by DISTANCE FROM THE EQUATOR, and you are starting at the Equator both times. So which end of the list comes first?",
+      "Opposite SEASONS south of the Equator is a real thing. An opposite ORDER of climate bands is not. The bands mirror in order, though they are not the same width on the two sides."
+    ]
+  },
+  {
+    "id": "m7geo-africa-physical-geography-006",
+    "loId": "m7geo.africa-physical-geography",
+    "cedCode": "M7GEO-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A cargo ship reaches the mouth of a river on the coast of Africa and plans to carry its load far inland by water. It travels a short way upstream and then meets rapids and waterfalls it cannot pass. Ships on many rivers in Europe carry cargo far inland with no such trouble. Every statement below is true. Which one EXPLAINS the difference?",
+    "choices": [
+      "The coastline of Africa is remarkably smooth for the size of the continent, with few deep bays",
+      "The Equator crosses through the middle of Africa",
+      "Much of the interior of Africa is a raised plateau and the land drops steeply to a narrow coastal plain, so rivers coming down off the plateau fall over cataracts, while Europe has a deeply indented coast and rivers that reach far inland",
+      "The Sahara stretches across the north of Africa"
+    ],
+    "answer": "C",
+    "hints": [
+      "A waterfall needs one thing: water going from higher land to lower land over a short distance. Which choice describes a change in ELEVATION?",
+      "Three of these are true facts about Africa that have nothing to do with how high the land is. True is not the same as relevant. Victoria Falls, on the Zambezi River, is one well known example of a river making that drop."
+    ]
+  },
+  {
+    "id": "m7geo-africa-history-and-culture-001",
+    "loId": "m7geo.africa-history-and-culture",
+    "cedCode": "M7GEO-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "For centuries camel caravans crossed the Sahara in both directions along the trans-Saharan trade routes. Which pair of goods moved along them, and which way did each one travel?",
+    "choices": [
+      "Salt carried north out of West Africa, and gold carried south into it",
+      "Gold carried north out of West Africa, and salt carried south into it",
+      "Cocoa carried north out of West Africa, and copper carried south into it",
+      "Rice carried north out of West Africa, and coffee carried south into it"
+    ],
+    "answer": "B",
+    "hints": [
+      "Gold was mined in the lands south of the desert. Salt was cut from the desert itself. Each one was scarce where the other was common.",
+      "Start with where each good came from, then send it toward the place that did not have it. Two shortages facing each other is a trade waiting to happen."
+    ]
+  },
+  {
+    "id": "m7geo-africa-history-and-culture-002",
+    "loId": "m7geo.africa-history-and-culture",
+    "cedCode": "M7GEO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Timbuktu grew up in the dry grassland just south of the Sahara, at a place where several camel caravan routes met. Traders arriving from the south brought gold, traders arriving from the north brought salt, and both had to stop there. In time the city held busy markets, mosques, schools and large collections of handwritten books. Why did a city grow at that particular spot?",
+    "choices": [
+      "It was built directly on top of the goldfields, so the gold did not have to be carried anywhere",
+      "It stood on the seacoast, where ships unloaded cargo straight into its markets",
+      "It sat where the trade routes met, so the goods and the wealth made from trading them passed through it",
+      "It was founded by European colonizers, who built a railroad across the desert to reach it"
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the question again for what it says about LOCATION. It gives you the position of the city, not what is buried underneath it.",
+      "Two of these choices contradict the question itself: it says the gold arrived from the south, and it says the city sat in grassland south of a desert rather than on a coast."
+    ]
+  },
+  {
+    "id": "m7geo-africa-history-and-culture-003",
+    "loId": "m7geo.africa-history-and-culture",
+    "cedCode": "M7GEO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Swahili is built on Bantu grammar and Bantu everyday words, and it also carries a large number of words borrowed from Arabic. Which explanation of that pattern is correct?",
+    "choices": [
+      "Swahili is a form of Arabic that changed after it reached Africa",
+      "Swahili and Arabic belong to the same language family, which is why so many of their words match",
+      "European colonizers carried Arabic words to East Africa along with their own languages",
+      "Traders sailed across the Indian Ocean and did business in the port towns of the East African coast for centuries, and Arabic words entered an African language through that contact"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at what the language IS underneath the borrowed words. The question tells you the grammar and the everyday core words are Bantu.",
+      "Borrowing words is not the same as being related, and two of these choices confuse borrowing with descent. The monsoon winds over the Indian Ocean reverse with the seasons, so a trader could sail out one season and come home the next."
+    ]
+  },
+  {
+    "id": "m7geo-africa-history-and-culture-004",
+    "loId": "m7geo.africa-history-and-culture",
+    "cedCode": "M7GEO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In many African countries an official language of the government is French, English or Portuguese, while people use one or more African languages at home, in the market and with friends. What best explains why a European language is official in so many of those countries?",
+    "choices": [
+      "European countries colonized those places and ran the government and the schools in their own language, and that language stayed on as an official language after independence",
+      "Those languages spread there through trading voyages across the Indian Ocean, in the same way Arabic words entered Swahili",
+      "An official language is a count of what people speak at home, so most families in those countries must speak French, English or Portuguese",
+      "Those countries share a land border with France, England or Portugal, so the languages crossed over"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which countries controlled those places, and what language a government and its schools would have been run in.",
+      "An official language is a language a government names for its own business. It is not a list of what is spoken at home -- the question already tells you African languages are what people use day to day."
+    ]
+  },
+  {
+    "id": "m7geo-africa-history-and-culture-005",
+    "loId": "m7geo.africa-history-and-culture",
+    "cedCode": "M7GEO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two neighboring African countries share a border that runs dead straight for hundreds of miles across flat, dry land. No river runs along it and no mountain range lies near it, and the home area of one ethnic group lies partly in each country. What best explains a border like this one?",
+    "choices": [
+      "The border follows a river that dried up long ago and left its straight channel behind",
+      "The border marks the line where one language stops being spoken and another begins",
+      "Borders in dry regions are always drawn straight, because the land there is flat",
+      "In the late 1800s European powers divided the continent among themselves and drew boundaries that often ignored where peoples were already living, and most countries kept those boundaries after independence"
+    ],
+    "answer": "D",
+    "hints": [
+      "Sort the boundary type first. A line that follows no landform at all is a geometric boundary, and the known weakness of a geometric boundary is that it takes no notice of who lives on either side.",
+      "One detail rules out the language answer on its own: the question says one ethnic group has its home area split by the line, so the line does not follow where a group begins and ends."
+    ]
+  },
+  {
+    "id": "m7geo-africa-history-and-culture-006",
+    "loId": "m7geo.africa-history-and-culture",
+    "cedCode": "M7GEO-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'Before Europeans arrived there were no cities, no writing and no large states in Africa.' Which response corrects this best?",
+    "choices": [
+      "The student is right about most of the continent, and wrong only about the far north",
+      "Large, wealthy states ran on African trade long before any European colony existed: Ghana, then Mali, then Songhai grew rich in West Africa by taxing the trans-Saharan trade in gold and salt, Timbuktu was a city of markets, schools and large collections of handwritten books, and the Swahili city-states on the east coast were busy ports trading across the Indian Ocean",
+      "The student is right about cities and states, and wrong only about writing",
+      "The claim cannot be checked at all, because Africa holds many countries and nothing can be said about any of them"
+    ],
+    "answer": "B",
+    "hints": [
+      "The claim names three things: cities, writing and large states. Go looking for all three, and say where each one was.",
+      "Two trade systems made parts of the continent wealthy long before any European colony: camel caravans across the Sahara in the west, and monsoon-wind sailing across the Indian Ocean in the east. Each one left cities behind."
+    ]
+  },
+  {
+    "id": "m7geo-middle-east-geography-and-resources-001",
+    "loId": "m7geo.middle-east-geography-and-resources",
+    "cedCode": "M7GEO-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a dry coastal country, a plant takes in seawater and removes the salt from it so that the water can be drunk and used in homes. What is this process called?",
+    "choices": [
+      "Irrigation",
+      "Groundwater pumping",
+      "Desalination",
+      "Evaporation"
+    ],
+    "answer": "C",
+    "hints": [
+      "The name of the process is built out of the word salt.",
+      "Irrigation carries water to fields that rain does not reach, and groundwater pumping brings up water already stored in rock below the surface. Neither one starts with seawater."
+    ]
+  },
+  {
+    "id": "m7geo-middle-east-geography-and-resources-002",
+    "loId": "m7geo.middle-east-geography-and-resources",
+    "cedCode": "M7GEO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two reference books list different countries as belonging to 'the Middle East.' Which explanation is best?",
+    "choices": [
+      "One of the books must simply be wrong, because there is one official list of which countries count",
+      "The edges of the region move over time as its rivers change course",
+      "The Middle East is a continent, and continents are difficult to count consistently",
+      "The Middle East is a region that people defined, so different sources draw its edges differently depending on their purpose"
+    ],
+    "answer": "D",
+    "hints": [
+      "Go back to the definition of a region: an area people group together because the grouping is useful for some purpose. Is a region something you could dig up?",
+      "The name itself is a clue. Middle of what, and east of what? A direction only means something from the place someone is standing, and this name was made by people in Europe looking outward."
+    ]
+  },
+  {
+    "id": "m7geo-middle-east-geography-and-resources-003",
+    "loId": "m7geo.middle-east-geography-and-resources",
+    "cedCode": "M7GEO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Petroleum and natural gas are heavily concentrated in the rock around the Persian Gulf. How did they come to be there?",
+    "choices": [
+      "Long ago the area lay under warm, shallow seas, and enormous numbers of tiny marine organisms sank into the sea-floor mud, were buried under layer after layer of sediment, and were cooked slowly by heat and pressure over millions of years",
+      "Rainwater soaking down through desert sand collected in underground pools and thickened into oil",
+      "The oil formed within the last few hundred years, as desert plants died and their remains ran down into the rock",
+      "Oil is a mineral that grows in place inside rock, a little more each year"
+    ],
+    "answer": "A",
+    "hints": [
+      "Petroleum forms from the remains of living things buried in sediment. Ask which living things, and what kind of place buries them under mud.",
+      "The timescale is the other half of the answer. This took millions of years, which is exactly why petroleum is sorted as nonrenewable."
+    ]
+  },
+  {
+    "id": "m7geo-middle-east-geography-and-resources-004",
+    "loId": "m7geo.middle-east-geography-and-resources",
+    "cedCode": "M7GEO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'Oil has always been the most valuable thing under that region.' What is wrong with the word 'always'?",
+    "choices": [
+      "Nothing is wrong with it, because anything that is valuable now was valuable at every earlier time too",
+      "Something is a resource only when people have a use for it AND a way to obtain it. For almost all of human history nothing anyone owned ran on petroleum and nobody could drill down to it or refine it, so the same oil sat in the rock and was worth nothing to the people living above it",
+      "The oil arrived in the rock only recently, so there was nothing valuable underground before engines were invented",
+      "The word is wrong because oil is renewable, so the supply keeps being remade"
+    ],
+    "answer": "B",
+    "hints": [
+      "The rock did not change. Ask what did change, and when.",
+      "A resource needs both halves: a use for the material AND a means of obtaining it. Take either half away and the same material is worth nothing to anyone."
+    ]
+  },
+  {
+    "id": "m7geo-middle-east-geography-and-resources-005",
+    "loId": "m7geo.middle-east-geography-and-resources",
+    "cedCode": "M7GEO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Karsen is an invented country in a dry part of the world, and most of it is desert. One large river enters from the mountains in the north and flows south across the whole country to the sea. The northern mountains rise high enough to catch rain and snow. Far out in the eastern desert there is a small oasis where groundwater comes near the surface. Where would you expect most of the people of Karsen to live?",
+    "choices": [
+      "Spread evenly across the desert interior, because the land there is flat and open",
+      "Strung along the river, in and near the wetter northern mountains, and at the place where the river meets the sea",
+      "Gathered at the oasis, because an oasis in a desert supports more people than a river does",
+      "Along the borders of the country, because borders are what decide where settlement grows"
+    ],
+    "answer": "B",
+    "hints": [
+      "In an arid place, ask one question first: where is the fresh water? Everything else follows from the answer.",
+      "Open land is not what is scarce in a desert. List every source of fresh water the description gives you, then put people on top of that list."
+    ]
+  },
+  {
+    "id": "m7geo-middle-east-geography-and-resources-006",
+    "loId": "m7geo.middle-east-geography-and-resources",
+    "cedCode": "M7GEO-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In an invented dry region, farms pump water from a layer of rock below the surface. Rain does soak down and refill that layer, but very slowly, and some of the water down there soaked in long ago when the climate was wetter than it is now. Year after year, more water is pumped out than soaks back in. What does that tell you?",
+    "choices": [
+      "The supply will last forever, because rain refills groundwater and that makes it renewable",
+      "Because the water is underground, how much is pumped out does not change how much is down there",
+      "Groundwater must be nonrenewable after all, since a supply that can run short cannot be renewable at all",
+      "The water level in the layer will fall year after year, because it is being taken out faster than it is replaced"
+    ],
+    "answer": "D",
+    "hints": [
+      "Picture a bucket with a very slow tap running into it. What happens if you scoop out more than the tap puts in?",
+      "Renewable describes how a resource is replaced, not how much of it there is. Compare the rate going out with the rate coming in."
+    ]
+  },
+  {
+    "id": "m7geo-africa-middle-east-development-001",
+    "loId": "m7geo.africa-middle-east-development",
+    "cedCode": "M7GEO-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Geographers have a word for a country with no coastline at all, so that goods leaving it must cross at least one neighboring country before they reach a seaport. What is that word?",
+    "choices": [
+      "Coastal",
+      "Commodity",
+      "Urbanized",
+      "Landlocked"
+    ],
+    "answer": "D",
+    "hints": [
+      "The word says what the land has done to the country: it is shut in by land on every side.",
+      "A commodity is a raw material bought and sold on world markets, and urbanized describes a country where a large share of people live in cities. Neither one is about coastline."
+    ]
+  },
+  {
+    "id": "m7geo-africa-middle-east-development-002",
+    "loId": "m7geo.africa-middle-east-development",
+    "cedCode": "M7GEO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The invented country of Sarova has no coastline. The copper from its mines is sold to buyers overseas, so it travels by rail across a neighboring country to reach a seaport. Why does being landlocked tend to raise the cost of selling that copper abroad?",
+    "choices": [
+      "The copper must be carried across at least one other country to reach a ship, which adds distance, border crossings, paperwork and fees, and the route depends on a railway and a port that another government maintains",
+      "A country with no coastline is not able to trade with other countries at all",
+      "A country with no coastline has less fertile soil and fewer minerals underground",
+      "A country with no coastline is always farther from the Equator than its neighbors"
+    ],
+    "answer": "A",
+    "hints": [
+      "Trace the journey the copper actually makes, from the mine to the deck of a ship, and count what has to happen along the way.",
+      "Landlocked is a fact about position on a map. Check whether each choice is about the route to the sea or about something else entirely."
+    ]
+  },
+  {
+    "id": "m7geo-africa-middle-east-development-003",
+    "loId": "m7geo.africa-middle-east-development",
+    "cedCode": "M7GEO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The invented country of Tenari earns most of its export money from one commodity. Why is that riskier than earning export money from several different products?",
+    "choices": [
+      "Selling one product means the country runs out of that product sooner",
+      "If the world price of that one commodity falls, almost all of the export earnings fall at the same time, because there is no second large export to make up the difference",
+      "A country that sells one commodity sets the world price itself, so it has no reason to sell anything else",
+      "A fall in the price reaches only the companies that mine or grow the commodity, and stops there"
+    ],
+    "answer": "B",
+    "hints": [
+      "The risk is not about running out of something. Ask what happens to the total money coming in when the single price that decides it moves.",
+      "Two of these are worth checking against the lesson: who sets a world price, and whether export earnings stay inside one industry. Export earnings also pay for imports and for projects such as roads, clinics and schools."
+    ]
+  },
+  {
+    "id": "m7geo-africa-middle-east-development-004",
+    "loId": "m7geo.africa-middle-east-development",
+    "cedCode": "M7GEO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Ambel, a large share of the population is children and teenagers, and there are fewer people at older ages. What does that age structure most directly tell planners?",
+    "choices": [
+      "The total population of Ambel will begin shrinking within the next few years",
+      "The greatest need soon will be for hospitals and care built for people at older ages",
+      "There will be strong demand for school places now, and many people reaching working age within a few years",
+      "Ambel must be a lower-income country, because that is what a young population means"
+    ],
+    "answer": "C",
+    "hints": [
+      "The children counted in this structure are already born. Ask what they need this year, and then ask what they will be doing in about ten years.",
+      "Check the other three. An age structure is a shape, not an income measurement, and a wide base of young people is not the shape of a population about to shrink."
+    ]
+  },
+  {
+    "id": "m7geo-africa-middle-east-development-005",
+    "loId": "m7geo.africa-middle-east-development",
+    "cedCode": "M7GEO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Miravel, most families send and receive money using a mobile phone rather than a bank branch, and that became ordinary without telephone wires ever being run to every home. What does this pattern show?",
+    "choices": [
+      "Miravel must have built a wired telephone network first and then taken it out again",
+      "Sending money by phone is possible only in countries that already have a bank branch in every town",
+      "When a newer technology is cheaper to install than the older one it replaced, a place can adopt the newer one first, so countries do not all build things in the same order",
+      "Every country builds the same things in the same order, and Miravel simply reached this step sooner than its neighbors"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what a mobile phone network needs, and compare that with what running a wire to every single house needs.",
+      "The point of the example is the ORDER in which things get built. Two of these choices assume there is only one possible order for every country."
+    ]
+  },
+  {
+    "id": "m7geo-africa-middle-east-development-006",
+    "loId": "m7geo.africa-middle-east-development",
+    "cedCode": "M7GEO-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two invented countries sit in the same world region. Miravel is coastal, with a deep-water port where ships load cocoa and containers of clothing sewn in nearby factories, a new university in the port city, and a dry inland north where many households carry water from a well. Sarova is landlocked, sends its copper by rail across Miravel to reach the sea, and has a fast-growing capital city with reliable electricity while several rural districts do not have it. Which conclusion do these two descriptions support?",
+    "choices": [
+      "The two countries differ from each other in coastline, in exports and in what they have built, and each one also differs from itself from district to district, so one label for the whole region would hide all of those differences at once",
+      "One label fits the whole region well, as long as the label is taken from the country with the larger port",
+      "The two countries can be put in a single order, because a country with a coastline always earns more than a landlocked one",
+      "Nothing at all can be said about either country, because a national average always hides the variation inside it"
+    ],
+    "answer": "A",
+    "hints": [
+      "Read each description for what it actually says, and resist the urge to sort the two countries into an order. Nothing here is a ranking.",
+      "Look INSIDE each country as well as between them. Miravel has a port city with a university and a dry north where households carry water; Sarova has a fast-growing capital and rural districts without reliable electricity."
+    ]
+  }
+]

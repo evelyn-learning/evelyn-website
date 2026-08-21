@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-levels-of-organization-001",
+    "loId": "m7sci.levels-of-organization",
+    "cedCode": "M7SCI-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence describes what a tissue is?",
+    "choices": [
+      "Any group of cells that happen to sit next to each other in the body",
+      "A group of similar cells that work together on the same job",
+      "A group of two or more organs that share one large task",
+      "A structure built from several different kinds of tissue"
+    ],
+    "answer": "B",
+    "hints": [
+      "One word in the definition is doing all the work: the cells have to be similar.",
+      "Muscle tissue is many muscle cells that all shorten to pull. Same kind of cell, same job."
+    ]
+  },
+  {
+    "id": "m7sci-levels-of-organization-002",
+    "loId": "m7sci.levels-of-organization",
+    "cedCode": "M7SCI-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Put these levels of organization in order, starting with the smallest and simplest: organ, organism, cell, organ system, tissue. Which ordering is correct?",
+    "choices": [
+      "cell, tissue, organ, organ system, organism",
+      "cell, organ, tissue, organ system, organism",
+      "tissue, cell, organ, organ system, organism",
+      "cell, tissue, organ system, organ, organism"
+    ],
+    "answer": "A",
+    "hints": [
+      "Each level is built out of the level below it. Ask which one is a building block of the next.",
+      "The heart is built from tissues, and those tissues are built from cells. The heart is one part of a larger system."
+    ]
+  },
+  {
+    "id": "m7sci-levels-of-organization-003",
+    "loId": "m7sci.levels-of-organization",
+    "cedCode": "M7SCI-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student learns that the stomach contains muscle tissue that churns food and a lining tissue that releases the juices which break food down, and that together these do one main job. Which level of organization is the stomach, and why?",
+    "choices": [
+      "A tissue, because all of its cells are working on the same job of breaking food down",
+      "An organ system, because two different jobs are being carried out inside it",
+      "An organ, because different kinds of tissue are built into one structure with one main job",
+      "An organism, because it is a complete living structure inside the body"
+    ],
+    "answer": "C",
+    "hints": [
+      "Count the KINDS of tissue named. Then ask which level requires more than one kind.",
+      "One kind of tissue on its own is just a tissue. Different tissues built into one structure with one main job is the next level up."
+    ]
+  },
+  {
+    "id": "m7sci-levels-of-organization-004",
+    "loId": "m7sci.levels-of-organization",
+    "cedCode": "M7SCI-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A bird's egg cell is far larger than a small scrap of muscle cut from a mouse's leg. Which statement correctly names the level of organization of each?",
+    "choices": [
+      "The egg is at a higher level than the muscle scrap, because the larger structure always sits higher on the ladder",
+      "The egg is a tissue and the muscle scrap is a cell, because the larger one must be built out of the smaller one",
+      "Both are tissues, because both are pieces taken from a larger living body",
+      "The egg is a single cell and the muscle scrap is a tissue, because level describes how something is organized, not how big it is"
+    ],
+    "answer": "D",
+    "hints": [
+      "Do not compare the two sizes. Ask about each one separately: what is it made of?",
+      "The egg is one cell, however large it is. The scrap is many similar cells that all shorten to pull."
+    ]
+  },
+  {
+    "id": "m7sci-levels-of-organization-005",
+    "loId": "m7sci.levels-of-organization",
+    "cedCode": "M7SCI-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The pancreas releases juices that help break down food in the small intestine, and it also releases hormones into the blood that keep blood sugar inside its normal range. Which statement about the pancreas is correct?",
+    "choices": [
+      "It is one organ that belongs to both the digestive system and the endocrine system, because organ system names describe the body rather than build walls inside it",
+      "It must really be two separate organs, because one organ can belong to only one organ system",
+      "It is an organ system rather than an organ, because it takes part in two different large tasks",
+      "It is a tissue rather than an organ, because it releases substances instead of squeezing or moving"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the organ test first: is the pancreas one structure built from tissues, doing a job?",
+      "Ask whether anything stops a single organ from taking part in two large tasks. The system names are labels we use, not barriers inside the body."
+    ]
+  },
+  {
+    "id": "m7sci-levels-of-organization-006",
+    "loId": "m7sci.levels-of-organization",
+    "cedCode": "M7SCI-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An illness weakens the muscle tissue of a woman's heart, so the heart squeezes less forcefully with each beat. Every other part of her body starts out healthy. Which statement best describes what follows?",
+    "choices": [
+      "Only the heart is affected, because each organ carries out its own job on its own",
+      "The circulatory system moves less blood, so cells all over her body receive oxygen and nutrients more slowly, release energy from food more slowly, and she tires quickly on stairs that used to be easy",
+      "The problem stays at the tissue level, because trouble in a group of cells is too small to reach a whole organ system",
+      "Nothing changes for her, because the lungs take over the job of moving the blood"
+    ],
+    "answer": "B",
+    "hints": [
+      "Walk the ladder upward from where the damage is: tissue, then organ, then organ system, then the whole person.",
+      "The heart is not separate from its tissues, and the circulatory system is not separate from the heart. Follow what each level was counting on the level below to supply."
+    ]
+  },
+
+  {
+    "id": "m7sci-digestive-and-circulatory-systems-001",
+    "loId": "m7sci.digestive-and-circulatory-systems",
+    "cedCode": "M7SCI-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student eats a bowl of oatmeal. Where do most of the nutrients from that oatmeal pass into the blood?",
+    "choices": [
+      "In the stomach, because that is where acid and churning break the food down",
+      "In the mouth, because chewing and saliva start the breakdown there",
+      "In the small intestine, because its wall is folded and covered in villi with capillaries just beneath them",
+      "In the large intestine, because that is the last stop before the leftovers leave the body"
+    ],
+    "answer": "C",
+    "hints": [
+      "Breaking food down and letting food into the blood are two different jobs. Ask which organ is built for the second one.",
+      "Absorbing needs a huge surface with very thin blood vessels right underneath. Only one organ in the path is lined with villi."
+    ]
+  },
+  {
+    "id": "m7sci-digestive-and-circulatory-systems-002",
+    "loId": "m7sci.digestive-and-circulatory-systems",
+    "cedCode": "M7SCI-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best describes what the heart does?",
+    "choices": [
+      "It makes new blood to replace the blood the body has used up",
+      "It cleans the wastes out of the blood before sending it back around",
+      "It stores the nutrients from food until the body cells need them",
+      "It pumps blood through the vessels so that materials reach the cells of the body"
+    ],
+    "answer": "D",
+    "hints": [
+      "The heart is a muscle. Think about the one thing a muscle can actually do.",
+      "Blood cells are made in bone marrow, and wastes are taken out of the blood by the kidneys and the liver, so neither of those jobs belongs to the heart."
+    ]
+  },
+  {
+    "id": "m7sci-digestive-and-circulatory-systems-003",
+    "loId": "m7sci.digestive-and-circulatory-systems",
+    "cedCode": "M7SCI-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly describes the three kinds of blood vessel?",
+    "choices": [
+      "Arteries carry blood away from the heart, veins carry blood back to the heart, and capillaries are the tiny vessels in between, where materials pass in and out of the blood",
+      "Arteries carry blood back to the heart, veins carry blood away from the heart, and capillaries connect the two",
+      "Arteries carry blood, veins carry air from the lungs, and capillaries carry the nutrients from food",
+      "Materials pass in and out of the blood along the arteries, while capillaries only hold blood in storage until it is needed"
+    ],
+    "answer": "A",
+    "hints": [
+      "The word artery goes with away. Start there and the veins follow.",
+      "Materials can only cross where the vessel wall is one cell thick, so find the choice that puts the crossing at the capillaries."
+    ]
+  },
+  {
+    "id": "m7sci-digestive-and-circulatory-systems-004",
+    "loId": "m7sci.digestive-and-circulatory-systems",
+    "cedCode": "M7SCI-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After a student eats a bowl of rice, small pieces of it cross the wall of the small intestine and enter the blood. Which statement best describes what happens to those pieces next?",
+    "choices": [
+      "They turn into new blood, and that new blood then travels out to the rest of the body",
+      "They travel dissolved in the plasma, and they pass out of the blood at capillaries to enter the cells that need them",
+      "They stay inside the wall of the small intestine until a cell arrives to collect them",
+      "They are pushed straight to the leg muscles along a tube that runs from the intestine down the leg"
+    ],
+    "answer": "B",
+    "hints": [
+      "The blood was already there, moving in a loop, before the rice ever arrived.",
+      "The nutrients are passengers, not the vehicle. Ask which part of the blood is the liquid they dissolve into, and where they get off."
+    ]
+  },
+  {
+    "id": "m7sci-digestive-and-circulatory-systems-005",
+    "loId": "m7sci.digestive-and-circulatory-systems",
+    "cedCode": "M7SCI-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An illness flattens the villi in a person's small intestine, so the inside of that wall becomes smooth. The person still chews normally, the stomach still churns and still releases acid, and the heart and blood vessels are healthy. Why do the body's cells still end up short of nutrients?",
+    "choices": [
+      "Food is no longer broken down, because the villi are the part that breaks food into small pieces",
+      "The heart has less blood to pump, because blood is made out of the nutrients from food",
+      "Far less surface is left for absorbing, so fewer nutrient pieces cross into the blood, and the circulatory system can only deliver what it is handed",
+      "The large intestine takes the nutrients back out before the blood can reach them"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check the three jobs separately: breaking food down, getting the pieces into the blood, and carrying them around. Two of them still work.",
+      "The villi are what give the small intestine its enormous absorbing surface. A healthy delivery truck still delivers nothing if nothing is loaded onto it."
+    ]
+  },
+  {
+    "id": "m7sci-digestive-and-circulatory-systems-006",
+    "loId": "m7sci.digestive-and-circulatory-systems",
+    "cedCode": "M7SCI-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Follow one bite of an apple from the mouth to a muscle cell in the arm. Which sequence is correct?",
+    "choices": [
+      "mouth, then esophagus, then stomach, where the nutrients cross into the blood, then heart, then arteries, then capillaries in the arm muscle",
+      "mouth, then esophagus, then stomach, then small intestine, then large intestine, where the nutrients cross into the blood, then heart, then capillaries in the arm muscle",
+      "mouth, then esophagus, then small intestine, then stomach, where the breakdown is finished and the nutrients cross into the blood, then heart, then capillaries in the arm muscle",
+      "mouth, then esophagus, then stomach, then small intestine, where the nutrients cross through the villi into capillaries, then heart, then arteries, then capillaries in the arm muscle"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two things have to be right at once: the order of the organs, and the place where the nutrients enter the blood.",
+      "The stomach churns and breaks food down but absorbs almost nothing, and the large intestine comes after the crossing point, not before it."
+    ]
+  },
+
+  {
+    "id": "m7sci-respiratory-and-nervous-systems-001",
+    "loId": "m7sci.respiratory-and-nervous-systems",
+    "cedCode": "M7SCI-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which list gives the path air takes from outside the body to the place where oxygen enters the blood?",
+    "choices": [
+      "nose or mouth, then trachea, then bronchi, then the smaller tubes inside the lung, then alveoli",
+      "nose or mouth, then bronchi, then trachea, then alveoli, then the smaller tubes inside the lung",
+      "nose or mouth, then esophagus, then trachea, then alveoli",
+      "nose or mouth, then trachea, then alveoli, then bronchi, then the smaller tubes inside the lung"
+    ],
+    "answer": "A",
+    "hints": [
+      "The trachea is a single windpipe, and it splits into two tubes, one for each lung.",
+      "The alveoli are the tiny air sacs at the very ends of the smallest tubes, so they must come last."
+    ]
+  },
+  {
+    "id": "m7sci-respiratory-and-nervous-systems-002",
+    "loId": "m7sci.respiratory-and-nervous-systems",
+    "cedCode": "M7SCI-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student says, \"Respiration just means breathing in and out.\" Which sentence corrects that?",
+    "choices": [
+      "Breathing and cellular respiration are the same process, and cellular respiration is simply the name scientists use for it",
+      "Breathing is the movement of air into and out of the lungs, while cellular respiration is a chemical process inside cells that releases the energy stored in food",
+      "Breathing happens inside the cells, while cellular respiration happens in the lungs",
+      "Breathing is how the lungs make energy, and cellular respiration is how that energy is carried to the muscles"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask where each one happens. One of them you can watch from across the room; the other you could never see.",
+      "Breathing is a movement of air. Cellular respiration is a chemical change inside cells, and the energy it deals with is released from food, not made."
+    ]
+  },
+  {
+    "id": "m7sci-respiratory-and-nervous-systems-003",
+    "loId": "m7sci.respiratory-and-nervous-systems",
+    "cedCode": "M7SCI-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Where does oxygen move into the blood, and what moves the opposite way at that same place?",
+    "choices": [
+      "In the trachea, where oxygen moves into the blood and carbon dioxide moves out of it",
+      "In the alveoli, where carbon dioxide moves into the blood and oxygen moves out of it",
+      "In the alveoli, where oxygen moves into the blood and carbon dioxide moves out of it",
+      "In the bronchi, where the lungs separate the air into oxygen and carbon dioxide"
+    ],
+    "answer": "C",
+    "hints": [
+      "The crossing happens where the wall between the air and the blood is thinnest, at the very end of the branching tubes.",
+      "Check the direction of each gas. Oxygen is what the cells need delivered; carbon dioxide is what the cells produced and need carried away."
+    ]
+  },
+  {
+    "id": "m7sci-respiratory-and-nervous-systems-004",
+    "loId": "m7sci.respiratory-and-nervous-systems",
+    "cedCode": "M7SCI-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You touch something sharp and your hand pulls back before you feel any pain. Which statement describes the path the signal took and why it was so fast?",
+    "choices": [
+      "A sensory neuron carried the signal to the brain, you decided to move, and a motor neuron carried the signal back; it is fast because thinking is fast",
+      "The arm muscle detected the sharp point on its own and pulled back, with no neuron involved",
+      "A nerve carried the signal straight from the hand to the arm muscle, passing through neither the spinal cord nor the brain",
+      "A sensory neuron carried the signal to the spinal cord, the spinal cord processed it, and a motor neuron carried the signal to the muscle; it is fast because the signal skipped the longer trip to the brain"
+    ],
+    "answer": "D",
+    "hints": [
+      "Your hand had already moved before you felt anything, so the movement cannot have waited on a decision.",
+      "Something still had to do the processing. Ask which structure did it instead of the brain, and what the shorter route buys you."
+    ]
+  },
+  {
+    "id": "m7sci-respiratory-and-nervous-systems-005",
+    "loId": "m7sci.respiratory-and-nervous-systems",
+    "cedCode": "M7SCI-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about the air a person breathes out is correct?",
+    "choices": [
+      "It still contains oxygen, and most of it is nitrogen that passed in and back out unchanged; what gas exchange changes is the amount of each gas",
+      "It contains only carbon dioxide, because the lungs keep all of the oxygen that came in",
+      "It contains no nitrogen, because the blood takes the nitrogen in at the alveoli",
+      "It is exactly the same as the air breathed in, because the lungs do not change the air at all"
+    ],
+    "answer": "A",
+    "hints": [
+      "Air is a mixture, and the gas there is most of is one your body does nothing with.",
+      "The lungs do not sort the air into separate gases. Compare the AMOUNTS in air going in and air coming out instead."
+    ]
+  },
+  {
+    "id": "m7sci-respiratory-and-nervous-systems-006",
+    "loId": "m7sci.respiratory-and-nervous-systems",
+    "cedCode": "M7SCI-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student starts jogging and, without choosing to, begins breathing faster and more deeply. Which explanation of this change is correct?",
+    "choices": [
+      "The lungs release the energy stored in food, and the blood carries that energy to the leg muscles, so the lungs have to work harder",
+      "The working muscle cells used more oxygen and released more carbon dioxide, the rise in blood carbon dioxide was detected, signals traveled along nerves to the diaphragm and the rib muscles, and those muscles moved more air in and out",
+      "The body wanted more oxygen, so it decided to breathe faster until it felt comfortable again",
+      "The respiratory system carried oxygen straight to the leg muscle cells, and the circulatory system only carried the waste away"
+    ],
+    "answer": "B",
+    "hints": [
+      "Start at the smallest level. What changed first inside the leg muscle cells, and what did they release into the blood?",
+      "Energy is released from food inside cells, never in the lungs, and nothing in a body wants or decides anything. Look for detected, then signals, then a response."
+    ]
+  },
+
+  {
+    "id": "m7sci-homeostasis-001",
+    "loId": "m7sci.homeostasis",
+    "cedCode": "M7SCI-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement describes homeostasis most accurately?",
+    "choices": [
+      "Conditions inside a living thing are held perfectly still and never change at all",
+      "Conditions inside a living thing change to match the conditions outside it",
+      "Conditions inside a living thing drift, and responses keep bringing them back toward a normal range",
+      "A living thing changes its body permanently so that it fits a new environment"
+    ],
+    "answer": "C",
+    "hints": [
+      "Your temperature first thing in the morning and your temperature after running are not the same number. Does that mean homeostasis was not working?",
+      "Think about the word range. A range is a band of values, not one exact value, and something keeps pulling the condition back into that band."
+    ]
+  },
+  {
+    "id": "m7sci-homeostasis-002",
+    "loId": "m7sci.homeostasis",
+    "cedCode": "M7SCI-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence best explains how sweating helps cool a person down?",
+    "choices": [
+      "The sweat is cold when it leaves the skin, so it cools the body by lying on it",
+      "The sweat washes heat off the surface of the skin as it runs down the body",
+      "Sweating makes the skin heavier, which slows the person down so that less heat is released",
+      "The sweat evaporates from the skin, and evaporation carries heat away from the body"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what has to happen to the sweat before any cooling happens at all.",
+      "Compare a hot sticky day when sweat just sits on you and you feel awful with a breezy day when sweat dries quickly and you feel better."
+    ]
+  },
+  {
+    "id": "m7sci-homeostasis-003",
+    "loId": "m7sci.homeostasis",
+    "cedCode": "M7SCI-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: \"When you get cold, your body knows it needs heat, so it decides to shiver.\" Which sentence describes what is really happening?",
+    "choices": [
+      "The drop in temperature is detected, signals travel to the muscles, and the fast contractions of shivering release heat that warms the body back toward its normal range",
+      "The body wants to be warm, so it chooses to shiver until it feels comfortable enough to stop",
+      "The cold air shakes the muscles from the outside, and that shaking cools the body even further",
+      "Shivering is only a side effect of feeling cold and has no effect on body temperature"
+    ],
+    "answer": "A",
+    "hints": [
+      "Cross out any choice that uses words like knows, wants or chooses, because nothing inside a body does those things.",
+      "Of the choices left, ask what shivering actually is. Muscles contracting fast is muscle work, and muscle work releases heat."
+    ]
+  },
+  {
+    "id": "m7sci-homeostasis-004",
+    "loId": "m7sci.homeostasis",
+    "cedCode": "M7SCI-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "During a sprint a student's breathing becomes much faster and deeper. A friend says this proves homeostasis has failed, because something about her has clearly changed. Which response is correct?",
+    "choices": [
+      "The friend is right, because homeostasis means that nothing about a body changes",
+      "The friend is wrong, because the faster deeper breathing is the response that brings the oxygen and carbon dioxide in her blood back toward their normal ranges",
+      "The friend is right, because homeostasis works only while a person is resting",
+      "The friend is wrong, because homeostasis applies only to body temperature and not to the gases in the blood"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask which condition is actually being controlled here. It is not the breathing itself.",
+      "In the detect, respond, return loop, something visible changes on the outside in order to keep a condition steady on the inside. Notice too that her breathing slows again once she stops."
+    ]
+  },
+  {
+    "id": "m7sci-homeostasis-005",
+    "loId": "m7sci.homeostasis",
+    "cedCode": "M7SCI-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a hot afternoon a dog pants heavily, and water evaporates from its mouth and tongue. Which statement best describes what is happening?",
+    "choices": [
+      "Only humans keep their internal conditions inside a normal range, so the panting must be happening for some unrelated reason",
+      "The dog's temperature is being held at one exact value, which is what homeostasis means",
+      "A rise in the dog's temperature is detected, panting is the response, and the evaporating water carries heat away, bringing the temperature back toward its normal range",
+      "The dog decides to pant because it knows it is too hot, which shows that dogs think about their own temperature"
+    ],
+    "answer": "C",
+    "hints": [
+      "Sweating cools a person as the sweat evaporates. Ask what is evaporating from the dog.",
+      "Fit the description to the loop: what was detected, what responded, and what happened to the condition afterward."
+    ]
+  },
+  {
+    "id": "m7sci-homeostasis-006",
+    "loId": "m7sci.homeostasis",
+    "cedCode": "M7SCI-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student walks from a warm building out into freezing air. Within a minute the blood vessels near her skin have narrowed and she has begun to shiver. Which statement traces what is happening most accurately?",
+    "choices": [
+      "Her internal temperature dropped until it matched the outside air, and the shivering is what happens once that has finished",
+      "Nothing was detected; the cold air itself made the blood vessels shrink and made the muscles shake",
+      "Her muscles created new energy in order to make heat, which raised her temperature back to exactly its usual value",
+      "The drop in her temperature was detected, signals traveled through the nervous system, the narrowed vessels slowed heat loss at the skin while the shivering muscles released heat from food, and her temperature was brought back toward its normal range"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two responses are described, not one. Ask what each of them does to the amount of heat she has.",
+      "Nothing creates energy, nothing decides anything, and the target is a range rather than one exact value. Look for detected, then signals, then responses, then a return toward normal."
+    ]
+  }
+]

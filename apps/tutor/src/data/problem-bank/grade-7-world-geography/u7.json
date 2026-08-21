@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-latin-america-physical-geography-001",
+    "loId": "m7geo.latin-america-physical-geography",
+    "cedCode": "M7GEO-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which mountain range runs from north to south along the western side of South America, close to the Pacific coast, for almost the whole length of the continent?",
+    "choices": [
+      "The Andes",
+      "The Amazon Basin",
+      "The Pampas",
+      "The Atacama Desert"
+    ],
+    "answer": "A",
+    "hints": [
+      "The question asks for a mountain range. One choice names the land that drains into a river, one names wide grasslands, and one names a desert.",
+      "This range is the longest continental mountain range on Earth, and the plate boundary along the western edge of South America is what pushed it up."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-physical-geography-002",
+    "loId": "m7geo.latin-america-physical-geography",
+    "cedCode": "M7GEO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Amazon River begins high in the Andes, which stand near the Pacific coast on the western side of South America. From there the river crosses Brazil. Which ocean does it reach, and how can you tell from that description?",
+    "choices": [
+      "The Pacific Ocean, because a river always returns to whichever ocean is nearest its source",
+      "The Atlantic Ocean, because the river crosses the continent from west to east and Brazil sits on the eastern side",
+      "The Arctic Ocean, because a river leaving a mountain range always turns north toward colder land",
+      "It reaches no ocean at all, because a river that starts in mountains ends in the middle of a continent"
+    ],
+    "answer": "B",
+    "hints": [
+      "The description hands you two clues: the Andes are near the Pacific on the western side, and the river crosses Brazil. Which side of the continent is Brazil on?",
+      "A river flows downhill from its source to the sea, and it does not have to pick the nearest coast. Follow the direction the description gives you, west to east, and name the ocean waiting at that end."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-physical-geography-003",
+    "loId": "m7geo.latin-america-physical-geography",
+    "cedCode": "M7GEO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Central America is an isthmus. Which description matches what an isthmus is?",
+    "choices": [
+      "A narrow strip of water that joins two seas",
+      "A piece of land with water on every side of it",
+      "A chain of islands arranged in a curved line",
+      "A narrow strip of land that joins two larger areas of land"
+    ],
+    "answer": "D",
+    "hints": [
+      "Read the word carefully. An isthmus is made of land, not water, so one choice can be crossed out straight away.",
+      "Central America connects the land to its north with the land to its south. What shape of land does that job?"
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-physical-geography-004",
+    "loId": "m7geo.latin-america-physical-geography",
+    "cedCode": "M7GEO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two towns lie in the same South American country, at almost the same latitude, close to the Equator. Valle Bajo sits on a flat coastal plain just above sea level and is hot every month of the year. Cima Verde sits high in the Andes and is cool every month of the year, and people there want a jacket after dark. What best explains the difference?",
+    "choices": [
+      "Cima Verde is farther from the Equator, so sunlight reaches it at a lower angle all year",
+      "Cima Verde is closer to the sun, and being closer to the sun makes the air around a place cooler",
+      "Cima Verde sits at a much higher elevation, and air temperature falls as elevation rises",
+      "The two towns are in different countries, and every country has its own single climate"
+    ],
+    "answer": "C",
+    "hints": [
+      "The item tells you on purpose that the two towns share a latitude and a country. Cross out any answer whose reason depends on distance from the Equator or on a different country.",
+      "Only one thing in the description is actually different between the two towns. Find it, and then say what it does to the temperature of the air."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-physical-geography-005",
+    "loId": "m7geo.latin-america-physical-geography",
+    "cedCode": "M7GEO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Atacama Desert lies in northern Chile, on the Pacific coast, with the Andes standing to its east. It is one of the driest places on Earth. A student says it must be dry because it is far from any ocean. What is the best response?",
+    "choices": [
+      "The student's reason works, because a desert can only form far inland, away from any ocean",
+      "The desert sits right on the Pacific coast, so distance from the ocean cannot be the cause. It is dry because the Andes to its east take the moisture out of air arriving from that direction, and because a cold ocean current runs along the coast to its west",
+      "The desert sits right on the Pacific coast, so distance from the ocean cannot be the cause. It is dry because it is one of the hottest places on Earth, and heat is what makes a desert",
+      "The student's reason works, because a mountain range standing beside a place has no effect on where rain falls"
+    ],
+    "answer": "B",
+    "hints": [
+      "Start with the fact the item gives you. Where is the Atacama in relation to the Pacific Ocean? Check whether the student's reason can even be true before you look for a better one.",
+      "A desert is defined by how little precipitation falls on it, not by how hot it is. Two choices lean on heat or on distance instead of on what is blocking the moisture."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-physical-geography-006",
+    "loId": "m7geo.latin-america-physical-geography",
+    "cedCode": "M7GEO-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "On the invented continent of Marnia, a long, high mountain range runs from north to south near the western coast. Winds arrive steadily from the east all year. On the eastern side of the range the land is green and rainy. What should you expect on the narrow strip of land between the range and the western coast, and why?",
+    "choices": [
+      "Wetter than the eastern side, because a mountain range increases rainfall equally on both of its sides",
+      "Wetter than the eastern side, because that strip of land sits closer to an ocean than the eastern side does",
+      "Drier than the eastern side, because the air arriving from the east has already dropped most of its moisture climbing over the range",
+      "Exactly the same as the eastern side, because both sides of the range sit at the same latitude"
+    ],
+    "answer": "C",
+    "hints": [
+      "Follow the air. It arrives from the east, so it meets the eastern slope first and has to rise over the range. What does rising, cooling air do with the water vapor it is carrying?",
+      "The name for the dry area on the far side of a mountain range, where the air has already lost its moisture, is a rain shadow."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-history-and-culture-001",
+    "loId": "m7geo.latin-america-history-and-culture",
+    "cedCode": "M7GEO-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Indigenous peoples such as the Maya, the Mexica (also called the Aztec) and the Inca built large states in this region long before any European ship arrived. Which statement about indigenous peoples of the region is true today?",
+    "choices": [
+      "Indigenous peoples no longer live anywhere in the region",
+      "Indigenous peoples live in the region today, and indigenous languages such as Quechua, Aymara, Nahuatl, Mayan languages and Guarani are spoken every day",
+      "Indigenous languages of the region are studied only by historians and are not spoken at home by anyone",
+      "Indigenous peoples arrived in the region after Spanish colonization began there"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check the tense of every choice. The question asks what is true right now, not what was true long ago.",
+      "Guarani is an official language of Paraguay, alongside Spanish, and Quechua is spoken at home by families in the Andes. That rules out any choice that puts these languages only in the past."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-history-and-culture-002",
+    "loId": "m7geo.latin-america-history-and-culture",
+    "cedCode": "M7GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Most people in Brazil speak Portuguese, while most people in the countries that border Brazil speak Spanish. What best explains that pattern?",
+    "choices": [
+      "Portuguese and Spanish are the two indigenous languages of South America, and each one grew up in a different part of the continent",
+      "Each country in the region picked a language for itself after it became an independent country",
+      "Portugal colonized what is now Brazil while Spain colonized most of the surrounding mainland, and the language of each colonizing country spread where it took control",
+      "Portuguese reached Brazil only through trading ships, without any Portuguese speakers ever settling there"
+    ],
+    "answer": "C",
+    "hints": [
+      "A language usually ends up in a place because people who spoke it moved there and then ran the government and the schools in it.",
+      "Both Spanish and Portuguese came from Europe. Ask which European country took control of which piece of land, and the map of languages follows."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-history-and-culture-003",
+    "loId": "m7geo.latin-america-history-and-culture",
+    "cedCode": "M7GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Over several hundred years, millions of people were captured in Africa, carried across the Atlantic Ocean against their will, and sold into slavery in the Americas. Using the terms from the migration unit, how should a geographer describe this movement?",
+    "choices": [
+      "Forced migration, because the people who were moved had no choice at any point",
+      "Voluntary migration, because the people who moved were choosing a new place to live",
+      "Seasonal migration, because the movement happened at one particular time of year",
+      "Rural-to-urban migration, because the people who moved were leaving the countryside for cities"
+    ],
+    "answer": "A",
+    "hints": [
+      "The item says the people were captured and carried across the ocean against their will. Which word among the choices matches that plainly?",
+      "Voluntary means the person who moved made the choice. Nothing in this description was chosen by the people who were moved."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-history-and-culture-004",
+    "loId": "m7geo.latin-america-history-and-culture",
+    "cedCode": "M7GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Communities of African descent are largest in the Caribbean islands and along the coast of Brazil, and African heritage is central to the music, food and religious practice of those places. Which fact best explains why the pattern sits in those particular places?",
+    "choices": [
+      "Those places are the closest part of the region to Africa, so people sailed there on their own and settled",
+      "African heritage and European heritage are the same thing, because both of them arrived across the Atlantic Ocean",
+      "The name Latin America refers to African languages, so African heritage would be expected everywhere in the region",
+      "Those places had the plantations where the largest numbers of enslaved Africans were taken and made to work, and their descendants have lived there ever since"
+    ],
+    "answer": "D",
+    "hints": [
+      "This is a question about a forced migration, not about a choice anybody made. Ask where the people who were taken across the Atlantic were made to work.",
+      "Most of the people taken across the Atlantic were made to work on plantations growing sugar and other crops, and the largest numbers were taken to the Caribbean islands and to coastal Brazil. Today's pattern sits directly on top of that."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-history-and-culture-005",
+    "loId": "m7geo.latin-america-history-and-culture",
+    "cedCode": "M7GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A dish served in a coastal Brazilian city is made from black beans, which were grown in the Americas long before European contact, cooked with pork from pigs that Europeans brought across the Atlantic, and served with rice, which also arrived after European contact. Which idea does this dish best illustrate?",
+    "choices": [
+      "Cultural blending, because elements from more than one source have combined over generations into something that belongs to that place",
+      "Cultural replacement, because one set of traditions pushed every other one off the plate",
+      "Cultural isolation, because the dish is made only from ingredients that were already in the Americas",
+      "The spread of a single trait, because only one of the three ingredients ever moved anywhere"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count the sources named in the item. The beans, the pork and the rice do not all come from the same place.",
+      "If one source had replaced the others, only one of them would still be on the plate. All three are on the plate at once."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-history-and-culture-006",
+    "loId": "m7geo.latin-america-history-and-culture",
+    "cedCode": "M7GEO-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: 'Latin America is one culture, because everybody there speaks Spanish.' Which response corrects the student most completely?",
+    "choices": [
+      "The student is right about the language but wrong about the culture, since a shared language does not have to mean a shared way of living",
+      "The student is right, because the name of a region is always a promise that everyone inside it lives in the same way",
+      "Portuguese is the language of Brazil, while French, English, Dutch and Haitian Creole are spoken in parts of the Caribbean and the northern coast of South America, and indigenous languages such as Quechua, Aymara, Nahuatl, Mayan languages and Guarani are spoken every day. A region is an area geographers group together for one reason, never a claim that everyone inside it lives the same way",
+      "The student should have written that everybody in the region speaks Portuguese instead of Spanish"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two separate claims need correcting here, not one: the claim about the language and the claim about the culture. Look for the choice that handles both of them.",
+      "A region is a grouping geographers make for one reason. It never promises that every person inside it lives the same way, and this region holds many countries and many languages."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-economy-and-cities-001",
+    "loId": "m7geo.latin-america-economy-and-cities",
+    "cedCode": "M7GEO-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Copper, oil, coffee and soybeans are all raw products that are bought and sold on a world market, at a world price that no single country sets. What word do geographers use for a product like that?",
+    "choices": [
+      "A commodity",
+      "Diversification",
+      "A primate city",
+      "A tertiary activity"
+    ],
+    "answer": "A",
+    "hints": [
+      "The word you want names the PRODUCT itself, not a city it is shipped from and not the spreading of income across more products.",
+      "Think of a sack of coffee beans or a load of copper ore: a raw product with a price set on a world market."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-economy-and-cities-002",
+    "loId": "m7geo.latin-america-economy-and-cities",
+    "cedCode": "M7GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student learns that farms in Latin America send coffee, bananas, soybeans and beef to many other countries, and concludes that most people in the region must therefore live in the countryside. What is wrong with that conclusion?",
+    "choices": [
+      "Nothing is wrong with it, because a region that exports a great deal of food must be a region of farmers",
+      "The size of the exports of a place tells you nothing about anything at all, so no conclusion of any kind can be drawn from it",
+      "Only a country where most people are farmers is able to export food, so the student should have reached the opposite conclusion",
+      "Latin America is highly urbanized, meaning a large majority of its people live in cities and towns, and a region can export a great deal of farm produce without most of its people being farmers"
+    ],
+    "answer": "D",
+    "hints": [
+      "Urbanization is a SHARE: it is the fraction of people who live in cities and towns. Ask what that share is in this region.",
+      "Farms can produce a great deal of food with relatively few workers, so heavy farm exports do not tell you where most of the people live."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-economy-and-cities-003",
+    "loId": "m7geo.latin-america-economy-and-cities",
+    "cedCode": "M7GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Costera, one city holds far more people than any other city in the country. It also holds the national government, the head offices of nearly every large company, the busiest airport, and the end of every main rail line. Which term best describes that city?",
+    "choices": [
+      "A break-of-bulk point, because goods have to change transport where the rail lines end",
+      "A primate city, because it is far larger than any other city in its country and it concentrates the main functions",
+      "A capital city, and that is all the description tells you, because the term only means the seat of government",
+      "An informal settlement, because a city that holds this much must have grown very quickly"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two facts are doing the work here: how this city's size compares with every other city in the country, and how many important functions sit inside it. Find the term that requires both.",
+      "Being the capital is only one of the four facts listed. A term that covers only that leaves three facts unexplained."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-economy-and-cities-004",
+    "loId": "m7geo.latin-america-economy-and-cities",
+    "cedCode": "M7GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Brasilia is the capital of Brazil, and Sao Paulo is a separate and very large city. What does this show about the terms capital city and primate city?",
+    "choices": [
+      "Nothing, because the two terms mean exactly the same thing as each other",
+      "That the largest city in a country is always also the seat of its government",
+      "That a capital city is the seat of government, while a primate city is one that is far larger than any other city in its country and concentrates business and transport. The two often land on the same city, but they do not have to",
+      "That a country with more than one very large city cannot have a capital at all"
+    ],
+    "answer": "C",
+    "hints": [
+      "Write out what each term actually requires. One of them is about government. The other is about size compared with every other city, plus a concentration of functions.",
+      "If the two terms meant the same thing, the capital of Brazil and its very large cities would have to be the same place. Check whether they are."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-economy-and-cities-005",
+    "loId": "m7geo.latin-america-economy-and-cities",
+    "cedCode": "M7GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The invented country of Aldera earns nearly all of its export income from one mineral. The invented country of Ravela earns its export income from a mineral, two farm crops, and goods made in its factories. The world price of that mineral falls sharply, and it is the same mineral in both countries. Which statement describes what follows correctly?",
+    "choices": [
+      "Ravela is a more advanced country than Aldera, and that is why it handles the fall better",
+      "Aldera is not affected at all, because a world price is set outside the country rather than inside it",
+      "Both countries lose exactly the same amount of income, because the price fell by the same amount for each of them",
+      "Aldera is more exposed than Ravela, because nearly all of its export income depends on the single price that fell, while Ravela's other earners are unaffected"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask how much of each country's export income is tied to the one price that actually moved.",
+      "One of these choices turns a description of how income is spread into a ranking of countries. This course describes economies and never ranks them, so that choice is out on those grounds alone."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-economy-and-cities-006",
+    "loId": "m7geo.latin-america-economy-and-cities",
+    "cedCode": "M7GEO-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Before a canal was cut across the narrow waist of Central America, in Panama, a ship sailing between the Atlantic side and the Pacific side had to travel all the way around the southern end of South America. Which statement best explains why so much shipping is now funneled through that one narrow lane of water?",
+    "choices": [
+      "The canal removes an entire long voyage, so the route through it saves ships a great deal of distance and time, and geography decides where trade piles up",
+      "Ships are no longer physically able to sail around the southern end of South America at all",
+      "A canal is a natural feature of the land, and ships are required to follow natural features wherever they lead",
+      "A canal creates brand new trade out of nothing, rather than pulling in trade that was already crossing between the two oceans"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the two routes a ship could take between the two oceans. How much travel does the canal remove from the journey?",
+      "This is the same idea as a mountain pass or a narrow strait, drawn at a much bigger size: where a route is short and narrow, traffic concentrates on it."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-environment-issues-001",
+    "loId": "m7geo.latin-america-environment-issues",
+    "cedCode": "M7GEO-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Geographers use one word for the clearing of forest so that the land can be used for something else. What is that word?",
+    "choices": [
+      "Irrigation",
+      "Deforestation",
+      "Urbanization",
+      "Terracing"
+    ],
+    "answer": "B",
+    "hints": [
+      "Break the word apart. It contains the word for a forest, with a beginning that means taking away.",
+      "Irrigation brings water to fields, terracing cuts flat steps into a slope, and urbanization is about cities. Only one of these four is about removing trees."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-environment-issues-002",
+    "loId": "m7geo.latin-america-environment-issues",
+    "cedCode": "M7GEO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A road is built through a forested area so that goods can be carried to market more quickly. Which of these is best described as an UNINTENDED effect of building the road?",
+    "choices": [
+      "Goods reach the market in less time than they used to take",
+      "The journey between two towns along the route becomes shorter",
+      "Trucks on the new road can carry heavier loads than the slower river route could carry",
+      "People and machines can now reach forest that was almost impossible to get to before, and clearing spreads along the road"
+    ],
+    "answer": "D",
+    "hints": [
+      "An intended effect is the one the builders were aiming at. Read the item again and ask what the road was built FOR.",
+      "Three of these choices are things the builders wanted or expected. Only one is a change that follows from the road without anybody having planned it."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-environment-issues-003",
+    "loId": "m7geo.latin-america-environment-issues",
+    "cedCode": "M7GEO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A patch of tropical rainforest is cleared and planted with crops. The ground produces well for the first couple of seasons and then produces poorly. Which explanation best fits what happened?",
+    "choices": [
+      "Most of the nutrients were held in the living forest plants, so clearing them carried away the store the crops had been living on",
+      "The soil was deep and rich, and the crops slowly used up nutrients that had built up in the ground over centuries",
+      "Removing the trees made the area colder, and the cold is what stopped the crops from growing",
+      "Rainforest land is always too steep to farm, whatever the soil underneath it happens to be like"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask the key question: in a tropical rainforest, where are the nutrients actually kept, in the ground or in the plants?",
+      "One choice assumes that a lush forest proves rich soil underneath. That is exactly the trap. Which choice explains the good-then-poor pattern without assuming it?"
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-environment-issues-004",
+    "loId": "m7geo.latin-america-environment-issues",
+    "cedCode": "M7GEO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Trees draw water up from the ground and release it from their leaves, so a forest returns large amounts of moisture to the air above it. A wide area of forest is removed. Which effect follows most directly from that one fact?",
+    "choices": [
+      "Nothing about the moisture in the air changes, because only oceans put water into the air",
+      "The bare ground releases moisture at exactly the same rate the forest did, so the total stays the same",
+      "Less moisture rises from that area into the air, so less is available to fall back onto it as rain",
+      "The area turns into a desert straight away, with no rain of any kind ever falling there again"
+    ],
+    "answer": "C",
+    "hints": [
+      "You are given one fact and asked what follows from it alone. The fact is that the trees were putting moisture into the air. Take the trees away and follow that moisture.",
+      "Two of the wrong choices claim that nothing changes at all, and one claims the change is instant and total. A direct effect is usually neither of those."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-environment-issues-005",
+    "loId": "m7geo.latin-america-environment-issues",
+    "cedCode": "M7GEO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "High in the Andes, farmers have cut terraces, which are flat steps carved into a steep hillside, for centuries. What does this example show about people modifying the physical environment?",
+    "choices": [
+      "That modifying the environment only became common in modern times",
+      "That any modification of a hillside makes soil wash away faster than it otherwise would",
+      "That terraces are a natural landform of mountain areas rather than something people made",
+      "That people have modified environments for a very long time, and that a modification can hold soil and water on a slope instead of wearing it away, so the effects have to be worked out case by case"
+    ],
+    "answer": "D",
+    "hints": [
+      "The item says farmers have been doing this for centuries. Check that against any choice claiming modification is a modern thing.",
+      "Ask what a flat step cut into a steep slope does to soil and water that would otherwise run straight downhill."
+    ]
+  },
+  {
+    "id": "m7geo-latin-america-environment-issues-006",
+    "loId": "m7geo.latin-america-environment-issues",
+    "cedCode": "M7GEO-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A stretch of forest beside a newly built road is cleared and turned into cattle pasture. A student is asked to explain what follows from the clearing and writes only: 'This is terrible and the people doing it should stop.' What would a geographic answer do instead?",
+    "choices": [
+      "Agree with the student, and add the name of the country that should be held responsible for it",
+      "State both halves of the trade-off, that food, work and income are gained while forest, habitat and soil are given up, then name who gains and who bears the cost, and stop there, because whether the clearing should happen is a separate question that people who agree on every fact still answer differently",
+      "State that clearing land produces no effects that are worth describing, so there is nothing for a geographer to explain",
+      "Decide which side of the question wins and announce that verdict, because announcing a verdict is what explaining something means"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what the student's sentence actually explains. Does it say what was cleared, why anybody clears land, or what follows from the clearing?",
+      "A geographic answer traces causes and effects and names the trade-off, including who gains and who bears the cost. Deciding what ought to be done is a different question, and geography does not settle it."
+    ]
+  }
+]

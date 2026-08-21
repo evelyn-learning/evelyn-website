@@ -60,6 +60,45 @@ const HS_COURSE_NAMES: Record<string, string> = {
 // Kept in sync with the same map in extract-topic-notes-baselines.ts.
 const MS_COURSE_NAMES: Record<string, string> = {
   m7math: 'Grade 7 Math',
+  m7ela: 'Grade 7 English Language Arts',
+  m7sci: 'Grade 7 Science',
+  m7geo: 'Grade 7 World Geography',
+};
+
+// The MS system prompt names the teacher's subject, so an ELA note never
+// arrives written by a math teacher. Keyed by the same course infix.
+const MS_SUBJECT_PHRASE: Record<
+  string,
+  { teacher: string; course: string; imperative: string; slips: string; edges: string }
+> = {
+  m7math: {
+    teacher: 'middle-school math teacher',
+    course: '7th-grade math course',
+    imperative: '"Always check the sign before you simplify"',
+    slips: 'sign errors, mixing up related terms, dropping units',
+    edges: 'zero, negative numbers, non-integer answers',
+  },
+  m7ela: {
+    teacher: 'middle-school English language arts teacher',
+    course: '7th-grade English language arts course',
+    imperative: '"Always point at the line in the text before you name the trait"',
+    slips: 'confusing a summary with a theme, calling every comparison a metaphor, mixing up the narrator and the author',
+    edges: 'a character who says one thing and does another, a text with more than one central idea, a word whose everyday meaning differs from its meaning here',
+  },
+  m7sci: {
+    teacher: 'middle-school life-science teacher',
+    course: '7th-grade life science course',
+    imperative: '"Always say where the energy came from before you say where it went"',
+    slips: 'saying a cell part "makes" energy rather than releases it, confusing genotype with phenotype, treating an individual as if it adapts during its lifetime',
+    edges: 'organisms that do not fit the usual pattern, traits that are common but recessive, ratios that are probabilities rather than guarantees',
+  },
+  m7geo: {
+    teacher: 'middle-school world geography teacher',
+    course: '7th-grade world geography course',
+    imperative: '"Always say latitude before longitude"',
+    slips: 'swapping latitude and longitude, confusing climate with weather, confusing a country with a continent or a region',
+    edges: 'places that sit in two regions at once, a factor that pushes people out of one place and pulls them into another, borders that follow rivers rather than straight lines',
+  },
 };
 
 function isHS(plan: LessonPlan): boolean {
@@ -68,8 +107,8 @@ function isHS(plan: LessonPlan): boolean {
 
 // Middle-school (MS) courses get their own system prompt variant — same
 // "ordinary class work, no exam framing" posture as SYSTEM_HS, but with a
-// middle-school teacher persona instead of a high-school one (see
-// SYSTEM_MS below).
+// middle-school teacher persona instead of a high-school one, and with the
+// teacher's SUBJECT filled in per course (see msSystem below).
 function isMS(plan: LessonPlan): boolean {
   return plan.id.startsWith('evelyn.ms.');
 }
@@ -159,19 +198,33 @@ Return ONLY the JSON array. No prose, no code fences, no preamble.`;
 // grader, not a high-schooler — plainer vocabulary, shorter sentences,
 // concrete framing over abstraction. Same SAT/ACT/AP/exam-vocabulary ban
 // applies (this is core class content, not test prep).
-const SYSTEM_MS = `You are an experienced middle-school math teacher producing study-notes "pointers" for a single topic in a 7th-grade math course.
+//
+// It is a FUNCTION, not a const, because the MS band now spans four
+// subjects: the teacher's subject is interpolated from the plan id via
+// MS_SUBJECT_PHRASE, so a geography note is never written by a math
+// teacher. Adding an MS course means adding a MS_SUBJECT_PHRASE row.
+const msSystem = (plan: LessonPlan): string => {
+  const infix = plan.id.match(/^evelyn\.ms\.([a-z0-9]+)\./)?.[1] ?? '';
+  const s = MS_SUBJECT_PHRASE[infix] ?? {
+    teacher: 'middle-school teacher',
+    course: '7th-grade course',
+    imperative: '"Always name the idea before you use it"',
+    slips: 'mixing up related terms, using a word loosely',
+    edges: 'the cases the lesson mentions but does not dwell on',
+  };
+  return `You are an experienced ${s.teacher} producing study-notes "pointers" for a single topic in a ${s.course}.
 
 Pointers are tactical reminders students actually need — gotchas, precise vocabulary/notation students misuse, edge cases, common errors, and quick self-check tips. They are NOT theory (definitions/formulas/rules) and NOT methods (procedural recipes). They sit alongside theory + methods in the student's notes; they're the things a 7th grader needs to remember to avoid the mistakes this class makes over and over.
 
 Given a topic + the lesson content (theory key ideas, worked examples, recap takeaways), produce 4-8 pointers as a JSON array. Each pointer has:
-  - "content":   the pointer text. Markdown allowed. ≤300 chars. Imperative voice preferred ("Don't confuse X with Y", "Always check the sign before you Y"). Plain, concrete language a 12-year-old reads easily — short sentences, no jargon beyond what the lesson itself introduces.
+  - "content":   the pointer text. Markdown allowed. ≤300 chars. Imperative voice preferred ("Don't confuse X with Y", ${s.imperative}). Plain, concrete language a 12-year-old reads easily — short sentences, no jargon beyond what the lesson itself introduces.
   - "kind":      one of "gotcha" | "vocab-note" | "edge-case" | "common-error" | "tip".
   - "rationale": 1-2 sentences explaining why this pointer is worth remembering. (Not persisted — for human review only.)
 
 Cover a mix of kinds. Prioritize:
-  - Precise vocabulary/notation students get wrong or use loosely (e.g. sign errors, mixing up related terms, dropping units).
+  - Precise vocabulary/notation students get wrong or use loosely (e.g. ${s.slips}).
   - Common errors this specific topic invites (the ones a teacher sees every year at this age).
-  - Edge cases the lesson touches but doesn't emphasize (e.g. zero, negative numbers, non-integer answers).
+  - Edge cases the lesson touches but doesn't emphasize (e.g. ${s.edges}).
   - Conceptual confusions with adjacent topics in the same unit.
 
 Avoid:
@@ -181,6 +234,7 @@ Avoid:
   - Anything > 300 chars. Tighten.
 
 Return ONLY the JSON array. No prose, no code fences, no preamble.`;
+};
 
 // Digital SAT (test-prep) variant: unlike HS, mentioning the exam is
 // CORRECT and expected here — the course exists to prepare for it. Unlike
@@ -384,7 +438,7 @@ async function genPointers(plan: LessonPlan): Promise<PointerProposal[]> {
       : isHS(plan)
         ? SYSTEM_HS
         : isMS(plan)
-          ? SYSTEM_MS
+          ? msSystem(plan)
           : SYSTEM_AP;
   const response = await anthropic.messages.create({
     model: MODEL,

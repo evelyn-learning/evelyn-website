@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-classifying-living-things-001",
+    "loId": "m7sci.classifying-living-things",
+    "cedCode": "M7SCI-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A scientific name is always two words long. Which two groups from the classification hierarchy do those two words come from?",
+    "choices": [
+      "The genus first, then the species name",
+      "The kingdom first, then the phylum",
+      "The class first, then the order",
+      "The domain first, then the kingdom"
+    ],
+    "answer": "A",
+    "hints": [
+      "The two-word name is built from the two narrowest groups, the ones at the very bottom of the list.",
+      "The narrowest group of all is the species, and the group just above it is the genus."
+    ]
+  },
+  {
+    "id": "m7sci-classifying-living-things-002",
+    "loId": "m7sci.classifying-living-things",
+    "cedCode": "M7SCI-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is typing the scientific name of the gray wolf in a report. The genus is Canis and the species name is lupus. Which version follows the rules of binomial nomenclature?",
+    "choices": [
+      "canis lupus, with both words lowercase",
+      "Canis Lupus, with both words capitalized",
+      "Canis lupus, with the genus first and capitalized and the species name second and lowercase",
+      "Lupus canis, with the species name written first and the genus second"
+    ],
+    "answer": "C",
+    "hints": [
+      "Three separate rules are being checked at once: which word comes first, which word gets a capital letter, and which word stays lowercase.",
+      "The genus always comes first, and it is the only one of the two words that starts with a capital letter."
+    ]
+  },
+  {
+    "id": "m7sci-classifying-living-things-003",
+    "loId": "m7sci.classifying-living-things",
+    "cedCode": "M7SCI-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student in the United States and a student in Britain write to each other about a bird they both call a robin. When they compare descriptions, they realize they are describing two different birds. The American robin is Turdus migratorius and the European robin is Erithacus rubecula. What does this example best show?",
+    "choices": [
+      "One of the two students is using a wrong name, because each animal has only one correct everyday name.",
+      "Everyday names can point to different organisms in different places, so scientists give each species one agreed scientific name that works everywhere.",
+      "The two birds must be close relatives, because people in both places gave them the same everyday name.",
+      "Scientific names are only needed for organisms that live in more than one country."
+    ],
+    "answer": "B",
+    "hints": [
+      "Neither student made a mistake. Each used the name that people around them actually use.",
+      "Ask what problem the two scientific names solve that the word robin does not."
+    ]
+  },
+  {
+    "id": "m7sci-classifying-living-things-004",
+    "loId": "m7sci.classifying-living-things",
+    "cedCode": "M7SCI-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three beetles are studied. Beetle 1 and Beetle 2 are placed in the same family but in different genera. Beetle 3 is placed in the same order as the other two, but in a different family. Which statement is best supported?",
+    "choices": [
+      "Beetle 3 must be in a different class from Beetle 1 and Beetle 2.",
+      "Beetle 1 and Beetle 2 must be in different orders, because they are in different genera.",
+      "All three beetles must be in the same genus, because all three are beetles.",
+      "Beetle 1 and Beetle 2 are more closely related to each other than either is to Beetle 3, because they stay in the same group further down the hierarchy."
+    ],
+    "answer": "D",
+    "hints": [
+      "The groups nest inside one another, so being in the same family also means being in the same order, class, phylum, kingdom and domain.",
+      "The further down the list two organisms stay together, the more recent the ancestor the evidence says they share."
+    ]
+  },
+  {
+    "id": "m7sci-classifying-living-things-005",
+    "loId": "m7sci.classifying-living-things",
+    "cedCode": "M7SCI-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "For a long time, falcons were grouped with hawks and eagles, because all of those birds hunt other animals and all of them have hooked beaks and curved claws. Later, DNA comparisons showed that falcons are more closely related to parrots and songbirds, and the classification was changed. Which statement best explains what happened?",
+    "choices": [
+      "Classification groups organisms by shared ancestry, and DNA tracks ancestry more directly than a hooked beak does, because a similar way of hunting can shape a similar beak in two separate lines.",
+      "The falcons themselves changed over the last few years, so they had to be moved into a different group.",
+      "The earlier scientists were careless, which shows that classification is mostly guesswork and cannot be trusted.",
+      "Falcons were moved because they hunt in different habitats from hawks and eagles, and habitat decides the group."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what the old grouping was based on, then ask what classification is actually supposed to show.",
+      "A hooked beak is useful for any bird that tears food, so it can appear in two separate lines. That is what an analogous structure is."
+    ]
+  },
+  {
+    "id": "m7sci-classifying-living-things-006",
+    "loId": "m7sci.classifying-living-things",
+    "cedCode": "M7SCI-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A dolphin and a shark both have smooth streamlined bodies and fins, and both live in the ocean. DNA comparisons and body structures place the dolphin in the class Mammalia along with mice and bats, and place the shark in a different class along with other fishes. A student says the dolphin and the shark should be grouped together because they look alike and live in the same place. Which response is best?",
+    "choices": [
+      "The student is right, because organisms that look alike and live in the same habitat are always closely related, so appearance is enough to decide a group.",
+      "The student is right, because a classification should be redrawn whenever two organisms are found living in the same habitat, no matter what their DNA shows.",
+      "The student is wrong, because the shared streamlined shape is an analogous feature shaped by a similar way of swimming, and organisms are grouped by the shared ancestry that DNA and body structures support.",
+      "The student is wrong, because a dolphin is more advanced than a shark and therefore belongs in a higher group than any fish does."
+    ],
+    "answer": "C",
+    "hints": [
+      "Two of these choices agree with the student. Check them against what classification is a claim about before you compare the other two.",
+      "One remaining choice reaches the right conclusion for a reason the unit rules out: no group is higher, lower or more advanced than another."
+    ]
+  },
+
+  {
+    "id": "m7sci-domains-and-kingdoms-001",
+    "loId": "m7sci.domains-and-kingdoms",
+    "cedCode": "M7SCI-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which list names the three domains of life?",
+    "choices": [
+      "Bacteria, Monera, Eukarya",
+      "Bacteria, Archaea, Eukarya",
+      "Plants, Animals, Fungi",
+      "Prokarya, Eukarya, Protista"
+    ],
+    "answer": "B",
+    "hints": [
+      "A domain is the widest group of all, wider than a kingdom, so plants and animals are too narrow to be on this list.",
+      "Two of the three domains are made of cells with no nucleus, and Monera is the old name that was replaced when those two were separated."
+    ]
+  },
+  {
+    "id": "m7sci-domains-and-kingdoms-002",
+    "loId": "m7sci.domains-and-kingdoms",
+    "cedCode": "M7SCI-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student says the world would be better off with no bacteria at all, because bacteria are germs. Which statement best corrects that idea?",
+    "choices": [
+      "Every single kind of bacterium causes disease in people, so a world with no bacteria in it would be a healthier world for everyone.",
+      "Bacteria are harmful in soil, because they break down dead leaves and dead animals that the plants growing there still need whole.",
+      "Bacteria are not really living things at all, because their cells have no nucleus to hold their DNA, so it does not matter whether they are here or not.",
+      "Only a small share of bacteria cause disease. Many are helpful or necessary: bacteria in your intestines help you digest food, and bacteria in soil break down dead material so its nutrients can be used again."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about where you meet bacteria besides an ad for antibacterial soap: yogurt, your own gut, and the soil under a pile of dead leaves.",
+      "Ask what would happen to dead leaves and dead animals in a world with no bacteria breaking them down."
+    ]
+  },
+  {
+    "id": "m7sci-domains-and-kingdoms-003",
+    "loId": "m7sci.domains-and-kingdoms",
+    "cedCode": "M7SCI-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fuzzy black patch grows on a forgotten slice of bread. It is made of many cells, and each cell has a nucleus and a cell wall. It never moves. It cannot use light to make food; instead it releases chemicals into the bread and soaks up the broken-down nutrients. Which kingdom does it belong to?",
+    "choices": [
+      "Fungi, because it is a many-celled eukaryote that breaks food down outside itself and then absorbs it",
+      "Plants, because it has cell walls and stays in one place",
+      "Animals, because it cannot make its own food from light",
+      "Protists, because anything that is not clearly a plant or an animal is filed there"
+    ],
+    "answer": "A",
+    "hints": [
+      "Staying still and having cell walls are true of more than one kingdom, so neither one decides this. The food question decides it.",
+      "There are three ways to get food: make it from light, absorb it after breaking it down outside the body, or take it inside the body and digest it there."
+    ]
+  },
+  {
+    "id": "m7sci-domains-and-kingdoms-004",
+    "loId": "m7sci.domains-and-kingdoms",
+    "cedCode": "M7SCI-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A drop of pond water holds a tiny green organism. It is made of one single cell, that cell keeps its DNA inside a nucleus, it makes its own food using light, and it swims with a whip-like tail. Which group is it placed in?",
+    "choices": [
+      "Domain Bacteria, because it is single-celled and lives in pond water",
+      "Kingdom Plants, because it is green and makes its own food using light",
+      "Kingdom Protists, in domain Eukarya, because it is a single-celled eukaryote and the protists are the mixed group of mostly single-celled eukaryotes",
+      "Domain Archaea, because Archaea is the domain for organisms that live in water"
+    ],
+    "answer": "C",
+    "hints": [
+      "Answer the nucleus question first: the DNA is inside a nucleus, so two of the three domains are already out.",
+      "Now ask the second sorting question: one cell or many? Plants are many-celled, so making food from light is not enough to make something a plant."
+    ]
+  },
+  {
+    "id": "m7sci-domains-and-kingdoms-005",
+    "loId": "m7sci.domains-and-kingdoms",
+    "cedCode": "M7SCI-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scientist collects a single-celled organism from warm water at the edge of a hot spring. Under a powerful microscope she sees that the cell has no nucleus and its DNA sits loose inside the cell. What can she correctly conclude so far?",
+    "choices": [
+      "It belongs to Archaea, because organisms collected from hot springs belong to Archaea.",
+      "It is a prokaryote, so it is either a bacterium or an archaean, and comparing its DNA and cell chemistry with known groups is what decides between the two.",
+      "It belongs to Eukarya, because it was collected from water rather than from soil.",
+      "It belongs to Bacteria, because Bacteria is the only domain whose members are single cells."
+    ],
+    "answer": "B",
+    "hints": [
+      "No nucleus rules out one whole domain immediately. The question is whether what she can see settles which of the two remaining domains it is.",
+      "Bacteria and Archaea are both single-celled and both prokaryotic, and archaea also live in ordinary soil and ocean water. A habitat is not a domain."
+    ]
+  },
+  {
+    "id": "m7sci-domains-and-kingdoms-006",
+    "loId": "m7sci.domains-and-kingdoms",
+    "cedCode": "M7SCI-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Older textbooks put every organism whose cells have no nucleus into a single group called Monera. Today those organisms are placed in two separate domains, Bacteria and Archaea. A student says: \"That change means the old scientists were careless, and anyway prokaryotes are the simplest and least advanced living things.\" Which response corrects both halves of what the student said?",
+    "choices": [
+      "The first half is right and the second is wrong: splitting Monera shows the earlier scientists had been careless, although prokaryotes are not simple or less advanced.",
+      "Both halves are right: Monera was an error made by careless scientists, and prokaryotes really are less advanced than eukaryotes because their cells have fewer parts.",
+      "The group was split because so many new kinds of bacteria kept being discovered that the single group grew too crowded to be useful, and prokaryotes are indeed the least advanced group of all.",
+      "The group was split because DNA and cell chemistry showed the two are deeply different, which is the system improving as evidence arrives rather than an earlier mistake; and no group here is simple, primitive or less advanced than another."
+    ],
+    "answer": "D",
+    "hints": [
+      "Deal with the two halves separately. First ask what scientists gained access to that they did not have before, then ask whether classification ranks organisms at all.",
+      "Prokaryotes live nearly everywhere on this planet. Any choice that calls a group primitive, simple or less advanced breaks a rule of this unit."
+    ]
+  },
+
+  {
+    "id": "m7sci-using-dichotomous-keys-001",
+    "loId": "m7sci.using-dichotomous-keys",
+    "cedCode": "M7SCI-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does a dichotomous key do, and how many statements does each step offer?",
+    "choices": [
+      "It explains what an organism eats and where it lives, offering three statements at each step.",
+      "It shows how closely two species are related, offering two statements at each step.",
+      "It gives the name of an unknown organism, offering exactly two statements at each step, of which exactly one matches.",
+      "It lists every known organism in alphabetical order so you can look one up."
+    ],
+    "answer": "C",
+    "hints": [
+      "The word dichotomous means divided in two, so the number of statements per step is in the name itself.",
+      "A key has exactly one job. Once it hands you a name, you would need a field guide to learn anything else about the organism."
+    ]
+  },
+  {
+    "id": "m7sci-using-dichotomous-keys-002",
+    "loId": "m7sci.using-dichotomous-keys",
+    "cedCode": "M7SCI-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Use this key. 1a. The animal has six legs -- go to step 2. 1b. The animal has eight legs -- go to step 3. 2a. The animal has wings -- Honeybee. 2b. The animal has no wings -- Field ant. 3a. The body is rounded and there is no tail -- Garden spider. 3b. The body is long and ends in a curled tail -- Scorpion. Under a flowerpot you find a small black animal with six legs and no wings. What does the key name it?",
+    "choices": [
+      "Field ant",
+      "Honeybee",
+      "Garden spider",
+      "Scorpion"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start at step 1 and count the legs. Six legs matches 1a, and 1a sends you to step 2.",
+      "At step 2, read both statements and pick the one that matches. The animal has no wings, and being small and black is not something this key asks about."
+    ]
+  },
+  {
+    "id": "m7sci-using-dichotomous-keys-003",
+    "loId": "m7sci.using-dichotomous-keys",
+    "cedCode": "M7SCI-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are writing step 1 of a dichotomous key for four kinds of beetle found in a garden. Which pair of statements works best as step 1?",
+    "choices": [
+      "1a. The beetle is large -- go to step 2. 1b. The beetle is small -- go to step 3.",
+      "1a. The beetle is interesting -- go to step 2. 1b. The beetle is dull -- go to step 3.",
+      "1a. The beetle has spots on its wing covers -- go to step 2. 1b. The beetle is shiny black -- go to step 3.",
+      "1a. The beetle has spots on its wing covers -- go to step 2. 1b. The beetle has no spots on its wing covers -- go to step 3."
+    ],
+    "answer": "D",
+    "hints": [
+      "A good step uses something two different students would see in exactly the same way, and the two options must never both fit the same beetle.",
+      "Ask two questions of each pair. Could one beetle match both statements? Could one beetle match neither?"
+    ]
+  },
+  {
+    "id": "m7sci-using-dichotomous-keys-004",
+    "loId": "m7sci.using-dichotomous-keys",
+    "cedCode": "M7SCI-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Use this key for five trees. 1a. The leaves are needle-shaped -- go to step 2. 1b. The leaves are broad and flat -- go to step 3. 2a. The needles grow in bundles of two or more -- Pine. 2b. The needles grow singly along the twig -- Spruce. 3a. The leaf edge is smooth -- go to step 4. 3b. The leaf edge is toothed -- Elm. 4a. The leaf is shaped like a hand with five lobes -- Sweetgum. 4b. The leaf is oval with no lobes -- Magnolia. You pick up a leaf that is broad and flat, has a smooth edge, and is oval with no lobes. What does the key name it?",
+    "choices": [
+      "Elm",
+      "Magnolia",
+      "Sweetgum",
+      "Spruce"
+    ],
+    "answer": "B",
+    "hints": [
+      "Step 1 asks only about the shape of the leaves. Broad and flat matches 1b, which sends you to step 3.",
+      "Step 3 asks about the leaf edge, and a smooth edge sends you on to step 4 rather than straight to a name. Keep going only where each matching statement sends you."
+    ]
+  },
+  {
+    "id": "m7sci-using-dichotomous-keys-005",
+    "loId": "m7sci.using-dichotomous-keys",
+    "cedCode": "M7SCI-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student uses this key. 1a. The animal has fur -- go to step 2. 1b. The animal has feathers -- go to step 3. 2a. The animal has webbed feet -- Beaver. 2b. The animal has feet with no webbing -- Squirrel. 3a. The animal has a beak wider than it is long -- Duck. 3b. The animal has a narrow pointed beak -- Sparrow. Her animal has feathers, feet with no webbing, and a narrow pointed beak. She reads down the key, sees that 2b says feet with no webbing, picks 2b, and writes down Squirrel. What went wrong, and what is the correct name?",
+    "choices": [
+      "Nothing went wrong. Statement 2b described her animal, so Squirrel is the right name.",
+      "The key is broken and should be rewritten, because a bird can have feet with no webbing.",
+      "She skipped step 1. Her animal has feathers, so 1b sends her to step 3, where the narrow pointed beak matches 3b and names it a Sparrow.",
+      "The key cannot name this animal, because no step mentions the color of its feathers."
+    ],
+    "answer": "C",
+    "hints": [
+      "Every step after the first is written for a smaller group. Ask which animals step 2 was written for.",
+      "Start at step 1 and take only the statement that matches, then go only where that statement sends you. Feathers is the very first thing this key asks about."
+    ]
+  },
+  {
+    "id": "m7sci-using-dichotomous-keys-006",
+    "loId": "m7sci.using-dichotomous-keys",
+    "cedCode": "M7SCI-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A class writes this key for the four insects found in the school garden. 1a. The insect has wings -- go to step 2. 1b. The insect has no wings -- go to step 3. 2a. The wings are clear -- Honeybee. 2b. The wings are covered by hard wing cases -- Ladybug. 3a. The body is one smooth oval -- Springtail. 3b. The body has a narrow waist between two parts -- Field ant. On vacation far away, a student runs a large tropical beetle through this key. The beetle has wings covered by hard wing cases, so the key names it Ladybug. What is the best conclusion?",
+    "choices": [
+      "The key was built for four school-garden insects only, so it handed back the closest of its own four names, and that name is wrong for this beetle.",
+      "The insect is a ladybug, because every step of the key was followed correctly.",
+      "The key is broken and the class should throw it out and start over.",
+      "The tropical beetle must be a kind of insect that has never been named by anyone."
+    ],
+    "answer": "A",
+    "hints": [
+      "The student really did follow the steps correctly, so the mistake is not in how the key was used. Ask what set of organisms this key was written for.",
+      "Notice that no step of this key offers the option none of these. A key always hands back one of its own names, even for an organism it was never built for."
+    ]
+  },
+
+  {
+    "id": "m7sci-cladograms-and-relatedness-001",
+    "loId": "m7sci.cladograms-and-relatedness",
+    "cedCode": "M7SCI-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "On a cladogram, what does each branch point stand for?",
+    "choices": [
+      "The species on that branch that is the most advanced",
+      "The exact number of years that have passed since a split",
+      "The oldest species that is still living today",
+      "A common ancestor: an ancestral population that split into two groups which stopped mixing"
+    ],
+    "answer": "D",
+    "hints": [
+      "The ends of the branches are the tips, and the tips are the species being compared. So a branch point is something else.",
+      "Think of your own family tree: the place where two lines meet stands for the relative you both come from."
+    ]
+  },
+  {
+    "id": "m7sci-cladograms-and-relatedness-002",
+    "loId": "m7sci.cladograms-and-relatedness",
+    "cedCode": "M7SCI-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cladogram compares four turtle species: Species J, Species K, Species L and Species M. The first branch separates Species J from the other three. Next, Species K splits off from the group containing Species L and Species M. Most recently, Species L and Species M separate from each other. Which two species are most closely related?",
+    "choices": [
+      "Species J and Species K, because they are the two that branched off earliest",
+      "Species L and Species M, because their branch point is the most recent one",
+      "Species J and Species M, because they are the first and last species named",
+      "Species K and Species L, because they are named next to each other"
+    ],
+    "answer": "B",
+    "hints": [
+      "The rule is that two species are more closely related when their branch point is more recent, meaning closer to the tips.",
+      "Read the sentences in order. The last split described is the most recent one, so look at which two species separate there."
+    ]
+  },
+  {
+    "id": "m7sci-cladograms-and-relatedness-003",
+    "loId": "m7sci.cladograms-and-relatedness",
+    "cedCode": "M7SCI-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cladogram compares four lizard species, all alive today. It is printed with the tips across the page in this order from left to right: Species A, Species B, Species C, Species D. The first branch separates Species A from the other three. A student says Species A must be the oldest and most primitive, because it sits on the far left and its line branched off first. What is the best response?",
+    "choices": [
+      "The student is right, because on any cladogram the species drawn furthest to the left is the oldest one and the species furthest to the right is the newest.",
+      "The student is right, because a line that branches off at the first branch point stops changing from that moment on and stays the way its ancestors were.",
+      "The student is wrong. Species A is a lizard alive today, its line has been evolving just as long as the others, and left-to-right position means nothing, since the diagram can be flipped without changing any relationship.",
+      "The student is wrong, because Species A is in fact the most advanced of the four species, since its line has had the longest time to branch on its own."
+    ],
+    "answer": "C",
+    "hints": [
+      "All four tips are species alive right now, so ask how long each line has been evolving since the ancestors they share.",
+      "Two of these choices rank the species against each other. A cladogram shows who is related to whom and nothing more."
+    ]
+  },
+  {
+    "id": "m7sci-cladograms-and-relatedness-004",
+    "loId": "m7sci.cladograms-and-relatedness",
+    "cedCode": "M7SCI-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cladogram compares four fish species: Species P, Species Q, Species R and Species S. The first branch separates Species P from the other three. Next, Species Q splits off from the group containing Species R and Species S. Most recently, Species R and Species S separate from each other. Is Species Q more closely related to Species R, or to Species S?",
+    "choices": [
+      "Equally related to both, because tracing back from Species Q reaches Species R and Species S at the very same branch point",
+      "To Species R, because Species R is named before Species S",
+      "To Species S, because Species S is named last and so is the most advanced",
+      "To neither, because Species Q is the ancestor that Species R and Species S both came from"
+    ],
+    "answer": "A",
+    "hints": [
+      "Trace backward from Species Q until you meet Species R, and note the branch point. Then do the same for Species Q and Species S.",
+      "Species Q split away from a group that still held Species R and Species S together, so one single branch point connects Species Q to both of them."
+    ]
+  },
+  {
+    "id": "m7sci-cladograms-and-relatedness-005",
+    "loId": "m7sci.cladograms-and-relatedness",
+    "cedCode": "M7SCI-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cladogram compares four beetle species, all alive today. They are listed here in alphabetical order: Species E, Species F, Species G, Species H. The first branch separates Species G from the other three. Next, Species E splits off from the group containing Species F and Species H. Most recently, Species F and Species H separate from each other. Which statement is correct?",
+    "choices": [
+      "Species E and Species F are the closest pair, because they are listed right next to each other.",
+      "Species G is the ancestor of the other three species, because its line separated first.",
+      "Species E is more closely related to Species F than to Species H, because Species F is listed closer to Species E.",
+      "Species F and Species H are the closest pair, because their branch point is the most recent one."
+    ],
+    "answer": "D",
+    "hints": [
+      "The species are listed in alphabetical order, which says nothing about ancestry. Put the list aside and use only the sentences about the branches.",
+      "Species E split from a group that still held Species F and Species H together, so Species E is equally related to both of them."
+    ]
+  },
+  {
+    "id": "m7sci-cladograms-and-relatedness-006",
+    "loId": "m7sci.cladograms-and-relatedness",
+    "cedCode": "M7SCI-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A cladogram compares five crab species, all alive today: Species T, Species U, Species V, Species W and Species X. The first branch separates Species T from the other four. Next, Species U splits off from the group containing Species V, Species W and Species X. Next, Species V splits off from the group containing Species W and Species X. Most recently, Species W and Species X separate from each other. Which statement is best supported?",
+    "choices": [
+      "Species T is more closely related to Species U than Species V is, because Species T and Species U are the two that branched off earliest.",
+      "Species V is more closely related to Species X than Species U is, because tracing back from Species X meets Species V at a more recent branch point than it meets Species U.",
+      "Species X is the most advanced of the five, because it is the last species to appear on the diagram.",
+      "The diagram shows that Species W and Species X separated about a million years ago."
+    ],
+    "answer": "B",
+    "hints": [
+      "Cross out any choice that ranks a species or reads years off the diagram. A cladogram gives the order of the splits, never the number of years.",
+      "For the two choices left, trace backward from Species X twice: once until you meet Species V, and once until you meet Species U. Then ask which of those two branch points is nearer the tips."
+    ]
+  }
+]

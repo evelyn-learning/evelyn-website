@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-text-structure-001",
+    "loId": "m7ela.text-structure",
+    "cedCode": "M7ELA-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the structure of this paragraph? \"First the volunteers spread a layer of gravel down the length of the trail. Next they raked it flat, and after that they packed it down with a heavy roller. Finally they set a new sign at the trailhead.\"",
+    "choices": [
+      "Description",
+      "Cause and effect",
+      "Chronological sequence",
+      "Compare and contrast"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether swapping two of these sentences would break the paragraph.",
+      "First, next, after that, finally - each step has to happen after the one before it, and that is what sequence means."
+    ]
+  },
+  {
+    "id": "m7ela-text-structure-002",
+    "loId": "m7ela.text-structure",
+    "cedCode": "M7ELA-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the structure of this paragraph? \"A canvas tent and a nylon tent both keep the rain off, but they behave differently on a hot afternoon. Canvas is heavy to carry, and it stays cool inside because the thick cloth blocks the sun. Nylon instead packs down small enough to fit in a backpack, and it heats up fast by noon.\"",
+    "choices": [
+      "Compare and contrast",
+      "Cause and effect",
+      "Chronological sequence",
+      "Problem and solution"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count the subjects first. How many things is this paragraph about, and does each one get its own sentence?",
+      "The word \"because\" explains one detail inside one sentence. Structure is about how the whole paragraph is built, and this one holds two tents up against each other using the same category."
+    ]
+  },
+  {
+    "id": "m7ela-text-structure-003",
+    "loId": "m7ela.text-structure",
+    "cedCode": "M7ELA-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the structure of this paragraph? \"The clock tower on Grand Avenue is forty feet tall and faced with pale brick. Its bell was cast in 1904, and its copper roof was replaced in 1968. A narrow iron stair inside runs from the door up to the clock face.\"",
+    "choices": [
+      "Chronological sequence",
+      "Cause and effect",
+      "Problem and solution",
+      "Description"
+    ],
+    "answer": "D",
+    "hints": [
+      "Dates are a clue, not a verdict. Ask whether the sentences lead into one another or just keep adding facts about the same one thing.",
+      "The two years sit next to the height, the brick and the stair as more facts about one tower. Those facts are siblings, not a chain, and nothing here is called a trouble or a fix."
+    ]
+  },
+  {
+    "id": "m7ela-text-structure-004",
+    "loId": "m7ela.text-structure",
+    "cedCode": "M7ELA-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A camp handbook page tells campers what to do if a canoe tips over. It covers how to hold on to the paddle, then how to flip the boat back upright, then how to climb in over the side, in the order those actions have to happen. Why did the writer arrange the page this way?",
+    "choices": [
+      "Because the page has to hold a canoe and a kayak side by side so campers can pick one",
+      "Because a camper in the water has to be able to follow the actions in the order they must be done",
+      "Because the page has to explain what causes canoes to tip over in the first place",
+      "Because sequence is the clearest structure for any handbook page"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what a camper actually has to DO with this page, and when they would be reading it.",
+      "Naming the shape is only half the job. One choice names the work the step order does for the reader; two name work a different shape would do, and one claims a shape is always best."
+    ]
+  },
+  {
+    "id": "m7ela-text-structure-005",
+    "loId": "m7ela.text-structure",
+    "cedCode": "M7ELA-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the structure of this paragraph? \"A late frost hit the orchard on Coyle Road in April, and nearly all of the apple blossoms died overnight. With so few blossoms, the trees set almost no fruit, and the cider stand at the end of the drive stayed closed all fall.\"",
+    "choices": [
+      "Chronological sequence",
+      "Problem and solution",
+      "Cause and effect",
+      "Compare and contrast"
+    ],
+    "answer": "C",
+    "hints": [
+      "Try the rewrite test on the whole paragraph: can you retell it as \"X happened, so Y happened, so Z happened\" without changing the meaning?",
+      "The frost kills the blossoms, the missing blossoms mean no fruit, and no fruit closes the stand. \"April\" and \"all fall\" are time details, and nothing here is offered as a fix."
+    ]
+  },
+  {
+    "id": "m7ela-text-structure-006",
+    "loId": "m7ela.text-structure",
+    "cedCode": "M7ELA-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which structure organizes this paragraph AS A WHOLE? \"The band room had nowhere to store instruments, so cases were stacked against the fire door all winter. First the teacher measured the back wall, then the shop class cut the boards, and by March a set of open shelves held every case in its own slot. The fire door has stayed clear ever since.\"",
+    "choices": [
+      "Chronological sequence",
+      "Description",
+      "Compare and contrast",
+      "Problem and solution"
+    ],
+    "answer": "D",
+    "hints": [
+      "A long passage can nest one shape inside another. Ask which shape organizes ALL the sentences, not just the middle one.",
+      "Sentence 1 names something that is not working, and the last sentence reports that it got fixed. The first-then-by-March run is a smaller shape sitting inside the fix."
+    ]
+  },
+  {
+    "id": "m7ela-authors-purpose-and-perspective-001",
+    "loId": "m7ela.authors-purpose-and-perspective",
+    "cedCode": "M7ELA-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the primary purpose of this page from the school yearbook? \"The chess club met on Thursdays in Room 12. Members played in three tournaments this year and finished second at the district meet.\"",
+    "choices": [
+      "To explain how the pieces move in a game of chess",
+      "To inform readers about when the chess club met and how it did this year",
+      "To persuade readers to join the chess club next year",
+      "To entertain readers with a funny story about a tournament"
+    ],
+    "answer": "B",
+    "hints": [
+      "Run the clues. Are there steps and the word because? Sense words? A scene with characters? A line telling somebody what to do?",
+      "The page gives dates and results in a flat tone and never asks the reader for anything, which points at one purpose family."
+    ]
+  },
+  {
+    "id": "m7ela-authors-purpose-and-perspective-002",
+    "loId": "m7ela.authors-purpose-and-perspective",
+    "cedCode": "M7ELA-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What is the primary purpose of this piece from a school newsletter? \"Our courtyard has been a patch of weeds for two years. A garden there would give the science classes something living to study, and the cafeteria could use the herbs. The principal should let students plant it this spring.\"",
+    "choices": [
+      "To describe what the courtyard looks like in early spring",
+      "To inform readers about the condition of the courtyard, since the piece gives facts about it",
+      "To persuade the principal to let students plant a garden in the courtyard",
+      "To explain, step by step, how a school garden gets planted"
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the last sentence again and ask whether it tells somebody what should happen.",
+      "Facts prove nothing about purpose - persuasive writing is full of them. A call to action does prove something, and there is one here."
+    ]
+  },
+  {
+    "id": "m7ela-authors-purpose-and-perspective-003",
+    "loId": "m7ela.authors-purpose-and-perspective",
+    "cedCode": "M7ELA-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student has to state the author's purpose of a newsletter piece about the late activity bus. Which answer states a PURPOSE rather than something else?",
+    "choices": [
+      "The late activity bus.",
+      "The late activity bus leaves at four o'clock.",
+      "Students who stay for clubs need a ride home.",
+      "To persuade the school to keep the late activity bus running."
+    ],
+    "answer": "D",
+    "hints": [
+      "A purpose is a verb. If your answer could be written on a list of topics, it is not a purpose yet.",
+      "One choice names the subject, one is a checkable fact about it, and one is a reason from inside the piece. Only one says what the writer is trying to DO and to whom."
+    ]
+  },
+  {
+    "id": "m7ela-authors-purpose-and-perspective-004",
+    "loId": "m7ela.authors-purpose-and-perspective",
+    "cedCode": "M7ELA-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The writer of this student blog post never says \"I think.\" What is the writer's perspective? \"The cafeteria has swapped the salad bar for a machine that hands out three kinds of prepackaged wraps. Every lunch now arrives sealed in plastic, and the counter where students used to build their own plate is a blank strip of steel.\"",
+    "choices": [
+      "The writer regrets losing the salad bar and the choice it gave students",
+      "The writer thinks the sealed wraps are a cleaner and safer way to serve lunch",
+      "The writer has no position and is only reporting what the cafeteria changed",
+      "The writer thinks the cafeteria should stop serving lunch altogether"
+    ],
+    "answer": "A",
+    "hints": [
+      "Trade each loaded word for a plain one. \"Sealed in plastic\" becomes wrapped, and \"a blank strip of steel\" becomes an empty counter. What feeling drains out when you do that?",
+      "Notice what the writer gives space to: the plate students used to build for themselves, against three fixed choices from a machine. A writer does not have to announce a position for you to find it."
+    ]
+  },
+  {
+    "id": "m7ela-authors-purpose-and-perspective-005",
+    "loId": "m7ela.authors-purpose-and-perspective",
+    "cedCode": "M7ELA-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two seventh graders wrote about the same subject for the school paper.\n\nWRITER A: \"Four minutes is not enough time to get from the science wing to the gym, and half the class walks in after the bell.\"\n\nWRITER B: \"Every minute added between classes comes out of class time, and the students who arrive late are usually the ones who stop at their lockers twice.\"\n\nWhat is the main difference between the two writers?",
+    "choices": [
+      "Writer A thinks the passing period is too short for the walk, while Writer B thinks longer passing periods would cost class time",
+      "Writer A is writing about the science wing, while Writer B is writing about lockers",
+      "Writer A is arguing a position, while Writer B is only reporting facts and has no position",
+      "Writer A gives an opinion and Writer B gives a fact, so only Writer A has a purpose"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both writers are on the same subject: whether the passing period between classes should be longer. So the difference cannot be the topic.",
+      "Writer B sounds calmer, but read what Writer B actually claims. Saying the late students are the ones stopping at their lockers twice is an argument, not a neutral report."
+    ]
+  },
+  {
+    "id": "m7ela-authors-purpose-and-perspective-006",
+    "loId": "m7ela.authors-purpose-and-perspective",
+    "cedCode": "M7ELA-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A four-paragraph piece in the town paper covers the plan to open the middle school track to the public in the evenings. It quotes three neighbors who want to walk laps there, lists the hours the track sits empty, and describes the new gate. It never mentions what the coaches or the track team said about sharing the surface. Which statement best identifies evidence of the writer's perspective?",
+    "choices": [
+      "The piece quotes three neighbors, which shows that most people in town agree with the plan",
+      "The piece runs for four paragraphs, so it covers the subject thoroughly",
+      "The piece never includes what the coaches or the track team said, so one whole side of the subject is missing",
+      "The piece describes the new gate, and describing something always shows that the writer approves of it"
+    ],
+    "answer": "C",
+    "hints": [
+      "Perspective hides in three places: loaded words, what got the most space, and what a fair treatment would have included but this piece left out.",
+      "Ask who is missing from the page. Every voice in the piece wants the same thing, and the people who use the track every afternoon never get a sentence."
+    ]
+  },
+  {
+    "id": "m7ela-tracing-an-argument-001",
+    "loId": "m7ela.tracing-an-argument",
+    "cedCode": "M7ELA-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence states the CLAIM of this argument? \"The art room closes at three o'clock every day. Students who ride the late bus can never use it, so the school should keep the art room open until four. Two art teachers have said they already stay that late to grade.\"",
+    "choices": [
+      "The art room closes at three o'clock every day.",
+      "Students who ride the late bus can never use it.",
+      "Two art teachers have said they already stay that late to grade.",
+      "The school should keep the art room open until four."
+    ],
+    "answer": "D",
+    "hints": [
+      "A claim is a sentence somebody could argue back at, and it asks you to believe something or do something.",
+      "One option is a checkable fact nobody could dispute, one is a because sentence holding the claim up, and one is proof somebody offered. Only one asks the school to change something."
+    ]
+  },
+  {
+    "id": "m7ela-tracing-an-argument-002",
+    "loId": "m7ela.tracing-an-argument",
+    "cedCode": "M7ELA-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence states a REASON supporting the claim, rather than the claim itself or a piece of evidence? \"The seventh grade should hold the book swap in the gym instead of the library. The library is too small for a swap, since it has only four tables and one door. The gym holds ten tables along one wall.\"",
+    "choices": [
+      "The seventh grade should hold the book swap in the gym instead of the library.",
+      "The library is too small for a swap.",
+      "The library has only four tables and one door.",
+      "The gym holds ten tables along one wall."
+    ],
+    "answer": "B",
+    "hints": [
+      "Put the word because after the claim and see which sentence finishes it: \"we should hold it in the gym because...\"",
+      "Two of these options are countable facts offered as proof, and one is the claim itself. A reason is the sentence those facts are sitting underneath."
+    ]
+  },
+  {
+    "id": "m7ela-tracing-an-argument-003",
+    "loId": "m7ela.tracing-an-argument",
+    "cedCode": "M7ELA-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence in this argument is a feeling rather than evidence? \"The school should add a second water fountain in the gym hallway. The one fountain there has a line after every practice, and it was shut off for two weeks during the pipe repair in March. Everybody is completely sick of waiting for it.\"",
+    "choices": [
+      "The one fountain there has a line after every practice.",
+      "The fountain was shut off for two weeks during the pipe repair in March.",
+      "Everybody is completely sick of waiting for it.",
+      "The school should add a second water fountain in the gym hallway."
+    ],
+    "answer": "C",
+    "hints": [
+      "Evidence is something a person could go and check: a fact, a date, a count, something observed.",
+      "One sentence reports how people feel instead of what happened. How people feel about the fountain is the thing being argued about, not proof of it."
+    ]
+  },
+  {
+    "id": "m7ela-tracing-an-argument-004",
+    "loId": "m7ela.tracing-an-argument",
+    "cedCode": "M7ELA-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The reason in this argument is that drivers cannot see the crosswalk. Which detail is true but does NOT make that reason more likely? \"The town should repaint the crosswalk outside Willow Elementary. The stripes have worn down until they are hard to see from a car, and a crossing guard says cars rolled past the stop line four times last week. Drivers coming over the hill reach the corner before the pavement comes into view. Willow Elementary was built in 1962.\"",
+    "choices": [
+      "Willow Elementary was built in 1962.",
+      "A crossing guard says cars rolled past the stop line four times last week.",
+      "Drivers coming over the hill reach the corner before the pavement comes into view.",
+      "The stripes have worn down until they are hard to see from a car."
+    ],
+    "answer": "A",
+    "hints": [
+      "Every one of these sentences is true. Being true is not the test. The test is whether it makes THIS reason more likely.",
+      "Say the reason out loud, then each option after it. Three are about what a driver can or cannot see at that corner. One is about the age of a building."
+    ]
+  },
+  {
+    "id": "m7ela-tracing-an-argument-005",
+    "loId": "m7ela.tracing-an-argument",
+    "cedCode": "M7ELA-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What is the main problem with the evidence in this argument? \"The school should replace the water bottle filler by the field with two new ones. My brother filled his bottle there in September and said the water came out warm. Replacing it would get every student at this school drinking more water.\"",
+    "choices": [
+      "The evidence is off the point, because how the water tastes has nothing to do with drinking water.",
+      "The evidence would be stronger if the writer said how strongly his brother felt about it.",
+      "The evidence is weak only because it is one sentence, so adding any second sentence would fix it.",
+      "One person's experience on one day is far too small to support a claim about every student in the school."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare the size of the claim with the size of the proof. The claim is about a whole school. How many people is the proof about?",
+      "Warm water really would put someone off drinking, so this is not a relevance problem. Ask instead whether one brother on one day can stand in for everybody."
+    ]
+  },
+  {
+    "id": "m7ela-tracing-an-argument-006",
+    "loId": "m7ela.tracing-an-argument",
+    "cedCode": "M7ELA-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this argument: \"The library should stay open during lunch. Students who have practice after school have no other time to check out books. Right now the only stretch the library is open is the twenty minutes before first bell.\" Which addition would best support the reason that students with practice have no other time?",
+    "choices": [
+      "The library has a new set of graphic novels that many students want to read.",
+      "Every fall and spring sport at the school practices from three to five, and the library closes at three.",
+      "One seventh grader said she would probably stop by the library at lunch if it were open.",
+      "The library is the quietest room in the building."
+    ],
+    "answer": "B",
+    "hints": [
+      "Say the reason first, then test each option against it: does this make it more likely that students with practice have NO other time?",
+      "Two options are true and appealing but are about the library itself rather than about time, and one is a single student saying what she might do. Only one shows the practice hours and the library hours colliding."
+    ]
+  },
+  {
+    "id": "m7ela-comparing-two-texts-001",
+    "loId": "m7ela.comparing-two-texts",
+    "cedCode": "M7ELA-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which fact do BOTH texts state?\n\nText 1: The courtyard garden produced beans and tomatoes all through September. Two science classes used the beds to measure how fast plants grow.\n\nText 2: Two science classes used the courtyard garden beds to measure how fast plants grow. Watering those beds took a volunteer every single day of the summer.",
+    "choices": [
+      "The garden produced beans and tomatoes all through September.",
+      "Watering the beds took a volunteer every day of the summer.",
+      "Two science classes used the garden beds to measure how fast plants grow.",
+      "The school plans to make the courtyard garden bigger next year."
+    ],
+    "answer": "C",
+    "hints": [
+      "Make two lists. Write down what Text 1 says, then what Text 2 says, and look for the line that turns up on both lists.",
+      "Two of these choices appear in only one of the texts, and one appears in neither. Only one sentence is printed by both writers."
+    ]
+  },
+  {
+    "id": "m7ela-comparing-two-texts-002",
+    "loId": "m7ela.comparing-two-texts",
+    "cedCode": "M7ELA-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "How do these two presentations differ?\n\nText 1: The town replaced the wooden playground at Ryder Park with a metal one last spring. The new climbing frame has ramps, so kids who use wheelchairs can get all the way up to the top deck.\n\nText 2: The town replaced the wooden playground at Ryder Park with a metal one last spring. The metal slide gets hot enough by noon that families wait until evening to use it.",
+    "choices": [
+      "One of the two writers must have the facts wrong, because the texts do not agree.",
+      "The two texts are about different topics, so there is nothing to compare.",
+      "Text 2 is the better text, because it tells the reader what time of day to visit.",
+      "Each writer chose a different fact about the new playground, so each one leaves the reader with a different picture of the same change."
+    ],
+    "answer": "D",
+    "hints": [
+      "Both texts open with the identical change. So the difference has to come from the sentence that follows it in each one.",
+      "Check whether the two second sentences actually contradict each other. A frame with ramps and a slide that gets hot can both be true on the same playground."
+    ]
+  },
+  {
+    "id": "m7ela-comparing-two-texts-003",
+    "loId": "m7ela.comparing-two-texts",
+    "cedCode": "M7ELA-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which detail appears ONLY in Text 2?\n\nText 1: The new recycling bins went into every classroom in October. The custodians say the trash cans fill up more slowly now.\n\nText 2: The new recycling bins went into every classroom in October. Much of what students drop into them is food waste, which cannot be recycled.",
+    "choices": [
+      "The new bins went into every classroom in October.",
+      "Much of what students drop into the bins is food waste, which cannot be recycled.",
+      "The custodians say the trash cans fill up more slowly now.",
+      "The bins will be taken back out at the end of the year."
+    ],
+    "answer": "B",
+    "hints": [
+      "Cross off anything that shows up in both texts - that is shared ground, not a difference.",
+      "One choice is the shared opening fact, one belongs to Text 1, and one is in neither text. That leaves the sentence only the second writer chose to include."
+    ]
+  },
+  {
+    "id": "m7ela-comparing-two-texts-004",
+    "loId": "m7ela.comparing-two-texts",
+    "cedCode": "M7ELA-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which statement describes these two texts best?\n\nText 1: The spring concert has moved from the gym to the town theater. The theater holds fewer people than the gym, so each student gets only two tickets for family.\n\nText 2: The spring concert has moved from the gym to the town theater. The theater holds fewer people than the gym, which means every seat is close to the stage and the sound does not disappear into a ceiling.",
+    "choices": [
+      "Both texts print the same fact, that the theater holds fewer people than the gym, and draw opposite conclusions from it.",
+      "Text 2 proves that Text 1 is wrong about how many tickets students get.",
+      "The two texts describe two different changes to the spring concert.",
+      "The two texts disagree about whether the concert has moved at all."
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the second sentence of each text word by word. How much of it is identical?",
+      "Fewer seats can mean fewer tickets AND a better view on the same night. Ask whether one writer has to be mistaken, or whether they simply followed the same fact in two directions."
+    ]
+  },
+  {
+    "id": "m7ela-comparing-two-texts-005",
+    "loId": "m7ela.comparing-two-texts",
+    "cedCode": "M7ELA-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which pair of quoted phrases best shows where these two texts part company?\n\nText 1: The activity bus now leaves thirty minutes later than it did last year. Students who stay for clubs can finish a whole meeting before they go.\n\nText 2: The activity bus now leaves thirty minutes later than it did last year. Riders who live out past the creek do not get home until it is nearly dark.",
+    "choices": [
+      "\"leaves thirty minutes later\" in Text 1 and \"leaves thirty minutes later\" in Text 2",
+      "\"finish a whole meeting before they go\" in Text 1 and \"do not get home until it is nearly dark\" in Text 2",
+      "\"thirty minutes later\" in Text 1 and \"nearly dark\" in Text 2",
+      "\"last year\" in Text 1 and \"last year\" in Text 2"
+    ],
+    "answer": "B",
+    "hints": [
+      "A phrase both writers print is shared ground. Shared ground is where a comparison starts, but it is not where the two texts part company.",
+      "You are looking for one phrase from each text that shows what that writer decided the later departure MEANS. Any pair that reuses the shared fact is only half an answer."
+    ]
+  },
+  {
+    "id": "m7ela-comparing-two-texts-006",
+    "loId": "m7ela.comparing-two-texts",
+    "cedCode": "M7ELA-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A reader finishes Text 1 thinking the change hurt the park, and finishes Text 2 thinking it helped. Neither writer states an opinion outright. What produced the difference?\n\nText 1: The town filled in the old wading pool at Harmon Park and planted grass over it. Families with small children now drive to the pool in the next town on hot days.\n\nText 2: The town filled in the old wading pool at Harmon Park and planted grass over it. The lawn is the only flat open space in the park now, and two soccer games run there every Saturday.",
+    "choices": [
+      "Each writer reported a different consequence of the same change, and both consequences can be true.",
+      "One writer stated facts while the other stated an opinion, which is why they leave different impressions.",
+      "The two writers disagree about whether the wading pool was filled in at all.",
+      "Text 2 is the more reliable text, because it says how often the space is used."
+    ],
+    "answer": "A",
+    "hints": [
+      "Start with the shared ground. Both texts print the same first sentence, so neither writer is disputing what happened.",
+      "Look at what each writer chose to report NEXT. A drive to the next town and two Saturday soccer games can both be real on the same summer, which means neither writer had to bend anything."
+    ]
+  }
+]

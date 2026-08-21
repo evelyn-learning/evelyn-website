@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-research-questions-001",
+    "loId": "m7ela.research-questions",
+    "cedCode": "M7ELA-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which one of these is a research question rather than a topic?",
+    "choices": [
+      "Why do most tornadoes in the United States form in the late afternoon?",
+      "Tornadoes in the Midwest.",
+      "Storm safety in our town.",
+      "The equipment storm chasers carry in their trucks."
+    ],
+    "answer": "A",
+    "hints": [
+      "A topic is a subject area you could read about forever. A research question is one sentence that names exactly what you want to find out.",
+      "Three of these have no question mark and ask for nothing, so they would never tell you when the project is finished."
+    ]
+  },
+  {
+    "id": "m7ela-research-questions-002",
+    "loId": "m7ela.research-questions",
+    "cedCode": "M7ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Devon wrote this question for his report: \"Did our town build a new skate ramp last year?\" One word finishes it, so his project would be over before it started. Which revision fixes that problem?",
+    "choices": [
+      "Is the new skate ramp popular with riders?",
+      "Why did our town decide to build a new skate ramp instead of repairing the old one?",
+      "The new skate ramp on Miller Street.",
+      "Is the skate ramp the best thing our town has built?"
+    ],
+    "answer": "B",
+    "hints": [
+      "The repair for a yes-or-no question is always the same: swap the opener. Do, Did, Is and Was become Why, How or What caused.",
+      "Two of the choices still open with \"Is,\" so one word still finishes them, and one choice has no question mark at all."
+    ]
+  },
+  {
+    "id": "m7ela-research-questions-003",
+    "loId": "m7ela.research-questions",
+    "cedCode": "M7ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Ana has to write a two-page report about honeybees. Which question is narrow enough to answer well in two pages?",
+    "choices": [
+      "How do insects help plants all over the world?",
+      "Do honeybees live in hives?",
+      "How do honeybees turn nectar into honey inside the hive?",
+      "Honeybees and the flowers they visit."
+    ],
+    "answer": "C",
+    "hints": [
+      "Match the size of the question to the size of the assignment, then check that it is a question at all and that one word cannot finish it.",
+      "One choice covers every insect on Earth, one is answered with the single word yes, and one has no question mark."
+    ]
+  },
+  {
+    "id": "m7ela-research-questions-004",
+    "loId": "m7ela.research-questions",
+    "cedCode": "M7ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Rosa's question is \"Do volcanoes erupt more than once?\" Her teacher points out that one word finishes it. Which revision fixes that problem without creating a new one?",
+    "choices": [
+      "Volcanoes that erupt again and again.",
+      "Which volcano is the most exciting one to study?",
+      "Are volcanoes dangerous to the towns near them?",
+      "Why do some volcanoes erupt again and again while others go quiet for good?"
+    ],
+    "answer": "D",
+    "hints": [
+      "A repair has to pass all four tests, not only the one that was broken. Run question, narrow, open and answerable on each choice.",
+      "One choice has no question mark, one still opens with \"Are,\" and one asks for an opinion that no source could ever settle."
+    ]
+  },
+  {
+    "id": "m7ela-research-questions-005",
+    "loId": "m7ela.research-questions",
+    "cedCode": "M7ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has two pages to fill and proposes this question: \"How has clothing changed throughout history?\" It really is a question, and one word cannot finish it. Which test does it still fail?",
+    "choices": [
+      "It is a topic rather than a question.",
+      "It is not narrow enough for the space available.",
+      "It can be answered with a single word.",
+      "It asks for an opinion that no source can settle."
+    ],
+    "answer": "B",
+    "hints": [
+      "The stem already rules out two of the four tests. Check the other two against the size of the assignment.",
+      "Every kind of clothing, everywhere, across all of history in two pages means one thin sentence about a hundred things. Adding limits - which garment, which place, which stretch of time - is the fix."
+    ]
+  },
+  {
+    "id": "m7ela-research-questions-006",
+    "loId": "m7ela.research-questions",
+    "cedCode": "M7ELA-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Miguel is writing two pages about the crows that live in the city park. All four of these are real questions, and none of them can be finished with the word yes. Which one is the best research question for that assignment?",
+    "choices": [
+      "How do city animals survive?",
+      "Why are crows the most impressive birds a person could study?",
+      "Why do the crows in the park gather in the same trees before sunset each fall?",
+      "What color are the crows in the park?"
+    ],
+    "answer": "C",
+    "hints": [
+      "Being open is only one of the four tests. Run narrow and answerable on each one, and then ask which question would hand you more questions while you researched it.",
+      "One covers every animal in every city, one asks for a verdict that no source can settle, and one you could answer by looking out the window, which leaves nothing left to research."
+    ]
+  },
+  {
+    "id": "m7ela-evaluating-sources-001",
+    "loId": "m7ela.evaluating-sources",
+    "cedCode": "M7ELA-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Your research question is: \"Why do some house cats knead blankets with their paws?\" Which source is the most credible for THAT question?",
+    "choices": [
+      "A message board where six cat owners describe what their own cats do.",
+      "A page with no author listed that sells blankets made for cats.",
+      "A neatly designed site with a serious-sounding name that gives no author and no sources.",
+      "An article by a named veterinarian who works with cats, published in a pet-care magazine, that lists the animal-behavior guides it used."
+    ],
+    "answer": "D",
+    "hints": [
+      "Run WHO and WHY on each one. Which source names a person with expertise on this exact topic, and which one has something to sell?",
+      "Then run CAN I CHECK IT. Two of these give you no way to trace where their information came from, and a serious-looking design is not evidence of anything."
+    ]
+  },
+  {
+    "id": "m7ela-evaluating-sources-002",
+    "loId": "m7ela.evaluating-sources",
+    "cedCode": "M7ELA-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You find a page on the website of the company that makes and sells a brand of water bottle for hikers. Which research question is this page a good source for?",
+    "choices": [
+      "What sizes this brand of water bottle is sold in.",
+      "Whether this brand is the toughest water bottle a hiker can buy.",
+      "Whether carrying water lowers the chance of getting sick on a long hike.",
+      "Which brand of water bottle most hikers in the country choose."
+    ],
+    "answer": "A",
+    "hints": [
+      "The page is not useless and it is not trustworthy for everything. Ask which question the company is genuinely the best-informed source about.",
+      "For three of these the company benefits from one particular answer. For one of them it is simply reporting a fact about its own product."
+    ]
+  },
+  {
+    "id": "m7ela-evaluating-sources-003",
+    "loId": "m7ela.evaluating-sources",
+    "cedCode": "M7ELA-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student finds a handwritten diary kept by a farmer in 1918. Each week the farmer wrote down which crops she planted and what the weather did. Which research question is this diary a strong source for?",
+    "choices": [
+      "Which crops grow best in the county today.",
+      "Whether this spring was wetter than usual in the county.",
+      "What one farmer planted, and what the weather was like on her farm, in 1918.",
+      "How farm machinery has changed since 1918."
+    ],
+    "answer": "C",
+    "hints": [
+      "Old is not the same as wrong. Ask whether your topic has changed since 1918.",
+      "For one of these the diary is a primary source, written by the person who was there in the year it happened. The other three ask about now, or about a stretch of time the diary never saw."
+    ]
+  },
+  {
+    "id": "m7ela-evaluating-sources-004",
+    "loId": "m7ela.evaluating-sources",
+    "cedCode": "M7ELA-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two web pages say the same thing about a rare frog. You notice that the second page says the claim was \"reported by\" the first page and links straight to it. Your partner says that counts as two sources. What is the best response?",
+    "choices": [
+      "It counts as two sources, because two separate pages both say it.",
+      "It is one claim twice, because the second page copied the first instead of finding out on its own.",
+      "It counts as two sources only if both pages were written in the same year.",
+      "Neither page can be used now, because copying makes both of them wrong."
+    ],
+    "answer": "B",
+    "hints": [
+      "The word that does the work in question four is \"independent.\"",
+      "Ask whether the second page found the information on its own. Copying does not prove the claim is false; it means you still have one source, so keep looking for one that did its own work."
+    ]
+  },
+  {
+    "id": "m7ela-evaluating-sources-005",
+    "loId": "m7ela.evaluating-sources",
+    "cedCode": "M7ELA-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Your research question is: \"Why do bridges have gaps in the roadway with metal teeth in them?\" Which source is the weakest for that question, even though the writer is a real expert?",
+    "choices": [
+      "A blog post by a named dentist explaining what she thinks the gaps are for.",
+      "An article by a named engineer who designs bridges, published in a magazine that lists the sources it used.",
+      "A page from a state highway department explaining how the bridges it maintains are built.",
+      "An interview with a named worker who has repaired those metal joints for twenty years."
+    ],
+    "answer": "A",
+    "hints": [
+      "Question one is not \"is there a name on it.\" It is \"what does this person know about THIS?\"",
+      "Three of these come from people who work with bridges. One comes from an expert in a completely different field, and expertise does not transfer from one topic to another."
+    ]
+  },
+  {
+    "id": "m7ela-evaluating-sources-006",
+    "loId": "m7ela.evaluating-sources",
+    "cedCode": "M7ELA-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A page written by the owner of a dog-training business argues that its own class is the best way to stop a dog from pulling on the leash. Further down, the same page describes step by step what happens in one of those class sessions. Which statement about the page is correct?",
+    "choices": [
+      "The page is not credible for anything, because the owner is selling classes.",
+      "The page is credible for everything on it, because the owner works with dogs every day.",
+      "The page is credible only if it was written this year.",
+      "The page cannot settle which method is best, but it is a good source for what happens inside the business's own classes."
+    ],
+    "answer": "D",
+    "hints": [
+      "A source is credible FOR A QUESTION, not in general. Take the two parts of the page one at a time.",
+      "On the claim that helps the sale, the owner wants one answer and offers nothing you can check. On what happens inside its own class, the business is the one who actually knows."
+    ]
+  },
+  {
+    "id": "m7ela-quoting-paraphrasing-summarizing-001",
+    "loId": "m7ela.quoting-paraphrasing-summarizing",
+    "cedCode": "M7ELA-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You want to give your reader the main points of a whole three-page article in two sentences of your own. Which move is that?",
+    "choices": [
+      "Quoting, because you are using material that came from the article.",
+      "Summarizing.",
+      "Paraphrasing, because the sentences are in your own words.",
+      "None of the three, because you did not copy any exact words."
+    ],
+    "answer": "B",
+    "hints": [
+      "Start with length. Which move is always much shorter than the thing it covers?",
+      "A paraphrase restates one idea at about the same length, and a quotation copies exact words inside quotation marks. Only one move boils something long down to its main points."
+    ]
+  },
+  {
+    "id": "m7ela-quoting-paraphrasing-summarizing-002",
+    "loId": "m7ela.quoting-paraphrasing-summarizing",
+    "cedCode": "M7ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Original, from a book about beavers: \"When a beaver hears running water, it starts piling sticks and mud at the spot until the sound stops.\" Which choice is only a word swap rather than a real paraphrase?",
+    "choices": [
+      "The sound of running water is the trigger. A beaver that hears it will heap sticks and mud onto the spot until it can no longer hear anything.",
+      "A beaver builds its dam wherever the water in the stream is deepest.",
+      "The book says a beaver \"starts piling sticks and mud at the spot until the sound stops.\"",
+      "When a beaver hears flowing water, it begins stacking branches and mud at the place until the noise ends."
+    ],
+    "answer": "D",
+    "hints": [
+      "Line each choice up against the original piece by piece and watch whether the pieces are still sitting in the same slots.",
+      "One choice keeps the original sentence standing and drops a synonym into every slot: hears flowing water, begins stacking, until the noise ends."
+    ]
+  },
+  {
+    "id": "m7ela-quoting-paraphrasing-summarizing-003",
+    "loId": "m7ela.quoting-paraphrasing-summarizing",
+    "cedCode": "M7ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Original, from a book about sea otters: \"Sea otters wrap themselves in strands of kelp before they sleep so the current does not carry them away.\" Which choice is a real paraphrase of that sentence?",
+    "choices": [
+      "Drifting off in the current is the danger, so a sea otter about to sleep anchors itself by winding kelp around its body.",
+      "Sea otters wrap themselves in pieces of kelp before they sleep so the current does not take them away.",
+      "Sea otters eat kelp before they sleep so they will not get hungry during the night.",
+      "Sea otters wrap themselves in strands of kelp before they sleep so the current does not carry them away. The book is named on my sources page."
+    ],
+    "answer": "A",
+    "hints": [
+      "Do not pick the one that merely sounds different. A paraphrase rebuilds the sentence, so the pieces should not still be in the same order.",
+      "One choice only swaps synonyms into the same shape, one copies the sentence exactly and hopes a source list excuses it, and one says something the original never said."
+    ]
+  },
+  {
+    "id": "m7ela-quoting-paraphrasing-summarizing-004",
+    "loId": "m7ela.quoting-paraphrasing-summarizing",
+    "cedCode": "M7ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Original, from a guide to schoolyard insects: \"Ants in the courtyard follow a scent trail laid down by the first ant that found the food. Every ant that walks the trail leaves a little more scent behind, so the busiest path smells the strongest. When the food runs out, the ants stop adding scent and the trail fades.\" Which choice is the best SUMMARY of that paragraph?",
+    "choices": [
+      "Ants in the courtyard follow a scent trail that the first ant to find the food laid down, and every ant that walks the trail leaves a little more scent behind, so the busiest path smells the strongest, and when the food runs out the ants stop adding scent and the trail fades away.",
+      "Ants work together better than any other insect, which is why they take over a picnic so quickly.",
+      "Ants mark the path to food with scent, the busiest path smells strongest, and the trail fades once the food is gone.",
+      "Some insects in the courtyard move around in interesting ways during the day."
+    ],
+    "answer": "C",
+    "hints": [
+      "Start with length. A summary is much shorter than what it covers, so one choice is disqualified before you even check its meaning.",
+      "Among the short ones, rule out the choice that adds an opinion the paragraph never states, and the choice so vague that the actual finding disappears."
+    ]
+  },
+  {
+    "id": "m7ela-quoting-paraphrasing-summarizing-005",
+    "loId": "m7ela.quoting-paraphrasing-summarizing",
+    "cedCode": "M7ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Your report is about how one hand-painted sign changed the mood of the school garden. The sign reads, \"Pull one weed. Any weed. Thank you.\" You want your reader to hear how friendly that sounds. Which move fits?",
+    "choices": [
+      "Summarize the other rules posted around the garden so the reader gets the full picture.",
+      "Paraphrase the line, because paraphrasing is always the safer choice.",
+      "Copy the words into your own sentence without quotation marks, since a sign is not something a person said out loud.",
+      "Quote the line, because the exact words are what make the sign sound friendly."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what your reader needs. Is it the general idea that visitors may pull weeds, or the particular way this sign says it?",
+      "When the wording itself is the point, putting it in your own words throws away the thing you wanted - and quotation marks go around any exact copied words, not only around speech."
+    ]
+  },
+  {
+    "id": "m7ela-quoting-paraphrasing-summarizing-006",
+    "loId": "m7ela.quoting-paraphrasing-summarizing",
+    "cedCode": "M7ELA-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Original, from a book about ponds in winter: \"Because a pond freezes from the top down, fish can keep swimming in the water underneath all winter.\" Which choice is a real paraphrase that also keeps the meaning accurate?",
+    "choices": [
+      "Fish get through the winter by swimming above the sheet of ice that forms across the bottom of the pond.",
+      "Ice forms across the surface of a pond first, which leaves liquid water below it, and fish spend the winter swimming in that lower layer.",
+      "Because a pond freezes from the surface down, fish can keep swimming in the water below all winter.",
+      "As the book puts it, \"Because a pond freezes from the top down, fish can keep swimming in the water underneath all winter.\" That counts as a paraphrase because I named the book."
+    ],
+    "answer": "B",
+    "hints": [
+      "Two tests have to pass at once here: is the sentence genuinely rebuilt, and does it still say what the original said?",
+      "One choice is rebuilt but turns the pond upside down, one leaves the sentence standing with two synonyms dropped in, and one is a quotation wearing the wrong label."
+    ]
+  },
+  {
+    "id": "m7ela-citing-sources-001",
+    "loId": "m7ela.citing-sources",
+    "cedCode": "M7ELA-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "These four sentences all come from one student's report about rain gardens. Which sentence does NOT need a citation?",
+    "choices": [
+      "The rain garden behind the school soaks up the water that used to flood the parking lot.",
+      "Bees visit a rain garden more often when it holds flowers that bloom at different times of the year.",
+      "A garden is a piece of ground where people grow plants.",
+      "The city started paying for rain gardens on school grounds four years ago."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask the common-knowledge question about each one: would a general reader accept this without checking anywhere?",
+      "Three of these are findings somebody had to observe, measure or look up, even though none of them names a source out loud. One is a plain definition of the word itself."
+    ]
+  },
+  {
+    "id": "m7ela-citing-sources-002",
+    "loId": "m7ela.citing-sources",
+    "cedCode": "M7ELA-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Priya read a magazine article about wolf pups, closed the tab, and wrote the idea in her own sentences. She used none of the article's exact words. Does that sentence need a citation?",
+    "choices": [
+      "No, because she did not copy any exact words.",
+      "No, because she wrote the sentence herself.",
+      "Yes, because the article is what found the information out, even though she wrote the sentence.",
+      "Yes, but only if she also puts quotation marks around it."
+    ],
+    "answer": "C",
+    "hints": [
+      "Credit follows the idea, not the punctuation. Ask one question about the sentence: did she know this before she opened the source?",
+      "Rewording changes the words and nothing else. A paraphrase gets named exactly the way a quotation would, and quotation marks belong only on exact copied words."
+    ]
+  },
+  {
+    "id": "m7ela-citing-sources-003",
+    "loId": "m7ela.citing-sources",
+    "cedCode": "M7ELA-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this beside a fact in her notes. WHO MADE IT: a writer named Sam Oyelaran. WHAT IT IS CALLED: \"Why Some Sidewalks Crack.\" WHERE IT WAS PUBLISHED: a website called Curb Notes. WHERE I FOUND IT: curbnotes.example/cracks. Which piece of a citation is still missing?",
+    "choices": [
+      "Who made it - the author or the group that published it.",
+      "What it is called - the title.",
+      "Where it was published - the website or magazine it sits inside.",
+      "When it came out - the date it was published."
+    ],
+    "answer": "D",
+    "hints": [
+      "Run the five pieces down the list one at a time and check each one off against her note.",
+      "Three of the choices name something the note already has. The one left over matters because information ages, and a reader needs to know how old this is."
+    ]
+  },
+  {
+    "id": "m7ela-citing-sources-004",
+    "loId": "m7ela.citing-sources",
+    "cedCode": "M7ELA-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student's paragraph has three sentences: his own opinion about the school library, a fact he reworded from a county library newsletter, and something he sees at the front desk himself every day. He listed the newsletter at the end of his paper and says that list covers the whole paragraph. What is wrong?",
+    "choices": [
+      "A reader in the middle of the paragraph cannot tell which sentence came from the newsletter, so the borrowed sentence needs credit inside the sentence itself.",
+      "Nothing is wrong, because the newsletter does appear in the list at the end.",
+      "He should not have reworded the newsletter's sentence in the first place.",
+      "All three sentences need a citation, including the one he observed himself."
+    ],
+    "answer": "A",
+    "hints": [
+      "Credit has two jobs and two places. Ask which job the list at the end actually does.",
+      "The list gives a reader the five pieces they need to go find the source. Only in-text credit shows WHICH part of your paragraph is borrowed."
+    ]
+  },
+  {
+    "id": "m7ela-citing-sources-005",
+    "loId": "m7ela.citing-sources",
+    "cedCode": "M7ELA-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four students used the same invented source, a neighborhood weather blog, in their reports. Which one has plagiarized?",
+    "choices": [
+      "Tomas copied one sentence exactly, put quotation marks around it, and named the blog in his own sentence right before it.",
+      "Nia copied a sentence, changed a few words to similar ones, kept the order the same, and put the blog only in the list at the end.",
+      "Owen read the post, closed the tab, wrote the idea in his own sentences, and named the blog in the sentence where he used it.",
+      "Rafi wrote that rain falls from clouds and did not cite that anywhere."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask two separate questions about each student: what did they do to the words, and where did the credit go?",
+      "One student wrote something a general reader already accepts, so no source is needed there. Another kept the source's sentence standing and only changed a few words inside it."
+    ]
+  },
+  {
+    "id": "m7ela-citing-sources-006",
+    "loId": "m7ela.citing-sources",
+    "cedCode": "M7ELA-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three days ago a student wrote one line in her notes: penguins in a colony can pick out their own chick's call in a crowd of thousands - HEARD IT IN A VIDEO. She is now writing her report and cannot remember whether those words were copied. What is wrong with the note, and what should she do?",
+    "choices": [
+      "It is missing four of the five pieces, and it does not show whether the words were copied, so she has to reopen the source, record all five, and put quotation marks on any exact words.",
+      "Nothing is wrong, because she did write down where she heard it.",
+      "The only problem is the missing date, and she can leave that out because this fact will not go out of date.",
+      "The fact is common knowledge about penguins, so the note needs no source at all."
+    ],
+    "answer": "A",
+    "hints": [
+      "Two things have gone wrong here, not one. Run the five pieces against her note, then ask how she can tell her own words from the source's.",
+      "\"A video\" is not who made it, what it is called, where it was published or when. And a note that never marked its quotations is exactly how accidental plagiarism happens."
+    ]
+  }
+]

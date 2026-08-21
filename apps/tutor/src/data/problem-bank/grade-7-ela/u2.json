@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-theme-and-summary-001",
+    "loId": "m7ela.theme-and-summary",
+    "cedCode": "M7ELA-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is stated as a THEME rather than as a topic, a moral, or a plot detail?",
+    "choices": [
+      "Jealousy.",
+      "Wanting what someone else has can make you stop seeing what you already have.",
+      "Never be jealous of your friends.",
+      "Dana borrowed her cousin's skateboard on Saturday."
+    ],
+    "answer": "B",
+    "hints": [
+      "A theme is a full sentence that says something about how life works. Cross out anything that is one word, anything that gives an order, and anything that is just an event.",
+      "One choice is a single-word topic, one starts with \"never\" and barks a command, and one only reports something that happened. The choice left over makes a claim about people."
+    ]
+  },
+  {
+    "id": "m7ela-theme-and-summary-002",
+    "loId": "m7ela.theme-and-summary",
+    "cedCode": "M7ELA-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the story, then choose the theme it supports. \"Every night Omar set two alarms so he would not oversleep for his paper route. When his sister broke her ankle in March, he set a third one, for her medicine. He never told her about the third alarm.\"",
+    "choices": [
+      "Responsibility.",
+      "Always help your family without complaining.",
+      "Omar sets three alarms on his phone every night.",
+      "Caring for someone often happens quietly, where the person being cared for never sees it."
+    ],
+    "answer": "D",
+    "hints": [
+      "Two of these are not theme statements at all. One is a single word and one gives an order. Rule those out first, then check whether what is left says anything about life.",
+      "The last sentence of the story is the one that decides it. Ask why the story bothers to tell you that Omar never mentioned the third alarm."
+    ]
+  },
+  {
+    "id": "m7ela-theme-and-summary-003",
+    "loId": "m7ela.theme-and-summary",
+    "cedCode": "M7ELA-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the story, then choose the best OBJECTIVE SUMMARY. \"Lena signed up for the school talent show with a song she had never sung in front of anyone. She practiced in the shower for three weeks. On the night of the show the microphone cut out halfway through, and the audience kept clapping in time until she finished the song without it.\"",
+    "choices": [
+      "Lena enters the school talent show with a song she has never performed for anyone. She practices for three weeks. During the show the microphone fails, and she finishes the song without it while the audience claps along.",
+      "Lena was so brave, and the best part was when the whole crowd clapped for her at the end.",
+      "You should always keep going when something goes wrong in the middle of a performance.",
+      "Lena signed up for the talent show. She picked a song. She practiced in the shower. The microphone cut out."
+    ],
+    "answer": "A",
+    "hints": [
+      "Objective means no opinion and no advice. Two of these break that rule in their first few words.",
+      "Of the two that are left, one lists small steps and stops before the ending. A summary always says how things turned out."
+    ]
+  },
+  {
+    "id": "m7ela-theme-and-summary-004",
+    "loId": "m7ela.theme-and-summary",
+    "cedCode": "M7ELA-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the story. \"Theo's bus pass expired on a Tuesday, and he did not tell his mom, because she had just started a new job. For two weeks he walked the forty minutes to school in a green raincoat, leaving before six. His mom found the expired pass in the laundry and bought him a new one without ever saying a word about the walking.\" Which detail could be cut from an objective summary without making the ending stop making sense?",
+    "choices": [
+      "Theo's bus pass expired.",
+      "Theo did not tell his mom, because she had just started a new job.",
+      "Theo walked to school in a green raincoat.",
+      "Theo's mom found the expired pass and bought him a new one."
+    ],
+    "answer": "C",
+    "hints": [
+      "Test the details one at a time. Cover a detail with your thumb and ask whether the ending still makes sense without it.",
+      "Three of these are links in the chain: the problem, the reason Theo hid it, and how it ended. The fourth only tells you what he had on."
+    ]
+  },
+  {
+    "id": "m7ela-theme-and-summary-005",
+    "loId": "m7ela.theme-and-summary",
+    "cedCode": "M7ELA-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the story. \"All season Bea told everyone she did not care about making the relay team. She checked the posted list four times the morning it went up. When her name was on it, she said it was probably a mistake, and then she kept the printout in her binder all year.\" A reader states the theme this way: pretending not to want something is a way of protecting yourself from wanting it. Which detail most clearly shows that Bea's claim not to care was not true?",
+    "choices": [
+      "Bea told everyone all season that she did not care about making the relay team.",
+      "Bea said her name being on the list was probably a mistake.",
+      "The relay team list was posted in the morning.",
+      "Bea kept the printout in her binder all year."
+    ],
+    "answer": "D",
+    "hints": [
+      "You are not looking for the pretending. You are looking for the moment the pretending is contradicted by something Bea does.",
+      "Two choices are Bea saying she does not care, which is the claim itself and proves nothing. One is a detail about timing. Only one shows her holding on to the thing she said did not matter."
+    ]
+  },
+  {
+    "id": "m7ela-theme-and-summary-006",
+    "loId": "m7ela.theme-and-summary",
+    "cedCode": "M7ELA-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Story: \"Ruben spent October building a ramp for the neighborhood skate spot out of scrap plywood. In November the city posted a notice that the lot would become a parking area. Ruben took the ramp apart and carried the pieces to his garage, where they are still stacked, and he has started measuring the alley behind his building.\" Student summary: \"Ruben builds an awesome ramp at the skate spot. The city ruins it by turning the lot into parking. He takes the ramp apart.\" Which revision would most improve the summary?",
+    "choices": [
+      "Add that the ramp was built out of scrap plywood.",
+      "Replace \"awesome\" and \"ruins it\" with neutral wording, and add that Ruben has started measuring the alley behind his building.",
+      "Add a sentence saying whether the city was right to turn the lot into parking.",
+      "Change \"ruins it\" to \"unfairly ruins it\" so that readers understand the situation better."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check the student summary against both rules at once: is there any opinion in it, and does it reach how things turned out?",
+      "\"Awesome\" and \"ruins it\" are judgments, not events - and the summary stops one step short of the ending. The best revision fixes both problems, and adding more opinion fixes neither."
+    ]
+  },
+  {
+    "id": "m7ela-point-of-view-001",
+    "loId": "m7ela.point-of-view",
+    "cedCode": "M7ELA-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What point of view is this excerpt written in? \"I counted the cracks in the sidewalk the whole way to the dentist, the way I always do when I am nervous.\"",
+    "choices": [
+      "Second person",
+      "Third person limited",
+      "First person",
+      "Third person omniscient"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at the pronouns in the narration itself, not in any dialogue.",
+      "The teller is standing inside the story and calls himself or herself \"I,\" which names one point of view exactly."
+    ]
+  },
+  {
+    "id": "m7ela-point-of-view-002",
+    "loId": "m7ela.point-of-view",
+    "cedCode": "M7ELA-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What point of view is this excerpt written in? \"Malik set his tray down on the counter. 'I already paid for mine,' the boy behind him said, holding up a receipt. Malik was fairly sure the boy had not.\"",
+    "choices": [
+      "Third person limited",
+      "First person",
+      "Third person omniscient",
+      "Second person"
+    ],
+    "answer": "A",
+    "hints": [
+      "Cover the words inside the quotation marks with your thumb. Only the narration decides the point of view.",
+      "The leftover narration says Malik, him, and he - and it reports what Malik was fairly sure of, but never what the other boy is thinking. One head, told from outside."
+    ]
+  },
+  {
+    "id": "m7ela-point-of-view-003",
+    "loId": "m7ela.point-of-view",
+    "cedCode": "M7ELA-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What point of view is this excerpt written in? \"Junie decided the smell drifting out of the science room was nothing to worry about. Two doors down, Mr. Okafor was already deciding it was time to open every window in the hallway.\"",
+    "choices": [
+      "First person",
+      "Third person limited",
+      "Second person",
+      "Third person omniscient"
+    ],
+    "answer": "D",
+    "hints": [
+      "The narration uses names and he and she, so it is third person. Now run the real test: count the heads.",
+      "You are told what Junie decided, and you are also told what Mr. Okafor was deciding two doors away, where Junie cannot see him. Two heads means the narrator is all-knowing."
+    ]
+  },
+  {
+    "id": "m7ela-point-of-view-004",
+    "loId": "m7ela.point-of-view",
+    "cedCode": "M7ELA-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the excerpt, then choose what this narrator lets the reader know. \"I told my cousin that the trip did not matter to me. She nodded, put her headphones back on, and looked out the window until we reached the station.\"",
+    "choices": [
+      "What the narrator is thinking and also what the cousin is thinking.",
+      "What the narrator says and notices, and only what the cousin does - not why she does it.",
+      "What the cousin is thinking, but not what the narrator is thinking.",
+      "Everything that happens in the story, including scenes the narrator is not present for."
+    ],
+    "answer": "B",
+    "hints": [
+      "The narrator is a person standing inside the story. How many heads can a person inside a story see into?",
+      "List what you are actually told about the cousin: she nodded, she put her headphones on, she looked out the window. Every one of those is something you could watch from the next seat. None of them is a thought."
+    ]
+  },
+  {
+    "id": "m7ela-point-of-view-005",
+    "loId": "m7ela.point-of-view",
+    "cedCode": "M7ELA-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "This excerpt is third person limited. \"Sam checked the score again and told himself there was still time. On the other bench, Priya retied her left shoe for the third time.\" Which sentence, added to the end, would make the excerpt third person omniscient?",
+    "choices": [
+      "\"Two minutes,\" the referee called across the court.",
+      "Sam wondered whether Priya was as nervous as he was.",
+      "Priya was not fixing her shoe. She was buying herself ten more seconds before she had to look at the scoreboard.",
+      "Priya stood up and walked toward the scorer's table."
+    ],
+    "answer": "C",
+    "hints": [
+      "The narration already goes inside Sam. To become omniscient it has to open a SECOND head.",
+      "Three of these add only something Sam could see or hear from his own bench, or one more of Sam's own thoughts. One tells you the real reason behind what Priya is doing, and only Priya knows that."
+    ]
+  },
+  {
+    "id": "m7ela-point-of-view-006",
+    "loId": "m7ela.point-of-view",
+    "cedCode": "M7ELA-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Here is one moment written two ways. VERSION 1: \"Devon handed over the last ticket. He had been saving it for his brother. Ms. Reyes took it and wrote his name on the list.\" VERSION 2: \"Devon handed over the last ticket. He had been saving it for his brother. Ms. Reyes took it and wrote his name on the list, thinking that this was the third year in a row he had given something away.\" What does Version 2 gain, and what does it give up?",
+    "choices": [
+      "It gains Ms. Reyes's view of Devon as a pattern, and it gives up the reader's uncertainty about whether anyone noticed what he did.",
+      "It gains a narrator who stands inside the story, and it gives up the outside voice that Version 1 has.",
+      "It gains extra events, and it gives up the setting that Version 1 establishes.",
+      "It gains Devon's thoughts, which Version 1 never reports."
+    ],
+    "answer": "A",
+    "hints": [
+      "Count the heads in each version first, then ask what the extra head hands the reader and what it takes away.",
+      "Both versions are third person and both already report Devon's thought about saving the ticket, so nothing about the pronouns or the events changed. What changed is that a second person's thinking is now on the page - and once you know Devon was seen, you can no longer wonder whether he was."
+    ]
+  },
+  {
+    "id": "m7ela-figurative-language-001",
+    "loId": "m7ela.figurative-language",
+    "cedCode": "M7ELA-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which figure of speech is used in this sentence? \"The hallway after the last bell was as loud as a lawn mower.\"",
+    "choices": [
+      "Metaphor",
+      "Personification",
+      "Idiom",
+      "Simile"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for a signal word. Two little words separate this figure from a metaphor.",
+      "The sentence uses \"as ... as\" to compare a hallway to a lawn mower, which are two completely unlike things."
+    ]
+  },
+  {
+    "id": "m7ela-figurative-language-002",
+    "loId": "m7ela.figurative-language",
+    "cedCode": "M7ELA-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses personification?",
+    "choices": [
+      "The screen door banged twice behind him.",
+      "The screen door complained every time the wind pushed it.",
+      "The screen door was as thin as a sheet of paper.",
+      "I have fixed that screen door a hundred times this summer."
+    ],
+    "answer": "B",
+    "hints": [
+      "One of these is a simile and one is an exaggeration. Sort those out first, then look hard at the two left.",
+      "Personification needs a HUMAN quality, not just any verb. Banging is only a noise a door makes on its own, but complaining needs a voice and a mood."
+    ]
+  },
+  {
+    "id": "m7ela-figurative-language-003",
+    "loId": "m7ela.figurative-language",
+    "cedCode": "M7ELA-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is a metaphor?",
+    "choices": [
+      "The dog next door barks like a car alarm.",
+      "The dog next door is a beagle.",
+      "At six in the morning, the dog next door is an alarm clock nobody can switch off.",
+      "The dog next door barked for ten straight minutes."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cross out any sentence with like or as in it. That one is a simile, so it cannot be the answer here.",
+      "The word \"is\" does not make a metaphor by itself. One sentence uses \"is\" and is simply true word for word, because that is just what kind of dog it is. A metaphor has to join two UNLIKE things."
+    ]
+  },
+  {
+    "id": "m7ela-figurative-language-004",
+    "loId": "m7ela.figurative-language",
+    "cedCode": "M7ELA-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What does this metaphor tell you? \"On the ride home, my sister's silence was a closed door.\"",
+    "choices": [
+      "She had shut herself off, and there was no way for anyone to get in.",
+      "She was sitting next to the door of the car.",
+      "She was tired out from the long day.",
+      "She was making more noise than usual."
+    ],
+    "answer": "A",
+    "hints": [
+      "Name both sides first. The thing being described is the sister's silence. The thing it is compared to is a closed door.",
+      "Ask which ONE quality of a closed door crosses over. Not its color, not its hinges - what a closed door does to anyone standing on the outside of it."
+    ]
+  },
+  {
+    "id": "m7ela-figurative-language-005",
+    "loId": "m7ela.figurative-language",
+    "cedCode": "M7ELA-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses hyperbole?",
+    "choices": [
+      "The line for the water fountain stretched past the gym doors.",
+      "The line for the water fountain was a thousand miles long.",
+      "The line for the water fountain moved like cold syrup.",
+      "The line for the water fountain finally gave up and broke apart."
+    ],
+    "answer": "B",
+    "hints": [
+      "Hyperbole is exaggeration stretched so far that nobody is meant to believe it. Ask which sentence could not possibly be true.",
+      "One sentence is a plain literal description, one uses \"like\" and is a simile, and one gives the line a human decision. Only one stretches a measurement past anything real."
+    ]
+  },
+  {
+    "id": "m7ela-figurative-language-006",
+    "loId": "m7ela.figurative-language",
+    "cedCode": "M7ELA-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "\"Every August the creek behind the trailer park forgets it was ever a creek at all, and the kids ride their bikes straight down the middle of it.\" Which choice names the figure correctly AND explains what it means?",
+    "choices": [
+      "Simile - the creek is compared to a road using the word like.",
+      "Hyperbole - the writer exaggerates to say the creek disappears, when really it only slows down in August.",
+      "Idiom - \"forgets it was ever a creek\" is a common phrase that means the weather has turned hot.",
+      "Personification - forgetting is something only a person can do, and it means the creek dries up completely every August."
+    ],
+    "answer": "D",
+    "hints": [
+      "Do the label first. Search the sentence for like or as, and check whether anything is being called something it is not.",
+      "There is no like and no as, so it is not a simile. Ask what kind of word \"forgets\" is - and then check the meaning against the second half of the sentence, where kids are riding bikes down the middle of it."
+    ]
+  },
+  {
+    "id": "m7ela-tone-mood-and-word-choice-001",
+    "loId": "m7ela.tone-mood-and-word-choice",
+    "cedCode": "M7ELA-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A reader asks, \"How does the writer seem to feel about the subject?\" Which term names what that reader is trying to identify?",
+    "choices": [
+      "Tone",
+      "Mood",
+      "Theme",
+      "Summary"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two of the four choices are about feelings. Decide whose feelings the question is asking about.",
+      "The question asks about the WRITER's attitude, not about the feeling handed to the reader. The reader's feeling is the other one."
+    ]
+  },
+  {
+    "id": "m7ela-tone-mood-and-word-choice-002",
+    "loId": "m7ela.tone-mood-and-word-choice",
+    "cedCode": "M7ELA-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A writer changes the sentence \"The relatives arrived at noon\" to \"The relatives descended at noon.\" What does the new word change?",
+    "choices": [
+      "It changes how many relatives came to the house.",
+      "It changes what time the relatives came to the house.",
+      "It leaves every fact the same but makes the arrival feel sudden and overwhelming.",
+      "It makes the sentence sound more formal without changing the feeling at all."
+    ],
+    "answer": "C",
+    "hints": [
+      "Line the two sentences up and mark the only word that is different. The number and the time did not move.",
+      "\"Descended\" is the word you would use for a swarm coming down on something. Ask what feeling that hands the reader that \"arrived\" does not."
+    ]
+  },
+  {
+    "id": "m7ela-tone-mood-and-word-choice-003",
+    "loId": "m7ela.tone-mood-and-word-choice",
+    "cedCode": "M7ELA-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which word best names the MOOD of this passage - the feeling it gives the reader? \"The heater clicked off at nine and did not come back on. Ivan pulled the blanket up to his chin and watched his breath rise toward the ceiling in the dark. Downstairs, the front door was still unlocked.\"",
+    "choices": [
+      "Cheerful",
+      "Uneasy",
+      "Amused",
+      "Peaceful"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the loaded details: a heater that stops, breath you can see in the dark, and one last piece of information about a door.",
+      "The last sentence is the decisive one. A writer does not mention an unlocked door at the end of a dark, cold scene to make you comfortable."
+    ]
+  },
+  {
+    "id": "m7ela-tone-mood-and-word-choice-004",
+    "loId": "m7ela.tone-mood-and-word-choice",
+    "cedCode": "M7ELA-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice best describes the NARRATOR'S tone? \"My aunt has kept the same wall calendar since before I was born, and every January she buys the exact same one again. She says the pictures are different if you look closely. I have looked closely. They are not.\"",
+    "choices": [
+      "Angry - the narrator resents being made to look at the calendar every year.",
+      "Neutral - the narrator only reports facts about the calendar and takes no attitude.",
+      "Admiring - the narrator thinks the aunt has excellent taste in calendars.",
+      "Wry and affectionate - the narrator teases the aunt's habit without any meanness in it."
+    ],
+    "answer": "D",
+    "hints": [
+      "Tone is the attitude in the wording. Read the last two short sentences again and ask what the narrator is doing with them.",
+      "\"I have looked closely. They are not.\" is a joke at the aunt's expense - but the narrator actually went and looked, which is not what an angry or a bored person does."
+    ]
+  },
+  {
+    "id": "m7ela-tone-mood-and-word-choice-005",
+    "loId": "m7ela.tone-mood-and-word-choice",
+    "cedCode": "M7ELA-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice best describes the tone and the mood of this passage? \"The vet came out at 4:20. She said the word sorry first, which is how I knew. My dad asked what we owed. In the corner of the waiting room there was a fish tank, and one of the fish was orange.\"",
+    "choices": [
+      "The tone is flat and controlled, and that flatness is exactly what makes the mood so heavy.",
+      "The tone is heavy and grieving, and the mood the passage creates is cheerful.",
+      "The tone and the mood are both cheerful, because the passage ends on a bright orange fish.",
+      "The tone is flat, which shows that the narrator does not really care what happened."
+    ],
+    "answer": "A",
+    "hints": [
+      "Tone and mood are two separate questions. Do the tone first by looking only at HOW the sentences are written, not at what happens in them.",
+      "There is not one feeling word in the whole passage - just a time, a bill, and a fish. Ask whether that means the narrator feels nothing, or means the narrator will not say it."
+    ]
+  },
+  {
+    "id": "m7ela-tone-mood-and-word-choice-006",
+    "loId": "m7ela.tone-mood-and-word-choice",
+    "cedCode": "M7ELA-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer wants a paragraph about the last day of summer camp to feel wistful - fond, and a little sad that it is ending. Which revision of the sentence below best creates that mood? Original sentence: \"We got on the bus at ten and went home.\"",
+    "choices": [
+      "We got on the horrible bus at ten and finally escaped that awful place.",
+      "We boarded the motor coach at ten o'clock and were transported to our residences.",
+      "We climbed onto the bus at ten, and for the first mile nobody turned on a phone or said anything at all.",
+      "We got on the bus at ten and went home, which made every single one of us extremely sad."
+    ],
+    "answer": "C",
+    "hints": [
+      "Wistful means fond and a little sad at the same time. Rule out any revision that is only bitter, and any that is only formal.",
+      "Two revisions are left, and one of them just announces the feeling with the word sad. Mood is built out of loaded details the reader feels for themselves, not out of a label the writer sticks on the end."
+    ]
+  }
+]

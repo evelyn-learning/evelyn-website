@@ -1940,6 +1940,126 @@ import { SEED_M7MATH_U10_PROBABILITY_OF_SIMPLE_EVENTS } from './seeds/m7math-u10
 import { SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY } from './seeds/m7math-u10-experimental-vs-theoretical-probability';
 import { SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS } from './seeds/m7math-u10-probability-models-and-simulations';
 import { SEED_M7MATH_U10_COMPOUND_EVENTS } from './seeds/m7math-u10-compound-events';
+import { SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE } from './seeds/m7ela-u1-text-evidence-and-inference';
+import { SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT } from './seeds/m7ela-u1-plot-structure-and-conflict';
+import { SEED_M7ELA_U1_CHARACTERIZATION } from './seeds/m7ela-u1-characterization';
+import { SEED_M7ELA_U1_SETTING_AND_STORY_ELEMENTS } from './seeds/m7ela-u1-setting-and-story-elements';
+import { SEED_M7ELA_U2_THEME_AND_SUMMARY } from './seeds/m7ela-u2-theme-and-summary';
+import { SEED_M7ELA_U2_POINT_OF_VIEW } from './seeds/m7ela-u2-point-of-view';
+import { SEED_M7ELA_U2_FIGURATIVE_LANGUAGE } from './seeds/m7ela-u2-figurative-language';
+import { SEED_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE } from './seeds/m7ela-u2-tone-mood-and-word-choice';
+import { SEED_M7ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS } from './seeds/m7ela-u3-central-idea-and-supporting-details';
+import { SEED_M7ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT } from './seeds/m7ela-u3-summarizing-informational-text';
+import { SEED_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS } from './seeds/m7ela-u3-text-features-and-graphics';
+import { SEED_M7ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY } from './seeds/m7ela-u3-technical-and-domain-vocabulary';
+import { SEED_M7ELA_U4_TEXT_STRUCTURE } from './seeds/m7ela-u4-text-structure';
+import { SEED_M7ELA_U4_AUTHORS_PURPOSE_AND_PERSPECTIVE } from './seeds/m7ela-u4-authors-purpose-and-perspective';
+import { SEED_M7ELA_U4_TRACING_AN_ARGUMENT } from './seeds/m7ela-u4-tracing-an-argument';
+import { SEED_M7ELA_U4_COMPARING_TWO_TEXTS } from './seeds/m7ela-u4-comparing-two-texts';
+import { SEED_M7ELA_U5_PARTS_OF_SPEECH } from './seeds/m7ela-u5-parts-of-speech';
+import { SEED_M7ELA_U5_SUBJECT_VERB_AGREEMENT } from './seeds/m7ela-u5-subject-verb-agreement';
+import { SEED_M7ELA_U5_PRONOUNS_AND_ANTECEDENTS } from './seeds/m7ela-u5-pronouns-and-antecedents';
+import { SEED_M7ELA_U5_VERB_TENSE_CONSISTENCY } from './seeds/m7ela-u5-verb-tense-consistency';
+import { SEED_M7ELA_U6_PHRASES_AND_CLAUSES } from './seeds/m7ela-u6-phrases-and-clauses';
+import { SEED_M7ELA_U6_SENTENCE_TYPES_AND_COMBINING } from './seeds/m7ela-u6-sentence-types-and-combining';
+import { SEED_M7ELA_U6_FRAGMENTS_AND_RUN_ONS } from './seeds/m7ela-u6-fragments-and-run-ons';
+import { SEED_M7ELA_U6_COMMAS_AND_END_PUNCTUATION } from './seeds/m7ela-u6-commas-and-end-punctuation';
+import { SEED_M7ELA_U7_CONTEXT_CLUES } from './seeds/m7ela-u7-context-clues';
+import { SEED_M7ELA_U7_ROOTS_PREFIXES_AND_SUFFIXES } from './seeds/m7ela-u7-roots-prefixes-and-suffixes';
+import { SEED_M7ELA_U7_CONNOTATION_AND_DENOTATION } from './seeds/m7ela-u7-connotation-and-denotation';
+import { SEED_M7ELA_U7_COMMONLY_CONFUSED_WORDS } from './seeds/m7ela-u7-commonly-confused-words';
+import { SEED_M7ELA_U8_CLAIMS_AND_REASONS } from './seeds/m7ela-u8-claims-and-reasons';
+import { SEED_M7ELA_U8_EVIDENCE_AND_ELABORATION } from './seeds/m7ela-u8-evidence-and-elaboration';
+import { SEED_M7ELA_U8_COUNTERCLAIMS } from './seeds/m7ela-u8-counterclaims';
+import { SEED_M7ELA_U8_ORGANIZING_AN_ARGUMENT } from './seeds/m7ela-u8-organizing-an-argument';
+import { SEED_M7ELA_U9_INFORMATIVE_THESIS_AND_STRUCTURE } from './seeds/m7ela-u9-informative-thesis-and-structure';
+import { SEED_M7ELA_U9_PARAGRAPH_DEVELOPMENT } from './seeds/m7ela-u9-paragraph-development';
+import { SEED_M7ELA_U9_TRANSITIONS_AND_COHESION } from './seeds/m7ela-u9-transitions-and-cohesion';
+import { SEED_M7ELA_U9_NARRATIVE_TECHNIQUE } from './seeds/m7ela-u9-narrative-technique';
+import { SEED_M7ELA_U10_RESEARCH_QUESTIONS } from './seeds/m7ela-u10-research-questions';
+import { SEED_M7ELA_U10_EVALUATING_SOURCES } from './seeds/m7ela-u10-evaluating-sources';
+import { SEED_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/m7ela-u10-quoting-paraphrasing-summarizing';
+import { SEED_M7ELA_U10_CITING_SOURCES } from './seeds/m7ela-u10-citing-sources';
+import { SEED_M7SCI_U1_CHARACTERISTICS_OF_LIVING_THINGS } from './seeds/m7sci-u1-characteristics-of-living-things';
+import { SEED_M7SCI_U1_SCIENTIFIC_INVESTIGATION } from './seeds/m7sci-u1-scientific-investigation';
+import { SEED_M7SCI_U1_VARIABLES_AND_CONTROLS } from './seeds/m7sci-u1-variables-and-controls';
+import { SEED_M7SCI_U1_DATA_GRAPHS_AND_CONCLUSIONS } from './seeds/m7sci-u1-data-graphs-and-conclusions';
+import { SEED_M7SCI_U2_CELL_THEORY_AND_MICROSCOPES } from './seeds/m7sci-u2-cell-theory-and-microscopes';
+import { SEED_M7SCI_U2_PLANT_AND_ANIMAL_CELLS } from './seeds/m7sci-u2-plant-and-animal-cells';
+import { SEED_M7SCI_U2_ORGANELLES_AND_THEIR_JOBS } from './seeds/m7sci-u2-organelles-and-their-jobs';
+import { SEED_M7SCI_U2_DIFFUSION_AND_OSMOSIS } from './seeds/m7sci-u2-diffusion-and-osmosis';
+import { SEED_M7SCI_U3_LEVELS_OF_ORGANIZATION } from './seeds/m7sci-u3-levels-of-organization';
+import { SEED_M7SCI_U3_DIGESTIVE_AND_CIRCULATORY_SYSTEMS } from './seeds/m7sci-u3-digestive-and-circulatory-systems';
+import { SEED_M7SCI_U3_RESPIRATORY_AND_NERVOUS_SYSTEMS } from './seeds/m7sci-u3-respiratory-and-nervous-systems';
+import { SEED_M7SCI_U3_HOMEOSTASIS } from './seeds/m7sci-u3-homeostasis';
+import { SEED_M7SCI_U4_ENERGY_FOR_LIVING_THINGS } from './seeds/m7sci-u4-energy-for-living-things';
+import { SEED_M7SCI_U4_PHOTOSYNTHESIS } from './seeds/m7sci-u4-photosynthesis';
+import { SEED_M7SCI_U4_CELLULAR_RESPIRATION } from './seeds/m7sci-u4-cellular-respiration';
+import { SEED_M7SCI_U4_MATTER_AND_ENERGY_IN_ORGANISMS } from './seeds/m7sci-u4-matter-and-energy-in-organisms';
+import { SEED_M7SCI_U5_CELL_DIVISION_AND_GROWTH } from './seeds/m7sci-u5-cell-division-and-growth';
+import { SEED_M7SCI_U5_ASEXUAL_AND_SEXUAL_REPRODUCTION } from './seeds/m7sci-u5-asexual-and-sexual-reproduction';
+import { SEED_M7SCI_U5_PLANT_REPRODUCTION_AND_POLLINATION } from './seeds/m7sci-u5-plant-reproduction-and-pollination';
+import { SEED_M7SCI_U5_ENVIRONMENT_AND_GROWTH } from './seeds/m7sci-u5-environment-and-growth';
+import { SEED_M7SCI_U6_GENES_CHROMOSOMES_AND_DNA } from './seeds/m7sci-u6-genes-chromosomes-and-dna';
+import { SEED_M7SCI_U6_DOMINANT_AND_RECESSIVE_TRAITS } from './seeds/m7sci-u6-dominant-and-recessive-traits';
+import { SEED_M7SCI_U6_PUNNETT_SQUARES } from './seeds/m7sci-u6-punnett-squares';
+import { SEED_M7SCI_U6_MUTATIONS_AND_VARIATION } from './seeds/m7sci-u6-mutations-and-variation';
+import { SEED_M7SCI_U7_FOSSILS_AND_THE_FOSSIL_RECORD } from './seeds/m7sci-u7-fossils-and-the-fossil-record';
+import { SEED_M7SCI_U7_EVIDENCE_FOR_COMMON_ANCESTRY } from './seeds/m7sci-u7-evidence-for-common-ancestry';
+import { SEED_M7SCI_U7_NATURAL_SELECTION } from './seeds/m7sci-u7-natural-selection';
+import { SEED_M7SCI_U7_ADAPTATION_AND_ARTIFICIAL_SELECTION } from './seeds/m7sci-u7-adaptation-and-artificial-selection';
+import { SEED_M7SCI_U8_CLASSIFYING_LIVING_THINGS } from './seeds/m7sci-u8-classifying-living-things';
+import { SEED_M7SCI_U8_DOMAINS_AND_KINGDOMS } from './seeds/m7sci-u8-domains-and-kingdoms';
+import { SEED_M7SCI_U8_USING_DICHOTOMOUS_KEYS } from './seeds/m7sci-u8-using-dichotomous-keys';
+import { SEED_M7SCI_U8_CLADOGRAMS_AND_RELATEDNESS } from './seeds/m7sci-u8-cladograms-and-relatedness';
+import { SEED_M7SCI_U9_ECOSYSTEM_ORGANIZATION } from './seeds/m7sci-u9-ecosystem-organization';
+import { SEED_M7SCI_U9_FOOD_CHAINS_AND_FOOD_WEBS } from './seeds/m7sci-u9-food-chains-and-food-webs';
+import { SEED_M7SCI_U9_CYCLES_OF_MATTER } from './seeds/m7sci-u9-cycles-of-matter';
+import { SEED_M7SCI_U9_BIOMES_AND_HABITATS } from './seeds/m7sci-u9-biomes-and-habitats';
+import { SEED_M7SCI_U10_INTERACTIONS_BETWEEN_SPECIES } from './seeds/m7sci-u10-interactions-between-species';
+import { SEED_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS } from './seeds/m7sci-u10-population-changes-and-limits';
+import { SEED_M7SCI_U10_ECOSYSTEM_DISRUPTION } from './seeds/m7sci-u10-ecosystem-disruption';
+import { SEED_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT } from './seeds/m7sci-u10-biodiversity-and-human-impact';
+import { SEED_M7GEO_U1_MAPS_GLOBES_AND_PROJECTIONS } from './seeds/m7geo-u1-maps-globes-and-projections';
+import { SEED_M7GEO_U1_LATITUDE_LONGITUDE_AND_LOCATION } from './seeds/m7geo-u1-latitude-longitude-and-location';
+import { SEED_M7GEO_U1_MAP_ELEMENTS_SCALE_AND_DIRECTION } from './seeds/m7geo-u1-map-elements-scale-and-direction';
+import { SEED_M7GEO_U1_REGIONS_AND_PLACE } from './seeds/m7geo-u1-regions-and-place';
+import { SEED_M7GEO_U2_LANDFORMS_AND_WATER_FEATURES } from './seeds/m7geo-u2-landforms-and-water-features';
+import { SEED_M7GEO_U2_PLATE_TECTONICS_AND_NATURAL_HAZARDS } from './seeds/m7geo-u2-plate-tectonics-and-natural-hazards';
+import { SEED_M7GEO_U2_WEATHER_CLIMATE_AND_FACTORS } from './seeds/m7geo-u2-weather-climate-and-factors';
+import { SEED_M7GEO_U2_CLIMATE_ZONES_AND_BIOMES } from './seeds/m7geo-u2-climate-zones-and-biomes';
+import { SEED_M7GEO_U3_POPULATION_DISTRIBUTION_AND_DENSITY } from './seeds/m7geo-u3-population-distribution-and-density';
+import { SEED_M7GEO_U3_POPULATION_GROWTH_AND_STRUCTURE } from './seeds/m7geo-u3-population-growth-and-structure';
+import { SEED_M7GEO_U3_MIGRATION_PUSH_AND_PULL } from './seeds/m7geo-u3-migration-push-and-pull';
+import { SEED_M7GEO_U3_URBANIZATION_AND_SETTLEMENT } from './seeds/m7geo-u3-urbanization-and-settlement';
+import { SEED_M7GEO_U4_WHAT_CULTURE_IS } from './seeds/m7geo-u4-what-culture-is';
+import { SEED_M7GEO_U4_LANGUAGE_FAMILIES_AND_DIFFUSION } from './seeds/m7geo-u4-language-families-and-diffusion';
+import { SEED_M7GEO_U4_WORLD_RELIGIONS } from './seeds/m7geo-u4-world-religions';
+import { SEED_M7GEO_U4_CULTURAL_CHANGE_AND_GLOBALIZATION } from './seeds/m7geo-u4-cultural-change-and-globalization';
+import { SEED_M7GEO_U5_ECONOMIC_SYSTEMS } from './seeds/m7geo-u5-economic-systems';
+import { SEED_M7GEO_U5_RESOURCES_AND_ECONOMIC_ACTIVITY } from './seeds/m7geo-u5-resources-and-economic-activity';
+import { SEED_M7GEO_U5_LEVELS_OF_DEVELOPMENT } from './seeds/m7geo-u5-levels-of-development';
+import { SEED_M7GEO_U5_TRADE_AND_INTERDEPENDENCE } from './seeds/m7geo-u5-trade-and-interdependence';
+import { SEED_M7GEO_U6_TYPES_OF_GOVERNMENT } from './seeds/m7geo-u6-types-of-government';
+import { SEED_M7GEO_U6_CITIZENSHIP_AND_RIGHTS } from './seeds/m7geo-u6-citizenship-and-rights';
+import { SEED_M7GEO_U6_BORDERS_AND_CONFLICT } from './seeds/m7geo-u6-borders-and-conflict';
+import { SEED_M7GEO_U6_INTERNATIONAL_COOPERATION } from './seeds/m7geo-u6-international-cooperation';
+import { SEED_M7GEO_U7_LATIN_AMERICA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u7-latin-america-physical-geography';
+import { SEED_M7GEO_U7_LATIN_AMERICA_HISTORY_AND_CULTURE } from './seeds/m7geo-u7-latin-america-history-and-culture';
+import { SEED_M7GEO_U7_LATIN_AMERICA_ECONOMY_AND_CITIES } from './seeds/m7geo-u7-latin-america-economy-and-cities';
+import { SEED_M7GEO_U7_LATIN_AMERICA_ENVIRONMENT_ISSUES } from './seeds/m7geo-u7-latin-america-environment-issues';
+import { SEED_M7GEO_U8_EUROPE_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u8-europe-physical-geography';
+import { SEED_M7GEO_U8_EUROPE_HISTORY_AND_CULTURE } from './seeds/m7geo-u8-europe-history-and-culture';
+import { SEED_M7GEO_U8_EUROPE_ECONOMY_AND_UNION } from './seeds/m7geo-u8-europe-economy-and-union';
+import { SEED_M7GEO_U8_RUSSIA_AND_EURASIA } from './seeds/m7geo-u8-russia-and-eurasia';
+import { SEED_M7GEO_U9_AFRICA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u9-africa-physical-geography';
+import { SEED_M7GEO_U9_AFRICA_HISTORY_AND_CULTURE } from './seeds/m7geo-u9-africa-history-and-culture';
+import { SEED_M7GEO_U9_MIDDLE_EAST_GEOGRAPHY_AND_RESOURCES } from './seeds/m7geo-u9-middle-east-geography-and-resources';
+import { SEED_M7GEO_U9_AFRICA_MIDDLE_EAST_DEVELOPMENT } from './seeds/m7geo-u9-africa-middle-east-development';
+import { SEED_M7GEO_U10_ASIA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u10-asia-physical-geography';
+import { SEED_M7GEO_U10_SOUTH_AND_EAST_ASIA_CULTURE } from './seeds/m7geo-u10-south-and-east-asia-culture';
+import { SEED_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY } from './seeds/m7geo-u10-asia-population-and-economy';
+import { SEED_M7GEO_U10_OCEANIA_AND_ANTARCTICA } from './seeds/m7geo-u10-oceania-and-antarctica';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3802,6 +3922,128 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY,
   SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS,
   SEED_M7MATH_U10_COMPOUND_EVENTS,
+  // MS-core — Grade 7 English Language Arts.
+  SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE,
+  SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT,
+  SEED_M7ELA_U1_CHARACTERIZATION,
+  SEED_M7ELA_U1_SETTING_AND_STORY_ELEMENTS,
+  SEED_M7ELA_U2_THEME_AND_SUMMARY,
+  SEED_M7ELA_U2_POINT_OF_VIEW,
+  SEED_M7ELA_U2_FIGURATIVE_LANGUAGE,
+  SEED_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE,
+  SEED_M7ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS,
+  SEED_M7ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT,
+  SEED_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS,
+  SEED_M7ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY,
+  SEED_M7ELA_U4_TEXT_STRUCTURE,
+  SEED_M7ELA_U4_AUTHORS_PURPOSE_AND_PERSPECTIVE,
+  SEED_M7ELA_U4_TRACING_AN_ARGUMENT,
+  SEED_M7ELA_U4_COMPARING_TWO_TEXTS,
+  SEED_M7ELA_U5_PARTS_OF_SPEECH,
+  SEED_M7ELA_U5_SUBJECT_VERB_AGREEMENT,
+  SEED_M7ELA_U5_PRONOUNS_AND_ANTECEDENTS,
+  SEED_M7ELA_U5_VERB_TENSE_CONSISTENCY,
+  SEED_M7ELA_U6_PHRASES_AND_CLAUSES,
+  SEED_M7ELA_U6_SENTENCE_TYPES_AND_COMBINING,
+  SEED_M7ELA_U6_FRAGMENTS_AND_RUN_ONS,
+  SEED_M7ELA_U6_COMMAS_AND_END_PUNCTUATION,
+  SEED_M7ELA_U7_CONTEXT_CLUES,
+  SEED_M7ELA_U7_ROOTS_PREFIXES_AND_SUFFIXES,
+  SEED_M7ELA_U7_CONNOTATION_AND_DENOTATION,
+  SEED_M7ELA_U7_COMMONLY_CONFUSED_WORDS,
+  SEED_M7ELA_U8_CLAIMS_AND_REASONS,
+  SEED_M7ELA_U8_EVIDENCE_AND_ELABORATION,
+  SEED_M7ELA_U8_COUNTERCLAIMS,
+  SEED_M7ELA_U8_ORGANIZING_AN_ARGUMENT,
+  SEED_M7ELA_U9_INFORMATIVE_THESIS_AND_STRUCTURE,
+  SEED_M7ELA_U9_PARAGRAPH_DEVELOPMENT,
+  SEED_M7ELA_U9_TRANSITIONS_AND_COHESION,
+  SEED_M7ELA_U9_NARRATIVE_TECHNIQUE,
+  SEED_M7ELA_U10_RESEARCH_QUESTIONS,
+  SEED_M7ELA_U10_EVALUATING_SOURCES,
+  SEED_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING,
+  SEED_M7ELA_U10_CITING_SOURCES,
+  // MS-core — Grade 7 Science (Life Science).
+  SEED_M7SCI_U1_CHARACTERISTICS_OF_LIVING_THINGS,
+  SEED_M7SCI_U1_SCIENTIFIC_INVESTIGATION,
+  SEED_M7SCI_U1_VARIABLES_AND_CONTROLS,
+  SEED_M7SCI_U1_DATA_GRAPHS_AND_CONCLUSIONS,
+  SEED_M7SCI_U2_CELL_THEORY_AND_MICROSCOPES,
+  SEED_M7SCI_U2_PLANT_AND_ANIMAL_CELLS,
+  SEED_M7SCI_U2_ORGANELLES_AND_THEIR_JOBS,
+  SEED_M7SCI_U2_DIFFUSION_AND_OSMOSIS,
+  SEED_M7SCI_U3_LEVELS_OF_ORGANIZATION,
+  SEED_M7SCI_U3_DIGESTIVE_AND_CIRCULATORY_SYSTEMS,
+  SEED_M7SCI_U3_RESPIRATORY_AND_NERVOUS_SYSTEMS,
+  SEED_M7SCI_U3_HOMEOSTASIS,
+  SEED_M7SCI_U4_ENERGY_FOR_LIVING_THINGS,
+  SEED_M7SCI_U4_PHOTOSYNTHESIS,
+  SEED_M7SCI_U4_CELLULAR_RESPIRATION,
+  SEED_M7SCI_U4_MATTER_AND_ENERGY_IN_ORGANISMS,
+  SEED_M7SCI_U5_CELL_DIVISION_AND_GROWTH,
+  SEED_M7SCI_U5_ASEXUAL_AND_SEXUAL_REPRODUCTION,
+  SEED_M7SCI_U5_PLANT_REPRODUCTION_AND_POLLINATION,
+  SEED_M7SCI_U5_ENVIRONMENT_AND_GROWTH,
+  SEED_M7SCI_U6_GENES_CHROMOSOMES_AND_DNA,
+  SEED_M7SCI_U6_DOMINANT_AND_RECESSIVE_TRAITS,
+  SEED_M7SCI_U6_PUNNETT_SQUARES,
+  SEED_M7SCI_U6_MUTATIONS_AND_VARIATION,
+  SEED_M7SCI_U7_FOSSILS_AND_THE_FOSSIL_RECORD,
+  SEED_M7SCI_U7_EVIDENCE_FOR_COMMON_ANCESTRY,
+  SEED_M7SCI_U7_NATURAL_SELECTION,
+  SEED_M7SCI_U7_ADAPTATION_AND_ARTIFICIAL_SELECTION,
+  SEED_M7SCI_U8_CLASSIFYING_LIVING_THINGS,
+  SEED_M7SCI_U8_DOMAINS_AND_KINGDOMS,
+  SEED_M7SCI_U8_USING_DICHOTOMOUS_KEYS,
+  SEED_M7SCI_U8_CLADOGRAMS_AND_RELATEDNESS,
+  SEED_M7SCI_U9_ECOSYSTEM_ORGANIZATION,
+  SEED_M7SCI_U9_FOOD_CHAINS_AND_FOOD_WEBS,
+  SEED_M7SCI_U9_CYCLES_OF_MATTER,
+  SEED_M7SCI_U9_BIOMES_AND_HABITATS,
+  SEED_M7SCI_U10_INTERACTIONS_BETWEEN_SPECIES,
+  SEED_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS,
+  SEED_M7SCI_U10_ECOSYSTEM_DISRUPTION,
+  SEED_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT,
+  SEED_M7GEO_U1_MAPS_GLOBES_AND_PROJECTIONS,
+  SEED_M7GEO_U1_LATITUDE_LONGITUDE_AND_LOCATION,
+  SEED_M7GEO_U1_MAP_ELEMENTS_SCALE_AND_DIRECTION,
+  SEED_M7GEO_U1_REGIONS_AND_PLACE,
+  SEED_M7GEO_U2_LANDFORMS_AND_WATER_FEATURES,
+  SEED_M7GEO_U2_PLATE_TECTONICS_AND_NATURAL_HAZARDS,
+  SEED_M7GEO_U2_WEATHER_CLIMATE_AND_FACTORS,
+  SEED_M7GEO_U2_CLIMATE_ZONES_AND_BIOMES,
+  SEED_M7GEO_U3_POPULATION_DISTRIBUTION_AND_DENSITY,
+  SEED_M7GEO_U3_POPULATION_GROWTH_AND_STRUCTURE,
+  SEED_M7GEO_U3_MIGRATION_PUSH_AND_PULL,
+  SEED_M7GEO_U3_URBANIZATION_AND_SETTLEMENT,
+  SEED_M7GEO_U4_WHAT_CULTURE_IS,
+  SEED_M7GEO_U4_LANGUAGE_FAMILIES_AND_DIFFUSION,
+  SEED_M7GEO_U4_WORLD_RELIGIONS,
+  SEED_M7GEO_U4_CULTURAL_CHANGE_AND_GLOBALIZATION,
+  SEED_M7GEO_U5_ECONOMIC_SYSTEMS,
+  SEED_M7GEO_U5_RESOURCES_AND_ECONOMIC_ACTIVITY,
+  SEED_M7GEO_U5_LEVELS_OF_DEVELOPMENT,
+  SEED_M7GEO_U5_TRADE_AND_INTERDEPENDENCE,
+  SEED_M7GEO_U6_TYPES_OF_GOVERNMENT,
+  SEED_M7GEO_U6_CITIZENSHIP_AND_RIGHTS,
+  SEED_M7GEO_U6_BORDERS_AND_CONFLICT,
+  SEED_M7GEO_U6_INTERNATIONAL_COOPERATION,
+  SEED_M7GEO_U7_LATIN_AMERICA_PHYSICAL_GEOGRAPHY,
+  SEED_M7GEO_U7_LATIN_AMERICA_HISTORY_AND_CULTURE,
+  SEED_M7GEO_U7_LATIN_AMERICA_ECONOMY_AND_CITIES,
+  SEED_M7GEO_U7_LATIN_AMERICA_ENVIRONMENT_ISSUES,
+  SEED_M7GEO_U8_EUROPE_PHYSICAL_GEOGRAPHY,
+  SEED_M7GEO_U8_EUROPE_HISTORY_AND_CULTURE,
+  SEED_M7GEO_U8_EUROPE_ECONOMY_AND_UNION,
+  SEED_M7GEO_U8_RUSSIA_AND_EURASIA,
+  SEED_M7GEO_U9_AFRICA_PHYSICAL_GEOGRAPHY,
+  SEED_M7GEO_U9_AFRICA_HISTORY_AND_CULTURE,
+  SEED_M7GEO_U9_MIDDLE_EAST_GEOGRAPHY_AND_RESOURCES,
+  SEED_M7GEO_U9_AFRICA_MIDDLE_EAST_DEVELOPMENT,
+  SEED_M7GEO_U10_ASIA_PHYSICAL_GEOGRAPHY,
+  SEED_M7GEO_U10_SOUTH_AND_EAST_ASIA_CULTURE,
+  SEED_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY,
+  SEED_M7GEO_U10_OCEANIA_AND_ANTARCTICA,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
