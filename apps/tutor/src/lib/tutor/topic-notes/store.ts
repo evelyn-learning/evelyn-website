@@ -939,6 +939,46 @@ import { BASELINE_M7SCI_U10_INTERACTIONS_BETWEEN_SPECIES } from './seeds/m7sci-u
 import { BASELINE_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS } from './seeds/m7sci-u10-population-changes-and-limits';
 import { BASELINE_M7SCI_U10_ECOSYSTEM_DISRUPTION } from './seeds/m7sci-u10-ecosystem-disruption';
 import { BASELINE_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT } from './seeds/m7sci-u10-biodiversity-and-human-impact';
+import { BASELINE_M7GEO_U1_MAPS_GLOBES_AND_PROJECTIONS } from './seeds/m7geo-u1-maps-globes-and-projections';
+import { BASELINE_M7GEO_U1_LATITUDE_LONGITUDE_AND_LOCATION } from './seeds/m7geo-u1-latitude-longitude-and-location';
+import { BASELINE_M7GEO_U1_MAP_ELEMENTS_SCALE_AND_DIRECTION } from './seeds/m7geo-u1-map-elements-scale-and-direction';
+import { BASELINE_M7GEO_U1_REGIONS_AND_PLACE } from './seeds/m7geo-u1-regions-and-place';
+import { BASELINE_M7GEO_U2_LANDFORMS_AND_WATER_FEATURES } from './seeds/m7geo-u2-landforms-and-water-features';
+import { BASELINE_M7GEO_U2_PLATE_TECTONICS_AND_NATURAL_HAZARDS } from './seeds/m7geo-u2-plate-tectonics-and-natural-hazards';
+import { BASELINE_M7GEO_U2_WEATHER_CLIMATE_AND_FACTORS } from './seeds/m7geo-u2-weather-climate-and-factors';
+import { BASELINE_M7GEO_U2_CLIMATE_ZONES_AND_BIOMES } from './seeds/m7geo-u2-climate-zones-and-biomes';
+import { BASELINE_M7GEO_U3_POPULATION_DISTRIBUTION_AND_DENSITY } from './seeds/m7geo-u3-population-distribution-and-density';
+import { BASELINE_M7GEO_U3_POPULATION_GROWTH_AND_STRUCTURE } from './seeds/m7geo-u3-population-growth-and-structure';
+import { BASELINE_M7GEO_U3_MIGRATION_PUSH_AND_PULL } from './seeds/m7geo-u3-migration-push-and-pull';
+import { BASELINE_M7GEO_U3_URBANIZATION_AND_SETTLEMENT } from './seeds/m7geo-u3-urbanization-and-settlement';
+import { BASELINE_M7GEO_U4_WHAT_CULTURE_IS } from './seeds/m7geo-u4-what-culture-is';
+import { BASELINE_M7GEO_U4_LANGUAGE_FAMILIES_AND_DIFFUSION } from './seeds/m7geo-u4-language-families-and-diffusion';
+import { BASELINE_M7GEO_U4_WORLD_RELIGIONS } from './seeds/m7geo-u4-world-religions';
+import { BASELINE_M7GEO_U4_CULTURAL_CHANGE_AND_GLOBALIZATION } from './seeds/m7geo-u4-cultural-change-and-globalization';
+import { BASELINE_M7GEO_U5_ECONOMIC_SYSTEMS } from './seeds/m7geo-u5-economic-systems';
+import { BASELINE_M7GEO_U5_RESOURCES_AND_ECONOMIC_ACTIVITY } from './seeds/m7geo-u5-resources-and-economic-activity';
+import { BASELINE_M7GEO_U5_LEVELS_OF_DEVELOPMENT } from './seeds/m7geo-u5-levels-of-development';
+import { BASELINE_M7GEO_U5_TRADE_AND_INTERDEPENDENCE } from './seeds/m7geo-u5-trade-and-interdependence';
+import { BASELINE_M7GEO_U6_TYPES_OF_GOVERNMENT } from './seeds/m7geo-u6-types-of-government';
+import { BASELINE_M7GEO_U6_CITIZENSHIP_AND_RIGHTS } from './seeds/m7geo-u6-citizenship-and-rights';
+import { BASELINE_M7GEO_U6_BORDERS_AND_CONFLICT } from './seeds/m7geo-u6-borders-and-conflict';
+import { BASELINE_M7GEO_U6_INTERNATIONAL_COOPERATION } from './seeds/m7geo-u6-international-cooperation';
+import { BASELINE_M7GEO_U7_LATIN_AMERICA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u7-latin-america-physical-geography';
+import { BASELINE_M7GEO_U7_LATIN_AMERICA_HISTORY_AND_CULTURE } from './seeds/m7geo-u7-latin-america-history-and-culture';
+import { BASELINE_M7GEO_U7_LATIN_AMERICA_ECONOMY_AND_CITIES } from './seeds/m7geo-u7-latin-america-economy-and-cities';
+import { BASELINE_M7GEO_U7_LATIN_AMERICA_ENVIRONMENT_ISSUES } from './seeds/m7geo-u7-latin-america-environment-issues';
+import { BASELINE_M7GEO_U8_EUROPE_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u8-europe-physical-geography';
+import { BASELINE_M7GEO_U8_EUROPE_HISTORY_AND_CULTURE } from './seeds/m7geo-u8-europe-history-and-culture';
+import { BASELINE_M7GEO_U8_EUROPE_ECONOMY_AND_UNION } from './seeds/m7geo-u8-europe-economy-and-union';
+import { BASELINE_M7GEO_U8_RUSSIA_AND_EURASIA } from './seeds/m7geo-u8-russia-and-eurasia';
+import { BASELINE_M7GEO_U9_AFRICA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u9-africa-physical-geography';
+import { BASELINE_M7GEO_U9_AFRICA_HISTORY_AND_CULTURE } from './seeds/m7geo-u9-africa-history-and-culture';
+import { BASELINE_M7GEO_U9_MIDDLE_EAST_GEOGRAPHY_AND_RESOURCES } from './seeds/m7geo-u9-middle-east-geography-and-resources';
+import { BASELINE_M7GEO_U9_AFRICA_MIDDLE_EAST_DEVELOPMENT } from './seeds/m7geo-u9-africa-middle-east-development';
+import { BASELINE_M7GEO_U10_ASIA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u10-asia-physical-geography';
+import { BASELINE_M7GEO_U10_SOUTH_AND_EAST_ASIA_CULTURE } from './seeds/m7geo-u10-south-and-east-asia-culture';
+import { BASELINE_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY } from './seeds/m7geo-u10-asia-population-and-economy';
+import { BASELINE_M7GEO_U10_OCEANIA_AND_ANTARCTICA } from './seeds/m7geo-u10-oceania-and-antarctica';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -1737,6 +1777,46 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS,
   BASELINE_M7SCI_U10_ECOSYSTEM_DISRUPTION,
   BASELINE_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT,
+  BASELINE_M7GEO_U1_MAPS_GLOBES_AND_PROJECTIONS,
+  BASELINE_M7GEO_U1_LATITUDE_LONGITUDE_AND_LOCATION,
+  BASELINE_M7GEO_U1_MAP_ELEMENTS_SCALE_AND_DIRECTION,
+  BASELINE_M7GEO_U1_REGIONS_AND_PLACE,
+  BASELINE_M7GEO_U2_LANDFORMS_AND_WATER_FEATURES,
+  BASELINE_M7GEO_U2_PLATE_TECTONICS_AND_NATURAL_HAZARDS,
+  BASELINE_M7GEO_U2_WEATHER_CLIMATE_AND_FACTORS,
+  BASELINE_M7GEO_U2_CLIMATE_ZONES_AND_BIOMES,
+  BASELINE_M7GEO_U3_POPULATION_DISTRIBUTION_AND_DENSITY,
+  BASELINE_M7GEO_U3_POPULATION_GROWTH_AND_STRUCTURE,
+  BASELINE_M7GEO_U3_MIGRATION_PUSH_AND_PULL,
+  BASELINE_M7GEO_U3_URBANIZATION_AND_SETTLEMENT,
+  BASELINE_M7GEO_U4_WHAT_CULTURE_IS,
+  BASELINE_M7GEO_U4_LANGUAGE_FAMILIES_AND_DIFFUSION,
+  BASELINE_M7GEO_U4_WORLD_RELIGIONS,
+  BASELINE_M7GEO_U4_CULTURAL_CHANGE_AND_GLOBALIZATION,
+  BASELINE_M7GEO_U5_ECONOMIC_SYSTEMS,
+  BASELINE_M7GEO_U5_RESOURCES_AND_ECONOMIC_ACTIVITY,
+  BASELINE_M7GEO_U5_LEVELS_OF_DEVELOPMENT,
+  BASELINE_M7GEO_U5_TRADE_AND_INTERDEPENDENCE,
+  BASELINE_M7GEO_U6_TYPES_OF_GOVERNMENT,
+  BASELINE_M7GEO_U6_CITIZENSHIP_AND_RIGHTS,
+  BASELINE_M7GEO_U6_BORDERS_AND_CONFLICT,
+  BASELINE_M7GEO_U6_INTERNATIONAL_COOPERATION,
+  BASELINE_M7GEO_U7_LATIN_AMERICA_PHYSICAL_GEOGRAPHY,
+  BASELINE_M7GEO_U7_LATIN_AMERICA_HISTORY_AND_CULTURE,
+  BASELINE_M7GEO_U7_LATIN_AMERICA_ECONOMY_AND_CITIES,
+  BASELINE_M7GEO_U7_LATIN_AMERICA_ENVIRONMENT_ISSUES,
+  BASELINE_M7GEO_U8_EUROPE_PHYSICAL_GEOGRAPHY,
+  BASELINE_M7GEO_U8_EUROPE_HISTORY_AND_CULTURE,
+  BASELINE_M7GEO_U8_EUROPE_ECONOMY_AND_UNION,
+  BASELINE_M7GEO_U8_RUSSIA_AND_EURASIA,
+  BASELINE_M7GEO_U9_AFRICA_PHYSICAL_GEOGRAPHY,
+  BASELINE_M7GEO_U9_AFRICA_HISTORY_AND_CULTURE,
+  BASELINE_M7GEO_U9_MIDDLE_EAST_GEOGRAPHY_AND_RESOURCES,
+  BASELINE_M7GEO_U9_AFRICA_MIDDLE_EAST_DEVELOPMENT,
+  BASELINE_M7GEO_U10_ASIA_PHYSICAL_GEOGRAPHY,
+  BASELINE_M7GEO_U10_SOUTH_AND_EAST_ASIA_CULTURE,
+  BASELINE_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY,
+  BASELINE_M7GEO_U10_OCEANIA_AND_ANTARCTICA,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
