@@ -858,6 +858,48 @@ import { BASELINE_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY } from './s
 import { BASELINE_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS } from './seeds/m7math-u10-probability-models-and-simulations';
 import { BASELINE_M7MATH_U10_COMPOUND_EVENTS } from './seeds/m7math-u10-compound-events';
 
+// m7ela lesson-plan seeds via scripts/extract-topic-notes-baselines.ts
+import { BASELINE_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE } from './seeds/m7ela-u1-text-evidence-and-inference';
+import { BASELINE_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT } from './seeds/m7ela-u1-plot-structure-and-conflict';
+import { BASELINE_M7ELA_U1_CHARACTERIZATION } from './seeds/m7ela-u1-characterization';
+import { BASELINE_M7ELA_U1_SETTING_AND_STORY_ELEMENTS } from './seeds/m7ela-u1-setting-and-story-elements';
+import { BASELINE_M7ELA_U2_THEME_AND_SUMMARY } from './seeds/m7ela-u2-theme-and-summary';
+import { BASELINE_M7ELA_U2_POINT_OF_VIEW } from './seeds/m7ela-u2-point-of-view';
+import { BASELINE_M7ELA_U2_FIGURATIVE_LANGUAGE } from './seeds/m7ela-u2-figurative-language';
+import { BASELINE_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE } from './seeds/m7ela-u2-tone-mood-and-word-choice';
+import { BASELINE_M7ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS } from './seeds/m7ela-u3-central-idea-and-supporting-details';
+import { BASELINE_M7ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT } from './seeds/m7ela-u3-summarizing-informational-text';
+import { BASELINE_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS } from './seeds/m7ela-u3-text-features-and-graphics';
+import { BASELINE_M7ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY } from './seeds/m7ela-u3-technical-and-domain-vocabulary';
+import { BASELINE_M7ELA_U4_TEXT_STRUCTURE } from './seeds/m7ela-u4-text-structure';
+import { BASELINE_M7ELA_U4_AUTHORS_PURPOSE_AND_PERSPECTIVE } from './seeds/m7ela-u4-authors-purpose-and-perspective';
+import { BASELINE_M7ELA_U4_TRACING_AN_ARGUMENT } from './seeds/m7ela-u4-tracing-an-argument';
+import { BASELINE_M7ELA_U4_COMPARING_TWO_TEXTS } from './seeds/m7ela-u4-comparing-two-texts';
+import { BASELINE_M7ELA_U5_PARTS_OF_SPEECH } from './seeds/m7ela-u5-parts-of-speech';
+import { BASELINE_M7ELA_U5_SUBJECT_VERB_AGREEMENT } from './seeds/m7ela-u5-subject-verb-agreement';
+import { BASELINE_M7ELA_U5_PRONOUNS_AND_ANTECEDENTS } from './seeds/m7ela-u5-pronouns-and-antecedents';
+import { BASELINE_M7ELA_U5_VERB_TENSE_CONSISTENCY } from './seeds/m7ela-u5-verb-tense-consistency';
+import { BASELINE_M7ELA_U6_PHRASES_AND_CLAUSES } from './seeds/m7ela-u6-phrases-and-clauses';
+import { BASELINE_M7ELA_U6_SENTENCE_TYPES_AND_COMBINING } from './seeds/m7ela-u6-sentence-types-and-combining';
+import { BASELINE_M7ELA_U6_FRAGMENTS_AND_RUN_ONS } from './seeds/m7ela-u6-fragments-and-run-ons';
+import { BASELINE_M7ELA_U6_COMMAS_AND_END_PUNCTUATION } from './seeds/m7ela-u6-commas-and-end-punctuation';
+import { BASELINE_M7ELA_U7_CONTEXT_CLUES } from './seeds/m7ela-u7-context-clues';
+import { BASELINE_M7ELA_U7_ROOTS_PREFIXES_AND_SUFFIXES } from './seeds/m7ela-u7-roots-prefixes-and-suffixes';
+import { BASELINE_M7ELA_U7_CONNOTATION_AND_DENOTATION } from './seeds/m7ela-u7-connotation-and-denotation';
+import { BASELINE_M7ELA_U7_COMMONLY_CONFUSED_WORDS } from './seeds/m7ela-u7-commonly-confused-words';
+import { BASELINE_M7ELA_U8_CLAIMS_AND_REASONS } from './seeds/m7ela-u8-claims-and-reasons';
+import { BASELINE_M7ELA_U8_EVIDENCE_AND_ELABORATION } from './seeds/m7ela-u8-evidence-and-elaboration';
+import { BASELINE_M7ELA_U8_COUNTERCLAIMS } from './seeds/m7ela-u8-counterclaims';
+import { BASELINE_M7ELA_U8_ORGANIZING_AN_ARGUMENT } from './seeds/m7ela-u8-organizing-an-argument';
+import { BASELINE_M7ELA_U9_INFORMATIVE_THESIS_AND_STRUCTURE } from './seeds/m7ela-u9-informative-thesis-and-structure';
+import { BASELINE_M7ELA_U9_PARAGRAPH_DEVELOPMENT } from './seeds/m7ela-u9-paragraph-development';
+import { BASELINE_M7ELA_U9_TRANSITIONS_AND_COHESION } from './seeds/m7ela-u9-transitions-and-cohesion';
+import { BASELINE_M7ELA_U9_NARRATIVE_TECHNIQUE } from './seeds/m7ela-u9-narrative-technique';
+import { BASELINE_M7ELA_U10_RESEARCH_QUESTIONS } from './seeds/m7ela-u10-research-questions';
+import { BASELINE_M7ELA_U10_EVALUATING_SOURCES } from './seeds/m7ela-u10-evaluating-sources';
+import { BASELINE_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/m7ela-u10-quoting-paraphrasing-summarizing';
+import { BASELINE_M7ELA_U10_CITING_SOURCES } from './seeds/m7ela-u10-citing-sources';
+
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
   BASELINE_AP_CALCBC_INTRODUCING_CALCULUS,
@@ -1574,6 +1616,47 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY,
   BASELINE_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS,
   BASELINE_M7MATH_U10_COMPOUND_EVENTS,
+  // MS-core — Grade 7 English Language Arts.
+  BASELINE_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE,
+  BASELINE_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT,
+  BASELINE_M7ELA_U1_CHARACTERIZATION,
+  BASELINE_M7ELA_U1_SETTING_AND_STORY_ELEMENTS,
+  BASELINE_M7ELA_U2_THEME_AND_SUMMARY,
+  BASELINE_M7ELA_U2_POINT_OF_VIEW,
+  BASELINE_M7ELA_U2_FIGURATIVE_LANGUAGE,
+  BASELINE_M7ELA_U2_TONE_MOOD_AND_WORD_CHOICE,
+  BASELINE_M7ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS,
+  BASELINE_M7ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT,
+  BASELINE_M7ELA_U3_TEXT_FEATURES_AND_GRAPHICS,
+  BASELINE_M7ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY,
+  BASELINE_M7ELA_U4_TEXT_STRUCTURE,
+  BASELINE_M7ELA_U4_AUTHORS_PURPOSE_AND_PERSPECTIVE,
+  BASELINE_M7ELA_U4_TRACING_AN_ARGUMENT,
+  BASELINE_M7ELA_U4_COMPARING_TWO_TEXTS,
+  BASELINE_M7ELA_U5_PARTS_OF_SPEECH,
+  BASELINE_M7ELA_U5_SUBJECT_VERB_AGREEMENT,
+  BASELINE_M7ELA_U5_PRONOUNS_AND_ANTECEDENTS,
+  BASELINE_M7ELA_U5_VERB_TENSE_CONSISTENCY,
+  BASELINE_M7ELA_U6_PHRASES_AND_CLAUSES,
+  BASELINE_M7ELA_U6_SENTENCE_TYPES_AND_COMBINING,
+  BASELINE_M7ELA_U6_FRAGMENTS_AND_RUN_ONS,
+  BASELINE_M7ELA_U6_COMMAS_AND_END_PUNCTUATION,
+  BASELINE_M7ELA_U7_CONTEXT_CLUES,
+  BASELINE_M7ELA_U7_ROOTS_PREFIXES_AND_SUFFIXES,
+  BASELINE_M7ELA_U7_CONNOTATION_AND_DENOTATION,
+  BASELINE_M7ELA_U7_COMMONLY_CONFUSED_WORDS,
+  BASELINE_M7ELA_U8_CLAIMS_AND_REASONS,
+  BASELINE_M7ELA_U8_EVIDENCE_AND_ELABORATION,
+  BASELINE_M7ELA_U8_COUNTERCLAIMS,
+  BASELINE_M7ELA_U8_ORGANIZING_AN_ARGUMENT,
+  BASELINE_M7ELA_U9_INFORMATIVE_THESIS_AND_STRUCTURE,
+  BASELINE_M7ELA_U9_PARAGRAPH_DEVELOPMENT,
+  BASELINE_M7ELA_U9_TRANSITIONS_AND_COHESION,
+  BASELINE_M7ELA_U9_NARRATIVE_TECHNIQUE,
+  BASELINE_M7ELA_U10_RESEARCH_QUESTIONS,
+  BASELINE_M7ELA_U10_EVALUATING_SOURCES,
+  BASELINE_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING,
+  BASELINE_M7ELA_U10_CITING_SOURCES,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
