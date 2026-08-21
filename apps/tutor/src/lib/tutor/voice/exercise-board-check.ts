@@ -70,9 +70,36 @@ function hasLongQuote(text: string): boolean {
   return words.length >= 4;
 }
 
+/** R50 T8 — scene-setting verbs. The three shapes above were derived from a
+ *  SINGLE live failure (2026-08-12, HS English: quoted working material +
+ *  ask verb), so all three encode that one instance: (a)/(b) enumeration,
+ *  "N different sentences", quoted material. The measured consequence is
+ *  that `exercise_no_board` fired ZERO times in 1,598 prod sessions between
+ *  2026-08-11 and 2026-08-21 — and a detector that never fires is
+ *  indistinguishable from a clean corpus.
+ *
+ *  Live miss that motivated this shape (portal-b0a1b396, Grade 7 geography,
+ *  t=186.3s): "Picture a huge mountain range running right next to the coast
+ *  — and picture wind carrying moist ocean air toward it. What do you think
+ *  happens to that moist air when it hits the mountain wall?" — an entire
+ *  spatial situation built in prose, `brain_turn` recorded 0 tool calls, and
+ *  none of the three shapes could match because the turn has no enumeration,
+ *  no count noun and no quote.
+ *
+ *  Kept conservative on the same reasoning as the shapes above, and for one
+ *  more: this stays TELEMETRY-ONLY, so a false positive costs a triage line
+ *  while a false negative costs the signal we do not currently have. */
+const SCENE_VERB_RE =
+  /\b(?:picture|imagine|visuali[sz]e|envision|suppose)\b|\blet's say\b|\bthink about it like\b|\bthink of it (?:as|like)\b/i;
+
+/** Minimum words for shape (iv). "Imagine that!" is not a posed situation;
+ *  the live miss ran 76 words. Guards against short conversational asides
+ *  that happen to contain a scene verb and a question mark. */
+const SCENE_MIN_WORDS = 20;
+
 export interface VoiceOnlyExerciseResult {
   posed: boolean;
-  shape?: 'ab-enum' | 'n-different' | 'quoted-material';
+  shape?: 'ab-enum' | 'n-different' | 'quoted-material' | 'scene-prose';
 }
 
 export function detectVoiceOnlyExercise(turnText: string): VoiceOnlyExerciseResult {
@@ -106,6 +133,17 @@ export function detectVoiceOnlyExercise(turnText: string): VoiceOnlyExerciseResu
     (hasAbEnum || N_DIFFERENT_RE.test(text) || GENERIC_COUNT_NOUN_RE.test(text))
   ) {
     return { posed: true, shape: 'quoted-material' };
+  }
+
+  // Shape (iv) R50: a scene-setting imperative building a spatial/physical
+  // situation in prose, plus a question about it, in a substantive turn.
+  // Requires the question mark (never bare narration) and a word floor.
+  if (
+    hasQuestionMark &&
+    SCENE_VERB_RE.test(text) &&
+    text.trim().split(/\s+/).filter(Boolean).length >= SCENE_MIN_WORDS
+  ) {
+    return { posed: true, shape: 'scene-prose' };
   }
 
   return { posed: false };

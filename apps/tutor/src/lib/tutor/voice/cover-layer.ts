@@ -77,6 +77,65 @@ const ANSWER_EXPR_RE = /(?:-|\b(?:minus|negative)\s+)?\d+(?:\.\d+)?(?:\s*\/\s*-?
 const FRACTION_CONTINUATION_RE =
   /(?:^|\s)(?:plus|minus|times|over|divided(?:\s+by)?|[+\-*/^])\s*\S/i;
 
+/** R50 T4 (live, portal-1f44f0eb + portal-14bbe45a): the echo dropped the
+ *  words ATTACHED to the number and quoted the bare digits back, which reads
+ *  as a mishear. Four real turns:
+ *    "B 5 is deeper down."               -> "Okay, 5."
+ *    "flow 3."           (ASR: floor 3)  -> "Okay, 3."
+ *    "point 3 repeating is smaller"      -> "3. Okay."
+ *    "66.6 bar."                         -> "Hmm, 66.6."
+ *  The last two are not cosmetic: "point 3" is 0.3 and "66.6 bar" is 66.6
+ *  REPEATING, so the echo states a different VALUE than the student did.
+ *
+ *  Same principle already applied twice in this file (R36 multi-number, R45
+ *  fraction-continuation): refuse rather than truncate and misquote. The
+ *  asymmetry makes refusing cheap — a generic cover ("One moment.") is never
+ *  wrong, while a confident wrong echo actively confuses.
+ *
+ *  Implemented as an ALLOW-list of tokens that may sit directly before the
+ *  number, not a deny-list of labels: labels are open-ended and arrive
+ *  ASR-garbled ("flow" for "floor"), so an enumeration of them would miss
+ *  exactly the cases nobody predicted. Anything unrecognised => refuse. */
+const ANSWER_PREFIX_ALLOWED = new Set([
+  // fillers / discourse markers
+  'uh', 'um', 'er', 'erm', 'ah', 'oh', 'hmm', 'well', 'so', 'like', 'okay',
+  'ok', 'yeah', 'yes', 'yep', 'yup', 'no', 'nope', 'right', 'sure', 'and',
+  'or', 'then', 'but', 'alright',
+  // copulas / auxiliaries (covers "that'll be 28", "it's -2")
+  'is', 'are', 'was', 'were', 'be', 'been', 'being', 'am', 'will', 'would',
+  'could', 'should', 'can', 'may', 'might', 'must', 'do', 'does', 'did',
+  'get', 'gets', 'got', 'make', 'makes', 'made', 'come', 'comes', 'came',
+  // pronouns / determiners (covers "that's 16")
+  'it', 'its', "it's", 'that', "that's", 'thats', 'this', 'they', 'them',
+  'i', 'we', 'you', 'he', 'she', 'the', 'a', 'an', 'my', 'your',
+  // answering verbs
+  'think', 'thinks', 'guess', 'say', 'says', 'said', 'believe', 'reckon',
+  'answer', 'answers', 'equals', 'equal', 'gives', 'give', 'means', 'put',
+  // hedges
+  'maybe', 'probably', 'roughly', 'about', 'around', 'approximately',
+  'exactly', 'just', 'only', 'still', 'actually', 'definitely', 'perhaps',
+  'possibly', 'almost', 'nearly',
+  // prepositions / comparatives
+  'to', 'of', 'at', 'by', 'with', 'than', 'as', 'into', 'from', 'for',
+  // arithmetic cues (already part of the captured expression grammar)
+  'plus', 'minus', 'negative', 'times', 'over', 'divided',
+]);
+
+/** Words IMMEDIATELY AFTER the number that change what it denotes, so
+ *  echoing the bare number misstates the student's answer. "bar"/"repeating"
+ *  are the live cases (66.6 vs 66.6-repeating); the fraction-denominator
+ *  words cover "3 fourths" echoing as "3". */
+const VALUE_MODIFIER_TRAIL_RE =
+  /^\s*(?:bar|repeating|recurring|repeated|percent|percentage|squared|cubed|root|halves|thirds|fourths|quarters|fifths|sixths|sevenths|eighths|ninths|tenths)\b/i;
+
+/** Lowercased word directly before `index`, apostrophes normalised to ASCII.
+ *  Empty string when the number opens the utterance (always allowed). */
+function tokenBefore(t: string, index: number): string {
+  const head = t.slice(0, index).replace(/[\u2018\u2019]/g, "'");
+  const m = /([A-Za-z][A-Za-z']*)[^A-Za-z']*$/.exec(head);
+  return m ? m[1].toLowerCase() : '';
+}
+
 /** The transcript's single answer expression, in SPOKEN form ("minus 3 over
  *  6"). Null when there is no number — or MORE than one ("m is 4 and b is
  *  -2"): a lone echoed tail misquotes the student, so multi-number turns
@@ -97,6 +156,13 @@ export function extractAnswerToken(t: string): string | null {
     const remainder = t.slice((m.index ?? 0) + raw.length);
     if (FRACTION_CONTINUATION_RE.test(remainder)) return null;
   }
+
+  // R50 T4: the number is qualified by an adjacent word — echoing the bare
+  // digits would misquote (and for "point 3" / "66.6 bar", misstate the
+  // value). Refuse; the caller falls back to the generic cover.
+  const before = tokenBefore(t, m.index ?? 0);
+  if (before && !ANSWER_PREFIX_ALLOWED.has(before)) return null;
+  if (VALUE_MODIFIER_TRAIL_RE.test(t.slice((m.index ?? 0) + raw.length))) return null;
 
   return raw
     .replace(/\s*\/\s*/, ' over ')

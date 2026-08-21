@@ -10,6 +10,8 @@ import {
   clampQpinFraction,
   latestSubstantiveTutorEntry,
   shouldClearQpinOnSegmentChange,
+  isQpinStaleByTurns,
+  QPIN_MAX_TUTOR_TURNS_BEHIND,
   QPIN_POST_SPEECH_MS,
   QPIN_HARD_CAP_MS,
   QPIN_TOP_MIN_PX,
@@ -126,6 +128,66 @@ check(
   true,
 );
 check('both empty (never started a plan) → do not clear', shouldClearQpinOnSegmentChange('', ''), false);
+
+// --- R50 T2: turn-distance staleness bound.
+// Rebuilt from live session portal-14bbe45a (Grade 7 fractions, 2026-08-21).
+// The pin was set on the t=630.3s turn ("what's 0.625 as a percent?") and was
+// still showing it when the board had moved to "Two thirds" (t=899.5s). The
+// lesson cursor did NOT advance between t=213 and t=1152.9, so R47's
+// clear-on-segment-change could not fire, and six substantive tutor turns
+// went by with the pin unmoved.
+const T = (id: string, role: 'tutor' | 'student', historyOnly = false) => ({ id, role, historyOnly });
+const LIVE_TRANSCRIPT = [
+  T('t630', 'tutor'),          // <- pinned here ("what's 0.625 as a percent?")
+  T('s1', 'student'),
+  T('t664', 'tutor'),
+  T('s2', 'student'),
+  T('t700', 'tutor'),
+  T('s3', 'student'),
+  T('t723', 'tutor'),
+  T('s4', 'student'),
+  T('t897', 'tutor'),          // "Two thirds" turn — board has moved on
+];
+
+check('live stale pin (6 tutor turns behind) is stale', isQpinStaleByTurns(LIVE_TRANSCRIPT, 't630'), true);
+check('the newest pin is never stale', isQpinStaleByTurns(LIVE_TRANSCRIPT, 't897'), false);
+check(
+  'one tutor turn behind is NOT stale (student may still be answering)',
+  isQpinStaleByTurns([T('a', 'tutor'), T('b', 'student'), T('c', 'tutor')], 'a'),
+  false,
+);
+check(
+  'exactly at the bound is NOT stale',
+  isQpinStaleByTurns([T('a', 'tutor'), T('b', 'tutor'), T('c', 'tutor')], 'a', 2),
+  false,
+);
+check(
+  'one past the bound IS stale',
+  isQpinStaleByTurns([T('a', 'tutor'), T('b', 'tutor'), T('c', 'tutor'), T('d', 'tutor')], 'a', 2),
+  true,
+);
+// R38 must survive: nudges and board-only turns cannot age a pin out. If this
+// ever flips, an idle nudge starts killing questions the student is answering
+// — the exact regression R38 existed to fix.
+check(
+  'historyOnly turns do NOT count toward staleness (R38 guarantee)',
+  isQpinStaleByTurns(
+    [T('a', 'tutor'), T('n1', 'tutor', true), T('n2', 'tutor', true), T('n3', 'tutor', true), T('n4', 'tutor', true)],
+    'a',
+  ),
+  false,
+);
+check(
+  'student turns do NOT count toward staleness',
+  isQpinStaleByTurns([T('a', 'tutor'), T('s1', 'student'), T('s2', 'student'), T('s3', 'student')], 'a'),
+  false,
+);
+// Totality: an unknown id must never clear a pin — losing a live question is
+// worse than showing a stale one, so the unknown case fails toward keeping it.
+check('unknown pin id → not stale', isQpinStaleByTurns(LIVE_TRANSCRIPT, 'nope'), false);
+check('null pin id → not stale', isQpinStaleByTurns(LIVE_TRANSCRIPT, null), false);
+check('empty transcript → not stale', isQpinStaleByTurns([], 't630'), false);
+check('bound is a positive integer', Number.isInteger(QPIN_MAX_TUTOR_TURNS_BEHIND) && QPIN_MAX_TUTOR_TURNS_BEHIND > 0, true);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);

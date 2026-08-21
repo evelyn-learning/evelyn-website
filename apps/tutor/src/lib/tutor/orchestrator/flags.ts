@@ -192,6 +192,22 @@ export const TUTOR_IDLE_NUDGE_V2 =
 // answered. Same class as define-before-quiz, for answers. Prompt-side —
 // the brain chose to draw it, and no runtime check could know 3.75 was the
 // answer to an improvised question. Default OFF.
+// R50 T3 correction-note timeout (2026-08-21, portal-1f44f0eb 347-392s).
+// The judge is advisory-only (Pillar 2b), so a planted correction note is
+// the only repair path for a false rejection — and it waited for the
+// student's NEXT REAL TURN. Live, that meant a correct answer stayed
+// rejected for 40s and was only repaired because the student repeated
+// themselves; a student who accepts the rejection is never corrected.
+// This bounds the wait: once the deadline passes, the tutor self-corrects
+// unprompted. Default ON per the R49b standing rule — R49 shipped two
+// severe fixes dark and prod kept the bugs.
+export const TUTOR_CORRECTION_NOTE_TIMEOUT =
+  process.env.NEXT_PUBLIC_TUTOR_CORRECTION_NOTE_TIMEOUT !== 'off';
+/** How long a planted note may sit undelivered before the tutor volunteers
+ *  the correction. Chosen from the live trace: the student's own repair came
+ *  at ~33s after the plant, so a shorter bound repairs the silent case
+ *  without pre-empting a student who is simply thinking. */
+export const CORRECTION_NOTE_TIMEOUT_MS = 20_000;
 export const TUTOR_ANSWER_REVEAL_GUARD =
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'true';

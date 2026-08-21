@@ -253,5 +253,53 @@ test('empty inputs are total, never throw', () => {
 });
 
 
+// --- R50 T8: shape (iv) scene-prose. The three original shapes were derived
+// from ONE live failure and encoded it; measured consequence was that
+// exercise_no_board fired ZERO times in 1,598 prod sessions over ten days.
+// Re-measured after adding shape (iv) over 402 real claude-brain tutor turns
+// paired with their actual tool-call counts: 31 posed (7.7%), of which 2
+// also had zero render tools (0.5%) — the true event rate. One of those two
+// is the live miss below. The old shapes caught 0 of the same 402.
+const LIVE_MISS_R50 =
+  "Not quite. Distance from the equator explains heat, but I asked why a desert " +
+  "can form even when it's sitting right next to an ocean — plenty of water next " +
+  "door. Let's think about it like a wall. Picture a huge mountain range running " +
+  "right next to the coast, Praveen — and picture wind carrying moist ocean air " +
+  "toward it. What do you think happens to that moist air when it hits the " +
+  "mountain wall?";
+
+test('R50 live miss (portal-b0a1b396, Grade 7 geography) is posed — shape iv', () => {
+  const r = detectVoiceOnlyExercise(LIVE_MISS_R50);
+  assert.equal(r.posed, true);
+  assert.equal(r.shape, 'scene-prose');
+});
+
+test('R50: the three ORIGINAL shapes could not have caught it', () => {
+  // Proves the shape is genuinely new coverage, not a re-derivation: the
+  // live miss has no (a)/(b) enumeration, no "N different <noun>", no quote.
+  assert.equal(/\([a-d]\)[\s\S]{0,300}?\([a-d]\)/i.test(LIVE_MISS_R50), false);
+  assert.equal(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|several)\s+(different|separate)\s+(sentences?|examples?|ways?|cases?)\b/i.test(LIVE_MISS_R50), false);
+  assert.equal(/(^|[\s(])['"\u2018\u201c]([A-Za-z][\w'\u2019.,;:!?\-\s]{2,140}?)['\u2019"\u201d](?=$|[\s).,!?;:])/.test(LIVE_MISS_R50), false);
+});
+
+test('shape (iv) requires a question mark — narration alone never fires', () => {
+  const narrated = LIVE_MISS_R50.replace(/\?/g, '.');
+  assert.equal(detectVoiceOnlyExercise(narrated).posed, false);
+});
+
+test('shape (iv) requires substance — a short scene aside never fires', () => {
+  assert.equal(detectVoiceOnlyExercise('Imagine that! Ready?').posed, false);
+  assert.equal(detectVoiceOnlyExercise('Picture it. Got it?').posed, false);
+});
+
+test('shape (iv) does not fire on an ordinary Socratic question', () => {
+  // No scene verb — the single most common shape in the corpus must stay
+  // silent, or the advisory drowns in the turns it is meant to surface.
+  assert.equal(detectVoiceOnlyExercise(
+    'Right — five eighths. Now push it one more step: what is 0.625 as a percent, ' +
+    'and how did you get there from the decimal you just found for me?',
+  ).posed, false);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed > 0 ? 1 : 0);

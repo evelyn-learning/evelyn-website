@@ -161,5 +161,38 @@ for (const [poolName, pool] of allPools) {
   }
 }
 
+// --- R50 T4: refuse to echo a number that is QUALIFIED by an adjacent word.
+// All four inputs are verbatim student turns from live sessions
+// portal-1f44f0eb / portal-14bbe45a, with the wrong echo they produced.
+check('r50-label-letter',      extractAnswerToken('B 5 is deeper down.') === null);   // was "Okay, 5."
+check('r50-label-asr-garble',  extractAnswerToken('flow 3.') === null);               // "floor 3" -> was "Okay, 3."
+check('r50-decimal-point',     extractAnswerToken('Um, of course point 3 repeating is smaller') === null); // was "3. Okay."
+check('r50-repeating-bar',     extractAnswerToken('66.6 bar.') === null);             // was "Hmm, 66.6."
+// The same four must not merely return null — they must land on a NON-echo
+// cover, since a null token with a numeric-echo category would render "{a}".
+check('r50-label-letter-cat',     cat('B 5 is deeper down.') !== 'numeric-echo');
+check('r50-decimal-point-cat',    cat('Um, of course point 3 repeating is smaller') !== 'numeric-echo');
+check('r50-repeating-bar-cat',    cat('66.6 bar.') !== 'numeric-echo');
+// Trailing modifiers that change the value or the denomination.
+check('r50-trail-repeating',   extractAnswerToken('0.3 repeating') === null);
+check('r50-trail-percent',     extractAnswerToken('62.5 percent') === null);
+check('r50-trail-fraction',    extractAnswerToken('3 fourths') === null);
+// --- R50 T4 REGRESSION GUARD: the good echoes must still echo. These are
+// the cases the taxonomy calls the highest-risk boundary in this file, plus
+// every extractAnswerToken case that predates this change.
+check('r50-keep-agreement-1',  extractAnswerToken("Yeah, that's 16.") === '16');
+check('r50-keep-agreement-2',  extractAnswerToken("Yeah, that'll be 28.") === '28');
+check('r50-keep-bare',         extractAnswerToken('29.') === '29');
+check('r50-keep-filler',       extractAnswerToken("Uh, it'll be uh 6.") === '6');
+check('r50-keep-hedge',        extractAnswerToken('maybe 3.5.') === '3.5');
+check('r50-keep-literal-neg',  extractAnswerToken("it's -2.") === 'minus 2');
+check('r50-keep-spoken-neg',   extractAnswerToken('minus 22.') === 'minus 22');
+check('r50-keep-fraction',     extractAnswerToken('1/2') === '1 over 2');
+check('r50-keep-neg-fraction', extractAnswerToken('-3/6.') === 'minus 3 over 6');
+check('r50-keep-curly-apos',   extractAnswerToken('Yeah, that\u2019s 16.') === '16');
+// Categories for the keepers, so a refusal here can never pass silently.
+check('r50-keep-agreement-cat', cat("Yeah, that's 16.") === 'numeric-echo');
+check('r50-keep-filler-cat',    cat("Uh, it'll be uh 6.") === 'numeric-echo');
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');

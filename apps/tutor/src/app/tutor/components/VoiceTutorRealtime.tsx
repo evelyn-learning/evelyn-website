@@ -213,6 +213,8 @@ import {
   BARGEIN_BASELINE_LOOKBACK_MS,
   BARGEIN_GATE_POLL_MS,
   BARGEIN_GATE_MAX_MS,
+  TUTOR_CORRECTION_NOTE_TIMEOUT,
+  CORRECTION_NOTE_TIMEOUT_MS,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -225,7 +227,7 @@ import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-r
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
 import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/voice/nonanswer-praise';
-import { buildJudgeCorrectionNote, hasMathExpression, shouldConsumeJudgeCorrectionNote } from '@/lib/tutor/voice/judge-correction-note';
+import { buildJudgeCorrectionNote, hasMathExpression, shouldConsumeJudgeCorrectionNote, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
 import {
@@ -1966,7 +1968,7 @@ export function VoiceTutorRealtime({
   const onDebugEventRef = useRef(onDebugEvent);
   useEffect(() => { onDebugEventRef.current = onDebugEvent; }, [onDebugEvent]);
   const handleStudentTranscriptForBrainRef = useRef<
-    ((transcript: string, opts?: { silent?: boolean; bypassMidUtteranceGuard?: boolean }) => unknown) | null
+    ((transcript: string, opts?: { silent?: boolean; bypassMidUtteranceGuard?: boolean; bypassPerceptionDedupe?: boolean }) => unknown) | null
   >(null);
   const mockAgenda = useMemo(() => buildMockReviewAgenda(mockReview), [mockReview]);
   const mockDrawer = useMemo(() => buildMockReviewDrawer(mockReview), [mockReview]);
@@ -3158,6 +3160,54 @@ export function VoiceTutorRealtime({
   // false reject can be owned instead of standing forever. Same lifecycle as
   // the three refs above.
   const pendingJudgeCorrectionNoteRef = useRef<string | null>(null);
+  // R50 T3: deadline for an undelivered correction note. Armed wherever a
+  // note is planted; cleared wherever one is consumed or replaced.
+  const correctionNoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** R50 T3: start (or restart) the deadline for a freshly planted note. The
+   *  dispatch is silent + bracketed and carries the CORRECTION_DUE sentinel,
+   *  the one synthetic prefix shouldConsumeJudgeCorrectionNote accepts — so
+   *  this turn actually spends the note instead of stranding it again.
+   *  Re-checks liveness at FIRE time: a note consumed by a real student turn
+   *  in the meantime clears the ref, and this becomes a no-op. */
+  const armCorrectionNoteDeadline = useCallback(() => {
+    if (!TUTOR_CORRECTION_NOTE_TIMEOUT) return;
+    if (correctionNoteTimerRef.current) clearTimeout(correctionNoteTimerRef.current);
+    const fire = () => {
+      correctionNoteTimerRef.current = null;
+      if (!pendingJudgeCorrectionNoteRef.current) return;   // a real student turn already spent it
+      // Read through refs, never through the callbacks/consts declared later
+      // in this component — this helper sits ~11k lines ABOVE them, so naming
+      // one in a dep array would evaluate it at render time and throw
+      // "cannot access before initialization" on every mount.
+      const busy =
+        productionStateRef.current === 'speaking' ||
+        brainBusyRef.current ||
+        perceptionMidUtteranceRef.current ||
+        studentTypingRef.current;
+      if (busy) {                                            // retry once the turn settles
+        correctionNoteTimerRef.current = setTimeout(fire, CORRECTION_NOTE_TIMEOUT_MS);
+        return;
+      }
+      onDebugEvent?.(
+        'judge_correction_note_timeout',
+        `undelivered ${CORRECTION_NOTE_TIMEOUT_MS}ms — volunteering the correction`,
+      );
+      void handleStudentTranscriptForBrainRef.current?.(
+        CORRECTION_DUE_DIRECTIVE,
+        { silent: true, bypassPerceptionDedupe: true },
+      );
+    };
+    correctionNoteTimerRef.current = setTimeout(fire, CORRECTION_NOTE_TIMEOUT_MS);
+  }, [onDebugEvent]);
+  // R50 T3: a pending deadline must not outlive the session — otherwise it
+  // dispatches a brain turn into a torn-down component after the student has
+  // already left (the class of bug that leaves an "ended" session emitting).
+  useEffect(() => () => {
+    if (correctionNoteTimerRef.current) {
+      clearTimeout(correctionNoteTimerRef.current);
+      correctionNoteTimerRef.current = null;
+    }
+  }, []);
   // Populated after toggleMicMute is defined so the brain orchestrator (which
   // lives above it) can honour a "mute me" voice command without a forward ref.
   const muteMicRef = useRef<(() => void) | null>(null);
@@ -9042,6 +9092,9 @@ export function VoiceTutorRealtime({
       if (pendingJudgeCorrectionNoteRef.current && shouldConsumeJudgeCorrectionNote(transcript)) {
         runTranscript = `${pendingJudgeCorrectionNoteRef.current}\n\n${runTranscript}`;
         pendingJudgeCorrectionNoteRef.current = null;
+        // R50 T3: the note is spent — cancel its deadline so the timeout
+        // path cannot dispatch a second, now-pointless correction turn.
+        if (correctionNoteTimerRef.current) { clearTimeout(correctionNoteTimerRef.current); correctionNoteTimerRef.current = null; }
         onDebugEvent?.('judge_correction_note_consumed', 'delivered with this turn');
       }
       let firstSentenceMs: number | null = null;
@@ -10649,6 +10702,7 @@ export function VoiceTutorRealtime({
                         pendingJudgeCorrectionNoteRef.current =
                           `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may actually match the intended answer "${inv.expected}" — re-check and, if right, credit them. ` +
                           `If on re-checking you stand by what you said, continue naturally and do not mention this review.`;
+                        armCorrectionNoteDeadline();   // R50 T3: third plant site — same deadline
                         onDebugEvent?.('inverse_verdict_correction_note_planted', `expected=${inv.expected?.slice(0, 40)}`);
                       }
                     }
@@ -13041,6 +13095,7 @@ export function VoiceTutorRealtime({
                     const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim));
                     if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
+                      armCorrectionNoteDeadline();   // R50 T3
                       onDebugEvent?.('judge_correction_note_planted', `advisory: ${noteworthyAdvisoryIssues[0].claim.slice(0, 60)}`);
                     }
                   }
@@ -13071,6 +13126,7 @@ export function VoiceTutorRealtime({
                   const correctionNote = buildJudgeCorrectionNote(killIssues.map((i) => i.claim));
                   if (correctionNote) {
                     pendingJudgeCorrectionNoteRef.current = correctionNote;
+                    armCorrectionNoteDeadline();   // R50 T3
                     onDebugEvent?.('judge_correction_note_planted', killIssues[0].claim.slice(0, 60));
                   }
                   // Round-7 Fix D: detect re-assertion loops. Tokenize

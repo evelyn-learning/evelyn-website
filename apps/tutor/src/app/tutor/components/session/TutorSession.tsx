@@ -47,6 +47,7 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
+import { isQpinStaleByTurns, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
@@ -519,10 +520,18 @@ export default function TutorSession(props: TutorSessionProps) {
         );
         (async () => {
           try {
-            const base64Data = content.replace(/^data:image\/\w+;base64,/, '');
+            const base64Data = content.replace(/^data:image\/[\w.+-]+;base64,/, '');
+            // R50 T1: mimeType was hardcoded 'image/png'. That was true for
+            // the whiteboard-capture caller (a canvas export) but became a
+            // bug the moment the UPLOAD button was routed through here —
+            // /api/tutor/extract-homework validates mimeType against
+            // ['image/jpeg','image/png','image/gif','image/webp'] and passes
+            // it straight to the vision API as `media_type`, so a GIF
+            // announced as PNG is rejected. Praveen's live upload WAS a gif.
+            const mimeMatch = /^data:(image\/[\w.+-]+);base64,/.exec(content);
             const resp = await fetch('/api/tutor/extract-homework', {
               method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageData: base64Data, mimeType: 'image/png', subject, topic, level }),
+              body: JSON.stringify({ imageData: base64Data, mimeType: mimeMatch ? mimeMatch[1] : 'image/png', subject, topic, level }),
             });
             const data = await resp.json();
             if (data.extractedProblem && realtimeHandleRef.current) {
@@ -538,6 +547,30 @@ export default function TutorSession(props: TutorSessionProps) {
     }
     onTrackInteraction?.('click', `whiteboard-${type}`, { content: content.slice(0, 100) });
   }, [subject, topic, level, onTrackInteraction]);
+
+  /**
+   * R50 T1 — the embed's upload button was a silent no-op.
+   *
+   * `SessionControls` renders the dropzone unconditionally (and promises
+   * "The tutor will extract problems from this image"), reads the file,
+   * base64-encodes it, calls `onUploadHomework`, then CLOSES THE MODAL — so
+   * a failure here looks exactly like a success. `/tutor/page.tsx` passes a
+   * real handler; the embed never has, so the prop fell through to
+   * `?? (() => {})` and every embed upload was dropped on the floor.
+   * Measured over prod Mongo: 0 of 318 embed sessions have ever emitted an
+   * `image_upload` event, against 14 direct-route sessions that did.
+   *
+   * Routed into `handleStudentInput('image', …)` rather than reimplemented,
+   * because that path already does what an upload should: it speaks an
+   * instant "Got your upload — one sec while I read it.", puts the image on
+   * the board, extracts it, and hands the brain the extracted text. The
+   * default is deliberately NOT a no-op — a prop that silently does nothing
+   * is what made this invisible for the life of the embed.
+   */
+  const handleUploadHomeworkFallback = useCallback((base64Data: string, mimeType: string) => {
+    onDebugEvent?.('image_upload', `Homework upload (embed): ${mimeType}`);
+    handleStudentInput('image', `data:${mimeType};base64,${base64Data}`);
+  }, [handleStudentInput, onDebugEvent]);
 
   const dispatchQuick = useCallback((text: string) => {
     realtimeHandleRef.current?.stopSpeaking();
@@ -827,6 +860,66 @@ export default function TutorSession(props: TutorSessionProps) {
     prevQpinSegmentIdRef.current = next;
     if (shouldClearQpinOnSegmentChange(prev, next)) setQuestionPin(null);
   }, [lessonProgress.currentSegmentId]);
+  // R50 T5 — segment-length telemetry, the shared root of two live defects.
+  //
+  // portal-14bbe45a held ONE segment from t=213 to t=1152.9 (940s, 6+
+  // questions) and portal-1f44f0eb ran its opening segment to t=621.8 — and
+  // inside that one, after resolving "which floor is closest to the lobby"
+  // and correcting a false denial about it, the tutor moved to a different
+  // problem and then RE-POSED the resolved one (t=474.9), narrating "that
+  // closes out our try-yourself" though the cursor had never moved.
+  //
+  // Both the Q-pin bound (R47) and the problem-card tracking key off segment
+  // ADVANCE, so both degrade together whenever the brain stays put. This
+  // measures how often that happens before anything is changed about it —
+  // the R48/R49b detectors were shipped without that step and produced zero
+  // signal for ten days, which reads identically to "no problem".
+  /** Substantive tutor turns inside one segment before it is called overlong.
+   *  Live reference points: portal-14bbe45a ran 6+ questions in one segment,
+   *  portal-1f44f0eb re-posed a resolved problem in its opening segment. */
+  const OVERLONG_SEGMENT_TURNS = 6;
+  const overlongSegmentRef = useRef<{ segId: string; baseline: number; fired: boolean } | null>(null);
+  useEffect(() => {
+    const segId = lessonProgress.currentSegmentId ?? '';
+    const tutorTurns = transcript.filter((t) => t.role === 'tutor' && !t.historyOnly).length;
+    const st = overlongSegmentRef.current;
+    if (!st || st.segId !== segId) {
+      // Baseline at segment entry, so the count is turns-WITHIN-segment and
+      // not turns-so-far — the whole point is the length of ONE segment.
+      overlongSegmentRef.current = { segId, baseline: tutorTurns, fired: false };
+      return;
+    }
+    if (st.fired) return;
+    const within = tutorTurns - st.baseline;
+    if (within >= OVERLONG_SEGMENT_TURNS) {
+      st.fired = true;   // once per segment, never a per-turn stream
+      onDebugEvent?.(
+        'segment_overlong',
+        `segment "${segId || '(none)'}" has run ${within} substantive tutor turns without advancing`,
+      );
+    }
+  }, [transcript, lessonProgress.currentSegmentId, onDebugEvent]);
+
+  // R50 T2: turn-distance staleness bound. R38 made the pin survive later
+  // tutor turns (an idle nudge must not kill a live question) and R47 bounded
+  // it to the SEGMENT — but neither bounds it INSIDE one long segment, and
+  // that is where it failed live: portal-14bbe45a held one segment for 940s
+  // across six questions while the pin stayed on the first of them.
+  //
+  // This is deliberately a belt to R47's braces. It does not need to know WHY
+  // a replacement was missed — a pin more than QPIN_MAX_TUTOR_TURNS_BEHIND
+  // substantive tutor turns behind is stale by construction. Only substantive
+  // turns count, which is what keeps R38's guarantee intact.
+  useEffect(() => {
+    if (!TUTOR_QUESTION_PIN || !questionPin) return;
+    if (!isQpinStaleByTurns(transcript, questionPin.turnId)) return;
+    onDebugEvent?.(
+      'qpin_stale_cleared',
+      `>${QPIN_MAX_TUTOR_TURNS_BEHIND} tutor turns behind — "${questionPin.gist.slice(0, 60)}"`,
+    );
+    setQuestionPin(null);
+  }, [transcript, questionPin, onDebugEvent]);
+
   // R47 Task 3c (review fix): live mirror of the segment id, kept in sync
   // every time it changes — separate from prevQpinSegmentIdRef above
   // (which holds a PREVIOUS-value-for-diffing semantic the clear effect
@@ -904,13 +997,33 @@ export default function TutorSession(props: TutorSessionProps) {
         // started — the clear effect already emptied questionPin for the
         // OLD segment; do not resurrect it for a question that no longer
         // matches the student's current problem context.
-        if (currentSegmentIdLiveRef.current !== segIdAtFetch) return;
-        if (gist) setQuestionPin({ turnId: entry.id, gist });
+        if (currentSegmentIdLiveRef.current !== segIdAtFetch) {
+          // R50 T2: this drop was previously silent. The Q-pin path emitted
+          // NO debug events at all, which is why a live stale pin could not
+          // be root-caused from the stored session — every branch is now
+          // visible in triage.
+          onDebugEvent?.('qpin_drop', `segment moved during fetch (${segIdAtFetch} -> ${currentSegmentIdLiveRef.current})`);
+          return;
+        }
+        if (gist) {
+          setQuestionPin({ turnId: entry.id, gist });
+          onDebugEvent?.('qpin_set', `"${gist.slice(0, 60)}"`);
+        } else {
+          onDebugEvent?.('qpin_drop', 'gist empty (model judged the "?" conversational)');
+        }
       })
       .catch(() => {
-        if (currentSegmentIdLiveRef.current !== segIdAtFetch) return;
+        if (currentSegmentIdLiveRef.current !== segIdAtFetch) {
+          onDebugEvent?.('qpin_drop', 'segment moved during fetch (error path)');
+          return;
+        }
         const fallback = lastQuestionSentence(entry.text);
-        if (fallback) setQuestionPin({ turnId: entry.id, gist: fallback });
+        if (fallback) {
+          setQuestionPin({ turnId: entry.id, gist: fallback });
+          onDebugEvent?.('qpin_set', `fallback: "${fallback.slice(0, 60)}"`);
+        } else {
+          onDebugEvent?.('qpin_drop', 'gist request failed and no fallback sentence');
+        }
       });
   }, [lastTutorFinal]);
 
@@ -1199,7 +1312,7 @@ export default function TutorSession(props: TutorSessionProps) {
       startedAtMs={voiceStartedAtMs}
       maxDuration={sessionMaxMinutes}
       onEndSession={handleEndSession}
-      onUploadHomework={onUploadHomework ?? (() => {})}
+      onUploadHomework={onUploadHomework ?? handleUploadHomeworkFallback}
       transcript={transcript}
       whiteboardCommands={whiteboardCommands}
       topicName={topicLabel}

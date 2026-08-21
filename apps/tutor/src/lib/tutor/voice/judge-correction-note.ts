@@ -70,7 +70,40 @@ export function claimsWithMathExpression(claims: string[]): string[] {
  * `[start lesson]`, cover turns, etc.) — see the `isSynthetic` check
  * VoiceTutorRealtime already uses at its cover-arm site.
  */
+/** R50 T3: the one bracketed dispatch that MAY consume a pending note.
+ *
+ *  Every other synthetic dispatch is excluded on purpose — burning the note
+ *  on an idle nudge or a resume would spend it without the student's words
+ *  in hand, which is the whole point of holding it. But excluding ALL
+ *  bracketed turns left the note with no delivery path when the student
+ *  simply stops talking, which is the failure this sentinel closes. */
+export const CORRECTION_DUE_PREFIX = '[Correction-due]';
+
+/** Dispatched when a planted note has gone undelivered past its deadline.
+ *  Deliberately does NOT restate the flagged claim — the note itself is
+ *  prepended to this same turn and already carries it. */
+export const CORRECTION_DUE_DIRECTIVE =
+  `${CORRECTION_DUE_PREFIX} The student has gone quiet since your last turn. ` +
+  `Act on the correction note above now rather than waiting for them to speak: ` +
+  `if you got it wrong, own it in one short sentence and re-ask the question. ` +
+  `If on re-checking you stand by what you said, say nothing about the review and ` +
+  `simply offer the student a way back in.`;
+
+/**
+ * A note is consumed by a REAL student turn, never by an ordinary synthetic
+ * dispatch — with the single exception of the correction-due sentinel above.
+ *
+ * R50 T3 (live, portal-1f44f0eb 347-392s): the tutor falsely rejected a
+ * correct answer ("1" for the floor closest to the lobby) at 351.0s. The
+ * judge flagged it 3.9s later and planted a note — but the note sat unspent
+ * until the student REPEATED THEMSELVES at 387.7s, so the correction landed
+ * ~40s after the error and only because the student pushed back. A student
+ * who accepts the false rejection and stays quiet never gets corrected at
+ * all, and that is the common case: the judge is advisory-only by design
+ * (Pillar 2b), so this note is the ONLY repair path in the system.
+ */
 export function shouldConsumeJudgeCorrectionNote(transcript: string): boolean {
+  if (transcript.trimStart().startsWith(CORRECTION_DUE_PREFIX)) return true;
   return !/^\s*\[/.test(transcript);
 }
 
