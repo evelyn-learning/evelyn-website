@@ -899,6 +899,46 @@ import { BASELINE_M7ELA_U10_RESEARCH_QUESTIONS } from './seeds/m7ela-u10-researc
 import { BASELINE_M7ELA_U10_EVALUATING_SOURCES } from './seeds/m7ela-u10-evaluating-sources';
 import { BASELINE_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/m7ela-u10-quoting-paraphrasing-summarizing';
 import { BASELINE_M7ELA_U10_CITING_SOURCES } from './seeds/m7ela-u10-citing-sources';
+import { BASELINE_M7SCI_U1_CHARACTERISTICS_OF_LIVING_THINGS } from './seeds/m7sci-u1-characteristics-of-living-things';
+import { BASELINE_M7SCI_U1_SCIENTIFIC_INVESTIGATION } from './seeds/m7sci-u1-scientific-investigation';
+import { BASELINE_M7SCI_U1_VARIABLES_AND_CONTROLS } from './seeds/m7sci-u1-variables-and-controls';
+import { BASELINE_M7SCI_U1_DATA_GRAPHS_AND_CONCLUSIONS } from './seeds/m7sci-u1-data-graphs-and-conclusions';
+import { BASELINE_M7SCI_U2_CELL_THEORY_AND_MICROSCOPES } from './seeds/m7sci-u2-cell-theory-and-microscopes';
+import { BASELINE_M7SCI_U2_PLANT_AND_ANIMAL_CELLS } from './seeds/m7sci-u2-plant-and-animal-cells';
+import { BASELINE_M7SCI_U2_ORGANELLES_AND_THEIR_JOBS } from './seeds/m7sci-u2-organelles-and-their-jobs';
+import { BASELINE_M7SCI_U2_DIFFUSION_AND_OSMOSIS } from './seeds/m7sci-u2-diffusion-and-osmosis';
+import { BASELINE_M7SCI_U3_LEVELS_OF_ORGANIZATION } from './seeds/m7sci-u3-levels-of-organization';
+import { BASELINE_M7SCI_U3_DIGESTIVE_AND_CIRCULATORY_SYSTEMS } from './seeds/m7sci-u3-digestive-and-circulatory-systems';
+import { BASELINE_M7SCI_U3_RESPIRATORY_AND_NERVOUS_SYSTEMS } from './seeds/m7sci-u3-respiratory-and-nervous-systems';
+import { BASELINE_M7SCI_U3_HOMEOSTASIS } from './seeds/m7sci-u3-homeostasis';
+import { BASELINE_M7SCI_U4_ENERGY_FOR_LIVING_THINGS } from './seeds/m7sci-u4-energy-for-living-things';
+import { BASELINE_M7SCI_U4_PHOTOSYNTHESIS } from './seeds/m7sci-u4-photosynthesis';
+import { BASELINE_M7SCI_U4_CELLULAR_RESPIRATION } from './seeds/m7sci-u4-cellular-respiration';
+import { BASELINE_M7SCI_U4_MATTER_AND_ENERGY_IN_ORGANISMS } from './seeds/m7sci-u4-matter-and-energy-in-organisms';
+import { BASELINE_M7SCI_U5_CELL_DIVISION_AND_GROWTH } from './seeds/m7sci-u5-cell-division-and-growth';
+import { BASELINE_M7SCI_U5_ASEXUAL_AND_SEXUAL_REPRODUCTION } from './seeds/m7sci-u5-asexual-and-sexual-reproduction';
+import { BASELINE_M7SCI_U5_PLANT_REPRODUCTION_AND_POLLINATION } from './seeds/m7sci-u5-plant-reproduction-and-pollination';
+import { BASELINE_M7SCI_U5_ENVIRONMENT_AND_GROWTH } from './seeds/m7sci-u5-environment-and-growth';
+import { BASELINE_M7SCI_U6_GENES_CHROMOSOMES_AND_DNA } from './seeds/m7sci-u6-genes-chromosomes-and-dna';
+import { BASELINE_M7SCI_U6_DOMINANT_AND_RECESSIVE_TRAITS } from './seeds/m7sci-u6-dominant-and-recessive-traits';
+import { BASELINE_M7SCI_U6_PUNNETT_SQUARES } from './seeds/m7sci-u6-punnett-squares';
+import { BASELINE_M7SCI_U6_MUTATIONS_AND_VARIATION } from './seeds/m7sci-u6-mutations-and-variation';
+import { BASELINE_M7SCI_U7_FOSSILS_AND_THE_FOSSIL_RECORD } from './seeds/m7sci-u7-fossils-and-the-fossil-record';
+import { BASELINE_M7SCI_U7_EVIDENCE_FOR_COMMON_ANCESTRY } from './seeds/m7sci-u7-evidence-for-common-ancestry';
+import { BASELINE_M7SCI_U7_NATURAL_SELECTION } from './seeds/m7sci-u7-natural-selection';
+import { BASELINE_M7SCI_U7_ADAPTATION_AND_ARTIFICIAL_SELECTION } from './seeds/m7sci-u7-adaptation-and-artificial-selection';
+import { BASELINE_M7SCI_U8_CLASSIFYING_LIVING_THINGS } from './seeds/m7sci-u8-classifying-living-things';
+import { BASELINE_M7SCI_U8_DOMAINS_AND_KINGDOMS } from './seeds/m7sci-u8-domains-and-kingdoms';
+import { BASELINE_M7SCI_U8_USING_DICHOTOMOUS_KEYS } from './seeds/m7sci-u8-using-dichotomous-keys';
+import { BASELINE_M7SCI_U8_CLADOGRAMS_AND_RELATEDNESS } from './seeds/m7sci-u8-cladograms-and-relatedness';
+import { BASELINE_M7SCI_U9_ECOSYSTEM_ORGANIZATION } from './seeds/m7sci-u9-ecosystem-organization';
+import { BASELINE_M7SCI_U9_FOOD_CHAINS_AND_FOOD_WEBS } from './seeds/m7sci-u9-food-chains-and-food-webs';
+import { BASELINE_M7SCI_U9_CYCLES_OF_MATTER } from './seeds/m7sci-u9-cycles-of-matter';
+import { BASELINE_M7SCI_U9_BIOMES_AND_HABITATS } from './seeds/m7sci-u9-biomes-and-habitats';
+import { BASELINE_M7SCI_U10_INTERACTIONS_BETWEEN_SPECIES } from './seeds/m7sci-u10-interactions-between-species';
+import { BASELINE_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS } from './seeds/m7sci-u10-population-changes-and-limits';
+import { BASELINE_M7SCI_U10_ECOSYSTEM_DISRUPTION } from './seeds/m7sci-u10-ecosystem-disruption';
+import { BASELINE_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT } from './seeds/m7sci-u10-biodiversity-and-human-impact';
 
 export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_AP_CALCBC_DEFINING_LIMITS,
@@ -1657,6 +1697,46 @@ export const SEED_BASELINES: TopicNotesBaseline[] = [
   BASELINE_M7ELA_U10_EVALUATING_SOURCES,
   BASELINE_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING,
   BASELINE_M7ELA_U10_CITING_SOURCES,
+  BASELINE_M7SCI_U1_CHARACTERISTICS_OF_LIVING_THINGS,
+  BASELINE_M7SCI_U1_SCIENTIFIC_INVESTIGATION,
+  BASELINE_M7SCI_U1_VARIABLES_AND_CONTROLS,
+  BASELINE_M7SCI_U1_DATA_GRAPHS_AND_CONCLUSIONS,
+  BASELINE_M7SCI_U2_CELL_THEORY_AND_MICROSCOPES,
+  BASELINE_M7SCI_U2_PLANT_AND_ANIMAL_CELLS,
+  BASELINE_M7SCI_U2_ORGANELLES_AND_THEIR_JOBS,
+  BASELINE_M7SCI_U2_DIFFUSION_AND_OSMOSIS,
+  BASELINE_M7SCI_U3_LEVELS_OF_ORGANIZATION,
+  BASELINE_M7SCI_U3_DIGESTIVE_AND_CIRCULATORY_SYSTEMS,
+  BASELINE_M7SCI_U3_RESPIRATORY_AND_NERVOUS_SYSTEMS,
+  BASELINE_M7SCI_U3_HOMEOSTASIS,
+  BASELINE_M7SCI_U4_ENERGY_FOR_LIVING_THINGS,
+  BASELINE_M7SCI_U4_PHOTOSYNTHESIS,
+  BASELINE_M7SCI_U4_CELLULAR_RESPIRATION,
+  BASELINE_M7SCI_U4_MATTER_AND_ENERGY_IN_ORGANISMS,
+  BASELINE_M7SCI_U5_CELL_DIVISION_AND_GROWTH,
+  BASELINE_M7SCI_U5_ASEXUAL_AND_SEXUAL_REPRODUCTION,
+  BASELINE_M7SCI_U5_PLANT_REPRODUCTION_AND_POLLINATION,
+  BASELINE_M7SCI_U5_ENVIRONMENT_AND_GROWTH,
+  BASELINE_M7SCI_U6_GENES_CHROMOSOMES_AND_DNA,
+  BASELINE_M7SCI_U6_DOMINANT_AND_RECESSIVE_TRAITS,
+  BASELINE_M7SCI_U6_PUNNETT_SQUARES,
+  BASELINE_M7SCI_U6_MUTATIONS_AND_VARIATION,
+  BASELINE_M7SCI_U7_FOSSILS_AND_THE_FOSSIL_RECORD,
+  BASELINE_M7SCI_U7_EVIDENCE_FOR_COMMON_ANCESTRY,
+  BASELINE_M7SCI_U7_NATURAL_SELECTION,
+  BASELINE_M7SCI_U7_ADAPTATION_AND_ARTIFICIAL_SELECTION,
+  BASELINE_M7SCI_U8_CLASSIFYING_LIVING_THINGS,
+  BASELINE_M7SCI_U8_DOMAINS_AND_KINGDOMS,
+  BASELINE_M7SCI_U8_USING_DICHOTOMOUS_KEYS,
+  BASELINE_M7SCI_U8_CLADOGRAMS_AND_RELATEDNESS,
+  BASELINE_M7SCI_U9_ECOSYSTEM_ORGANIZATION,
+  BASELINE_M7SCI_U9_FOOD_CHAINS_AND_FOOD_WEBS,
+  BASELINE_M7SCI_U9_CYCLES_OF_MATTER,
+  BASELINE_M7SCI_U9_BIOMES_AND_HABITATS,
+  BASELINE_M7SCI_U10_INTERACTIONS_BETWEEN_SPECIES,
+  BASELINE_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS,
+  BASELINE_M7SCI_U10_ECOSYSTEM_DISRUPTION,
+  BASELINE_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT,
 ];
 
 const baselinesById = new Map(SEED_BASELINES.map((b) => [b.baselineId, b]));
