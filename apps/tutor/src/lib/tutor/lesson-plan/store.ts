@@ -1980,6 +1980,46 @@ import { SEED_M7ELA_U10_RESEARCH_QUESTIONS } from './seeds/m7ela-u10-research-qu
 import { SEED_M7ELA_U10_EVALUATING_SOURCES } from './seeds/m7ela-u10-evaluating-sources';
 import { SEED_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING } from './seeds/m7ela-u10-quoting-paraphrasing-summarizing';
 import { SEED_M7ELA_U10_CITING_SOURCES } from './seeds/m7ela-u10-citing-sources';
+import { SEED_M7SCI_U1_CHARACTERISTICS_OF_LIVING_THINGS } from './seeds/m7sci-u1-characteristics-of-living-things';
+import { SEED_M7SCI_U1_SCIENTIFIC_INVESTIGATION } from './seeds/m7sci-u1-scientific-investigation';
+import { SEED_M7SCI_U1_VARIABLES_AND_CONTROLS } from './seeds/m7sci-u1-variables-and-controls';
+import { SEED_M7SCI_U1_DATA_GRAPHS_AND_CONCLUSIONS } from './seeds/m7sci-u1-data-graphs-and-conclusions';
+import { SEED_M7SCI_U2_CELL_THEORY_AND_MICROSCOPES } from './seeds/m7sci-u2-cell-theory-and-microscopes';
+import { SEED_M7SCI_U2_PLANT_AND_ANIMAL_CELLS } from './seeds/m7sci-u2-plant-and-animal-cells';
+import { SEED_M7SCI_U2_ORGANELLES_AND_THEIR_JOBS } from './seeds/m7sci-u2-organelles-and-their-jobs';
+import { SEED_M7SCI_U2_DIFFUSION_AND_OSMOSIS } from './seeds/m7sci-u2-diffusion-and-osmosis';
+import { SEED_M7SCI_U3_LEVELS_OF_ORGANIZATION } from './seeds/m7sci-u3-levels-of-organization';
+import { SEED_M7SCI_U3_DIGESTIVE_AND_CIRCULATORY_SYSTEMS } from './seeds/m7sci-u3-digestive-and-circulatory-systems';
+import { SEED_M7SCI_U3_RESPIRATORY_AND_NERVOUS_SYSTEMS } from './seeds/m7sci-u3-respiratory-and-nervous-systems';
+import { SEED_M7SCI_U3_HOMEOSTASIS } from './seeds/m7sci-u3-homeostasis';
+import { SEED_M7SCI_U4_ENERGY_FOR_LIVING_THINGS } from './seeds/m7sci-u4-energy-for-living-things';
+import { SEED_M7SCI_U4_PHOTOSYNTHESIS } from './seeds/m7sci-u4-photosynthesis';
+import { SEED_M7SCI_U4_CELLULAR_RESPIRATION } from './seeds/m7sci-u4-cellular-respiration';
+import { SEED_M7SCI_U4_MATTER_AND_ENERGY_IN_ORGANISMS } from './seeds/m7sci-u4-matter-and-energy-in-organisms';
+import { SEED_M7SCI_U5_CELL_DIVISION_AND_GROWTH } from './seeds/m7sci-u5-cell-division-and-growth';
+import { SEED_M7SCI_U5_ASEXUAL_AND_SEXUAL_REPRODUCTION } from './seeds/m7sci-u5-asexual-and-sexual-reproduction';
+import { SEED_M7SCI_U5_PLANT_REPRODUCTION_AND_POLLINATION } from './seeds/m7sci-u5-plant-reproduction-and-pollination';
+import { SEED_M7SCI_U5_ENVIRONMENT_AND_GROWTH } from './seeds/m7sci-u5-environment-and-growth';
+import { SEED_M7SCI_U6_GENES_CHROMOSOMES_AND_DNA } from './seeds/m7sci-u6-genes-chromosomes-and-dna';
+import { SEED_M7SCI_U6_DOMINANT_AND_RECESSIVE_TRAITS } from './seeds/m7sci-u6-dominant-and-recessive-traits';
+import { SEED_M7SCI_U6_PUNNETT_SQUARES } from './seeds/m7sci-u6-punnett-squares';
+import { SEED_M7SCI_U6_MUTATIONS_AND_VARIATION } from './seeds/m7sci-u6-mutations-and-variation';
+import { SEED_M7SCI_U7_FOSSILS_AND_THE_FOSSIL_RECORD } from './seeds/m7sci-u7-fossils-and-the-fossil-record';
+import { SEED_M7SCI_U7_EVIDENCE_FOR_COMMON_ANCESTRY } from './seeds/m7sci-u7-evidence-for-common-ancestry';
+import { SEED_M7SCI_U7_NATURAL_SELECTION } from './seeds/m7sci-u7-natural-selection';
+import { SEED_M7SCI_U7_ADAPTATION_AND_ARTIFICIAL_SELECTION } from './seeds/m7sci-u7-adaptation-and-artificial-selection';
+import { SEED_M7SCI_U8_CLASSIFYING_LIVING_THINGS } from './seeds/m7sci-u8-classifying-living-things';
+import { SEED_M7SCI_U8_DOMAINS_AND_KINGDOMS } from './seeds/m7sci-u8-domains-and-kingdoms';
+import { SEED_M7SCI_U8_USING_DICHOTOMOUS_KEYS } from './seeds/m7sci-u8-using-dichotomous-keys';
+import { SEED_M7SCI_U8_CLADOGRAMS_AND_RELATEDNESS } from './seeds/m7sci-u8-cladograms-and-relatedness';
+import { SEED_M7SCI_U9_ECOSYSTEM_ORGANIZATION } from './seeds/m7sci-u9-ecosystem-organization';
+import { SEED_M7SCI_U9_FOOD_CHAINS_AND_FOOD_WEBS } from './seeds/m7sci-u9-food-chains-and-food-webs';
+import { SEED_M7SCI_U9_CYCLES_OF_MATTER } from './seeds/m7sci-u9-cycles-of-matter';
+import { SEED_M7SCI_U9_BIOMES_AND_HABITATS } from './seeds/m7sci-u9-biomes-and-habitats';
+import { SEED_M7SCI_U10_INTERACTIONS_BETWEEN_SPECIES } from './seeds/m7sci-u10-interactions-between-species';
+import { SEED_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS } from './seeds/m7sci-u10-population-changes-and-limits';
+import { SEED_M7SCI_U10_ECOSYSTEM_DISRUPTION } from './seeds/m7sci-u10-ecosystem-disruption';
+import { SEED_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT } from './seeds/m7sci-u10-biodiversity-and-human-impact';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -3883,6 +3923,47 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M7ELA_U10_EVALUATING_SOURCES,
   SEED_M7ELA_U10_QUOTING_PARAPHRASING_SUMMARIZING,
   SEED_M7ELA_U10_CITING_SOURCES,
+  // MS-core — Grade 7 Science (Life Science).
+  SEED_M7SCI_U1_CHARACTERISTICS_OF_LIVING_THINGS,
+  SEED_M7SCI_U1_SCIENTIFIC_INVESTIGATION,
+  SEED_M7SCI_U1_VARIABLES_AND_CONTROLS,
+  SEED_M7SCI_U1_DATA_GRAPHS_AND_CONCLUSIONS,
+  SEED_M7SCI_U2_CELL_THEORY_AND_MICROSCOPES,
+  SEED_M7SCI_U2_PLANT_AND_ANIMAL_CELLS,
+  SEED_M7SCI_U2_ORGANELLES_AND_THEIR_JOBS,
+  SEED_M7SCI_U2_DIFFUSION_AND_OSMOSIS,
+  SEED_M7SCI_U3_LEVELS_OF_ORGANIZATION,
+  SEED_M7SCI_U3_DIGESTIVE_AND_CIRCULATORY_SYSTEMS,
+  SEED_M7SCI_U3_RESPIRATORY_AND_NERVOUS_SYSTEMS,
+  SEED_M7SCI_U3_HOMEOSTASIS,
+  SEED_M7SCI_U4_ENERGY_FOR_LIVING_THINGS,
+  SEED_M7SCI_U4_PHOTOSYNTHESIS,
+  SEED_M7SCI_U4_CELLULAR_RESPIRATION,
+  SEED_M7SCI_U4_MATTER_AND_ENERGY_IN_ORGANISMS,
+  SEED_M7SCI_U5_CELL_DIVISION_AND_GROWTH,
+  SEED_M7SCI_U5_ASEXUAL_AND_SEXUAL_REPRODUCTION,
+  SEED_M7SCI_U5_PLANT_REPRODUCTION_AND_POLLINATION,
+  SEED_M7SCI_U5_ENVIRONMENT_AND_GROWTH,
+  SEED_M7SCI_U6_GENES_CHROMOSOMES_AND_DNA,
+  SEED_M7SCI_U6_DOMINANT_AND_RECESSIVE_TRAITS,
+  SEED_M7SCI_U6_PUNNETT_SQUARES,
+  SEED_M7SCI_U6_MUTATIONS_AND_VARIATION,
+  SEED_M7SCI_U7_FOSSILS_AND_THE_FOSSIL_RECORD,
+  SEED_M7SCI_U7_EVIDENCE_FOR_COMMON_ANCESTRY,
+  SEED_M7SCI_U7_NATURAL_SELECTION,
+  SEED_M7SCI_U7_ADAPTATION_AND_ARTIFICIAL_SELECTION,
+  SEED_M7SCI_U8_CLASSIFYING_LIVING_THINGS,
+  SEED_M7SCI_U8_DOMAINS_AND_KINGDOMS,
+  SEED_M7SCI_U8_USING_DICHOTOMOUS_KEYS,
+  SEED_M7SCI_U8_CLADOGRAMS_AND_RELATEDNESS,
+  SEED_M7SCI_U9_ECOSYSTEM_ORGANIZATION,
+  SEED_M7SCI_U9_FOOD_CHAINS_AND_FOOD_WEBS,
+  SEED_M7SCI_U9_CYCLES_OF_MATTER,
+  SEED_M7SCI_U9_BIOMES_AND_HABITATS,
+  SEED_M7SCI_U10_INTERACTIONS_BETWEEN_SPECIES,
+  SEED_M7SCI_U10_POPULATION_CHANGES_AND_LIMITS,
+  SEED_M7SCI_U10_ECOSYSTEM_DISRUPTION,
+  SEED_M7SCI_U10_BIODIVERSITY_AND_HUMAN_IMPACT,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
