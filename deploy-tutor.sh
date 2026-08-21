@@ -288,6 +288,57 @@ trap 'handle_error $LINENO' ERR
 # message, and the message names $LOCK_DIR either way. A start-time check
 # would close it and is more machinery than the risk warrants.
 # ---------------------------------------------------------------------------
+
+# ── GUARD: never deploy from a repo ROOT. ────────────────────────────────
+# 2026-08-21 incident. Three agent sessions share this repo. R49/R49b was
+# deployed and verified at 00:25 UTC; at 04:36 UTC another session ran THIS
+# script from the repo root, which sat on `main`. main did not carry the
+# round, so the deploy shipped that session's work and silently dropped
+# ours — while leaving all nine feature flags switched ON in the server env,
+# because the env file HAD been reconciled into root. Every check reported
+# healthy for ten hours against code that could not read those flags.
+#
+# The deploy lock is not a defence against this: it only exists DURING a
+# deploy, so finding it free proves nothing about undeployed work sitting on
+# someone else's branch. A ping between sessions was the only safeguard, and
+# a ping is not a mechanism.
+#
+# A worktree's git-dir is `<repo>/.git/worktrees/<name>`; a root checkout's
+# is plain `.git`. That is the whole test. Deploy from a worktree whose
+# branch you control, or do not deploy.
+#
+# Escape hatch, deliberately awkward: ALLOW_ROOT_DEPLOY=1. If you reach for
+# it, first ask what is on the root's branch that is NOT in yours.
+GIT_DIR_REL="$(git rev-parse --git-dir 2>/dev/null || echo 'not-a-repo')"
+case "$GIT_DIR_REL" in
+  */.git/worktrees/*) : ;;                       # linked worktree — correct
+  not-a-repo)
+    log_message "ERROR" "Not a git repository — refusing to deploy from an unknown tree."
+    exit 1 ;;
+  *)
+    if [ "${ALLOW_ROOT_DEPLOY:-}" = "1" ]; then
+      log_message "INFO" "ALLOW_ROOT_DEPLOY=1 — deploying from the repo ROOT by explicit override."
+    else
+      log_message "ERROR" "REFUSING TO DEPLOY FROM THE REPO ROOT (git-dir: $GIT_DIR_REL, branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null))."
+      log_message "ERROR" "  This script ships the WORKING TREE. The root is shared by every agent session,"
+      log_message "ERROR" "  so deploying from it ships whatever branch the root happens to be on and"
+      log_message "ERROR" "  silently drops any round that lives on another branch (2026-08-21 incident)."
+      log_message "ERROR" "  Deploy from your own worktree instead:  .claude/worktrees/<yours>"
+      log_message "ERROR" "  Override only if you know what root carries that your worktree does not:"
+      log_message "ERROR" "      ALLOW_ROOT_DEPLOY=1 ./deploy-tutor.sh"
+      exit 1
+    fi ;;
+esac
+
+# Placed BEFORE the lock is acquired, deliberately. This check needs no lock —
+# it is a pure local git query — and a refused deploy must not take the global
+# lock on its way out. The lock is shared by all four deploy scripts, its
+# release lives in an EXIT trap, and that trap does not always win against a
+# SIGKILL (documented lock leak). A guard that grabbed the lock before
+# refusing would turn "you deployed from the wrong directory" into "nobody on
+# this machine can deploy until someone rm -rf's a lock by hand". Verified the
+# hard way on 2026-08-21 by an earlier revision of this very guard.
+
 LOCK_DIR="/tmp/evelyn-deploy.lock"
 LOCK_HELD=false
 # Initialised here, not just at Step 1, because the EXIT trap below can fire
@@ -428,6 +479,7 @@ log_message "INFO" "Starting Evelyn Learning TUTOR deployment to production..."
 # and, for the ketcher guard, before any manifest can be generated without
 # the bundles in it.
 log_message "STEP" "Preflight checks..."
+
 
 # 0a. Production env must exist.
 #
