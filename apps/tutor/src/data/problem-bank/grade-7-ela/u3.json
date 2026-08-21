@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-central-idea-and-supporting-details-001",
+    "loId": "m7ela.central-idea-and-supporting-details",
+    "cedCode": "M7ELA-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read the paragraph, then choose the statement of its central idea. \"A bike helmet is built to be wrecked. Inside the hard shell is a thick layer of foam, and in a crash that foam crushes and stays crushed. Crushing slowly is what keeps your head from stopping all at once. Because the foam only does that one time, a helmet that has taken a real hit should be replaced.\"",
+    "choices": [
+      "Bike helmets.",
+      "Inside the hard shell is a thick layer of foam.",
+      "A helmet protects your head by crushing in a crash, which is why it works only once and has to be replaced after a real hit.",
+      "Riding a bike is dangerous."
+    ],
+    "answer": "C",
+    "hints": [
+      "A topic is a word you could write on a folder tab. A central idea is a complete sentence with a point in it. One choice here is only the tab.",
+      "Run the whole-text test. Walk through all four sentences and ask which choice every single one of them is working for; two choices cover only one sentence, and one says something the paragraph never claims."
+    ]
+  },
+  {
+    "id": "m7ela-central-idea-and-supporting-details-002",
+    "loId": "m7ela.central-idea-and-supporting-details",
+    "cedCode": "M7ELA-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An article has this central idea: planting a row of trees along a street makes the street cooler in summer. Which detail actually SUPPORTS that idea?",
+    "choices": [
+      "Shade from the branches keeps the pavement underneath from heating up as much in the sun.",
+      "Tree roots can lift and crack an old sidewalk over time.",
+      "Many towns hold a tree-planting day in the spring.",
+      "Some trees drop sticky seeds onto parked cars."
+    ],
+    "answer": "A",
+    "hints": [
+      "Every choice here is true. That is the trap. A true fact is a supporting detail only if it backs up THIS point.",
+      "The point is about trees and heat. Ask which choice says anything at all about temperature; the other three are about sidewalks, about spring events, and about seeds."
+    ]
+  },
+  {
+    "id": "m7ela-central-idea-and-supporting-details-003",
+    "loId": "m7ela.central-idea-and-supporting-details",
+    "cedCode": "M7ELA-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the paragraph, then choose the statement of its central idea. \"Most people think a cactus stores its water in its spines. But the spines hold no water at all. They are leaves that changed shape over a very long time, and their job is to throw a little shade on the plant and to keep animals from biting into it. The water is kept in the thick green stem, which swells after a rain.\"",
+    "choices": [
+      "Most people think a cactus stores its water in its spines.",
+      "Cactus spines keep animals from biting the plant.",
+      "Cactus plants grow in dry places.",
+      "A cactus keeps its water in its thick stem, and its spines are changed leaves that shade and protect it instead."
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the turn word. Sentence 2 begins with \"But,\" and a \"but\" tells you the writer is about to push back on what was just said.",
+      "The opening line is the belief being corrected, not the point. Two other choices are single details, and one is a fact the paragraph never states."
+    ]
+  },
+  {
+    "id": "m7ela-central-idea-and-supporting-details-004",
+    "loId": "m7ela.central-idea-and-supporting-details",
+    "cedCode": "M7ELA-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the paragraph, then choose the statement that covers the whole thing. \"The bakery on Sumner Street throws away very little of what it bakes. Loaves that have not sold by closing time are boxed up for a food pantry two blocks away. Broken rolls and cut-off crusts are dried and ground into crumbs for the next day's meatballs. Anything still left at the end of the week goes into a compost bin behind the shop.\"",
+    "choices": [
+      "Unsold loaves are boxed up and given to a food pantry.",
+      "The bakery finds a use for almost everything it bakes instead of throwing it out.",
+      "The only way the bakery avoids waste is by giving away the loaves that do not sell.",
+      "Broken rolls and crusts are ground into crumbs for meatballs."
+    ],
+    "answer": "B",
+    "hints": [
+      "Two of these choices are lifted straight out of a single sentence. Check each choice against sentence 2 AND sentence 3 AND sentence 4.",
+      "One choice adds the word \"only,\" which the paragraph never says, since it lists the pantry, the crumbs and the compost bin as three separate uses."
+    ]
+  },
+  {
+    "id": "m7ela-central-idea-and-supporting-details-005",
+    "loId": "m7ela.central-idea-and-supporting-details",
+    "cedCode": "M7ELA-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the paragraph, then choose the statement of its central idea. \"Sailing ships once carried heavy stones in the hold when they had no cargo to haul. The stones, called ballast, sat low in the hull and kept the ship from rolling over in rough water. Sailors dumped the stones on shore when real cargo came aboard, and in a few old port towns you can still walk on a beach made almost entirely of rock from the other side of an ocean.\"",
+    "choices": [
+      "An empty ship carried heavy stones low in its hull so that rough water could not roll it over.",
+      "A few old port towns have beaches made of rock from far away.",
+      "Ballast.",
+      "Being a sailor on an old ship was hard work."
+    ],
+    "answer": "A",
+    "hints": [
+      "The strangest fact in a paragraph pulls your eye, but interesting is not the same as important. Ask what the surprising fact was put there to PROVE.",
+      "The beaches are evidence that sailors really did dump the stones, which only makes sense once you know why the stones were aboard. One other choice is just the topic word, and one is a claim the paragraph never makes."
+    ]
+  },
+  {
+    "id": "m7ela-central-idea-and-supporting-details-006",
+    "loId": "m7ela.central-idea-and-supporting-details",
+    "cedCode": "M7ELA-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read both short texts, then choose the sentence that states a central idea covering BOTH of them.\n\nTEXT 1: \"An owl hunts in near darkness, and its eyes are only part of the reason. In many owls the two ear openings sit at slightly different heights on the head, so a sound made by a mouse reaches one ear a hair sooner than the other. That tiny gap tells the owl where the mouse is.\"\n\nTEXT 2: \"The front edge of an owl's wing feathers is fringed like a comb. The fringe breaks up the rush of air that would otherwise whistle over the wing, so an owl in flight makes almost no sound. A mouse gets no warning until the owl arrives.\"",
+    "choices": [
+      "Owls find their prey mainly by seeing it.",
+      "Owls eat mice.",
+      "An owl's body is built for catching prey it cannot see, from ears that pinpoint a sound to wings that fly silently.",
+      "In many owls the two ear openings sit at different heights on the head."
+    ],
+    "answer": "C",
+    "hints": [
+      "A candidate has to cover BOTH texts. Try each choice against Text 1, then against Text 2, and throw out any that works for only one.",
+      "One choice is a single detail from Text 1. One names a fact both texts mention in passing without saying what either text is arguing. One is about eyesight, which Text 1 says is only part of the reason and Text 2 never mentions."
+    ]
+  },
+  {
+    "id": "m7ela-summarizing-informational-text-001",
+    "loId": "m7ela.summarizing-informational-text",
+    "cedCode": "M7ELA-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a summary of an article about how a compass works. Which sentence must be cut from that summary?",
+    "choices": [
+      "A compass needle is a small magnet that can spin freely.",
+      "I think a compass is the coolest thing in a whole hiking kit.",
+      "The needle lines itself up with the magnetic field of the Earth.",
+      "One end of the needle is marked so a hiker can tell which way is north."
+    ],
+    "answer": "B",
+    "hints": [
+      "A summary says what the text says. A review says what you think. One of these sentences is the second kind.",
+      "Look for the words \"I think.\" Whether a compass is cool is not information from the article, so it cannot go in a summary of it."
+    ]
+  },
+  {
+    "id": "m7ela-summarizing-informational-text-002",
+    "loId": "m7ela.summarizing-informational-text",
+    "cedCode": "M7ELA-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the passage, then choose the best summary. \"In late summer the days get shorter, and a maple tree stops making the green coloring in its leaves. That green had been covering up yellow and orange colors that were sitting in the leaf the whole time. As the green fades away, those colors show through, and the leaf looks as though it has changed color.\"",
+    "choices": [
+      "In late summer the days get shorter, and a maple tree stops making the green coloring in its leaves.",
+      "Maple leaves have yellow and orange in them.",
+      "Fall leaves are the best part of autumn, and maples are the prettiest tree of all.",
+      "As the days shorten, a maple stops making green coloring, so the yellow and orange already inside the leaf finally become visible."
+    ],
+    "answer": "D",
+    "hints": [
+      "Start with step 1. In one sentence, what is this whole passage mostly about? Then check which choice actually says that.",
+      "One choice copies the opening sentence word for word, one gives a single detail and never says why the leaf seems to change, and one adds an opinion the passage never states."
+    ]
+  },
+  {
+    "id": "m7ela-summarizing-informational-text-003",
+    "loId": "m7ela.summarizing-informational-text",
+    "cedCode": "M7ELA-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Here is one sentence from an article about school lunch: \"Students who help plan the lunch menu waste less food at lunchtime.\"\n\nWhich version restates it in your own words?",
+    "choices": [
+      "Pupils who assist in planning the lunch menu squander less food at lunchtime.",
+      "Students who help plan the lunch menu never throw any food away at all.",
+      "When kids get a say in what is served, less of the meal ends up in the trash.",
+      "Students who help plan the lunch menu waste less food, which proves every school should let them do it."
+    ],
+    "answer": "C",
+    "hints": [
+      "Line each choice up against the original, word by word. If the two sentences march along in step with only a few words traded out, that is a close paraphrase, not your own words.",
+      "Two of the choices change the meaning. One turns \"less food\" into \"no food at all,\" and one bolts an opinion onto the end."
+    ]
+  },
+  {
+    "id": "m7ela-summarizing-informational-text-004",
+    "loId": "m7ela.summarizing-informational-text",
+    "cedCode": "M7ELA-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the passage, then choose the best summary. \"A paper clip holds papers together because it is bent, not because it is sticky. The wire is trying to spring back to the shape it had before, and that springiness is what pinches the sheets. Push too thick a stack into the clip and the wire bends past the point where it can spring back, so the clip stays wide open and never grips again.\"",
+    "choices": [
+      "A paper clip grips because the bent wire keeps trying to spring back, and it stops working once too thick a stack bends the wire so far that it cannot spring back.",
+      "A paper clip holds papers together because it is bent, not because it is sticky.",
+      "Paper clips are made of wire that can be bent into a shape.",
+      "Paper clips are handy, but they are badly made, since they give out so easily."
+    ],
+    "answer": "A",
+    "hints": [
+      "The passage explains a chain: the wire wants to spring back, the springiness pinches, and bending it too far ends both. A summary that drops the end of the chain has dropped half the point.",
+      "One choice copies the opening sentence, one gives a detail and never says what makes a clip grip, and one adds a judgment the passage never makes."
+    ]
+  },
+  {
+    "id": "m7ela-summarizing-informational-text-005",
+    "loId": "m7ela.summarizing-informational-text",
+    "cedCode": "M7ELA-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An article explains that honey does not spoil, because it holds very little water and is too acidic for most tiny living things to grow in. A student's draft summary has four sentences. Which sentence should be cut?",
+    "choices": [
+      "Honey can sit for a very long time without spoiling.",
+      "Beekeepers in many places wear pale suits when they open a hive.",
+      "Honey holds very little water, so the tiny living things that spoil food cannot grow well in it.",
+      "Honey is also acidic, which most of those tiny living things cannot survive."
+    ],
+    "answer": "B",
+    "hints": [
+      "Step 2 of the recipe: keep only the details that support the central idea. The central idea here is why honey does not spoil.",
+      "One sentence is true and interesting and has nothing to do with spoiling. Interesting does not earn a detail a place in a summary."
+    ]
+  },
+  {
+    "id": "m7ela-summarizing-informational-text-006",
+    "loId": "m7ela.summarizing-informational-text",
+    "cedCode": "M7ELA-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the passage, then choose the best summary. \"A lighthouse does not simply shine. It blinks in a pattern, and no two lighthouses along the same stretch of coast blink the same way. A sailor holding a chart can time the flashes and read off which light it is, which tells the sailor where the ship must be. Before radio, that was often the only way to fix a position at night close to shore.\"",
+    "choices": [
+      "A lighthouse blinks in a pattern, and no two lighthouses along the same stretch of coast blink the same way.",
+      "A sailor could time the flashes of a lighthouse against a chart.",
+      "Lighthouses blink in patterns, a sailor can time them with a chart, and before radio this was often the only way to fix a position at night, which shows how clever the old sailors really were.",
+      "Each lighthouse flashes its own pattern, so a sailor who times the flashes against a chart can tell which light it is and work out where the ship is."
+    ],
+    "answer": "D",
+    "hints": [
+      "All four choices contain something true. Check each one for the whole chain: a pattern that is different for each light, a chart that names the pattern, and a position the sailor gets out of it.",
+      "One choice copies the opening and stops before the purpose, one gives the middle step and never says what it is for, and one carries the whole chain but tacks on an opinion about clever sailors that the passage never states."
+    ]
+  },
+  {
+    "id": "m7ela-text-features-and-graphics-001",
+    "loId": "m7ela.text-features-and-graphics",
+    "cedCode": "M7ELA-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A book about volcanoes has an alphabetical list at the back that gives the meaning of terms used in the book, such as magma and vent. What is that part of the book called?",
+    "choices": [
+      "a glossary",
+      "an index",
+      "a table of contents",
+      "a caption"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two parts of a book sit at the back in alphabetical order. Tell them apart by what each one gives you: meanings, or page numbers.",
+      "This list gives the MEANING of each term, not the pages where it appears, so it is not the index; and a contents list sits at the front in chapter order."
+    ]
+  },
+  {
+    "id": "m7ela-text-features-and-graphics-002",
+    "loId": "m7ela.text-features-and-graphics",
+    "cedCode": "M7ELA-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A magazine article is described here in words. It carries the heading \"Where the Rain Goes,\" and under that heading are three subheadings, in this order: \"Down the Storm Drain,\" \"Into the Soil,\" \"Back into the Air.\" A reader wants to know what happens to rain that falls on a paved parking lot. Which subheading should the reader turn to, and why?",
+    "choices": [
+      "\"Into the Soil,\" because all rain soaks into the ground in the end.",
+      "\"Back into the Air,\" because the heading says the water goes away.",
+      "\"Down the Storm Drain,\" because a parking lot is paved, so rain runs off it instead of soaking in.",
+      "Any of the three, because subheadings are decoration and do not tell a reader anything."
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the three subheadings as a set. They are the three routes this article says rainwater can take, and your job is to match the parking lot to one of them.",
+      "Ask what a paved surface does to rain. It cannot soak in through asphalt, so the water has to run somewhere, and only one subheading names the place it runs to."
+    ]
+  },
+  {
+    "id": "m7ela-text-features-and-graphics-003",
+    "loId": "m7ela.text-features-and-graphics",
+    "cedCode": "M7ELA-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A photograph in an invented town newsletter is described here in words: an old brick building with a tall chimney stands beside a set of railroad tracks, and tall grass grows right up against the wall. The caption under the photograph reads: \"The Weller flour mill, empty since the year the branch line closed, is being turned into apartments this fall.\"\n\nWhich piece of information does the caption give that the photograph alone could not?",
+    "choices": [
+      "That the building stands next to railroad tracks.",
+      "That the building is going to be turned into apartments.",
+      "That the building is made of brick.",
+      "How many apartments the building will hold."
+    ],
+    "answer": "B",
+    "hints": [
+      "Make two lists. What can a camera see here? What does the caption say? Then cross off anything that is on both lists.",
+      "Two choices name things the photograph already shows. One names something the caption never mentions at all. That leaves one, and it is a plan for the future, which no camera can photograph."
+    ]
+  },
+  {
+    "id": "m7ela-text-features-and-graphics-004",
+    "loId": "m7ela.text-features-and-graphics",
+    "cedCode": "M7ELA-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A page of an invented park brochure has a paragraph and a table on it, both described here in words.\n\nThe paragraph reads: \"The nature center sits at the north end of the park, and a volunteer is on hand most afternoons to answer questions about the trails.\"\n\nThe table is titled \"Trail Lengths\" and has two columns, Trail and Miles. The rows read: Creek Loop, 1.2. Ridge Trail, 3.5. Marsh Boardwalk, 0.6.\n\nA visitor wants to walk the shortest trail in the park. Where is the answer, and what is it?",
+    "choices": [
+      "In the paragraph, because the paragraph is the part that describes the trails.",
+      "Nowhere on the page, so the visitor would have to ask the volunteer.",
+      "In both places, because any fact printed in a table is also stated in the paragraph.",
+      "In the table, which gives a length for each trail; the Marsh Boardwalk at 0.6 miles is the shortest."
+    ],
+    "answer": "D",
+    "hints": [
+      "Read the paragraph again and hunt for a number. Then read the table rows again and hunt for a number. Only one of them has any.",
+      "A table is part of the text, not an extra. Compare the three lengths and pick the smallest one."
+    ]
+  },
+  {
+    "id": "m7ela-text-features-and-graphics-005",
+    "loId": "m7ela.text-features-and-graphics",
+    "cedCode": "M7ELA-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reading a science book comes to this sentence: \"Heat travels up the metal handle by conduction, passing from particle to particle without the metal itself moving anywhere.\" In the book, the word conduction is printed in bold type. What does that bold type most likely tell the reader?",
+    "choices": [
+      "That conduction is a key term whose meaning is given nearby or in the glossary at the back.",
+      "That the reader should say the word louder when reading the sentence aloud.",
+      "That conduction is the title of the chapter this sentence appears in.",
+      "That the sentence holding the bold word is the central idea of the whole page."
+    ],
+    "answer": "A",
+    "hints": [
+      "Bold and italic type are the writer pointing at something. Ask what a writer wants you to do when a brand new subject word shows up in bold.",
+      "A bold word is a promise that a definition is close by, either right there in the sentence or in the list of meanings at the back of the book."
+    ]
+  },
+  {
+    "id": "m7ela-text-features-and-graphics-006",
+    "loId": "m7ela.text-features-and-graphics",
+    "cedCode": "M7ELA-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An invented student magazine is running an article on how a paper airplane stays up. The writer already has three paragraphs of explanation. Now the writer wants readers to be able to tell which part of the plane is the wing, which part is the nose, and exactly where each fold goes, without adding another paragraph of writing. Which text feature does that job best?",
+    "choices": [
+      "An index at the back of the magazine listing \"wing\" and \"nose\" with the page numbers where each word appears.",
+      "A sidebar telling the story of the first paper airplane contest ever held at the school.",
+      "A labeled diagram of the finished plane, with a line running from each name to the part it names.",
+      "A heading above the article reading \"The Parts of a Paper Airplane.\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Take the four features one at a time and name the job each one does. Then ask which of those jobs is \"show me which part is which.\"",
+      "An index sends you to a page, a sidebar tells a related story, and a heading is a label that names a section. Only one feature attaches a name directly to the part it belongs to."
+    ]
+  },
+  {
+    "id": "m7ela-technical-and-domain-vocabulary-001",
+    "loId": "m7ela.technical-and-domain-vocabulary",
+    "cedCode": "M7ELA-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A science book says: \"Put a thin slice of onion under a microscope and you will see rows of tiny boxes. Each of those boxes is a cell, the smallest unit of a living thing.\" What does the word cell mean in that book?",
+    "choices": [
+      "a small locked room in a jail",
+      "the smallest unit of a living thing",
+      "one square in a table of rows and columns",
+      "a battery that powers a flashlight"
+    ],
+    "answer": "B",
+    "hints": [
+      "Step three: take the help the text offers. This sentence hands you the meaning right after a comma.",
+      "One choice is the everyday meaning of cell, and two are meanings the word carries in other places. Only one matches what the sentence itself says a cell is."
+    ]
+  },
+  {
+    "id": "m7ela-technical-and-domain-vocabulary-002",
+    "loId": "m7ela.technical-and-domain-vocabulary",
+    "cedCode": "M7ELA-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A science article says: \"A rock is matter, and so is the air around it, because both have mass and both take up space. A shadow is not matter, and neither is a sound.\" What does the word matter mean in that article?",
+    "choices": [
+      "anything that has mass and takes up space",
+      "to be important, as in \"your vote matters\"",
+      "a subject someone is dealing with, as in \"a private matter\"",
+      "anything solid that you could pick up and hold"
+    ],
+    "answer": "A",
+    "hints": [
+      "Name the subject first. This is a science article, so ask what matter names inside science, then check the sentence for a definition.",
+      "Two choices are everyday meanings. The fourth choice sounds close, but the article says the AIR is matter too, and air is not solid and cannot be held."
+    ]
+  },
+  {
+    "id": "m7ela-technical-and-domain-vocabulary-003",
+    "loId": "m7ela.technical-and-domain-vocabulary",
+    "cedCode": "M7ELA-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hiking guide says: \"Check the key in the corner of the map before you set out. A dashed line means a footpath, a solid line means a road, and a small triangle means a shelter.\" What does the word key mean in that guide?",
+    "choices": [
+      "a small metal object that opens a lock",
+      "the most important part of something, as in \"the key to the game\"",
+      "the part of a map that explains what its symbols stand for",
+      "a sheet listing the answers to a set of questions"
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the substitute test. Put the everyday meaning in: \"Check the small metal object in the corner of the map.\" Listen to how fast that breaks.",
+      "The sentence goes straight on to tell you what a dashed line means, what a solid line means and what a triangle means. Whatever the key is, it is the thing doing that explaining."
+    ]
+  },
+  {
+    "id": "m7ela-technical-and-domain-vocabulary-004",
+    "loId": "m7ela.technical-and-domain-vocabulary",
+    "cedCode": "M7ELA-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geography page says: \"Before you measure anything on this map, find the scale. On this map one inch stands for two miles, so a road that runs three inches across the page is a six-mile drive.\" What does the word scale mean on that page?",
+    "choices": [
+      "a machine you stand on to find out how much you weigh",
+      "one of the thin flat plates that cover a fish",
+      "a set of musical notes played in order, going up or down",
+      "the relationship between a distance on the map and the real distance on the ground"
+    ],
+    "answer": "D",
+    "hints": [
+      "Name the subject. You are reading a geography page about measuring on a map, so ask what scale would name inside that subject.",
+      "The sentence spells out how it works: one inch on the page stands for two miles in the real world. That pairing of a page distance with a real distance IS the meaning."
+    ]
+  },
+  {
+    "id": "m7ela-technical-and-domain-vocabulary-005",
+    "loId": "m7ela.technical-and-domain-vocabulary",
+    "cedCode": "M7ELA-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A science handout says: \"Copper is a good conductor, which is why the wire inside a lamp cord is made of it. Rubber is a poor conductor, which is why that wire is wrapped in a rubber coat.\" What does the word conductor mean in that handout?",
+    "choices": [
+      "a person who stands in front of an orchestra and leads it",
+      "a material that lets electricity pass through it easily",
+      "a person who checks tickets on a train",
+      "a material that stops electricity from passing through it"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two choices are everyday meanings and both name a person. A person cannot be wrapped around a wire, so the handout must be using the word for a material.",
+      "Read the two sentences together. Copper is a GOOD conductor and carries the electricity; rubber is a POOR conductor and blocks it. So the word itself has to name the letting-through, not the blocking."
+    ]
+  },
+  {
+    "id": "m7ela-technical-and-domain-vocabulary-006",
+    "loId": "m7ela.technical-and-domain-vocabulary",
+    "cedCode": "M7ELA-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two different books use the word solution.\n\nBOOK 1, a science book: \"Stir the salt into the water until it disappears. The clear liquid you are left with is a solution.\"\n\nBOOK 2, a math book: \"A solution to the equation is any number that makes both sides equal.\"\n\nWhich statement about the word solution is correct?",
+    "choices": [
+      "Both books are using the everyday meaning, the answer to a problem, so the two sentences are saying the same thing.",
+      "The science book is using the word wrongly, because a solution really means the answer to a problem.",
+      "Only the math book is using a technical meaning, because solution is a math word that science borrowed.",
+      "In the science book it names a liquid mixture and in the math book it names a number that makes an equation true, because the subject decides which meaning is in use."
+    ],
+    "answer": "D",
+    "hints": [
+      "Read each sentence on its own and ask what the word is naming there. In one it is a thing you could pour; in the other it is a number.",
+      "Neither book is wrong and neither is using the everyday meaning. A word can carry a different exact meaning in each subject, and the subject you are reading in is what settles which one you get."
+    ]
+  }
+]

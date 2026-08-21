@@ -1,0 +1,428 @@
+[
+  {
+    "id": "m7ela-context-clues-001",
+    "loId": "m7ela.context-clues",
+    "cedCode": "M7ELA-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does the word \"drenched\" mean in this passage? \"The storm caught us halfway home from the field. By the time we reached the porch we were drenched, and water was still running off my sleeves and squelching inside my sneakers.\"",
+    "choices": [
+      "worn out from running so far",
+      "completely soaked with water",
+      "shivering because of the cold",
+      "covered in mud from the field"
+    ],
+    "answer": "B",
+    "hints": [
+      "Read past the hard word to the end of the passage, then ask what the details after it are all describing.",
+      "Water running off sleeves and squelching inside sneakers points at one thing only. Substitute each choice into the sentence and keep the one the details actually support."
+    ]
+  },
+  {
+    "id": "m7ela-context-clues-002",
+    "loId": "m7ela.context-clues",
+    "cedCode": "M7ELA-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What does the word \"novice\" mean in this sentence? \"Rosa has been climbing the gym's hardest wall since third grade, but her cousin Teo is a novice who had never touched a climbing hold before Saturday.\"",
+    "choices": [
+      "a climber with years of practice",
+      "a person who teaches a sport to others",
+      "someone who is afraid of heights",
+      "a beginner who is new to an activity"
+    ],
+    "answer": "D",
+    "hints": [
+      "The signal word \"but\" tells you this is a contrast clue, so whatever Rosa is, Teo is the opposite.",
+      "Rosa has climbed for years and Teo had never touched a hold. Flip the years of practice, and do not add a reason the sentence never gives."
+    ]
+  },
+  {
+    "id": "m7ela-context-clues-003",
+    "loId": "m7ela.context-clues",
+    "cedCode": "M7ELA-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "What does the word \"tedious\" mean in this passage? \"Sorting four boxes of loose bottle caps by color turned out to be tedious. We did the exact same thing over and over for two hours, and by the end nobody was talking.\"",
+    "choices": [
+      "boring because it goes on and on without changing",
+      "difficult because it takes great skill",
+      "messy and hard to keep clean",
+      "surprising and hard to plan for"
+    ],
+    "answer": "A",
+    "hints": [
+      "The first sentence does not explain the word, so read on. The clue is sitting in the second sentence.",
+      "\"The exact same thing over and over for two hours\" tells you how dull the job was, not how hard it was. Boring and difficult are not the same idea."
+    ]
+  },
+  {
+    "id": "m7ela-context-clues-004",
+    "loId": "m7ela.context-clues",
+    "cedCode": "M7ELA-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "What does the word \"ample\" mean in this passage? \"Coach told us not to worry about water for the hike. There is ample water in the cooler - two bottles for every person on the trip, plus a spare case waiting in the van.\"",
+    "choices": [
+      "barely enough to go around",
+      "very cold, the way a cooler is",
+      "more than enough",
+      "expensive and hard to replace"
+    ],
+    "answer": "C",
+    "hints": [
+      "Do not stop at the hard word. Read all the way to the end of the sentence, because the part after the dash is doing the work.",
+      "Two bottles for every person plus a spare case is far past what anyone needs. One choice guesses from the word \"cooler\" instead of from the clue."
+    ]
+  },
+  {
+    "id": "m7ela-context-clues-005",
+    "loId": "m7ela.context-clues",
+    "cedCode": "M7ELA-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reads this sentence: \"The old rope bridge looked flimsy, but the new one is sturdy enough to hold a loaded truck.\" The student guesses that \"flimsy\" means strong. Which check shows the guess is wrong?",
+    "choices": [
+      "Flimsy and sturdy do not rhyme, so they cannot mean the same thing.",
+      "Substituting \"strong\" makes the signal word \"but\" pointless, because both halves of the sentence would then say the same thing.",
+      "The sentence never tells you how much the loaded truck weighs.",
+      "Flimsy looks almost like \"filmy,\" so it has to mean something else."
+    ],
+    "answer": "B",
+    "hints": [
+      "Use step four of the routine: put the guess into the sentence in place of the hard word and read the whole thing again.",
+      "\"But\" promises a contrast. If a guess makes both halves of the sentence agree, the guess has broken the sentence, and that is the proof."
+    ]
+  },
+  {
+    "id": "m7ela-context-clues-006",
+    "loId": "m7ela.context-clues",
+    "cedCode": "M7ELA-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In which sentence do the surrounding words work as a CONTRAST clue to the meaning of \"reluctant\"?",
+    "choices": [
+      "Nadia was reluctant to sing in front of the class, and her hands shook as she stood up.",
+      "Nadia was reluctant to sing in front of the class, so she asked to read her poem instead.",
+      "Nadia has been reluctant to sing in front of the class since the first week of September.",
+      "Nadia was reluctant to sing in front of the class, but her brother volunteered before the teacher finished the question."
+    ],
+    "answer": "D",
+    "hints": [
+      "A contrast clue needs a signal such as but, however, unlike or instead, and it hands you the OPPOSITE of the hard word.",
+      "One sentence adds a supporting detail, one gives a result with \"so,\" and one gives no clue at all. Only one sets Nadia against somebody who did the opposite."
+    ]
+  },
+  {
+    "id": "m7ela-roots-prefixes-and-suffixes-001",
+    "loId": "m7ela.roots-prefixes-and-suffixes",
+    "cedCode": "M7ELA-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The word \"unhelpful\" is built from three parts: un + help + ful. What does the prefix un- mean?",
+    "choices": ["again", "full of", "not", "before"],
+    "answer": "C",
+    "hints": [
+      "A prefix goes on the FRONT of a word and changes its meaning. Ask what the front piece does to the word \"helpful.\"",
+      "\"Full of\" is what the SUFFIX -ful means at the other end of the word. The front piece flips the meaning to the opposite."
+    ]
+  },
+  {
+    "id": "m7ela-roots-prefixes-and-suffixes-002",
+    "loId": "m7ela.roots-prefixes-and-suffixes",
+    "cedCode": "M7ELA-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The prefix trans- means across and the root port means carry. Read the sentence: \"Trucks transport the lumber from the mill to the building site.\" Which meaning fits both the word parts and the sentence?",
+    "choices": [
+      "to carry something from one place to another",
+      "to build something across a river",
+      "to look at something from far away",
+      "to say something out loud across a room"
+    ],
+    "answer": "A",
+    "hints": [
+      "Put the two part meanings together first - across plus carry - and then check that guess against what the trucks are doing in the sentence.",
+      "Three of the choices quietly swap the root port for a different root: struct means build, spect means look, and dict means say."
+    ]
+  },
+  {
+    "id": "m7ela-roots-prefixes-and-suffixes-003",
+    "loId": "m7ela.roots-prefixes-and-suffixes",
+    "cedCode": "M7ELA-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Three of these words begin with the prefix un- meaning not. In one of them, u and n are just the first two letters of the word and there is no prefix at all. Which word is it?",
+    "choices": ["unfair", "unhappy", "unsafe", "under"],
+    "answer": "D",
+    "hints": [
+      "Take the letters u-n off the front of each word and ask whether what is left is a real word or a root you recognize.",
+      "Then run the meaning test, which is the one that decides. Something under a table is not the opposite of a \"der,\" because there is no such word part."
+    ]
+  },
+  {
+    "id": "m7ela-roots-prefixes-and-suffixes-004",
+    "loId": "m7ela.roots-prefixes-and-suffixes",
+    "cedCode": "M7ELA-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "\"Invent\" is a verb. Adding the suffix -tion makes \"invention.\" What does that suffix do to the word?",
+    "choices": [
+      "It makes the word mean the opposite, so an invention is something that was never invented.",
+      "It names the act or the result, turning the verb into a noun.",
+      "It changes only the meaning; a suffix can never change the job a word does in a sentence.",
+      "It turns the word into an adverb, the same way -ly does."
+    ],
+    "answer": "B",
+    "hints": [
+      "Say both words inside a sentence: \"They invent things\" and \"They built a new invention.\" What kind of word is each one acting as?",
+      "Agree becomes agreement and act becomes action in the same way. All of those endings name a thing, which means the word has become a noun."
+    ]
+  },
+  {
+    "id": "m7ela-roots-prefixes-and-suffixes-005",
+    "loId": "m7ela.roots-prefixes-and-suffixes",
+    "cedCode": "M7ELA-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The prefix sub- means under and the root marine has to do with the sea. Read the sentence: \"The submarine slipped below the surface and cruised for three hours before anyone spotted it again.\" Which meaning fits both the word parts and the sentence?",
+    "choices": [
+      "a ship that carries cargo across the sea",
+      "a machine for looking far out over the water",
+      "a ship built to travel under the water",
+      "a fast boat that races along the top of the water"
+    ],
+    "answer": "C",
+    "hints": [
+      "Name the two parts before you guess: sub- tells you where it goes, and marine tells you what it goes through.",
+      "Then check the guess against the sentence. It slipped BELOW the surface, which rules out anything traveling along the top."
+    ]
+  },
+  {
+    "id": "m7ela-roots-prefixes-and-suffixes-006",
+    "loId": "m7ela.roots-prefixes-and-suffixes",
+    "cedCode": "M7ELA-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student says that \"awful\" must mean \"full of awe,\" because -ful means full of. Then the student reads this sentence: \"The soup was awful, so I poured it out and ate cereal instead.\" What is the best response?",
+    "choices": [
+      "The parts really do read that way, but the sentence shows that awful now means very bad - when the parts and the sentence disagree, the sentence wins.",
+      "The student is right, because word parts always give a word its exact meaning.",
+      "The student is wrong because -ful does not mean full of.",
+      "The student is wrong because \"awful\" has no suffix on it at all."
+    ],
+    "answer": "A",
+    "hints": [
+      "Word parts hand you a guess, not a guarantee. Step four of the routine is to check that guess against the sentence it came from.",
+      "Nobody pours out soup that fills them with awe. Notice that two choices attack a claim that is actually true: -ful really does mean full of, and awful really does end with it."
+    ]
+  },
+  {
+    "id": "m7ela-connotation-and-denotation-001",
+    "loId": "m7ela.connotation-and-denotation",
+    "cedCode": "M7ELA-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is a word's connotation?",
+    "choices": [
+      "its exact dictionary meaning, with no feeling attached",
+      "the number of syllables the word has",
+      "the job the word does in a sentence, such as noun or verb",
+      "the positive, neutral or negative feeling the word carries on top of its meaning"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two words can share a definition and still leave a reader with opposite impressions. That extra thing riding along is what you are naming.",
+      "One choice is the definition of denotation, which is connotation's partner, not its twin."
+    ]
+  },
+  {
+    "id": "m7ela-connotation-and-denotation-002",
+    "loId": "m7ela.connotation-and-denotation",
+    "cedCode": "M7ELA-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "All four of these words name something you notice with your nose. Which one carries the most negative feeling?",
+    "choices": ["aroma", "odor", "scent", "smell"],
+    "answer": "B",
+    "hints": [
+      "Denotation cannot settle this one, because all four mean roughly the same thing. Sort them by the feeling each one leaves behind.",
+      "Try each word inside \"the ___ coming from the gym bag.\" Two of them sound pleasant, one is plain and neutral, and one tells you to hold your nose."
+    ]
+  },
+  {
+    "id": "m7ela-connotation-and-denotation-003",
+    "loId": "m7ela.connotation-and-denotation",
+    "cedCode": "M7ELA-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about a neighbor who repairs old bikes instead of buying new ones, and he wants readers to admire her. Which word belongs in the blank? \"Mrs. Okonkwo is ___ about what she spends on parts.\"",
+    "choices": ["thrifty", "cheap", "stingy", "tight-fisted"],
+    "answer": "A",
+    "hints": [
+      "All four words describe somebody who does not spend much money, so the dictionary cannot pick the winner. Ask which one a reader hears as praise.",
+      "Three of these turn careful spending into a complaint. Only one of them counts it as a good habit."
+    ]
+  },
+  {
+    "id": "m7ela-connotation-and-denotation-004",
+    "loId": "m7ela.connotation-and-denotation",
+    "cedCode": "M7ELA-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A town newsletter reports: \"A mob of shoppers swarmed the new bakery on Saturday morning, and the line stretched around the corner until noon.\" What does the writer's word choice show?",
+    "choices": [
+      "The writer thinks the bakery's bread is not very good.",
+      "The writer is only reporting what happened and shows no attitude at all.",
+      "The writer disapproves of the shoppers and makes an ordinary line sound out of control.",
+      "The writer is saying the shoppers broke the law and had to be sent home."
+    ],
+    "answer": "C",
+    "hints": [
+      "Swap \"mob\" for \"crowd\" and \"swarmed\" for \"filled,\" then read the sentence again. The facts stay the same; the feeling does not.",
+      "A mob is a group that is out of control, and swarming is what wasps do. Two negative choices in one sentence is a decision, not an accident - but nothing in the sentence says anybody actually did anything wrong."
+    ]
+  },
+  {
+    "id": "m7ela-connotation-and-denotation-005",
+    "loId": "m7ela.connotation-and-denotation",
+    "cedCode": "M7ELA-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two neighbors describe the same dog. Neighbor 1: \"That dog is determined to get through the gate.\" Neighbor 2: \"That dog is stubborn about the gate.\" Which statement best explains the difference?",
+    "choices": [
+      "Neighbor 2 is saying the dog got through the gate and Neighbor 1 is not.",
+      "The two words are listed as synonyms, so both sentences mean exactly the same thing to a reader.",
+      "Neighbor 2 made a mistake, because negative words should not be used in writing.",
+      "Both report the same behavior, but \"determined\" makes the dog sound admirable while \"stubborn\" makes it sound like a problem."
+    ],
+    "answer": "D",
+    "hints": [
+      "Line up the facts first. Same dog, same gate, same behavior - so the difference is not in what happened.",
+      "Determined and stubborn share a denotation and split hard on feeling. One roots for the dog and the other complains about it."
+    ]
+  },
+  {
+    "id": "m7ela-connotation-and-denotation-006",
+    "loId": "m7ela.connotation-and-denotation",
+    "cedCode": "M7ELA-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a newsletter blurb that should make readers WANT to join the school garden club. The draft sentence reads: \"Members spend an hour after school pulling weeds and moving buckets of water.\" Which revision best fits that goal?",
+    "choices": [
+      "Members spend an hour after school stuck pulling weeds and lugging buckets of water across the field.",
+      "Members spend an hour after school tending the beds and watering the new tomato plants.",
+      "Members spend an hour after school removing weeds and carrying buckets of water.",
+      "Members spend an hour after school forced to pull weeds and haul water until the sun goes down."
+    ],
+    "answer": "B",
+    "hints": [
+      "Decide the feeling you want first, then pick the rung that produces it. The goal is to make the hour sound worth spending.",
+      "Two revisions make the same hour sound like a punishment, and one only restates the draft in equally plain, neutral words. Only one picks words a reader hears as pleasant."
+    ]
+  },
+  {
+    "id": "m7ela-commonly-confused-words-001",
+    "loId": "m7ela.commonly-confused-words",
+    "cedCode": "M7ELA-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"The bike was missing ___ front reflector, so Dad taped a new one on before dark.\"",
+    "choices": ["it's", "its'", "its", "it is"],
+    "answer": "C",
+    "hints": [
+      "Run the long-form test: read the sentence with \"it is\" put back into the blank.",
+      "\"The bike was missing it is front reflector\" is nonsense, so the blank needs the possessive - and for the word \"it,\" the possessive is the one with no apostrophe."
+    ]
+  },
+  {
+    "id": "m7ela-commonly-confused-words-002",
+    "loId": "m7ela.commonly-confused-words",
+    "cedCode": "M7ELA-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice correctly completes the sentence? \"___ meeting us by the fountain as soon as the parade ends.\"",
+    "choices": ["They're", "Their", "There", "Theirs"],
+    "answer": "A",
+    "hints": [
+      "Run the three questions in order, starting with the first one: does \"they are\" fit in the blank?",
+      "\"They are meeting us by the fountain\" reads perfectly, so the blank needs the two words squeezed together with an apostrophe."
+    ]
+  },
+  {
+    "id": "m7ela-commonly-confused-words-003",
+    "loId": "m7ela.commonly-confused-words",
+    "cedCode": "M7ELA-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly?",
+    "choices": [
+      "My backpack was heavier then yours, so we traded at the corner.",
+      "We waited for the rain to stop, and than we walked home.",
+      "My backpack was heavier than yours, so we traded at the corner.",
+      "First we set up the tent, than we cooked dinner over the camp stove."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what each sentence is doing at that spot: measuring two things against each other, or telling you what happened next.",
+      "ThAn compAres, and thEn is timE. One sentence compares two backpacks; the other two are telling you the order of events."
+    ]
+  },
+  {
+    "id": "m7ela-commonly-confused-words-004",
+    "loId": "m7ela.commonly-confused-words",
+    "cedCode": "M7ELA-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which pair of words correctly completes the sentence? \"A later start to the school day could ___ students in every grade, and you can see the ___ of that change within a week.\"",
+    "choices": [
+      "affect ... effect",
+      "effect ... affect",
+      "affect ... affect",
+      "effect ... effect"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check what sits right before each blank. A helping word like \"could\" is followed by an action word; the word \"the\" is followed by a naming word.",
+      "Affect is the Action, so it is the verb after \"could.\" Effect is the End result, so it is the noun after \"the.\""
+    ]
+  },
+  {
+    "id": "m7ela-commonly-confused-words-005",
+    "loId": "m7ela.commonly-confused-words",
+    "cedCode": "M7ELA-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly?",
+    "choices": [
+      "Your welcome to borrow the tent, but it's poles are in the garage.",
+      "You're welcome to borrow the tent, but its poles are in the garage.",
+      "You're welcome to borrow the tent, but it's poles are in the garage.",
+      "Your welcome to borrow the tent, but its poles are in the garage."
+    ],
+    "answer": "B",
+    "hints": [
+      "There are two slots to check, so check them one at a time with the long-form test.",
+      "\"You are welcome to borrow the tent\" makes sense, so that slot takes the apostrophe. \"It is poles are in the garage\" is nonsense, so that slot needs the possessive with no apostrophe."
+    ]
+  },
+  {
+    "id": "m7ela-commonly-confused-words-006",
+    "loId": "m7ela.commonly-confused-words",
+    "cedCode": "M7ELA-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly?",
+    "choices": [
+      "Whose bringing the cooler, and do you know if their meeting us at the field?",
+      "Who's bringing the cooler, and do you know if their meeting us at the field?",
+      "Whose bringing the cooler, and do you know if they're meeting us at the field?",
+      "Who's bringing the cooler, and do you know if they're meeting us at the field?"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two slots, and the same long-form test works on both: try \"who is\" in the first one and \"they are\" in the second.",
+      "\"Who is bringing the cooler\" works and \"if they are meeting us\" works, so both slots need the contraction. The possessive forms whose and their belong somewhere else."
+    ]
+  }
+]

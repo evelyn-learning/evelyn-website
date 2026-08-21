@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-maps-globes-and-projections-001",
+    "loId": "m7geo.maps-globes-and-projections",
+    "cedCode": "M7GEO-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which model of Earth keeps shape, area, distance and direction all correct at the same time?",
+    "choices": [
+      "A Mercator projection map",
+      "An equal-area projection map",
+      "A globe",
+      "A compromise projection map"
+    ],
+    "answer": "C",
+    "hints": [
+      "Earth is very nearly a sphere. Which model is the same kind of surface as Earth itself?",
+      "Every flat map is made by pressing a round surface onto paper, and that always stretches something. Only a round model avoids the problem entirely."
+    ]
+  },
+  {
+    "id": "m7geo-maps-globes-and-projections-002",
+    "loId": "m7geo.maps-globes-and-projections",
+    "cedCode": "M7GEO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Every flat map of the whole world distorts at least one of four properties. Which list names those four properties?",
+    "choices": [
+      "Shape, area, distance and direction",
+      "Title, legend, scale and compass rose",
+      "Latitude, longitude, hemisphere and grid",
+      "North, south, east and west"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what a stretched drawing of a country gets wrong: how it looks, how much room it takes up, how far it sits from other places, and which way it lies from them.",
+      "The other lists are real geography words, but they name the parts of a map or the lines on a globe, not the properties a projection can distort."
+    ]
+  },
+  {
+    "id": "m7geo-maps-globes-and-projections-003",
+    "loId": "m7geo.maps-globes-and-projections",
+    "cedCode": "M7GEO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a Mercator world map, where is the stretching of area greatest?",
+    "choices": [
+      "Along the Equator",
+      "It is exactly the same everywhere on the map",
+      "Only over the oceans, never over land",
+      "Far from the Equator, toward the poles"
+    ],
+    "answer": "D",
+    "hints": [
+      "Picture Antarctica on a Mercator map. It is smeared into a wide band across the bottom of the page.",
+      "The stretching is smallest at the Equator and grows larger and larger as you move north or south."
+    ]
+  },
+  {
+    "id": "m7geo-maps-globes-and-projections-004",
+    "loId": "m7geo.maps-globes-and-projections",
+    "cedCode": "M7GEO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a Mercator world map, Greenland is drawn looking about as large as the whole continent of Africa, even though Africa is very much larger. How can a correctly drawn map show something so misleading?",
+    "choices": [
+      "The mapmaker made a mistake that a more careful mapmaker could fix.",
+      "The Mercator projection stretches area more and more toward the poles, so Greenland, which lies far north, is drawn far larger than it is, while Africa straddles the Equator and is barely stretched.",
+      "A globe would show the same comparison, so this map can be trusted for comparing land sizes.",
+      "Every world map draws land areas in correct proportion, so nothing needs explaining."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask where on a Mercator map the stretching is largest, then ask where each of these two places sits.",
+      "Greenland lies far to the north. Africa straddles the Equator. Only one of the two is sitting in the part of the map that gets blown up, and the stretching is a rule of the projection, not anybody's error."
+    ]
+  },
+  {
+    "id": "m7geo-maps-globes-and-projections-005",
+    "loId": "m7geo.maps-globes-and-projections",
+    "cedCode": "M7GEO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two groups need a world map. Group 1 is following a ship that holds one steady compass direction, and wants that course to appear as a straight line. Group 2 wants to compare how much land Antarctica covers next to South America. Which pairing of maps is right?",
+    "choices": [
+      "Group 1 should use a Mercator map, and Group 2 should use an equal-area map.",
+      "Group 1 should use an equal-area map, and Group 2 should use a Mercator map.",
+      "Both groups should use a Mercator map.",
+      "Both groups should use an equal-area map."
+    ],
+    "answer": "A",
+    "hints": [
+      "For each group, first name which of the four properties the question is about: shape, area, distance or direction. Then pick the projection built to protect that property.",
+      "Holding a steady compass course is a DIRECTION question, and the Mercator projection was drawn for exactly that. Comparing how much land two places cover is an AREA question."
+    ]
+  },
+  {
+    "id": "m7geo-maps-globes-and-projections-006",
+    "loId": "m7geo.maps-globes-and-projections",
+    "cedCode": "M7GEO-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two world maps hang on a classroom wall. On one of them Africa looks much larger next to Greenland than it does on the other, and both maps were drawn correctly. Which statement best explains this?",
+    "choices": [
+      "One of the two maps must have been printed carelessly.",
+      "The two sheets of paper are different sizes, and a bigger sheet enlarges some continents more than others.",
+      "The two maps use different projections, and each projection follows a different rule for flattening Earth, so the same world can look different on each one.",
+      "One map came from a photograph taken in space and the other is a drawing, so only the photograph is correct."
+    ],
+    "answer": "C",
+    "hints": [
+      "A projection is a rule for moving places from round Earth onto flat paper. What happens when two mapmakers follow two different rules?",
+      "Both maps can follow their own rule perfectly and still disagree about how big something looks, because the two rules protect different properties."
+    ]
+  },
+  {
+    "id": "m7geo-latitude-longitude-and-location-001",
+    "loId": "m7geo.latitude-longitude-and-location",
+    "cedCode": "M7GEO-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Longitude is measured east and west starting from which line?",
+    "choices": [
+      "The Equator",
+      "The Prime Meridian",
+      "The Tropic of Capricorn",
+      "The Arctic Circle"
+    ],
+    "answer": "B",
+    "hints": [
+      "Longitude measures how far east or west a place is, so its starting line has to be one that runs from pole to pole.",
+      "The Equator, the Tropic of Capricorn and the Arctic Circle are all lines of LATITUDE. Only one choice names a line of longitude."
+    ]
+  },
+  {
+    "id": "m7geo-latitude-longitude-and-location-002",
+    "loId": "m7geo.latitude-longitude-and-location",
+    "cedCode": "M7GEO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about lines of latitude is correct?",
+    "choices": [
+      "They run east and west around the globe, and they measure how far north or south a place is.",
+      "They run north and south from pole to pole, and they measure how far east or west a place is.",
+      "They run north and south from pole to pole, and they measure how far north or south a place is.",
+      "They meet one another at the North Pole and the South Pole."
+    ],
+    "answer": "A",
+    "hints": [
+      "Picture the Equator, which is a line of latitude. Does it run side to side around the globe, or from pole to pole?",
+      "The direction a line RUNS and the direction it MEASURES are not the same. Two of these choices actually describe lines of longitude."
+    ]
+  },
+  {
+    "id": "m7geo-latitude-longitude-and-location-003",
+    "loId": "m7geo.latitude-longitude-and-location",
+    "cedCode": "M7GEO-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A weather station lies 20 degrees north of the Equator and 50 degrees west of the Prime Meridian. Which choice states its absolute location correctly?",
+    "choices": [
+      "50 degrees W, 20 degrees N",
+      "20 degrees S, 50 degrees E",
+      "20 degrees, 50 degrees",
+      "20 degrees N, 50 degrees W"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two things have to be right: the order of the two numbers, and the hemisphere letter on each one.",
+      "Latitude is always written first. North of the Equator is N, and west of the Prime Meridian is W. One choice has the order reversed, one has both letters wrong, and one has no letters at all."
+    ]
+  },
+  {
+    "id": "m7geo-latitude-longitude-and-location-004",
+    "loId": "m7geo.latitude-longitude-and-location",
+    "cedCode": "M7GEO-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes a location as 130 degrees N, 55 degrees E. Which statement explains what is wrong?",
+    "choices": [
+      "Nothing is wrong. Both numbers are inside their limits and both letters are there.",
+      "The letters are wrong: latitude should carry E or W, and longitude should carry N or S.",
+      "Latitude only reaches 90 degrees, so 130 degrees N is not a real latitude. The two numbers were most likely written in the wrong order.",
+      "Longitude only reaches 90 degrees, so 55 degrees E is not a real longitude."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check each number against its own limit. How far can latitude count before it reaches a pole?",
+      "Latitude runs from 0 at the Equator to 90 at each pole. Longitude runs to 180 east and 180 west. If the first number in a pair is bigger than 90, something is wrong."
+    ]
+  },
+  {
+    "id": "m7geo-latitude-longitude-and-location-005",
+    "loId": "m7geo.latitude-longitude-and-location",
+    "cedCode": "M7GEO-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which choice is a correctly written coordinate pair?",
+    "choices": [
+      "160 degrees N, 75 degrees W",
+      "75 degrees S, 160 degrees E",
+      "45 degrees E, 100 degrees N",
+      "30 degrees W, 60 degrees N"
+    ],
+    "answer": "B",
+    "hints": [
+      "Run three checks on every pair: latitude is written first, latitude is never bigger than 90, and longitude is never bigger than 180.",
+      "Latitude carries N or S, and longitude carries E or W. Two of these pairs put an east-west letter in the first slot, and one gives a latitude larger than 90."
+    ]
+  },
+  {
+    "id": "m7geo-latitude-longitude-and-location-006",
+    "loId": "m7geo.latitude-longitude-and-location",
+    "cedCode": "M7GEO-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hiker calls for help and says that her campsite is about two miles upriver from the old wooden bridge. The rescue team asks her for a latitude and longitude instead. Why do they want the coordinates?",
+    "choices": [
+      "Because a description of where a place sits can never be true.",
+      "Because absolute location changes as a person travels, so the team needs the newest one.",
+      "Because a latitude and longitude pair also tells the team which direction to travel, and a description cannot.",
+      "Because two miles upriver from the old wooden bridge is a relative location, which only helps somebody who already knows that bridge, while a latitude and longitude pair is an absolute location that names one exact spot for everybody."
+    ],
+    "answer": "D",
+    "hints": [
+      "There are two ways to answer the question where. One names an exact spot with numbers, and the other describes a place by what it is near.",
+      "Relative location is a real answer, but it depends on the listener knowing the landmark. Absolute location means the same spot to everybody, anywhere on Earth."
+    ]
+  },
+  {
+    "id": "m7geo-map-elements-scale-and-direction-001",
+    "loId": "m7geo.map-elements-scale-and-direction",
+    "cedCode": "M7GEO-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which part of a map tells you what its symbols and colors stand for?",
+    "choices": [
+      "The scale",
+      "The legend, also called the key",
+      "The compass rose",
+      "The title"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think of the box in the corner of an amusement park map that tells you a fork and knife means food.",
+      "Each part answers a different question. The scale answers how far, the compass rose answers which way is north, and the title answers what the map shows."
+    ]
+  },
+  {
+    "id": "m7geo-map-elements-scale-and-direction-002",
+    "loId": "m7geo.map-elements-scale-and-direction",
+    "cedCode": "M7GEO-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A compass rose shows four cardinal directions and four intermediate directions. Which list gives the four INTERMEDIATE directions?",
+    "choices": [
+      "North, south, east and west",
+      "North, northeast, east and southeast",
+      "Northeast, northwest, southeast and southwest",
+      "Up, down, left and right"
+    ],
+    "answer": "C",
+    "hints": [
+      "Intermediate directions sit between the cardinal ones, and each of their names is built out of two cardinal names.",
+      "North, south, east and west are the CARDINAL directions. The intermediate ones each combine a north or a south with an east or a west."
+    ]
+  },
+  {
+    "id": "m7geo-map-elements-scale-and-direction-003",
+    "loId": "m7geo.map-elements-scale-and-direction",
+    "cedCode": "M7GEO-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A map is described as a large-scale map. What does that tell you about it?",
+    "choices": [
+      "It shows a small area in great detail, such as a few city blocks.",
+      "It shows a large area with little detail, such as the whole world.",
+      "It is printed on a large sheet of paper.",
+      "It covers a large part of Earth's surface."
+    ],
+    "answer": "A",
+    "hints": [
+      "These words are the reverse of what they sound like. Say the memory line: large scale, small area, lots of detail.",
+      "Scale is about how much the real world was shrunk to fit the page. It is not about how much ground the map covers, and it is not about the size of the paper."
+    ]
+  },
+  {
+    "id": "m7geo-map-elements-scale-and-direction-004",
+    "loId": "m7geo.map-elements-scale-and-direction",
+    "cedCode": "M7GEO-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A map of the Maple Ridge school campus has a written scale that reads: one inch represents 150 feet. On the map, the gym and the library are 4 inches apart in a straight line. How far apart are they on the ground?",
+    "choices": [
+      "150 feet, because that is the number the scale gives",
+      "154 feet, because 150 plus 4 is 154",
+      "37.5 feet, because 150 divided by 4 is 37.5",
+      "600 feet, because 4 times 150 feet is 600 feet"
+    ],
+    "answer": "D",
+    "hints": [
+      "The scale tells you what ONE inch on the page is worth on the ground. You have four of those inches.",
+      "Four inches means four helpings of 150 feet. Multiply, or add 150 four times. Do not divide, and do not add the two numbers together."
+    ]
+  },
+  {
+    "id": "m7geo-map-elements-scale-and-direction-005",
+    "loId": "m7geo.map-elements-scale-and-direction",
+    "cedCode": "M7GEO-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A map of Hillcrest Park is drawn with its compass rose pointing north toward the top of the page. The legend shows a triangle for picnic tables and a blue oval for the pond. On the map, a triangle sits directly to the right of the blue oval. Which statement is correct?",
+    "choices": [
+      "There are picnic tables west of the pond.",
+      "There are picnic tables east of the pond.",
+      "There are picnic tables north of the pond.",
+      "There is a campground east of the pond."
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the legend first to learn what each shape means, then use the compass rose to turn a position on the page into a real direction.",
+      "When north points toward the top of the page, the right side of the page is east. Nothing here stands for a campground, because the legend does not list one."
+    ]
+  },
+  {
+    "id": "m7geo-map-elements-scale-and-direction-006",
+    "loId": "m7geo.map-elements-scale-and-direction",
+    "cedCode": "M7GEO-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hiking map of Cedar Hollow is printed sideways so that a long trail fits on the page, and its compass rose shows the north arrow pointing toward the right edge of the paper. A hiker standing at the parking lot wants to walk north. What should she do?",
+    "choices": [
+      "Walk in the direction the compass rose calls north, which on this map is toward the right edge of the page. The map is correct as printed.",
+      "Walk toward the top of the page, because north is always at the top of a map.",
+      "Refuse to use the map, because a map with north pointing sideways has been drawn wrong.",
+      "Ignore the compass rose once the paper has been turned, and follow the trail toward the top of the page."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what a compass rose is for. If north were always at the top, would any map need one?",
+      "North at the top is a habit mapmakers agreed on, not a rule of Earth. The compass rose exists so that a map can be turned any way and still be read correctly."
+    ]
+  },
+  {
+    "id": "m7geo-regions-and-place-001",
+    "loId": "m7geo.regions-and-place",
+    "cedCode": "M7GEO-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In geography, what is a region?",
+    "choices": [
+      "The exact spot named by a latitude and longitude pair",
+      "An area whose one true border geographers are still hunting for",
+      "Any area that has a river or a mountain range along its edge",
+      "An area that people group together because of something it has in common"
+    ],
+    "answer": "D",
+    "hints": [
+      "Earth is far too complicated to think about all at once, so geographers sort it into groups. What is a group like that called?",
+      "Regions are tools that people draw, not natural facts waiting to be discovered. One of the choices describes absolute location instead of a region."
+    ]
+  },
+  {
+    "id": "m7geo-regions-and-place-002",
+    "loId": "m7geo.regions-and-place",
+    "cedCode": "M7GEO-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence gives a RELATIVE location?",
+    "choices": [
+      "The campsite is at 44 degrees N, 90 degrees W.",
+      "Winters at the campsite are long and snowy.",
+      "The campsite is about two miles upriver from the old bridge.",
+      "The campsite is at 0 degrees latitude, 20 degrees E."
+    ],
+    "answer": "C",
+    "hints": [
+      "Relative location describes where a place is by what it is near. Absolute location names one exact spot with numbers.",
+      "Two of these choices are coordinate pairs, so they give absolute location. One describes the climate, which is a characteristic of place rather than a location at all."
+    ]
+  },
+  {
+    "id": "m7geo-regions-and-place-003",
+    "loId": "m7geo.regions-and-place",
+    "cedCode": "M7GEO-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geographer is describing a town. Which sentence describes a HUMAN characteristic of the place rather than a physical one?",
+    "choices": [
+      "A river runs along the eastern edge of the town.",
+      "Two languages are spoken in the town, and the older houses are built of brick.",
+      "The land rises steeply on the northern side of the town.",
+      "Winters there are long and snowy."
+    ],
+    "answer": "B",
+    "hints": [
+      "Physical characteristics would be there even if nobody had ever arrived: landforms, water, plants and climate.",
+      "Human characteristics are what people make and how people live, such as the languages spoken and what the buildings are made of."
+    ]
+  },
+  {
+    "id": "m7geo-regions-and-place-004",
+    "loId": "m7geo.regions-and-place",
+    "cedCode": "M7GEO-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sort these three areas by the kind of region each one is. (1) An area where wheat is the main crop growing in the fields. (2) The neighborhoods that one subway line carries riders to and from. (3) The part of the United States that people call the Midwest.",
+    "choices": [
+      "(1) formal, (2) functional, (3) perceptual",
+      "(1) functional, (2) formal, (3) perceptual",
+      "(1) perceptual, (2) functional, (3) formal",
+      "(1) formal, (2) perceptual, (3) functional"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what holds each area together: a trait you could go out and check, a service running outward from a center, or the way people think and talk about an area.",
+      "A checkable shared trait makes a formal region. A center providing a service makes a functional region, and its edge is the last stop. A name people use, with edges people disagree about, makes a perceptual region."
+    ]
+  },
+  {
+    "id": "m7geo-regions-and-place-005",
+    "loId": "m7geo.regions-and-place",
+    "cedCode": "M7GEO-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "People all over the United States talk about a part of the country called the Midwest, but people in different states disagree about exactly which states belong in it. What does that disagreement show?",
+    "choices": [
+      "Somebody must be wrong, because every region has one exact border.",
+      "The Midwest is a formal region whose border simply has not been measured yet.",
+      "The Midwest is a perceptual region, built out of how people think and talk about an area, so fuzzy edges are ordinary rather than a mistake.",
+      "The Midwest is a functional region, because it is organized around one central city."
+    ],
+    "answer": "C",
+    "hints": [
+      "Different kinds of region have different kinds of border. Which kind is made out of what people think and say?",
+      "There is no official list of states to check an answer against, because nobody discovered the Midwest. People created it, and a region built from how people talk has fuzzy edges by its nature."
+    ]
+  },
+  {
+    "id": "m7geo-regions-and-place-006",
+    "loId": "m7geo.regions-and-place",
+    "cedCode": "M7GEO-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two towns sit beside a river that floods almost every spring. In the first town, families build their houses on tall posts so that the flood water passes underneath. The second town builds a long wall of packed earth along the riverbank to keep the water off its streets. Which statement describes these two responses correctly?",
+    "choices": [
+      "Neither one is human-environment interaction, because the river itself is still the same river.",
+      "Both towns modified their surroundings.",
+      "Both towns are examples of people damaging the environment.",
+      "The first town adapted to its surroundings and the second town modified its surroundings, and both are human-environment interaction."
+    ],
+    "answer": "D",
+    "hints": [
+      "Human-environment interaction has three parts: people adapt, people modify, and people depend. Ask which part each town is doing.",
+      "The first town changed the way it builds in order to fit a condition it cannot control. The second town changed the surroundings themselves. Modifying is not another word for damaging."
+    ]
+  }
+]

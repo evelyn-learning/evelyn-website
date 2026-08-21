@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-cell-division-and-growth-001",
+    "loId": "m7sci.cell-division-and-growth",
+    "cedCode": "M7SCI-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A skin cell in your body goes through cell division. What does cell division produce?",
+    "choices": [
+      "Two new cells, each carrying the same genetic information as the original cell",
+      "Two new cells, each carrying half of the genetic information of the original cell",
+      "One new cell that is twice as large as the original cell",
+      "Two new cells, each carrying brand new genetic information written during the split"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what the cell does just before it splits: it copies its DNA.",
+      "Because a full copy is made first, each new cell walks away with a complete set of instructions, not part of a set and not a different set."
+    ]
+  },
+  {
+    "id": "m7sci-cell-division-and-growth-002",
+    "loId": "m7sci.cell-division-and-growth",
+    "cedCode": "M7SCI-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A seventh grader is 4 cm taller in June than she was the previous September. What happened inside her body to make her taller?",
+    "choices": [
+      "The cells she already had stretched out and became much larger",
+      "Her cells filled with extra water until her whole body was larger",
+      "Her body made more cells by cell division, built from material in the food, water and air she took in",
+      "New cells appeared out of nothing in the empty spaces inside her body"
+    ],
+    "answer": "C",
+    "hints": [
+      "A cell cannot get much bigger, because its membrane could no longer move food in and waste out fast enough.",
+      "Whatever the new cells are built from had to enter her body somehow. Matter does not appear out of nowhere."
+    ]
+  },
+  {
+    "id": "m7sci-cell-division-and-growth-003",
+    "loId": "m7sci.cell-division-and-growth",
+    "cedCode": "M7SCI-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A piece of mouse skin and a piece of elephant skin are placed under the same microscope at the same magnification. What do biologists actually see, and why?",
+    "choices": [
+      "Elephant cells look far larger, because a larger animal is built out of larger cells",
+      "The cells look about the same size, because the elephant is built from many more cells rather than bigger ones",
+      "Mouse cells look far larger, because a small animal has to pack more into each cell",
+      "Elephant cells look far larger, because cells keep growing larger throughout an animal's life and elephants live far longer than mice"
+    ],
+    "answer": "B",
+    "hints": [
+      "Every animal cell runs into the same limit: it can only feed itself through its membrane.",
+      "If cells of all animals stay about the same size, then a bigger body has to come from a bigger NUMBER of them."
+    ]
+  },
+  {
+    "id": "m7sci-cell-division-and-growth-004",
+    "loId": "m7sci.cell-division-and-growth",
+    "cedCode": "M7SCI-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A forty year old man has not grown taller in over twenty years. A student concludes that cell division has stopped in his body. Why is the student wrong?",
+    "choices": [
+      "Cell division did stop, and it starts again only for the few days right after an injury",
+      "Cell division is still going on, and it is still making him taller in amounts too small to notice",
+      "Cell division did stop, because an adult keeps the same cells for the rest of his life",
+      "Cell division is still going on, because worn-out skin, blood and gut lining cells are constantly replaced and damage is repaired"
+    ],
+    "answer": "D",
+    "hints": [
+      "Cell division does two different jobs. Growth is one of them. What is the other one?",
+      "Cells wear out and are lost at every age. If nothing replaced them, the supply would run down."
+    ]
+  },
+  {
+    "id": "m7sci-cell-division-and-growth-005",
+    "loId": "m7sci.cell-division-and-growth",
+    "cedCode": "M7SCI-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Imagine a cube-shaped cell whose sides all double in length without it ever dividing. Its outside surface becomes 4 times as large, and its inside becomes 8 times as large. What trouble does that create for the cell?",
+    "choices": [
+      "The outside grows faster than the inside, so the cell takes in far more food than it can use",
+      "There is 8 times as much inside to supply but only 4 times as much membrane to supply it through, so materials cannot cross fast enough",
+      "The doubled cell has too little DNA to run a larger inside, so it can no longer copy its instructions",
+      "The doubled cell becomes so heavy that its membrane tears open under the weight"
+    ],
+    "answer": "B",
+    "hints": [
+      "Everything entering or leaving the cell has to cross the membrane, which is the outside surface.",
+      "Compare the two numbers directly: 8 times the inside, 4 times the surface. The traffic per bit of membrane has doubled."
+    ]
+  },
+  {
+    "id": "m7sci-cell-division-and-growth-006",
+    "loId": "m7sci.cell-division-and-growth",
+    "cedCode": "M7SCI-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student scrapes her knee. Over the next week the skin closes over the scrape, and during that week she eats and drinks normally. Which statement best explains where the new skin came from?",
+    "choices": [
+      "New cells appeared out of nothing to fill the gap, which is why the wound closed on its own",
+      "The cells at the edge of the scrape stretched sideways until they covered the gap, so no new cells were needed",
+      "Cells at the edge of the scrape divided until the gap was filled, and the material for those new cells came from the food, water and air she took in",
+      "Her body turned energy from her food straight into new cells, creating matter that was not in her body before"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two separate questions have to be answered here: what process closed the gap, and what the new cells are built out of.",
+      "Matter is not created. Anything that ends up inside a new cell had to enter her body first as food, drink or air."
+    ]
+  },
+
+  {
+    "id": "m7sci-asexual-and-sexual-reproduction-001",
+    "loId": "m7sci.asexual-and-sexual-reproduction",
+    "cedCode": "M7SCI-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What single question tells you whether a case is asexual reproduction or sexual reproduction?",
+    "choices": [
+      "Whether the organism is simple or complicated",
+      "Whether the offspring end up looking like the parent",
+      "How quickly the new organism is produced",
+      "How many parents contributed genetic information"
+    ],
+    "answer": "D",
+    "hints": [
+      "Both terms are defined in the lesson by the same one fact about the parents.",
+      "One parent gives you one label, and two parents give you the other. Everything else follows from that."
+    ]
+  },
+  {
+    "id": "m7sci-asexual-and-sexual-reproduction-002",
+    "loId": "m7sci.asexual-and-sexual-reproduction",
+    "cedCode": "M7SCI-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hydra in a pond grows a small bud on the side of its body. The bud grows larger, breaks off, and swims away on its own. What is true about the genetic information of the new hydra?",
+    "choices": [
+      "It carries the same genetic information as its single parent, because this is asexual reproduction",
+      "It carries half the genetic information of each of two parents, because this is sexual reproduction",
+      "It carries a blend of the genetic information of all the hydras living in that pond",
+      "It carries new genetic information that its parent did not have, because budding produces variation"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start with the question that decides every case: how many parents contributed genetic information here?",
+      "The bud grew out of the body of one hydra. No second parent appears anywhere in the description."
+    ]
+  },
+  {
+    "id": "m7sci-asexual-and-sexual-reproduction-003",
+    "loId": "m7sci.asexual-and-sexual-reproduction",
+    "cedCode": "M7SCI-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two guinea pigs have a litter of four young. The four young do not look alike, and none of them looks exactly like either parent. What is the best explanation?",
+    "choices": [
+      "Each young guinea pig is an even blend, or average, of its two parents, the way two paint colors mix",
+      "The parents produced young that differ on purpose, so that the litter could handle different conditions",
+      "Each young guinea pig received a different combination of genetic information from its two parents",
+      "The young changed their own genetic information after birth to match their surroundings"
+    ],
+    "answer": "C",
+    "hints": [
+      "Each parent passes on genetic information through sex cells, and the halves that get combined are not the same for every offspring.",
+      "Two of these choices claim something produced differences because differences would be useful. Nothing in living things works that way."
+    ]
+  },
+  {
+    "id": "m7sci-asexual-and-sexual-reproduction-004",
+    "loId": "m7sci.asexual-and-sexual-reproduction",
+    "cedCode": "M7SCI-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A grower fills an entire field with potato plants grown from pieces cut off one single potato. Which statement best describes the risk of doing this?",
+    "choices": [
+      "The plants are weaker than seed-grown plants, because asexual reproduction is a more primitive way to reproduce",
+      "The plants all carry the same genetic information, so a disease that affects one plant can affect all of them the same way",
+      "The plants will grow more and more different from one another as the season goes on, so the field will not stay uniform",
+      "The plants cannot grow properly, because a new plant requires genetic information from two parents to develop"
+    ],
+    "answer": "B",
+    "hints": [
+      "Every plant in this field came from one parent potato. Ask what all of those plants share.",
+      "The risk is not that the plants are weak. The risk is that they are all alike, so one problem becomes a problem for the whole field at once."
+    ]
+  },
+  {
+    "id": "m7sci-asexual-and-sexual-reproduction-005",
+    "loId": "m7sci.asexual-and-sexual-reproduction",
+    "cedCode": "M7SCI-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Field A was grown entirely from runners off one strawberry plant. Field B was grown from seeds that formed after flowers on many different plants were pollinated. A mold spreads through the area. Almost every plant in Field A is damaged, while in Field B some plants are badly damaged, some lightly damaged, and some barely touched. Which statement about Field B is correct?",
+    "choices": [
+      "The Field B plants already differed from one another when their seeds formed, and the mold only revealed differences that were there beforehand",
+      "The Field B plants built up resistance during the season because they needed it once the mold arrived",
+      "The Field B plants are a more advanced kind of strawberry than the Field A plants",
+      "The Field B plants each rewrote their own genetic information once the mold reached them"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask when the differences among the Field B plants came into existence.",
+      "Every Field B seed received a combination of genetic information from two parents, and that happened long before any mold appeared."
+    ]
+  },
+  {
+    "id": "m7sci-asexual-and-sexual-reproduction-006",
+    "loId": "m7sci.asexual-and-sexual-reproduction",
+    "cedCode": "M7SCI-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A strawberry plant spreads by runners that root and grow into new plants, and it also grows flowers that make seeds after pollen from another plant reaches them. A student says one of those two must be the plant's real, more advanced method. How should you answer, and what genetic information do the offspring carry in each case?",
+    "choices": [
+      "Seeds are the advanced method and runners are a leftover primitive one, so the runner plants carry less genetic information than the seedlings",
+      "Runners are the advanced method because they are faster, and both kinds of offspring carry the same genetic information as the parent plant",
+      "Neither method is more advanced, and both kinds of offspring carry the same genetic information as the parent plant",
+      "Neither method is more advanced: each runner plant carries the same genetic information as its one parent, while each seed carries a combination from two parents"
+    ],
+    "answer": "D",
+    "hints": [
+      "Neither strategy ranks above the other, so throw out the word advanced first and then work out the genetics.",
+      "Count the parents in each case. A runner plant has one parent; a seed formed after pollen arrived from another plant has two."
+    ]
+  },
+
+  {
+    "id": "m7sci-plant-reproduction-and-pollination-001",
+    "loId": "m7sci.plant-reproduction-and-pollination",
+    "cedCode": "M7SCI-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a flower, which structure receives pollen?",
+    "choices": [
+      "The anther, the sac at the top of the stamen",
+      "The stigma, the sticky tip of the pistil",
+      "The ovary, the rounded chamber at the base of the pistil",
+      "The petals, the colored parts arranged around the outside"
+    ],
+    "answer": "B",
+    "hints": [
+      "Pollen leaves one flower part and arrives at another. One of these choices is where pollen is PRODUCED, so it cannot also be where pollen is received.",
+      "The receiving part sits at the top of the pistil, and a grain that lands on it sticks there instead of blowing away."
+    ]
+  },
+  {
+    "id": "m7sci-plant-reproduction-and-pollination-002",
+    "loId": "m7sci.plant-reproduction-and-pollination",
+    "cedCode": "M7SCI-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bee picks up pollen from the anther of one apple flower and later lands on a second apple flower, leaving some of that pollen on its stigma. Which statement describes what has happened so far?",
+    "choices": [
+      "Fertilization has happened, because pollination and fertilization are two names for the same event",
+      "Fertilization has happened first, and pollination will follow once the seed begins to form",
+      "Neither one has happened, because pollen has to land on a petal before it can reach the pistil",
+      "Pollination has happened, and fertilization follows only if a sperm cell from the pollen reaches an egg cell inside an ovule"
+    ],
+    "answer": "D",
+    "hints": [
+      "One of these words means a TRANSFER from place to place; the other means two cells JOINING. Decide which one the bee just finished.",
+      "The pollen is sitting on the outside of the pistil, at the stigma. The egg cell is much further in, inside an ovule. Something still has to travel."
+    ]
+  },
+  {
+    "id": "m7sci-plant-reproduction-and-pollination-003",
+    "loId": "m7sci.plant-reproduction-and-pollination",
+    "cedCode": "M7SCI-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Biologists call a tomato, a pea pod, an apple and a prickly burr all fruits. What do those four things have in common?",
+    "choices": [
+      "Each one is a grown ovary with seeds inside it",
+      "Each one is sweet enough for an animal to eat",
+      "Each one formed from a petal that thickened after the flower closed up",
+      "Each one formed without any pollination taking place first"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start from the flower part that holds the ovules, and ask what happens to it after fertilization.",
+      "A fruit is not defined by taste. A burr is not sweet and it is still a fruit."
+    ]
+  },
+  {
+    "id": "m7sci-plant-reproduction-and-pollination-004",
+    "loId": "m7sci.plant-reproduction-and-pollination",
+    "cedCode": "M7SCI-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A field plant has small green flowers with no scent and no nectar. In late spring its anthers release huge clouds of very light, dry pollen whenever the air moves. What is the best conclusion?",
+    "choices": [
+      "It cannot reproduce, because it has no bright petals and no nectar to bring pollinators in",
+      "Its pollen is carried by insects, because every flowering plant depends on insects for pollination",
+      "Its pollen is carried by wind, and releasing so much light pollen raises the chance that some grains land on a stigma of the same kind of plant",
+      "Its pollen is carried by water, because dull green flowers grow only next to ponds and streams"
+    ],
+    "answer": "C",
+    "hints": [
+      "Read the two clues together: the flower offers nothing an animal would come for, and the pollen is light, dry and released when the air moves.",
+      "Wind cannot aim. When a carrier cannot aim, the only way to keep the chance of a hit reasonable is to send out an enormous amount."
+    ]
+  },
+  {
+    "id": "m7sci-plant-reproduction-and-pollination-005",
+    "loId": "m7sci.plant-reproduction-and-pollination",
+    "cedCode": "M7SCI-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gardener plants two tomato seeds from the same packet. One plant grows outdoors. The other grows in a sealed indoor room with no insects and no moving air. Both plants grow tall, stay green, and produce plenty of flowers, but weeks later only the outdoor plant carries tomatoes. What best explains the result?",
+    "choices": [
+      "The indoor plant did not receive enough light, which is why it made no fruit",
+      "The indoor plant grew from a seed that was unable to produce fruit",
+      "The indoor plant put all of its material into growing tall, leaving nothing for fruit",
+      "With no insects and no moving air, no pollen reached a stigma, so there was no pollination, no fertilization, and no ovary swelled into a fruit"
+    ],
+    "answer": "D",
+    "hints": [
+      "List what is the same for the two plants and what differs. Both were healthy and both flowered, so the explanation has to survive that evidence.",
+      "Pollen does not travel to a stigma by itself. Something has to carry it, and the sealed room had neither carrier."
+    ]
+  },
+  {
+    "id": "m7sci-plant-reproduction-and-pollination-006",
+    "loId": "m7sci.plant-reproduction-and-pollination",
+    "cedCode": "M7SCI-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In one wildflower population, plants with brighter petals received more insect visits than plants with duller petals, and over many generations bright petals became common in that population. Which statement describes what happened correctly?",
+    "choices": [
+      "Flowers with brighter petals were visited more often, so more of their pollen was carried to other flowers and they left more offspring, and over many generations bright petals became common",
+      "The flowers made their petals brighter in order to attract more insects to visit them",
+      "Each individual flower slowly turned brighter during its own life, so that insects would visit it more often",
+      "The insects chose the brighter flowers, and that choice changed the genetic information inside the duller flowers"
+    ],
+    "answer": "A",
+    "hints": [
+      "No plant plans, chooses or wants anything. Look for the choice that only reports what happened and what followed from it.",
+      "The change described is a change in a POPULATION across many generations, not a change in any one flower during its own life."
+    ]
+  },
+
+  {
+    "id": "m7sci-environment-and-growth-001",
+    "loId": "m7sci.environment-and-growth",
+    "cedCode": "M7SCI-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best describes how genetic factors and environmental factors together influence how tall an organism grows?",
+    "choices": [
+      "Genes fix the height exactly, and no growing conditions can change it",
+      "Growing conditions decide the height completely, and inherited instructions have nothing to do with it",
+      "Genes set a range of possible heights, and conditions such as food, water and light decide where inside that range the organism ends up",
+      "Whichever factor is stronger takes over completely, and the other factor then has no effect at all"
+    ],
+    "answer": "C",
+    "hints": [
+      "The answer to genes or environment was never one of the two on its own.",
+      "One choice sounds like a compromise but is the same either-or mistake in disguise, because it still ends with one factor doing all the work."
+    ]
+  },
+  {
+    "id": "m7sci-environment-and-growth-002",
+    "loId": "m7sci.environment-and-growth",
+    "cedCode": "M7SCI-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two cuttings are taken from one houseplant, so they carry the same instructions. One cutting is kept on a bright windowsill and one is kept in a dim corner. After six weeks the windowsill cutting is bushy with broad dark green leaves, and the dim-corner cutting is long, thin and pale. What is the best explanation?",
+    "choices": [
+      "The two cuttings must carry different genes, because they turned out different",
+      "Their genes are the same, so the difference comes from the different amounts of light they received",
+      "The dim-corner cutting stretched itself out on purpose to reach the light",
+      "The dim-corner cutting changed its own genes so that it would suit the dark"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both pieces were cut off one plant. Write down what is the same about them and what is different, then see which list could possibly explain the result.",
+      "Three of these choices break a rule from the lesson: one ignores where the cuttings came from, one gives a plant a goal, and one has an organism editing its own instructions to match its surroundings."
+    ]
+  },
+  {
+    "id": "m7sci-environment-and-growth-003",
+    "loId": "m7sci.environment-and-growth",
+    "cedCode": "M7SCI-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gardener grows two bean plants from seeds in the same packet. Plant A is watered every day and reaches about 40 cm. Plant B is watered rarely and reaches only about 15 cm. Both plants still make seeds. The next spring the gardener plants seeds from plant B in well-watered soil. About how tall should those new plants grow, and why?",
+    "choices": [
+      "About 15 cm, because seeds that come from a small plant grow into small plants",
+      "About 15 cm at first, and taller only after several generations of good watering",
+      "Taller than 40 cm, because the dry year toughened plant B and that toughness is passed to its seeds",
+      "About 40 cm, because the dry conditions changed only how plant B itself turned out, not the instructions packed into its seeds"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask the test question: did the drought change the INSTRUCTIONS, or only that ONE plant?",
+      "A seed carries a copy of its parent's instructions. It does not carry a record of the hard year that parent had."
+    ]
+  },
+  {
+    "id": "m7sci-environment-and-growth-004",
+    "loId": "m7sci.environment-and-growth",
+    "cedCode": "M7SCI-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two young trees of the same kind grew from seeds that came off one parent tree. One grew in the middle of a crowded forest and is tall and thin with branches only near the top. The other grew in an open field and is shorter and wider with branches all the way down its trunk. Which explanation is stated correctly?",
+    "choices": [
+      "Light reached the forest tree mainly from above, so its stem grew long and its shaded lower branches died back, while the open-field tree was lit from every side and kept its lower branches",
+      "The forest tree stretched itself taller in order to reach the sunlight above its neighbors",
+      "The two trees must carry different instructions, because trees of one kind always grow into the same shape",
+      "The forest tree needed to be tall to survive, so it grew tall, and the seeds it drops will grow into tall thin trees anywhere"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both seeds came off one parent tree, so rule the instructions out first and look at the conditions.",
+      "Two of these choices give the tree a goal or make need the cause of a trait. Neither of those is how growth works."
+    ]
+  },
+  {
+    "id": "m7sci-environment-and-growth-005",
+    "loId": "m7sci.environment-and-growth",
+    "cedCode": "M7SCI-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student says: \"Height is a genetic trait, so how you treat a plant cannot change how tall it gets.\" What is wrong with that reasoning?",
+    "choices": [
+      "Nothing is wrong with it, because a trait that is called genetic really is fixed from the start",
+      "Height is not a genetic trait at all, because it depends only on water, light and soil",
+      "Genetic means the instructions came from the parents, and those instructions leave room, so water, light and food still decide where inside that room the plant lands",
+      "Genetic traits can be changed, but only when an organism decides to grow differently"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two cuttings off one plant carry identical instructions and still end up different sizes, which would be impossible if genetic meant fixed.",
+      "Work out what the word genetic actually claims. It names where the instructions came from; it does not claim the outcome is locked."
+    ]
+  },
+  {
+    "id": "m7sci-environment-and-growth-006",
+    "loId": "m7sci.environment-and-growth",
+    "cedCode": "M7SCI-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two rabbits come from the same litter. One is given plenty of food and grows large; the other is given very little food and stays small. Later the large rabbit has babies of its own, and those babies are raised on a normal amount of food. What is the best prediction about the size of the babies?",
+    "choices": [
+      "They will be large, because their parent grew large after eating extra food",
+      "Their size will depend on the instructions they inherited and on the food they get, because the extra food their parent ate is not passed on",
+      "They will be exactly the same size as their parent, because body size is set by genes alone",
+      "They will be large only if they are fed extra food, because extra food changes the genes of an animal"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask the test question again: did the extra food change the instructions the parent passes on, or only how that one rabbit turned out?",
+      "The correct answer keeps BOTH factors in play. Any choice that hands the whole result to genes alone, or to food alone, is leaving half the story out."
+    ]
+  }
+]

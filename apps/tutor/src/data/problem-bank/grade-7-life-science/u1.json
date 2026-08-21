@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-characteristics-of-living-things-001",
+    "loId": "m7sci.characteristics-of-living-things",
+    "cedCode": "M7SCI-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the smallest unit that counts as living on its own?",
+    "choices": [
+      "A cell",
+      "A tissue",
+      "An organ",
+      "A drop of water"
+    ],
+    "answer": "A",
+    "hints": [
+      "Every living thing is either one of these or is built out of many of them.",
+      "A tissue is made of many of these working together, so a tissue cannot be the smallest one."
+    ]
+  },
+  {
+    "id": "m7sci-characteristics-of-living-things-002",
+    "loId": "m7sci.characteristics-of-living-things",
+    "cedCode": "M7SCI-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An icicle hanging from a gutter gets longer every cold night. A bean seedling in a cup on the windowsill also gets longer every day. Which statement gives the real difference between these two kinds of getting longer?",
+    "choices": [
+      "The seedling gets longer faster, and living things always grow faster than nonliving things",
+      "The icicle is not really getting longer, because its shape stays the same the whole time",
+      "The seedling grows by making more cells inside itself, while the icicle only freezes more water onto its outside",
+      "The seedling takes in water and the icicle does not take in anything"
+    ],
+    "answer": "C",
+    "hints": [
+      "Both things really do get longer, so the answer cannot be that one of them is not growing.",
+      "Ask where the new material ends up. Living things add new cells on the inside; the icicle piles new ice onto its outside."
+    ]
+  },
+  {
+    "id": "m7sci-characteristics-of-living-things-003",
+    "loId": "m7sci.characteristics-of-living-things",
+    "cedCode": "M7SCI-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a hot afternoon a dog pants heavily in the backyard. A thermometer shows that the temperature inside the dog's body is still about the same as it was in the cool house that morning. Which characteristic of living things does the steady inside temperature show best?",
+    "choices": [
+      "Growth and development, because panting uses energy that would otherwise build new cells",
+      "Maintaining internal balance, because a condition inside the body is held steady while the outside changes",
+      "Responding to stimuli only, because panting is just a reaction to hot air and nothing inside is being held steady",
+      "Being made of cells, because only something built from cells can feel heat"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the two temperatures in the problem. The outside got much hotter. What did the inside temperature do?",
+      "Reacting to something outside is one characteristic. Holding the inside steady while the outside swings is the stronger, more specific one."
+    ]
+  },
+  {
+    "id": "m7sci-characteristics-of-living-things-004",
+    "loId": "m7sci.characteristics-of-living-things",
+    "cedCode": "M7SCI-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A dry sunflower seed has been sitting in a paper envelope in a kitchen drawer for a year. It has not moved, changed color, or gotten any bigger. Is the seed alive, and what is the best reason?",
+    "choices": [
+      "It is not alive, because a living thing has to be doing something you can see",
+      "It is not alive, because it has not grown or reproduced in a whole year",
+      "It is alive, because it is made of the same material as the plant it came from",
+      "It is alive, because it is made of cells and uses a trickle of energy while dormant, and it will grow roots and leaves if it is given water, warmth and air"
+    ],
+    "answer": "D",
+    "hints": [
+      "Being still is a clue, not a test. Run the whole checklist on the seed instead of judging it by activity.",
+      "Ask what is inside the seed and what happens when you plant it. Nothing dead grows roots and leaves."
+    ]
+  },
+  {
+    "id": "m7sci-characteristics-of-living-things-005",
+    "loId": "m7sci.characteristics-of-living-things",
+    "cedCode": "M7SCI-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Beetles live on the bark of dark-colored trees, and birds hunt them by sight. Long ago most of the beetles in that woods were light colored. Many generations later, most of them are dark colored. Which statement describes what happened correctly?",
+    "choices": [
+      "Beetles that happened to be born darker were eaten less often, so they left more offspring and darker beetles became more common in the population",
+      "Each beetle slowly darkened its own shell during its lifetime to match the bark",
+      "The beetles needed to be darker in order to survive, so they developed darker shells",
+      "The beetles decided to become darker so that the birds would stop finding them"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what actually changes over generations: an individual beetle, or how common a trait is in the whole group?",
+      "No living thing grows a trait because it needs one or wants one. Look for the choice about which beetles survived and left offspring."
+    ]
+  },
+  {
+    "id": "m7sci-characteristics-of-living-things-006",
+    "loId": "m7sci.characteristics-of-living-things",
+    "cedCode": "M7SCI-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A class leaves a damp slice of bread in a covered dish. After a week a gray fuzzy patch covers part of the slice, and the patch spreads a little farther each day. Under a microscope the patch turns out to be a tangle of tiny threads, and each thread is built from cells. A student wonders whether the patch is alive or is just a stain soaking through the bread. Which observation is the strongest evidence that the patch is alive?",
+    "choices": [
+      "The patch is gray, and many living things are gray",
+      "The patch got bigger every day, and getting bigger is by itself enough to show that something is alive",
+      "The threads are built from cells, and the patch spreads by making more of those cells",
+      "The patch appeared only after the bread was left damp, and living things need water"
+    ],
+    "answer": "C",
+    "hints": [
+      "A spreading stain also gets bigger every day and also needs moisture, so ask which observation a stain could NOT match.",
+      "Start with the first item on the checklist. What is the patch built out of, and how does it add to itself?"
+    ]
+  },
+
+  {
+    "id": "m7sci-scientific-investigation-001",
+    "loId": "m7sci.scientific-investigation",
+    "cedCode": "M7SCI-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A class keeps mealworms in a shallow tray. Which of these is a testable science question?",
+    "choices": [
+      "Which mealworm in the tray is the cutest?",
+      "Do more mealworms end up on the covered end of the tray than on the brightly lit end?",
+      "Should our class be allowed to keep mealworms in the classroom?",
+      "What does a mealworm feel when the lamp is switched on?"
+    ],
+    "answer": "B",
+    "hints": [
+      "For each question, ask what you could go and collect that would answer it: a count, a measurement, or a careful observation.",
+      "Cutest is an opinion, should is about rules, and no instrument reads out what an insect feels inside."
+    ]
+  },
+  {
+    "id": "m7sci-scientific-investigation-002",
+    "loId": "m7sci.scientific-investigation",
+    "cedCode": "M7SCI-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Tia's testable question is: do mealworms end up at the covered end of a tray more often than at the brightly lit end? Which of these is the best hypothesis for that question?",
+    "choices": [
+      "Mealworms probably like the dark better than the light.",
+      "Do mealworms prefer dark places or bright places?",
+      "Mealworms are easy to keep in a classroom tray.",
+      "If a tray has one covered end and one brightly lit end, then more mealworms will be at the covered end after five minutes, because mealworms move away from light."
+    ],
+    "answer": "D",
+    "hints": [
+      "A hypothesis is a statement, not a question, and it has three parts: if something is changed, then something measurable happens, because of a reason.",
+      "Check each choice for a measurable result. A choice that is still a question has not been turned into a hypothesis yet."
+    ]
+  },
+  {
+    "id": "m7sci-scientific-investigation-003",
+    "loId": "m7sci.scientific-investigation",
+    "cedCode": "M7SCI-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Dev predicted that mealworms would gather at the warm end of a tray. He ran twenty mealworms through the test three separate times, following his plan carefully, and each time the mealworms spread out evenly across the tray. What should Dev write about his investigation?",
+    "choices": [
+      "The evidence does not support his hypothesis, which is a real and useful result about warmth and these mealworms",
+      "His experiment failed, so he should keep running it until the mealworms gather at the warm end",
+      "His results prove that mealworms do not respond to anything in their surroundings",
+      "He must have made a mistake in his procedure, because the mealworms did not do what he predicted"
+    ],
+    "answer": "A",
+    "hints": [
+      "An experiment fails when the plan does not answer the question. Did Dev measure the wrong thing or run too few trials?",
+      "A hypothesis is allowed to turn out wrong. Also watch the wording: evidence supports or does not support an idea, and science does not prove things true."
+    ]
+  },
+  {
+    "id": "m7sci-scientific-investigation-004",
+    "loId": "m7sci.scientific-investigation",
+    "cedCode": "M7SCI-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ben wants to know whether bread grows mold in fewer days on the kitchen counter than in the refrigerator. Which plan would give him the best evidence?",
+    "choices": [
+      "Leave one slice on the counter and one slice in the refrigerator, and see which one gets moldy first",
+      "Leave six slices on the counter, then compare them with how he remembers bread doing last summer",
+      "Leave six slices from one loaf on the counter and six slices from that same loaf in the refrigerator, and record the number of days until the first mold spot appears on each slice",
+      "Leave six slices on the counter and six in the refrigerator, and at the end decide by eye which group looks worse"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check each plan against the three planning decisions: what gets measured, how many trials, and what will count as evidence.",
+      "One slice against one slice can be decided by a single unlucky slice, looking worse is not a measurement, and a memory from last summer leaves him with no refrigerator group at all."
+    ]
+  },
+  {
+    "id": "m7sci-scientific-investigation-005",
+    "loId": "m7sci.scientific-investigation",
+    "cedCode": "M7SCI-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hypothesis has to be able to turn out wrong. Which of these could NOT be tested, because no result you can imagine would count against it?",
+    "choices": [
+      "If radish seedlings are given 12 hours of light a day, then after two weeks they will be taller in centimeters than seedlings given 4 hours a day, because more light lets a plant make more food.",
+      "If a slice of bread is sprayed with vinegar, then mold will take more days to appear on it than on a slice sprayed with plain water, because vinegar makes conditions harder for mold.",
+      "If mealworms are put in a tray with one covered end, then more than half of them will be under the cover after five minutes, because mealworms move away from light.",
+      "Plants do better when they are in good conditions."
+    ],
+    "answer": "D",
+    "hints": [
+      "For each one, try to describe a measurement that would show the idea was wrong. If you cannot even imagine that measurement, the idea is not testable.",
+      "Look for the choice that names nothing you could measure and no amount you could compare - the words in it cannot be read off any instrument."
+    ]
+  },
+  {
+    "id": "m7sci-scientific-investigation-006",
+    "loId": "m7sci.scientific-investigation",
+    "cedCode": "M7SCI-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Rosa planted 10 bean seeds in a warm room and 10 in a cold room, keeping the soil, cups and water the same. Before starting, she decided that clearly fewer days to sprout in the warm group would support her hypothesis. Her results: the warm seeds sprouted in an average of 4 days, and the cold seeds in an average of 9 days. Which conclusion is written correctly?",
+    "choices": [
+      "This experiment proves that warmth is what makes all seeds sprout.",
+      "The evidence supports her hypothesis: in this test the warm seeds sprouted about 5 days sooner on average than the cold seeds.",
+      "The evidence does not support her hypothesis, because 4 days is a smaller number than 9 days.",
+      "Her hypothesis is now a proven fact, because she used ten seeds in each group."
+    ],
+    "answer": "B",
+    "hints": [
+      "First check what she decided in advance would count as support, then compare the two averages: 4 days against 9 days.",
+      "Two of these choices claim the test proved something. Evidence supports or does not support a hypothesis; it never proves one true."
+    ]
+  },
+
+  {
+    "id": "m7sci-variables-and-controls-001",
+    "loId": "m7sci.variables-and-controls",
+    "cedCode": "M7SCI-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a fair test, what is the dependent variable?",
+    "choices": [
+      "The one thing the investigator changes on purpose",
+      "A factor the investigator deliberately keeps the same in every group",
+      "The outcome the investigator measures, which depends on the thing that was changed",
+      "The group of subjects that receives no treatment"
+    ],
+    "answer": "C",
+    "hints": [
+      "Use the memory hook: I change the Independent variable, and the Dependent variable Depends on it.",
+      "The dependent variable always comes with a unit and a tool for reading it, such as centimeters read off a ruler."
+    ]
+  },
+  {
+    "id": "m7sci-variables-and-controls-002",
+    "loId": "m7sci.variables-and-controls",
+    "cedCode": "M7SCI-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Maya plants 30 radish seeds in 30 identical cups using the same soil. Ten cups get 20 mL of water each morning, ten get 40 mL, and ten get 60 mL. Every cup sits on the same table under the same lamp for the same number of hours. After two weeks Maya measures each seedling with a ruler. Which of these is the INDEPENDENT variable?",
+    "choices": [
+      "The amount of water each group receives every morning",
+      "The height of the seedlings in centimeters after two weeks",
+      "The kind of soil used in all thirty cups",
+      "The ten cups placed in each of the three groups"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the memory hook: I change the Independent variable, and the Dependent variable Depends on it and is the one I measure.",
+      "One of these Maya read off a ruler at the end and one she kept identical everywhere. Only one is the thing she deliberately set to a different value for each group."
+    ]
+  },
+  {
+    "id": "m7sci-variables-and-controls-003",
+    "loId": "m7sci.variables-and-controls",
+    "cedCode": "M7SCI-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A class tests whether a new plant food makes bean plants grow taller. Twenty bean plants are grown in identical cups with the same soil, the same amount of water, the same light and the same room. Ten of the plants get plant food mixed into their water, and ten get plain water. Which part of this setup is the CONTROL GROUP?",
+    "choices": [
+      "The same soil used in all twenty cups",
+      "The height of the plants, measured at the end of the investigation",
+      "The plant food mixed into the water of ten of the plants",
+      "The ten plants that get plain water and no plant food"
+    ],
+    "answer": "D",
+    "hints": [
+      "A control group is a GROUP of subjects, while a controlled variable is a FACTOR held the same. Which choices name factors?",
+      "The control group is the one that gets no treatment, so it shows what happens when nothing is done."
+    ]
+  },
+  {
+    "id": "m7sci-variables-and-controls-004",
+    "loId": "m7sci.variables-and-controls",
+    "cedCode": "M7SCI-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ravi wants to know whether a new food makes crickets chirp more often. He keeps ten crickets on the new food in a warm tank and ten crickets on the regular food in a cool tank. The tanks are the same size and everything else is handled the same way. The crickets on the new food chirp more often. Why can Ravi NOT conclude that the new food caused the extra chirping?",
+    "choices": [
+      "He should have changed even more things at once, because testing more variables makes an experiment stronger",
+      "The two groups differ in food AND in temperature, so he cannot tell which of those caused the extra chirping",
+      "His conclusion is fine, because the crickets on the new food really did chirp more often",
+      "He included a group on the regular food, so his investigation was already a fair test"
+    ],
+    "answer": "B",
+    "hints": [
+      "List every single difference between the two groups, not just the one Ravi was interested in.",
+      "The crickets on the new food also got something else the other crickets did not. What was it?"
+    ]
+  },
+  {
+    "id": "m7sci-variables-and-controls-005",
+    "loId": "m7sci.variables-and-controls",
+    "cedCode": "M7SCI-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Jo tests whether mixing compost into the soil makes sunflower seedlings grow taller. She grows ONE seedling in soil with compost and ONE seedling in soil without compost. The cups, the seeds, the water, the light and the room are all identical, and compost is the only difference. After two weeks the compost seedling is 2 cm taller. What is the biggest problem with this investigation?",
+    "choices": [
+      "She changed too many things at once, so the result cannot be interpreted",
+      "She forgot to include a group that received no compost",
+      "One seedling in each group is not enough, because plants vary on their own and a 2 cm difference could easily be luck",
+      "She should have added compost to both cups, so that everything was kept the same"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check the setup against the rules one at a time. Is there exactly one independent variable? Is there a group that got no treatment? How many plants are in each group?",
+      "Two sunflower seedlings grown side by side in identical cups still end up different heights. So what does a 2 cm gap between just two plants really tell you?"
+    ]
+  },
+  {
+    "id": "m7sci-variables-and-controls-006",
+    "loId": "m7sci.variables-and-controls",
+    "cedCode": "M7SCI-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A class wants to know whether earthworms move toward damp soil. They fill a shallow box with soil, make the left half damp and cover it with a lid so it is dark, and leave the right half dry under a bright desk lamp. They put one earthworm in the middle, and ten minutes later it is on the left half. Which change would most improve this investigation?",
+    "choices": [
+      "Make both halves equally dark so that light is held the same, and use twenty worms instead of one",
+      "Use twenty worms instead of one, and make the left half even damper and darker than it was before",
+      "Leave the setup exactly as it is, but run the same single worm through it twenty times",
+      "Shine the bright lamp over both halves and keep using one worm, because one worm is easier to watch closely"
+    ],
+    "answer": "A",
+    "hints": [
+      "There are two separate problems here. Compare the halves item by item, then count how many worms were tested.",
+      "A good fix has to leave dampness as the only difference between the halves AND give enough trials that one worm's wandering cannot decide the answer."
+    ]
+  },
+
+  {
+    "id": "m7sci-data-graphs-and-conclusions-001",
+    "loId": "m7sci.data-graphs-and-conclusions",
+    "cedCode": "M7SCI-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student measures the temperature of a cup of hot water every two minutes for twenty minutes as it cools, and wants to show how the temperature changed. Which kind of graph fits this data best?",
+    "choices": [
+      "A bar graph, because temperature is a number",
+      "A bar graph, because each reading is a separate group",
+      "Either kind of graph works equally well, because both of them show numbers",
+      "A line graph, because one measurement is changing continuously over time"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask whether the space between two readings means something real. Is there a temperature at minute 5, in between the readings at minute 4 and minute 6?",
+      "Bar graphs are for separate groups with nothing in between them, like three kinds of soil. Time is not like that."
+    ]
+  },
+  {
+    "id": "m7sci-data-graphs-and-conclusions-002",
+    "loId": "m7sci.data-graphs-and-conclusions",
+    "cedCode": "M7SCI-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A class measured the same plant once a week. Week 1: 4 cm. Week 2: 6 cm. Week 3: 9 cm. Week 4: 8 cm. Week 5: 12 cm. Week 6: 15 cm. Which statement describes the trend correctly?",
+    "choices": [
+      "The plant grew for three weeks and then started shrinking",
+      "The plant grew overall, from 4 cm to 15 cm, with one dip at week 4 that does not change the upward trend",
+      "There is no trend, because the numbers do not go up every single week",
+      "The plant is shrinking, because week 4 is lower than week 3"
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the first number with the last number, then check the shape of everything in between.",
+      "Real measurements wobble. One reading that dips does not reverse a trend that runs across the whole set."
+    ]
+  },
+  {
+    "id": "m7sci-data-graphs-and-conclusions-003",
+    "loId": "m7sci.data-graphs-and-conclusions",
+    "cedCode": "M7SCI-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A class planted the same number of bean seeds in three kinds of soil and counted how many sprouted. Sandy soil: 4 sprouted. Potting soil: 9 sprouted. Clay soil: 6 sprouted. Which graph fits this data, and why?",
+    "choices": [
+      "A line graph, because the number changes from one soil to the next",
+      "A line graph, because there are three points that can be connected",
+      "A bar graph, because the three soils are separate groups with nothing in between them",
+      "A bar graph, because the counts happen to be whole numbers"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask whether anything exists halfway between two of these groups. Is there a soil in between sandy soil and potting soil?",
+      "A line is for a measurement that changes continuously, because the space between the points has to mean something real."
+    ]
+  },
+  {
+    "id": "m7sci-data-graphs-and-conclusions-004",
+    "loId": "m7sci.data-graphs-and-conclusions",
+    "cedCode": "M7SCI-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two students graph the exact same data: one plant that grew from 61 cm to 64 cm over four weeks. The first student draws the side axis running from 0 to 100 cm, and the line looks almost flat. The second student draws the side axis running from 60 to 65 cm, and the line climbs steeply across the page. Which statement is correct?",
+    "choices": [
+      "Both graphs show the same 3 cm of growth, because the scale on the axis changes how the change looks, not how big it really is",
+      "The second graph must be wrong, because a line that steep could not come from a 3 cm change",
+      "The second graph shows much more growth than the first one, because its line is steeper",
+      "The first graph must be wrong, because a real change should never look flat"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both students plotted the very same plant. Work out how many centimeters it actually gained.",
+      "Read the numbers printed on each side axis before deciding whether an effect is big or small."
+    ]
+  },
+  {
+    "id": "m7sci-data-graphs-and-conclusions-005",
+    "loId": "m7sci.data-graphs-and-conclusions",
+    "cedCode": "M7SCI-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a school garden, the plots that got extra compost grew taller tomato plants than the plots that got none. Those compost plots all happen to sit along the sunny south fence, and the plots with no compost sit in the shade of the building. Which conclusion does this evidence support?",
+    "choices": [
+      "Compost has no effect on how tall tomato plants grow",
+      "The compost plots grew taller plants, but the extra sunlight could explain the difference just as well, so this data does not show what caused it",
+      "Compost causes tomato plants to grow taller",
+      "Taller tomato plants cause gardeners to add more compost to a plot"
+    ],
+    "answer": "B",
+    "hints": [
+      "List everything that is different between the two sets of plots. Is compost really the only difference?",
+      "When a second thing changes along with the one you care about, the test is not fair and the two causes cannot be separated."
+    ]
+  },
+  {
+    "id": "m7sci-data-graphs-and-conclusions-006",
+    "loId": "m7sci.data-graphs-and-conclusions",
+    "cedCode": "M7SCI-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A counselor at one small summer camp kept a record for four days. Day 1: 4 cups of lemonade sold, 1 camper reported a sunburn. Day 2: 10 cups sold, 3 sunburns. Day 3: 18 cups sold, 6 sunburns. Day 4: 22 cups sold, 7 sunburns. Which conclusion is best supported by this record?",
+    "choices": [
+      "Drinking lemonade causes sunburn, because the two numbers rose together every day",
+      "Getting a sunburn makes campers buy lemonade, because the two numbers rose together every day",
+      "There is no pattern in these numbers, because lemonade and sunburn have nothing to do with each other",
+      "Lemonade sales and reported sunburns rose together on these four days, and hot sunny weather could raise both, so this data does not show that either one caused the other"
+    ],
+    "answer": "D",
+    "hints": [
+      "The pattern is real - both columns rise. The question is what the pattern does and does not tell you.",
+      "A correlation leaves three options open: A caused B, B caused A, or a third thing caused both. Name a third thing that would raise both numbers on the same day."
+    ]
+  }
+]

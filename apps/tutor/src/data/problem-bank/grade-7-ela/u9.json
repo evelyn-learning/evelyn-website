@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7ela-informative-thesis-and-structure-001",
+    "loId": "m7ela.informative-thesis-and-structure",
+    "cedCode": "M7ELA-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a short informative piece about the school garden. Which of these is a focus statement?",
+    "choices": [
+      "The school garden behind the cafeteria.",
+      "In this paper I will tell you all about the school garden behind the cafeteria.",
+      "The school garden runs on a yearly cycle: seeds start in trays indoors in late winter, the seedlings move out to the beds once the frost has passed, and the beds are cleared and covered before the first hard freeze.",
+      "Every middle school in the country should plant a garden behind its cafeteria."
+    ],
+    "answer": "C",
+    "hints": [
+      "A focus statement is one sentence that names the topic AND says what the piece will show about it. Read each choice and ask what you actually learned from it.",
+      "One choice is only a topic and not even a sentence, one talks about the paper instead of the garden, and one takes a side a reader could argue with."
+    ]
+  },
+  {
+    "id": "m7ela-informative-thesis-and-structure-002",
+    "loId": "m7ela.informative-thesis-and-structure",
+    "cedCode": "M7ELA-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing an INFORMATIVE piece explaining how a public library decides which books to buy. Which sentence is a focus statement for that piece?",
+    "choices": [
+      "A public library chooses new books in stages: staff record the titles readers ask for, a selection team weighs those requests against reviews and the year's budget, and every approved title is cataloged before it reaches a shelf.",
+      "Public libraries should spend far more of their budget on the books that students actually request.",
+      "How a public library decides which books to buy.",
+      "This report will explain how a public library decides which books to buy."
+    ],
+    "answer": "A",
+    "hints": [
+      "Informative writing explains; it does not persuade. Cross out any choice a reader could disagree with.",
+      "Of the three that are left, one is only a topic and not a sentence, and one is an announcement about the report rather than a statement about the library."
+    ]
+  },
+  {
+    "id": "m7ela-informative-thesis-and-structure-003",
+    "loId": "m7ela.informative-thesis-and-structure",
+    "cedCode": "M7ELA-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student has one page for an informative piece and has written \"birds\" at the top. Which version of the topic is narrowed enough to cover well in one page?",
+    "choices": [
+      "Birds in every part of the world.",
+      "Animals that travel long distances.",
+      "Why birds are the most interesting animals anyone could study.",
+      "How a songbird's body gets ready for its fall trip south."
+    ],
+    "answer": "D",
+    "hints": [
+      "Narrow by asking three questions about the topic: which kind, which part, and what about it.",
+      "Broad is not easier; broad is shallow. Two of these choices are wider than \"birds\" or just as wide, and one of them takes a side instead of naming something to explain."
+    ]
+  },
+  {
+    "id": "m7ela-informative-thesis-and-structure-004",
+    "loId": "m7ela.informative-thesis-and-structure",
+    "cedCode": "M7ELA-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer has gathered these notes for an informative piece. (1) A rim brake squeezes two rubber pads against the outside edge of the wheel. (2) A disc brake squeezes pads against a metal disc bolted near the center of the wheel. (3) Rim brakes weigh less and are easier to adjust at home with basic tools. (4) Disc brakes keep gripping better when the wheel is wet or muddy. Which structure fits this information best?",
+    "choices": [
+      "Sequence, because the notes are numbered, and a numbered list means the order matters.",
+      "Compare-contrast, because two kinds of brake are lined up against each other point by point.",
+      "Cause-effect, because the notes explain why a bicycle needs brakes at all.",
+      "Definition, because an informative piece has to begin by explaining what a brake is."
+    ],
+    "answer": "B",
+    "hints": [
+      "Gather the information first, then let it choose the structure. Ask what the four notes are doing as a set.",
+      "Notes 1 and 2 name the same part on two different bikes, and notes 3 and 4 weigh those two against each other. Numbering is not sequence, and nothing here says why brakes exist."
+    ]
+  },
+  {
+    "id": "m7ela-informative-thesis-and-structure-005",
+    "loId": "m7ela.informative-thesis-and-structure",
+    "cedCode": "M7ELA-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer is planning an informative piece on how bike gears work and has these notes. (1) A chain connects a gear at the pedals to a gear at the back wheel. (2) In a low gear each push of the pedals is easy, but the back wheel turns less. (3) In a high gear each push is harder, but the back wheel turns farther. (4) A metal arm called the derailleur pushes the chain sideways onto a different gear. (5) Every middle school should teach students to repair their own bikes. Which note should be cut, and why?",
+    "choices": [
+      "Note 1, because a reader already knows that a bike has a chain.",
+      "Note 4, because the word derailleur is too hard for a short piece.",
+      "Note 5, because it argues for something people ought to do instead of explaining how gears work.",
+      "Note 3, because it says the same thing as note 2 in different words."
+    ],
+    "answer": "C",
+    "hints": [
+      "Say the job of the piece out loud, then test each note against it. Which note is not information about gears at all?",
+      "Four of the notes report how the parts work. One of them tells schools what they should do, and a sentence that takes a side never belongs in an informative piece."
+    ]
+  },
+  {
+    "id": "m7ela-informative-thesis-and-structure-006",
+    "loId": "m7ela.informative-thesis-and-structure",
+    "cedCode": "M7ELA-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer has notes on what happens to a library book from the moment a reader suggests it to the moment it reaches a shelf, and the notes only make sense in one order. Which focus statement and structure go together best for these notes?",
+    "choices": [
+      "Focus statement: \"A suggested book moves through a fixed set of stops - a request form, a selection meeting, an order to the supplier, and the cataloging desk - before any reader can check it out.\" Structure: sequence.",
+      "Focus statement: \"A library is a better place to get a book than a bookstore is.\" Structure: compare-contrast.",
+      "Focus statement: \"In this paper I will explain what happens to a book that a reader suggests.\" Structure: sequence.",
+      "Focus statement: \"A library book is a printed volume owned by a public institution and lent out for a set number of weeks.\" Structure: definition."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the focus statement first and the structure second. A pairing fails if either half is wrong.",
+      "One choice takes a side, one announces the paper instead of saying anything about the book, and one defines the word \"book\" while ignoring the stops the notes are actually about."
+    ]
+  },
+  {
+    "id": "m7ela-paragraph-development-001",
+    "loId": "m7ela.paragraph-development",
+    "cedCode": "M7ELA-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Read this paragraph. \"(1) A bicycle chain has to be cleaned every few weeks. (2) Grit from the road sticks to the oily film on the links. (3) That grit grinds against the teeth of the gears every time the chain goes around. (4) Bicycle races on a track are run on a wooden oval with steeply banked sides. (5) A rag and a little fresh chain oil take the grit off before it wears the metal down.\" Which sentence does NOT belong?",
+    "choices": [
+      "Sentence 2: Grit from the road sticks to the oily film on the links.",
+      "Sentence 4: Bicycle races on a track are run on a wooden oval with steeply banked sides.",
+      "Sentence 3: That grit grinds against the teeth of the gears every time the chain goes around.",
+      "Sentence 5: A rag and a little fresh chain oil take the grit off before it wears the metal down."
+    ],
+    "answer": "B",
+    "hints": [
+      "Read sentence 1 and say the job out loud: explain why a chain has to be cleaned. Then ask each other sentence, \"does this one help?\"",
+      "Three sentences build one chain of reasoning: grit sticks, grit grinds, oil and a rag remove it. One is a true and interesting fact about a completely different subject."
+    ]
+  },
+  {
+    "id": "m7ela-paragraph-development-002",
+    "loId": "m7ela.paragraph-development",
+    "cedCode": "M7ELA-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph opens with this topic sentence: \"Yeast is what turns a heavy lump of dough into a light loaf.\" Which added sentence best DEVELOPS that point?",
+    "choices": [
+      "Without yeast in it, dough would stay heavy instead of turning light.",
+      "Bakers keep their flour in sealed bins so that insects cannot get into it.",
+      "Bread always tastes better when it is still warm from the oven.",
+      "The yeast feeds on sugars in the flour and gives off carbon dioxide gas, and the stretchy dough traps that gas in thousands of small bubbles."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask the added-knowledge question of each choice: what does the reader know now that the topic sentence did not already say?",
+      "One choice says the claim again in new words, one is a true fact about storing flour rather than about rising, and one is an opinion about taste. Only one explains how the yeast actually does it."
+    ]
+  },
+  {
+    "id": "m7ela-paragraph-development-003",
+    "loId": "m7ela.paragraph-development",
+    "cedCode": "M7ELA-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "These three sentences are the support for one paragraph. \"Some songbirds line the trip up with the stars they can see on a clear night. Others follow the shape of a coastline or a river valley below them. A few seem to sense the pull of the earth's magnetic field.\" Which topic sentence fits this support best?",
+    "choices": [
+      "Migrating songbirds find their way using more than one kind of guide.",
+      "Birds are amazing animals that can do things no person could ever do.",
+      "Some songbirds steer by the stars on a clear night.",
+      "Towns should dim the lights on their tallest buildings during the fall migration."
+    ],
+    "answer": "A",
+    "hints": [
+      "A topic sentence has to promise exactly what the support delivers. Not broader, not narrower.",
+      "One choice covers only the first supporting sentence, one is a general opinion the support never proves, and one argues for something people should do that the support never mentions."
+    ]
+  },
+  {
+    "id": "m7ela-paragraph-development-004",
+    "loId": "m7ela.paragraph-development",
+    "cedCode": "M7ELA-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this paragraph. \"(1) A school library gets its books in several different ways. (2) The librarian keeps a running list of the titles students ask for and orders from it each spring. (3) A set amount of money is put aside in the school budget every year for new titles. (4) Every book in the library is shelved by a number that groups it with the other books on the same subject. (5) Families whose children have outgrown their books often donate whole boxes of them to the front office.\" Which sentence does NOT belong?",
+    "choices": [
+      "Sentence 2: The librarian keeps a running list of the titles students ask for and orders from it each spring.",
+      "Sentence 3: A set amount of money is put aside in the school budget every year for new titles.",
+      "Sentence 4: Every book in the library is shelved by a number that groups it with the other books on the same subject.",
+      "Sentence 5: Families whose children have outgrown their books often donate whole boxes of them to the front office."
+    ],
+    "answer": "C",
+    "hints": [
+      "The job in sentence 1 is narrow: how the books ARRIVE. Test each sentence against that exact job, not against the general subject of libraries.",
+      "Three sentences name a way a book gets into the building: requests, budget money, donations. One is true and interesting but describes what happens to a book after it is already there."
+    ]
+  },
+  {
+    "id": "m7ela-paragraph-development-005",
+    "loId": "m7ela.paragraph-development",
+    "cedCode": "M7ELA-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student hands in this paragraph. \"(1) Low gears make a steep hill easier to climb. (2) Low gears really help a lot on a hill. (3) Climbing a hill is much easier when you shift down.\" What is wrong with it, and what is the best fix?",
+    "choices": [
+      "Nothing is wrong. The point is stated clearly three times, so no reader could possibly miss it.",
+      "Sentences 2 and 3 only restate the topic sentence, so they should be replaced with a fact or an example that explains why a low gear takes less force from a rider's legs.",
+      "The paragraph is too short, so two more sentences about hills should be added to bring it up to five.",
+      "The topic sentence should be moved to the end so that the paragraph builds up to it."
+    ],
+    "answer": "B",
+    "hints": [
+      "After each sentence, ask what the reader knows that they did not know one sentence earlier.",
+      "Repeating is not developing, and there is no five-sentence rule. The paragraph is not short of sentences; it is short of support."
+    ]
+  },
+  {
+    "id": "m7ela-paragraph-development-006",
+    "loId": "m7ela.paragraph-development",
+    "cedCode": "M7ELA-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Four students wrote a paragraph under the topic sentence \"A songbird cannot simply take off on a long fall trip without getting its body ready first.\" Which paragraph is both unified and developed?",
+    "choices": [
+      "A songbird cannot just leave whenever it feels like it. It has to get ready first. Getting ready matters a lot for a trip that long, and a bird that had not gotten ready would be in real trouble.",
+      "A songbird gets its body ready before it goes. Migration means moving from one place to another when the seasons change. Plenty of other animals migrate too, including whales and some butterflies.",
+      "In the weeks before it leaves, a songbird eats far more than usual and stores the extra as fat. Bright lights on tall buildings confuse birds flying at night, and many of them strike the glass. That stored fat is the fuel the bird burns between stops.",
+      "In the weeks before it leaves, a songbird eats far more than usual and stores the extra as fat under its skin. That fat is the fuel it burns between stops, because a bird has no way to carry food with it. Many songbirds also grow a fresh set of flight feathers first, since worn feathers would make every mile cost more effort."
+    ],
+    "answer": "D",
+    "hints": [
+      "Run two checks on each paragraph, not one. First unity: does every sentence help the topic sentence? Then development: does the reader learn something new in each sentence?",
+      "One paragraph only restates the claim three times, one drifts into defining migration and listing other animals, and one is well developed except for a true sentence about window strikes that has nothing to do with getting the body ready."
+    ]
+  },
+  {
+    "id": "m7ela-transitions-and-cohesion-001",
+    "loId": "m7ela.transitions-and-cohesion",
+    "cedCode": "M7ELA-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which transition best fills the blank? \"A power outage shut off the cafeteria freezers for two whole days. ___ the kitchen staff had to throw out everything that had been stored inside them.\"",
+    "choices": [
+      "For example,",
+      "As a result,",
+      "However,",
+      "In addition,"
+    ],
+    "answer": "B",
+    "hints": [
+      "Say the connection in plain words before you look at the choices. Did the throwing out just happen to come after the outage, or did the outage make it happen?",
+      "The outage is the reason the food had to go, so you need a word from the cause and effect family, not an example, a turn, or one more item on a list."
+    ]
+  },
+  {
+    "id": "m7ela-transitions-and-cohesion-002",
+    "loId": "m7ela.transitions-and-cohesion",
+    "cedCode": "M7ELA-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which transition best fills the blank? \"Most of the seventh graders signed up for the morning shift in the school garden. ___ three of them asked to come after school instead.\"",
+    "choices": [
+      "Therefore,",
+      "For instance,",
+      "However,",
+      "In short,"
+    ],
+    "answer": "C",
+    "hints": [
+      "Name the relationship first. The first sentence is about the students who took the morning shift. The second is about students who did the opposite.",
+      "The three who come after school are the exception to the rest, so you need a contrast word. Nothing here is caused by anything, the three are not an example of taking the morning shift, and one sentence is far too early to wrap up."
+    ]
+  },
+  {
+    "id": "m7ela-transitions-and-cohesion-003",
+    "loId": "m7ela.transitions-and-cohesion",
+    "cedCode": "M7ELA-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which transition best fills the blank? \"Yeast is not the only thing that can put bubbles into a batter. ___ baking soda starts giving off gas the moment it touches something sour like buttermilk.\"",
+    "choices": [
+      "For example,",
+      "However,",
+      "As a result,",
+      "Finally,"
+    ],
+    "answer": "A",
+    "hints": [
+      "Say the connection out loud. The first sentence says there is more than one bubble maker. What is the second sentence doing with that?",
+      "Baking soda is one case of the thing the first sentence just named, so the relationship is example. The second sentence does not turn against the first one, and it is not a result of it."
+    ]
+  },
+  {
+    "id": "m7ela-transitions-and-cohesion-004",
+    "loId": "m7ela.transitions-and-cohesion",
+    "cedCode": "M7ELA-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which transition best fills the blank? \"The dough is kneaded until it turns smooth and springy, and then it is left in a covered bowl to rise. ___ it is punched down, shaped into a loaf, and set in the pan for a second rise.\"",
+    "choices": [
+      "However,",
+      "For instance,",
+      "In short,",
+      "Next,"
+    ],
+    "answer": "D",
+    "hints": [
+      "The whole passage is walking through steps. Ask what the second sentence is doing to the first one: turning against it, giving one case of it, summing it up, or coming after it.",
+      "Punching down and shaping are the stage that follows rising, so the relationship is sequence. Nothing turns against anything, and a piece that is still in the middle of the steps is not wrapping up."
+    ]
+  },
+  {
+    "id": "m7ela-transitions-and-cohesion-005",
+    "loId": "m7ela.transitions-and-cohesion",
+    "cedCode": "M7ELA-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A draft reads: \"Our class started a compost bin behind the cafeteria last September. It has worked out.\" Which revision of the SECOND sentence improves cohesion WITHOUT adding a transition word?",
+    "choices": [
+      "As a result, it has worked out well for us.",
+      "This has really worked out, and it is something everybody likes.",
+      "The bin now takes in a full bucket of fruit peels and coffee grounds from the kitchen every single day.",
+      "In addition, the compost bin has worked out."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cohesion comes from repeating the key noun from the sentence before, not from bolting a connector onto a vague sentence.",
+      "Two of these choices add a transition word, which the question rules out. The remaining wrong choice piles up \"This\" and \"it\" with no noun standing behind either one."
+    ]
+  },
+  {
+    "id": "m7ela-transitions-and-cohesion-006",
+    "loId": "m7ela.transitions-and-cohesion",
+    "cedCode": "M7ELA-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A draft reads: \"The garden club waters the raised beds every morning before first period. Therefore, the club pulls the weeds along the fence every Friday. However, the beds along the south wall dry out faster than the others, so those beds get a second watering at lunch.\" One transition in this paragraph names the wrong relationship. Which revision fixes it?",
+    "choices": [
+      "Change \"However\" to \"As a result,\" because the south beds drying out is caused by the morning watering.",
+      "Change \"Therefore\" to \"In addition,\" because pulling the weeds is one more job the club does, not a result of watering the beds.",
+      "Change \"Therefore\" to \"However,\" because watering and weeding happen on different days of the week.",
+      "Put a transition at the front of the first sentence too, so that every sentence in the paragraph is connected to the one beside it."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check each transition separately. Cover the word, say the relationship between the two sentences in plain language, and then see whether the word belongs to that family.",
+      "The south beds really are an exception to the rest, so \"However\" is doing its job. Weeding is not a result of watering, and a difference in the day of the week is not a turn against anything."
+    ]
+  },
+  {
+    "id": "m7ela-narrative-technique-001",
+    "loId": "m7ela.narrative-technique",
+    "cedCode": "M7ELA-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this telling sentence: \"Jonah was angry when he found his bike lying in the driveway with a bent wheel.\" Which revision SHOWS that Jonah is angry instead of telling it?",
+    "choices": [
+      "Jonah was very angry, and he felt really mad, when he found his bike in the driveway.",
+      "Jonah was a furious, upset, irritated, cross boy standing in the driveway beside his bike.",
+      "Jonah stood the bike up, spun the bent wheel once, and walked into the house without saying anything to anyone.",
+      "Jonah laughed, picked the bike up, and told his sister the wheel had been bent for weeks anyway."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cross out every word that names a feeling. Which choice still leaves a picture standing?",
+      "One choice repeats the feeling word, one stacks four adjectives and gives you nothing to see, and one shows a boy who is not bothered at all."
+    ]
+  },
+  {
+    "id": "m7ela-narrative-technique-002",
+    "loId": "m7ela.narrative-technique",
+    "cedCode": "M7ELA-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which line of dialogue is punctuated correctly?",
+    "choices": [
+      "\"I already fed him,\" Rosa said.",
+      "\"I already fed him.\" Rosa said.",
+      "\"I already fed him\", Rosa said.",
+      "\"I already fed him,\" Said Rosa."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at three things: the mark that ends the quoted words, whether that mark sits inside or outside the closing quotation mark, and whether the tag starts with a capital letter.",
+      "Before a tag like \"Rosa said,\" the quoted words end with a comma, that comma goes INSIDE the closing quotation mark, and the tag begins in lowercase. A period there would end the sentence and leave the tag stranded."
+    ]
+  },
+  {
+    "id": "m7ela-narrative-technique-003",
+    "loId": "m7ela.narrative-technique",
+    "cedCode": "M7ELA-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Nadia is writing about the afternoon her science team's rocket finally launched. The launch is the moment that matters. The drive to the field and the setup are not. Which version paces the story best?",
+    "choices": [
+      "The drive took half an hour. I counted four white trucks and finished a whole sleeve of crackers. The cooler in the back seat kept sliding into my leg. Then we set the rocket up and it launched.",
+      "The drive took half an hour and the cooler slid into my leg. The setup took twenty minutes and my fingers went numb. The launch took three seconds and the rocket went up.",
+      "The launch was really exciting and everybody on the team cheered, and it was easily the best part of the whole day.",
+      "The drive and the setup blurred together. Then Ms. Alvarez counted down, the igniter clicked, and the rocket left the pad before my eyes could follow it. It was a white line, and then it was a dot. I was still looking straight up when the parachute opened."
+    ],
+    "answer": "D",
+    "hints": [
+      "Count the sentences each version spends on the launch, and the sentences it spends on the drive.",
+      "One version is slow in the wrong place, one gives every part of the day the same amount of space, and one skips the big moment and then tells you it was exciting."
+    ]
+  },
+  {
+    "id": "m7ela-narrative-technique-004",
+    "loId": "m7ela.narrative-technique",
+    "cedCode": "M7ELA-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Theo forgot the poster his group had spent all week on, and the four of them are standing in the hallway five minutes before their presentation. Which line of Mira's dialogue reveals the most about her?",
+    "choices": [
+      "\"Hey, Theo. Did you end up watching the game last night?\"",
+      "\"It's okay. It's okay. Just let me do the talking, and you hold up the notebook.\"",
+      "\"You forgot the poster that our whole group worked on all week.\"",
+      "\"They said it might snow again on Thursday.\""
+    ],
+    "answer": "B",
+    "hints": [
+      "Story dialogue earns its space by revealing character or moving the story forward. Two of these choices are small talk that anyone could say in any scene.",
+      "One choice only repeats what the reader already watched happen. The remaining choice shows someone insisting she is fine while quietly taking the whole job over."
+    ]
+  },
+  {
+    "id": "m7ela-narrative-technique-005",
+    "loId": "m7ela.narrative-technique",
+    "cedCode": "M7ELA-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: \"The big, scary, huge dog ran at us very fast.\" Which revision gives the reader the best description?",
+    "choices": [
+      "A Rottweiler came off the porch at us, dragging its chain across the concrete behind it.",
+      "The enormous, terrifying, gigantic dog ran at us extremely fast.",
+      "The dog was very frightening, and it moved toward us quite quickly.",
+      "The dog ran at us, and all three of us were really scared."
+    ],
+    "answer": "A",
+    "hints": [
+      "One precise noun or verb usually beats three adjectives. Ask which choice puts an actual picture in your head.",
+      "One choice just swaps in new adjectives that mean the same things, one stays vague, and one names the feeling for you instead of showing what happened."
+    ]
+  },
+  {
+    "id": "m7ela-narrative-technique-006",
+    "loId": "m7ela.narrative-technique",
+    "cedCode": "M7ELA-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student's story about learning a skateboard trick ends with this line: \"I finally landed it and Dad was proud.\" Which revision shows the feeling instead of naming it, gives the dialogue a job to do, AND punctuates that dialogue correctly?",
+    "choices": [
+      "I finally landed it. Dad was very proud of me, and I was really happy about it too.",
+      "I finally landed it. \"You landed it.\" Dad said, and he was proud of me.",
+      "I finally landed it, and Dad told me he was proud of me, which made me feel great.",
+      "I rolled away from the rail with both feet still on the board. \"You landed it,\" Dad said, and then he did not say another word the whole way to the car."
+    ],
+    "answer": "D",
+    "hints": [
+      "This item has three tests. Cross out the feeling words first, then check whether the dialogue reveals anything, then check the mark before the tag.",
+      "Two choices simply name the feeling again. The one that does use dialogue puts a period before \"Dad said,\" which ends the sentence and leaves the tag with nothing to attach to."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m7geo-population-distribution-and-density-001",
+    "loId": "m7geo.population-distribution-and-density",
+    "cedCode": "M7GEO-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Population density measures which of the following?",
+    "choices": [
+      "The pattern of which parts of a place have people and which parts do not",
+      "The total number of people who live in a country",
+      "How fast the population of a country is changing",
+      "The number of people for each unit of area, such as people per square mile"
+    ],
+    "answer": "D",
+    "hints": [
+      "Density is a number you calculate by dividing. Distribution is a pattern you describe in words.",
+      "The calculation is population divided by land area, which gives people per square mile or people per square kilometer."
+    ]
+  },
+  {
+    "id": "m7geo-population-distribution-and-density-002",
+    "loId": "m7geo.population-distribution-and-density",
+    "cedCode": "M7GEO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these questions is about population DISTRIBUTION rather than about population density?",
+    "choices": [
+      "Which parts of the country have almost nobody living in them?",
+      "How many people live in each square mile of the country?",
+      "How many people live in each square kilometer of the capital region?",
+      "How many people are there for every square mile of farmland?"
+    ],
+    "answer": "A",
+    "hints": [
+      "Distribution asks WHERE people are. Density asks HOW MANY people there are for each unit of area.",
+      "Three of these choices ask for a number per unit of area. Only one asks about the pattern of where people are."
+    ]
+  },
+  {
+    "id": "m7geo-population-distribution-and-density-003",
+    "loId": "m7geo.population-distribution-and-density",
+    "cedCode": "M7GEO-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Kestria is an invented country with a population of 4,000,000 people and a land area of 50,000 square miles. What is Kestria's population density?",
+    "choices": [
+      "800 people per square mile",
+      "80 people per square mile",
+      "50,000 people per square mile",
+      "4,000,000 people per square mile"
+    ],
+    "answer": "B",
+    "hints": [
+      "Density equals population divided by land area, so divide 4,000,000 by 50,000.",
+      "Cancel four zeros from each number first, which leaves 400 divided by 5."
+    ]
+  },
+  {
+    "id": "m7geo-population-distribution-and-density-004",
+    "loId": "m7geo.population-distribution-and-density",
+    "cedCode": "M7GEO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Ostvale, an invented country, has an average population density of 15 people per square mile. Nine out of every ten Ostvalers live in three towns strung along the country's only large river, and the rest of the land is a high, dry plateau. Which statement about Ostvale is best supported?",
+    "choices": [
+      "Almost every square mile of Ostvale holds about 15 people.",
+      "Ostvale must have a small land area, because its density is low.",
+      "The plateau holds far fewer than 15 people per square mile, and the three towns hold far more.",
+      "The people of Ostvale are spread evenly across the country."
+    ],
+    "answer": "C",
+    "hints": [
+      "A density number is an average. Ask what an average is allowed to tell you, and what it quietly hides.",
+      "The case says nine out of every ten people are in three towns. If those towns sit above the average, what must the plateau be?"
+    ]
+  },
+  {
+    "id": "m7geo-population-distribution-and-density-005",
+    "loId": "m7geo.population-distribution-and-density",
+    "cedCode": "M7GEO-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The valley and delta of the Nile in Egypt have carried dense settlement for thousands of years, while the desert on either side of them has not. Which of the five settlement conditions best explains that difference?",
+    "choices": [
+      "A cold climate",
+      "High elevation",
+      "Distance from any trade route",
+      "A steady supply of fresh water"
+    ],
+    "answer": "D",
+    "hints": [
+      "The five conditions are fresh water, arable land, a moderate climate, flat land, and access to the coast or a trade route. Which one does a large river bring to land where almost no rain falls?",
+      "The desert and the valley share the same hot, dry climate. What the valley has that the desert does not is the river itself."
+    ]
+  },
+  {
+    "id": "m7geo-population-distribution-and-density-006",
+    "loId": "m7geo.population-distribution-and-density",
+    "cedCode": "M7GEO-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Norvane and Tavora are invented countries with exactly the same population density: 40 people per square mile. In Norvane, farms and small towns are spread fairly evenly over the whole country. In Tavora, almost everyone lives in two coastal cities, and the interior is desert. What does this pair of countries show about density numbers?",
+    "choices": [
+      "Two countries can share the same density and still have completely different distributions, because density is an average.",
+      "One of the two densities must have been calculated incorrectly.",
+      "Tavora must have more people living in it than Norvane does.",
+      "Norvane must have a much larger land area than Tavora does."
+    ],
+    "answer": "A",
+    "hints": [
+      "Both numbers were calculated the same way: population divided by land area. Ask what that calculation does to the difference between the two countries.",
+      "Density answers how many people there are for each square mile on average. It never answers where those people are. That second question is distribution."
+    ]
+  },
+  {
+    "id": "m7geo-population-growth-and-structure-001",
+    "loId": "m7geo.population-growth-and-structure",
+    "cedCode": "M7GEO-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "How do geographers find the natural increase of a population?",
+    "choices": [
+      "By adding the birth rate and the death rate together",
+      "By subtracting the number of people who move away from the number who move in",
+      "By subtracting the death rate from the birth rate",
+      "By dividing the population by the land area"
+    ],
+    "answer": "C",
+    "hints": [
+      "Natural increase is a single subtraction, and both rates are counted out of the same 1,000 people.",
+      "One of the other choices describes migration and another describes population density. Neither of those is natural increase."
+    ]
+  },
+  {
+    "id": "m7geo-population-growth-and-structure-002",
+    "loId": "m7geo.population-growth-and-structure",
+    "cedCode": "M7GEO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In Merrow, an invented country, there were about 24 births last year for every 1,000 people and about 8 deaths for every 1,000 people. What was Merrow's natural increase, and what does it mean?",
+    "choices": [
+      "32 per 1,000, because the two rates are added together",
+      "16 per 1,000, so births outnumbered deaths and the population grew from births and deaths alone",
+      "16 per 1,000, so deaths outnumbered births and the population shrank from births and deaths alone",
+      "3 per 1,000, because 24 divided by 8 equals 3"
+    ],
+    "answer": "B",
+    "hints": [
+      "Do the subtraction first: the birth rate minus the death rate.",
+      "Two choices give the same number and then disagree about what it means. Which of the two rates was the larger one to start with?"
+    ]
+  },
+  {
+    "id": "m7geo-population-growth-and-structure-003",
+    "loId": "m7geo.population-growth-and-structure",
+    "cedCode": "M7GEO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The population growth rate of Ostvale, an invented country, has fallen from about 2 percent a year to about 1 percent a year. The rate is still above zero. What is happening to Ostvale's population?",
+    "choices": [
+      "It is shrinking, because the growth rate went down.",
+      "More people now die in Ostvale each year than are born there.",
+      "It stopped changing on the day the growth rate began to fall.",
+      "It is still growing, but it adds fewer people each year than it used to."
+    ],
+    "answer": "D",
+    "hints": [
+      "A growth rate is a speed, not a size. A car that slows down is still moving forward.",
+      "The rate is still above zero. What would have to happen to the rate before a population actually shrank?"
+    ]
+  },
+  {
+    "id": "m7geo-population-growth-and-structure-004",
+    "loId": "m7geo.population-growth-and-structure",
+    "cedCode": "M7GEO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the invented country of Tavora, out of every 100 people about 34 are under 15, about 61 are 15 to 64, and about 5 are 65 or older. Which statement describes Tavora's age structure and what it points to?",
+    "choices": [
+      "A wide base, which points to school places now and jobs for young adults later",
+      "A top-heavy structure, which points to pensions and care for older adults",
+      "An even structure, in which the three age bands are close to balanced",
+      "A wide base, which points to pensions and care for older adults"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compare the bottom band with the top band: about 34 out of every 100 people are under 15, and about 5 are 65 or older.",
+      "Once you have named the shape, walk those children forward ten or fifteen years and ask what they will need first and what they will need next."
+    ]
+  },
+  {
+    "id": "m7geo-population-growth-and-structure-005",
+    "loId": "m7geo.population-growth-and-structure",
+    "cedCode": "M7GEO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Verendal, an invented country, recorded more deaths than births last year, and yet its total population was larger at the end of the year than at the start. How can both of those be true at once?",
+    "choices": [
+      "Its natural increase must actually have been positive.",
+      "The birth rate must have been counted out of 100 people instead of out of 1,000.",
+      "Enough people moved into Verendal to more than make up the difference.",
+      "A total population cannot change from one year to the next, so one of the reports is wrong."
+    ],
+    "answer": "C",
+    "hints": [
+      "Natural increase is only one of the two inputs to population change. What is the other one?",
+      "Total population change equals natural increase plus whatever migration adds or takes away."
+    ]
+  },
+  {
+    "id": "m7geo-population-growth-and-structure-006",
+    "loId": "m7geo.population-growth-and-structure",
+    "cedCode": "M7GEO-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Selvia and Verendal are invented countries with populations of about the same size. In Selvia, about 36 of every 100 people are under 15 and about 4 are 65 or older. In Verendal, about 15 of every 100 are under 15 and about 21 are 65 or older. Which country is likely to need more new classrooms over the next ten years, and why?",
+    "choices": [
+      "Verendal, because a larger share of its people are aged 15 to 64",
+      "Selvia, because a much larger share of its people are children who are in school now or will be soon",
+      "Neither, because an age structure cannot be used to say what a place will need",
+      "Verendal, because a top-heavy age structure means more people in every age band"
+    ],
+    "answer": "B",
+    "hints": [
+      "Classrooms are for children. Which country has the larger share of people under 15?",
+      "The two countries hold about the same number of people, so read the shares. The whole difference between them is who those people are."
+    ]
+  },
+  {
+    "id": "m7geo-migration-push-and-pull-001",
+    "loId": "m7geo.migration-push-and-pull",
+    "cedCode": "M7GEO-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is a push factor?",
+    "choices": [
+      "A reason that makes someone want to leave the place where they live",
+      "A reason that attracts someone to a new place",
+      "The distance between an old home and a new one",
+      "A move that crosses a national border"
+    ],
+    "answer": "A",
+    "hints": [
+      "Push and pull are told apart by one test question: which place is the reason about?",
+      "A push factor is about the place a person is LEAVING. A pull factor is about the place they are GOING."
+    ]
+  },
+  {
+    "id": "m7geo-migration-push-and-pull-002",
+    "loId": "m7geo.migration-push-and-pull",
+    "cedCode": "M7GEO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this case, then decide which reason is a PULL factor. A family left a farming valley after three dry years left them with no crop to sell. They moved to a town where a cousin already had a spare room and a new bakery was hiring.",
+    "choices": [
+      "The three dry years in the valley",
+      "Having no crop left to sell",
+      "The distance between the valley and the town",
+      "The cousin with a spare room in the town"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask the one test question about each choice: is this reason about the place they left, or about the place they went to?",
+      "Two of these describe conditions back in the valley, and one describes how far the move was. Only one describes something waiting for them in the town."
+    ]
+  },
+  {
+    "id": "m7geo-migration-push-and-pull-003",
+    "loId": "m7geo.migration-push-and-pull",
+    "cedCode": "M7GEO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A family moves about twenty miles, and the move takes them across a national border into a neighboring country. How is this migration best described?",
+    "choices": [
+      "Internal, because twenty miles is a short distance",
+      "International, because the move crossed a national border",
+      "Forced, because the family had to cross a border",
+      "Not migration at all, because the distance is so small"
+    ],
+    "answer": "B",
+    "hints": [
+      "Only one thing decides internal versus international, and it is not distance.",
+      "A move of a thousand miles inside one country is internal. A move of twenty miles that crosses a border is international."
+    ]
+  },
+  {
+    "id": "m7geo-migration-push-and-pull-004",
+    "loId": "m7geo.migration-push-and-pull",
+    "cedCode": "M7GEO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student says, 'Housing is a pull factor, so it can never be a push factor.' Which case shows that the student is wrong?",
+    "choices": [
+      "A family moved because a factory closed in their town and a hospital was hiring in the city.",
+      "A family moved for the climate rather than for anything to do with housing.",
+      "A family left a town where rents had risen beyond what they could pay and moved to a city where cheaper apartments were available.",
+      "A family moved across a national border instead of moving inside their own country."
+    ],
+    "answer": "C",
+    "hints": [
+      "To show the student is wrong, you need one topic that appears as a push in the old place and as a pull in the new place. The topic has to be housing.",
+      "One choice does exactly that with work instead of housing. It shows the general idea, but it does not answer the question that was actually asked."
+    ]
+  },
+  {
+    "id": "m7geo-migration-push-and-pull-005",
+    "loId": "m7geo.migration-push-and-pull",
+    "cedCode": "M7GEO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The transatlantic slave trade, in which millions of enslaved African people were taken by force to the Americas, was the largest forced migration in history. Which feature of it makes it forced migration rather than voluntary migration?",
+    "choices": [
+      "The people who were moved had no choice at all; they were taken against their will.",
+      "It crossed an ocean, and any move that long counts as forced.",
+      "It happened long ago, and migrations from the past are counted as forced.",
+      "The people who were moved traveled in large groups rather than as single families."
+    ],
+    "answer": "A",
+    "hints": [
+      "Voluntary and forced are told apart by one question: did the people have a real choice about leaving?",
+      "Distance, dates and the size of a group do not decide this label. Only the absence of any choice does."
+    ]
+  },
+  {
+    "id": "m7geo-migration-push-and-pull-006",
+    "loId": "m7geo.migration-push-and-pull",
+    "cedCode": "M7GEO-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In an invented country, a family leaves a highland village after a landslide destroys the only road that carried their crops to market. Their house is undamaged, but the crops can no longer be sold. They settle in a city on the coast of the same country, where relatives already live and a port is hiring. Which description of this migration is the most complete?",
+    "choices": [
+      "Forced and internal, because a landslide is a natural disaster",
+      "International and forced, because the landslide left the family no choice",
+      "Voluntary, and explained entirely by the port jobs",
+      "Internal and voluntary, with a push from the destroyed road and pulls from the relatives and the port work"
+    ],
+    "answer": "D",
+    "hints": [
+      "Answer three separate questions: internal or international, voluntary or forced, and what were the pushes and the pulls?",
+      "The family's home still stands and they chose where to go, so the move was a choice, even a hard one. And an explanation built on a single reason is an unfinished explanation."
+    ]
+  },
+  {
+    "id": "m7geo-urbanization-and-settlement-001",
+    "loId": "m7geo.urbanization-and-settlement",
+    "cedCode": "M7GEO-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What do geographers mean by urbanization?",
+    "choices": [
+      "A city is covering more land than it used to cover.",
+      "The share of a country's people who live in cities and towns is rising.",
+      "The total number of people in a country is rising.",
+      "The buildings in a city are getting taller."
+    ],
+    "answer": "B",
+    "hints": [
+      "Urbanization is about people, and it is a comparison between two numbers.",
+      "Ask which choice compares the number of urban people with the number of people in the country altogether."
+    ]
+  },
+  {
+    "id": "m7geo-urbanization-and-settlement-002",
+    "loId": "m7geo.urbanization-and-settlement",
+    "cedCode": "M7GEO-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In an invented district, about fifty homes stand close together around a square. The only well for miles is in the middle of that square, and two roads cross there. Which settlement pattern is this?",
+    "choices": [
+      "Linear",
+      "Dispersed",
+      "Clustered",
+      "Urbanized"
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask what shape the homes make on the ground: a line, a group around one center, or a scatter?",
+      "One of the choices is not a settlement pattern at all. It is the word for a rising share of people living in cities and towns."
+    ]
+  },
+  {
+    "id": "m7geo-urbanization-and-settlement-003",
+    "loId": "m7geo.urbanization-and-settlement",
+    "cedCode": "M7GEO-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Farmhouses in an invented district stand about a mile apart, and each one sits in the middle of the fields that household works. Which pattern is this, and what causes it?",
+    "choices": [
+      "Dispersed, because each household lives in the middle of the land it farms",
+      "Clustered, because all of the farms grow the same crop",
+      "Linear, because the farms are all in one district",
+      "Dispersed, because the people there never planned their settlement"
+    ],
+    "answer": "A",
+    "hints": [
+      "Name the shape first, then look for the cause in the work being done.",
+      "Dispersed is not a settlement that failed to organize itself. It is the arrangement that fits farming, where each household needs a lot of land around it."
+    ]
+  },
+  {
+    "id": "m7geo-urbanization-and-settlement-004",
+    "loId": "m7geo.urbanization-and-settlement",
+    "cedCode": "M7GEO-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Over ten years, the largest city of an invented country built new neighborhoods outward onto what used to be farmland, so the city now covers much more ground. Over those same ten years, the share of the country's people who live in cities and towns stayed exactly the same. Is the country urbanizing?",
+    "choices": [
+      "Yes, because the city covers much more land than it did before",
+      "Yes, because new neighborhoods always mean new residents",
+      "No, because a country stops urbanizing once its cities reach the farmland",
+      "No, because urbanization is a rising share of people living in urban places, and that share did not change"
+    ],
+    "answer": "D",
+    "hints": [
+      "Write down the test before you read the case again: is the SHARE of people living in urban places going up?",
+      "A city spreading outward is a real change, but it is a change measured in land. Urbanization is measured in people."
+    ]
+  },
+  {
+    "id": "m7geo-urbanization-and-settlement-005",
+    "loId": "m7geo.urbanization-and-settlement",
+    "cedCode": "M7GEO-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented towns grew where they did for different reasons. Drumlin sits where a mountain pass opens onto a plain, and goods carried over the pass by pack animals are unloaded there and reloaded onto wagons. Havenreach sits on a hilltop with steep sides and one narrow road leading up. Which pair of reasons best explains the two sites?",
+    "choices": [
+      "Drumlin is a defensible site; Havenreach is a break-of-bulk point.",
+      "Drumlin is a break-of-bulk point; Havenreach is a defensible site.",
+      "Both are break-of-bulk points, because roads meet at both of them.",
+      "Both grew because of a resource worth digging up nearby."
+    ],
+    "answer": "B",
+    "hints": [
+      "A break-of-bulk point is a place where goods have to change from one kind of transport to another. Which of the two descriptions says that is happening?",
+      "The other town is described by its shape and its approach, not by its cargo. A steep hill with one narrow road up is hard for attackers to reach."
+    ]
+  },
+  {
+    "id": "m7geo-urbanization-and-settlement-006",
+    "loId": "m7geo.urbanization-and-settlement",
+    "cedCode": "M7GEO-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In an invented country over ten years, the number of people living in cities fell slightly. Over those same ten years, the number of people living in the countryside fell by a much larger amount, as families moved abroad. Which statement about urbanization in that country is correct?",
+    "choices": [
+      "The country did not urbanize, because the number of people living in its cities fell.",
+      "The country urbanized, because its total population fell.",
+      "The country urbanized, because the share of its people living in cities rose, even though the number of city dwellers fell.",
+      "There is no way to tell, because urbanization is measured by how much land the cities cover."
+    ],
+    "answer": "C",
+    "hints": [
+      "Urbanization is a fraction: urban people over total people. A fraction can rise when the bottom shrinks faster than the top does.",
+      "The cities lost a little and the countryside lost a lot. Work out what that does to urban divided by total."
+    ]
+  }
+]

@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-interactions-between-species-001",
+    "loId": "m7sci.interactions-between-species",
+    "cedCode": "M7SCI-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two bird species in one meadow both feed on the same kind of seed, and in most years there are not enough of those seeds for both species to eat all they need. What is this interaction called?",
+    "choices": [
+      "Predation",
+      "Competition",
+      "Mutualism",
+      "Parasitism"
+    ],
+    "answer": "B",
+    "hints": [
+      "Run the test on each species: when the seed supply is short, each species gets less than it needs.",
+      "This interaction does not require fighting, and it does not even require the two species to meet. It only requires one supply that is not big enough for everyone."
+    ]
+  },
+  {
+    "id": "m7sci-interactions-between-species-002",
+    "loId": "m7sci.interactions-between-species",
+    "cedCode": "M7SCI-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A spider spins its web between two branches of a shrub and catches flying insects there. The web does not feed the shrub and does not damage it. As far as anyone can tell, the shrub is neither helped nor harmed. Which interaction is this?",
+    "choices": [
+      "Mutualism, because the spider and the shrub each gain something",
+      "Parasitism, because the spider is living on the shrub",
+      "Commensalism, because the spider benefits and the shrub is unaffected",
+      "Predation, because the spider catches and eats insects"
+    ],
+    "answer": "C",
+    "hints": [
+      "The pair you are labeling is the spider and the shrub. Ask about each of those two, one at a time: benefit, harmed, or unaffected.",
+      "The spider clearly benefits, so the label rests entirely on the shrub. The problem tells you the shrub is neither fed nor damaged."
+    ]
+  },
+  {
+    "id": "m7sci-interactions-between-species-003",
+    "loId": "m7sci.interactions-between-species",
+    "cedCode": "M7SCI-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Certain ants live inside the hollow thorns of an acacia tree. The thorns give the ants shelter, and the tree produces a sugary liquid that the ants feed on. The ants bite and drive off animals that come to eat the tree's leaves, so the tree loses fewer leaves. Which interaction is this?",
+    "choices": [
+      "Mutualism, because the ants get shelter and food and the tree loses fewer leaves",
+      "Commensalism, because the ants benefit and the tree is unaffected",
+      "Parasitism, because the ants take food and shelter from the tree",
+      "Predation, because the ants attack other animals"
+    ],
+    "answer": "A",
+    "hints": [
+      "The ants obviously benefit, so spend your thinking on the tree. Does the tree end up better off, worse off, or the same?",
+      "Read the last part of the sentence about the leaves. That is the tree's side of the arrangement."
+    ]
+  },
+  {
+    "id": "m7sci-interactions-between-species-004",
+    "loId": "m7sci.interactions-between-species",
+    "cedCode": "M7SCI-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Most parasites do not kill the host they feed on. Which explanation of that pattern is correct?",
+    "choices": [
+      "A parasite holds back on purpose so that its host will survive.",
+      "A parasite is too small to do a host any real harm.",
+      "A parasite feeds only on parts of the host that are already dead.",
+      "A parasite feeds on one living host over a long stretch of time, and a host that dies quickly ends the feeding."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare two timelines. A predator's meal is finished in minutes, but a parasite feeds on the same host for days, weeks or years.",
+      "Ask what happens to the parasite's food supply if the host dies. The reason is built into the arrangement, not a choice the parasite makes."
+    ]
+  },
+  {
+    "id": "m7sci-interactions-between-species-005",
+    "loId": "m7sci.interactions-between-species",
+    "cedCode": "M7SCI-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two chipmunks of the same species gather acorns from the same small patch of oak trees. In a year when the oaks make few acorns, both chipmunks store less food and raise fewer young. The two chipmunks never fight each other. Which statement is correct?",
+    "choices": [
+      "This is not competition, because members of the same species cannot compete with each other.",
+      "This is competition, because both chipmunks need the same limited resource, and competition happens within one species as well as between two species.",
+      "This is not competition, because the two chipmunks never fight over the acorns.",
+      "This is parasitism, because each chipmunk is taking food that the other one needs."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask the only question competition depends on: is there one supply that is not big enough for everyone who needs it?",
+      "Parasitism means one organism lives on or in another and feeds there. Check whether that is happening, and check whether fighting is required for competition."
+    ]
+  },
+  {
+    "id": "m7sci-interactions-between-species-006",
+    "loId": "m7sci.interactions-between-species",
+    "cedCode": "M7SCI-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two things are happening to one pine tree. (1) A fungus grows on the tree's roots. The fungus takes sugar from the tree, and with the fungus there the tree takes in more water and minerals from the soil than it could on its own. (2) A beetle bores into the trunk and feeds on the tree's living wood for months while the tree goes on growing. Which pair of labels is correct?",
+    "choices": [
+      "Fungus and tree = parasitism, because the fungus takes sugar; beetle and tree = predation, because the beetle eats part of the tree",
+      "Fungus and tree = commensalism, because only the fungus gains; beetle and tree = parasitism",
+      "Fungus and tree = mutualism, because each one gains something; beetle and tree = parasitism, because the beetle gains and the tree is harmed but stays alive",
+      "Fungus and tree = mutualism; beetle and tree = predation, because the beetle kills the wood it feeds on"
+    ],
+    "answer": "C",
+    "hints": [
+      "Run the test four times, once for each organism in each pair. Taking something is not the same as harming, if the giver gets something back.",
+      "Predation ends the life of the organism that is eaten within one event. Ask whether the pine tree is still alive months into the beetle's feeding."
+    ]
+  },
+
+  {
+    "id": "m7sci-population-changes-and-limits-001",
+    "loId": "m7sci.population-changes-and-limits",
+    "cedCode": "M7SCI-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does the carrying capacity of an environment mean?",
+    "choices": [
+      "The population size that environment can support over time, given the resources it has right now",
+      "The largest number of animals ever counted in that environment",
+      "A number set for each place that never changes",
+      "The number of young born in that environment each year"
+    ],
+    "answer": "A",
+    "hints": [
+      "Carrying capacity is a property of the place, not of the animal, and it depends on the resources the place has.",
+      "Rule out the choice that treats it as a record high, and rule out the choice that says it can never change."
+    ]
+  },
+  {
+    "id": "m7sci-population-changes-and-limits-002",
+    "loId": "m7sci.population-changes-and-limits",
+    "cedCode": "M7SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is an abiotic limiting factor for a population of frogs in a pond?",
+    "choices": [
+      "A disease that spreads among the frogs",
+      "Herons that hunt the frogs",
+      "The supply of insects the frogs eat",
+      "The water temperature during a hard freeze"
+    ],
+    "answer": "D",
+    "hints": [
+      "Abiotic means nonliving. Sort each choice into living or nonliving first.",
+      "Disease, predators and food all involve living things. Only one choice on this list does not."
+    ]
+  },
+  {
+    "id": "m7sci-population-changes-and-limits-003",
+    "loId": "m7sci.population-changes-and-limits",
+    "cedCode": "M7SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Students counted the crickets in a field once a year. Year 1: about 10 crickets. Year 2: about 24. Year 3: about 40. Year 4: about 44. Year 5: about 41. Year 6: about 43. Which statement best describes this population?",
+    "choices": [
+      "The population is crashing, because the count fell from about 44 in year 4 to about 41 in year 5.",
+      "The carrying capacity of the field is about 10 crickets, because that is the size the count started at.",
+      "The population has leveled off near a carrying capacity of about 40 crickets, and it wobbles a little around that size.",
+      "The population has stopped changing, because the crickets stopped reproducing once the count reached 40."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at the changes between years, not just the counts. The early jumps are about 14 and about 16. How big are the last three changes?",
+      "Carrying capacity is the level the count settles around and holds, not the level it began at, and a change of a few crickets is a wobble rather than a crash."
+    ]
+  },
+  {
+    "id": "m7sci-population-changes-and-limits-004",
+    "loId": "m7sci.population-changes-and-limits",
+    "cedCode": "M7SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pond behind a school held about 50 sunfish one year and about 110 the next. Then a hot, dry summer shrank the pond to a small fraction of its usual size, and the year after that the count was about 15 sunfish. What is the best interpretation of the drop?",
+    "choices": [
+      "The sunfish are going extinct, because a sharp drop in a count always means a species is disappearing for good.",
+      "Far more sunfish died than were born, because the pond lost much of the water and space they depend on. About 15 survived, so the population can grow again if the pond refills.",
+      "A new predator must have moved into the pond, because only predators can push a population down.",
+      "Nothing in the environment limited the fish. Population counts simply rise and fall at random from year to year."
+    ],
+    "answer": "B",
+    "hints": [
+      "A population falls when deaths and departures outrun births and arrivals. The problem names the resource that ran short just before the drop.",
+      "Check the last count before deciding the fish are gone. Are there survivors left in the pond?"
+    ]
+  },
+  {
+    "id": "m7sci-population-changes-and-limits-005",
+    "loId": "m7sci.population-changes-and-limits",
+    "cedCode": "M7SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A meadow supported about 30 rabbits year after year. Then three unusually wet years grew much more grass in the meadow, and the rabbit count settled near 45 and has stayed near 45 since. Which explanation is best?",
+    "choices": [
+      "The carrying capacity of the meadow rose, because more grass means the meadow can support more rabbits than it could before.",
+      "Carrying capacity is a fixed number for a place, so the real carrying capacity of this meadow is still about 30 rabbits.",
+      "Each rabbit changed during its lifetime so that it needed less food than rabbits used to need.",
+      "Carrying capacity no longer applies here, because a population that grows past its old level has escaped its limiting factors."
+    ],
+    "answer": "A",
+    "hints": [
+      "Carrying capacity depends on the resources a place has right now. What happened to the food supply in this meadow?",
+      "An individual rabbit does not change to fit its surroundings during its life, so rule that choice out and ask what changed about the place."
+    ]
+  },
+  {
+    "id": "m7sci-population-changes-and-limits-006",
+    "loId": "m7sci.population-changes-and-limits",
+    "cedCode": "M7SCI-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A field holds far more grass than the ground squirrels living there can eat, but only a few rock piles where the squirrels can shelter. The squirrel count rose to about 25 and then wobbled between about 22 and about 27 for several years. People then built several more rock piles in the field, and over the next few years the count climbed to about 40 and began wobbling near that size. What does this show?",
+    "choices": [
+      "Food was the limiting factor, because food is the resource every population needs most.",
+      "The wobble between about 22 and about 27 shows the population was crashing every year.",
+      "The squirrels stopped being born once the count reached about 25 and started again when the rock piles were added.",
+      "Shelter was the limiting factor that set the carrying capacity here, and adding shelter raised the carrying capacity."
+    ],
+    "answer": "D",
+    "hints": [
+      "Carrying capacity is set by whichever resource runs short first. Which resource was plentiful in this field, and which one was scarce?",
+      "Test your answer against the second half of the story: the count changed after one specific thing was added, and it was not food."
+    ]
+  },
+
+  {
+    "id": "m7sci-ecosystem-disruption-001",
+    "loId": "m7sci.ecosystem-disruption",
+    "cedCode": "M7SCI-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A food chain is written with arrows like this: grass to grasshopper, grasshopper to lizard, lizard to hawk. What does each arrow show?",
+    "choices": [
+      "The direction energy flows, from the organism that is eaten to the organism that eats it",
+      "The direction energy flows, from the organism that eats to the organism that is eaten",
+      "Which organism in each pair is larger",
+      "The order in which the species arrived in the ecosystem"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what the lizard gets from the grasshopper it eats, and which way that goes.",
+      "Two choices say the same thing in opposite directions. Decide whether energy moves into the eater or out of it."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-disruption-002",
+    "loId": "m7sci.ecosystem-disruption",
+    "cedCode": "M7SCI-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A grass fire started by lightning sweeps across a prairie every few years. The fire clears away dead plant material, returns nutrients to the soil, and kills back young trees that would otherwise grow up and shade out the grasses. Which statement is best supported?",
+    "choices": [
+      "This is not a disruption at all, because ecosystems are only disrupted when people interfere.",
+      "The fire destroys the prairie permanently, because the plants that burned are gone.",
+      "Fire is a natural disruption, and this prairie is one of the ecosystems shaped by a disruption that returns regularly.",
+      "After the fire the prairie will rebuild into exactly the community it had before, species for species."
+    ],
+    "answer": "C",
+    "hints": [
+      "Lightning is not a person, so ask whether a disruption has to be caused by people.",
+      "Read what the fire does to the soil and to the young trees, then ask whether every disruption is damage."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-disruption-003",
+    "loId": "m7sci.ecosystem-disruption",
+    "cedCode": "M7SCI-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fire burns through a forest. Two years later the burned ground is covered with grasses and wildflowers. Ten years later, shrubs and young trees stand above those grasses. Which statement best describes what is happening?",
+    "choices": [
+      "Nothing about the forest really changed, because plants are growing there again.",
+      "The community is rebuilding in stages, which is called succession, and what it rebuilds into may differ from the forest that burned.",
+      "The ecosystem was destroyed for good, because the original trees are gone.",
+      "The forest is certain to end up with exactly the same species in exactly the same numbers as before."
+    ],
+    "answer": "B",
+    "hints": [
+      "Grasses and wildflowers first, then shrubs and young trees, is a sequence. What is the name for rebuilding in stages?",
+      "Two choices here are opposite extremes, and one promises an exact return. Ask whether a rebuilt community has to match the old one."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-disruption-004",
+    "loId": "m7sci.ecosystem-disruption",
+    "cedCode": "M7SCI-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A beetle native to another continent arrives in a new region in a shipment of wood. Within a few years it is common across that region, while in its native region it has always been scarce. Which explanation is best supported?",
+    "choices": [
+      "The beetle is a harmful kind of beetle, so it damages every place it reaches.",
+      "The beetle spreads because it wants more space than it had in its native region.",
+      "The beetle must have changed into a faster-growing species during the journey.",
+      "In its native region, predators, diseases and competitors held its numbers down, and in the new region those limits are missing."
+    ],
+    "answer": "D",
+    "hints": [
+      "It is the same beetle in both places. If the beetle did not change, then something about the two places must be different.",
+      "Think about what normally keeps a population from growing without limit: things that eat it, diseases that spread through it, and other species that need the same resources."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-disruption-005",
+    "loId": "m7sci.ecosystem-disruption",
+    "cedCode": "M7SCI-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A meadow food web runs like this, with each arrow pointing from the organism eaten to the organism that eats it: grass to rabbit, grass to mouse, rabbit to fox. A disease removes most of the rabbits, and nothing else changes at first. Which prediction is best supported?",
+    "choices": [
+      "The fox population falls and the mouse population falls too, because losing any species makes every population in a web fall.",
+      "The fox population rises, because there is now less competition for the grass.",
+      "The fox population falls because it has lost much of its food, and the mouse population can rise because more grass is left for the mice.",
+      "The mice are unaffected, because no animal in this web eats a mouse."
+    ],
+    "answer": "C",
+    "hints": [
+      "Step one: the foxes fed on the rabbits. What happens to the foxes when most rabbits are gone?",
+      "Step two: the mice never met a rabbit, but both feed on the same grass. What happens to the grass supply for the mice when far fewer rabbits are eating it?"
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-disruption-006",
+    "loId": "m7sci.ecosystem-disruption",
+    "cedCode": "M7SCI-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A desert food chain runs like this, with each arrow pointing from the organism eaten to the organism that eats it: grass to grasshopper, grasshopper to lizard, lizard to hawk. A disease removes most of the hawks. Counts taken the same way each year show the lizard count roughly doubling over the next two years. Which statement is the strongest argument about what happens next?",
+    "choices": [
+      "With fewer hawks hunting them, the lizards rose, so grasshopper counts should fall as more lizards feed on them, and yearly grasshopper counts would test that prediction.",
+      "The lizard population will keep rising year after year with no limit, because the hawks that held it down are gone.",
+      "Losing the hawks must be bad for every population in the desert.",
+      "The disease that struck the hawks will spread to the lizards next, which is what the changing counts show."
+    ],
+    "answer": "A",
+    "hints": [
+      "Follow the chain one link at a time, and build on the counts you were given instead of guessing at a new cause.",
+      "A strong argument states what should happen next AND names the measurement that would test it. Also ask whether the lizards can rise without running short of grasshoppers."
+    ]
+  },
+
+  {
+    "id": "m7sci-biodiversity-and-human-impact-001",
+    "loId": "m7sci.biodiversity-and-human-impact",
+    "cedCode": "M7SCI-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does biodiversity mean?",
+    "choices": [
+      "The number of animals living in an area",
+      "The total number of individual organisms in an area, whatever kinds they are",
+      "The number of large animals in an area that people can see easily",
+      "The variety of different living things in an area, including plants, fungi and microorganisms, plus the variety within a single species"
+    ],
+    "answer": "D",
+    "hints": [
+      "Biodiversity is about variety, not about a head count. A field holding ten thousand plants that are all the same grass has very low biodiversity.",
+      "Ask what each choice leaves out. Most of the living things in a patch of soil are not animals, and hardly any of them are easy to see."
+    ]
+  },
+  {
+    "id": "m7sci-biodiversity-and-human-impact-002",
+    "loId": "m7sci.biodiversity-and-human-impact",
+    "cedCode": "M7SCI-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of these is an example of an ecosystem service?",
+    "choices": [
+      "Insects pollinating the crops that people eat",
+      "A machine at a treatment plant filtering water for a town",
+      "A farmer planting seeds in a field",
+      "A store selling fruit that was grown in another state"
+    ],
+    "answer": "A",
+    "hints": [
+      "An ecosystem service is useful work that the ecosystem itself does, work nobody is paid for.",
+      "Three of these choices describe work done by people or by machines people built."
+    ]
+  },
+  {
+    "id": "m7sci-biodiversity-and-human-impact-003",
+    "loId": "m7sci.biodiversity-and-human-impact",
+    "cedCode": "M7SCI-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A wide new road is built straight through a forest. Almost no trees are removed except along the road itself. Why can the animal populations in that forest still be harmed?",
+    "choices": [
+      "They are not harmed, because almost all of the forest is still standing.",
+      "The forest is now two smaller pieces, so each piece supports a smaller population, animals struck by vehicles are removed, and many animals will not cross at all, so the two populations stop mixing.",
+      "Most of the forest habitat was destroyed, so there is far less space than there was before.",
+      "Noise from the road is the only thing that affects the animals."
+    ],
+    "answer": "B",
+    "hints": [
+      "Almost all the trees are still there, so ask what else changed. One forest became two pieces with a gap between them.",
+      "Animals move to find food, to find mates, and to leave an area when conditions turn bad. What happens when a gap blocks that movement?"
+    ]
+  },
+  {
+    "id": "m7sci-biodiversity-and-human-impact-004",
+    "loId": "m7sci.biodiversity-and-human-impact",
+    "cedCode": "M7SCI-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After a forest is cut into small separated pieces, one animal species still survives in each piece, but each group is small and the groups no longer mix. Scientists say biodiversity has already gone down even though no species has disappeared. What do they mean?",
+    "choices": [
+      "The species has turned into a different species in each piece.",
+      "Biodiversity counts only whole species, so nothing has actually been lost yet.",
+      "A small, separated group holds fewer different versions of genes, so the variety within that species has gone down.",
+      "The individuals in each piece changed their genes during their lifetimes to fit the smaller area."
+    ],
+    "answer": "C",
+    "hints": [
+      "Biodiversity includes the variety inside a single species, not only the number of species.",
+      "Fewer individuals means fewer different versions of genes being carried. An individual does not change its genes during its life."
+    ]
+  },
+  {
+    "id": "m7sci-biodiversity-and-human-impact-005",
+    "loId": "m7sci.biodiversity-and-human-impact",
+    "cedCode": "M7SCI-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Pond P has this food web, with each arrow pointing from the organism eaten to the organism that eats it: algae to shrimp, shrimp to trout. Pond Q has this food web: algae to shrimp, algae to snail, algae to mayfly, shrimp to trout, snail to trout, mayfly to trout. A disease removes most of the shrimp from both ponds. In which pond are the trout more likely to keep feeding, and why?",
+    "choices": [
+      "Pond P, because its trout have fewer other species competing with them",
+      "Pond Q, because a pond with more species cannot be reached by a disease",
+      "Both ponds are affected the same way, because losing one species never changes an ecosystem",
+      "Pond Q, because its trout also feed on snails and mayflies, so energy can still reach the trout along another pathway while the shrimp recover"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count the separate pathways that lead to the trout in each pond, then cross out the shrimp pathway in both and see what is left.",
+      "More species means more pathways through the web, which means fewer single points of failure."
+    ]
+  },
+  {
+    "id": "m7sci-biodiversity-and-human-impact-006",
+    "loId": "m7sci.biodiversity-and-human-impact",
+    "cedCode": "M7SCI-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A forest has been cut in two by a road, and a town is deciding what to do. PLAN A: buy a large area of forest on one side of the road and protect it, allowing no building there. PLAN B: build a planted crossing over the road and connect the two pieces of forest with a strip of trees. Which is the strongest evaluation of these two plans?",
+    "choices": [
+      "Plan A is better, because protecting land is always the right choice.",
+      "Plan B fits this problem better, because the problem here is that the road separates the two pieces and Plan B reconnects them. Its trade-off is that a crossing is expensive and has to be studied and placed where the animals already travel, while Plan A protects more habitat but leaves the pieces separated.",
+      "Plan B is better, because it costs less money than buying land.",
+      "Neither plan is worth trying, because the forest has already been changed too much for anything to help."
+    ],
+    "answer": "B",
+    "hints": [
+      "Name the specific problem this town has before you judge either plan, then ask which plan actually addresses it.",
+      "A strong evaluation compares the plans on effectiveness, cost and side effects, and it says the trade-off out loud instead of calling one plan perfect."
+    ]
+  }
+]

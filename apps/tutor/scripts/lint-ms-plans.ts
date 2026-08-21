@@ -1,15 +1,32 @@
 /**
- * Lint every MS-core plan (selected by known course infix: m7math today).
- * Selection is by PLAN id, so nothing outside evelyn.ms.* can match.
+ * Lint every MS-core plan (selected by known course infix: m7math, m7ela,
+ * m7sci, m7geo). Selection is by PLAN id, so nothing outside evelyn.ms.* can
+ * match - in particular the 33 legacy evelyn.g7.* seeds are untouched.
  * Mirrors lint-hs-plans.ts. Run: npm run lint:ms-plans
  */
 import { SEED_PLANS } from '../src/lib/tutor/lesson-plan/store';
 import type { SegmentTryYourself } from '../src/lib/tutor/lesson-plan/types';
 import { MS_PACING_THRESHOLDS } from '../src/lib/tutor/lesson-plan/seeds/_ms-shared';
 
-// course infix → expected identity; extend as ELA/Science/Geography land.
-const COURSES: Record<string, { subject: string; topic: string; loPrefix: string; std: string; grade: string }> = {
-  m7math: { subject: 'math', topic: 'grade-7-math', loPrefix: 'm7math', std: 'M7MATH', grade: '7' },
+// course infix -> expected identity.
+//
+// `tryFormat` is per-course on purpose. Grade 7 Math wants a numeric
+// try_yourself because typing a number IS the skill being practised. ELA,
+// Life Science and World Geography have no natural numeric answer space at
+// this grade -- forcing one there produces contrived "how many kingdoms are
+// there" arithmetic -- so their recipe is three MCQs. Never relax this to a
+// band-wide "numeric optional": that would silently let a math plan ship
+// with no numeric practice at all.
+type TryFormat = 'two-mcq-one-numeric' | 'three-mcq';
+
+const COURSES: Record<
+  string,
+  { subject: string; topic: string; loPrefix: string; std: string; grade: string; tryFormat: TryFormat }
+> = {
+  m7math: { subject: 'math', topic: 'grade-7-math', loPrefix: 'm7math', std: 'M7MATH', grade: '7', tryFormat: 'two-mcq-one-numeric' },
+  m7ela: { subject: 'ela', topic: 'grade-7-ela', loPrefix: 'm7ela', std: 'M7ELA', grade: '7', tryFormat: 'three-mcq' },
+  m7sci: { subject: 'science', topic: 'grade-7-life-science', loPrefix: 'm7sci', std: 'M7SCI', grade: '7', tryFormat: 'three-mcq' },
+  m7geo: { subject: 'social-studies', topic: 'grade-7-world-geography', loPrefix: 'm7geo', std: 'M7GEO', grade: '7', tryFormat: 'three-mcq' },
 };
 
 const COURSE_SEL = new RegExp(`^evelyn\\.ms\\.(${Object.keys(COURSES).join('|')})\\.`);
@@ -67,10 +84,15 @@ for (const p of plans) {
   if (FRQ_MARKERS.test(String(md.cedTopic)) || FRQ_MARKERS.test(String(md.cedTitle))) err(p.id, 'cedTopic/cedTitle must not contain frq/dbq/leq/saq');
   if (JSON.stringify(p.pacingThresholds) !== JSON.stringify(MS_PACING_THRESHOLDS)) err(p.id, 'pacingThresholds must be MS_PACING_THRESHOLDS');
 
-  // MS recipe is fixed at 3 try_yourselves: 2 MCQ + 1 numeric.
+  // MS recipe is fixed at 3 try_yourselves; the mcq/numeric split is per-course.
   const tys = p.segments.filter((s): s is SegmentTryYourself => s.kind === 'try_yourself');
   if (tys.length !== 3) err(p.id, `needs exactly 3 try_yourself segments (has ${tys.length})`);
-  if (!tys.some((t) => t.responseFormat === 'numeric')) err(p.id, 'needs at least one numeric try_yourself');
+  const numericCount = tys.filter((t) => t.responseFormat === 'numeric').length;
+  if (course.tryFormat === 'two-mcq-one-numeric') {
+    if (numericCount !== 1) err(p.id, `needs exactly 1 numeric try_yourself (has ${numericCount})`);
+  } else if (numericCount !== 0) {
+    err(p.id, `${course.topic} try_yourself segments must all be mcq (found ${numericCount} numeric)`);
+  }
   for (const t of tys) {
     if (t.responseFormat !== 'mcq' && t.responseFormat !== 'numeric') err(p.id, `${t.id}: responseFormat must be mcq|numeric`);
     if (t.responseFormat === 'mcq') {

@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-cell-theory-and-microscopes-001",
+    "loId": "m7sci.cell-theory-and-microscopes",
+    "cedCode": "M7SCI-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement is one of the three parts of cell theory?",
+    "choices": [
+      "All cells are about the same size and the same shape.",
+      "All cells come from cells that already exist.",
+      "Every living thing is made of many cells working together.",
+      "Living things can form out of nonliving material when the conditions are right."
+    ],
+    "answer": "B",
+    "hints": [
+      "The three parts answer three questions: what living things are made of, what the cell does for the organism, and where new cells come from.",
+      "One choice is the exact belief that cell theory replaced, and one choice forgets that a single cell can be an entire organism."
+    ]
+  },
+  {
+    "id": "m7sci-cell-theory-and-microscopes-002",
+    "loId": "m7sci.cell-theory-and-microscopes",
+    "cedCode": "M7SCI-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A compound light microscope has an eyepiece marked 10 times. A student clicks the 20 times objective lens into place. What is the total magnification, and why?",
+    "choices": [
+      "30 times, because the two lens powers are added together.",
+      "20 times, because the objective is the only lens that magnifies.",
+      "2 times, because the objective power is divided by the eyepiece power.",
+      "200 times, because the eyepiece power is multiplied by the objective power."
+    ],
+    "answer": "D",
+    "hints": [
+      "The light passes through both lenses, one after the other, so the eyepiece enlarges an image the objective has already enlarged.",
+      "Multiply the two powers instead of adding them: 10 times 20."
+    ]
+  },
+  {
+    "id": "m7sci-cell-theory-and-microscopes-003",
+    "loId": "m7sci.cell-theory-and-microscopes",
+    "cedCode": "M7SCI-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A classmate says, \"Cell theory is only a theory, so scientists are not really sure about it yet.\" Which reply corrects him?",
+    "choices": [
+      "In science a theory is a well-supported explanation backed by a huge body of evidence, so calling it a theory means the opposite of unsure.",
+      "He is right, because a theory is an idea that nobody has tested yet.",
+      "He is right for now, because a theory stays uncertain until someone proves it and it turns into a law.",
+      "In science a theory is one scientist's opinion, and cell theory is the opinion of the person who named cells."
+    ],
+    "answer": "A",
+    "hints": [
+      "The everyday meaning of the word theory and the science meaning are almost opposites.",
+      "The science word for an idea that has not been tested yet is hypothesis, not theory."
+    ]
+  },
+  {
+    "id": "m7sci-cell-theory-and-microscopes-004",
+    "loId": "m7sci.cell-theory-and-microscopes",
+    "cedCode": "M7SCI-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An elephant is far bigger than a mouse, so a student predicts that elephant cells will be much bigger than mouse cells. Under the microscope, cells from the two animals turn out to be roughly the same size. Which explanation fits that result?",
+    "choices": [
+      "The elephant cells shrank while the slide was being prepared.",
+      "The elephant cells really are bigger, but they were viewed at a lower magnification.",
+      "An elephant is bigger because it is built from a far greater number of cells, not from bigger ones.",
+      "Cell size matches body size only in animals smaller than a mouse."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare it to a brick wall. A longer wall is not built out of longer bricks.",
+      "The differences in cell size that do exist come from the job a cell does, so ask whether size or number explains a bigger body."
+    ]
+  },
+  {
+    "id": "m7sci-cell-theory-and-microscopes-005",
+    "loId": "m7sci.cell-theory-and-microscopes",
+    "cedCode": "M7SCI-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Through a microscope a student watches a single-celled pond organism swim, wrap itself around a smaller particle to take it in, and later split into two. She decides it must be a young stage that will grow into something bigger. Which correction is best?",
+    "choices": [
+      "It is already a complete organism, and that one cell carries out every life process by itself.",
+      "It is a cell that broke off a larger organism and is surviving alone for a short while.",
+      "It is not really alive, because one cell is not enough to count as an organism.",
+      "It is alive but unfinished, because a single cell cannot reproduce on its own."
+    ],
+    "answer": "A",
+    "hints": [
+      "List what she actually watched it do, then ask whether any second cell helped with any of it.",
+      "Being made of one cell says how the organism is built. It does not say the organism is unfinished or doing less."
+    ]
+  },
+  {
+    "id": "m7sci-cell-theory-and-microscopes-006",
+    "loId": "m7sci.cell-theory-and-microscopes",
+    "cedCode": "M7SCI-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two flasks of broth are boiled long enough to kill anything living in them. Flask A is sealed shut while it is still hot. Flask B is left open to the air. A week later the broth in flask B is cloudy and full of swimming microorganisms under the microscope, while flask A is still clear. Which conclusion does this best support?",
+    "choices": [
+      "Living things can form out of plain broth, because flask B filled up with organisms.",
+      "Boiling makes microorganisms grow, because both flasks were boiled before they were left out.",
+      "The microscope caused the organisms to appear, because nobody could see them before the lens was used.",
+      "Cells come from cells that already exist, because the sealed flask held identical broth and stayed clear."
+    ],
+    "answer": "D",
+    "hints": [
+      "The two flasks differ in only one way, so a fair conclusion has to rest on that one difference.",
+      "If living things could form out of the broth itself, the sealed flask would have gone cloudy too, since its broth is the same."
+    ]
+  },
+
+  {
+    "id": "m7sci-plant-and-animal-cells-001",
+    "loId": "m7sci.plant-and-animal-cells",
+    "cedCode": "M7SCI-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which cell part is found in BOTH plant cells and animal cells?",
+    "choices": [
+      "Chloroplasts",
+      "A cell wall",
+      "Ribosomes",
+      "One large central vacuole"
+    ],
+    "answer": "C",
+    "hints": [
+      "Three of these four are on the short plant-only list. Recall that list before you choose.",
+      "Every cell has to build proteins, whether it makes its own food or eats food from outside."
+    ]
+  },
+  {
+    "id": "m7sci-plant-and-animal-cells-002",
+    "loId": "m7sci.plant-and-animal-cells",
+    "cedCode": "M7SCI-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement correctly describes the outer layers of a plant cell?",
+    "choices": [
+      "It has a cell membrane, with a rigid cell wall outside the membrane.",
+      "It has a cell wall instead of a cell membrane.",
+      "It has a cell membrane, with a rigid cell wall tucked inside the membrane.",
+      "It has a cell wall only at times when the plant needs extra support."
+    ],
+    "answer": "A",
+    "hints": [
+      "A plant cell does not swap one layer for another. It adds one.",
+      "The thin flexible layer that controls what enters and leaves is on the inside, and the rigid supporting layer sits outside it."
+    ]
+  },
+  {
+    "id": "m7sci-plant-and-animal-cells-003",
+    "loId": "m7sci.plant-and-animal-cells",
+    "cedCode": "M7SCI-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: \"Animal cells have no vacuoles at all.\" Which correction is accurate?",
+    "choices": [
+      "The sentence is fine as written, because vacuoles are found only in plant cells.",
+      "Animal cells have vacuoles and plant cells have none.",
+      "Animal cells have one large central vacuole, and plant cells have several small ones.",
+      "Animal cells do have vacuoles, but only small ones. The plant difference is one large central vacuole."
+    ],
+    "answer": "D",
+    "hints": [
+      "The difference here is about size and number, not about having them or not having them.",
+      "Small storage spaces show up in both kinds of cell. Only one kind has a single big one filling much of the middle."
+    ]
+  },
+  {
+    "id": "m7sci-plant-and-animal-cells-004",
+    "loId": "m7sci.plant-and-animal-cells",
+    "cedCode": "M7SCI-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A report on a cell lists a nucleus, cytoplasm, a cell membrane and mitochondria, and nothing else. A student concludes the cell is a plant cell because it contains mitochondria. What is wrong with his reasoning?",
+    "choices": [
+      "Nothing is wrong, because only plant cells contain mitochondria.",
+      "Mitochondria are in both kinds of cell, so they cannot decide which kind this is.",
+      "Mitochondria are found only in animal cells, so the cell has to be an animal cell.",
+      "Mitochondria are found only in cells with no nucleus, so the report contradicts itself."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask the same question about every part on the list: would the other kind of cell have this too?",
+      "A part that both kinds of cell share can never be the evidence that tells them apart."
+    ]
+  },
+  {
+    "id": "m7sci-plant-and-animal-cells-005",
+    "loId": "m7sci.plant-and-animal-cells",
+    "cedCode": "M7SCI-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scientist describes a cell she is studying: it has DNA, ribosomes, a cell membrane and a cell wall, but no nucleus and no chloroplasts. What is the best conclusion?",
+    "choices": [
+      "It is a plant cell, because a cell wall means plant.",
+      "It is an animal cell, because it has no chloroplasts.",
+      "It is neither a plant nor an animal cell. With no nucleus it is a prokaryotic cell, such as a bacterium.",
+      "It cannot be a real cell, because DNA cannot exist in a cell that has no nucleus."
+    ],
+    "answer": "C",
+    "hints": [
+      "Plant cells and animal cells are both eukaryotic, which means both of them keep their DNA inside a nucleus.",
+      "A cell wall is not proof of a plant. Bacteria usually have a wall too, and having no nucleus does not mean having no DNA."
+    ]
+  },
+  {
+    "id": "m7sci-plant-and-animal-cells-006",
+    "loId": "m7sci.plant-and-animal-cells",
+    "cedCode": "M7SCI-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A healthy potted plant is moved into a completely dark closet and watered normally. After several weeks it dies. A student says this proves the plant never needed mitochondria, only chloroplasts. Which explanation of the plant's death is correct?",
+    "choices": [
+      "In the dark the chloroplasts could not release the energy stored in the plant's food, so the plant ran down.",
+      "In the dark the chloroplasts could not make food, so the mitochondria had no food to release energy from. The plant needed both parts.",
+      "Chloroplasts and mitochondria both need light to work, so in the dark neither one could do anything.",
+      "Light itself is the plant's food, so a plant in the dark simply has nothing to eat and no food to spend."
+    ],
+    "answer": "B",
+    "hints": [
+      "Sort the two jobs first: which part captures light to make food, and which part releases the energy stored in that food?",
+      "Making the food and spending the food are two separate steps, and a plant needs both of them to happen."
+    ]
+  },
+
+  {
+    "id": "m7sci-organelles-and-their-jobs-001",
+    "loId": "m7sci.organelles-and-their-jobs",
+    "cedCode": "M7SCI-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which organelle holds the cell's instructions (DNA) and directs the cell's activities?",
+    "choices": [
+      "The nucleus",
+      "The mitochondria",
+      "The cell membrane",
+      "The cytoplasm"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which part stores the information that the rest of the cell follows.",
+      "The jelly filling the cell, the boundary at its edge, and the energy-releasing parts all have other jobs."
+    ]
+  },
+  {
+    "id": "m7sci-organelles-and-their-jobs-002",
+    "loId": "m7sci.organelles-and-their-jobs",
+    "cedCode": "M7SCI-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence describes what mitochondria do most accurately?",
+    "choices": [
+      "They make new energy for the cell to use.",
+      "They capture light energy and use it to make food.",
+      "They release the energy stored in food into a form the cell can use.",
+      "They store the cell's supply of water and nutrients."
+    ],
+    "answer": "C",
+    "hints": [
+      "One choice breaks a rule about energy. Energy cannot be created out of nothing.",
+      "One of the other choices describes an organelle that only plant cells have, and one describes a vacuole."
+    ]
+  },
+  {
+    "id": "m7sci-organelles-and-their-jobs-003",
+    "loId": "m7sci.organelles-and-their-jobs",
+    "cedCode": "M7SCI-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cell is assembling large amounts of protein. Which organelle does the actual assembling?",
+    "choices": [
+      "The vacuole, which stores water and nutrients",
+      "The ribosomes, which build proteins",
+      "The cell wall, which gives support from outside the membrane",
+      "The mitochondria, which release the energy stored in food"
+    ],
+    "answer": "B",
+    "hints": [
+      "Each choice names a part and its job, so match the job in the question to the job in the choice.",
+      "Storing, supporting and releasing energy are three different jobs, and none of them is building."
+    ]
+  },
+  {
+    "id": "m7sci-organelles-and-their-jobs-004",
+    "loId": "m7sci.organelles-and-their-jobs",
+    "cedCode": "M7SCI-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Imagine an animal cell whose cell membrane stops acting as a gatekeeper and simply lets everything pass in both directions. Every other organelle still works normally. What is the best prediction?",
+    "choices": [
+      "Nothing much changes, because the cytoplasm holds everything in place anyway.",
+      "Nothing much changes, because the nucleus takes over deciding what enters and leaves.",
+      "Nothing much changes, because the cell wall outside the membrane takes over the gatekeeping.",
+      "The cell loses control of its contents, because useful materials can leak out and harmful ones can drift in."
+    ],
+    "answer": "D",
+    "hints": [
+      "Start from the membrane's job, then ask what is no longer true once it stops doing that job.",
+      "Two of the choices hand the job to a part that does not do it, and one hands it to a part an animal cell does not even have."
+    ]
+  },
+  {
+    "id": "m7sci-organelles-and-their-jobs-005",
+    "loId": "m7sci.organelles-and-their-jobs",
+    "cedCode": "M7SCI-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Muscle cells, which do a great deal of work, contain far more mitochondria than skin cells do. What does that difference best suggest?",
+    "choices": [
+      "Muscle cells create more energy than skin cells create.",
+      "Muscle cells need more energy released from food, and more mitochondria can release it faster.",
+      "Muscle cells store more food than skin cells, and mitochondria are storage sacs.",
+      "Muscle cells have no nucleus, so the extra mitochondria take over the nucleus's job."
+    ],
+    "answer": "B",
+    "hints": [
+      "How many of a part a cell has usually matches how much of that part's job the cell has to get done.",
+      "State the mitochondrion's job carefully. It releases energy that is already stored in food; it does not create any."
+    ]
+  },
+  {
+    "id": "m7sci-organelles-and-their-jobs-006",
+    "loId": "m7sci.organelles-and-their-jobs",
+    "cedCode": "M7SCI-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In a leaf cell on a sunny windowsill, light energy is captured and used to make sugar. Later that same sugar is broken down so the cell can grow and repair itself. Which organelles carried out those two steps, in that order?",
+    "choices": [
+      "Mitochondria first, then chloroplasts.",
+      "Ribosomes first, then the nucleus.",
+      "Chloroplasts first, then mitochondria.",
+      "Chloroplasts for both steps, because a plant cell has no mitochondria."
+    ],
+    "answer": "C",
+    "hints": [
+      "Name the job in each step: capturing light to make food, and then releasing the energy stored in that food.",
+      "A plant cell has both organelles, because food still has to be spent after it has been made."
+    ]
+  },
+
+  {
+    "id": "m7sci-diffusion-and-osmosis-001",
+    "loId": "m7sci.diffusion-and-osmosis",
+    "cedCode": "M7SCI-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Osmosis is the name for one particular kind of diffusion. Which one?",
+    "choices": [
+      "The spreading of salt across a membrane",
+      "The spreading of oxygen across a membrane",
+      "The movement of any particle against the direction of spreading",
+      "The spreading of water across a membrane"
+    ],
+    "answer": "D",
+    "hints": [
+      "Osmosis is not a separate force. It is ordinary diffusion, tracked for one substance only.",
+      "Think about the dried raisin that swells overnight in a cup of plain water. What moved into it?"
+    ]
+  },
+  {
+    "id": "m7sci-diffusion-and-osmosis-002",
+    "loId": "m7sci.diffusion-and-osmosis",
+    "cedCode": "M7SCI-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A drop of food coloring is added to a glass of still water and slowly spreads until the whole glass is tinted. Which sentence explains why that happens?",
+    "choices": [
+      "The coloring particles want to spread out until both ends of the glass are even.",
+      "The coloring particles move randomly, and because they started crowded in one spot, more wander away than wander back.",
+      "The coloring particles can tell which part of the glass is emptier and travel toward it.",
+      "The water pushes the coloring particles outward until they are evenly spread."
+    ],
+    "answer": "B",
+    "hints": [
+      "Words like wants, knows and tries almost always mean an explanation has skipped over the real cause.",
+      "The real reason is a counting reason. Where particles are crowded, more of them are available to wander away."
+    ]
+  },
+  {
+    "id": "m7sci-diffusion-and-osmosis-003",
+    "loId": "m7sci.diffusion-and-osmosis",
+    "cedCode": "M7SCI-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "There is more oxygen in the fluid around a cell than there is inside the cell, and oxygen spreads into the cell until it is evenly spread. What does this movement cost the cell?",
+    "choices": [
+      "Energy, because the membrane has to open a gate for every particle that enters.",
+      "Energy, because anything crossing the cell membrane has to be pushed through by the cell.",
+      "Nothing, because the oxygen particles are already moving randomly and spreading is the result.",
+      "Nothing, because oxygen is a gas, and gases never need energy to move anywhere."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask the one question that settles the cost: is the substance moving with the spreading, or against it?",
+      "Two of the choices charge the cell for work it never had to do, and one is free for a made-up reason about gases."
+    ]
+  },
+  {
+    "id": "m7sci-diffusion-and-osmosis-004",
+    "loId": "m7sci.diffusion-and-osmosis",
+    "cedCode": "M7SCI-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A crisp stick of celery is stood upright overnight in a cup of very salty water. In the morning it is limp and floppy instead of snapping when it is bent. What happened?",
+    "choices": [
+      "Water moved out of the celery cells toward the salty water, which has less water in it than the cells do.",
+      "Salt moved into the celery cells and pushed the water out ahead of it.",
+      "Water moved into the celery cells from the cup, because salty water has more water in it than plain water does.",
+      "The cells spent energy pumping water out to protect themselves from the salt."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which side holds more water: the inside of the celery cells, or a cup where a lot of what is dissolved is salt.",
+      "Osmosis moves water rather than salt, and it costs the cell nothing."
+    ]
+  },
+  {
+    "id": "m7sci-diffusion-and-osmosis-005",
+    "loId": "m7sci.diffusion-and-osmosis",
+    "cedCode": "M7SCI-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Hours after a drop of food coloring was added to a glass of still water, the color looks exactly the same everywhere in the glass. What are the coloring particles doing now?",
+    "choices": [
+      "They have stopped moving, because they are already evenly spread.",
+      "They have settled into a thin layer at the bottom, because the spreading is finished.",
+      "They keep moving, but only back toward the spot where the drop first landed.",
+      "They keep moving randomly, and about as many go each way, so the color stays even."
+    ],
+    "answer": "D",
+    "hints": [
+      "Nothing switched the jiggling off, so ask what actually changed between the first minute and the third hour.",
+      "Even color does not require still particles. It only requires that the traffic each way match."
+    ]
+  },
+  {
+    "id": "m7sci-diffusion-and-osmosis-006",
+    "loId": "m7sci.diffusion-and-osmosis",
+    "cedCode": "M7SCI-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three things happen to the same kind of cell. (1) In pure water the cell swells. (2) In very salty water the cell shrinks. (3) The cell takes in a nutrient from the fluid around it even though that nutrient is already more crowded inside the cell than outside. Which statement about the energy cost of these three events is correct?",
+    "choices": [
+      "Events 1 and 2 are passive and cost the cell nothing, while event 3 is active transport and costs the cell energy.",
+      "All three are passive, because anything that crosses a membrane happens on its own.",
+      "All three cost the cell energy, because the cell membrane is selectively permeable.",
+      "Events 1 and 2 cost energy because water is heavy, while event 3 is free because the nutrient is small."
+    ],
+    "answer": "A",
+    "hints": [
+      "Sort each event by direction: is the substance heading toward the less crowded side, or toward the more crowded side?",
+      "Moving along with the spreading is free. Moving against it is the one the cell has to pay for."
+    ]
+  }
+]

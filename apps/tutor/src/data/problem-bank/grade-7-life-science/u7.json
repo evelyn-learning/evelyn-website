@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-fossils-and-the-fossil-record-001",
+    "loId": "m7sci.fossils-and-the-fossil-record",
+    "cedCode": "M7SCI-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement best describes what most fossils are?",
+    "choices": [
+      "Preserved remains or traces of a living thing from long ago, in which the original material has usually been replaced by minerals or left as an impression",
+      "The original bones of an animal, kept exactly as they were on the day the animal died",
+      "Only the bones of dinosaurs, since no other kind of living thing left fossils behind",
+      "Ordinary rocks that happen by chance to be shaped like a plant or an animal"
+    ],
+    "answer": "A",
+    "hints": [
+      "A fossil lifted out of rock is usually heavy and stony. Ask what happened to the original bone or shell over all that time.",
+      "A footprint and a burrow both count as fossils, and neither one is any part of a body. Pick the choice wide enough to include them."
+    ]
+  },
+  {
+    "id": "m7sci-fossils-and-the-fossil-record-002",
+    "loId": "m7sci.fossils-and-the-fossil-record",
+    "cedCode": "M7SCI-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cliff shows four rock layers that geologists have checked and found undisturbed. From top to bottom the layers are J, K, L and M. Which list puts the layers in order from oldest to youngest?",
+    "choices": [
+      "J, K, L, M, because the layer sitting at the top of a cliff formed first",
+      "The order cannot be worked out at all, because the exact age of each layer is not given",
+      "M, L, K, J, because in undisturbed layers a deeper layer formed earlier than the layers above it",
+      "All four layers formed at the same time, so no layer is older than another"
+    ],
+    "answer": "C",
+    "hints": [
+      "Sediment settles on top of whatever is already lying there. Which of these four layers was there before any of the others?",
+      "Read from the bottom of the cliff upward, not from the top of the printed list downward."
+    ]
+  },
+  {
+    "id": "m7sci-fossils-and-the-fossil-record-003",
+    "loId": "m7sci.fossils-and-the-fossil-record",
+    "cedCode": "M7SCI-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Fossils of clams, snails and fish teeth are far more common than fossils of jellyfish and worms. Which statement best explains why?",
+    "choices": [
+      "Soft-bodied animals such as jellyfish and worms never lived in the places where those rocks formed",
+      "Fossilization usually needs quick burial in sediment plus hard parts that resist decay, and soft bodies are broken down long before they can be buried",
+      "Hard-shelled animals are more advanced, so they are better at leaving fossils behind",
+      "Almost every organism that dies becomes a fossil, so the number of each kind of fossil matches the number that lived"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what happens to a soft body lying in mud within a few days, and what happens to a shell in the same mud.",
+      "Ask which parts last long enough to be buried by sediment: something hard like a shell or a tooth, or something soft."
+    ]
+  },
+  {
+    "id": "m7sci-fossils-and-the-fossil-record-004",
+    "loId": "m7sci.fossils-and-the-fossil-record",
+    "cedCode": "M7SCI-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A road cut exposes four rock layers that have been checked and found undisturbed. From top to bottom the layers are P, Q, R and S. Layer S holds fossils of tiny shelled organisms only. Layer R holds fossils of a fish covered in heavy bony plates that is not found alive anywhere now. Layer Q holds fossils of a large reptile that is not found alive anywhere now. Layer P holds fossils of small sea snails of a kind still living in the ocean today. Which conclusion is best supported by this stack?",
+    "choices": [
+      "The plated fish in layer R was a more primitive animal than the reptile in layer Q",
+      "The sea snails in layer P are the oldest fossils in the road cut, because layer P is named first",
+      "The stack shows living things steadily improving from the bottom of the cut to the top",
+      "The kinds of living things here changed over time: the plated fish and the large reptile are not found alive today, and the reptile appears in layer Q while being absent from every layer below it"
+    ],
+    "answer": "D",
+    "hints": [
+      "Put the four layers in order from oldest to youngest first, using the rule that deeper means older in undisturbed rock.",
+      "Higher in the stack means later, and nothing else. Rule out any choice that calls one organism better, more advanced or more primitive than another."
+    ]
+  },
+  {
+    "id": "m7sci-fossils-and-the-fossil-record-005",
+    "loId": "m7sci.fossils-and-the-fossil-record",
+    "cedCode": "M7SCI-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pond once held snails with hard shells and soft-bodied worms that burrowed in the mud at the bottom. Long after the mud hardened into rock, scientists split the rock open and find many snail shell fossils and not one worm body. A student concludes that no worms ever lived in that pond. How should the student's conclusion be judged?",
+    "choices": [
+      "It is correct, because if worms had lived there their fossils would certainly be in the rock",
+      "It is correct, because soft-bodied animals fossilize just as easily as hard-shelled ones do",
+      "It is not supported. Soft bodies decay long before they can be buried, so finding only shells is expected either way, and preserved burrows could still record the worms",
+      "It is not supported, because the layers must have been disturbed and the worm fossils carried somewhere else"
+    ],
+    "answer": "C",
+    "hints": [
+      "The two animals never had an equal chance of being preserved. Ask which one had hard parts.",
+      "Not finding something is much weaker information than finding it. Remember too that a burrow is itself a kind of fossil."
+    ]
+  },
+  {
+    "id": "m7sci-fossils-and-the-fossil-record-006",
+    "loId": "m7sci.fossils-and-the-fossil-record",
+    "cedCode": "M7SCI-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student argues that the fossil record cannot be evidence that living things have changed over time. His reason: in one undisturbed road cut a certain kind of clam is found in a lower layer, is missing from the three layers above it, and then turns up again in a still higher layer. Which response is best supported by what scientists know about how fossils form and how rock layers behave?",
+    "choices": [
+      "The gap is expected. Fossilization is rare, layers can be worn away by erosion, and the clam may have been living somewhere that left no fossils in this cut, so a missing fossil is missing evidence rather than evidence against change",
+      "The gap proves that the clam died out completely and then the same kind of clam came back later exactly as it was",
+      "The gap shows that nothing at all was alive on Earth while those three layers were forming",
+      "The gap means these layers should be read from the top downward instead, which makes the problem disappear"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask first what missing from a layer actually reports: that the organism never existed, or that no fossil of it was found in that rock.",
+      "List the ordinary reasons a fossil might be absent - the organism lived elsewhere, it was not buried quickly, the rock was eroded - before deciding the record itself is broken."
+    ]
+  },
+
+  {
+    "id": "m7sci-evidence-for-common-ancestry-001",
+    "loId": "m7sci.evidence-for-common-ancestry",
+    "cedCode": "M7SCI-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is a common ancestor?",
+    "choices": [
+      "A living species that another living species is descended from",
+      "A species that lived in the past and that two or more later species are both descended from",
+      "The oldest individual organism alive in a population today",
+      "Any two species that look alike and live in the same place"
+    ],
+    "answer": "B",
+    "hints": [
+      "The word ancestor points into the past, not at something alive beside you now.",
+      "It is one species, from long ago, that two later species both trace back to."
+    ]
+  },
+  {
+    "id": "m7sci-evidence-for-common-ancestry-002",
+    "loId": "m7sci.evidence-for-common-ancestry",
+    "cedCode": "M7SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bird wing contains an upper arm bone, two forearm bones and hand bones. An insect wing contains no bones at all; it is a thin sheet growing out of the hard outer covering of the body. Both are used for flying. How should this pair be classified, and what does it tell us?",
+    "choices": [
+      "Homologous, because both are wings and both are used for flying",
+      "Homologous, because both spread out sideways from the body in a similar shape",
+      "They show that birds and insects are closely related, because two animals that do the same thing must be close relatives",
+      "Analogous, because they do the same job but are built from different parts, so they are not evidence of a close shared ancestor"
+    ],
+    "answer": "D",
+    "hints": [
+      "Classify by what is inside the structure, never by what the structure does.",
+      "One of these wings has limb bones in it and the other has no bones at all. Same job, different build has its own name."
+    ]
+  },
+  {
+    "id": "m7sci-evidence-for-common-ancestry-003",
+    "loId": "m7sci.evidence-for-common-ancestry",
+    "cedCode": "M7SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A human arm, a bat wing, a whale flipper and a cat front leg each contain one long upper bone, then two bones side by side, then a cluster of small wrist bones, then digits. The four limbs are used for very different jobs. Which statement explains why scientists treat this as evidence of a common ancestor?",
+    "choices": [
+      "The same bone arrangement shows up in all four even though the limbs do different jobs, which fits the four species inheriting that arrangement from one earlier species",
+      "All four animals use their front limbs to move around, and doing the same job is what shows shared ancestry",
+      "Each animal grew the limb it needed for the place where it lives, so the limb matches the habitat",
+      "The four limbs are about the same size and shape on the outside"
+    ],
+    "answer": "A",
+    "hints": [
+      "The evidence is not what the limbs do. Ask what is the same about how they are built inside, and whether different jobs make that sameness more surprising or less.",
+      "One choice has an animal growing a body part because it needs one. Body parts are inherited, not ordered up when they would be handy."
+    ]
+  },
+  {
+    "id": "m7sci-evidence-for-common-ancestry-004",
+    "loId": "m7sci.evidence-for-common-ancestry",
+    "cedCode": "M7SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Scientists compare the same gene in three living species with the human version of that gene. The version in Species A is the most similar to the human version. The version in Species B is less similar. The version in Species C is the least similar of the three. Which conclusion does this evidence best support?",
+    "choices": [
+      "Humans are descended from Species A, because its version of the gene is the closest match",
+      "Species C is not related to humans at all, because its version of the gene is the least similar",
+      "Humans share a more recent common ancestor with Species A than with Species B or Species C",
+      "Species C is the most evolved of the three, because its DNA has changed the most since the split"
+    ],
+    "answer": "C",
+    "hints": [
+      "Differences in DNA build up after two lines split apart, so a very close match points to a split that happened more recently.",
+      "All three of these species are alive today, and so are humans. A living species is a cousin, never an ancestor, and there is no such thing as being more evolved."
+    ]
+  },
+  {
+    "id": "m7sci-evidence-for-common-ancestry-005",
+    "loId": "m7sci.evidence-for-common-ancestry",
+    "cedCode": "M7SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The early embryos of a fish, a chicken and a human all have a tail and a set of folds in the neck region, and they look far more alike than the adult animals ever do. Which statement says what this evidence does and does not show?",
+    "choices": [
+      "It shows that a human embryo passes through a fish stage and then a reptile stage as it develops",
+      "It shows that humans are descended from the fish species that is alive today",
+      "It shows nothing about ancestry, because early embryos of completely unrelated species always look identical",
+      "It shows that these related species inherited a similar set of instructions for building a body, so their early embryos look alike; the embryo is not replaying its evolutionary history"
+    ],
+    "answer": "D",
+    "hints": [
+      "Say only what can actually be seen: the early embryos of related species look similar to one another.",
+      "The idea that an embryo acts out a sequence of ancestor forms is an old idea and it is false. Rule out any choice that describes stages being replayed."
+    ]
+  },
+  {
+    "id": "m7sci-evidence-for-common-ancestry-006",
+    "loId": "m7sci.evidence-for-common-ancestry",
+    "cedCode": "M7SCI-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "One team compares the early embryos of three living species called A, B and C. The embryos of A and B stay similar to each other for a long stretch of development, while the embryo of C looks different from both almost from the start. A second team, working separately and never seeing the embryos, compares the DNA of the three species and finds that the DNA of A and B is more alike than either one is to C. Which statement best describes what the two results together support?",
+    "choices": [
+      "Species A is the ancestor of Species B, since the two kinds of evidence match so closely",
+      "A and B share a more recent common ancestor with each other than either shares with C, and the case is stronger because two different methods that could have disagreed gave the same grouping",
+      "Species C is less evolved than A and B, because its line split off from the others earlier",
+      "The DNA result should be set aside, because evidence from bodies and embryos is the only reliable kind"
+    ],
+    "answer": "B",
+    "hints": [
+      "Work out the grouping that each team's evidence points to on its own, then compare the two groupings.",
+      "Ask why it matters that the second team never saw the first team's results. Remember too that all three species are alive now, so none is the ancestor of the others and none is ranked above another."
+    ]
+  },
+
+  {
+    "id": "m7sci-natural-selection-001",
+    "loId": "m7sci.natural-selection",
+    "cedCode": "M7SCI-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Natural selection changes which of the following, and over what stretch of time?",
+    "choices": [
+      "One individual, over its own lifetime, as it gets used to its surroundings",
+      "One individual, at the moment it is born, depending on what it is going to need",
+      "A population, over many generations",
+      "Every living thing on Earth at once, within a single generation"
+    ],
+    "answer": "C",
+    "hints": [
+      "Only a group has a share of a trait, and the share is the thing that shifts.",
+      "An organism lives and dies with the genes it was born with, so the change has to show up in the next round of offspring and the ones after that."
+    ]
+  },
+  {
+    "id": "m7sci-natural-selection-002",
+    "loId": "m7sci.natural-selection",
+    "cedCode": "M7SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A population of mice lives on pale sand. Most of the mice have pale fur and a few have dark fur, and fur color is inherited. A patch of dark volcanic rock spreads across part of the area, and owls hunt the mice by sight. After many generations, most of the mice living on the dark rock have dark fur. Which statement explains this correctly?",
+    "choices": [
+      "Dark-furred mice were already present. On the dark rock they were harder for owls to see, so they survived and reproduced more often, and dark fur became more common over generations",
+      "The mice on the dark rock darkened their fur to match it, and their pups were born dark",
+      "The mice needed darker fur to hide on the dark rock, so the population began producing dark pups",
+      "The dark rock caused mutations that gave the mice exactly the fur color they required"
+    ],
+    "answer": "A",
+    "hints": [
+      "Read the second sentence of the problem again. Dark-furred mice were in the population before the dark rock spread. What does that tell you about where the dark fur came from?",
+      "No mouse changes its fur color during its life, and needing a trait never produces it. Look for the choice in which only the share of dark mice in the population changes, across generations."
+    ]
+  },
+  {
+    "id": "m7sci-natural-selection-003",
+    "loId": "m7sci.natural-selection",
+    "cedCode": "M7SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a lizard population, some lizards are large and brightly colored and some are small and dull brown. Hawks hunt the area by sight. Over many generations the small dull lizards become more common. A classmate says this cannot be right, because survival of the fittest means the strongest survive. What does fittest actually mean here?",
+    "choices": [
+      "The strongest and largest individuals, because they win fights over territory",
+      "The individuals that live the longest, whether or not they ever reproduce",
+      "The individuals that are the most advanced, since evolution works toward better animals",
+      "The individuals whose traits fit the current conditions, which here means being hard for hawks to spot"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask what the hawks are actually doing. They hunt by sight, so which lizards do they find first?",
+      "Fit is measured against the conditions the population is living in right now, not against strength, not against lifespan, and not against any ranking of better and worse animals."
+    ]
+  },
+  {
+    "id": "m7sci-natural-selection-004",
+    "loId": "m7sci.natural-selection",
+    "cedCode": "M7SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A patient takes an antibiotic. Most of the bacteria causing the infection die, but a few that already carried a version of a gene the drug does not affect survive and reproduce, and the infection comes back. A student says natural selection is completely random. Which statement about randomness is correct?",
+    "choices": [
+      "All of it is random: which bacteria carried that version of the gene and which ones survived were both matters of chance",
+      "The version of the gene appeared by chance, but survival was not random - the drug removed the bacteria without that version and left the ones that had it",
+      "None of it is random: the bacteria produced the version of the gene they needed in order to survive the drug",
+      "The drug caused the version of the gene to appear, and then which bacteria survived was random"
+    ],
+    "answer": "B",
+    "hints": [
+      "Split the question in two. First ask how the version of the gene got into the population, then ask what decided which bacteria lived.",
+      "Mutations happen by chance and never arrive on order. The drug, on the other hand, filters in a completely consistent way, and something consistent is not random."
+    ]
+  },
+  {
+    "id": "m7sci-natural-selection-005",
+    "loId": "m7sci.natural-selection",
+    "cedCode": "M7SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A farmer sprays a pesticide on a field of insects. The first year the spray clears out almost all of them. A few years later the same spray barely works. A student writes: \"The insects got used to the pesticide and toughened up so that they could survive it.\" Which sentence corrects the student?",
+    "choices": [
+      "A few insects already carried a version of a gene the pesticide does not affect. The spray killed the others, so the survivors produced the next generation, and over several generations that version became common in the population",
+      "The insects that were sprayed and lived through it toughened up during their lives, and passed that toughness on to their young",
+      "The pesticide grew weaker every year it sat in the shed, so it stopped killing the insects",
+      "The insects that survived became a more advanced kind of insect than the ones that died"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask where the variation came from, and when. Did the spray create it, or was it already in the field population before the farmer bought the can?",
+      "An insect is born with its genes and dies with the same genes, and needing something never produces it. Rewrite the sentence so that the population changes and the individuals do not."
+    ]
+  },
+  {
+    "id": "m7sci-natural-selection-006",
+    "loId": "m7sci.natural-selection",
+    "cedCode": "M7SCI-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "For many generations a beetle population on dark tree bark has become mostly dark brown, because birds hunting by sight take the pale gray beetles more often. Then a pale dust settles over the bark and stays for many years. Beetle color is inherited, and some pale gray beetles are still present in the population. What do the four steps of natural selection predict, and why?",
+    "choices": [
+      "The dark beetles will lighten their color to match the dust, since they can no longer hide on the bark",
+      "Nothing about the population will change, because dark brown has already been shown to be the better color",
+      "Pale gray beetles are now harder for the birds to see, so they will survive and reproduce more often, and the share of pale beetles in the population will rise over generations",
+      "The beetles will become a more advanced species, because the population has now been through two different sets of conditions"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start at step 1 and ask what variation is still present in the population at the moment the dust arrives.",
+      "A trait is never better in general, only better for the conditions right now. Ask which color is hard for a bird to see against pale dust, and remember that only the share of a trait in a population can change."
+    ]
+  },
+
+  {
+    "id": "m7sci-adaptation-and-artificial-selection-001",
+    "loId": "m7sci.adaptation-and-artificial-selection",
+    "cedCode": "M7SCI-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which statement defines an adaptation?",
+    "choices": [
+      "Any change an organism makes to its own body during its life in order to suit its surroundings",
+      "A trait an organism develops because it needs that trait",
+      "A trait that makes an organism more advanced than the organisms living around it",
+      "An inherited trait that became common in a population over generations, because the individuals that had it survived and reproduced more often"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count the organisms and count the generations. An adaptation is a statement about a group across many rounds of parents and offspring.",
+      "The trait has to be inherited, and it has to have become common because the individuals carrying it left more offspring."
+    ]
+  },
+  {
+    "id": "m7sci-adaptation-and-artificial-selection-002",
+    "loId": "m7sci.adaptation-and-artificial-selection",
+    "cedCode": "M7SCI-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In November a student notices that the family dog has grown a thicker coat than it had in the summer, and says the dog has adapted to winter. Is that the right use of the word adaptation?",
+    "choices": [
+      "Yes, because the dog changed in a way that helps it survive the cold, and any helpful change is an adaptation",
+      "No. The dog is responding to cold weather within its own life. An adaptation is an inherited trait that became common in a population across generations",
+      "Yes, and any puppies the dog has next spring will be born with thicker coats because of this winter",
+      "No, because a thick coat can never be an adaptation for any animal, since a thick coat is a problem in hot weather"
+    ],
+    "answer": "B",
+    "hints": [
+      "Two questions decide whether the word fits: how many organisms are involved, and how many generations.",
+      "Growing a thicker coat in winter is like sweating on a hot day. It is something a body does during one life, and the weather does not write it into the next generation."
+    ]
+  },
+  {
+    "id": "m7sci-adaptation-and-artificial-selection-003",
+    "loId": "m7sci.adaptation-and-artificial-selection",
+    "cedCode": "M7SCI-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gardener tastes the corn crop every year, saves seed only from the sweetest plants, and sows that seed the next spring. Sweetness is inherited. After many years almost every ear in the patch is sweet. In this example, what is doing the job that owls do for a population of mice?",
+    "choices": [
+      "The sweetness itself, which spreads through the patch on its own once it appears",
+      "The soil in the garden, which decides which plants grow best",
+      "The gardener's preference, which decides which plants get to reproduce",
+      "The seed itself, which chooses whether or not to sprout"
+    ],
+    "answer": "C",
+    "hints": [
+      "In natural selection the environment decides which individuals reproduce. Ask who decides that in this garden.",
+      "Look for the filter: the thing that lets some individuals leave offspring while others leave none."
+    ]
+  },
+  {
+    "id": "m7sci-adaptation-and-artificial-selection-004",
+    "loId": "m7sci.adaptation-and-artificial-selection",
+    "cedCode": "M7SCI-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Dog breeds as different as a great dane and a chihuahua all came from wolves, through people breeding dogs for the traits they wanted. Which statement about that is correct?",
+    "choices": [
+      "People chose which dogs would have puppies, generation after generation, so traits that already varied among dogs became common in particular breeds",
+      "People created brand new traits that had never appeared in any wolf or dog, and put them into the puppies",
+      "The wolves changed themselves during their own lifetimes to become smaller and friendlier so that people would feed them",
+      "The breeds show that dogs are further along in evolution than wolves are"
+    ],
+    "answer": "A",
+    "hints": [
+      "Breeding can only work on differences that are already present in the animals being bred.",
+      "Ask what a breeder actually controls. A breeder does not build a puppy. A breeder decides which adults become parents."
+    ]
+  },
+  {
+    "id": "m7sci-adaptation-and-artificial-selection-005",
+    "loId": "m7sci.adaptation-and-artificial-selection",
+    "cedCode": "M7SCI-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Thick fur is an adaptation in a population of foxes living in a cold place. A student says this means thick fur is simply a better trait than thin fur. How should that be corrected?",
+    "choices": [
+      "The student is right, because a trait that becomes common must be the best possible version of that trait",
+      "Thick fur only had to work better than the other versions that happened to be present in that population, under those conditions. In a hot place the same trait would be a serious problem, so no trait is better everywhere",
+      "The student is right, because foxes with thick fur are a more advanced kind of fox than foxes with thin fur",
+      "The student is wrong, because fur thickness is not inherited and so it cannot be an adaptation at all"
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what the trait was competing against: every design that could possibly exist, or only the versions that happened to be present at the time?",
+      "Try the same trait under different conditions. Would thick fur still help a fox living in a desert?"
+    ]
+  },
+  {
+    "id": "m7sci-adaptation-and-artificial-selection-006",
+    "loId": "m7sci.adaptation-and-artificial-selection",
+    "cedCode": "M7SCI-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two things happen to apple trees in one valley. In an orchard, a grower plants seeds only from the trees whose apples resist rotting the longest, and repeats this for many years. In a wild patch nearby nobody plants anything, but a fungus that rots fruit spreads through the area and stays for many years. Fruit that resists rotting is inherited, and in both places it becomes common. Which statement best compares the two cases?",
+    "choices": [
+      "Only the orchard case counts as selection, because the wild trees had nobody choosing for them",
+      "Only the wild case counts as selection, because the orchard trees were handed the trait by the grower",
+      "Neither case counts as selection, because in both places the trees changed their own fruit in response to what was happening around them",
+      "Both cases are the same process acting on variation that already existed. In the orchard the filter is human preference; in the wild patch the filter is the fungus"
+    ],
+    "answer": "D",
+    "hints": [
+      "In both places ask the same two questions: were the trees already different from one another, and what decided which trees left offspring?",
+      "Artificial selection and natural selection differ only in what does the filtering. Neither one creates a trait that was not already there."
+    ]
+  }
+]

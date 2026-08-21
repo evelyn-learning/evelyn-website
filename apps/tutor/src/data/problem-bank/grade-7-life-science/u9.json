@@ -1,0 +1,461 @@
+[
+  {
+    "id": "m7sci-ecosystem-organization-001",
+    "loId": "m7sci.ecosystem-organization",
+    "cedCode": "M7SCI-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A city park holds gray squirrels, robins and oak trees, along with soil, water and sunlight. Which of these groups is a population?",
+    "choices": [
+      "All the gray squirrels living in the park",
+      "All the living things in the park",
+      "The gray squirrels and the robins in the park, because both live in the trees",
+      "The soil, the water and the sunlight of the park"
+    ],
+    "answer": "A",
+    "hints": [
+      "A population is built from one species only. Count how many different kinds of living thing each choice contains.",
+      "One choice is the community, one puts two different species in a single group, and one lists no living things at all."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-organization-002",
+    "loId": "m7sci.ecosystem-organization",
+    "cedCode": "M7SCI-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which part of a forest floor is a biotic factor?",
+    "choices": [
+      "The sunlight that reaches the ground",
+      "The temperature of the air under the trees",
+      "A dead leaf lying on the ground",
+      "The rainwater sitting in a puddle"
+    ],
+    "answer": "C",
+    "hints": [
+      "Biotic does not mean alive right now. It means living OR once living.",
+      "Three of these were never alive at any point. Ask where each one came from."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-organization-003",
+    "loId": "m7sci.ecosystem-organization",
+    "cedCode": "M7SCI-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A class studies a vacant lot near the school. They record every weed, beetle, ant and sparrow they can find, and they also record the sunlight, the rainfall and the soil temperature. Which statement describes what they studied?",
+    "choices": [
+      "A community, because a community includes the sunlight, the rainfall and the temperature",
+      "An ecosystem, because they recorded both the living parts and the non-living parts",
+      "A population, because everything they recorded is in one lot",
+      "A biome, because a vacant lot is larger than a single pond"
+    ],
+    "answer": "B",
+    "hints": [
+      "Decide the level by what the group contains. Sort their notes into living things and non-living things first.",
+      "A community stops at the living things. Adding the non-living parts moves you up one step."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-organization-004",
+    "loId": "m7sci.ecosystem-organization",
+    "cedCode": "M7SCI-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Which list names the levels of ecological organization in order from the smallest to the largest?",
+    "choices": [
+      "population, organism, community, ecosystem, biome",
+      "organism, community, population, ecosystem, biome",
+      "organism, population, community, ecosystem, biome",
+      "organism, population, community, biome, ecosystem"
+    ],
+    "answer": "C",
+    "hints": [
+      "Each level is built out of the level below it, so start with a single living thing.",
+      "A group of one species is a population, all the populations together are the community, and adding the non-living parts gives the ecosystem. A biome holds many similar ecosystems."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-organization-005",
+    "loId": "m7sci.ecosystem-organization",
+    "cedCode": "M7SCI-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rotting log in a forest holds beetles, fungi and mosses together with damp wood, trapped water and air. A herd of elephants is spread across a whole valley. Which statement names the level of each one correctly?",
+    "choices": [
+      "The elephants are an ecosystem because they cover far more ground, and the log is only a population.",
+      "The log is a small ecosystem and the elephants are a population, because a level is set by what the group contains, not by how large the area is.",
+      "Both are ecosystems, because both of them contain living things.",
+      "The log cannot be any level, because the wood in it is no longer alive."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask what is inside each group, and ignore how much ground it covers.",
+      "The elephants are all one species. The log holds several species plus non-living parts."
+    ]
+  },
+  {
+    "id": "m7sci-ecosystem-organization-006",
+    "loId": "m7sci.ecosystem-organization",
+    "cedCode": "M7SCI-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student lists six parts of a school garden: earthworms in the soil, a log lying along the edge of the bed, the sunlight, the air temperature, fallen apple blossoms, and water from the hose. How many of the six are biotic factors, and which ones are they?",
+    "choices": [
+      "One: the earthworms only, because nothing else on the list is alive right now",
+      "Two: the earthworms and the water, because those are the parts the garden could not do without",
+      "Four: the earthworms, the log, the fallen blossoms and the water, because living things are made mostly of water",
+      "Three: the earthworms, the log and the fallen blossoms, because biotic means living or once living"
+    ],
+    "answer": "D",
+    "hints": [
+      "Go item by item and ask one question about each: was this ever alive?",
+      "Being needed by living things does not make something biotic. Water and sunlight are needed by everything in the garden and were still never alive."
+    ]
+  },
+
+  {
+    "id": "m7sci-food-chains-and-food-webs-001",
+    "loId": "m7sci.food-chains-and-food-webs",
+    "cedCode": "M7SCI-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Every food chain begins with which kind of organism?",
+    "choices": [
+      "A carnivore, such as a snake",
+      "A decomposer, such as a soil fungus",
+      "A producer, such as grass or pond algae",
+      "A herbivore, such as a grasshopper"
+    ],
+    "answer": "C",
+    "hints": [
+      "The first organism in a chain has to get its energy from somewhere other than eating.",
+      "Only one kind of organism makes its own food using sunlight, and everything else in the ecosystem is living on the energy it captured."
+    ]
+  },
+  {
+    "id": "m7sci-food-chains-and-food-webs-002",
+    "loId": "m7sci.food-chains-and-food-webs",
+    "cedCode": "M7SCI-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In a meadow, grasshoppers eat grass. Which way should the arrow between the grass and the grasshopper point, and why?",
+    "choices": [
+      "From the grasshopper to the grass, because the arrow shows what the grasshopper eats",
+      "From the grass to the grasshopper, because energy moves out of the grass and into the grasshopper",
+      "Either way, because both organisms belong to the same food chain",
+      "From the grasshopper to the grass, because the grass gets the material back after the grasshopper dies"
+    ],
+    "answer": "B",
+    "hints": [
+      "An arrow in a food chain follows the energy, not the eating and not the hunting.",
+      "Try reading the arrow as the words \"gives its energy to\". Which organism ends up with the energy inside it?"
+    ]
+  },
+  {
+    "id": "m7sci-food-chains-and-food-webs-003",
+    "loId": "m7sci.food-chains-and-food-webs",
+    "cedCode": "M7SCI-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes a pond food chain as heron to sunfish, sunfish to mayfly larva, mayfly larva to algae. He says each arrow shows what that animal eats. Which statement about his chain is correct?",
+    "choices": [
+      "The chain is correct, because an arrow shows what each animal eats.",
+      "Only the last arrow is backwards, and the first two links are fine.",
+      "Every arrow is backwards. It should read algae to mayfly larva, mayfly larva to sunfish, sunfish to heron.",
+      "The chain is fine, because a food chain may be written starting from either end."
+    ],
+    "answer": "C",
+    "hints": [
+      "Use the ten-second check: a food chain has to start at a producer, and a producer cannot eat anything.",
+      "This chain starts at a heron. If the first link is backwards, look at what that means for all the rest."
+    ]
+  },
+  {
+    "id": "m7sci-food-chains-and-food-webs-004",
+    "loId": "m7sci.food-chains-and-food-webs",
+    "cedCode": "M7SCI-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A meadow food chain runs grass to grasshopper, grasshopper to frog, frog to snake. The meadow holds an enormous amount of grass, plenty of grasshoppers, a fair number of frogs, and only a few snakes. Which statement best explains why the snakes are so few?",
+    "choices": [
+      "Snakes are bigger than grasshoppers, so the meadow simply has room for fewer of them.",
+      "The snake sits at the top of the chain, so the most energy of all is available to it.",
+      "Energy is recycled back down to the grass at each step, so almost none of it reaches the snakes.",
+      "Only a small fraction of the energy at each step is stored in the level above it, so very little is left after three steps."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about the energy a grasshopper eats. How much of it ends up stored in the grasshopper's body, and where does the rest go?",
+      "Count the steps from the grass to the snake. Energy is lost at every one of them, and it leaves as heat rather than passing on."
+    ]
+  },
+  {
+    "id": "m7sci-food-chains-and-food-webs-005",
+    "loId": "m7sci.food-chains-and-food-webs",
+    "cedCode": "M7SCI-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A forest food web runs leaves to caterpillar, caterpillar to songbird, songbird to hawk. Fungi and bacteria in the soil break down the fallen leaves, the dead animals and the droppings. Which statement about those fungi and bacteria is correct?",
+    "choices": [
+      "They are part of the food web, and what they release goes back to the soil where the trees can use it again.",
+      "They sit outside the food web, because rotting only destroys dead material and gives nothing back.",
+      "They capture the sunlight that brings energy into the forest in the first place.",
+      "They feed only on the hawks, because the hawks are at the top of the web."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask what a decomposer puts back, and then ask who in this web needs it.",
+      "The producers here are the trees, and they take in what they need from the soil and the air."
+    ]
+  },
+  {
+    "id": "m7sci-food-chains-and-food-webs-006",
+    "loId": "m7sci.food-chains-and-food-webs",
+    "cedCode": "M7SCI-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A meadow food web runs like this: grass to grasshopper, grass to mouse, grasshopper to frog, frog to snake, mouse to snake, snake to hawk. A disease wipes out every frog. Which prediction follows from the web?",
+    "choices": [
+      "Only the frogs are affected, because a change stops at the species that is lost.",
+      "Grasshoppers increase because they have lost a predator, so the grass is grazed down, and the snakes eat more mice instead, so the mouse population drops.",
+      "Grasshoppers decrease, because the frogs had been their main source of food.",
+      "The grass increases, because there are fewer animals left in the meadow to eat it."
+    ],
+    "answer": "B",
+    "hints": [
+      "Find every arrow that touches the frogs. There are two: grasshopper to frog, and frog to snake.",
+      "Read each of those arrows from the eaten to the eater to work out who was feeding on whom, then follow the change one more step along the arrows it reaches."
+    ]
+  },
+
+  {
+    "id": "m7sci-cycles-of-matter-001",
+    "loId": "m7sci.cycles-of-matter",
+    "cedCode": "M7SCI-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Water in a puddle turns into an invisible gas and rises into the air. What is this step of the water cycle called?",
+    "choices": [
+      "Evaporation",
+      "Condensation",
+      "Precipitation",
+      "Transpiration"
+    ],
+    "answer": "A",
+    "hints": [
+      "The water is changing from a liquid into a gas, and it is leaving the ground for the air.",
+      "One of the other three is the opposite change, gas back into liquid droplets, and another is water falling from a cloud."
+    ]
+  },
+  {
+    "id": "m7sci-cycles-of-matter-002",
+    "loId": "m7sci.cycles-of-matter",
+    "cedCode": "M7SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement describes how matter and energy move through an ecosystem?",
+    "choices": [
+      "Matter cycles and is used again and again, while energy flows one way, entering as sunlight and leaving as heat.",
+      "Energy cycles and is used again and again, while matter flows one way and is used up.",
+      "Both matter and energy cycle, so an ecosystem needs neither fresh sunlight nor fresh atoms.",
+      "Both matter and energy flow one way, so an ecosystem needs a delivery of new atoms to keep going."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which one an ecosystem needs delivered fresh every day. Anything that truly went around in a loop would not need a delivery.",
+      "Heat that leaves a food web never returns to the plants. Now ask the same about a carbon atom a decomposer releases into the air."
+    ]
+  },
+  {
+    "id": "m7sci-cycles-of-matter-003",
+    "loId": "m7sci.cycles-of-matter",
+    "cedCode": "M7SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which process REMOVES carbon dioxide from the air?",
+    "choices": [
+      "Cellular respiration in an animal",
+      "Decomposers breaking down a dead log",
+      "Gasoline burning in a car engine",
+      "Photosynthesis in a plant"
+    ],
+    "answer": "D",
+    "hints": [
+      "Three of these four send carbon back into the air as carbon dioxide. Only one takes carbon out of it.",
+      "Ask which process builds carbon into a sugar. That is the doorway carbon uses to get into living things."
+    ]
+  },
+  {
+    "id": "m7sci-cycles-of-matter-004",
+    "loId": "m7sci.cycles-of-matter",
+    "cedCode": "M7SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Every autumn a forest drops a thick layer of leaves onto the ground, and yet the forest floor does not get deeper year after year. Which statement best explains this?",
+    "choices": [
+      "The matter in the leaves is destroyed as they rot, so it stops existing.",
+      "The trees pull the carbon from the fallen leaves back up through their roots.",
+      "The leaves rot, but rotting is only decay and is part of no cycle, so the matter stays shut inside the leaves.",
+      "Decomposers break the leaves down and return the matter in them to the soil and the air, where living things can use it again."
+    ],
+    "answer": "D",
+    "hints": [
+      "The leaves do not vanish on their own. Something is feeding on them, and whatever feeds on something returns matter while it does so.",
+      "One choice claims matter can be destroyed, which never happens. Another sends carbon into a tree through the roots, when a tree takes its carbon in from the air."
+    ]
+  },
+  {
+    "id": "m7sci-cycles-of-matter-005",
+    "loId": "m7sci.cycles-of-matter",
+    "cedCode": "M7SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A young tree grows over many years into a large tree with a heavy trunk and thick branches. Where did most of the carbon in all that new wood come from?",
+    "choices": [
+      "From carbon dioxide in the air, which the leaves take in during photosynthesis",
+      "From carbon in the soil, which the roots take in along with the water",
+      "From brand new carbon atoms that the tree built as it grew",
+      "From sunlight, which the tree turned into wood"
+    ],
+    "answer": "A",
+    "hints": [
+      "Soil gives a tree water and minerals. Ask separately where the carbon comes in.",
+      "No living thing makes an atom, and sunlight is energy rather than matter. That leaves only two places the carbon could have come from, and only one of them is a carbon-containing gas."
+    ]
+  },
+  {
+    "id": "m7sci-cycles-of-matter-006",
+    "loId": "m7sci.cycles-of-matter",
+    "cedCode": "M7SCI-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Every decomposer in a forest disappears. The Sun keeps shining and the plants keep making food, but several years later dead leaves and dead animals lie in deep piles and the plants are growing poorly. Which explanation is correct?",
+    "choices": [
+      "The forest has run out of matter, because the dead material used all of it up.",
+      "Sunlight has stopped reaching the forest, so the plants no longer have the energy they need.",
+      "The matter is still in the forest but locked inside the dead material, so the soil is never restocked with nitrogen and minerals. Energy was never the problem, since sunlight kept arriving.",
+      "Energy has stopped cycling back to the plants, because returning energy to producers is the job decomposers do."
+    ],
+    "answer": "C",
+    "hints": [
+      "Nothing left the forest. Ask where all the matter in those piles actually is, and whether any plant can reach it.",
+      "Handle matter and energy separately. The Sun never stopped shining, so decide which of the two is genuinely in short supply."
+    ]
+  },
+
+  {
+    "id": "m7sci-biomes-and-habitats-001",
+    "loId": "m7sci.biomes-and-habitats",
+    "cedCode": "M7SCI-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A biome is a large region defined mainly by which two things?",
+    "choices": [
+      "Its temperature and its precipitation",
+      "The animals and the plants that are found there",
+      "The country and the continent it sits in",
+      "Its size and the number of species it holds"
+    ],
+    "answer": "A",
+    "hints": [
+      "Two measurements of climate do most of the sorting work.",
+      "Places on opposite sides of the world belong to the same biome when their climate is alike, which rules out any answer based on where the region is."
+    ]
+  },
+  {
+    "id": "m7sci-biomes-and-habitats-002",
+    "loId": "m7sci.biomes-and-habitats",
+    "cedCode": "M7SCI-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which statement about deserts is accurate?",
+    "choices": [
+      "A desert is defined by very high temperature, so every desert is hot.",
+      "A desert is defined by sandy ground, so a dry place without sand is not a desert.",
+      "A desert is defined by very low precipitation, so a desert can be hot or cold.",
+      "A desert is defined by having no living things in it at all."
+    ],
+    "answer": "C",
+    "hints": [
+      "Only one of the two climate measurements gives a desert its name. Is it temperature or precipitation?",
+      "Almost no precipitation falls on much of Antarctica. Does your chosen statement still work there?"
+    ]
+  },
+  {
+    "id": "m7sci-biomes-and-habitats-003",
+    "loId": "m7sci.biomes-and-habitats",
+    "cedCode": "M7SCI-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A chipmunk lives in a temperate forest. It sleeps in a burrow under a fallen log, spends the day gathering seeds and nuts, and is hunted by hawks. Which statement uses the words biome, habitat and niche correctly?",
+    "choices": [
+      "The temperate forest is its habitat, the burrow under the log is its biome, and gathering seeds is its niche.",
+      "The temperate forest is its biome, the burrow under the log is its habitat, and gathering seeds while being hunted by hawks is part of its niche.",
+      "The temperate forest is its niche, the burrow under the log is its habitat, and gathering seeds is its biome.",
+      "The burrow under the log is its biome, the temperate forest is its niche, and being hunted by hawks is its habitat."
+    ],
+    "answer": "B",
+    "hints": [
+      "Sort the three pieces of information by size and by type. One is a whole region, one is a specific spot, and one is not a place at all.",
+      "A niche is a job, so the only phrase that can be a niche is the one describing what the chipmunk DOES."
+    ]
+  },
+  {
+    "id": "m7sci-biomes-and-habitats-004",
+    "loId": "m7sci.biomes-and-habitats",
+    "cedCode": "M7SCI-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A field station sends these notes: every month of the year is cold, very little precipitation falls, a layer of the soil never thaws even in summer, no trees grow, and mosses and lichens cover the ground. Which biome is this, and which piece of evidence decides it?",
+    "choices": [
+      "Desert, because the very low precipitation is the deciding evidence",
+      "Taiga, because the long cold winters are the deciding evidence",
+      "Temperate forest, because mosses grow on forest floors",
+      "Tundra, because soil that never thaws is permafrost, and the ground of a cold desert does thaw in summer"
+    ],
+    "answer": "D",
+    "hints": [
+      "Low precipitation narrows the answer to the two dry biomes, and a desert can be any temperature, so cold does not settle it either.",
+      "Look for the one observation that only a single biome can explain."
+    ]
+  },
+  {
+    "id": "m7sci-biomes-and-habitats-005",
+    "loId": "m7sci.biomes-and-habitats",
+    "cedCode": "M7SCI-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Most plants growing in the tundra are low to the ground rather than tall. Which sentence explains that pattern correctly?",
+    "choices": [
+      "Each tundra plant grew shorter during its own life because it needed shelter from the wind.",
+      "The tundra changed the plants so that they would fit their surroundings better.",
+      "The plants stayed low so that they could avoid the cold wind.",
+      "In tundra conditions, plants that were already low-growing survived and reproduced more often, so over many generations that trait became common."
+    ],
+    "answer": "D",
+    "hints": [
+      "Three of these describe something happening to one plant, or something a plant wanted. Only one describes a whole population changing across generations.",
+      "A trait is inherited from a parent. An individual cannot invent a new inherited trait because it needs one, and a place cannot reach in and redesign a living thing."
+    ]
+  },
+  {
+    "id": "m7sci-biomes-and-habitats-006",
+    "loId": "m7sci.biomes-and-habitats",
+    "cedCode": "M7SCI-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two forests sit on opposite sides of the world. Both are warm in every month and get rain in nearly every month, and both grow trees in layers. Monkeys live in one of them and none live in the other. A student says the two forests cannot belong to the same biome, because different animals live in them. Which response is correct?",
+    "choices": [
+      "The student is right, because a biome is named for the animals that live in it.",
+      "The student is wrong. Biomes are sorted by climate, and both forests are warm and wet all year, so both are tropical rainforest even though different species live in each one.",
+      "The student is right, because two places on different continents always belong to different biomes.",
+      "The student is wrong, but only because the two forests are about the same size."
+    ],
+    "answer": "B",
+    "hints": [
+      "Go back to what actually defines a biome, and check whether the student used it.",
+      "Similar climate supports similar KINDS of living things, which is not the same as the identical list of species."
+    ]
+  }
+]
