@@ -237,6 +237,7 @@
     "test:image-upload-normalise": "npx tsx scripts/test-image-upload-normalise.ts",
     "test:posed-problem-unboarded": "npx tsx scripts/test-posed-problem-unboarded.ts",
     "test:pacing-verdict": "npx tsx scripts/test-pacing-verdict.ts",
+    "test:embed-debug-coverage": "npx tsx scripts/test-embed-debug-coverage.ts",
     "test:derived-notes": "MONGODB_URI=mongodb://127.0.0.1:1/unused-stub npx tsx scripts/test-derived-notes.ts",
     "test:profile-resolver": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-profile-resolver.ts",
     "test:portal-student-scoping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-student-scoping.ts",

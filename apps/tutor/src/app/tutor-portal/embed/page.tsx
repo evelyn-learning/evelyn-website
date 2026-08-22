@@ -123,6 +123,62 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // covers 'evidence_' (the older 'segment_evidence_on_advance' was likewise
   // uncovered); two short lines per completed evaluative segment.
   'evidence_',
+  // ⚠ R54 (2026-08-22) — THIRD TIME THIS LIST HAS SILENTLY EATEN A FAMILY.
+  // The two notes above record the first two. This time an audit found
+  // **148 of 283 emitted event types uncovered**, i.e. 52% of the engine's
+  // instrumentation discarded for the surface where essentially all real
+  // students are. Consequences that had already reached conclusions:
+  //   · `posed_problem_unboarded` (R51) was shipped WITH A WATCH CONDITION —
+  //     "if it never fires on a turn nobody wrote it for it is over-narrow" —
+  //     that was UNFALSIFIABLE, because the event never reached Mongo.
+  //   · `quantities_unanchored` (R49b) reading 0 across the corpus measured
+  //     this allowlist, not the detector.
+  //   · `image_upload` reading 0 across 318 embed sessions was reported as
+  //     evidence uploads never worked. It was evidence of this filter.
+  // A coverage gate now exists (scripts/test-embed-debug-coverage.ts) so a
+  // new event type can never again be dropped silently — adding one forces
+  // a choice between persisting it and naming it as deliberately excluded.
+  //
+  // Added here: the R50-R53 diagnostic families, plus the correctness family
+  // (a tutor stating something false is the single most important thing to
+  // have a record of, and NONE of it was being kept).
+  'qpin_', 'segment_overlong', 'posed_problem_unboarded',
+  'quantities_unanchored', 'map_pins_', 'image_upload',
+  'whiteboard_false_claim', 'fact_wrong', 'wrong_final_answer',
+  'answer_miscorrection', 'spoken_card_mismatch', 'voice_board_mismatch',
+  'context_loss', 'uncertain_transcript', 'noise_filtered',
+  // R54 continued — the remaining families the audit surfaced. These are
+  // INCIDENT-level events (one row when something goes wrong), not per-turn
+  // breadcrumbs, so the volume argument for keeping this list short does not
+  // apply to them. Grouped by what they let you answer during triage:
+  //   why a claim was killed / retried:
+  'arith_claim_kill', 'simplification_verdict_kill', 'give_up_render_kill',
+  'contradiction_inversion_retry', 'self_correction_retry',
+  'nonanswer_praise_retry', 'kill_suppressed_final_attempt',
+  //   why something vanished from the board:
+  'killed_render', 'figure_evolve_removed', 'prescribed_render',
+  //   whether the card matched what was said (content drift):
+  'show_problem_', 'show_segment_card', 'show_worked_example',
+  'problem_equation_drift', 'board_anchor_flagged', 'meta_narration_dropped',
+  //   pedagogy advisories:
+  'bare_praise_ending_advisory', 'affirmative_no_advance_advisory',
+  'disclaimer_verbatim_reuse_advisory', 'socratic_bulldozing',
+  'try_yourself', 'turn_cap_flagged', 'required_phrase_missing',
+  //   the dedup family (R49b's retry-context bug lived here):
+  'dedup_',
+  //   learner-model writes:
+  'evidence_', 'segment_evidence', 'mark_segment_complete_cross_lo_rejected',
+  'advance_', 'inferred_advance_from_segment_card',
+  //   latency covers + startup/recovery failures:
+  'cover_', 'cutoff_resume', 'warmup_', 'listening_no_dispatch',
+  //   problem pipeline:
+  'generate_problem_unrendered', 'generated_problem_received',
+  'no_problem_available_observed', 'new_problem_keyword',
+  'expected_answer_pinned', 'student_problem_detected',
+  //   session dynamics + resume:
+  'topic_shift', 'fatigue_detected', 'long_session_checkin', 'session_',
+  'resume_from_clause', 'mid_session_regreet_dropped', 'duplicate_response',
+  'skip_button', 'opener_', 'student_turn_detection_error',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

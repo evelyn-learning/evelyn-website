@@ -224,7 +224,7 @@ import {
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
-import { findOutOfBoundsPins, buildMapBoundsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
+import { findOutOfBoundsPins, buildMapBoundsRejection, findCrowdedPins, buildCrowdedPinsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
 import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
@@ -4599,6 +4599,26 @@ export function VoiceTutorRealtime({
           onDebugEvent?.(
             'map_pins_out_of_bounds',
             `${bad.length} pin(s) outside "${cmdAny.background}": ${bad.map((b) => `${b.label} ${b.by}° past ${b.edge}`).join('; ')}`,
+          );
+          rejected.push({ action: 'show_map', reason });
+          return [];
+        }
+        // R54 (live, portal-0d4a6a90): the pins fit the background but are
+        // too crowded to read at that scale. Three features 7° apart on the
+        // `world` map projected to a 10.5px span with the markers inside one
+        // another — the tutor announced three drawn features and the student
+        // reported seeing nothing. Only rejects when a tighter background
+        // both contains the pins AND actually separates them.
+        const crowded = findCrowdedPins(
+          String(cmdAny.background ?? ''),
+          Array.isArray(cmdAny.pins) ? cmdAny.pins : [],
+        );
+        if (crowded) {
+          const reason = buildCrowdedPinsRejection(String(cmdAny.background ?? ''), crowded);
+          console.warn('[VoiceTutorRealtime] Dropping show_map with unreadably crowded pins:', crowded);
+          onDebugEvent?.(
+            'map_pins_crowded',
+            `"${crowded.a}" and "${crowded.b}" ${crowded.px}px apart on "${cmdAny.background}" — suggest "${crowded.suggestion}"`,
           );
           rejected.push({ action: 'show_map', reason });
           return [];
