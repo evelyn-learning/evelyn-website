@@ -336,3 +336,160 @@ export function detectUnanchoredQuantities(opts: {
   const unanchored = missing.length >= MIN_SITUATION_QUANTITIES;
   return { unanchored, missing, considered: spoken.length };
 }
+
+/* ------------------------------------------------------------------ *
+ * R51 — a POSED problem whose subject matter is not on the board.
+ * ------------------------------------------------------------------ */
+
+/**
+ * Live miss (portal-0984e111, t=97.3): the tutor posed an entire new word
+ * problem in speech —
+ *   "let's push a bit further with problem 3 then. Kris has 5 gift bags,
+ *    each filled with s stickers and t toys — what expression captures how
+ *    many items are in just one bag?"
+ * — while the turn's ONLY render was `showEquation 5p` labelled "New cards
+ * from p packs": the answer to the PREVIOUS problem. So the board showed
+ * stale content that looked current, and the student was asked to work on
+ * something that was never written down.
+ *
+ * It slipped past all three existing checks, and each for a different
+ * reason, which is why this needs its own:
+ *   · `exercise_no_board` is a PRESENCE check — *a* render fired, so it was
+ *     satisfied. It cannot tell whose problem the render was about.
+ *   · `detectUnanchoredQuantities` needs >= MIN_SITUATION_QUANTITIES
+ *     numerics; this turn's only number is "5", dropped as a conversational
+ *     count, and s/t are variables, not quantities.
+ *   · shape (iv) `scene-prose` needs a scene verb (picture/imagine/suppose);
+ *     this turn has none — it states a situation flatly.
+ *
+ * The question this asks is the one none of them ask: does the board carry
+ * the SUBJECT MATTER of the thing just posed? Compared on distinctive
+ * content words rather than numbers, because the numbers are exactly what
+ * collide across problems ("5 gift bags" vs "5p" would match on "5" and
+ * prove nothing) while the nouns do not.
+ *
+ * Telemetry-only, like its siblings — never a kill, never a corrective note.
+ */
+
+/**
+ * Ask-phrases that mark a problem being POSED rather than discussed.
+ *
+ * CALIBRATED AGAINST THE CORPUS, NOT GUESSED — and the first draft was wrong.
+ * A looser version (any of what/which/write/how-many near
+ * expression|total|value|many|much) fired on 13 of 591 real tutor turns, and
+ * inspection showed almost all were FALSE: mishear recoveries ("I couldn't
+ * quite catch that"), session resumes ("we're back — right where we left
+ * off"), affirmations ("Right — 11.25, that's your total pushback") and idle
+ * nudges ("Take your time. Team Plus is pulling with fifteen"). Those are
+ * conversation, not a problem being set.
+ *
+ * Narrowed to an explicit expression-WRITING ask, which is the lesson shape
+ * the live miss belongs to. KNOWN AND ACCEPTED BLIND SPOT: a posed
+ * ARITHMETIC problem ("Jeff has 12 marbles and gives away 5 — how many
+ * left?") will not match. Per this file's standing tradeoff a false negative
+ * costs one missed telemetry line, while a false positive costs a misleading
+ * advisory on an ordinary turn — and at 591 turns the loose version was
+ * mostly noise, which would have made the whole signal unusable.
+ */
+const POSED_ASK_RE =
+  /\b(?:what|which)\s+(?:expression|equation|formula)\b|\bwrite\s+(?:an?|the)\s+(?:expression|equation|formula)\b|\bexpression\s+(?:captures|represents|shows|models|for)\b/i;
+
+/** Words that carry no subject matter, so overlap on them means nothing. */
+const CONTENT_STOPWORDS = new Set([
+  'what', 'which', 'write', 'give', 'tell', 'them', 'they', 'this', 'that',
+  'with', 'from', 'have', 'has', 'had', 'each', 'just', 'only', 'more',
+  'than', 'then', 'there', 'here', 'about', 'into', 'your', 'yours', 'their',
+  'expression', 'equation', 'formula', 'answer', 'problem', 'question',
+  'many', 'much', 'total', 'number', 'numbers', 'value', 'values', 'like',
+  'some', 'any', 'all', 'one', 'two', 'three', 'four', 'five', 'lets',
+  'let', 'now', 'next', 'first', 'second', 'third', 'captures', 'called',
+  'using', 'these', 'those', 'when', 'where', 'does', 'will', 'would',
+  'been', 'being', 'were', 'was', 'are', 'and', 'the', 'for', 'but',
+]);
+
+/** Distinctive content words: >=4 letters, not a stopword, deduped. */
+function contentWords(text: string): string[] {
+  const words = (text || '')
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !CONTENT_STOPWORDS.has(w));
+  return Array.from(new Set(words));
+}
+
+/**
+ * The POSED sentence, plus the one before it for setup.
+ *
+ * Comparing the WHOLE turn against the board was the first design and it
+ * could not catch its own live miss: that turn OPENS by wrapping up the
+ * previous problem ("five p new cards, since each of the p packs holds 5")
+ * and only then poses the new one. The board legitimately carried "cards"
+ * and "packs" from the wrap-up half, so whole-turn overlap was non-zero and
+ * the detector stayed silent — while the half that mattered, the Kris gift
+ * bags, was nowhere on the board. **A turn is not one topic, and comparing
+ * it as though it were hides exactly the transition this exists to catch.**
+ *
+ * Sentence split follows the R49b lesson: terminator + whitespace + capital,
+ * never a bare /[.!?]/ — a naive split cuts "10.5" at its decimal point, and
+ * decimals mid-sentence are routine in a maths tutor.
+ */
+function posedSegment(text: string): string {
+  // \s* not \s+ : real stored turns run sentences together with NO space
+  // ("...holds 5.Sounds like this is clicking..." — verbatim from the live
+  // miss). Requiring whitespace made the splitter a no-op on exactly the
+  // turn it was written for. Decimals stay safe because the lookahead
+  // demands a CAPITAL, and "10.5" is followed by a digit.
+  const sentences = (text || '').split(/(?<=[.!?])\s*(?=[A-Z"'“])/);
+  const idx = sentences.findIndex((x) => POSED_ASK_RE.test(x));
+  if (idx < 0) return '';
+  return (idx > 0 ? sentences[idx - 1] + ' ' : '') + sentences[idx];
+}
+
+/** Minimum distinctive words a turn must carry before the check applies —
+ *  below this the overlap statistic is too small to mean anything. */
+export const MIN_POSED_CONTENT_WORDS = 4;
+
+export interface PosedProblemUnboardedResult {
+  /** True when a problem was posed and the board carries none of its subject. */
+  unboarded: boolean;
+  /** Distinctive words from the posed text (what was looked for). */
+  considered: string[];
+  /** Those that DID appear in the render payloads. */
+  matched: string[];
+}
+
+export function detectPosedProblemUnboarded(opts: {
+  turnText: string;
+  /** Flattened text of every render payload this turn put on the board. */
+  renderedText: string;
+}): PosedProblemUnboardedResult {
+  const NONE: PosedProblemUnboardedResult = { unboarded: false, considered: [], matched: [] };
+  const text = (opts.turnText || '').trim();
+  if (!text) return NONE;
+  // A posed problem is a QUESTION or an IMPERATIVE. Requiring '?' was the
+  // first gate and it was too strict — caught by this suite's own held-out
+  // case, "Write an expression for the total bulbs she plants.", which is a
+  // perfectly ordinary way to set a problem and carries no question mark.
+  // The live miss happened to have one, so a seed-shaped gate looked fine.
+  const IMPERATIVE_ASK_RE = /\bwrite\s+(?:an?|the)\s+(?:expression|equation|formula)\b/i;
+  if (!text.includes('?') && !IMPERATIVE_ASK_RE.test(text)) return NONE;
+  if (!POSED_ASK_RE.test(text)) return NONE;
+
+  // Scope to the posed sentence — NOT the whole turn. See posedSegment.
+  const segment = posedSegment(text);
+  if (!segment) return NONE;
+  const considered = contentWords(segment);
+  if (considered.length < MIN_POSED_CONTENT_WORDS) return { ...NONE, considered };
+
+  const board = (opts.renderedText || '').toLowerCase();
+  // Substring rather than word match: a render often carries a stemmed or
+  // pluralised form ("sticker" for "stickers", "bag" inside "gift bags"),
+  // and a near-miss on morphology would fire the detector on a board that
+  // is genuinely about the right thing — the expensive direction here.
+  const matched = considered.filter((w) => board.includes(w) || board.includes(w.replace(/s$/, '')));
+
+  // Fire ONLY at zero overlap. A board carrying some of the subject is not
+  // the failure this exists to catch, and a partial-overlap threshold would
+  // make the detector fire on ordinary multi-step turns.
+  return { unboarded: matched.length === 0, considered, matched };
+}

@@ -235,6 +235,7 @@
     "test:map-pins": "npx tsx scripts/test-map-pins.ts",
     "test:correction-note-timeout": "npx tsx scripts/test-correction-note-timeout.ts",
     "test:image-upload-normalise": "npx tsx scripts/test-image-upload-normalise.ts",
+    "test:posed-problem-unboarded": "npx tsx scripts/test-posed-problem-unboarded.ts",
     "test:derived-notes": "MONGODB_URI=mongodb://127.0.0.1:1/unused-stub npx tsx scripts/test-derived-notes.ts",
     "test:profile-resolver": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-profile-resolver.ts",
     "test:portal-student-scoping": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-portal-student-scoping.ts",

@@ -215,6 +215,7 @@ import {
   BARGEIN_GATE_MAX_MS,
   TUTOR_CORRECTION_NOTE_TIMEOUT,
   CORRECTION_NOTE_TIMEOUT_MS,
+  TUTOR_POSED_PROBLEM_BOARD_CHECK,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -222,7 +223,7 @@ import {
   resolveBargeInEnergyThreshold,
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
-import { detectVoiceOnlyExercise, detectUnanchoredQuantities, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
@@ -13565,6 +13566,28 @@ export function VoiceTutorRealtime({
             onDebugEvent?.(
               'quantities_unanchored',
               `${q.missing.length}/${q.considered} spoken value(s) never reached the board: ${q.missing.join(', ')}`,
+            );
+          }
+        }
+        // R51: the SUBJECT-MATTER companion. The two checks above ask "did a
+        // render fire?" and "did the spoken NUMBERS reach the board?" —
+        // neither can tell whose problem the board is about. Live miss
+        // (portal-0984e111 t=97.3): the tutor posed the Kris gift-bag problem
+        // entirely in speech while the turn's only render was `5p`, the
+        // PREVIOUS problem's answer, so the board carried stale content that
+        // looked current. exercise_no_board was satisfied (a render fired),
+        // quantities_unanchored could not fire (the sole numeric, 5, is
+        // dropped as a conversational count and s/t are variables), and
+        // scene-prose needs a scene verb the turn does not have.
+        if (TUTOR_POSED_PROBLEM_BOARD_CHECK) {
+          const posed = detectPosedProblemUnboarded({
+            turnText: fullText,
+            renderedText: turnRenderPayloadTextRef.current,
+          });
+          if (posed.unboarded) {
+            onDebugEvent?.(
+              'posed_problem_unboarded',
+              `none of ${posed.considered.length} posed word(s) on the board [${posed.considered.slice(0, 8).join(', ')}]`,
             );
           }
         }

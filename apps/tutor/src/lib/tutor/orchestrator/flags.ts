@@ -201,6 +201,18 @@ export const TUTOR_IDLE_NUDGE_V2 =
 // This bounds the wait: once the deadline passes, the tutor self-corrects
 // unprompted. Default ON per the R49b standing rule — R49 shipped two
 // severe fixes dark and prod kept the bugs.
+// R51 posed-problem board check (2026-08-22, portal-0984e111 t=97.3). The
+// tutor posed a whole new word problem in speech while the turn's only
+// render was the PREVIOUS problem's answer — board stale, looked current.
+// Slips past all three existing checks: exercise_no_board is satisfied by
+// ANY render, quantities_unanchored needs >=3 numerics, scene-prose needs a
+// scene verb. Telemetry-only, never a kill. Default ON per the standing rule.
+// ⚠ Measured 1 hit in 591 real turns, and that hit IS the live miss it was
+// built from — so its generalisation is evidenced only by synthetic held-out
+// cases. Watch for it firing on a turn nobody wrote it for; if it never
+// does, it is over-narrow rather than the failure being rare.
+export const TUTOR_POSED_PROBLEM_BOARD_CHECK =
+  process.env.NEXT_PUBLIC_TUTOR_POSED_PROBLEM_BOARD_CHECK !== 'off';
 export const TUTOR_CORRECTION_NOTE_TIMEOUT =
   process.env.NEXT_PUBLIC_TUTOR_CORRECTION_NOTE_TIMEOUT !== 'off';
 /** How long a planted note may sit undelivered before the tutor volunteers
