@@ -101,7 +101,7 @@ import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mi
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
-import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState } from '@/lib/tutor/voice/cover-layer';
+import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
@@ -224,6 +224,8 @@ import {
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { findOutOfBoundsPins, buildMapBoundsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
+import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
 import { lastQuestionSentence } from '@/lib/tutor/question-gist-text';
 import { decideFallbackCard } from '@/lib/tutor/whiteboard/process-tool-call';
@@ -2626,10 +2628,8 @@ export function VoiceTutorRealtime({
   // the affirmation word ("*Exactly* — six!", "*Yes* — eight!"). The
   // anchor `^` previously failed on the leading `*`. Allow zero or more
   // markdown emphasis prefix chars (`*`, `_`, `~`) before the word.
-  const brainAffirmationRegex = /^[*_~`]*(exactly|that'?s right|that is right|correct|perfect|nice work|nice job|nice|good job|good|great|right|yes|yep|yeah|spot[\s-]?on|absolutely|you got it|you'?ve got it|you have got it|you'?re right|bingo)(?!.*\b(but|however|not\s+quite|almost|let\s+me\s+(?:re)?check|wait|actually|hmm|hold on|wrong|incorrect))/i;
   // Brain-correction regex. Matches phrases that indicate the student
   // got the answer wrong. Resets correct-streak, increments wrong-streak.
-  const brainCorrectionRegex = /\b(not\s+quite|that's\s+not|that\s+is\s+not|let's\s+(?:re)?check|almost|close\s+but|incorrect)\b/i;
   // Session-end signal regex (Task Y4 farewell-exemption fix). Mirrors the
   // "Session-end signals" trigger-phrase list verbatim from the
   // system-prompt (system-prompt-builder.ts ~907-913) — that section is a
@@ -4569,6 +4569,40 @@ export function VoiceTutorRealtime({
         // that contradicts the rendered card. The fuzzy 0.5 threshold
         // had escapes documented in git history (operator swap, RHS
         // drift on shared-shape problems) that exact tools handle now.
+      }
+      // R52 (live, portal-8d15f85c): reject a map whose pins fall outside the
+      // chosen background HERE, at acceptance, not at render time.
+      //
+      // R50 rendered a construction error in the card instead. It fired
+      // correctly and still failed, because the command was accepted, stored
+      // and summarised into <whiteboard_state> — so the brain believed the map
+      // was up, scribbled twice onto pins of a map that was never drawn, and
+      // referred to "our map" and "the two towns on the board" for the rest of
+      // the lesson while the student looked at an error box. Zero error events
+      // were recorded. Rendering is too late to tell the brain anything.
+      //
+      // Rejecting here routes through the same path as show_problem's empty
+      // statement: the command is dropped, audio is killed, and the reason is
+      // fed back so the turn is retried with a background that fits.
+      if (cmd.action === 'showMap') {
+        const bad = findOutOfBoundsPins(
+          String(cmdAny.background ?? ''),
+          Array.isArray(cmdAny.pins) ? cmdAny.pins : [],
+        );
+        if (bad.length > 0) {
+          const reason = buildMapBoundsRejection(
+            String(cmdAny.background ?? ''),
+            Array.isArray(cmdAny.pins) ? cmdAny.pins : [],
+            bad,
+          );
+          console.warn('[VoiceTutorRealtime] Dropping show_map with out-of-bounds pins:', bad);
+          onDebugEvent?.(
+            'map_pins_out_of_bounds',
+            `${bad.length} pin(s) outside "${cmdAny.background}": ${bad.map((b) => `${b.label} ${b.by}° past ${b.edge}`).join('; ')}`,
+          );
+          rejected.push({ action: 'show_map', reason });
+          return [];
+        }
       }
       if (cmd.action === 'showCircuit') {
         const components = Array.isArray(cmdAny.components) ? cmdAny.components : [];
@@ -8919,7 +8953,9 @@ export function VoiceTutorRealtime({
         //       changed" signal at the segment-tracking layer.
         //   (b) brain emits a correction utterance — handled in the
         //       post-stream streak update (resets correct-streak when
-        //       brainCorrectionRegex matches).
+        //       a correction is detected — see readPacingVerdict in
+        //       lib/tutor/voice/pacing-verdict.ts, which replaced the inline
+        //       brainAffirmationRegex/brainCorrectionRegex pair in R53).
         // For ordinary segment-change (try-easy-1 → try-easy-2 etc.),
         // we just retag the segId and keep the count. The original
         // design Q10 spec called for segment-change reset, but that
@@ -13650,9 +13686,21 @@ export function VoiceTutorRealtime({
         // non-verification. See objective-credit.ts header for why.
         const objectiveSignal = objectiveCorrectThisTurnRef.current?.signal ?? null;
         if (ver || objectiveSignal) {
-          const head = fullText.slice(0, 200);
-          const isAffirm = brainAffirmationRegex.test(head);
-          const isCorrect = brainCorrectionRegex.test(fullText);
+          // R53 (live, portal-8d15f85c): both readings moved into
+          // pacing-verdict.ts. The student answered correctly TWICE, was
+          // affirmed both times, and pacing recorded incorrect=2 — then the
+          // tutor told them the question was "still hanging out there waiting
+          // for your answer" and made them answer a third time. Two defects:
+          // the affirmation was ^-anchored so a lead-in ("Ah, Quito — got
+          // it. Right, …") defeated it, and the correction pattern ran over
+          // the WHOLE turn where the ordinary adverb "almost" ("rain almost
+          // never falls") marked a correct answer wrong.
+          // Measured over 591 real tutor turns: 35 change classification —
+          // 27 none→correct, 7 incorrect→none, 1 incorrect→correct, and
+          // ZERO that previously had credit lose it.
+          const verdictRead = readPacingVerdict(fullText);
+          const isAffirm = verdictRead.isAffirm;
+          const isCorrect = verdictRead.isCorrection;
           const decision = decidePacingCredit({
             isVerification: !!(ver?.isVerification && fullText.length > 0),
             isAffirm,
@@ -14451,6 +14499,29 @@ export function VoiceTutorRealtime({
           // TOTAL reads as perceived-first-sound (the Phase-2 metric).
           turnLatencyRef.current?.mark('firstTtsFetch', Date.now());
           onDebugEvent?.('ack_spoken', `"${text}" turn=${ackTurnIndex}${TUTOR_COVER_V2 && verdict.kind === 'cover' ? ` cat=${verdict.category}` : ''}`);
+          // R52: make the numeric-echo guard's REFUSALS observable.
+          //
+          // `ANSWER_PREFIX_ALLOWED` and its sibling patterns are allowlists
+          // built from what student utterances were assumed to look like.
+          // Everything outside them is refused silently and falls back to a
+          // generic cover — never wrong, and never reported. This guard was
+          // patched three times (R50 word forms, R50b symbol forms, R50c
+          // expressions) and every one of those adjustments was evaluated
+          // against silence, because there was no way to see how often, or
+          // why, the echo declined to fire.
+          //
+          // Only fires when the turn CONTAINED a number, so an ordinary
+          // wordy answer is not counted as a refusal — the ratio that
+          // matters is "numbers seen vs numbers echoed".
+          if (/\d/.test(ackTranscript)) {
+            const detail = extractAnswerTokenDetailed(ackTranscript);
+            if (detail.token === null && detail.reason && detail.reason !== 'no-number') {
+              onDebugEvent?.(
+                'ack_echo_refused',
+                `reason=${detail.reason} · "${ackTranscript.slice(0, 80)}"`,
+              );
+            }
+          }
         }, delayMs);
       }
     }

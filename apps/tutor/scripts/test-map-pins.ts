@@ -8,7 +8,7 @@
  * Run: npx tsx scripts/test-map-pins.ts
  */
 import { strict as assert } from 'node:assert';
-import { findOutOfBoundsPins, suggestContainingBackground } from '../src/app/tutor/components/whiteboard/MapRenderer';
+import { findOutOfBoundsPins, suggestContainingBackground, buildMapBoundsRejection } from '../src/lib/tutor/whiteboard/map-pin-bounds';
 import { deoverlapLabels } from '../src/lib/tutor/whiteboard/label-deoverlap';
 
 let passed = 0, failed = 0;
@@ -128,6 +128,46 @@ test('markers themselves never move — only text', () => {
   // unchanged by the pass (deoverlapLabels must not mutate its inputs).
   assert.deepEqual(dots, PTS.map(({ px, py }) => ({ left: px - R, right: px + R, top: py - R, bottom: py + R })));
   assert.equal(fixed.length, inputs.length);
+});
+
+console.log('\nR52 — the rejection the BRAIN receives');
+
+test('a bad map produces an actionable rejection reason', () => {
+  const bad = findOutOfBoundsPins('south-america', MAP1);
+  const reason = buildMapBoundsRejection('south-america', MAP1, bad);
+  // Must name the offending pin, how far out, and a concrete alternative —
+  // a rejection the brain cannot act on just burns a turn.
+  assert.ok(reason.includes('Warm rainy island'), 'names the pin');
+  assert.ok(/north edge/.test(reason), 'names the edge');
+  assert.ok(/background: "/.test(reason), 'offers a concrete background');
+  assert.ok(/show_map was rejected/.test(reason), 'names the tool');
+});
+
+test('the rejection tells the brain NOT to reference the map', () => {
+  // The live failure was not the bad pin — it was the brain scribbling at
+  // and talking about a map that was never drawn, for the rest of the
+  // lesson. The reason must close that off explicitly.
+  const reason = buildMapBoundsRejection('south-america', MAP1, findOutOfBoundsPins('south-america', MAP1));
+  assert.ok(/nothing was drawn/i.test(reason));
+  assert.ok(/do NOT scribble/i.test(reason));
+});
+
+test('the suggested background actually contains every pin', () => {
+  // A suggestion that is itself out of bounds would send the brain into a
+  // rejection loop — worse than no suggestion.
+  const suggestion = suggestContainingBackground(MAP1);
+  assert.ok(suggestion);
+  assert.deepEqual(findOutOfBoundsPins(suggestion!, MAP1), [],
+    `suggested "${suggestion}" must contain all pins`);
+});
+
+test('a valid map yields no rejection path at all', () => {
+  assert.deepEqual(findOutOfBoundsPins('south-america', MAP2), []);
+});
+
+test('malformed pins never throw and never reject', () => {
+  assert.deepEqual(findOutOfBoundsPins('south-america', [{ label: 'x', lat: NaN, lon: 0 }]), []);
+  assert.deepEqual(findOutOfBoundsPins('south-america', [{ label: 'y', lat: Infinity, lon: 0 }]), []);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

@@ -16,6 +16,17 @@ import React from 'react';
 import { feat, featSlug, type FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { deoverlapLabels } from '@/lib/tutor/whiteboard/label-deoverlap';
 import { MAP_BACKGROUND_PATHS, MAP_BACKGROUND_BBOXES } from './map-backgrounds.generated';
+// R52: the bounds geometry moved to lib so the TOOL-CALL VALIDATOR and this
+// renderer share one definition of "out of bounds". The renderer keeps its
+// error box as a BACKSTOP for any path that bypasses the dispatcher — but the
+// dispatcher is now what actually stops a bad map, because only a rejection
+// there reaches the brain (R50's card-level error did not).
+import {
+  findOutOfBoundsPins,
+  suggestContainingBackground,
+  PIN_DOT_RADIUS,
+} from '@/lib/tutor/whiteboard/map-pin-bounds';
+export { findOutOfBoundsPins, suggestContainingBackground } from '@/lib/tutor/whiteboard/map-pin-bounds';
 
 export interface MapPin {
   /**
@@ -112,92 +123,10 @@ function normToSvg(x: number, y: number): [number, number] {
   ];
 }
 
-/** Half-extent of a pin's dot (r=6 + 2px stroke), in SVG units. A pin whose
- *  dot cannot be drawn whole is the thing the student actually sees clipped. */
-const PIN_DOT_RADIUS = 8;
-
-export interface OutOfBoundsPin {
-  label: string;
-  lat: number;
-  lon: number;
-  /** Which edge it fell past — for the error message, not for layout. */
-  edge: 'north' | 'south' | 'east' | 'west';
-  /** Degrees past that edge, rounded to 1dp. */
-  by: number;
-}
-
 /**
- * R50 T6 (live, portal-b0a1b396 image 1): the brain pinned "Warm rainy
- * island" at 18.2°N — Puerto Rico — on the `south-america` background, whose
- * bbox tops out at 12.437°N. `projectLatLon` had no bounds check, so the pin
- * projected to py = 0.0 exactly (the top edge of the viewBox) and both the
- * dot and its label were clipped.
- *
- * Deliberately NOT clamped into view. Clamping would park the dot on
- * northern Colombia while the label still read "Warm rainy island" — turning
- * a rendering defect into a taught geography error, which is strictly worse
- * than showing nothing. Instead this surfaces a construction error the brain
- * re-renders from, the same affordance that fixed the R49 geometry
- * point-step bug (an error box the brain self-corrects from, rather than a
- * silent no-op it never learns about).
- *
- * Pure; safe on missing bbox (unknown background ⇒ no claim, no error).
+ * Transform normalized (0–100) coords to SVG pixel coords.
+ * Slight inset so pins near the edge aren't clipped.
  */
-export function findOutOfBoundsPins(
-  background: string,
-  pins: readonly { label?: string; lat?: number; lon?: number }[],
-): OutOfBoundsPin[] {
-  const bbox = MAP_BACKGROUND_BBOXES[background];
-  if (!bbox) return [];
-  const [w, s2, e, n] = bbox;
-  const out: OutOfBoundsPin[] = [];
-  for (const pin of pins) {
-    if (pin.lat == null || pin.lon == null) continue;
-    const [nx, ny] = projectLatLon(pin.lat, pin.lon, bbox);
-    const [px, py] = normToSvg(nx, ny);
-    // The projected dot must fit wholly inside the viewBox. Testing the
-    // PROJECTED position (not a degree tolerance) targets the defect the
-    // student sees — a coastal pin a shade outside the landmass bbox still
-    // lands on canvas and must not error.
-    const offTop = py - PIN_DOT_RADIUS < 0;
-    const offBottom = py + PIN_DOT_RADIUS > SVG_HEIGHT;
-    const offLeft = px - PIN_DOT_RADIUS < 0;
-    const offRight = px + PIN_DOT_RADIUS > SVG_WIDTH;
-    if (!offTop && !offBottom && !offLeft && !offRight) continue;
-    const edge: OutOfBoundsPin['edge'] =
-      offTop ? 'north' : offBottom ? 'south' : offLeft ? 'west' : 'east';
-    const by =
-      edge === 'north' ? pin.lat - n
-        : edge === 'south' ? s2 - pin.lat
-        : edge === 'west' ? w - pin.lon
-        : pin.lon - e;
-    out.push({
-      label: pin.label || '(unlabelled)',
-      lat: pin.lat,
-      lon: pin.lon,
-      edge,
-      by: Math.round(Math.max(0, by) * 10) / 10,
-    });
-  }
-  return out;
-}
-
-/** The narrowest known background whose bbox contains every supplied pin —
- *  the actionable half of the error message. Null when none qualifies. */
-export function suggestContainingBackground(
-  pins: readonly { lat?: number; lon?: number }[],
-): string | null {
-  const pts = pins.filter((p) => p.lat != null && p.lon != null) as { lat: number; lon: number }[];
-  if (pts.length === 0) return null;
-  let best: string | null = null;
-  let bestArea = Infinity;
-  for (const [name, [w, s2, e, n]] of Object.entries(MAP_BACKGROUND_BBOXES)) {
-    if (!pts.every((p) => p.lat <= n && p.lat >= s2 && p.lon >= w && p.lon <= e)) continue;
-    const area = (e - w) * (n - s2);
-    if (area < bestArea) { bestArea = area; best = name; }
-  }
-  return best;
-}
 
 /**
  * Real country outlines from Natural Earth 110m. The paths below are the

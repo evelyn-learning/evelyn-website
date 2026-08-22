@@ -179,38 +179,82 @@ function tokenBefore(t: string, index: number): string {
  *  garbles the numerator into a non-digit, e.g. "i over 1") AND the text
  *  past the captured token still carries more math — a truncated fraction
  *  read ("1 over 1") misquotes the student worse than a generic ack. */
-export function extractAnswerToken(t: string): string | null {
+/** Why a numeric echo was refused. Every refusal path in
+ *  `extractAnswerTokenDetailed` returns one of these. */
+export type AnswerRefusalReason =
+  | 'no-number'
+  | 'multi-number'
+  | 'fraction-continuation'
+  | 'prefix-not-allowed'
+  | 'operator-outside-token'
+  | 'trailing-modifier';
+
+export interface AnswerTokenResult {
+  token: string | null;
+  reason?: AnswerRefusalReason;
+}
+
+/**
+ * R52 — the detailed form, added so the guard's REFUSALS become observable.
+ *
+ * `ANSWER_PREFIX_ALLOWED` is an allowlist built from what student utterances
+ * were assumed to look like, and everything outside it is refused SILENTLY:
+ * the caller falls back to a generic cover, which is never wrong and never
+ * reported. That is the correct failure direction for correctness and the
+ * worst one for tuning — if the list is too narrow the numeric echo quietly
+ * stops applying and nothing says so.
+ *
+ * Measured at the time this was added: 5 refusal points in this function, 0
+ * telemetry calls in the whole file. The three separate patches this guard
+ * received (R50 word forms, R50b symbol forms, R50c expressions) were each
+ * evaluated against silence.
+ *
+ * Credit where it belongs: a peer project shipped an allowlist that discarded
+ * 100% of one business's conversion events, and caught it ONLY because an
+ * earlier reviewer had forced its filter to report a skip count — 11,964
+ * skipped vs 2,853 kept, sitting in the output the whole time. Vigilance does
+ * not survive a context reset; a counter in the output does.
+ */
+export function extractAnswerTokenDetailed(t: string): AnswerTokenResult {
   const matches = [...t.matchAll(ANSWER_EXPR_RE)];
-  if (matches.length !== 1) return null;
+  if (matches.length === 0) return { token: null, reason: 'no-number' };
+  if (matches.length > 1) return { token: null, reason: 'multi-number' };
   const m = matches[0];
   const raw = m[0];
 
   const looksLikeFraction = /\//.test(raw) || /\b(over|divided)\b/i.test(t);
   if (looksLikeFraction) {
     const remainder = t.slice((m.index ?? 0) + raw.length);
-    if (FRACTION_CONTINUATION_RE.test(remainder)) return null;
+    if (FRACTION_CONTINUATION_RE.test(remainder)) return { token: null, reason: 'fraction-continuation' };
   }
 
   // R50 T4: the number is qualified by an adjacent word — echoing the bare
   // digits would misquote (and for "point 3" / "66.6 bar", misstate the
   // value). Refuse; the caller falls back to the generic cover.
   const before = tokenBefore(t, m.index ?? 0);
-  if (before && !ANSWER_PREFIX_ALLOWED.has(before)) return null;
+  if (before && !ANSWER_PREFIX_ALLOWED.has(before)) return { token: null, reason: 'prefix-not-allowed' };
   // R50c: an operator the captured token does not span means the student
   // gave an EXPRESSION and this token is only a fragment of it. Blank out
   // the token's own span first, so a spoken sign ("minus 22") or a fraction
   // ("-3/6") — where the operator IS inside the capture — still echoes.
   const outsideToken =
     t.slice(0, m.index ?? 0) + ' ' + t.slice((m.index ?? 0) + raw.length);
-  if (MATH_OPERATOR_RE.test(outsideToken)) return null;
-  if (VALUE_MODIFIER_TRAIL_RE.test(t.slice((m.index ?? 0) + raw.length))) return null;
+  if (MATH_OPERATOR_RE.test(outsideToken)) return { token: null, reason: 'operator-outside-token' };
+  if (VALUE_MODIFIER_TRAIL_RE.test(t.slice((m.index ?? 0) + raw.length))) return { token: null, reason: 'trailing-modifier' };
 
-  return normaliseLeadingDot(raw)
-    .replace(/\s*\/\s*/, ' over ')
-    .replace(/-\s*/g, 'minus ')
-    .replace(/\bnegative\b/gi, 'minus')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return {
+    token: normaliseLeadingDot(raw)
+      .replace(/\s*\/\s*/, ' over ')
+      .replace(/-\s*/g, 'minus ')
+      .replace(/\bnegative\b/gi, 'minus')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  };
+}
+
+/** Back-compat wrapper — every existing call site and test uses this shape. */
+export function extractAnswerToken(t: string): string | null {
+  return extractAnswerTokenDetailed(t).token;
 }
 
 export function classifyCover(transcript: string): CoverVerdict {

@@ -5,6 +5,7 @@ import {
   createWarmupState, decideWarmupAction,
   COVER_POOLS, ESCALATION_TIERS, NOISE_NAG_LINE,
   extractAnswerToken,
+  extractAnswerTokenDetailed,
   type CoverVerdict,
 } from '../src/lib/tutor/voice/cover-layer';
 
@@ -236,6 +237,37 @@ check('r50c-keep-fraction',      extractAnswerToken('1/2') === '1 over 2');
 check('r50c-keep-plain',         extractAnswerToken('Um, 64.') === '64');
 check('r50c-keep-decimal',       extractAnswerToken('Uh, .6.') === '0.6');
 check('r50c-keep-agreement',     extractAnswerToken("Yeah, that's 16.") === '16');
+
+// --- R52: the refusal path must be OBSERVABLE. Until this existed, every
+// adjustment to ANSWER_PREFIX_ALLOWED (three of them in one night) was a
+// guess evaluated against silence — the guard refused, the caller fell back
+// to a generic cover, and nothing anywhere reported it.
+const rr = (t: string) => extractAnswerTokenDetailed(t).reason;
+check('r52-reason-prefix',    rr('B 5 is deeper down.') === 'prefix-not-allowed');
+check('r52-reason-operator',  rr('Yeah, there will be 17 plus A.') === 'operator-outside-token');
+check('r52-reason-trailing',  rr('66.6 bar.') === 'trailing-modifier');
+check('r52-reason-percent',   rr('60%.') === 'trailing-modifier');
+check('r52-reason-multi',     rr('m is 4 and b is -2') === 'multi-number');
+check('r52-reason-none',      rr('I have no idea') === 'no-number');
+// "1 over 1 + x" has TWO numbers and trips multi-number FIRST — my first
+// draft of this test used it and failed, correctly. The fraction-continuation
+// path is only reachable when ASR garbles the numerator to a non-digit, which
+// is the exact live shape R45 was built from ("i over 1 + x" for 1/(1+x)).
+check('r52-reason-fraction',  rr('i over 1 + x') === 'fraction-continuation');
+check('r52-reason-multi-wins', rr('1 over 1 + x') === 'multi-number');
+// A SUCCESSFUL echo must carry no reason — otherwise the counter would
+// report refusals on turns that echoed fine and the ratio would be noise.
+check('r52-success-no-reason',    extractAnswerTokenDetailed('Um, 64.').reason === undefined);
+check('r52-success-token',        extractAnswerTokenDetailed('Um, 64.').token === '64');
+check('r52-success-dec-no-reason',extractAnswerTokenDetailed('Uh, .6.').reason === undefined);
+// Every refusal reason must be distinct from every other, or the counter
+// cannot tell which rule is over-firing — the entire point of collecting it.
+const allReasons = ['B 5 is deeper down.', 'Yeah, there will be 17 plus A.', '66.6 bar.',
+                    'm is 4 and b is -2', 'I have no idea', 'i over 1 + x'].map(rr);
+check('r52-reasons-distinct', new Set(allReasons).size === allReasons.length);
+// The wrapper must stay byte-compatible with every existing call site.
+check('r52-wrapper-parity-1', extractAnswerToken('Um, 64.') === extractAnswerTokenDetailed('Um, 64.').token);
+check('r52-wrapper-parity-2', extractAnswerToken('60%.') === extractAnswerTokenDetailed('60%.').token);
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');
