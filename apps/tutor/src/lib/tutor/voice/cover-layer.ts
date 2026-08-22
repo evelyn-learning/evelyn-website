@@ -138,6 +138,30 @@ function normaliseLeadingDot(token: string): string {
   return token.replace(/(^|[^\d])\.(\d)/g, '$10.$2');
 }
 
+/** R50c (live, portal-0984e111): the student's answer was an ALGEBRAIC
+ *  EXPRESSION and the echo quoted only its number, dropping the variable:
+ *    "SS plus 4."              -> "Okay, 4."        (student meant s + 4)
+ *    "Yeah, there will be 17 plus A." -> "Hmm, 17."  (meant 17 + a)
+ *  Third variant of one class in one night (R50 caught the word forms
+ *  "point 6"/"60 percent"; R50b the symbol forms ".6"/"60%"), and the reason
+ *  each slipped is the same: the guard was built from the surface forms in
+ *  the last transcript instead of from the question "is the captured token
+ *  the WHOLE answer?".
+ *
+ *  This asks that question directly. R45 already established the principle
+ *  for one case — "a captured fraction followed by MORE math tokens must
+ *  refuse rather than truncate and misquote" — it was simply never
+ *  generalised past fractions. An operator sitting OUTSIDE the captured
+ *  token means the utterance is an expression and the token is a fragment
+ *  of it.
+ *
+ *  Deliberately operator-based, NOT variable-detection: "is that token a
+ *  variable or an English word?" is unanswerable ("a" is both an article
+ *  and the variable in the live case above), whereas "is there an operator
+ *  the captured token does not cover?" is decidable from the text. */
+const MATH_OPERATOR_RE =
+  /(?:^|\s)(?:plus|minus|times|over|divided(?:\s+by)?)(?:\s|$)|[+*/×÷]/i;
+
 /** Lowercased word directly before `index`, apostrophes normalised to ASCII.
  *  Empty string when the number opens the utterance (always allowed). */
 function tokenBefore(t: string, index: number): string {
@@ -172,6 +196,13 @@ export function extractAnswerToken(t: string): string | null {
   // value). Refuse; the caller falls back to the generic cover.
   const before = tokenBefore(t, m.index ?? 0);
   if (before && !ANSWER_PREFIX_ALLOWED.has(before)) return null;
+  // R50c: an operator the captured token does not span means the student
+  // gave an EXPRESSION and this token is only a fragment of it. Blank out
+  // the token's own span first, so a spoken sign ("minus 22") or a fraction
+  // ("-3/6") — where the operator IS inside the capture — still echoes.
+  const outsideToken =
+    t.slice(0, m.index ?? 0) + ' ' + t.slice((m.index ?? 0) + raw.length);
+  if (MATH_OPERATOR_RE.test(outsideToken)) return null;
   if (VALUE_MODIFIER_TRAIL_RE.test(t.slice((m.index ?? 0) + raw.length))) return null;
 
   return normaliseLeadingDot(raw)

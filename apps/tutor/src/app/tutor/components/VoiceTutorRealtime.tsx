@@ -19274,20 +19274,38 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               tabIndex keeps it out of the tab order; the caption beside it
               and the End/Pause + Mute controls carry the real affordances.
               Pre-start it is still the start button, unchanged. */}
+          {/* R50c (2026-08-21, Praveen's call): make it UNMISTAKABLY an
+              indicator. R49 turned this into a state-only element but left it
+              sharing the button's size, fill, shadow and mic glyph — only the
+              hover/active scale differed, which is invisible until you tap.
+              Live report: "clickable before the tutor's first turn, unclickable
+              after", i.e. the two states are indistinguishable until a tap
+              fails, and a tap that does nothing reads as broken.
+
+              So it is now a status LAMP, not a disabled button: a small dot,
+              no shadow, no mic glyph, no tap-target footprint. The state
+              information is not lost — the caption beside it already spells it
+              out in words ("SPEAKING" / "listening"), which is why the big
+              coloured disc was redundant as well as misleading. Colour and
+              pulse still carry the state at a glance.
+
+              Pre-start is UNTOUCHED: that is still the real start button and
+              must keep every button affordance. */}
           {TUTOR_DOCK_STATE_ONLY && hasStarted ? (
             <div
               aria-hidden
               data-testid="tutor-mic-state"
-              className={`
-                relative rounded-full text-white flex-shrink-0
-                transition-all duration-200 flex items-center justify-center
-                ${isIsland ? 'w-10 h-10 shadow-md' : 'w-12 h-12'}
-                ${stateUI.color}
-                ${stateUI.pulse ? 'animate-pulse' : ''}
-              `}
+              className={`flex-shrink-0 flex items-center justify-center ${isIsland ? 'w-6 h-6' : 'w-7 h-7'}`}
               title={stateUI.text}
             >
-              {stateUI.icon}
+              <span
+                className={`
+                  block rounded-full transition-all duration-200
+                  ${isIsland ? 'w-2.5 h-2.5' : 'w-3 h-3'}
+                  ${stateUI.color}
+                  ${stateUI.pulse ? 'animate-pulse' : ''}
+                `}
+              />
             </div>
           ) : (
           <button

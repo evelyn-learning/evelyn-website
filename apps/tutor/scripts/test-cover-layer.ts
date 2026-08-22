@@ -216,5 +216,26 @@ check('r50b-neg-still',           extractAnswerToken("it's -2.") === 'minus 2');
 check('r50b-frac-still',          extractAnswerToken('1/2') === '1 over 2');
 check('r50b-plain-int-cat',       cat('Um, 64.') === 'numeric-echo');
 
+// --- R50c: the ALGEBRAIC-EXPRESSION form. Third variant of one class in one
+// night — R50 caught the word forms ("point 6"/"60 percent"), R50b the symbol
+// forms (".6"/"60%"), and these are expressions where the number is only a
+// FRAGMENT of the student's answer. Verbatim from portal-0984e111.
+check('r50c-expr-var-then-num',  extractAnswerToken('SS plus 4.') === null);                       // was "Okay, 4."
+check('r50c-expr-num-then-var',  extractAnswerToken('Yeah, there will be 17 plus A.') === null);   // was "Hmm, 17."
+check('r50c-expr-coeff',         extractAnswerToken('So will it be 3 times C minus 15?') === null);
+check('r50c-expr-two-vars',      extractAnswerToken('5 times S plus T') === null);
+check('r50c-expr-symbol-op',     extractAnswerToken('17 + a') === null);
+check('r50c-expr-cat',           cat('SS plus 4.') !== 'numeric-echo');
+// The operator must be OUTSIDE the captured token to disqualify it. These
+// carry an operator INSIDE the capture and must still echo — without this
+// distinction the rule would silently kill every signed and fractional answer.
+check('r50c-keep-spoken-neg',    extractAnswerToken('minus 22.') === 'minus 22');
+check('r50c-keep-literal-neg',   extractAnswerToken("it's -2.") === 'minus 2');
+check('r50c-keep-neg-fraction',  extractAnswerToken('-3/6.') === 'minus 3 over 6');
+check('r50c-keep-fraction',      extractAnswerToken('1/2') === '1 over 2');
+check('r50c-keep-plain',         extractAnswerToken('Um, 64.') === '64');
+check('r50c-keep-decimal',       extractAnswerToken('Uh, .6.') === '0.6');
+check('r50c-keep-agreement',     extractAnswerToken("Yeah, that's 16.") === '16');
+
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('all cover-layer checks passed');

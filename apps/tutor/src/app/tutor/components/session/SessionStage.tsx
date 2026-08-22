@@ -33,6 +33,7 @@ import {
   normalizeCaptionMath,
 } from '@/lib/tutor/whiteboard/caption-fit';
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
+import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
 
 // 'manual-held' (R34 T4): Manual mic mode has a buffered, unsent turn —
@@ -1618,7 +1619,17 @@ function handleImage(e: React.ChangeEvent<HTMLInputElement>, onStudentInput: (t:
   const file = e.target.files?.[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => { if (typeof reader.result === 'string') onStudentInput('image', reader.result); };
+  reader.onload = () => {
+    if (typeof reader.result !== 'string') return;
+    // R50c: re-encode anything the vision API cannot take (avif/heic/bmp/svg)
+    // to PNG before it leaves the browser. A live AVIF upload did nothing at
+    // all — the picker offers `image/*`, the API whitelists four types, and
+    // nothing in between told the student. normaliseUploadedImage passes
+    // supported types straight through, so the common path is unchanged.
+    void normaliseUploadedImage(reader.result).then((safe) => {
+      if (safe) onStudentInput('image', safe);
+    });
+  };
   reader.readAsDataURL(file);
   e.target.value = '';
 }

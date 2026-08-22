@@ -12,6 +12,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Clock, LogOut, Camera, Upload, X, Download, GripVertical } from 'lucide-react';
+import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 
 interface WhiteboardCommandData {
   action: string;
@@ -183,7 +184,13 @@ export function SessionControls({
     const reader = new FileReader();
     reader.onload = (event) => {
       const base64 = event.target?.result as string;
-      setUploadPreview(base64);
+      // R50c: normalise here rather than at submit, so the PREVIEW the student
+      // sees is the same bytes that will be sent — an avif that previews fine
+      // and then fails on submit is the confusing version of this bug.
+      void normaliseUploadedImage(base64).then((safe) => {
+        if (safe) setUploadPreview(safe);
+        else alert('That image could not be read. Try a PNG or JPEG.');
+      });
     };
     reader.readAsDataURL(file);
   }, []);
@@ -383,7 +390,7 @@ export function SessionControls({
                     Click to upload or drag and drop
                   </p>
                   <p className="mt-1 text-xs text-gray-400">
-                    PNG, JPG, or HEIC up to 10MB
+                    PNG, JPG, HEIC, AVIF, WEBP or GIF up to 10MB
                   </p>
                 </div>
                 <input
