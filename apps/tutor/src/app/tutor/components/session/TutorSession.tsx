@@ -47,7 +47,7 @@ import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
-import { isQpinStaleByTurns, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
+import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
 import { latestSubstantiveTutorEntry, shouldClearQpinOnSegmentChange } from '@/lib/tutor/qpin-behavior';
 import { preStartDockCaption } from './prestart-affordances';
 import { HeaderClock } from './HeaderClock';
@@ -62,6 +62,10 @@ const TUTOR_CAPTION_SYNC = process.env.NEXT_PUBLIC_TUTOR_CAPTION_SYNC !== 'off';
 // Q pin (2026-07-14): gist of the tutor's current question pinned over the
 // board while the student thinks/answers. Kill switch, same pattern as above.
 const TUTOR_QUESTION_PIN = process.env.NEXT_PUBLIC_TUTOR_QUESTION_PIN !== 'off';
+// R55: clear the Q-pin when the question has been ANSWERED, not after N turns.
+// ON by default per the standing rule — R49 shipped two severe fixes dark and
+// prod kept the bugs.
+const TUTOR_QPIN_CLEAR_ON_ANSWER = process.env.NEXT_PUBLIC_TUTOR_QPIN_CLEAR_ON_ANSWER !== 'off';
 
 /** Loose normalization for matching the caption-sync reveal against the
  *  question sentence (display text and spoken text differ in punctuation
@@ -924,6 +928,48 @@ export default function TutorSession(props: TutorSessionProps) {
     onDebugEvent?.(
       'qpin_stale_cleared',
       `>${QPIN_MAX_TUTOR_TURNS_BEHIND} tutor turns behind — "${questionPin.gist.slice(0, 60)}"`,
+    );
+    setQuestionPin(null);
+  }, [transcript, questionPin, onDebugEvent]);
+
+  // R55: clear the pin when the question has been ANSWERED.
+  //
+  // R47 bounded the pin to its SEGMENT and R50 to a turn distance; neither
+  // asks the question that actually matters. Live (portal-8a9685e1): a pin
+  // answered at t=50.5 and affirmed at t=62.4 stayed up until t=150.0, and a
+  // second one answered at t=1430.3 stayed up until t=1602.7 — 87s and 167s
+  // showing a question the student had already settled.
+  //
+  // Praveen's constraint is encoded by construction, not by a special case: a
+  // pin may live across MANY turns, because a re-explanation after a wrong
+  // answer means the same question is still open. Turn count is not the
+  // signal; "has it been answered?" is. So we require an answer-shaped student
+  // turn AND an affirming tutor turn, and keep the pin on any correction,
+  // hint, re-explanation, or student question.
+  //
+  // REFUSALS ARE EMITTED, ONCE PER (pin, reason), so the skip ratio is
+  // readable. A guard whose refusals are unobservable cannot be tuned, only
+  // guessed at. Deduped rather than streamed because this effect runs on every
+  // transcript change and `debugEvents` is an embedded array under a 16MB
+  // per-document ceiling.
+  const qpinAnswerRefusalRef = useRef<string>('');
+  useEffect(() => {
+    if (!TUTOR_QUESTION_PIN || !TUTOR_QPIN_CLEAR_ON_ANSWER || !questionPin) return;
+    const decision = shouldClearQpinOnAnswer(transcript, questionPin.turnId);
+    if (!decision.clear) {
+      const key = `${questionPin.turnId}:${decision.reason}`;
+      if (qpinAnswerRefusalRef.current !== key) {
+        qpinAnswerRefusalRef.current = key;
+        onDebugEvent?.(
+          'qpin_answer_clear_refused',
+          `${decision.reason}${decision.coverCategory ? ` (${decision.coverCategory})` : ''} — "${questionPin.gist.slice(0, 60)}"`,
+        );
+      }
+      return;
+    }
+    onDebugEvent?.(
+      'qpin_cleared_answered',
+      `answered and affirmed — "${questionPin.gist.slice(0, 60)}"`,
     );
     setQuestionPin(null);
   }, [transcript, questionPin, onDebugEvent]);

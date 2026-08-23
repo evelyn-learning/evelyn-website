@@ -5,6 +5,9 @@
  */
 
 /** Pointer must move MORE than this (px, euclidean) before a press counts as a drag. */
+import { classifyCover } from './voice/cover-layer';
+import { readPacingVerdict } from './voice/pacing-verdict';
+
 export const QPIN_DRAG_THRESHOLD_PX = 5;
 /** Collapse this long after the tutor finishes speaking the ask. */
 export const QPIN_POST_SPEECH_MS = 6000;
@@ -136,4 +139,108 @@ export function isQpinStaleByTurns<T extends { id?: string; role: string; histor
     if (behind > max) return true;
   }
   return false;
+}
+
+
+/**
+ * R55 — CLEAR THE PIN WHEN THE QUESTION IS ANSWERED.
+ *
+ * A Q-pin's lifetime was bounded by REPLACEMENT, SEGMENT ADVANCE (R47) and a
+ * TURN-COUNT BACKSTOP (R50) — but never by the question actually being
+ * answered. Two live windows, portal-8a9685e1 (2026-08-22, Grade 7 geography),
+ * measured from the qpin telemetry R54 unblocked:
+ *
+ *   pin t=29.5   -> answered t=50.5   -> "Right — those are exactly the three
+ *                   ingredients" t=62.4 -> pin survived to t=150.0   (87s)
+ *   pin t=1398.3 -> answered t=1430.3 -> "Right — once." t=1435.8
+ *                                      -> pin survived to t=1602.7  (167s)
+ *
+ * WHY NOT TURN COUNT: a pin can remain valid across many turns. If the student
+ * did not understand and the tutor RE-EXPLAINS, the same question is still
+ * live. Turn count is not the signal; "has it been answered?" is.
+ *
+ * WHY NOT PACING CREDIT (the first design, discarded on measurement): pacing
+ * credit only runs on turns classified as verification, and there are ZERO
+ * `pacing_*` events in that entire session — a concept-explanation lesson has
+ * none. `readPacingVerdict` reads any turn's TEXT and needs no pacing
+ * machinery, so it is available on the surface where the bug actually happens.
+ *
+ * CONDITION 2 IS LOAD-BEARING, NOT DEFENSIVE. `AFFIRM_OPENER_RE` includes
+ * "good", so a tutor replying "Good question." to a student TANGENT reads as
+ * an affirmation. Requiring the student turn to be ANSWER-SHAPED is the only
+ * thing that blocks it — handled by construction rather than a special case.
+ *
+ * ANSWER-SHAPED IS A WHITELIST OF `classifyCover` OUTCOMES, NOT A BLACKLIST OF
+ * THREE. The design note said "exclude question/request/stuck"; that is not
+ * sufficient, because `classifyCover` returns a KIND as well as a CATEGORY and
+ * every `kind:'silent'` outcome is also a non-answer (backchannel "mm-hmm",
+ * continuation fragments, student stalls, synthetic bracketed dispatches).
+ * Blacklisting three of them would have let a grunt arm the clear.
+ *
+ * Every refusal returns a REASON so the skip ratio is readable in telemetry.
+ * A guard whose refusals are unobservable cannot be tuned, only guessed at —
+ * three ack guards were tuned against silence in one night before that lesson
+ * landed. Pure, total, never throws.
+ */
+export type QpinAnswerReason =
+  | 'answered'
+  | 'pin-not-found'
+  | 'no-student-turn'
+  | 'not-answer-shaped'
+  | 'awaiting-tutor-turn'
+  | 'no-affirm'
+  | 'correction';
+
+export interface QpinAnswerDecision {
+  clear: boolean;
+  reason: QpinAnswerReason;
+  /** Populated on 'not-answer-shaped' so the skip ratio is diagnosable. */
+  coverCategory?: string;
+}
+
+/** `classifyCover` outcomes that count as the student having ANSWERED.
+ *  Whitelist on purpose — see the note above. */
+const ANSWER_SHAPED_CATEGORIES = new Set(['numeric-echo', 'think-aloud', 'generic']);
+
+export function shouldClearQpinOnAnswer<
+  T extends { id?: string; role: string; text?: string; historyOnly?: boolean },
+>(transcript: readonly T[], pinTurnId: string | null | undefined): QpinAnswerDecision {
+  if (!pinTurnId) return { clear: false, reason: 'pin-not-found' };
+  const idx = transcript.findIndex((t) => t.id === pinTurnId);
+  if (idx < 0) return { clear: false, reason: 'pin-not-found' };
+
+  // 1+2. FORWARD SCAN to the first ANSWER-SHAPED student turn since the pin.
+  //
+  // Taking only the FIRST student turn was wrong: a backchannel, a stall or a
+  // clarifying question routinely precedes the answer, and stopping there made
+  // the guard refuse and the pin persist to the R50 backstop — the exact
+  // failure this function exists to remove. `firstCategory` remembers why the
+  // earliest candidate was rejected, so the refusal reason stays diagnosable
+  // rather than reporting whichever non-answer happened to come last.
+  let sIdx = -1;
+  let sawStudent = false;
+  let firstCategory = '';
+  for (let i = idx + 1; i < transcript.length; i++) {
+    if (transcript[i].role !== 'student') continue;
+    sawStudent = true;
+    const cover = classifyCover(transcript[i].text || '');
+    if (cover.kind === 'cover' && ANSWER_SHAPED_CATEGORIES.has(cover.category)) { sIdx = i; break; }
+    if (!firstCategory) firstCategory = cover.kind === 'cover' ? cover.category : cover.kind;
+  }
+  if (!sawStudent) return { clear: false, reason: 'no-student-turn' };
+  if (sIdx < 0) return { clear: false, reason: 'not-answer-shaped', coverCategory: firstCategory };
+
+  // 3. the tutor's following SUBSTANTIVE turn must read as an affirmation.
+  //    historyOnly turns are skipped — R38's guarantee, same as the turn bound.
+  let tIdx = -1;
+  for (let i = sIdx + 1; i < transcript.length; i++) {
+    const t = transcript[i];
+    if (t.role === 'tutor' && !t.historyOnly) { tIdx = i; break; }
+  }
+  if (tIdx < 0) return { clear: false, reason: 'awaiting-tutor-turn' };
+
+  const read = readPacingVerdict(transcript[tIdx].text || '');
+  if (read.isCorrection) return { clear: false, reason: 'correction' };
+  if (!read.isAffirm) return { clear: false, reason: 'no-affirm' };
+  return { clear: true, reason: 'answered' };
 }

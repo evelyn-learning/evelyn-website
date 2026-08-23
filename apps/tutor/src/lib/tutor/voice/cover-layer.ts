@@ -54,6 +54,17 @@ const BARE_SIGNED_NUMBER_RE = /^(minus|plus|negative)\s+\d+(\.\d+)?\.?\s*$/i;
 
 const BACKCHANNEL_WORDS = new Set([
   'yeah', 'yes', 'yep', 'yup', 'ok', 'okay', 'mhm', 'mm', 'hmm', 'right',
+  // R55: `words()` PRESERVES hyphens, so "mm-hmm" survives as ONE token and
+  // never matched the separate 'mm'/'hmm' entries — the two commonest English
+  // backchannels were classified as ordinary answers and drew a spoken cover,
+  // contradicting R44's own live-verify line ("back-channel (mm-hmm) never
+  // cuts the tutor"). Found because R55 needs "did the student ANSWER?" and a
+  // grunt was reading as an answer.
+  // DELIBERATELY NOT ADDING bare 'huh': "huh?" is a CONFUSION signal, not a
+  // backchannel, and the backchannel branch runs BEFORE QUESTION_RE — adding
+  // it would silence a student asking for help. Known remaining miss: the
+  // SPACED form "uh huh" (tokens 'uh' + 'huh'), left alone for that reason.
+  'mm-hmm', 'mmhmm', 'mhmm', 'uh-huh', 'uhhuh',
   'gotcha', 'sure', 'alright', 'all', 'cool', 'oh', 'i', 'see', 'got', 'it',
   'makes', 'sense', 'uh', 'um', 'fine', 'so', 'good', 'nice', 'thanks',
   'thank', 'you',

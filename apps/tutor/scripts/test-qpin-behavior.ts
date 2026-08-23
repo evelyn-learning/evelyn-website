@@ -11,6 +11,7 @@ import {
   latestSubstantiveTutorEntry,
   shouldClearQpinOnSegmentChange,
   isQpinStaleByTurns,
+  shouldClearQpinOnAnswer,
   QPIN_MAX_TUTOR_TURNS_BEHIND,
   QPIN_POST_SPEECH_MS,
   QPIN_HARD_CAP_MS,
@@ -188,6 +189,208 @@ check('unknown pin id → not stale', isQpinStaleByTurns(LIVE_TRANSCRIPT, 'nope'
 check('null pin id → not stale', isQpinStaleByTurns(LIVE_TRANSCRIPT, null), false);
 check('empty transcript → not stale', isQpinStaleByTurns([], 't630'), false);
 check('bound is a positive integer', Number.isInteger(QPIN_MAX_TUTOR_TURNS_BEHIND) && QPIN_MAX_TUTOR_TURNS_BEHIND > 0, true);
+
+// --- R55: shouldClearQpinOnAnswer -------------------------------------
+// The pin's lifetime was bounded by REPLACEMENT, SEGMENT ADVANCE and a
+// TURN-COUNT BACKSTOP — never by the question being ANSWERED. Live windows
+// from portal-8a9685e1 (2026-08-22, Grade 7 geography) below.
+//
+// A = answer-shaped student turn, Q = tutor turn text.
+const A = (id: string, text: string) => ({ id, role: 'student' as const, text, historyOnly: false });
+const T2 = (id: string, text: string, historyOnly = false) =>
+  ({ id, role: 'tutor' as const, text, historyOnly });
+
+// LIVE WINDOW 1 — pin set t=29.5, answered t=50.5, affirmed t=62.4
+// ("Right — those are exactly the three ingredients"), pin survived to t=150.
+const W1 = [
+  T2('q1', 'What factors could make places close together feel like three different worlds?'),
+  A('a1', 'elevation, wind and the ocean'),
+  T2('v1', 'Right — those are exactly the three ingredients.'),
+];
+check('live window 1: answered + affirmed → clear', shouldClearQpinOnAnswer(W1, 'q1').clear, true);
+check('live window 1: reason is answered', shouldClearQpinOnAnswer(W1, 'q1').reason, 'answered');
+
+// LIVE WINDOW 2 — pin set t=1398.3, answered t=1430.3, affirmed t=1435.8
+// ("Right — once."), pin survived to t=1602.7 (the R50 turn backstop).
+const W2 = [
+  T2('q2', 'If you walked from Mexico through Central America, would you cross water?'),
+  A('a2', 'yes, once'),
+  T2('v2', 'Right — once.'),
+];
+check('live window 2: answered + affirmed → clear', shouldClearQpinOnAnswer(W2, 'q2').clear, true);
+
+// PRAVEEN'S CONSTRAINT: a pin stays valid across many turns. If the student
+// did not understand and the tutor RE-EXPLAINS, the same question is live.
+check(
+  'tutor corrects → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', 'the one at sea level'),
+     T2('v', "Not quite — think about what happens as you climb.")],
+    'q',
+  ).clear,
+  false,
+);
+check(
+  'tutor re-explains without affirming → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', 'um'),
+     T2('v', 'Let me put that another way. Air cools as it rises.')],
+    'q',
+  ).clear,
+  false,
+);
+
+// KNOWN RISK named in the design: brainAffirmationRegex includes "good", so
+// "Good question." to a student TANGENT reads as an affirmation. Condition 2
+// is the only thing blocking it — which is why it is not optional.
+check(
+  'student asks a QUESTION + tutor says "Good question." → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which ingredient takes over as you climb?'),
+     A('a', 'wait, what does elevation mean?'),
+     T2('v', 'Good question. Elevation is height above sea level.')],
+    'q',
+  ).clear,
+  false,
+);
+check(
+  'student REQUEST (not an answer) + affirm → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', 'can you give me a hint?'),
+     T2('v', 'Sure — think about elevation.')],
+    'q',
+  ).clear,
+  false,
+);
+check(
+  'student STUCK + affirm → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', "i don't know"),
+     T2('v', 'Right, this one is tricky.')],
+    'q',
+  ).clear,
+  false,
+);
+
+// THE GAP FOUND WHILE VERIFYING THE DESIGN: classifyCover returns a KIND as
+// well as a category, and the kind:'silent' cases are not answers either.
+// "exclude question/request/stuck" would have let a backchannel arm the clear.
+check(
+  'BACKCHANNEL ("mm-hmm") is not an answer → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', 'mm-hmm'),
+     T2('v', 'Right, so elevation is the key.')],
+    'q',
+  ).clear,
+  false,
+);
+check(
+  'backchannel refusal reason is not-answer-shaped',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', 'mm-hmm'), T2('v', 'Right.')],
+    'q',
+  ).reason,
+  'not-answer-shaped',
+);
+check(
+  'SYNTHETIC bracketed dispatch is not an answer → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', '[Session-resumed]'),
+     T2('v', 'Right, where were we.')],
+    'q',
+  ).clear,
+  false,
+);
+
+// Ordering / totality.
+check(
+  'no student turn since the pin → pin KEPT',
+  shouldClearQpinOnAnswer([T2('q', 'Which town is cooler?'), T2('v', 'Right, exactly.')], 'q').clear,
+  false,
+);
+check(
+  'no-student-turn refusal reason',
+  shouldClearQpinOnAnswer([T2('q', 'Q?'), T2('v', 'Right, exactly.')], 'q').reason,
+  'no-student-turn',
+);
+check(
+  'answered but tutor has not replied yet → pin KEPT',
+  shouldClearQpinOnAnswer([T2('q', 'Which town is cooler?'), A('a', 'the mountain one')], 'q').clear,
+  false,
+);
+check(
+  'awaiting-tutor refusal reason',
+  shouldClearQpinOnAnswer([T2('q', 'Q?'), A('a', 'the mountain one')], 'q').reason,
+  'awaiting-tutor-turn',
+);
+check(
+  'historyOnly tutor turn does not count as the verdict turn (R38)',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', 'the mountain one'),
+     T2('h', '(rendered: showMap)', true)],
+    'q',
+  ).clear,
+  false,
+);
+// The `no-affirm` branch needs a case ONLY it protects: a real answer, and a
+// tutor who neither affirms nor corrects — just carries on. Without this the
+// branch is untested, because every other non-affirming case in this suite is
+// already blocked by condition 2 or reads as a correction.
+check(
+  'real answer + tutor neither affirms nor corrects → pin KEPT',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('a', 'the one up the mountain'),
+     T2('v', 'Let me show you both on the map.')],
+    'q',
+  ).clear,
+  false,
+);
+check(
+  'no-affirm refusal reason',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Q?'), A('a', 'the one up the mountain'),
+     T2('v', 'Let me show you both on the map.')],
+    'q',
+  ).reason,
+  'no-affirm',
+);
+// FORWARD SCAN: the first student turn after a pin is often NOT the answer —
+// a backchannel, a stall, or a clarifying question can come first. Taking only
+// the first student turn made the guard refuse and the pin persist to the R50
+// backstop, which is the exact failure R55 exists to remove. Scan forward to
+// the first ANSWER-SHAPED student turn instead.
+check(
+  'backchannel THEN a real answer → clears',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('b', 'mm-hmm'),
+     T2('m', 'Take your time.'), A('a', 'the one up the mountain'),
+     T2('v', 'Right — the mountain one.')],
+    'q',
+  ).clear,
+  true,
+);
+check(
+  'student tangent question, tutor answers it, THEN a real answer → clears',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('t', 'what does elevation mean?'),
+     T2('e', 'Good question. Height above sea level.'),
+     A('a', 'the one up the mountain'), T2('v', 'Exactly right.')],
+    'q',
+  ).clear,
+  true,
+);
+check(
+  'only non-answers ever follow → pin KEPT, reason not-answer-shaped',
+  shouldClearQpinOnAnswer(
+    [T2('q', 'Which town is cooler?'), A('b', 'mm-hmm'), T2('m', 'Take your time.'),
+     A('b2', 'yeah')],
+    'q',
+  ).reason,
+  'not-answer-shaped',
+);
+check('unknown pin id → never clears', shouldClearQpinOnAnswer(W1, 'nope').clear, false);
+check('null pin id → never clears', shouldClearQpinOnAnswer(W1, null).clear, false);
+check('empty transcript → never clears', shouldClearQpinOnAnswer([], 'q1').clear, false);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail > 0 ? 1 : 0);
