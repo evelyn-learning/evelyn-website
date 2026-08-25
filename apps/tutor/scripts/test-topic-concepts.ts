@@ -8,6 +8,7 @@ import {
   findConceptInTopic,
   resolveConceptFromLabel,
   resolveConceptsCovered,
+  isUrlSafeConceptId,
 } from '../src/lib/tutor/topic-concepts';
 
 let pass = 0;
@@ -86,6 +87,23 @@ check('no labels → []', resolveConceptsCovered('ap-physics-1', []), []);
 check('topic with no concepts → [] (the 256 pre-Step-4 leaves)',
   resolveConceptsCovered('counting', ["Newton's Second Law", 'anything']), []);
 check('unknown topic → []', resolveConceptsCovered('zzz-not-real', ['f equals ma']), []);
+
+// --- id URL-safety -------------------------------------------------------
+// A concept id BECOMES a URL segment. The evelyntutor session hit this live:
+// an emergent `concept:foo` id produced `/learn/.../concept:free-body-ish`,
+// a colon in a path segment. Their gate now rejects it — but a malformed id
+// should fail HERE, at authoring, not silently lose its page downstream.
+check('plain slug is url-safe', isUrlSafeConceptId('newtons-second-law'), true);
+check('digits allowed', isUrlSafeConceptId('ap-physics-1'), true);
+check('registry prefix rejected (the colon)', isUrlSafeConceptId('concept:free-body-ish'), false);
+check('space rejected', isUrlSafeConceptId('free body diagrams'), false);
+check('slash rejected', isUrlSafeConceptId('forces/newton'), false);
+check('uppercase rejected', isUrlSafeConceptId('NewtonsSecondLaw'), false);
+check('leading hyphen rejected', isUrlSafeConceptId('-leading'), false);
+check('trailing hyphen rejected', isUrlSafeConceptId('trailing-'), false);
+check('empty rejected', isUrlSafeConceptId(''), false);
+// And every id we actually ship must clear it.
+for (const c of p1) check(`[${c.id}] authored id is url-safe`, isUrlSafeConceptId(c.id), true);
 
 // --- sibling near-duplicate bar -----------------------------------------
 // The portal gate holds back the LATER of two siblings whose definitions

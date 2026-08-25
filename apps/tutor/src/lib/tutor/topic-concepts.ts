@@ -79,3 +79,20 @@ export function resolveConceptsCovered(topicId: string, labels: string[]): strin
   }
   return out;
 }
+
+/**
+ * A concept id becomes a URL segment on evelyntutor.com, so it must be safe
+ * there. Enforced at AUTHORING (see scripts/test-topic-concepts.ts) rather
+ * than only at the portal's gate: a malformed id downstream does not error,
+ * it silently renders as an anchor with no page, which is invisible.
+ *
+ * Found live by the evelyntutor.com session 2026-08-25 — an emergent
+ * registry id (`concept:free-body-ish`) produced a colon inside a path
+ * segment. Written as "is it URL-safe" rather than "does it start with
+ * `concept:`" on purpose: two id namespaces coexist by design, and a rule
+ * naming one prefix catches only that prefix, while a space, slash or
+ * capital breaks identically.
+ */
+export function isUrlSafeConceptId(id: string): boolean {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id ?? '');
+}
