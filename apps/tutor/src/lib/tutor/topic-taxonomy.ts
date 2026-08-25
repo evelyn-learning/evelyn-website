@@ -44,9 +44,60 @@ export type BrainGenState = 'disabled' | 'shadow' | 'beta' | 'live';
  */
 export type BankCoverageState = 'none' | 'seed' | 'curated' | 'maintained';
 
+/**
+ * A CONCEPT beneath a topic — the 4th taxonomy level (Step 4, 2026-08-25).
+ *
+ * Concepts are the unit the tutor actually teaches in a turn, and the unit
+ * the portal counts progress against: open containers currently carry zero
+ * CourseNode rows, so container progress cannot mean anything until these
+ * exist. Authored per-leaf ON DEMAND (starting with leaves that already have
+ * lesson plans) — never a big-bang fill.
+ *
+ * `id` IS A PUBLIC API: it becomes a URL segment on evelyntutor.com, so a
+ * rename is a redirect, not an edit.
+ *
+ * Shape agreed with the evelyntutor.com session 2026-08-25. Note there is NO
+ * `published`/`gatePassed` field, deliberately: that verdict belongs to the
+ * portal's quality gate, which is a pure function evaluated at render. Storing
+ * it here would cache a relation neither side controls and go stale silently
+ * the first time the gate is tightened.
+ */
+export interface TutorConcept {
+  /** Stable, URL-safe. Unique within the parent topic. */
+  id: string;
+  label: string;
+  /** Portal gate requires >= 120 chars. */
+  definition: string;
+  /**
+   * At least one. `point` is the scannable headline, `why` is the teaching —
+   * the split exists so the gate can test them separately; flattened to one
+   * string the check degrades to a length threshold any verbose paraphrase
+   * passes. Matches the 865 `sticking` entries already authored in the
+   * academy repo's topic briefs.
+   *
+   * ⚠ The gate rejects a `point` that OPENS with learner framing
+   * ("Students misunderstand X"); state the error first.
+   */
+  misconceptions: { point: string; why: string }[];
+  /**
+   * At least one. ⚠ The gate cannot tell a strong example from filler and
+   * passes both — emit ONE STRONG example rather than padding the array.
+   * Weak presence is unenforceable downstream and must be caught here.
+   */
+  workedExamples: string[];
+  /**
+   * Spoken/written phrasings that should resolve to this concept. Used by
+   * session tagging, NOT by the portal gate — the tutor has to map "the thing
+   * about charges falling off with distance squared" onto `coulombs-law`.
+   */
+  aliases?: string[];
+}
+
 export interface TutorTopic {
   id: string;
   label: string;
+  /** 4th-level concepts. Absent on the 256 topics that predate Step 4. */
+  concepts?: TutorConcept[];
   /** Adaptive-pacing rollout state. Defaults to 'disabled' if unset. */
   brainGen?: BrainGenState;
   /** Problem-bank coverage. Defaults to 'none' if unset. */
@@ -224,7 +275,89 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
     ap: [
       { id: 'ap-biology', label: 'AP Biology' },
       { id: 'ap-chemistry', label: 'AP Chemistry', brainGen: 'shadow', bankCoverage: 'none' },
-      { id: 'ap-physics-1', label: 'AP Physics 1', brainGen: 'shadow', bankCoverage: 'none' },
+      {
+        id: 'ap-physics-1',
+        label: 'AP Physics 1',
+        brainGen: 'shadow',
+        bankCoverage: 'none',
+        // Step 4 VERTICAL SLICE (2026-08-25) — first leaf authored, deliberately
+        // 4 concepts rather than the eventual 15-25. Proves the pipe end to end;
+        // the rest are authored on demand, per-leaf, never a big-bang fill.
+        concepts: [
+          {
+            id: 'newtons-second-law',
+            label: "Newton's Second Law",
+            definition:
+              'The acceleration of an object is proportional to the net force acting on it and inversely proportional to its mass, so a = F_net / m. The relationship is a statement about the VECTOR SUM of every force, which is why it is only usable once a free-body diagram is complete.',
+            misconceptions: [
+              {
+                point: 'Applying F = ma to a single force rather than to the net force',
+                why: 'Problems are introduced with one obvious push or pull, so the equation gets attached to "the force" instead of to the sum of all of them. It breaks the moment friction, tension, or a second contact force enters, and the error is invisible because the arithmetic still works.',
+              },
+              {
+                point: 'Treating mass and weight as interchangeable quantities',
+                why: 'Both are called "how heavy" in ordinary speech and share units in casual use. Mass is invariant while weight is a force that depends on local g, so the two diverge immediately in elevator, incline, and off-Earth problems.',
+              },
+            ],
+            workedExamples: [
+              'A 4.0 kg block is pulled right by a 20 N force while friction opposes it with 8.0 N. Net force is 20 - 8 = 12 N to the right, so a = 12 / 4.0 = 3.0 m/s^2 to the right. Note the single force never appears in the answer.',
+            ],
+            aliases: ['f equals ma', 'newton second law', 'net force and acceleration', 'force mass acceleration'],
+          },
+          {
+            id: 'free-body-diagrams',
+            label: 'Free-Body Diagrams',
+            definition:
+              'A free-body diagram isolates one object and draws every force acting ON it as a vector from a single point, excluding forces the object exerts on anything else. It is the step that converts a physical situation into the vector sum Newton\u2019s second law needs.',
+            misconceptions: [
+              {
+                point: 'Drawing forces the object exerts on other objects',
+                why: 'Third-law pairs are taught together, so both arrows feel like they belong in the same picture. Only forces acting ON the isolated body enter its diagram, and including the reaction force double-counts the interaction and produces a net force of zero for everything.',
+              },
+            ],
+            workedExamples: [
+              'A book rests on a table. The diagram carries exactly two arrows: gravity pulling down (mg) and the normal force pushing up (N). The book pushing DOWN on the table is real but belongs on the table\u2019s diagram, not the book\u2019s.',
+            ],
+            aliases: ['fbd', 'force diagram', 'drawing forces on an object', 'isolating the body'],
+          },
+          {
+            id: 'conservation-of-energy',
+            label: 'Conservation of Energy',
+            definition:
+              'In an isolated system the total mechanical energy stays constant, so kinetic and potential energy trade off without loss. Where non-conservative forces such as friction act, the missing mechanical energy has been converted to thermal energy rather than destroyed.',
+            misconceptions: [
+              {
+                point: 'Assuming mechanical energy is conserved when friction is present',
+                why: 'The phrase "energy is always conserved" is true of TOTAL energy but not of the mechanical energy the usual equations track. Friction moves energy into heat, so KE + PE at the start no longer equals KE + PE at the end, and the discrepancy is the work done against friction.',
+              },
+            ],
+            workedExamples: [
+              'A 2.0 kg ball dropped from 5.0 m has PE = mgh = 2.0 * 9.8 * 5.0 = 98 J at the top and no kinetic energy. Just before impact all 98 J is kinetic, so v = sqrt(2 * 98 / 2.0) = 9.9 m/s, independent of mass in the final expression.',
+            ],
+            aliases: ['energy conservation', 'kinetic and potential energy', 'mechanical energy', 'ke plus pe'],
+          },
+          {
+            id: 'centripetal-force',
+            label: 'Centripetal Force',
+            definition:
+              'An object moving on a circular path accelerates toward the centre with a = v^2 / r, so a net inward force of mv^2 / r is required. Centripetal force is a ROLE played by a real force such as tension, gravity, or friction, not an extra force of its own.',
+            misconceptions: [
+              {
+                point: 'Adding centripetal force as a separate arrow on the diagram',
+                why: 'The name sounds like a distinct force in the way gravity and tension are, so it gets drawn alongside them. It is a role filled by forces already present, and adding it double-counts the inward pull, typically doubling the computed acceleration.',
+              },
+              {
+                point: 'Invoking centrifugal force to explain the outward push',
+                why: 'The outward feeling in a turning car is real to the passenger, which makes an outward force seem obvious. In the ground frame no such force exists; the sensation is inertia carrying the body straight while the car turns beneath it.',
+              },
+            ],
+            workedExamples: [
+              'A 0.50 kg ball on a 1.2 m string swings at 3.0 m/s. Required centripetal force is mv^2 / r = 0.50 * 9.0 / 1.2 = 3.75 N, and that force IS the string tension \u2014 nothing new is added to the diagram.',
+            ],
+            aliases: ['circular motion force', 'centripetal acceleration', 'force toward the center', 'v squared over r'],
+          },
+        ],
+      },
       { id: 'ap-physics-2', label: 'AP Physics 2' },
       { id: 'ap-physics-c-mech', label: 'AP Physics C: Mechanics' },
       { id: 'ap-physics-c-em', label: 'AP Physics C: E&M' },

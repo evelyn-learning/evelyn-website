@@ -177,6 +177,7 @@ export async function POST(req: NextRequest) {
       updateFields.estimatedCost = body.estimatedCost;
     if (body.status !== undefined) updateFields.status = body.status;
     if (Array.isArray(body.topicsCovered)) updateFields.topicsCovered = body.topicsCovered;
+    if (Array.isArray(body.conceptsCovered)) updateFields.conceptsCovered = body.conceptsCovered;
     if (Array.isArray(body.weakTopics)) updateFields.weakTopics = body.weakTopics;
 
     // Lesson-phase position checkpoint (portal contract v1.2.0 — additive).

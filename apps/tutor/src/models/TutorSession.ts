@@ -74,6 +74,12 @@ export interface ITutorSession extends Document {
   weakTopics?: Array<{ topic: string; count: number }>;
   // Topics covered in this session, in order of first appearance.
   topicsCovered?: string[];
+  // Step 4 (2026-08-25) — AUTHORED concept ids taught this session, resolved
+  // from `topicsCovered` against the topic's 4th-level concepts. Additive and
+  // parallel: `topicsCovered` stays the source of truth, so if tagging proves
+  // noisy the portal's per-node rows can be rebuilt rather than being wrong
+  // permanently. Empty for the 256 leaves that predate Step 4.
+  conceptsCovered?: string[];
   // Lesson-phase position checkpoint (portal contract v1.2.0 — additive).
   // Written on each segment advance / mark_segment_complete so an abrupt
   // close (reload, tab-kill) still leaves a durable position the portal can
@@ -308,6 +314,10 @@ const TutorSessionSchema = new Schema<ITutorSession>(
       default: [],
     },
     topicsCovered: {
+      type: [String],
+      default: [],
+    },
+    conceptsCovered: {
       type: [String],
       default: [],
     },

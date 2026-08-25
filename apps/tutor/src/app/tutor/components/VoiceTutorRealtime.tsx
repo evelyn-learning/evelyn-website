@@ -311,6 +311,12 @@ import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import { CaptionSyncTracker } from '@/lib/tutor/voice/caption-sync';
 import { showsDockMuteButton } from '@/app/tutor/components/session/prestart-affordances';
 import { resolveAgendaPickFailure, resolveStartTap, type AgendaPickFailureStage } from '@/app/tutor/components/session/start-tap';
+import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
+
+/** Step 4 concept tagging. Default ON per the standing flag rule — a new
+ *  tutor flag defaults on (`!== 'off'`), never off, because R49 shipped two
+ *  severe fixes dark and production kept the bugs. */
+const CONCEPT_TAGGING_ON = process.env.NEXT_PUBLIC_TUTOR_CONCEPT_TAGGING !== 'off';
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -18069,6 +18075,12 @@ export function VoiceTutorRealtime({
         },
         getSessionSummary: () => ({
           topicsCovered: [...topicsCoveredRef.current],
+          // Step 4 (2026-08-25) — additive concept ids resolved from the SAME
+          // free-text labels, scoped to this session's topic. Flag defaults ON
+          // (`!== 'off'`); with concepts unauthored for a leaf this is [] and
+          // nothing downstream changes.
+          conceptsCovered:
+            CONCEPT_TAGGING_ON ? resolveConceptsCovered(topic, topicsCoveredRef.current) : [],
           weakTopics: Array.from(weaknessesRef.current.entries())
             .map(([topic, count]) => ({ topic, count }))
             .sort((a, b) => b.count - a.count),

@@ -744,6 +744,7 @@ function TutorPage() {
       try {
         const summary = realtimeHandleRef.current.getSessionSummary();
         if (summary.topicsCovered?.length) payload.topicsCovered = summary.topicsCovered;
+        if (summary.conceptsCovered?.length) payload.conceptsCovered = summary.conceptsCovered;
         if (summary.weakTopics?.length) payload.weakTopics = summary.weakTopics;
       } catch (err) {
         console.warn('[saveSessionUsage] getSessionSummary threw:', err);
@@ -3045,7 +3046,7 @@ function TutorPage() {
 
   // Render summary stage
   // Pull what was covered + how far the lesson plan got + minutes used.
-  const sessionSummary = realtimeHandleRef.current?.getSessionSummary?.() ?? { topicsCovered: [], weakTopics: [] };
+  const sessionSummary = realtimeHandleRef.current?.getSessionSummary?.() ?? { topicsCovered: [], conceptsCovered: [], weakTopics: [] };
   const segmentsCompletedIdx = lessonProgress.plan
     ? lessonProgress.plan.segments.findIndex((s) => s.id === lessonProgress.currentSegmentId)
     : -1;

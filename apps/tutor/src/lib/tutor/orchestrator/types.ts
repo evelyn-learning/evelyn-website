@@ -21,6 +21,11 @@ export interface RealtimeHandle {
   stopSpeaking: () => void;
   getSessionSummary: () => {
     topicsCovered: string[];
+    /** Step 4 (2026-08-25) — authored concept ids resolved from
+     *  `topicsCovered`, scoped to the session's topic. Additive: the
+     *  free-text list above stays the source of truth. `[]` when the flag
+     *  is off OR the leaf has no concepts authored, which is most of them. */
+    conceptsCovered: string[];
     weakTopics: Array<{ topic: string; count: number }>;
   };
   /** Phase 3: step the session-level depth preference. Negative =

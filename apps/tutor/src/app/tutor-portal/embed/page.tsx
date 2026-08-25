@@ -615,6 +615,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         const summary = sessionHandleRef.current?.getSessionSummary?.();
         return {
           ...(summary?.topicsCovered?.length ? { topicsCovered: summary.topicsCovered } : {}),
+          ...(summary?.conceptsCovered?.length ? { conceptsCovered: summary.conceptsCovered } : {}),
           ...(summary?.weakTopics?.length ? { weakTopics: summary.weakTopics } : {}),
         };
       })(),
