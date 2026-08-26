@@ -358,17 +358,45 @@ export default function SessionStage(props: SessionStageProps) {
   // onClick handlers must stay byte-identical; only their visibility (inside
   // the expanded column) changes.
   // R40 (user call): default OPEN on mount — students never discovered the
-  // fullscreen/tools buttons behind the bare wrench. The R35 outside-tap
-  // dismiss still collapses it on the first touch anywhere else, so the
-  // phone-occlusion concern T1 fixed only lasts until first interaction.
+  // fullscreen/tools buttons behind the bare wrench.
   const [toolsOpen, setToolsOpen] = useState(true);
+  // R57 (user call, 2026-08-26): the cluster must STAY expanded unless the
+  // student taps the wrench themselves.
+  //
+  // WHY, and why the previous two patches did not settle it. T1 collapsed the
+  // cluster to a FAB because the open column occluded the board on phones;
+  // R40 then defaulted it open because nobody found the fullscreen button
+  // behind a bare wrench; R40b re-opened it after the Start tap because Start
+  // registered as an outside tap. Each fixed the case in front of it and left
+  // the auto-collapse machinery running, so the cluster kept changing state on
+  // its own — and the reported symptom is exactly that unpredictability:
+  // students could not find fullscreen because the rail had silently collapsed
+  // since they last looked.
+  //
+  // The decisive one is the window `blur` dismiss. This component runs inside
+  // an iframe on crimsora.com and evelyntutor.com, so ANY click on the parent
+  // marketing/dashboard page steals window focus and collapsed the rail
+  // without the student touching the tutor at all. There is no student action
+  // to correlate with it, which is why it read as random.
+  //
+  // Flag `NEXT_PUBLIC_TUTOR_TOOLS_ALWAYS_OPEN`, default ON per the standing
+  // rule (`!== 'off'`), so a revert is an env change rather than a redeploy.
+  // With it OFF every dismisser below behaves exactly as it did before.
+  const toolsAlwaysOpen = process.env.NEXT_PUBLIC_TUTOR_TOOLS_ALWAYS_OPEN !== 'off';
   // R40b (embed-1785813017376): the Start tap is itself an "outside tap", so
   // the R35 dismiss collapsed the default-open cluster at the exact moment the
   // session began — open pre-start, gone once it mattered. Re-open when the
-  // session starts; the student's next outside tap collapses it as usual.
+  // session starts. Kept under the always-open flag too: with the dismissers
+  // gone it is a no-op in the common case, but it still recovers a rail the
+  // student collapsed by hand before the session began, which is the friendlier
+  // state to start a lesson in.
   useEffect(() => {
     if (started) setToolsOpen(true);
   }, [started]);
+  /** Auto-collapse after launching a tool — suppressed while always-open. */
+  const collapseToolsAfterUse = useCallback(() => {
+    if (!toolsAlwaysOpen) setToolsOpen(false);
+  }, [toolsAlwaysOpen]);
   // R35 T-C: close the tools cluster on any pointerdown outside its container
   // (FAB + expanded column together — ref-containment pattern matches
   // switcherRef below). Without this, tapping the whiteboard or anywhere
@@ -390,6 +418,10 @@ export default function SessionStage(props: SessionStageProps) {
   const dockRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!toolsOpen) return;
+    // R57: the whole dismiss cycle is off while always-open. Registering no
+    // listeners at all (rather than guarding inside each handler) means the
+    // parent-page focus steal cannot reach this component by any route.
+    if (toolsAlwaysOpen) return;
     const onPointerDown = (e: PointerEvent) => {
       if (
         toolsClusterRef.current &&
@@ -411,7 +443,7 @@ export default function SessionStage(props: SessionStageProps) {
       document.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('blur', onBlur);
     };
-  }, [toolsOpen]);
+  }, [toolsOpen, toolsAlwaysOpen]);
   const [switcherOpen, setSwitcherOpen] = useState(false);
   const animate = voiceState === 'speaking' || voiceState === 'listening' || voiceState === 'hearing';
   // 2026-07-26 pre-start redesign: is the center orb the live start button
@@ -1097,14 +1129,14 @@ export default function SessionStage(props: SessionStageProps) {
           {toolsOpen && (
             <>
               <div className="w-6 h-px bg-slate-200 my-0.5" />
-              <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); setToolsOpen(false); }}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
+              <ToolBtn active={tool === 'draw'} title="Draw" onClick={() => { setTool(tool === 'draw' ? null : 'draw'); collapseToolsAfterUse(); }}><Pencil className="w-[18px] h-[18px]" /></ToolBtn>
               {onToggleBoardPen && (
-                <ToolBtn active={!!boardPenActive} title="Draw on the board" onClick={() => { onToggleBoardPen(); setToolsOpen(false); }}>
+                <ToolBtn active={!!boardPenActive} title="Draw on the board" onClick={() => { onToggleBoardPen(); collapseToolsAfterUse(); }}>
                   <PenLine className="w-[18px] h-[18px]" />
                 </ToolBtn>
               )}
-              <ToolBtn active={tool === 'text'} title="Text note" onClick={() => { setTool(tool === 'text' ? null : 'text'); setToolsOpen(false); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
-              <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer" onClick={() => setToolsOpen(false)}><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
+              <ToolBtn active={tool === 'text'} title="Text note" onClick={() => { setTool(tool === 'text' ? null : 'text'); collapseToolsAfterUse(); }}><span className="font-bold text-sm">Aa</span></ToolBtn>
+              <label title="Upload a problem" className="grid place-items-center w-9 h-9 rounded-xl hover:bg-slate-100 text-slate-600 cursor-pointer" onClick={collapseToolsAfterUse}><Camera className="w-[18px] h-[18px]" /><input type="file" accept="image/*" className="hidden" onChange={(e) => handleImage(e, onStudentInput)} /></label>
               {/* Fullscreen — gate by CAPABILITY, not viewport width: the old
                   `hidden md:` gate also hid it inside the portal's <768px embed
                   iframe (the iframe's own viewport is what md: measures), which
@@ -1116,7 +1148,7 @@ export default function SessionStage(props: SessionStageProps) {
               {canFullscreen && (
                 <>
                   <div className="w-6 h-px bg-slate-200 my-0.5" />
-                  <ToolBtn title="Full screen" onClick={() => { toggleFullscreen(); setToolsOpen(false); }}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
+                  <ToolBtn title="Full screen" onClick={() => { toggleFullscreen(); collapseToolsAfterUse(); }}><Maximize2 className="w-[18px] h-[18px]" /></ToolBtn>
                 </>
               )}
               {/* Mobile expand (Task E8) — shown only where the native Fullscreen
@@ -1127,7 +1159,7 @@ export default function SessionStage(props: SessionStageProps) {
               {canExpand && (
                 <>
                   <div className="w-6 h-px bg-slate-200 my-0.5" />
-                  <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={() => { (expanded ? requestCollapse : requestExpand)(); setToolsOpen(false); }}>
+                  <ToolBtn active={expanded} title={expanded ? 'Exit expanded view' : 'Expand'} onClick={() => { (expanded ? requestCollapse : requestExpand)(); collapseToolsAfterUse(); }}>
                     {expanded ? <Minimize2 className="w-[18px] h-[18px]" /> : <Maximize2 className="w-[18px] h-[18px]" />}
                   </ToolBtn>
                 </>
