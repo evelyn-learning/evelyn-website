@@ -5,7 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
-import { verifyReplayToken } from '@/lib/tutor/portal/replay-token';
+import { verifyReplayTokenAsync } from '@/lib/tutor/portal/replay-token';
 import { resolveAudioFinalize } from '@/lib/tutor/recordings/finalize-audio';
 
 const AUDIO_BASE_DIR = process.env.TUTOR_AUDIO_DIR || '/var/data/evelyn/audio';
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
 
   const adminSession = await getServerSession(authOptions);
   if (!adminSession) {
-    const verdict = verifyReplayToken(searchParams.get('token'));
+    const verdict = await verifyReplayTokenAsync(searchParams.get('token'));
     if (!verdict.ok) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
     }

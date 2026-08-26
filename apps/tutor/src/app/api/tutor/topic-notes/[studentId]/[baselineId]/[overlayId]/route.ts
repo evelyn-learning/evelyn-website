@@ -14,7 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { deleteOverlay, type OverlayBucket } from '@/lib/tutor/topic-notes/apply-overlay';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
-import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 
 const VALID_BUCKETS: OverlayBucket[] = ['theory', 'methods', 'pointers'];
 
@@ -30,7 +30,7 @@ export async function DELETE(
     );
   }
   const token = req.headers.get('x-embed-token');
-  const auth = checkEmbedAuth({
+  const auth = await checkEmbedAuthAsync({
     token,
     expectedStudentId: studentId,
     route: 'topic-notes:DELETE',

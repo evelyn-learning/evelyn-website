@@ -18,7 +18,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { mongoMockStores } from '@/lib/tutor/mock-exam/service';
 import { getMockReviewContext } from '@/lib/tutor/mock-exam/review-context';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
-import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 
 export async function GET(req: NextRequest) {
   const attemptId = req.nextUrl.searchParams.get('attemptId');
@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'attemptId and studentId are required' }, { status: 400 });
   }
   const token = req.headers.get('x-embed-token');
-  const auth = checkEmbedAuth({
+  const auth = await checkEmbedAuthAsync({
     token,
     expectedStudentId: studentId,
     route: 'mock-review-context:GET',

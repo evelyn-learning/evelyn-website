@@ -10,7 +10,7 @@ import { connectDB } from "@core/db";
 import { TutorSession, type ITutorSession } from "@/models/TutorSession";
 import { extractClientIp } from "@/lib/tutor/recordings/client-ip";
 import { lookupGeo } from "@/lib/tutor/recordings/geo";
-import { checkEmbedAuth } from "@/lib/tutor/portal/embed-token";
+import { checkEmbedAuthAsync } from "@/lib/tutor/portal/embed-token";
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
@@ -26,7 +26,7 @@ import { checkEmbedAuth } from "@/lib/tutor/portal/embed-token";
  * before connectDB(), so a denied request never touches Mongo.
  */
 export async function GET(req: NextRequest) {
-  const auth = checkEmbedAuth({
+  const auth = await checkEmbedAuthAsync({
     token: req.headers.get("x-embed-token"),
     route: "session-usage:GET",
   });
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     // checkRateLimit/connectDB so a forged flood of studentId-bearing
     // requests gets 401s, not DB-adjacent work.
     if (body.studentId) {
-      const auth = checkEmbedAuth({
+      const auth = await checkEmbedAuthAsync({
         token,
         expectedStudentId: String(body.studentId),
         route: "session-usage:POST",

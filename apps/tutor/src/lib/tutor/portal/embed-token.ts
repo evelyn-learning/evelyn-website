@@ -25,6 +25,7 @@
 
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { getPartnerSecret } from './auth';
+import { resolvePartnerTokenSecrets } from './partner-token-secrets';
 
 export type EmbedEnforceMode = 'off' | 'log' | 'on';
 
@@ -57,11 +58,19 @@ function b64urlEncode(input: Buffer | string): string {
     .replace(/=+$/, '');
 }
 
-/** Verify an HS256 embed JWT. Returns the payload or a rejection reason. Never throws. */
-export function verifyEmbedToken(
+export type EmbedVerdict =
+  | { ok: true; payload: EmbedTokenPayload }
+  | { ok: false; reason: string };
+
+/**
+ * Structural + claim checks — everything that needs no secret. Returns a final
+ * verdict, or the pieces `finishEmbedVerification` needs once the caller has
+ * resolved the partner's live secrets. Split out so the sync and async entry
+ * points below cannot drift in their claim handling.
+ */
+function verifyEmbedTokenParts(
   token: string | null,
-  nowMs: number = Date.now(),
-): { ok: true; payload: EmbedTokenPayload } | { ok: false; reason: string } {
+): EmbedVerdict | { pending: { headerB64: string; payloadB64: string; sigB64: string; payload: EmbedTokenPayload; partnerId: string } } {
   if (!token) return { ok: false, reason: 'missing token' };
   const parts = token.split('.');
   if (parts.length !== 3) return { ok: false, reason: 'not a JWT' };
@@ -87,22 +96,45 @@ export function verifyEmbedToken(
   if (header.alg !== 'HS256') return { ok: false, reason: 'unsupported alg' };
   if (!payload.partner_id) return { ok: false, reason: 'missing claims' };
 
-  const secret = getPartnerSecret(payload.partner_id);
-  if (!secret) return { ok: false, reason: 'unknown partner' };
+  return {
+    pending: {
+      headerB64,
+      payloadB64,
+      sigB64,
+      payload: payload as EmbedTokenPayload,
+      partnerId: payload.partner_id,
+    },
+  };
+}
 
-  let expected: Buffer;
-  let actual: Buffer;
+/**
+ * Signature + expiry-with-grace, given the partner's candidate secrets. Pure.
+ *
+ * `secrets` is a LIST because an M1c registry row can hold several live
+ * secrets mid-rotation and any one of them verifying is a pass — the old
+ * env-only lookup could express exactly one, so a key rotation would have
+ * broken every embedded session for that partner.
+ */
+function finishEmbedVerification(
+  pending: { headerB64: string; payloadB64: string; sigB64: string; payload: EmbedTokenPayload },
+  secrets: string[],
+  nowMs: number,
+): EmbedVerdict {
+  if (secrets.length === 0) return { ok: false, reason: 'unknown partner' };
+
+  const payload = pending.payload;
+  const signed = `${pending.headerB64}.${pending.payloadB64}`;
+  let matched: boolean;
   try {
-    expected = createHmac('sha256', secret)
-      .update(`${headerB64}.${payloadB64}`)
-      .digest();
-    actual = b64urlDecode(sigB64);
+    const actual = b64urlDecode(pending.sigB64);
+    matched = secrets.some((secret) => {
+      const expected = createHmac('sha256', secret).update(signed).digest();
+      return expected.length === actual.length && timingSafeEqual(expected, actual);
+    });
   } catch {
     return { ok: false, reason: 'malformed token' };
   }
-  if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-    return { ok: false, reason: 'bad signature' };
-  }
+  if (!matched) return { ok: false, reason: 'bad signature' };
 
   if (payload.exp !== undefined) {
     // Number(...) on a non-numeric env value (e.g. a typo'd override) yields
@@ -118,7 +150,32 @@ export function verifyEmbedToken(
     }
   }
 
-  return { ok: true, payload: payload as EmbedTokenPayload };
+  return { ok: true, payload };
+}
+
+/**
+ * Verify an HS256 embed JWT against the ENV map only. Never throws.
+ *
+ * Retained for callers that cannot await and for the existing hermetic tests.
+ * ⚠ Cannot see M1c registry partners — use `verifyEmbedTokenAsync` in new
+ * code. See `partner-token-secrets.ts` for what this blind spot cost.
+ */
+export function verifyEmbedToken(token: string | null, nowMs: number = Date.now()): EmbedVerdict {
+  const step = verifyEmbedTokenParts(token);
+  if (!('pending' in step)) return step;
+  const secret = getPartnerSecret(step.pending.partnerId);
+  return finishEmbedVerification(step.pending, secret ? [secret] : [], nowMs);
+}
+
+/** Verify an HS256 embed JWT against the partner's LIVE secrets (registry, then env). Never throws. */
+export async function verifyEmbedTokenAsync(
+  token: string | null,
+  nowMs: number = Date.now(),
+): Promise<EmbedVerdict> {
+  const step = verifyEmbedTokenParts(token);
+  if (!('pending' in step)) return step;
+  const secrets = await resolvePartnerTokenSecrets(step.pending.partnerId);
+  return finishEmbedVerification(step.pending, secrets, nowMs);
 }
 
 export interface EmbedAuthDecision {
@@ -248,8 +305,38 @@ export function checkEmbedAuth(opts: {
 }): EmbedAuthDecision {
   const mode = embedEnforceMode();
   if (mode === 'off') return { allow: true };
+  return applyEmbedAuthDecision(verifyEmbedToken(opts.token), mode, opts);
+}
 
-  const verdict = verifyEmbedToken(opts.token);
+/**
+ * `checkEmbedAuth`, but resolving the partner through the M1c registry.
+ *
+ * THIS IS THE ONE PRODUCTION ROUTES SHOULD CALL. The sync sibling above sees
+ * only `PORTAL_PARTNER_SECRETS`, which is why every embed-token-gated engine
+ * route rejected the whole evelyntutor brand with `unknown partner` while its
+ * server-to-server portal calls (registry-resolved by `withPortalAuth`)
+ * succeeded — 1061 × 401 vs 0 × 200 on `/api/tutor/session-usage`, measured
+ * from nginx on 2026-08-26. See `partner-token-secrets.ts`.
+ *
+ * Decision logic is delegated to `applyEmbedAuthDecision` rather than copied,
+ * so the two entry points cannot drift the way the two secret lookups did.
+ */
+export async function checkEmbedAuthAsync(opts: {
+  token: string | null;
+  expectedStudentId?: string;
+  route: string;
+}): Promise<EmbedAuthDecision> {
+  const mode = embedEnforceMode();
+  if (mode === 'off') return { allow: true };
+  return applyEmbedAuthDecision(await verifyEmbedTokenAsync(opts.token), mode, opts);
+}
+
+/** Shared tail of both checkEmbedAuth entry points: student binding, then enforce mode. */
+function applyEmbedAuthDecision(
+  verdict: EmbedVerdict,
+  mode: EmbedEnforceMode,
+  opts: { expectedStudentId?: string; route: string },
+): EmbedAuthDecision {
   let reason: string | undefined;
   let payload: EmbedTokenPayload | undefined;
   if (!verdict.ok) {

@@ -1,6 +1,6 @@
 import { connectDB } from '@core/db';
 import { TutorSession } from '@/models';
-import { verifyReplayToken } from '@/lib/tutor/portal/replay-token';
+import { verifyReplayTokenAsync } from '@/lib/tutor/portal/replay-token';
 import ReplayPlayer, { TranscriptBubble } from '../../admin/tutor-sessions/components/ReplayPlayer';
 import ExportSessionPDFButton from '../../admin/tutor-sessions/components/ExportSessionPDFButton';
 
@@ -46,7 +46,7 @@ function Refusal({ message }: { message: string }) {
 
 export default async function StudentReplayPage({ searchParams }: ReplayPageProps) {
   const { token } = await searchParams;
-  const verdict = verifyReplayToken(token ?? null);
+  const verdict = await verifyReplayTokenAsync(token ?? null);
   if (!verdict.ok) {
     return <Refusal message="This replay link is invalid or has expired. Open the session again from your dashboard." />;
   }

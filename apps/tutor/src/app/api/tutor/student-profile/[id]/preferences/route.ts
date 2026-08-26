@@ -17,7 +17,7 @@ import {
   resolveProfileIdOrRaw,
 } from '@/lib/tutor/student-profile/store';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
-import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 
 const HUMOR_LEVELS = new Set(['off', 'light', 'medium', 'heavy']);
 const PACING_VALUES = new Set(['slower', 'default', 'faster']);
@@ -75,7 +75,7 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   // partner student's write, so that case rejects (401) instead — see
   // embedTokenRejectionReason's doc comment.
   const token = req.headers.get('x-embed-token');
-  const auth = checkEmbedAuth({
+  const auth = await checkEmbedAuthAsync({
     token,
     expectedStudentId: id,
     route: 'student-profile:preferences:PATCH',

@@ -37,7 +37,7 @@ import {
   type AddPointerInput,
 } from '@/lib/tutor/topic-notes/apply-overlay';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
-import { checkEmbedAuth, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
+import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 
 export async function GET(
   req: NextRequest,
@@ -48,7 +48,7 @@ export async function GET(
     return NextResponse.json({ error: 'studentId and baselineId required' }, { status: 400 });
   }
   const token = req.headers.get('x-embed-token');
-  const auth = checkEmbedAuth({
+  const auth = await checkEmbedAuthAsync({
     token,
     expectedStudentId: studentId,
     route: 'topic-notes:GET',
@@ -93,7 +93,7 @@ export async function PATCH(
   }
 
   const token = req.headers.get('x-embed-token');
-  const auth = checkEmbedAuth({
+  const auth = await checkEmbedAuthAsync({
     token,
     expectedStudentId: studentId,
     route: 'topic-notes:PATCH',
