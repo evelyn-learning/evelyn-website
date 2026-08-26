@@ -2791,6 +2791,32 @@ interface CommandRendererProps {
  */
 export const CommandRenderer = memo(CommandRendererInner);
 
+/**
+ * Neutral stand-in for a diagram whose solver rejected the brain's params.
+ *
+ * Markup is lifted verbatim from the catalog-dispatch branch's placeholder so
+ * every rejection looks the same to a student, whichever renderer produced it.
+ * A blank board is worse (the page badge still says "1 item"), and a red error
+ * box is worse still — see the five call sites above.
+ *
+ * ⚠ THIS IS DAMAGE CONTROL, NOT THE FIX. As the R50/R52 note in
+ * VoiceTutorRealtime records: by render time the command has already been
+ * accepted, stored and summarised into <whiteboard_state>, so the brain
+ * believes the diagram is on the board and will keep referring to it. The
+ * durable fix is rejecting at ACCEPTANCE, the way R52 does for out-of-bounds
+ * map pins. Until then this at least stops the student being shown a
+ * developer diagnostic.
+ */
+function DiagramPending() {
+  return (
+    <div className="space-y-3 py-6 px-2">
+      <div className="wb-skeleton h-5 bg-gray-200 rounded w-2/3" />
+      <div className="wb-skeleton h-24 bg-gray-100 rounded" />
+      <p className="text-xs text-gray-400 italic text-center">✏️ Tutor is figuring out how to draw this…</p>
+    </div>
+  );
+}
+
 function CommandRendererInner({ command }: CommandRendererProps) {
   switch (command.action) {
     case 'showEquation':
@@ -3193,11 +3219,16 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           />
         );
       } catch (err) {
-        return (
-          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
-            Passage error: {(err as Error).message}
-          </div>
-        );
+        // Never render solver internals to the student. These messages are
+        // written FOR THE MODEL — "Add a lone pair or increase a bond order",
+        // "set skipValidation: true if expanded octet is intended" — and a
+        // student mid-lesson read them as red error text blaming them for
+        // something they did not do (reported live from evelyntutor,
+        // 2026-08-26, two stacked red boxes during an alcohols/esters lesson).
+        // The solver is RIGHT to reject; only the audience was wrong.
+        // Same treatment the catalog dispatch below already uses.
+        console.warn('[CommandRenderer] annotated passage solver rejected:', (err as Error).message);
+        return <DiagramPending />;
       }
     }
 
@@ -3243,11 +3274,16 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           />
         );
       } catch (err) {
-        return (
-          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
-            Construction error: {(err as Error).message}
-          </div>
-        );
+        // Never render solver internals to the student. These messages are
+        // written FOR THE MODEL — "Add a lone pair or increase a bond order",
+        // "set skipValidation: true if expanded octet is intended" — and a
+        // student mid-lesson read them as red error text blaming them for
+        // something they did not do (reported live from evelyntutor,
+        // 2026-08-26, two stacked red boxes during an alcohols/esters lesson).
+        // The solver is RIGHT to reject; only the audience was wrong.
+        // Same treatment the catalog dispatch below already uses.
+        console.warn('[CommandRenderer] construction solver rejected:', (err as Error).message);
+        return <DiagramPending />;
       }
     }
 
@@ -3393,17 +3429,22 @@ function CommandRendererInner({ command }: CommandRendererProps) {
             />
           );
         }
-        return (
-          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
-            Dimensional check error: provide either `formula` or `expression` (with optional `expectedUnit`).
-          </div>
-        );
+        // Not an exception — a plain "the brain sent neither field" branch,
+        // and its text is literally API documentation addressed to the model.
+        // It reached the student in red just like the thrown ones did.
+        console.warn('[CommandRenderer] dimensional check: neither `formula` nor `expression` supplied');
+        return <DiagramPending />;
       } catch (err) {
-        return (
-          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
-            Dimensional check error: {(err as Error).message}
-          </div>
-        );
+        // Never render solver internals to the student. These messages are
+        // written FOR THE MODEL — "Add a lone pair or increase a bond order",
+        // "set skipValidation: true if expanded octet is intended" — and a
+        // student mid-lesson read them as red error text blaming them for
+        // something they did not do (reported live from evelyntutor,
+        // 2026-08-26, two stacked red boxes during an alcohols/esters lesson).
+        // The solver is RIGHT to reject; only the audience was wrong.
+        // Same treatment the catalog dispatch below already uses.
+        console.warn('[CommandRenderer] dimensional check solver rejected:', (err as Error).message);
+        return <DiagramPending />;
       }
     }
 
@@ -3424,11 +3465,16 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           />
         );
       } catch (err) {
-        return (
-          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
-            Equation balance error: {(err as Error).message}
-          </div>
-        );
+        // Never render solver internals to the student. These messages are
+        // written FOR THE MODEL — "Add a lone pair or increase a bond order",
+        // "set skipValidation: true if expanded octet is intended" — and a
+        // student mid-lesson read them as red error text blaming them for
+        // something they did not do (reported live from evelyntutor,
+        // 2026-08-26, two stacked red boxes during an alcohols/esters lesson).
+        // The solver is RIGHT to reject; only the audience was wrong.
+        // Same treatment the catalog dispatch below already uses.
+        console.warn('[CommandRenderer] equation balance solver rejected:', (err as Error).message);
+        return <DiagramPending />;
       }
     }
 
@@ -3462,11 +3508,16 @@ function CommandRendererInner({ command }: CommandRendererProps) {
           />
         );
       } catch (err) {
-        return (
-          <div className="p-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded">
-            Lewis construction error: {(err as Error).message}
-          </div>
-        );
+        // Never render solver internals to the student. These messages are
+        // written FOR THE MODEL — "Add a lone pair or increase a bond order",
+        // "set skipValidation: true if expanded octet is intended" — and a
+        // student mid-lesson read them as red error text blaming them for
+        // something they did not do (reported live from evelyntutor,
+        // 2026-08-26, two stacked red boxes during an alcohols/esters lesson).
+        // The solver is RIGHT to reject; only the audience was wrong.
+        // Same treatment the catalog dispatch below already uses.
+        console.warn('[CommandRenderer] Lewis structure solver rejected:', (err as Error).message);
+        return <DiagramPending />;
       }
     }
 

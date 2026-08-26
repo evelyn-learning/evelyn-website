@@ -448,6 +448,7 @@
     "test:lesson-fix-simulate-pass2": "node scripts/run-lesson-fix-test.mjs simulate 2",
     "test:lesson-fix-simulate-pass3": "node scripts/run-lesson-fix-test.mjs simulate 3",
     "practice-figure-gallery": "npx tsx scripts/practice-figure-gallery.ts",
-    "live:gameclass-replay": "node scripts/gameclass-replay.mjs"
+    "live:gameclass-replay": "node scripts/gameclass-replay.mjs",
+    "test:no-raw-solver-errors": "npx tsx scripts/test-no-raw-solver-errors.ts"
   }
 }
