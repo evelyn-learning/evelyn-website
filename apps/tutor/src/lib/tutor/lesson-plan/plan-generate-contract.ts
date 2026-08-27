@@ -117,6 +117,11 @@ export function generatedPlanMetadata(
     sessionMinutes: number;
     sourceKind?: 'materials';
     materialsMeta?: { count: number; kinds: string[]; totalChars: number };
+    /** What the uploaded material WAS (problem_set / explanatory_text / mixed
+     *  / diagram). Stamped so a later reader can tell a worksheet lesson from
+     *  a chapter lesson without re-classifying. Display/diagnostic only —
+     *  nothing branches on it. */
+    materialKind?: string;
   },
 ): Record<string, unknown> {
   return {
@@ -127,6 +132,7 @@ export function generatedPlanMetadata(
     portalPartnerId: opts.portalPartnerId,
     sessionMinutes: opts.sessionMinutes,
     ...(opts.sourceKind ? { sourceKind: opts.sourceKind } : {}),
+    ...(opts.materialKind ? { materialKind: opts.materialKind } : {}),
     ...(opts.materialsMeta ? { materialsMeta: opts.materialsMeta } : {}),
   };
 }

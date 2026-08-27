@@ -58,6 +58,13 @@ import {
   namespaceGeneratedLos,
 } from '@/lib/tutor/lesson-plan/generate-from-text';
 import { extractMaterials } from '@/lib/tutor/lesson-plan/material-extract';
+import {
+  classifyMaterial,
+  defaultClassifyDeps,
+  materialVerdict,
+  generationHintForKind,
+  getClassifierClient,
+} from '@/lib/tutor/lesson-plan/material-classify';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { upsertLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { clampSessionMinutes, maxLOsForBudget } from '@/lib/tutor/lesson-plan/session-budget';
@@ -109,6 +116,9 @@ export const POST = withPortalAuth(async (_req, auth) => {
   // no cacheKey stamped) on the text-only path below.
   let cacheKey: string | undefined;
   let materialsMeta: { count: number; kinds: string[]; totalChars: number } | undefined;
+  /** Stamped on the plan so a later reader can tell a worksheet lesson from a
+   *  chapter lesson without re-classifying. Display/diagnostic only. */
+  let materialKind: string | undefined;
 
   if (hasMaterials) {
     const extracted = await extractMaterials(materials!);
@@ -117,12 +127,46 @@ export const POST = withPortalAuth(async (_req, auth) => {
       // 422, not 502, and no LLM call has happened yet.
       return NextResponse.json({ error: extracted.code, message: extracted.message }, { status: 422 });
     }
+    // ⭐ GATE WHAT ACTUALLY DRIVES GENERATION.
+    //
+    // Every gate in front of this route — the portal's policy check and its
+    // container deriver / topic validator — reads the student's typed HINT.
+    // From here on it is `extracted.combinedText` that drives generation, and
+    // until now nothing ever looked at it. Both failure directions were live:
+    // an unrelated photo with a plausible hint produced a confident lesson
+    // about nothing, and good material with a lazy hint could be refused.
+    //
+    // Fails OPEN (see material-classify.ts): a null classification proceeds,
+    // because the alternative turns a model blip into a broken feature for a
+    // student who did nothing wrong. Only an explicit `unusable` refuses.
+    const classification = await classifyMaterial(
+      extracted.combinedText,
+      requestTopic ?? requestText,
+      defaultClassifyDeps(getClassifierClient()),
+    );
+    const verdict = materialVerdict(classification);
+    if (!verdict.proceed) {
+      // 422, in the same flat {error, message} shape the extraction failures
+      // above already use — the portal passes any engine 422 code through to
+      // the web unchanged, so this needs no portal change to reach the student.
+      return NextResponse.json({ error: verdict.code, message: verdict.message }, { status: 422 });
+    }
+
     // The extracted document text drives generation; the student's own
     // typed `text` becomes a topic hint instead (only if they didn't
     // already supply an explicit `topic`) — clamped to the contract's own
     // topic length cap, see REQUEST_TOPIC_MAX_LENGTH.
     text = extracted.combinedText;
     topic = requestTopic ?? requestText.slice(0, REQUEST_TOPIC_MAX_LENGTH);
+    // Tell the generator what KIND of material this is. Appended, never
+    // substituted: the material text still drives the content, this only says
+    // what to DO with it — the difference between "survey this topic" and
+    // "teach them how to solve these". The reported failure was a worksheet
+    // producing a generic topic survey that never mentioned the worksheet.
+    if (classification && classification.kind !== 'unusable') {
+      text = `${generationHintForKind(classification.kind, classification.itemCount)}\n\n${text}`;
+      materialKind = classification.kind;
+    }
     materialsMeta = {
       count: extracted.materials.length,
       kinds: extracted.materials.map((m) => m.kind),
@@ -263,7 +307,7 @@ export const POST = withPortalAuth(async (_req, auth) => {
       generatorOk,
       portalPartnerId: auth.partnerId,
       sessionMinutes,
-      ...(hasMaterials ? { sourceKind: 'materials' as const, materialsMeta } : {}),
+      ...(hasMaterials ? { sourceKind: 'materials' as const, materialsMeta, ...(materialKind ? { materialKind } : {}) } : {}),
     }),
   };
 
