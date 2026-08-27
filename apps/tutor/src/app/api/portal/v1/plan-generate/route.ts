@@ -179,6 +179,27 @@ export const POST = withPortalAuth(async (_req, auth) => {
     // misconceptions, so it's never even looked up. cacheKey stays
     // undefined, same as the materials path (see generatedPlanMetadata:
     // it omits cacheKey whenever this is undefined).
+  } else if (topic !== undefined && text !== topic) {
+    // ⭐ A STEERED REQUEST IS PER-STUDENT AND MUST NOT TOUCH THE SHARED CACHE.
+    //
+    // Same rule as the gap-topics branch above, for the same reason: when this
+    // student's own history shapes the plan, a generic cached plan for the
+    // topic would never reflect it. `cacheKey` stays undefined, so this
+    // generation is neither served FROM the cache nor stamped INTO it.
+    //
+    // THE DISCRIMINATOR IS PRECISE, NOT A HEURISTIC. Every existing caller
+    // sends `text` and `topic` IDENTICAL on this path — /learn/start and
+    // DemoService both pass the normalized topic as both fields, and
+    // /learn/material takes the materials branch above instead. They differ
+    // only when a caller has deliberately prepended steering prose to `text`
+    // while keeping `topic` as the human label, which today means exactly one
+    // thing: the portal continuing a topic the student has studied before
+    // (services/outlineFocus.ts).
+    //
+    // Without this, "Continue this topic" would silently return the SAME
+    // generic plan the student already worked through — the exact bug it was
+    // built to fix. Measured 2026-08-27: 94 cache-eligible plans existed, so
+    // this was not a theoretical hit.
   } else {
     cacheKey = topicCacheKey({ topic: topic ?? text, subject, grade, sessionMinutes, locale, band: learner?.band });
     const cachedPlan = await findCachedPlan(cacheKey);
