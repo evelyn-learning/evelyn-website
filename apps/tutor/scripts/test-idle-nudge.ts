@@ -61,6 +61,16 @@ function check(name: string, cond: boolean, got?: unknown) {
     'wrap-phase-beats-busy-recheck',
     decideIdleNudge({ busy: true, hidden: false, wrapPhase: true, state: s }) === 'stand-down',
   );
+  // R58 student-declared hold: the student asked for the silence — a
+  // nudge is exactly what they asked us not to do.
+  check(
+    'hold-stands-down',
+    decideIdleNudge({ busy: false, hidden: false, wrapPhase: false, hold: true, state: s }) === 'stand-down',
+  );
+  check(
+    'hold-absent-unchanged',
+    decideIdleNudge({ busy: false, hidden: false, wrapPhase: false, state: s }) === 'fire',
+  );
 }
 
 // After a fire, the same stretch re-arms at the longer repeat gap.

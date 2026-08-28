@@ -91,6 +91,45 @@ export const TUTOR_NOISE_NAG =
 // src/lib/tutor/voice/idle-nudge.ts (test:idle-nudge).
 export const TUTOR_IDLE_NUDGE =
   process.env.NEXT_PUBLIC_TUTOR_IDLE_NUDGE !== 'off';
+// R58 false-final-assertion kill (live, portal-71d11dac: "Right. Dividing
+// both sides by 3 gives $x = 11$" spoken — twice — against a card whose
+// verified answer is 13/3; the LLM judge killed both and Pillar 2b
+// downgraded both). Deterministic member of the verdict-detector family:
+// the tutor's OWN asserted "<answerVar> = <value>" is compared against the
+// VERIFIED expected answer (never the student's utterance — praised
+// intermediate steps must stay safe). Pure detector in
+// src/lib/tutor/voice/false-assertion-check.ts (test:false-assertion).
+// Default ON; NEXT_PUBLIC_TUTOR_FALSE_ASSERTION_KILL=off is the kill switch.
+export const TUTOR_FALSE_ASSERTION_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_FALSE_ASSERTION_KILL !== 'off';
+// R58 student-declared hold (live, portal-2f23ece4: "ignore everything I
+// say until I say candle" — the tutor kept answering every overheard
+// utterance and the private aside landed in the transcript). While
+// holding: no dispatch, no transcript append, no covers/nudges; resume by
+// codeword OR ready-intent OR direct address (the student came back
+// WITHOUT the codeword). Pure decisions in
+// src/lib/tutor/voice/student-hold.ts (test:student-hold). Default ON;
+// NEXT_PUBLIC_TUTOR_STUDENT_HOLD=off is the kill switch.
+export const TUTOR_STUDENT_HOLD =
+  process.env.NEXT_PUBLIC_TUTOR_STUDENT_HOLD !== 'off';
+// R58 first-session tip (requested 2026-08-28): a student whose browser
+// has never run a session gets ONE extra opener sentence — replies take a
+// few seconds, and a quiet spot helps. Keyed on localStorage (per-browser;
+// incognito/cleared storage repeats it once — they look identical to new
+// users), so it is structurally unrepeatable for returning students on
+// the same browser. Default ON for ALL surfaces (portal + demo embeds,
+// per owner ruling); NEXT_PUBLIC_TUTOR_FIRST_SESSION_TIP=off kills it.
+export const TUTOR_FIRST_SESSION_TIP =
+  process.env.NEXT_PUBLIC_TUTOR_FIRST_SESSION_TIP !== 'off';
+// R58 noise-floor nudge (live, portal-dd0bf3a9: AirPods with
+// noiseSuppression=undefined turned background noise into FLUENT nonsense
+// STT — "while networking distinct account revenues" — which the
+// classified-noise nag can never see). Watches the barge-in gate's
+// median-based pre-speech energy floor; consecutive elevated floors ⇒ one
+// spoken tip per session suggesting a quieter spot / lower volume.
+// Default ON; NEXT_PUBLIC_TUTOR_NOISE_FLOOR_NUDGE=off is the kill switch.
+export const TUTOR_NOISE_FLOOR_NUDGE =
+  process.env.NEXT_PUBLIC_TUTOR_NOISE_FLOOR_NUDGE !== 'off';
 /**
  * Agenda rail (2026-08-10): persistent content-labeled progress rail above the
  * whiteboard. Kill switch: NEXT_PUBLIC_TUTOR_AGENDA_RAIL=off.

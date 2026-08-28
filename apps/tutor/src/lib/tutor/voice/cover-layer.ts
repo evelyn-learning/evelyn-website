@@ -52,6 +52,15 @@ const CONTINUATION_LEAD_RE =
 // not a continuation fragment, even though it starts with a lead word.
 const BARE_SIGNED_NUMBER_RE = /^(minus|plus|negative)\s+\d+(\.\d+)?\.?\s*$/i;
 
+// R58 (live, portal-2f23ece4 "Oh, why not?" / portal-71d11dac "Sure, why
+// not?" + "Uh, I guess"): colloquial assent idioms. "why not" cannot go in
+// BACKCHANNEL_WORDS ('why'/'not' would silence real questions), so the
+// WHOLE utterance must be the idiom, allowing only leading interjections.
+// A "why not" with trailing content ("Why not use the other formula?")
+// deliberately fails this and falls through to QUESTION_RE.
+const ASSENT_IDIOM_RE =
+  /^(?:(?:oh|uh|um|er|well|so|hmm|yeah|yes|ok|okay|sure|alright)[,\s]+)*(?:why not|i guess(?:\s+so)?|guess so|i suppose(?:\s+so)?|suppose so|might as well)[\s.!?,]*$/i;
+
 const BACKCHANNEL_WORDS = new Set([
   'yeah', 'yes', 'yep', 'yup', 'ok', 'okay', 'mhm', 'mm', 'hmm', 'right',
   // R55: `words()` PRESERVES hyphens, so "mm-hmm" survives as ONE token and
@@ -285,6 +294,11 @@ export function classifyCover(transcript: string): CoverVerdict {
   if (w.length <= 4 && w.length > 0 && !/\d/.test(t) && w.every((x) => BACKCHANNEL_WORDS.has(x)))
     return { kind: 'silent', reason: 'backchannel' };
 
+  // R58: colloquial assent idioms ("Oh, why not?", "Uh, I guess") — must
+  // run BEFORE QUESTION_RE, which otherwise claims "why not?" via its
+  // trailing-"?" and leading-"why" alternatives.
+  if (ASSENT_IDIOM_RE.test(t)) return { kind: 'silent', reason: 'backchannel' };
+
   // Continuation fragments of the tutor's own sentence ("which is 0.",
   // "and the upper half is 23, 28, 30."): short, continuation lead token.
   if (w.length <= 10 && CONTINUATION_LEAD_RE.test(t) && !QUESTION_RE.test(t) && !BARE_SIGNED_NUMBER_RE.test(t))
@@ -437,6 +451,38 @@ export function recordNoiseDrop(
     return { nag: true };
   }
   return { nag: false };
+}
+
+/**
+ * R58 noise-floor tip (live, portal-dd0bf3a9: AirPods with
+ * noiseSuppression=undefined turned room noise into FLUENT nonsense STT —
+ * "while networking distinct account revenues" — which classifyTranscript
+ * called clean, so recordNoiseDrop above could never fire). The barge-in
+ * gate already measures the room: resolveBargeInEnergyThreshold clamps
+ * margin×median(pre-speech energy) to a ceiling, so a threshold SATURATED
+ * AT THE CEILING means the measured floor is well above every recorded
+ * self-echo level — a genuinely loud room. Three consecutive saturated
+ * gates ⇒ tip once, for the whole session. The tip itself rides the
+ * brain's next turn as a note (never spoken at gate-arm time — the gate
+ * arms mid-tutor-speech, exactly when a client line would collide).
+ */
+export interface NoiseFloorState { consecutiveElevated: number; tipped: boolean }
+export function createNoiseFloorState(): NoiseFloorState {
+  return { consecutiveElevated: 0, tipped: false };
+}
+export const NOISE_FLOOR_CONSECUTIVE = 3;
+
+export function recordFloorSample(state: NoiseFloorState, elevated: boolean): { tip: boolean } {
+  if (!elevated) {
+    state.consecutiveElevated = 0;
+    return { tip: false };
+  }
+  state.consecutiveElevated++;
+  if (!state.tipped && state.consecutiveElevated >= NOISE_FLOOR_CONSECUTIVE) {
+    state.tipped = true;
+    return { tip: true };
+  }
+  return { tip: false };
 }
 
 /**

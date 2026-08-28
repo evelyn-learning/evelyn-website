@@ -34,7 +34,10 @@ check('empty claims → null', buildJudgeCorrectionNote([]) === null);
 {
   const long = 'x'.repeat(400);
   const note = buildJudgeCorrectionNote([long, long, long]) ?? '';
-  check('long claims truncated', note.length < 900);
+  // R58: the fixed tail grew (never-narrate-the-check clause), so the
+  // bound moves with it. The property guarded is unchanged: each claim is
+  // cut at MAX_CLAIM_CHARS, so total length is bounded regardless of input.
+  check('long claims truncated', note.length < 1300);
   check('at most 2 claims quoted', (note.match(/"x{10}/g) ?? []).length === 2);
 }
 

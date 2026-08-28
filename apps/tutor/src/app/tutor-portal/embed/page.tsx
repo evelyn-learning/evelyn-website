@@ -77,6 +77,11 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // families; real-student volume stays modest vs the transcript payload.
   'brain_', 'judge', 'tool_call', 'verdict_', 'render_sync', 'cover_silent',
   'turn_length', 'completion_gated', 'auto_', 'pacing_', 'improvised_answer',
+  //   R58: solver-dispute correction note + false-final-assertion kill:
+  'improvised_mismatch_note_planted', 'false_assertion_kill',
+  //   R58: student-declared hold family (armed/active/swallowed/resumed/
+  //   check_in) + first-session tip + noise-floor nudge:
+  'student_hold_', 'first_session_tip', 'noise_floor_',
   'scribble_dedup', 'queue_drain', 'student_echo', 'vbs_',
   // Agenda rail (2026-08-10): agenda_rail_active — one line per fresh plan
   // start, proves the opener resolved a non-zero agenda item count (rail
@@ -168,6 +173,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'dedup_',
   //   learner-model writes:
   'evidence_', 'segment_evidence', 'mark_segment_complete_cross_lo_rejected',
+  //   R58 backward-mark exemption (accepts "advance then mark prior LO"):
+  'mark_segment_complete_prior_lo_accepted',
   'advance_', 'inferred_advance_from_segment_card',
   //   latency covers + startup/recovery failures:
   'cover_', 'cutoff_resume', 'warmup_', 'listening_no_dispatch',

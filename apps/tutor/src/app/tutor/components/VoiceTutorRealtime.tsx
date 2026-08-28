@@ -59,6 +59,7 @@ import {
   loGroupOf,
   remainingGroupSegmentIds,
   isGeneratedPlan,
+  isPriorSegment,
   filterRecapMustRemember,
 } from '@/lib/tutor/lesson-plan/context';
 import {
@@ -91,6 +92,8 @@ import { checkSimplificationVerdict, DENIAL_RE } from '@/lib/tutor/voice/simplif
 import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer } from '@/lib/tutor/voice/denied-answer-reversal';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
+import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
+import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
@@ -101,7 +104,7 @@ import { detectCardNarrationMismatch } from '@/lib/tutor/voice/card-narration-mi
 import { checkSpokenCardMismatch } from '@/lib/tutor/voice/spoken-card-mismatch';
 import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type TurnLatencyLedger } from '@/lib/tutor/voice/turn-latency';
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
-import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
+import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createNoiseFloorState, recordFloorSample, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
 import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
@@ -177,6 +180,10 @@ import {
   TUTOR_FIRST_TURN_V2,
   TUTOR_BRAIN_STALL_GUARD,
   TUTOR_SPOKEN_MONEY,
+  TUTOR_FALSE_ASSERTION_KILL,
+  TUTOR_STUDENT_HOLD,
+  TUTOR_FIRST_SESSION_TIP,
+  TUTOR_NOISE_FLOOR_NUDGE,
   TUTOR_DOCK_STATE_ONLY,
   TUTOR_QUANTITY_ANCHOR,
   TUTOR_IDLE_NUDGE_V2,
@@ -929,6 +936,11 @@ export function VoiceTutorRealtime({
   // the in-flight utterance's transcript, once it finalizes, merges into the
   // buffer and dispatches immediately instead of just being buffered.
   const manualSendPendingRef = useRef(false);
+  // R58 first-session tip: pending until the browser proves it has run a
+  // session before ('evelyn-first-session-tip-done'). Consumed once by the
+  // opening-directive attach in callBrainOnce. Default false so SSR and a
+  // storage-blocked browser both silently skip the tip.
+  const firstSessionTipPendingRef = useRef(false);
   // Mount-safe localStorage read (SSR/hydration-safe: first render always
   // renders the `false` default on server + client; this effect then syncs
   // the real per-device choice once mounted — same pattern used by the
@@ -936,6 +948,9 @@ export function VoiceTutorRealtime({
   useEffect(() => {
     try {
       if (typeof window === 'undefined' || !window.localStorage) return;
+      if (TUTOR_FIRST_SESSION_TIP && window.localStorage.getItem('evelyn-first-session-tip-done') !== 'yes') {
+        firstSessionTipPendingRef.current = true;
+      }
       if (window.localStorage.getItem('evelyn-manual-mic') === 'on') {
         manualMicRef.current = true;
         setManualMicState(true);
@@ -1365,6 +1380,13 @@ export function VoiceTutorRealtime({
   // two >=1.5s "noise" drops within 30s speaks one "didn't catch that"
   // line (60s cooldown). Persists across the noise-drop branch below.
   const noiseNagStateRef = useRef(createNoiseNagState());
+  // R58 noise-floor tip (portal-dd0bf3a9): three consecutive barge-in
+  // gates saturated at the energy ceiling ⇒ the room is measurably loud ⇒
+  // plant a one-per-session note that rides the brain's next real turn
+  // (see callBrainOnce) suggesting a quieter spot. Pure counter in
+  // cover-layer.ts (test:cover-layer).
+  const noiseFloorStateRef = useRef(createNoiseFloorState());
+  const pendingNoiseTipRef = useRef(false);
   // Stage 2 verdict → action dispatcher. Filled in once
   // handleStudentTranscriptForBrain is defined further down (forward
   // reference via ref to avoid hoisting issues). Called from the
@@ -1465,6 +1487,19 @@ export function VoiceTutorRealtime({
   const idleNudgeStateRef = useRef(createIdleNudgeState());
   const idleNudgeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const armIdleNudgeRef = useRef<() => void>(() => {});
+
+  // R58 student-declared hold (live, portal-2f23ece4 "ignore everything I
+  // say until I say candle"). PENDING is armed by the hold_for_student
+  // tool call mid-turn and promoted to ACTIVE only after that turn's
+  // dispatch completes — so the brain's own acknowledgment sentence still
+  // speaks. While ACTIVE, handleStudentTranscriptForBrain swallows every
+  // non-synthetic utterance that fails checkResume (student-hold.ts): no
+  // dispatch, no transcript append (the aside is private), no covers, no
+  // idle nudges. One gentle check-in after 5 quiet minutes, then silence
+  // again until the student resumes. Session-scoped — VTR remounts.
+  const pendingStudentHoldRef = useRef<{ resumeCue?: string } | null>(null);
+  const studentHoldRef = useRef<{ resumeCue?: string; sinceMs: number; checkInDone: boolean } | null>(null);
+  const studentHoldCheckInTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const renderBufferRef = useRef<Array<{
     processed: WhiteboardCommand[];
@@ -5836,7 +5871,25 @@ export function VoiceTutorRealtime({
         // instead of falling through to the demonstrated-mastery gate.
         // Only fires when we KNOW the current segment (empty cursor /
         // free-conversation is left alone — unrelated to this fix).
-        if (planNow && isGeneratedPlan(planNow)
+        // R58 (live, portal-d9e1b2d6): a BACKWARD cross-LO mark is the
+        // routine "advance_lesson to LO n+1, then mark LO n's try
+        // complete" ordering — advance_lesson earlier in the SAME batch
+        // already moved currentSegmentIdRef, so the E6 check below is
+        // guaranteed to fire on it. The student did that segment; the
+        // mark is honest bookkeeping. Rejecting it kill+retried the turn
+        // and cut a correct spoken verdict mid-sentence. Accept backward
+        // marks (fall through to the normal completion path); E6 keeps
+        // rejecting FORWARD marks of never-reached segments.
+        const crossLoBackwardMark = !!(planNow && isGeneratedPlan(planNow)
+          && typeof c.segmentId === 'string' && c.segmentId
+          && currentSegmentIdRef.current
+          && loGroupOf(c.segmentId) !== loGroupOf(currentSegmentIdRef.current)
+          && isPriorSegment(planNow, c.segmentId, currentSegmentIdRef.current));
+        if (crossLoBackwardMark) {
+          onDebugEvent?.('mark_segment_complete_prior_lo_accepted', `target="${c.segmentId}" current="${currentSegmentIdRef.current}"`);
+        }
+        if (!crossLoBackwardMark
+            && planNow && isGeneratedPlan(planNow)
             && typeof c.segmentId === 'string' && c.segmentId
             && currentSegmentIdRef.current
             && loGroupOf(c.segmentId) !== loGroupOf(currentSegmentIdRef.current)) {
@@ -8600,6 +8653,11 @@ export function VoiceTutorRealtime({
         clearTimeout(idleNudgeTimerRef.current);
         idleNudgeTimerRef.current = null;
       }
+      // R58: the student-hold check-in timer gets the same treatment.
+      if (studentHoldCheckInTimerRef.current) {
+        clearTimeout(studentHoldCheckInTimerRef.current);
+        studentHoldCheckInTimerRef.current = null;
+      }
       // R34 T3: the incomplete-hold timer gets the same unmount treatment —
       // left running past unmount it would flush a held fragment into a
       // stale closure.
@@ -9160,6 +9218,18 @@ export function VoiceTutorRealtime({
         if (correctionNoteTimerRef.current) { clearTimeout(correctionNoteTimerRef.current); correctionNoteTimerRef.current = null; }
         onDebugEvent?.('judge_correction_note_consumed', 'delivered with this turn');
       }
+      // R58 noise-floor tip (portal-dd0bf3a9): rides the next REAL student
+      // turn, same consumption rule as the correction note. The brain
+      // phrases it in its own voice, appended to a normal answer — no
+      // client line, no audio collision.
+      if (TUTOR_NOISE_FLOOR_NUDGE && pendingNoiseTipRef.current && !/^\s*\[/.test(transcript)) {
+        runTranscript =
+          `[noise note — not from the student] There has been persistent background noise on the student's side for a while. ` +
+          `After responding to what they said, add ONE short, kind sentence: a quieter spot, or turning down any nearby volume, will help you hear them clearly. ` +
+          `Say it once this session and never bring it up again.\n\n${runTranscript}`;
+        pendingNoiseTipRef.current = false;
+        onDebugEvent?.('noise_floor_tip_consumed', 'delivered with this turn');
+      }
       let firstSentenceMs: number | null = null;
       let totalSentenceCount = 0;
       // Word-budget corrective sibling to totalSentenceCount — same
@@ -9461,6 +9531,22 @@ export function VoiceTutorRealtime({
               : openingDirectiveRef.current;
             teacherIntroDirectiveRef.current = null;
             openingDirectiveBrainTurnsRef.current += 1;
+            // R58 first-session tip: rides the first opening turn only,
+            // like the teacher intro above. Keyed per-browser via
+            // localStorage (set at attach time), so a returning student on
+            // the same browser can never hear it twice; incognito/cleared
+            // storage looks like a new student and repeats it once —
+            // accepted trade-off (owner ruling 2026-08-28, ON for portal
+            // AND demo embeds).
+            if (TUTOR_FIRST_SESSION_TIP && firstSessionTipPendingRef.current) {
+              firstSessionTipPendingRef.current = false;
+              openingDirective +=
+                ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to arrive, and that a quiet spot helps you hear them clearly. Once, briefly, then never mention it again.';
+              try {
+                window.localStorage.setItem('evelyn-first-session-tip-done', 'yes');
+              } catch { /* storage unavailable — tip may repeat next session */ }
+              onDebugEvent?.('first_session_tip_attached', 'opening turn');
+            }
           }
         }
 
@@ -10186,7 +10272,10 @@ export function VoiceTutorRealtime({
         const checkCardNarrationMismatch = (textSoFar: string): boolean => {
           if (!cardNarrationPending) return false;
           const { segId, cardText } = cardNarrationPending;
-          const result = detectCardNarrationMismatch(cardText, textSoFar);
+          // R58 (portal-d9e1b2d6): the student's utterance grounds the
+          // comparison — a verdict quoting THEIR numbers before the next
+          // card goes up is not a competing problem (see the module doc).
+          const result = detectCardNarrationMismatch(cardText, textSoFar, transcript);
           if (!result.reject) return false;
           const reason = `You called show_segment_card for segment "${segId}" and the runtime rendered the AUTHORED card onto the whiteboard: "${cardText.slice(0, 80)}". But your narration this turn describes a DIFFERENT problem ("${textSoFar.slice(0, 160)}") — none of your spoken numbers match the card's numbers. The student sees the authored card on the board but hears you set up a different scenario, and will be graded against whichever one you actually meant. Re-narrate THE CARD's problem using its literal numbers: "${cardText.slice(0, 200)}". If you genuinely intended a fresh, off-script problem, use generate_problem or a topic-switch (new_page) instead of show_segment_card.`;
           rejectionsThisAttempt.push({ action: 'show_segment_card_narration_mismatch', reason });
@@ -10647,6 +10736,33 @@ export function VoiceTutorRealtime({
                       continue;
                     }
                   }
+                  // R58 false-final-assertion check (live, portal-71d11dac —
+                  // "Right. Dividing both sides by 3 gives $x = 11$" spoken
+                  // twice against a verified 13/3; the LLM judge killed both
+                  // and Pillar 2b downgraded both to advisory). Compares the
+                  // tutor's OWN asserted "<answerVar> = <value>" against the
+                  // VERIFIED expected answer — never the student's utterance,
+                  // so praised intermediate steps stay safe. Per-sentence,
+                  // like praise-contradiction above.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && TUTOR_FALSE_ASSERTION_KILL) {
+                    const fa = checkFalseFinalAssertion({
+                      sentence: updatedSentence,
+                      problemStatement: currentProblemRef.current?.statement,
+                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
+                      spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
+                    });
+                    if (fa.verdict === 'false_assertion') {
+                      const reason =
+                        `You asserted ${fa.answerVar} = ${fa.asserted}, but the verified answer for the active problem is ${fa.expected}. ` +
+                        `Re-derive the value step by step and re-deliver the turn with the correct final value — never state ${fa.answerVar} = ${fa.asserted} again.`;
+                      rejectionsThisAttempt.push({ action: 'false_final_assertion', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] false-assertion check: asserted ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected} — kill + retry`);
+                      onDebugEvent?.('false_assertion_kill', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)} (${fa.matchReason})`);
+                      continue;
+                    }
+                  }
                   // Praise-echo check (verdict-detector round, session portal-cb2addf5):
                   // the opener affirms a value that DISAGREES with what the student
                   // actually said ("Right — $2x$." after the student said "3x").
@@ -10764,7 +10880,8 @@ export function VoiceTutorRealtime({
                         // sites give the brain the same instruction.
                         pendingJudgeCorrectionNoteRef.current =
                           `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may actually match the intended answer "${inv.expected}" — re-check and, if right, credit them. ` +
-                          `If on re-checking you stand by what you said, continue naturally and do not mention this review.`;
+                          `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
+                          `Either way, NEVER narrate the act of checking ("re-checking my last correction", "that check was correct", "nothing to walk back") — the student must never learn a check happened.`;
                         armCorrectionNoteDeadline();   // R50 T3: third plant site — same deadline
                         onDebugEvent?.('inverse_verdict_correction_note_planted', `expected=${inv.expected?.slice(0, 40)}`);
                       }
@@ -10910,9 +11027,27 @@ export function VoiceTutorRealtime({
                   // net. Detect canonical leak patterns and drop the
                   // sentence from TTS + transcript without retrying.
                   // Generic patterns only — no subject content.
-                  const metaNarrationRe = /^\s*(?:the student\b|the active problem\b|let me mark\b|since the student\b|the runtime\b|the system\b|that'?s? a greenlight\b)/i
+                  // R58 additions (live, portal-9c73c826 "'Um, let me
+                  // think' isn't an answer yet — no verdict, just give
+                  // her room", portal-dc11fac1 "it doesn't have a
+                  // request pattern I need to classify away", and two
+                  // evelyntutor screenshots narrating the judge
+                  // correction-note re-check aloud): the verdict-guard
+                  // and correction-note vocabulary. "the student" is
+                  // now dropped ANYWHERE in a sentence — speaking TO
+                  // the student, a third-person "the student" is
+                  // always meta (the screenshot leak was mid-sentence:
+                  // "Re-checking my last correction — the student had
+                  // actually written…"). Deliberately NOT matched:
+                  // bare "classify"/"check"/"answer" — all three are
+                  // legitimate teaching content ("Ready to try
+                  // classifying one yourself?", "your check was
+                  // right"); only the meta COLLOCATIONS are dropped.
+                  const metaNarrationRe = /^\s*(?:the student\b|the active problem\b|let me mark\b|since the student\b|the runtime\b|the system\b|that'?s? a greenlight\b|re-?checking my\b)/i
                     .test(updatedSentence)
                     || /\bactive problem\b|\bgreenlight to advance\b|\bmark (?:it|this|the)? *(?:segment )?complete\b|\b(?:current|active) *segment\s*[Ii][Dd]?\b|\bcanonicaltext\b|\btool[_ ]result\b/i
+                    .test(updatedSentence)
+                    || /\bthe student\b|\bno verdict\b|\bisn'?t (?:quite )?an answer\b|\bnot an answer\b|\bmy (?:last|earlier|previous) correction\b|\bmy correction was\b|\bnothing to walk back\b|\bno correction (?:is )?needed\b|\brequest pattern\b|\bclassify (?:away|silently)\b|\bgive (?:her|him|them) (?:room|space)\b|\bautomated review\b/i
                     .test(updatedSentence);
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
@@ -11376,6 +11511,33 @@ export function VoiceTutorRealtime({
                               currentProblemRef.current.unverifiedCardAnswer = claimedAnswer;
                               onDebugEvent?.('inverse_verdict_unverified_pinned', claimedAnswer.slice(0, 60));
                             }
+                            // R58 (live, portal-71d11dac): the divergence used
+                            // to be LOGGED AND DISCARDED — the brain then
+                            // graded three student turns against its wrong
+                            // "11" while the solver's "13/3" sat in a debug
+                            // string, and the wrong value was finally spoken
+                            // as "x = 11 checks out". Neither answer is
+                            // trusted (the solver is itself an LLM), but the
+                            // brain must know the dispute exists BEFORE it
+                            // grades. Same slot + delivery machinery as the
+                            // judge correction note; never clobber a pending
+                            // one (kill-class notes win the slot).
+                            if (!pendingJudgeCorrectionNoteRef.current) {
+                              pendingJudgeCorrectionNoteRef.current =
+                                `[correction note — not from the student] For the problem you just posed ("${claimedStatement.slice(0, 120)}"), ` +
+                                `your stated answer "${claimedAnswer.slice(0, 60)}" DISAGREES with an independent solve ("${(v.solved ?? '').slice(0, 60)}"). ` +
+                                `Neither value is confirmed. Before grading the student on this problem, silently re-derive the answer step by step and trust that derivation over both earlier values. ` +
+                                `Never narrate this note or the act of checking — the student only ever hears normal tutoring.`;
+                              // Deliberately NO armCorrectionNoteDeadline():
+                              // the judge-note timeout exists to volunteer a
+                              // correction the student already HEARD. This
+                              // note matters only when GRADING — i.e. at the
+                              // next real student turn, exactly when notes
+                              // are consumed. A 20s timeout here would
+                              // interrupt a student quietly working the
+                              // problem.
+                              onDebugEvent?.('improvised_mismatch_note_planted', `claimed=${claimedAnswer.slice(0, 30)} solved=${(v.solved ?? '').slice(0, 30)}`);
+                            }
                           }
                         })
                         .catch(() => { /* verification is best-effort */ });
@@ -11549,6 +11711,28 @@ export function VoiceTutorRealtime({
                     // generate_problem-emitting so the show_problem
                     // auto-substitute (downstream) can bypass.
                     generateProblemThisTurnRef.current = true;
+                    onDebugEvent?.('server_only_tool', name);
+                    continue;
+                  }
+                  // R58 hold_for_student (live, portal-2f23ece4): the
+                  // student asked the tutor to stop listening until a
+                  // codeword. Arm as PENDING — activation happens when
+                  // this turn finishes (see handleStudentTranscriptForBrain
+                  // post-dispatch), so the brain's own acknowledgment
+                  // sentence still speaks. Must openGate() like
+                  // generate_problem or that acknowledgment never plays.
+                  if (name === 'hold_for_student') {
+                    if (gateState === 'gated') {
+                      clearTimeout(gateTimer);
+                      openGate();
+                    }
+                    if (TUTOR_STUDENT_HOLD) {
+                      const cueRaw = typeof (args as Record<string, unknown>)?.resumeCue === 'string'
+                        ? String((args as Record<string, unknown>).resumeCue) : '';
+                      const cue = cueRaw.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+                      pendingStudentHoldRef.current = { resumeCue: cue || undefined };
+                      onDebugEvent?.('student_hold_armed', cue ? `cue="${cue.slice(0, 30)}"` : 'no cue');
+                    }
                     onDebugEvent?.('server_only_tool', name);
                     continue;
                   }
@@ -14424,6 +14608,14 @@ export function VoiceTutorRealtime({
   // ref (stable identity) or a module-level pure import — see the
   // useCallback deps for the two non-ref component values it touches.
   const armCoverForDispatch = useCallback((transcript: string) => {
+    // R58 student-declared hold: no ack, no cover, no escalation while the
+    // student has asked us to stay quiet. Dispatch itself is swallowed in
+    // handleStudentTranscriptForBrain — this belt-and-braces guard covers
+    // the queue-drain path (utterances queued BEFORE the hold activated)
+    // and any caller that arms a cover without passing the swallow gate.
+    // A resuming turn clears the ref before reaching here, so it still
+    // gets its normal cover.
+    if (TUTOR_STUDENT_HOLD && studentHoldRef.current) return;
     // 2026-08-17 redraw-intent (portal-35b9a5d8): stamp whether THIS student
     // turn complains about a visual on the board — while set, the render
     // pipeline relaxes evolve-in-place to a same-category replace so a
@@ -14671,6 +14863,26 @@ export function VoiceTutorRealtime({
       onDebugEvent?.('voice_mute_command', transcript.slice(0, 60));
       muteMicRef.current?.();
       return;
+    }
+    // R58 student-declared hold: while ACTIVE, everything overheard is
+    // private (the student is talking to someone else) — swallowed before
+    // dispatch AND before the transcript append inside callBrainOnce.
+    // Synthetic bracketed dispatches pass through untouched (idle nudges
+    // are separately suppressed via decideIdleNudge's hold arg).
+    if (TUTOR_STUDENT_HOLD && studentHoldRef.current && !opts?.silent && !/^\s*\[/.test(transcript)) {
+      const resume = checkResume(transcript, studentHoldRef.current.resumeCue);
+      if (!resume.resume) {
+        onDebugEvent?.('student_hold_swallowed', transcript.slice(0, 60));
+        return;
+      }
+      if (studentHoldCheckInTimerRef.current) {
+        clearTimeout(studentHoldCheckInTimerRef.current);
+        studentHoldCheckInTimerRef.current = null;
+      }
+      studentHoldRef.current = null;
+      onDebugEvent?.('student_hold_resumed', `${resume.reason} — ${transcript.slice(0, 50)}`);
+      // Fall through: the resuming utterance dispatches normally, so the
+      // brain welcomes them back in its own voice.
     }
     // Stage 3 fix #11 (2026-05-28): defer-on-dispatch guard. If the
     // student is CURRENTLY mid-utterance, drop this dispatch — the
@@ -14971,11 +15183,44 @@ export function VoiceTutorRealtime({
           }
         }
       }
+      // R58 deterministic backstop: if the utterance itself is a
+      // hold-request ("ignore everything I say until I say candle") and
+      // the brain does NOT call hold_for_student this turn, arm the hold
+      // anyway — the tool path (preferred, it lets the brain pick the
+      // acknowledgment) simply overwrites this same pending ref.
+      if (TUTOR_STUDENT_HOLD && !opts?.silent && !/^\s*\[/.test(transcript)
+          && !studentHoldRef.current && !pendingStudentHoldRef.current) {
+        const holdReq = detectHoldRequest(transcript);
+        if (holdReq.hold) {
+          pendingStudentHoldRef.current = { resumeCue: holdReq.resumeCue };
+          onDebugEvent?.('student_hold_armed', `heuristic${holdReq.resumeCue ? ` cue="${holdReq.resumeCue.slice(0, 30)}"` : ''}`);
+        }
+      }
       // R32 Task 6: cover-arm (Task 3) + escalation-poller (Task 4) extracted
       // to armCoverForDispatch above — same call, now shared with the
       // queue-drain site below.
       armCoverForDispatch(transcript);
       await callBrainOnce(transcript, opts);
+      // R58: promote a pending hold to ACTIVE only now — the turn that
+      // acknowledged the request has fully dispatched, so its speech is
+      // already queued. One gentle check-in after 5 quiet minutes.
+      if (TUTOR_STUDENT_HOLD && pendingStudentHoldRef.current) {
+        studentHoldRef.current = { ...pendingStudentHoldRef.current, sinceMs: Date.now(), checkInDone: false };
+        pendingStudentHoldRef.current = null;
+        onDebugEvent?.('student_hold_active', studentHoldRef.current.resumeCue ? `cue="${studentHoldRef.current.resumeCue}"` : 'no cue');
+        if (studentHoldCheckInTimerRef.current) clearTimeout(studentHoldCheckInTimerRef.current);
+        studentHoldCheckInTimerRef.current = setTimeout(() => {
+          const hold = studentHoldRef.current;
+          if (!hold || hold.checkInDone) return;
+          hold.checkInDone = true;
+          if (Date.now() >= speakTextBlockedUntilRef.current) {
+            const line = 'Still here — whenever you’re ready, just say so and we’ll pick right back up.';
+            const sid = pushTtsScriptForPerception(line);
+            speakTextRef.current?.(line, sid);
+            onDebugEvent?.('student_hold_check_in', `${Math.round((Date.now() - hold.sinceMs) / 1000)}s held`);
+          }
+        }, 5 * 60_000);
+      }
       // Drain the queue. If multiple utterances arrived while we were
       // processing, combine them into one transcript so Claude sees a
       // single follow-up question rather than a stale chain.
@@ -15975,7 +16220,7 @@ export function VoiceTutorRealtime({
         sessionWrapMinutes != null &&
         (sessionModeRef.current === 'demo' || (sessionModeRef.current != null && maxDurationExplicit)) &&
         Math.floor((Date.now() - startedAtMs) / 60000) >= sessionWrapMinutes;
-      const decision = decideIdleNudge({ busy, hidden, wrapPhase, state: idleNudgeStateRef.current });
+      const decision = decideIdleNudge({ busy, hidden, wrapPhase, hold: TUTOR_STUDENT_HOLD && !!studentHoldRef.current, state: idleNudgeStateRef.current });
       if (decision === 'stand-down') return;
       if (decision === 'recheck') {
         idleNudgeTimerRef.current = setTimeout(fireOrRecheck, IDLE_NUDGE_RECHECK_MS);
@@ -17634,6 +17879,18 @@ export function VoiceTutorRealtime({
         });
         onDebugEvent?.('perception_bargein_gate_armed',
           `sustain=${BARGEIN_SUSTAIN_MS}ms threshold=${energyThreshold.toFixed(3)} (fixed=${BARGEIN_ENERGY_THRESHOLD})`);
+        // R58 noise-floor tip: a threshold saturated at the ceiling means
+        // margin×median(pre-speech energy) cleared it — the room is loud.
+        // Three in a row ⇒ plant the once-per-session note (delivered by
+        // the brain's next real turn; never spoken here, the tutor is
+        // mid-speech at gate-arm time).
+        if (TUTOR_NOISE_FLOOR_NUDGE) {
+          const { tip } = recordFloorSample(noiseFloorStateRef.current, energyThreshold >= BARGEIN_ENERGY_THRESHOLD);
+          if (tip) {
+            pendingNoiseTipRef.current = true;
+            onDebugEvent?.('noise_floor_tip_planted', `threshold=${energyThreshold.toFixed(3)}`);
+          }
+        }
         bargeInGateTimerRef.current = setInterval(() => {
           const now = Date.now();
           // Abandon the gate if the tutor has stopped talking (nothing left to

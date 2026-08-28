@@ -199,5 +199,30 @@ const CAR_CARD = 'A car travels 240 miles in 4 hours. Find the rate of change.';
   );
 }
 
+// ─── R58: student-number grounding (live, portal-d9e1b2d6 — fired twice
+// in one session). A verdict turn quotes the STUDENT's numbers, then
+// advances and shows the next card; the student's own numbers must count
+// as grounded, never as a competing problem. ───
+{
+  const TRY_CARD = 'Use a 2-term Taylor series for cos(x) at a = 0 to approximate cos(0.2).';
+  const SPOKEN = "Exactly right. That's 1 minus 0.08 plus 0.001067, roughly 0.9211 — matching your estimate. Let's lock in one more.";
+  const STUDENT = 'the first 3 non-zero terms will be 1 minus x squared by 2 plus x to the power of 4 by 24, roughly comes out to around 0.9211';
+  const withoutStudent = detectCardNarrationMismatch(TRY_CARD, SPOKEN);
+  check('R58 baseline: verdict quoting student numbers rejects WITHOUT student grounding',
+    withoutStudent.reject === true, JSON.stringify(withoutStudent));
+  const withStudent = detectCardNarrationMismatch(TRY_CARD, SPOKEN, STUDENT);
+  check('R58: same verdict passes WITH student text grounding',
+    withStudent.reject === false, JSON.stringify(withStudent));
+  // A genuinely different improvised problem still rejects even with the
+  // student's text supplied — its numbers appear in neither source.
+  const stillCaught = detectCardNarrationMismatch(
+    TRY_CARD,
+    'A taxi ride costs a flat 5 dollars plus 1.50 for every kilometer.',
+    STUDENT,
+  );
+  check('R58: genuine competing problem still rejects with student text',
+    stillCaught.reject === true, JSON.stringify(stillCaught));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

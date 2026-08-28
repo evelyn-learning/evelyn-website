@@ -18,6 +18,7 @@ import {
   isGeneratedPlan,
   filterRecapMustRemember,
   buildLessonPlanContext,
+  isPriorSegment,
 } from '../src/lib/tutor/lesson-plan/context';
 import { loBoundaryBeat, buildAdvanceBeatNote } from '../src/lib/tutor/lesson-plan/rail-labels';
 import type { LessonPlan, Segment, SegmentRecap } from '../src/lib/tutor/lesson-plan/types';
@@ -603,6 +604,26 @@ async function runAdvanceToolResultProviderChecks(): Promise<void> {
     multiAdvance3.ok === true && !String(multiAdvance3.instruction).includes('agenda item'),
     JSON.stringify(multiAdvance3),
   );
+}
+
+// ─── R58: isPriorSegment (backward-mark exemption for the E6 cross-LO
+// mark_segment_complete rejection; live session portal-d9e1b2d6 — brain
+// advanced to lo-5-hook then marked lo-2-try, and the reject audibly
+// killed a correct spoken verdict) ───
+{
+  const plan = buildPlan({ generated: true });
+  check('isPriorSegment: just-left try behind new LO hook → prior',
+    isPriorSegment(plan, 'lo-1-try', 'lo-2-hook'));
+  check('isPriorSegment: forward segment → NOT prior',
+    !isPriorSegment(plan, 'lo-2-try', 'lo-1-concept'));
+  check('isPriorSegment: same segment → NOT prior',
+    !isPriorSegment(plan, 'lo-1-try', 'lo-1-try'));
+  check('isPriorSegment: unknown target id → NOT prior (reject stands)',
+    !isPriorSegment(plan, 'lo-9-try', 'lo-2-hook'));
+  check('isPriorSegment: unknown current id → NOT prior (reject stands)',
+    !isPriorSegment(plan, 'lo-1-try', 'lo-9-hook'));
+  check('isPriorSegment: intro is prior to everything after it',
+    isPriorSegment(plan, 'intro', 'lo-1-hook'));
 }
 
 runAdvanceToolResultProviderChecks()

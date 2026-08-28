@@ -77,6 +77,20 @@ check('cont: "Let\'s go!" after "Want to…?" → continuation guard', contFires
 check('cont: continuation guard replaces verdict guard', !formatVerdictGuardBlock('Yes.', OFFER).includes('<verdict_guard>'));
 check('cont: guard forbids verdict opener', formatVerdictGuardBlock('Yes.', OFFER).includes('do NOT open with a verdict word'));
 
+// R58 (live, portal-2f23ece4: "Ready to try classifying one yourself?" →
+// "Oh, why not?" was read as the student CHALLENGING the prior claim —
+// "Good catch to question that — let's re-check it"). Colloquial assent
+// idioms after a continuation offer are consent, exactly like "Yes.".
+check('cont: "Oh, why not?" after offer → continuation guard', contFires('Oh, why not?', 'Ready to try classifying one yourself?'));
+check('cont: "Sure, why not?" after offer → continuation guard', contFires('Sure, why not?', OFFER));
+check('cont: "Uh, I guess." after offer → continuation guard', contFires('Uh, I guess.', OFFER));
+check('cont: "I guess so." after offer → continuation guard', contFires('I guess so.', OFFER));
+check('cont: "Might as well." after offer → continuation guard', contFires('Might as well.', OFFER));
+// "Why not?" after a CONTENT statement is a real question — no offer tail,
+// so the ordinary verdict guard must stay.
+check('cont: "Why not?" without offer → verdict guard', !contFires('Why not?', 'Dividing by zero is undefined.')
+  && formatVerdictGuardBlock('Why not?', 'Dividing by zero is undefined.').includes('<verdict_guard>'));
+
 // "Yes." answering a CONTENT question keeps the ordinary verdict guard.
 check('cont: "Yes." after content question → verdict guard', !contFires('Yes.', 'Is the net force bigger than before?')
   && formatVerdictGuardBlock('Yes.', 'Is the net force bigger than before?').includes('<verdict_guard>'));

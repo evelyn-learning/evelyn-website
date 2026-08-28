@@ -2100,6 +2100,24 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    // R58 (live, portal-2f23ece4): the student said "ignore everything I
+    // say until I say candle" — the brain acknowledged gracefully but had
+    // no way to actually stop replying, so every overheard private aside
+    // was answered and transcribed. This tool is that mechanism.
+    name: 'hold_for_student',
+    description: 'The student asked you to step away or stop listening for a while — e.g. "ignore everything I say until I say <word>", "I need to talk to someone", "don\'t listen for a bit". First speak ONE short warm acknowledgment (confirm the codeword if they gave one, and mention once that the mic button can also mute), then call this tool. The runtime then stays quiet — it will not respond to anything overheard — until the student says the codeword OR clearly addresses you again ("I\'m ready", "okay I\'m back", "are you there?"). NEVER call this for ordinary thinking pauses ("hold on", "give me a sec", "let me think") — those just get patience.',
+    parameters: {
+      type: 'object',
+      properties: {
+        resumeCue: {
+          type: 'string',
+          description: 'The codeword the student named ("candle"), if any. Omit when they didn\'t give one.',
+        },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'generate_problem',
     description: 'Request a practice problem at a specified relative difficulty, anchored on the student\'s most recent try-yourself or worked example. Use ONLY when the student explicitly asks for another problem ("give me another one", "harder please", "easier") OR when adaptive thresholds fire. The runtime returns a canonical problem (from problem bank or brain-generated and verified). The brain MUST emit a brief pre-call TTS bridge (≤10 words like "Sure, here\'s another one for you") and then quote the returned canonicalText VERBATIM in the next show_problem call + spoken delivery. Do NOT paraphrase the canonicalText.',
     parameters: {

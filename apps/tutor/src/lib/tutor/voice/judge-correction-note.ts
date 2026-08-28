@@ -87,7 +87,9 @@ export const CORRECTION_DUE_DIRECTIVE =
   `Act on the correction note above now rather than waiting for them to speak: ` +
   `if you got it wrong, own it in one short sentence and re-ask the question. ` +
   `If on re-checking you stand by what you said, say nothing about the review and ` +
-  `simply offer the student a way back in.`;
+  `simply offer the student a way back in. Never narrate the act of checking ` +
+  `("that check was correct", "no correction needed") — the student must never ` +
+  `learn a check happened.`;
 
 /**
  * A note is consumed by a REAL student turn, never by an ordinary synthetic
@@ -117,6 +119,12 @@ export function buildJudgeCorrectionNote(claims: string[]): string | null {
     `[correction note — not from the student] An automated review flagged your previous turn as likely mis-grading or contradicting the facts: ${quoted.join(' and ')}. ` +
     `Silently re-check that claim against the question you actually asked and the student's exact words. ` +
     `If you were wrong — especially if you rejected a correct answer — open this turn by briefly owning the correction ("Actually, hold on — you were right: …") before continuing. ` +
-    `If on re-checking you stand by what you said, continue naturally and do not mention this review.`
+    `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
+    // R58 (live, two evelyntutor sessions): the brain narrated the re-check
+    // itself aloud ("Re-checking my last correction — the student had
+    // actually written… nothing to walk back there"). The stand-by branch's
+    // "do not mention this review" read as permission to describe the check
+    // as long as the word "review" was avoided. Close that read explicitly.
+    `Either way, NEVER narrate the act of checking — no "re-checking my last correction", "that check was correct", "nothing to walk back", "no correction needed", and never refer to the student in the third person. The student must never learn a check happened; they only ever hear normal tutoring.`
   );
 }

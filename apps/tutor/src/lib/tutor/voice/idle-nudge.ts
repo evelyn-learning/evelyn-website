@@ -68,9 +68,14 @@ export function decideIdleNudge(args: {
    *  directive owns the endgame; a nudge here collides with the one-
    *  sign-off rule. Never true for non-demo sessions. */
   wrapPhase: boolean;
+  /** R58 student-declared hold ("wait until I say candle") — the student
+   *  ASKED for the silence, so nudging is exactly what they asked us not
+   *  to do. The hold's own single 5-minute check-in replaces it. */
+  hold?: boolean;
   state: IdleNudgeState;
 }): IdleNudgeDecision {
   if (args.wrapPhase) return 'stand-down';
+  if (args.hold) return 'stand-down';
   if (
     args.state.stretchCount >= IDLE_NUDGE_MAX_PER_STRETCH ||
     args.state.sessionCount >= IDLE_NUDGE_MAX_PER_SESSION

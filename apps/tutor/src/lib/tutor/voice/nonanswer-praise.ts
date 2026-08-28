@@ -130,6 +130,10 @@ export function nonAnswerPraiseFeedback(studentText: string): string {
     `${quoted} — an acknowledgment, NOT an answer. ` +
     `You affirmed it and revealed the answer to your own open question. ` +
     `Re-emit your response: no verdict word, do NOT state the answer or its value. ` +
-    `The student has not answered yet — briefly re-invite them (e.g. "Take your time — what do you get?") or keep waiting.`
+    `The student has not answered yet — briefly re-invite them (e.g. "Take your time — what do you get?") or keep waiting. ` +
+    // R58 (live, portal-9c73c826): the brain paraphrased this feedback
+    // aloud ("'Um, let me think' isn't an answer yet — no verdict"). Same
+    // clause the request branch already carries.
+    `Do not narrate this classification ("isn't an answer", "no verdict") — just respond naturally.`
   );
 }

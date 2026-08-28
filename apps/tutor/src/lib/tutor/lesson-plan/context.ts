@@ -187,6 +187,20 @@ export function remainingGroupSegmentIds(
     .map((s) => s.id);
 }
 
+/** R58 (live, portal-d9e1b2d6): true when `targetId` sits STRICTLY BEFORE
+ *  `currentId` in plan order. The E6 cross-LO mark rejection exists for
+ *  FORWARD marks (a never-reached segment being marked complete); the
+ *  legitimate ordering "advance_lesson to LO n+1, then mark LO n's try
+ *  complete" — which the brain emits routinely because the cursor mutates
+ *  mid-batch — is a BACKWARD mark of a segment the student actually did,
+ *  and rejecting it audibly killed a correct spoken verdict mid-sentence.
+ *  Either id missing from the plan ⇒ false (the caller's reject stands). */
+export function isPriorSegment(plan: LessonPlan, targetId: string, currentId: string): boolean {
+  const tIdx = plan.segments.findIndex((s) => s.id === targetId);
+  const cIdx = plan.segments.findIndex((s) => s.id === currentId);
+  return tIdx >= 0 && cIdx >= 0 && tIdx < cIdx;
+}
+
 /** Why `checkGeneratedPlanAdvance` blocked an explicit-id advance.
  *  `remainingSegmentIds` is the "go finish these first" list the
  *  rejection message hands back to the brain:

@@ -593,6 +593,12 @@ const SPAN_PRODUCT_EXCLUDE = new Set([
   // be split as variable products.
   'sum', 'bar', 'hat', 'set', 'rho', 'tau', 'eta', 'chi', 'psi', 'nu',
   'xi', 'pie',
+  // R58 (live, portal-71d11dac: "$x \div 3$" heard as "divided bee why
+  // 3"): the verbalizer emits the WORD "by" ("divided by") into the span,
+  // then the product splitter shredded it into b·y. Tradeoff accepted: a
+  // genuine in-span b·y product written as "by" now reads as the word —
+  // "divided by" is overwhelmingly the commoner case.
+  'by',
   // Round-25 (live: du → "dee why o u", $x-\mu$ → "m u"): every word
   // VAR_SPOKEN can emit (rewriteDerivatives runs BEFORE this splitter)
   // plus the short Greek names the base prose set owns — all of them
@@ -664,7 +670,10 @@ function respellMathLetters(s: string): string {
   // symbol (Na, Fe — a chem span converts them before this runs, but a
   // misdetected one must not shred them).
   s = s.replace(/\b([A-Z][a-z])\b/g, (m: string) =>
-    SPAN_PRODUCT_EXCLUDE.has(m.toLowerCase()) || m === 'Hz' || m === 'Pa' || ELEMENT_SYMBOLS.has(m)
+    // R58: 'by' is excluded ONLY in lowercase (the verbalizer's "divided
+    // by"); capital "By" in a span is the standard-form B·y product
+    // ("Ax + By = C", the R36b case) and must still split.
+    (m !== 'By' && SPAN_PRODUCT_EXCLUDE.has(m.toLowerCase())) || m === 'Hz' || m === 'Pa' || ELEMENT_SYMBOLS.has(m)
       ? m
       : m.split('').join(' '));
   return s

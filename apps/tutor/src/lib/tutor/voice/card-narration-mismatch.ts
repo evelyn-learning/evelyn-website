@@ -209,6 +209,16 @@ export interface CardNarrationMismatchResult {
 export function detectCardNarrationMismatch(
   cardText: string,
   spokenText: string,
+  // R58 (live, portal-d9e1b2d6, fired twice in one session): a turn that
+  // opens by GRADING the student's previous answer quotes the STUDENT's
+  // numbers ("Exactly right. That's 1 - 0.08 + 0.001067 ≈ 0.9211"), then
+  // advances and shows the NEXT card — whose numbers are naturally
+  // disjoint. Under the card-only comparison that verdict read as "a
+  // different problem" and the kill cut a correct spoken verdict
+  // mid-sentence. Numbers the student themselves just said are grounded
+  // speech, never evidence of a competing problem — treat them exactly
+  // like card numbers.
+  studentText?: string,
 ): CardNarrationMismatchResult {
   const cardNums = extractAllNumbers(cardText);
   if (cardNums.size === 0) {
@@ -221,13 +231,17 @@ export function detectCardNarrationMismatch(
     // competing problem statement.
     return { reject: false };
   }
-  const hasCardNum = [...spokenNums].some((n) => cardNums.has(n));
+  const allowedNums = studentText
+    ? new Set([...cardNums, ...extractAllNumbers(studentText)])
+    : cardNums;
+  const hasCardNum = [...spokenNums].some((n) => allowedNums.has(n));
   if (hasCardNum) {
-    // Paraphrase of the card, or a computed step referencing it — includes
-    // the case where an ambiguous word-number's OTHER reading matched.
+    // Paraphrase of the card, a computed step referencing it, or a quote
+    // of the student's own answer — includes the case where an ambiguous
+    // word-number's OTHER reading matched.
     return { reject: false };
   }
-  const newNums = [...spokenNums].filter((n) => !cardNums.has(n));
+  const newNums = [...spokenNums].filter((n) => !allowedNums.has(n));
   if (newNums.length >= 2) {
     return { reject: true, cardNums: [...cardNums], newNums };
   }

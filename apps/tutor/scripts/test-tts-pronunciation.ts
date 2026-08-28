@@ -447,6 +447,13 @@ console.log('OK — tts-pronunciation rewrites validated');
   eq('2 \\times 3 \\cdot 4 \\div 5 \\pm 1',
      '2 times 3 times 4 divided by 5 plus or minus 1',
      'math-operator-commands');
+  // R58 (live, portal-71d11dac): inside a DECLARED $-span the verbalizer's
+  // "divided by" survived only as prose — in-span, the product splitter
+  // shredded 'by' into b·y and the respell voiced "divided bee why 3".
+  eq('So $6 \\div 2 = 3$.', 'So 6 divided by 2 equals 3.',
+     'span-div-by-not-letter-split');
+  eq('That is $12 ÷ 4$.', 'That is 12 divided by 4.',
+     'span-unicode-div-by-not-letter-split');
 
   // --- pi -> "pie" (math-context; whole-token; caps-acronym guarded) ---
   eq('pi is irrational.', 'pie is irrational.', 'pi-lowercase');

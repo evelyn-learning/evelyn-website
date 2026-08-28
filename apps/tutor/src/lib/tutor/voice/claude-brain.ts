@@ -917,9 +917,15 @@ function formatStudentStateBlock(
  *  affirmative-no-advance advisory regex (VoiceTutorRealtime ~10155). */
 const CONTINUATION_QUESTION_RE =
   /\b(?:ready (?:to|for)|want to|should we|shall we|on to the|move on|got it|next one)\b[^?]{0,80}\?\s*$/i;
-/** Bare affirmative (leading fillers stripped) — consent, not an answer. */
+/** Bare affirmative (leading fillers stripped) — consent, not an answer.
+ *  R58 (live, portal-2f23ece4): "Oh, why not?" after "Ready to try
+ *  classifying one yourself?" was read as the student CHALLENGING the
+ *  prior claim. Colloquial assent idioms ("why not", "I guess", "might as
+ *  well") are consent — but ONLY here, where the offer tail in
+ *  CONTINUATION_QUESTION_RE disambiguates them; a bare "why not?" after a
+ *  content statement stays a genuine question. */
 const BARE_AFFIRMATIVE_RE =
-  /^(?:yes|yeah|yep|yup|yas|sure|ok|okay|ready|alright|sounds good|let'?s go|let'?s do it|onwards?|next|continue|go|good|cool|fine|great|all good)[\s.!,]*$/i;
+  /^(?:yes|yeah|yep|yup|yas|sure|ok|okay|ready|alright|sounds good|let'?s go|let'?s do it|onwards?|next|continue|go|good|cool|fine|great|all good|(?:sure,?\s+)?why not|i guess(?:\s+so)?|guess so|i suppose(?:\s+so)?|suppose so|might as well|of course|absolutely)[\s.!,?]*$/i;
 
 export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: string): string {
   const t = (transcript ?? '').trim();
@@ -931,7 +937,7 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
   // — twice in a row. A bare affirmative after a continuation OFFER is
   // consent, not an answer: swap in the continuation guard (the ordinary
   // verdict branches would invite exactly the observed praise-and-stall).
-  const bare = t.replace(/^(?:um|uh|er|well|so|hmm)[,\s]+/i, '').trim();
+  const bare = t.replace(/^(?:(?:um|uh|er|well|so|hmm|oh)[,\s]+)+/i, '').trim();
   if (
     lastTutorMessage &&
     BARE_AFFIRMATIVE_RE.test(bare) &&
@@ -951,7 +957,8 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
     + 'A hedged correct answer is still correct — confirm it; never treat uncertainty as wrongness. '
     + 'If it is wrong: corrective opener ("Not quite." / "Close.") and do NOT state the correct value — guide them to it. '
     + 'If the utterance is not an answer (a request, a question about the material, "I don\'t know", conversation): NO verdict or praise word anywhere in the turn — respond to what they actually said. '
-    + 'Classify silently: never announce the sorting aloud ("that\'s a request", "not an answer", "nothing to grade") — just respond ("Sure — here\'s one more."). '
+    + 'Classify silently: never announce the sorting aloud ("that\'s a request", "not an answer", "isn\'t an answer yet", "no verdict", "nothing to grade") — just respond ("Sure — here\'s one more."). '
+    + 'Never refer to the student in the third person ("the student", "give her room") — you are talking TO them. '
     + 'Never answer your own open question and praise as if the student had answered it; if you reveal after a give-up, reveal plainly ("No worries — it\'s …"), never as an affirmation. '
     + 'Never praise first and correct after.\n'
     + '</verdict_guard>\n\n';

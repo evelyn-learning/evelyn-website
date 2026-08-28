@@ -35,6 +35,33 @@ check('backchannel-1', cat('Yeah, makes sense.') === 'silent:backchannel');
 check('backchannel-2', cat('Oh, okay.') === 'silent:backchannel');
 check('backchannel-3', cat('Gotcha.') === 'silent:backchannel');
 check('backchannel-4', cat('Mhm.') === 'silent:backchannel');
+// ─── R58: noise-floor tip counter (portal-dd0bf3a9) ───
+{
+  const { createNoiseFloorState, recordFloorSample } = require('../src/lib/tutor/voice/cover-layer');
+  const s = createNoiseFloorState();
+  check('floor-1: two elevated → no tip',
+    recordFloorSample(s, true).tip === false && recordFloorSample(s, true).tip === false);
+  check('floor-2: third consecutive elevated → tip', recordFloorSample(s, true).tip === true);
+  check('floor-3: once per session — a fourth never re-tips', recordFloorSample(s, true).tip === false);
+  const s2 = createNoiseFloorState();
+  recordFloorSample(s2, true); recordFloorSample(s2, true);
+  recordFloorSample(s2, false); // quiet gate resets the streak
+  recordFloorSample(s2, true); recordFloorSample(s2, true);
+  check('floor-4: a quiet gate resets the consecutive count', recordFloorSample(s2, true).tip === true);
+}
+
+// R58 (live, portal-2f23ece4 "Oh, why not?" / portal-71d11dac "Sure, why
+// not?" + "Uh, I guess"): colloquial assent idioms drew question/generic
+// covers. They are backchannel-class: no spoken ack, brain still responds.
+check('assent-why-not', cat('Oh, why not?') === 'silent:backchannel');
+check('assent-sure-why-not', cat('Sure, why not?') === 'silent:backchannel');
+check('assent-i-guess', cat('Uh, I guess.') === 'silent:backchannel');
+check('assent-guess-so', cat('I guess so.') === 'silent:backchannel');
+check('assent-might-as-well', cat('Might as well.') === 'silent:backchannel');
+// A "why"-question with content stays a question; "I guess" + content
+// stays an answer-shaped turn.
+check('assent-not-why-question', cat('Why not use the other formula?') === 'question');
+check('assent-not-guess-content', cat('I guess 5.') === 'numeric-echo');
 check('continuation-1', cat('and the upper half is 23, 28, 30.') === 'silent:continuation');
 check('continuation-2', cat('which is 0.') === 'silent:continuation');
 check('synthetic', cat('[Continuation-after-cutoff: finish the thought]') === 'silent:synthetic');

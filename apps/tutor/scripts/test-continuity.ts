@@ -55,6 +55,17 @@ check('multiple declared bases → no rename (ambiguous)', !multi.changed);
 const already = normalizeRenamedFunction("f(x) = x^2", [decl('f')]);
 check('matching name untouched', !already.changed);
 
+// R58 regression (session portal-d9e1b2d6, 2026-08-27): "P(x) \approx f(x)
+// near x = 0" was rewritten to the tautology "P(x) ≈ P(x)" — the canonical
+// base P appears in the SAME latex beside f, which is the signal that the
+// two names are a deliberate two-function relation, not a drift.
+const coPresent = normalizeRenamedFunction('P(x) \\approx f(x) \\text{ near } x = 0', [decl('P')]);
+check('canonical base co-present in latex → no rename (two-function relation)',
+  !coPresent.changed && coPresent.latex.includes('f(x)'), coPresent.latex);
+const coPresentPrimes = normalizeRenamedFunction("P'(x) = f'(x)", [decl('P')]);
+check('co-presence guard holds for primed uses too',
+  !coPresentPrimes.changed, coPresentPrimes.latex);
+
 // ─── R42 regression: pre-normalization declaration harvest ───
 // (session portal-cb2addf5, 2026-08-10 — 24 renames in one session, all
 // collapsing to the wrong name because a metaphor \text{} card locked in

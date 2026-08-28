@@ -139,6 +139,16 @@ export function normalizeRenamedFunction(
     uses.push({ full: base + primes, base, primes, arg: m[3] });
   }
 
+  // R58 (session portal-d9e1b2d6): if the canonical base ALSO appears as a
+  // function application in this same latex, the two names are co-present
+  // deliberately (an approximation/relation between two functions, e.g.
+  // "P(x) \approx f(x)") — renaming the other one collapses the statement
+  // into a tautology ("P(x) ≈ P(x)"). Drift-renaming only ever applies
+  // when the declared name is ABSENT from the incoming latex.
+  if (uses.some(u => u.base === canonicalBase)) {
+    return { latex, changed: false };
+  }
+
   let out = latex;
   let changed = false;
   let oldName: string | undefined;
