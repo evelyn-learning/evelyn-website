@@ -289,7 +289,24 @@ export function matchUtteranceToAnswer(
   // multi-value guard silently loses its `=` signal (do not reorder this
   // strip to run after that guard, and do not make it global).
   const uAssignStripped = uRaw.replace(/^[a-z]'{0,2}=/i, '');
-  const u = uAssignStripped.length > 0 ? uAssignStripped : uRaw;
+  let u = uAssignStripped.length > 0 ? uAssignStripped : uRaw;
+  // R58b (live, portal-14e07a20): a worked-then-result utterance — "So
+  // that'll be 5 minus 4 = 1." — carried prose residue ("that'll be") plus
+  // multiple numbers, so it refused as unparseable and a false DENIAL of
+  // the correct terminal value survived every deterministic kill. A
+  // SINGLE-equation utterance whose text ends in "= <compact value>" is
+  // proposing that terminal value as its answer: compare the RHS alone.
+  // Guards: exactly one '=' in the RAW utterance — counted BEFORE the
+  // leading-assignment strip, which eats the first '=' of a
+  // multi-assignment ("x=4, y=-2" → "4, y=-2", one '=' left) and would
+  // otherwise let this rule grab the LAST assignment's value — a digit
+  // somewhere on the LHS (a bare "x = 5" is the strip's case above), and
+  // a compact number/fraction RHS (an expression RHS is working, not a
+  // result).
+  if ((uRaw.match(/=/g) ?? []).length === 1) {
+    const rhs = u.match(/^[^=]*\d[^=]*=\s*(-?\d+(?:\.\d+)?(?:\s*\/\s*-?\d+(?:\.\d+)?)?)\s*[.!?]?\s*$/);
+    if (rhs) u = rhs[1].trim();
+  }
   // 1) MCQ path — only when choices are supplied
   if (choices && choices.length > 0) {
     const lu = resolveMcqLetter(u, choices), le = resolveMcqLetter(e, choices);

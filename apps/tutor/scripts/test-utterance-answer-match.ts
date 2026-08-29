@@ -123,5 +123,22 @@ check('float rounding artifact just over: 7.001 vs 7 agree', matchUtteranceToAns
 check('non-trailing decimal still disagrees: 9.05 vs 9', matchUtteranceToAnswer('9.05', '9').verdict === 'disagree');
 check('non-trailing decimal still disagrees: 99.5 vs 100', matchUtteranceToAnswer('99.5', '100').verdict === 'disagree');
 
+// ─── R58b (live, portal-14e07a20): worked-then-result utterances.
+// "So that'll be 5 minus 4 = 1." refused as prose residue, so the
+// tutor's false denial of a correct answer survived every deterministic
+// kill. A single-equation utterance ending in "= <value>" proposes that
+// terminal value as the answer — compare the RHS. Multi-assignment
+// utterances ("x=4, y=-2") have ≥2 '=' and must keep refusing. ───
+check('R58b live fixture: "So that\'ll be 5 minus 4 = 1." vs 1 agree',
+  matchUtteranceToAnswer("So that'll be 5 minus 4 = 1.", '1').verdict === 'agree');
+check('R58b: wrong terminal RHS disagrees: "5 minus 4 = 2" vs 1',
+  matchUtteranceToAnswer('5 minus 4 = 2.', '1').verdict === 'disagree');
+check('R58b: worked equation with negative result: "-8 minus 3 = -11" vs -11 agree',
+  matchUtteranceToAnswer('-8 minus 3 = -11.', '-11').verdict === 'agree');
+check('R58b: multi-assignment still refuses: "x=4, y=-2" vs 4',
+  matchUtteranceToAnswer('x=4, y=-2', '4').verdict === 'unknown');
+check('R58b: fraction RHS: "so 26 over 2 = 13" vs 13 agree',
+  matchUtteranceToAnswer('so 26 over 2 = 13', '13').verdict === 'agree');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

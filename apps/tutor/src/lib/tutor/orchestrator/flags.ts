@@ -130,6 +130,18 @@ export const TUTOR_FIRST_SESSION_TIP =
 // Default ON; NEXT_PUBLIC_TUTOR_NOISE_FLOOR_NUDGE=off is the kill switch.
 export const TUTOR_NOISE_FLOOR_NUDGE =
   process.env.NEXT_PUBLIC_TUTOR_NOISE_FLOOR_NUDGE !== 'off';
+// R58b (2026-08-28, owner-approved): Cartesia TTS model. sonic-3.6 is GA,
+// same price as 3.5 (owner-verified against cartesia.ai/pricing), fully
+// backwards compatible, existing voice IDs unchanged; wins are pacing/
+// intonation + Indian-name pronunciation. NEXT_PUBLIC_ so the ONE name
+// works in both the server route (tts-cartesia) and the client WS hook
+// (useCartesiaSonicWS). Setting NEXT_PUBLIC_CARTESIA_TTS_MODEL=sonic-3.5
+// is the instant rollback. ⚠ The tts-pronunciation respell pins were
+// tuned against 3.5's normalizer quirks (bare "m" → "meter", 'em' voiced
+// /əm/) — they still feed 3.6 plain words, but a live listen should
+// confirm nothing sounds newly odd.
+export const CARTESIA_TTS_MODEL =
+  process.env.NEXT_PUBLIC_CARTESIA_TTS_MODEL || 'sonic-3.6';
 /**
  * Agenda rail (2026-08-10): persistent content-labeled progress rail above the
  * whiteboard. Kill switch: NEXT_PUBLIC_TUTOR_AGENDA_RAIL=off.

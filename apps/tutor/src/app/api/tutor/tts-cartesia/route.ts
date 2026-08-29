@@ -1,5 +1,5 @@
 /**
- * Cartesia TTS API Route — sonic-3.5
+ * Cartesia TTS API Route — model from CARTESIA_TTS_MODEL (sonic-3.6 default, R58b)
  *
  * Streaming pass-through to Cartesia's `/tts/bytes` endpoint. Returns raw
  * Float32 PCM at 24 kHz, mono (pcm_f32le, container: raw — NOT a WAV
@@ -27,6 +27,7 @@
 
 import { NextRequest } from 'next/server';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
+import { CARTESIA_TTS_MODEL } from '@/lib/tutor/orchestrator/flags';
 import { CARTESIA_DEFAULT_VOICE_ID, substituteCartesiaVoiceId } from '@core/voice/cartesia-voice-registry';
 
 const CARTESIA_TTS_URL = 'https://api.cartesia.ai/tts/bytes';
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
     }
 
     const ttsBody = {
-      model_id: 'sonic-3.5',
+      model_id: CARTESIA_TTS_MODEL,
       transcript: rewriteForTTS(text, { studentName }),
       voice,
       language: 'en',

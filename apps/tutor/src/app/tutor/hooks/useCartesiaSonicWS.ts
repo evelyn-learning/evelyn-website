@@ -46,6 +46,7 @@ import {
   CARTESIA_DEFAULT_VOICE_ID,
   applyCartesiaVoiceSubstitutions,
 } from '@core/voice/cartesia-voice-registry';
+import { CARTESIA_TTS_MODEL } from '@/lib/tutor/orchestrator/flags';
 
 const CARTESIA_VERSION = '2026-03-01';
 const SONIC_WS_URL = 'wss://api.cartesia.ai/tts/websocket';
@@ -226,7 +227,7 @@ export function useCartesiaSonicWS(options: UseCartesiaSonicWSOptions): UseCarte
     if (!ws) return false;
     const voiceSubs = tokenRef.current?.voiceSubs;
     const request = {
-      model_id: 'sonic-3.5',
+      model_id: CARTESIA_TTS_MODEL,
       transcript: text,
       voice: {
         mode: 'id' as const,

@@ -69,4 +69,10 @@ check('url cartesia opts back into real TTS over env silent', () => {
   assert.strictEqual(resolveTtsProvider('cartesia', 'silent'), 'cartesia');
 });
 
+// R58b: Cartesia model pin — default sonic-3.6, env-overridable rollback.
+check('CARTESIA_TTS_MODEL defaults to sonic-3.6', () => {
+  const { CARTESIA_TTS_MODEL } = require('../src/lib/tutor/orchestrator/flags');
+  assert.strictEqual(CARTESIA_TTS_MODEL, process.env.NEXT_PUBLIC_CARTESIA_TTS_MODEL || 'sonic-3.6');
+});
+
 console.log(`\n${passed} passed`);

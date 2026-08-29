@@ -2359,7 +2359,11 @@ export function VoiceTutorRealtime({
   // `Integral_a^b ... dx`-style equation). Used for spoken-final-answer
   // verification: when the tutor says "the answer is X", we ask Wolfram to
   // compute the true answer and compare.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[] } | null>(null);
+  // R58b: trackedAtMs orders the active card against a NEWER speech-posed
+  // problem staged in pendingGeneratedAnswerRef (see the inverse-verdict
+  // call site) — the student always answers the most recently POSED
+  // problem, which is not necessarily the most recently RENDERED card.
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; trackedAtMs?: number } | null>(null);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -2373,7 +2377,7 @@ export function VoiceTutorRealtime({
   // turn's <active_problem> block — the fix for verification drift (the
   // brain re-deriving mid-thread, dropping a factor, and affirming a wrong
   // answer while the verified one sat in a stale tool_result).
-  const pendingGeneratedAnswerRef = useRef<{ statement: string; expectedAnswer?: string } | null>(null);
+  const pendingGeneratedAnswerRef = useRef<{ statement: string; expectedAnswer?: string; atMs?: number } | null>(null);
 
   // Walk-through insistence counter for the current problem. The tutor should
   // default to Socratic; only switch to walk-through mode after the student
@@ -5597,6 +5601,7 @@ export function VoiceTutorRealtime({
           const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
           const genMatch = pendingGen && norm(pendingGen.statement) === norm(p.statement) ? pendingGen : null;
           currentProblemRef.current = {
+            trackedAtMs: Date.now(),
             statement: p.statement,
             kind,
             // Round-22: MCQ marker so the verification classifier can accept
@@ -5641,6 +5646,7 @@ export function VoiceTutorRealtime({
         if (statement) {
           const declared = typeof tyAny.expectedAnswer === 'string' ? tyAny.expectedAnswer.trim() : '';
           currentProblemRef.current = {
+            trackedAtMs: Date.now(),
             statement,
             kind: 'generic',
             source: 'card',
@@ -6343,7 +6349,7 @@ export function VoiceTutorRealtime({
           // If we don't have a problem statement yet but the tutor is showing
           // an integral to evaluate, promote it to the current problem.
           if (!currentProblemRef.current && /evaluate|to evaluate|integral to/i.test(label)) {
-            currentProblemRef.current = { statement: latex, kind: 'integral' };
+            currentProblemRef.current = { trackedAtMs: Date.now(), statement: latex, kind: 'integral' };
           }
         }
 
@@ -8292,6 +8298,7 @@ export function VoiceTutorRealtime({
           if (!statement) continue;
           const declared = typeof cmd.expectedAnswer === 'string' ? cmd.expectedAnswer.trim() : '';
           currentProblemRef.current = {
+            trackedAtMs: Date.now(),
             statement,
             kind: 'generic',
             source: 'card',
@@ -8306,6 +8313,7 @@ export function VoiceTutorRealtime({
         if (cmd?.action === 'showProblem' && cmd.problem?.statement) {
           const statement = String(cmd.problem.statement);
           currentProblemRef.current = {
+            trackedAtMs: Date.now(),
             statement,
             kind: /\\int|Integral_|\bintegral\b/i.test(statement) ? 'integral' : 'generic',
             hasChoices: Array.isArray(cmd.problem.answerChoices) && cmd.problem.answerChoices.length > 0,
@@ -9499,7 +9507,7 @@ export function VoiceTutorRealtime({
           const activeStmt = currentProblemRef.current?.statement ?? '';
           const brought = detectStudentBroughtProblem(lastStudent, authoredText, activeStmt);
           if (brought) {
-            currentProblemRef.current = { statement: brought, kind: 'generic', source: 'student' };
+            currentProblemRef.current = { trackedAtMs: Date.now(), statement: brought, kind: 'generic', source: 'student' };
             console.log(`[VoiceTutorRealtime] student-brought problem detected → grounding on it: "${brought.slice(0, 80)}"`);
             onDebugEvent?.('student_problem_detected', brought.slice(0, 90));
           }
@@ -10824,10 +10832,26 @@ export function VoiceTutorRealtime({
                       && Date.now() - pendingComputableEquationRef.current.armedAtMs < 120_000
                       ? pendingComputableEquationRef.current
                       : null;
+                    // R58b (live, portal-14e07a20): a SPEECH-posed problem
+                    // ("work out $2x - y$ when x = -4, y = 3", no card ever
+                    // rendered) blind-solve-verified its answer into
+                    // pendingGeneratedAnswerRef — where it sat unconsumed
+                    // while the student's correct "-11" was denied against
+                    // a stale card. The student answers the most recently
+                    // POSED problem: when the staged answer is NEWER than
+                    // the tracked card (or there is no card), it is the
+                    // grading truth. Same 2-minute freshness bound as
+                    // pendingEq.
+                    const pendingSpoken = pendingGeneratedAnswerRef.current?.expectedAnswer
+                      && typeof pendingGeneratedAnswerRef.current.atMs === 'number'
+                      && Date.now() - pendingGeneratedAnswerRef.current.atMs < 120_000
+                      && (pendingGeneratedAnswerRef.current.atMs > (currentProblemRef.current?.trackedAtMs ?? 0))
+                      ? pendingGeneratedAnswerRef.current
+                      : null;
                     const inv = checkInverseVerdict({
                       sentence: updatedSentence,
                       studentUtterance: transcript,
-                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
+                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
                       unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
                       choices: mcqChoices,
                       // R49: currency context for the spoken-money
@@ -10836,7 +10860,8 @@ export function VoiceTutorRealtime({
                       // the expected answer was the bare "3.75"), so the
                       // expected answer alone would never have shown it.
                       spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
-                      problemContext: currentProblemRef.current?.statement
+                      problemContext: pendingSpoken?.statement
+                        ?? currentProblemRef.current?.statement
                         ?? pendingEq?.latex,
                     });
                     if (inv.verdict === 'false_denial') {
@@ -11403,7 +11428,7 @@ export function VoiceTutorRealtime({
                       currentProblemRef.current.expectedAnswer = expAns;
                       onDebugEvent?.('expected_answer_pinned', (expAns ?? '').slice(0, 60));
                     } else {
-                      pendingGeneratedAnswerRef.current = { statement: st, expectedAnswer: expAns };
+                      pendingGeneratedAnswerRef.current = { statement: st, expectedAnswer: expAns, atMs: Date.now() };
                     }
                     onDebugEvent?.('generated_problem_received', st.slice(0, 60));
                   }
@@ -11482,7 +11507,7 @@ export function VoiceTutorRealtime({
                             if (currentProblemRef.current && normWs(currentProblemRef.current.statement) === normWs(claimedStatement)) {
                               currentProblemRef.current.expectedAnswer = claimedAnswer;
                             } else {
-                              pendingGeneratedAnswerRef.current = { statement: claimedStatement, expectedAnswer: claimedAnswer };
+                              pendingGeneratedAnswerRef.current = { statement: claimedStatement, expectedAnswer: claimedAnswer, atMs: Date.now() };
                             }
                             console.log('[VoiceTutorRealtime] improvised answer VERIFIED + pinned:', claimedAnswer.slice(0, 60));
                             onDebugEvent?.('improvised_answer_verified', claimedAnswer.slice(0, 60));
