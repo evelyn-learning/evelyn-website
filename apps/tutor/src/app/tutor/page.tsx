@@ -349,6 +349,10 @@ function TutorPage() {
   const [studentEmail, setStudentEmail] = useState('');
   // Set when /api/tutor/demo-start denies with 429 — renders the limit card.
   const [demoLimit, setDemoLimit] = useState<string | null>(null);
+  // Read-only quota status (2026-08-30): lets the setup screen warn BEFORE a
+  // doomed start, and the summary screen offer the evelyntutor/crimsora
+  // continuation choice after the LAST free demo instead of a dead end.
+  const [demoStatus, setDemoStatus] = useState<{ exhausted: boolean; remaining: number | null } | null>(null);
   const [inputMode, setInputMode] = useState<InputMode>('voice');
   // Voice settings: query param > env var > default
   const selectedVoice: VoiceId = ENV_CLASSIC_VOICE;
@@ -421,6 +425,23 @@ function TutorPage() {
       if (e) setStudentEmail((cur) => cur || e);
     } catch {}
   }, []);
+
+  // Demo-status refresh (2026-08-30): on mount (setup-screen warning) and on
+  // entering the summary stage (end-of-demos continuation card). Read-only,
+  // fails open server-side; a fetch error just means no proactive messaging.
+  useEffect(() => {
+    if (stage !== 'setup' && stage !== 'summary') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/tutor/demo-status');
+        if (!res.ok) return;
+        const d = (await res.json()) as { exhausted?: boolean; remaining?: number | null };
+        if (!cancelled) setDemoStatus({ exhausted: d.exhausted === true, remaining: d.remaining ?? null });
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [stage]);
   // Geo grid order (2026-07-19 accent-personas spec): local F/M pair first,
   // everyone else after in roster order. Computed post-mount (state, not a
   // render-time read) for the same SSR-hydration reason as the stored-choice
@@ -2248,12 +2269,15 @@ function TutorPage() {
 
           <div id="lesson-picker" className="max-w-3xl">
           {/* Demo gate (2026-08-29): limit card — quota hit, point at the
-              production implementations + contact instead of a dead end. */}
-          {demoLimit && (
+              production implementations + contact instead of a dead end.
+              2026-08-30: also shown PROACTIVELY when demo-status says the
+              visitor's free demos are already used, so nobody fills the form
+              just to earn a 429. */}
+          {(demoLimit || demoStatus?.exhausted) && (
             <div className="mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-5">
               <p className="font-semibold text-amber-900">
-                {demoLimit === 'email_limit'
-                  ? "You've used all the free demos for this email."
+                {demoLimit === 'email_limit' || (!demoLimit && demoStatus?.exhausted)
+                  ? "You've used all your free demos."
                   : demoLimit === 'demo_busy'
                     ? 'The demo is at capacity right now — please try again tomorrow.'
                     : "You've reached the demo limit for today."}
@@ -3230,7 +3254,50 @@ function TutorPage() {
             site has no /academy or enrolment route today — /contact is its
             conversion path; data-cta marks the link for analytics/repointing
             once a real enrolment page exists. */}
-        {shouldShowDemoCta({ flagOn: TUTOR_PEDAGOGY_OPENER, studentId: effectiveStudentId, sessionEnded: stage === 'summary' }) && (
+        {/* End-of-demos continuation choice (2026-08-30): once the LAST free
+            demo ends, the conversion ask stops being "contact us" and becomes
+            a concrete choice between the two production implementations —
+            1-on-1 open-topic tutoring vs structured courses. Replaces the
+            generic CTA card below whenever quota is exhausted. */}
+        {demoStatus?.exhausted && stage === 'summary' ? (
+          <div className="bg-white border-2 border-blue-200 rounded-xl p-6 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 mb-1 text-center">That was your last free demo — keep going</h2>
+            <p className="text-sm text-gray-600 mb-5 text-center">
+              The same tutor engine runs in two live products. Pick the one that fits how you want to learn.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <a
+                href="https://www.evelyntutor.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cta="demo-exhausted-evelyntutor"
+                className="group rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition p-5 flex flex-col"
+              >
+                <span className="font-semibold text-gray-900 group-hover:text-blue-600">Evelyn Tutor</span>
+                <span className="text-sm text-gray-600 mt-1 flex-1">
+                  1-on-1 voice tutoring on any topic you bring — your progress carries between sessions.
+                </span>
+                <span className="text-sm font-medium text-blue-600 mt-3">Continue on evelyntutor.com →</span>
+              </a>
+              <a
+                href="https://www.crimsora.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                data-cta="demo-exhausted-crimsora"
+                className="group rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-md transition p-5 flex flex-col"
+              >
+                <span className="font-semibold text-gray-900 group-hover:text-blue-600">Crimsora</span>
+                <span className="text-sm text-gray-600 mt-1 flex-1">
+                  Full structured courses — lesson plans, practice, and the tutor teaching every lesson.
+                </span>
+                <span className="text-sm font-medium text-blue-600 mt-3">Explore crimsora.com →</span>
+              </a>
+            </div>
+            <p className="text-xs text-gray-400 mt-4 text-center">
+              Building something of your own? <Link href="/contact?product=voice-tutor" className="underline">Talk to us</Link> about the tutor engine.
+            </p>
+          </div>
+        ) : shouldShowDemoCta({ flagOn: TUTOR_PEDAGOGY_OPENER, studentId: effectiveStudentId, sessionEnded: stage === 'summary' }) && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6 text-center">
             <h2 className="text-base font-semibold text-blue-900 mb-1">Enjoyed this?</h2>
             <p className="text-sm text-blue-800 mb-4">

@@ -74,6 +74,63 @@ type DemoStartResult =
   | { ok: false; kind: 'limited'; reason: string }
   | { ok: false; kind: 'error' };
 
+/** Read-only quota check (2026-08-30). Fails open — a fetch error just means
+ *  no proactive messaging; demo-start remains the enforcement point. */
+async function refreshDemoStatus(set: (v: boolean) => void): Promise<void> {
+  try {
+    const res = await fetch('/api/tutor/demo-status');
+    if (!res.ok) return;
+    const d = (await res.json()) as { exhausted?: boolean };
+    set(d.exhausted === true);
+  } catch {}
+}
+
+/** The end-of-demos continuation choice — the two live implementations of the
+ *  tutor engine, picked by how the visitor wants to learn. Factual copy only
+ *  (cross-promotion guardrail). */
+function ContinueChoicePanel({ onTrack }: { onTrack: (site: string) => void }) {
+  return (
+    <div className="rounded-2xl border-2 border-blue-200 bg-white p-6 mb-4">
+      <p className="font-bold text-lg text-slate-900 text-center mb-1">That was your last free demo — keep going</p>
+      <p className="text-sm text-slate-600 text-center mb-5">
+        The same tutor engine runs in two live products. Pick the one that fits how you want to learn.
+      </p>
+      <div className="grid sm:grid-cols-2 gap-4">
+        <a
+          href="https://www.evelyntutor.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => onTrack('evelyntutor')}
+          className="group rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition p-5 flex flex-col"
+        >
+          <span className="font-semibold text-slate-900 group-hover:text-blue-600">Evelyn Tutor</span>
+          <span className="text-sm text-slate-600 mt-1 flex-1">
+            1-on-1 voice tutoring on any topic you bring — your progress carries between sessions.
+          </span>
+          <span className="text-sm font-medium text-blue-600 mt-3">Continue on evelyntutor.com →</span>
+        </a>
+        <a
+          href="https://www.crimsora.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => onTrack('crimsora')}
+          className="group rounded-xl border border-slate-200 hover:border-blue-400 hover:shadow-md transition p-5 flex flex-col"
+        >
+          <span className="font-semibold text-slate-900 group-hover:text-blue-600">Crimsora</span>
+          <span className="text-sm text-slate-600 mt-1 flex-1">
+            Full structured courses — lesson plans, practice, and the tutor teaching every lesson.
+          </span>
+          <span className="text-sm font-medium text-blue-600 mt-3">Explore crimsora.com →</span>
+        </a>
+      </div>
+      <p className="text-xs text-slate-400 mt-4 text-center">
+        Building something of your own?{' '}
+        <Link href="/contact?product=voice-tutor" className="underline">Talk to us</Link> about the tutor engine.
+      </p>
+    </div>
+  );
+}
+
 /**
  * Token contract: a signed HS256 JWT minted by the engine's gated
  * /api/tutor/demo-start (demo-abuse restrictions, 2026-08-29 — replaces the
@@ -162,6 +219,10 @@ export default function VoiceTutorLiveDemo({
   // start cover. startError is the transient "something went wrong" case.
   const [limited, setLimited] = useState<string | null>(null);
   const [startError, setStartError] = useState(false);
+  // 2026-08-30: read-only quota status. Checked on mount (show the limit
+  // card BEFORE a doomed form-fill) and when a session ends (offer the
+  // evelyntutor/crimsora continuation choice after the LAST free demo).
+  const [demoExhausted, setDemoExhausted] = useState(false);
   // R39: set when the embed reports its session ended — surfaces the
   // "Choose another lesson" affordance now that the header links are gone.
   const [sessionEnded, setSessionEnded] = useState(false);
@@ -181,11 +242,20 @@ export default function VoiceTutorLiveDemo({
       if ((e.data as { type?: string } | null)?.type === 'evelyn:session_ended') {
         setSessionEnded(true);
         trackEvent('demo_session_ended', { plan_id: lesson.planId, surface });
+        // Ended session may have been the visitor's last free demo — refresh
+        // quota status so the continuation choice can render (2026-08-30).
+        void refreshDemoStatus(setDemoExhausted);
       }
     };
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
   }, [lesson.planId]);
+
+  // Proactive limit messaging (2026-08-30): a visitor whose demos are already
+  // used sees the limit card immediately, not after filling the form.
+  useEffect(() => {
+    void refreshDemoStatus(setDemoExhausted);
+  }, []);
 
   // Teacher restore + geo pre-select — same semantics as /tutor (stored
   // choice wins; first visit picks from the local accent pair and persists).
@@ -298,11 +368,19 @@ export default function VoiceTutorLiveDemo({
   if (embedSrc) {
     return (
       <div>
+        {/* 2026-08-30: that session was the visitor's LAST free demo — offer
+            the continuation choice right here, above the embed's own
+            end-of-session summary (which stays visible below). */}
+        {sessionEnded && demoExhausted && (
+          <ContinueChoicePanel
+            onTrack={(site) => trackEvent('demo_limited', { plan_id: lesson.planId, surface, reason: `continue_${site}` })}
+          />
+        )}
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <p className="text-sm text-slate-600">
             <span className="font-semibold text-slate-900">{lesson.title}</span> with {teacher.name} — 10-minute demo
           </p>
-          {sessionEnded && (
+          {sessionEnded && !demoExhausted && (
             <button
               type="button"
               onClick={() => {
@@ -351,6 +429,16 @@ export default function VoiceTutorLiveDemo({
           Contact us
         </Link>
       </div>
+    );
+  }
+
+  // 2026-08-30: demos already used up (checked on mount) — the picker would
+  // only lead to a 429, so the continuation choice IS the demo surface now.
+  if (demoExhausted) {
+    return (
+      <ContinueChoicePanel
+        onTrack={(site) => trackEvent('demo_limited', { plan_id: lesson.planId, surface, reason: `continue_${site}` })}
+      />
     );
   }
 
