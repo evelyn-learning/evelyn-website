@@ -3289,7 +3289,7 @@ export function VoiceTutorRealtime({
 
       const response = await fetch('/api/tutor/generate-whiteboard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body: JSON.stringify({
           tutorText,
           studentText: lastStudentMsg || '',
@@ -3991,7 +3991,7 @@ export function VoiceTutorRealtime({
 
       fetch('/api/tutor/sketch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body: JSON.stringify({ concept, labels, sessionId: sessionIdRef.current }),
         signal: controller.signal,
       })
@@ -9620,7 +9620,10 @@ export function VoiceTutorRealtime({
         brainTurnAbortedRef.current = false;
         const brainFetchInit: RequestInit = {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          // Demo gate (2026-08-29): thread the partner embed token so gated
+          // brain turns pass for cross-origin partner embeds; retail/demo
+          // surfaces pass via the demo-grant cookie instead.
+          headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
           signal: brainAbort.signal,
           body: JSON.stringify({
             systemPrompt: claudeSystemPromptRef.current,
@@ -15896,6 +15899,10 @@ export function VoiceTutorRealtime({
     vadPrefixPaddingMs,
     reconnectEnabled,
     useRealtimeV2,
+    // Demo gate (2026-08-29): partner embeds authenticate the gated
+    // realtime-token route via their embed token (cross-origin iframes
+    // can't rely on the demo-grant cookie).
+    embedToken,
     tools: realtimeV2Tools,
     relayMode: claudeBrainMode
       ? {

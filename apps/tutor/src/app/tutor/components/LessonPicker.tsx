@@ -39,6 +39,9 @@ function StepChip({ label, done }: { label: string; done: boolean }) {
 export interface LessonPickerProps {
   studentName: string;
   onStudentName: (v: string) => void;
+  /** Demo gate (2026-08-29): email is mandatory to start a demo session. */
+  studentEmail: string;
+  onStudentEmail: (v: string) => void;
   subject: string;
   level: string;
   topicId: string;
@@ -58,6 +61,8 @@ export interface LessonPickerProps {
 export default function LessonPicker({
   studentName,
   onStudentName,
+  studentEmail,
+  onStudentEmail,
   subject,
   level,
   topicId,
@@ -255,19 +260,40 @@ export default function LessonPicker({
         )}
       </div>
 
-      {/* Name */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-          Your Name (optional)
-        </label>
-        <input
-          id="name"
-          type="text"
-          value={studentName}
-          onChange={(e) => onStudentName(e.target.value)}
-          placeholder="Enter your name"
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
+      {/* Name + email — demo gate (2026-08-29): both are now REQUIRED. The
+          parent's canStart won't go true without a name and a plausible
+          email; the server re-validates and enforces demo quotas. */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            Your Name
+          </label>
+          <input
+            id="name"
+            type="text"
+            value={studentName}
+            onChange={(e) => onStudentName(e.target.value)}
+            placeholder="Enter your name"
+            required
+            maxLength={60}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={studentEmail}
+            onChange={(e) => onStudentEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            maxLength={254}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
       </div>
 
       {/* Start */}
@@ -282,7 +308,7 @@ export default function LessonPicker({
       </button>
       {!canStart && (
         <p className="text-center text-xs text-gray-400 -mt-2">
-          Search for a lesson above, or browse to pick a subject &amp; topic.
+          Pick a lesson and enter your name &amp; email to start.
         </p>
       )}
     </div>

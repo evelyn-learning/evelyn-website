@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { buildSystemPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { parseWhiteboardCommands } from '@/lib/tutor/ai/response-parser';
 import { loadModuleByParams } from '@core/knowledge/registry';
@@ -95,6 +96,12 @@ function classifyAPIError(error: unknown): APIErrorInfo {
 
 export async function POST(request: NextRequest) {
   try {
+    // Demo gate (2026-08-29): every text-mode turn is a Claude call. Retail
+    // /tutor passes via the demo-grant cookie; embed contexts via the
+    // x-embed-token header.
+    const deniedResponse = await denyIfNoDemoAccess(request, 'chat');
+    if (deniedResponse) return deniedResponse;
+
     const body = await request.json();
     const {
       message,

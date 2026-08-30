@@ -65,29 +65,36 @@ const DEFAULT_TONE_DOT: Record<string, string> = Object.fromEntries(
 );
 const FALLBACK_TONE_DOT = 'bg-blue-500';
 
+// Demo gate (2026-08-29): same dotted-domain regex the engine's gate
+// enforces server-side — stricter than HTML5's, which accepts `user@gmail`.
+const DEMO_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type DemoStartResult =
+  | { ok: true; token: string }
+  | { ok: false; kind: 'limited'; reason: string }
+  | { ok: false; kind: 'error' };
+
 /**
- * Token contract: base64 JSON (legacy) or a signed HS256 JWT (learner-model
- * Phase C, Task 5) — either way decoded by parseToken/verifyEmbedToken in
- * tutor-portal/embed. Preferred path: POST the config to the engine's own
- * mint endpoint so the auth-bearing claims (`partner_id`, `student_id`,
- * `exp`) get server-forced and HMAC-signed — a browser can't hold the
- * partner secret to sign itself. That endpoint NEVER hard-fails the demo:
- * on any network/response error this falls back to the previous client-side
- * btoa encoding, so a mint outage degrades to "unsigned token" (same as
- * before Task 1 shipped) rather than a broken demo.
+ * Token contract: a signed HS256 JWT minted by the engine's gated
+ * /api/tutor/demo-start (demo-abuse restrictions, 2026-08-29 — replaces the
+ * ungated /api/tutor-portal/demo-token call + client-side btoa fallback,
+ * which together let anyone run unlimited demo sessions; one demo student
+ * ran 16 from a single IP through this widget). The gate takes the now-
+ * MANDATORY name + email, enforces per-email/IP/device/day quotas, and sets
+ * the demo-grant cookie the engine's costly routes require — same-origin
+ * here (nginx routes /api/tutor/* to the engine), so the cookie rides into
+ * the iframe's fetches automatically. A 429 is a real "you've used your free
+ * demos" answer and must surface as one, not silently degrade; the old
+ * unsigned-btoa fallback is gone because gated routes reject it anyway.
  */
-async function buildEmbedToken(
+async function startGatedDemo(
   lesson: DemoLessonOption,
   teacher: TeacherPersonaWire,
   source: string,
-  studentName?: string,
-): Promise<string> {
+  studentName: string,
+  studentEmail: string,
+): Promise<DemoStartResult> {
   const cfg = {
-    partner_id: 'evelyn-marketing',
-    student_id: `demo-${Math.random().toString(36).slice(2, 10)}`,
-    // R40: /tutor collects a name and the tutor greets with it — the demo now
-    // does the same (optional; omitted → the opener stays name-less by design).
-    ...(studentName ? { student_name: studentName } : {}),
     subject: lesson.subjectLabel.toLowerCase(),
     level: lesson.levelLabel,
     curriculum_module: lesson.planId,
@@ -100,22 +107,21 @@ async function buildEmbedToken(
     metadata: { source },
   };
   try {
-    const res = await fetch('/api/tutor-portal/demo-token', {
+    const res = await fetch('/api/tutor/demo-start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ config: cfg }),
+      body: JSON.stringify({ name: studentName, email: studentEmail, config: cfg }),
     });
-    if (!res.ok) throw new Error(`demo-token mint failed: ${res.status}`);
+    if (res.status === 429) {
+      const d = (await res.json().catch(() => ({}))) as { reason?: string };
+      return { ok: false, kind: 'limited', reason: d.reason || 'limit' };
+    }
+    if (!res.ok) return { ok: false, kind: 'error' };
     const { token } = (await res.json()) as { token?: string };
-    if (typeof token !== 'string' || !token) throw new Error('demo-token mint returned no token');
-    return token;
+    if (typeof token !== 'string' || !token) return { ok: false, kind: 'error' };
+    return { ok: true, token };
   } catch {
-    // UTF-8-safe btoa fallback (teacher intros contain no exotic chars
-    // today, but the token must never break if one gains an em dash or
-    // accent). Client-forced partner_id/student_id here are exactly what
-    // the mint endpoint would have forced anyway — this is the same demo
-    // identity, just unsigned.
-    return btoa(unescape(encodeURIComponent(JSON.stringify(cfg))));
+    return { ok: false, kind: 'error' };
   }
 }
 
@@ -147,9 +153,15 @@ export default function VoiceTutorLiveDemo({
   const [geoPairIds, setGeoPairIds] = useState<string[]>([]);
   const [teacherOpen, setTeacherOpen] = useState(false);
   const [embedSrc, setEmbedSrc] = useState<string | null>(null);
-  // R40: optional student name, greeted by the tutor (parity with /tutor).
-  // Persisted so a returning visitor doesn't retype it.
+  // Demo gate (2026-08-29): name + email are now MANDATORY (parity with
+  // /tutor, where the tutor greets by name). Persisted so a returning
+  // visitor doesn't retype them — same keys as /tutor.
   const [studentName, setStudentName] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
+  // Quota hit (429 from demo-start) → render the limit card instead of the
+  // start cover. startError is the transient "something went wrong" case.
+  const [limited, setLimited] = useState<string | null>(null);
+  const [startError, setStartError] = useState(false);
   // R39: set when the embed reports its session ended — surfaces the
   // "Choose another lesson" affordance now that the header links are gone.
   const [sessionEnded, setSessionEnded] = useState(false);
@@ -181,6 +193,8 @@ export default function VoiceTutorLiveDemo({
     try {
       const storedName = window.localStorage.getItem('evelyn:demo:studentName');
       if (storedName) setStudentName(storedName);
+      const storedEmail = window.localStorage.getItem('evelyn:demo:studentEmail');
+      if (storedEmail) setStudentEmail(storedEmail);
     } catch {}
     try {
       const raw = window.localStorage.getItem(TEACHER_STORE_KEY);
@@ -247,18 +261,32 @@ export default function VoiceTutorLiveDemo({
     trackEvent('teacher_changed', { teacher_id: id, surface });
   };
 
+  const name = studentName.trim();
+  const email = studentEmail.trim();
+  const identityOk = name.length > 0 && DEMO_EMAIL_RE.test(email);
+
   const start = async () => {
-    if (starting) return;
+    if (starting || !identityOk) return;
     trackEvent('demo_start_click', { plan_id: lesson.planId, teacher_id: teacher.id });
-    const name = studentName.trim();
     try {
-      if (name) window.localStorage.setItem('evelyn:demo:studentName', name);
+      window.localStorage.setItem('evelyn:demo:studentName', name);
+      window.localStorage.setItem('evelyn:demo:studentEmail', email);
     } catch {}
     setStarting(true);
+    setStartError(false);
     try {
-      const token = await buildEmbedToken(lesson, teacher, source, name || undefined);
+      const result = await startGatedDemo(lesson, teacher, source, name, email);
+      if (!result.ok) {
+        if (result.kind === 'limited') {
+          setLimited(result.reason);
+          trackEvent('demo_limited', { plan_id: lesson.planId, surface, reason: result.reason });
+        } else {
+          setStartError(true);
+        }
+        return;
+      }
       setSessionEnded(false);
-      setEmbedSrc(`/tutor-portal/embed?token=${encodeURIComponent(token)}`);
+      setEmbedSrc(`/tutor-portal/embed?token=${encodeURIComponent(result.token)}`);
     } finally {
       setStarting(false);
     }
@@ -295,6 +323,33 @@ export default function VoiceTutorLiveDemo({
           title="Evelyn AI Voice Tutor — live demo"
           className="w-full h-[70vh] min-h-[480px] max-h-[720px] rounded-2xl border border-slate-200 shadow-lg bg-white"
         />
+      </div>
+    );
+  }
+
+  if (limited) {
+    return (
+      <div className="rounded-2xl border-2 border-amber-200 bg-amber-50 p-8 md:p-10 text-center">
+        <p className="font-bold text-lg text-slate-900">
+          {limited === 'email_limit'
+            ? "You've used all the free demos for this email"
+            : limited === 'demo_busy'
+              ? 'The demo is at capacity today'
+              : "You've reached the demo limit for today"}
+        </p>
+        <p className="text-sm text-slate-600 mt-2 max-w-md mx-auto">
+          Want to keep going? The same tutor engine runs in production at{' '}
+          <a href="https://www.evelyntutor.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">evelyntutor.com</a>{' '}
+          and{' '}
+          <a href="https://www.crimsora.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium">crimsora.com</a>{' '}
+          — try it there, or talk to us about your own use case.
+        </p>
+        <Link
+          href="/contact?product=voice-tutor"
+          className="mt-5 inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+        >
+          Contact us
+        </Link>
       </div>
     );
   }
@@ -341,23 +396,39 @@ export default function VoiceTutorLiveDemo({
               type="text"
               value={studentName}
               onChange={(e) => setStudentName(e.target.value)}
-              placeholder="Your name (optional)"
-              aria-label="Your name (optional)"
+              placeholder="Your name"
+              aria-label="Your name"
+              required
               maxLength={40}
+              className="w-full max-w-[260px] px-4 py-2.5 text-sm text-center border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+            <input
+              type="email"
+              value={studentEmail}
+              onChange={(e) => setStudentEmail(e.target.value)}
+              placeholder="you@example.com"
+              aria-label="Your email"
+              required
+              maxLength={254}
               className="w-full max-w-[260px] px-4 py-2.5 text-sm text-center border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
             <button
               type="button"
               onClick={start}
-              disabled={starting}
+              disabled={starting || !identityOk}
               aria-busy={starting}
-              className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-wait"
+              className="mt-2 inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed"
             >
               <Mic className="w-4 h-4" />
               {starting ? 'Starting…' : 'Start voice session'}
             </button>
+            {startError && (
+              <p className="text-xs text-rose-600" role="alert">
+                Couldn&apos;t start the demo — please try again.
+              </p>
+            )}
             <p className="text-xs text-slate-400">
-              Uses your microphone · voice + whiteboard · 10-minute demo · no signup
+              Uses your microphone · voice + whiteboard · free 10-minute demo
             </p>
           </div>
 

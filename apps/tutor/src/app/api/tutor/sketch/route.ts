@@ -12,6 +12,7 @@
  * in lib/tutor/whiteboard/doodler.ts (unit-probeable).
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { generateDoodle } from '@/lib/tutor/whiteboard/doodler';
 import type { SketchPrimitive } from '@/lib/tutor/whiteboard/sketch-schema';
 
@@ -38,6 +39,12 @@ const cacheKey = (concept: string, labels: string[]) =>
 
 export async function POST(request: NextRequest) {
   try {
+    // Demo gate (2026-08-29): sketch calls an LLM; the per-sessionId limiter
+    // below is defeated by minting a new sessionId, so gate on the demo
+    // grant cookie / embed token first.
+    const deniedResponse = await denyIfNoDemoAccess(request, 'sketch');
+    if (deniedResponse) return deniedResponse;
+
     const body = await request.json();
     const concept: string = typeof body?.concept === 'string' ? body.concept.trim() : '';
     const labels: string[] = Array.isArray(body?.labels) ? body.labels.map(String).slice(0, 10) : [];

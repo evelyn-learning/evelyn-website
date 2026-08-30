@@ -11,6 +11,8 @@ import { TutorSession, type ITutorSession } from "@/models/TutorSession";
 import { extractClientIp } from "@/lib/tutor/recordings/client-ip";
 import { lookupGeo } from "@/lib/tutor/recordings/geo";
 import { checkEmbedAuthAsync } from "@/lib/tutor/portal/embed-token";
+import { demoGateSecret } from "@/lib/tutor/demo-gate/gate";
+import { DEMO_GRANT_COOKIE, verifyDemoGrant } from "@/lib/tutor/demo-gate/grant";
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
@@ -139,6 +141,14 @@ export async function POST(req: NextRequest) {
     const isNewSession = !(await TutorSession.exists({ sessionId }));
     const clientIp = isNewSession ? extractClientIp(req.headers) : undefined;
     if (clientIp) setOnInsertFields.clientIp = clientIp.slice(0, 100);
+
+    // Demo gate (2026-08-29): stamp the gated email onto the session doc on
+    // insert — read from the VERIFIED grant cookie, never from the body, so
+    // a client can't attribute its session to someone else's address.
+    if (isNewSession) {
+      const grant = verifyDemoGrant(req.cookies.get(DEMO_GRANT_COOKIE)?.value, demoGateSecret());
+      if (grant) setOnInsertFields.studentEmail = grant.email;
+    }
 
     // Fields that should only be set on insert
     if (body.subject) setOnInsertFields.subject = body.subject;

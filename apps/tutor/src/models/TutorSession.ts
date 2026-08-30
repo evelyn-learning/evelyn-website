@@ -37,6 +37,8 @@ export interface IDebugEvent {
 export interface ITutorSession extends Document {
   sessionId: string;
   studentName?: string;
+  /** Demo gate (2026-08-29): server-stamped from the verified grant cookie. */
+  studentEmail?: string;
   /** A2: partner's stable student id from the embed token (name fallback). */
   studentId?: string;
   subject: string;
@@ -197,6 +199,12 @@ const TutorSessionSchema = new Schema<ITutorSession>(
     studentName: {
       type: String,
     },
+    // Demo gate (2026-08-29): the mandatory demo email, stamped server-side
+    // on insert from the verified demo-grant cookie — never client-supplied.
+    studentEmail: {
+      type: String,
+      maxlength: 254,
+    },
     // A2 (2026-07-08): the partner's stable student id from the embed token.
     // Lets the admin list resolve a display name when a session's own
     // studentName never arrived (double-start minted a token without
@@ -342,6 +350,10 @@ const TutorSessionSchema = new Schema<ITutorSession>(
 // Query indexes
 TutorSessionSchema.index({ status: 1, startedAt: -1 });
 TutorSessionSchema.index({ subject: 1, topic: 1 });
+// Demo gate (2026-08-29): makes "N demos from this IP, when" queryable —
+// clientIp was captured from day one but never indexed, so the abuse
+// baseline had to be computed by collection scan.
+TutorSessionSchema.index({ clientIp: 1, startedAt: -1 });
 
 // TTL index: auto-delete after 180 days (also serves as startedAt query index)
 TutorSessionSchema.index(

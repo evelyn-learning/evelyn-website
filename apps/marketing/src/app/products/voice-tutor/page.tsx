@@ -4,7 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { FAQ } from '@/components/ui/FAQ';
 import { productFAQs } from '@/data/faqs/products';
-import { Mic, MessageSquare, Upload, Pencil } from 'lucide-react';
+import { Mic, MessageSquare, Upload, Pencil, ExternalLink } from 'lucide-react';
 
 const VoiceTutorLiveDemo = dynamic(
   () => import('@/components/demos/VoiceTutorLiveDemo'),
@@ -83,7 +83,7 @@ function DemoSection() {
           </span>
           <h2 className="text-3xl font-bold text-slate-900 mb-2">Try the AI Voice Tutor</h2>
           <p className="text-slate-600 max-w-xl mx-auto mb-6">
-            Pick a lesson and start talking — this is the real tutor, not a video. No signup, ~2 minutes.
+            Pick a lesson and start talking — this is the real tutor, not a video. Just your name and email, ~2 minutes.
           </p>
         </div>
 
@@ -133,6 +133,64 @@ function DemoSection() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Live implementations of the tutor engine (2026-08-29). Guardrail (same as
+ * CrimsoraClientStory / the 2026-08-04 cross-promotion spec): FACTUAL copy
+ * only — what each site is and that the tutor runs there. No metrics, no
+ * quotes, no claims on their behalf.
+ */
+function LiveImplementationsSection() {
+  const sites = [
+    {
+      href: 'https://www.evelyntutor.com',
+      domain: 'evelyntutor.com',
+      name: 'Evelyn Tutor',
+      description:
+        'Our direct-to-student tutoring platform. The AI Voice Tutor teaches live sessions on any topic a student brings — try it and sign up there.',
+    },
+    {
+      href: 'https://www.crimsora.com',
+      domain: 'crimsora.com',
+      name: 'Crimsora',
+      description:
+        'A structured learning academy built on the same engine — full courses with lesson plans, practice, and the voice tutor teaching every lesson.',
+    },
+  ];
+  return (
+    <section className="py-16">
+      <div className="container-wide">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold text-slate-900 mb-2">See It Live in Production</h2>
+          <p className="text-slate-600 max-w-2xl mx-auto">
+            The same tutor engine already powers two live products. Try it in action — and sign up if it fits your needs.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+          {sites.map((site) => (
+            <a
+              key={site.domain}
+              href={site.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition p-6 flex flex-col"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-lg text-slate-900 group-hover:text-blue-600 transition-colors">{site.name}</h3>
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                  <ExternalLink className="w-3 h-3" />
+                  Visit Site
+                </span>
+              </div>
+              <p className="text-sm text-slate-600 flex-1">{site.description}</p>
+              <p className="text-xs text-slate-400 mt-4">{site.domain}</p>
+            </a>
+          ))}
         </div>
       </div>
     </section>
@@ -265,6 +323,7 @@ export default function VoiceTutorProductPage() {
       <ProductHero />
       <MetricsSection />
       <DemoSection />
+      <LiveImplementationsSection />
       <FeaturesSection />
       <HowItWorksSection />
       <FAQSection />

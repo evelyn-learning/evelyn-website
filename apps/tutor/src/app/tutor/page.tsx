@@ -94,6 +94,14 @@ const TUTOR_PEDAGOGY_OPENER = isPedagogyOpenerFlagValue(process.env.NEXT_PUBLIC_
 const OPENER_STORE_PREFIX = 'evelyn:tutor:lastOpener:';
 // Demo teacher choice survives refreshes (see selectedTeacherId below).
 const TEACHER_STORE_KEY = 'evelyn:tutor:selectedTeacher';
+
+// Demo gate (2026-08-29): client-side mirror of the server's email check
+// (demo-gate/gate.ts DEMO_EMAIL_RE) — dotted domain required, stricter than
+// HTML5's type=email. Same localStorage keys as the marketing embed so a
+// visitor's identity carries across surfaces.
+const DEMO_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEMO_NAME_STORE_KEY = 'evelyn:demo:studentName';
+const DEMO_EMAIL_STORE_KEY = 'evelyn:demo:studentEmail';
 // Accent hints + original-four set moved to a shared module 2026-08-02 (the
 // /products/voice-tutor live demo shows the same copy).
 function readStoredOpener(teacherId: string): LastOpenerRecord | undefined {
@@ -335,6 +343,12 @@ function TutorPage() {
   } = useStudentPreferences();
   const [sessionGoal, setSessionGoal] = useState<SessionGoal>('practice');
   const [studentName, setStudentName] = useState('');
+  // Demo gate (2026-08-29): email is now MANDATORY (with name) to start a
+  // demo. Persisted under the same localStorage keys the marketing embed
+  // uses so identity carries across surfaces.
+  const [studentEmail, setStudentEmail] = useState('');
+  // Set when /api/tutor/demo-start denies with 429 — renders the limit card.
+  const [demoLimit, setDemoLimit] = useState<string | null>(null);
   const [inputMode, setInputMode] = useState<InputMode>('voice');
   // Voice settings: query param > env var > default
   const selectedVoice: VoiceId = ENV_CLASSIC_VOICE;
@@ -396,6 +410,17 @@ function TutorPage() {
     () => DEMO_TEACHERS.find((t) => t.id === selectedTeacherId) ?? DEMO_TEACHERS[0],
     [selectedTeacherId],
   );
+
+  // Demo gate (2026-08-29): prefill name + email from prior visits (shared
+  // keys with the marketing embed). Runs once; user edits win afterwards.
+  useEffect(() => {
+    try {
+      const n = window.localStorage.getItem(DEMO_NAME_STORE_KEY);
+      const e = window.localStorage.getItem(DEMO_EMAIL_STORE_KEY);
+      if (n) setStudentName((cur) => cur || n);
+      if (e) setStudentEmail((cur) => cur || e);
+    } catch {}
+  }, []);
   // Geo grid order (2026-07-19 accent-personas spec): local F/M pair first,
   // everyone else after in roster order. Computed post-mount (state, not a
   // render-time read) for the same SSR-hydration reason as the stored-choice
@@ -934,7 +959,14 @@ function TutorPage() {
     () => selectedTopicId ? buildDisplayName(selectedSubject, selectedLevel, selectedTopicId) : '',
     [selectedSubject, selectedLevel, selectedTopicId]
   );
-  const canStartSession = !!(selectedSubject && selectedLevel && selectedTopicId);
+  // Demo gate (2026-08-29): a session now needs the taxonomy selection AND a
+  // name + plausible email (the gate form). The e2e harness's programmatic
+  // starts (testSessionRef) stay nameless by design — dev-only hooks, and
+  // local/private IPs are gate-allowlisted server-side anyway.
+  const taxonomyReady = !!(selectedSubject && selectedLevel && selectedTopicId);
+  const demoIdentityOk =
+    studentName.trim().length > 0 && DEMO_EMAIL_RE.test(studentEmail.trim());
+  const canStartSession = taxonomyReady && (demoIdentityOk || testSessionRef.current);
 
   // Reset downstream selections when a parent dropdown changes. (availableLessonPlans
   // is derived from the index, so it clears automatically.)
@@ -1237,6 +1269,32 @@ function TutorPage() {
   const handleStartSession = useCallback(async () => {
     if (!canStartSession) return;
 
+    // Demo gate (2026-08-29): clear the quota gate BEFORE any session state
+    // is touched. Sets the demo-grant cookie the costly routes require. The
+    // e2e harness's programmatic starts skip it (nameless by design; local
+    // IPs are allowlisted server-side). Infra failures fail OPEN — route
+    // enforcement is the backstop, and a gate outage must not kill the demo.
+    if (!testSessionRef.current) {
+      try {
+        const gateRes = await fetch('/api/tutor/demo-start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: studentName.trim(), email: studentEmail.trim() }),
+        });
+        if (gateRes.status === 429) {
+          const d = (await gateRes.json().catch(() => ({}))) as { reason?: string };
+          setDemoLimit(d.reason || 'limit');
+          return;
+        }
+        try {
+          window.localStorage.setItem(DEMO_NAME_STORE_KEY, studentName.trim());
+          window.localStorage.setItem(DEMO_EMAIL_STORE_KEY, studentEmail.trim());
+        } catch {}
+      } catch (err) {
+        console.warn('[demo-gate] demo-start unreachable — proceeding', err);
+      }
+    }
+
     // Track demo try
     onTry();
     trackInteraction('navigation', 'session_start', { topic: selectedTopicId, goal: sessionGoal, inputMode });
@@ -1345,7 +1403,7 @@ function TutorPage() {
     } finally {
       setIsProcessing(false);
     }
-  }, [canStartSession, selectedSubject, selectedLevel, selectedTopicId, selectedLessonPlanId, selectedTeacherId, studentName, sessionGoal, inputMode, onTry, trackInteraction]);
+  }, [canStartSession, selectedSubject, selectedLevel, selectedTopicId, selectedLessonPlanId, selectedTeacherId, studentName, studentEmail, sessionGoal, inputMode, onTry, trackInteraction]);
 
   // ── Dev-only e2e test hooks (Playwright harness) ──────────────────────────
   // NODE_ENV-guarded window hooks so the tutor-e2e harness can drive a real
@@ -1448,7 +1506,8 @@ function TutorPage() {
       // a 'Test Student' default here reached the brain as if it were the
       // student's real name (observed live 2026-07-03: "Hey Test Student!").
       // Callers that want a name (scripts/tutor-e2e/run.ts) pass one
-      // explicitly; canStartSession does not require a name.
+      // explicitly; canStartSession exempts test sessions from the demo
+      // gate's name+email requirement (testSessionRef, 2026-08-29).
       setStudentName(cfg.studentName || '');
       setTestStudentIdOverride(cfg.studentId || undefined);
       setTestSocialMemory(cfg.socialMemory);
@@ -2188,10 +2247,32 @@ function TutorPage() {
           </div>
 
           <div id="lesson-picker" className="max-w-3xl">
+          {/* Demo gate (2026-08-29): limit card — quota hit, point at the
+              production implementations + contact instead of a dead end. */}
+          {demoLimit && (
+            <div className="mb-4 rounded-xl border-2 border-amber-300 bg-amber-50 p-5">
+              <p className="font-semibold text-amber-900">
+                {demoLimit === 'email_limit'
+                  ? "You've used all the free demos for this email."
+                  : demoLimit === 'demo_busy'
+                    ? 'The demo is at capacity right now — please try again tomorrow.'
+                    : "You've reached the demo limit for today."}
+              </p>
+              <p className="text-sm text-amber-800 mt-1.5">
+                Want more? See the tutor in production at{' '}
+                <a href="https://www.evelyntutor.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">evelyntutor.com</a>{' '}
+                or{' '}
+                <a href="https://www.crimsora.com" target="_blank" rel="noopener noreferrer" className="underline font-medium">crimsora.com</a>
+                , or <a href="https://www.evelynlearning.com/contact?product=voice-tutor" className="underline font-medium">contact us</a> about your use case.
+              </p>
+            </div>
+          )}
           {/* Setup form */}
           <LessonPicker
             studentName={studentName}
             onStudentName={setStudentName}
+            studentEmail={studentEmail}
+            onStudentEmail={setStudentEmail}
             subject={selectedSubject}
             level={selectedLevel}
             topicId={selectedTopicId}

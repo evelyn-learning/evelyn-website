@@ -136,6 +136,13 @@ export interface RealtimeConfig {
    *  NEXT_PUBLIC_TUTOR_REALTIME_RECONNECT in VoiceTutorRealtime,
    *  mirroring the vad* env-prop convention. */
   reconnectEnabled?: boolean;
+  /** Demo gate (2026-08-29): partner embed token, threaded into the
+   *  realtime-token fetch BODY so the gated route can verify it — a
+   *  cross-origin partner iframe can't rely on third-party cookies, and
+   *  this hook owns those fetches. Absent on retail/demo surfaces, where
+   *  the demo-grant cookie rides automatically. Touches nothing else in
+   *  this hook — no voice/turn-taking behavior change. */
+  embedToken?: string;
   /** GPT-Realtime-2 native engine. When true the hook connects to the
    *  gpt-realtime-2 model, adds reasoning.effort to session.update, and
    *  lets the server auto-create a response on each VAD commit
@@ -683,6 +690,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
     reconnectEnabled = false,
     useRealtimeV2 = false,
+    embedToken,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
     onStudentAudioChunk, onTutorAudioChunk, onTtsPlaybackProgress, onTtsIssue, onTtsSentencePlayback, onVoiceHiccupCaption, onTtsTransportFallback, relayMode,
@@ -2092,7 +2100,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         tokenPromiseRef.current = fetch('/api/tutor/realtime-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ voice, instructions: initInstructions, engine: useRealtimeV2Ref.current ? 'realtime-2' : 'realtime' }),
+          body: JSON.stringify({ voice, instructions: initInstructions, engine: useRealtimeV2Ref.current ? 'realtime-2' : 'realtime', ...(embedToken ? { embedToken } : {}) }),
         })
           .then(async (r) => {
             if (!r.ok) {
@@ -2276,7 +2284,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       onError?.(error);
       updateState('error');
     }
-  }, [voice, vadThreshold, vadSilenceDurationMs, vadPrefixPaddingMs, handleMessage, onError, updateState]);
+  }, [voice, embedToken, vadThreshold, vadSilenceDurationMs, vadPrefixPaddingMs, handleMessage, onError, updateState]);
 
   // Break the connect↔reconnect circular dep via the file's existing
   // latest-fn-in-a-ref idiom (cf. startListeningRef below).
@@ -2413,7 +2421,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     tokenPromiseRef.current = fetch('/api/tutor/realtime-token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ voice, engine: useRealtimeV2Ref.current ? 'realtime-2' : 'realtime' }),
+      body: JSON.stringify({ voice, engine: useRealtimeV2Ref.current ? 'realtime-2' : 'realtime', ...(embedToken ? { embedToken } : {}) }),
     })
       .then(async (r) => {
         if (!r.ok) {
@@ -2430,7 +2438,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
         return null;
       });
     return tokenPromiseRef.current;
-  }, [voice]);
+  }, [voice, embedToken]);
 
   // When `instructions` arrives after the WebSocket is already open (parallel
   // startup path), poke the deferred session.update send.

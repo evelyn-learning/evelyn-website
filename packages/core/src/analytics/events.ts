@@ -14,7 +14,9 @@ export type DemoEventName =
   // R39: fullscreen link removed from the live-demo header; these two track the
   // event-driven return path that replaced the always-visible header links.
   | 'demo_session_ended'
-  | 'demo_change_lesson_after_end';
+  | 'demo_change_lesson_after_end'
+  // Demo gate (2026-08-29): a start attempt denied by the quota gate (429).
+  | 'demo_limited';
 
 export function trackEvent(
   name: DemoEventName,

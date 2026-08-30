@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 
 export async function POST(request: NextRequest) {
   const t0 = Date.now();
@@ -20,11 +21,22 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { voice = 'alloy', instructions, engine } = body as {
+    const { voice = 'alloy', instructions, engine, embedToken } = body as {
       voice?: string;
       instructions?: string;
       engine?: string;
+      embedToken?: string;
     };
+
+    // Demo gate (2026-08-29): this is the request that actually costs money
+    // (it mints an OpenAI ephemeral key) and it previously had zero
+    // protection. Retail/demo browsers pass via the demo-grant cookie set by
+    // /api/tutor/demo-start; partner embeds pass via their signed embed
+    // token, threaded here in the body because the voice hook owns this
+    // fetch. Checked AFTER body parse (the token rides in it) but before any
+    // OpenAI call.
+    const deniedResponse = await denyIfNoDemoAccess(request, 'realtime-token', embedToken ?? null);
+    if (deniedResponse) return deniedResponse;
 
     // Instructions, when supplied, replace OpenAI's default tutor persona
     // at session-creation time. Relay mode uses this so Realtime never

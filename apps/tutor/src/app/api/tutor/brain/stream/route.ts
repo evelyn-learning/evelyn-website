@@ -21,6 +21,7 @@
  * the JSON route remains authoritative.
  */
 import { NextRequest } from 'next/server';
+import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
 import { WHITEBOARD_TOOLS } from '@/app/tutor/hooks/toolDefinitions';
@@ -384,6 +385,12 @@ function badRequest(message: string): Response {
 }
 
 export async function POST(req: NextRequest) {
+  // Demo gate (2026-08-29): every brain turn is a Claude call. Retail /tutor
+  // passes via the demo-grant cookie; partner embeds via the x-embed-token
+  // header the orchestrator now threads onto this fetch.
+  const deniedResponse = await denyIfNoDemoAccess(req, 'brain-stream');
+  if (deniedResponse) return deniedResponse;
+
   let body: BrainStreamRequestBody;
   try {
     body = (await req.json()) as BrainStreamRequestBody;

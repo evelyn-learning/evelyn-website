@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { denyIfNoDemoAccess } from "@/lib/tutor/demo-gate/enforce";
 
 const anthropic = new Anthropic();
 
@@ -186,6 +187,11 @@ Schema:
 
 export async function POST(request: NextRequest) {
   try {
+    // Demo gate (2026-08-29): LLM-backed; the per-sessionId limiter below is
+    // defeated by minting a new sessionId, so gate on the grant/token first.
+    const deniedResponse = await denyIfNoDemoAccess(request, 'generate-whiteboard');
+    if (deniedResponse) return deniedResponse;
+
     const body = await request.json();
     const { tutorText, studentText, sessionId, recentContext, recentActions } = body;
 

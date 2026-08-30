@@ -1,33 +1,29 @@
-import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { getPartnerSecret } from '@/lib/tutor/portal/auth';
-import { signEmbedToken } from '@/lib/tutor/portal/embed-token';
+import { demoGateMode, demoGateSecret } from '@/lib/tutor/demo-gate/gate';
+import { DEMO_GRANT_COOKIE, verifyDemoGrant } from '@/lib/tutor/demo-gate/grant';
+import { mintDemoEmbedToken } from '@/lib/tutor/demo-gate/mint';
 
 /**
  * POST /api/tutor-portal/demo-token — first-party signed-token mint for the
  * ENGINE's own marketing demo funnel (learner-model Phase C, Task 5).
  *
- * The demo (`VoiceTutorLiveDemo.tsx`, /products/* and /solutions/[segment])
- * used to build its embed token client-side via a bare `btoa` — fine while
- * embed tokens were unsigned, but Task 1's HS256 verifier means an unsigned
- * token now fails verification once EMBED_TOKEN_ENFORCE is 'on'. Browsers
- * can't hold the HMAC partner secret, so signing has to happen server-side.
+ * DEMO GATE (2026-08-29): this route used to be deliberately unauthenticated
+ * on the argument that its forced demo-scoped claims WERE the auth guarantee.
+ * That argument covered identity but not COST — anyone could mint unlimited
+ * demo tokens and run unlimited sessions (one demo student ran 16 from one
+ * IP). It now requires a valid demo-grant cookie (issued by
+ * /api/tutor/demo-start after the mandatory name+email form clears the
+ * per-email/IP/device quotas) when TUTOR_DEMO_GATE is 'on'. New surfaces
+ * should call /api/tutor/demo-start directly — it mints the same token; this
+ * route remains for the /tutor reload-resume self-mint, whose browser holds
+ * the grant cookie from the original start.
  *
- * Deliberately UNAUTHENTICATED (no caller identity check): that's safe here
- * because this route mints ONLY demo-scoped identities. The server — not the
- * client — forces `partner_id: 'evelyn-marketing'` and a fresh
- * `demo-<random>` `student_id` onto every response, overriding anything the
- * caller sent in `config`. There is no way to mint a token for a real
- * partner or a real student through this endpoint; the forced claims ARE
- * the auth guarantee. This mirrors exactly what the old unsigned client-side
- * btoa path already allowed (anyone could hand-craft that base64 token), so
- * this endpoint introduces no new capability — it only lets the funnel keep
- * working once enforcement turns on.
- *
- * If no `evelyn-marketing` partner secret is configured (PORTAL_PARTNER_SECRETS
- * / PORTAL_PARTNER_ID+PORTAL_API_SECRET), this degrades to the legacy
- * unsigned base64 encoding rather than failing — the same shape
- * `verifyEmbedToken` already treats as a no-op in `off`-mode deployments.
+ * The forced-claims mint itself lives in demo-gate/mint.ts (shared with
+ * demo-start so the two paths cannot drift); it still forces
+ * `partner_id: 'evelyn-marketing'`, a fresh `demo-<random>` student_id and a
+ * 2h exp onto every response, and now also stamps `demo_gate: 1`, which is
+ * what the costly-route enforcement (demo-gate/enforce.ts) checks for on
+ * evelyn-marketing tokens.
  */
 export async function POST(req: NextRequest) {
   let body: unknown;
@@ -42,25 +38,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'bad_request', reason: 'missing_config' }, { status: 400 });
   }
 
-  // Forced claims spread AFTER the client-supplied config so a spoofed
-  // partner_id/student_id/exp in `config` is always overridden, never merged.
-  const payload: Record<string, unknown> = {
-    ...(config as Record<string, unknown>),
-    partner_id: 'evelyn-marketing',
-    student_id: `demo-${randomUUID().slice(0, 8)}`,
-    exp: Math.floor(Date.now() / 1000) + 2 * 60 * 60,
-  };
-
-  const secret = getPartnerSecret('evelyn-marketing');
-  if (!secret) {
-    // Degrade path: no marketing secret configured (e.g. local/dev, or
-    // enforcement not yet rolled out) — fall back to the legacy unsigned
-    // base64 encoding the demo used before Task 1. UTF-8-safe, matching
-    // buildEmbedToken's existing btoa(unescape(encodeURIComponent(...))).
-    const token = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64');
-    return NextResponse.json({ token });
+  if (demoGateMode() === 'on') {
+    const secret = demoGateSecret();
+    // No secret = gate inoperable → fail open with a loud log (matches
+    // enforce.ts) rather than bricking the funnel over a missing env var.
+    if (secret) {
+      const grant = verifyDemoGrant(req.cookies.get(DEMO_GRANT_COOKIE)?.value, secret);
+      if (!grant) {
+        return NextResponse.json({ error: 'demo_gate_required' }, { status: 401 });
+      }
+    } else {
+      console.error('[demo-gate] demo-token: no secret configured — failing open');
+    }
   }
 
-  const token = signEmbedToken(payload, secret);
+  const { token } = mintDemoEmbedToken(config as Record<string, unknown>);
   return NextResponse.json({ token });
 }
