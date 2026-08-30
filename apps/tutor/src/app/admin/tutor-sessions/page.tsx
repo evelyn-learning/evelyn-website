@@ -313,6 +313,18 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                     <tr key={s.sessionId as string} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         <div>{(s.studentName as string) || <span className="text-gray-400">Anonymous</span>}</div>
+                        {/* Demo gate (2026-08-30): the email captured by the
+                            mandatory demo form, stamped server-side from the
+                            verified grant cookie. */}
+                        {s.studentEmail ? (
+                          <a
+                            href={`mailto:${String(s.studentEmail)}`}
+                            className="block text-xs font-normal text-gray-500 hover:text-blue-600 truncate max-w-[180px]"
+                            title={String(s.studentEmail)}
+                          >
+                            {String(s.studentEmail)}
+                          </a>
+                        ) : null}
                         {(s.source && String(s.source) !== 'tutor') || s.sourcePartnerId ? (
                           <div className="flex flex-wrap gap-1 mt-0.5">
                             {String(s.source) !== 'tutor' && (
