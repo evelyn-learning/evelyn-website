@@ -375,7 +375,7 @@ export interface BrainTurnOutput {
   /** Anthropic stop reason — useful for debugging / telemetry. */
   stopReason: string;
   /** Token accounting for cost telemetry. */
-  usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number };
+  usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string };
 }
 
 /**
@@ -428,7 +428,7 @@ export type BrainStreamEvent =
   | {
       type: 'done';
       stopReason: string;
-      usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number };
+      usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string };
       /** Concatenated text across all sentences, for transcriptRef storage. */
       fullText: string;
       /** All tool calls, in emission order. */
@@ -1510,7 +1510,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
 
   let accumulatedText = '';
   const accumulatedToolCalls: BrainToolCall[] = [];
-  const totalUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
+  const totalUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, model: input.model ?? BRAIN_MODEL_ID };
   let lastStopReason: string = 'unknown';
 
   for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
@@ -1707,7 +1707,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
 
   let accumulatedText = '';
   const accumulatedToolCalls: BrainToolCall[] = [];
-  const totalUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
+  const totalUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, model: input.model ?? BRAIN_MODEL_ID };
   let lastStopReason: string = 'unknown';
   // Last iteration's full message — hoisted out so the post-loop rescue
   // (Option A, 2026-06-16) can rebuild a valid tool_use/tool_result

@@ -735,6 +735,9 @@ function TutorPage() {
         ...(u.inputTextTokens ? { inputTextTokens: u.inputTextTokens } : {}),
         ...(u.outputTextTokens ? { outputTextTokens: u.outputTextTokens } : {}),
         ...(u.inputCachedTokens ? { inputCachedTokens: u.inputCachedTokens } : {}),
+        ...(u.cacheReadTokens ? { cacheReadTokens: u.cacheReadTokens } : {}),
+        ...(u.cacheCreationTokens ? { cacheCreationTokens: u.cacheCreationTokens } : {}),
+        ...(u.model ? { model: u.model } : {}),
       })) } : {}),
       ...(newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {}),
       // Always include the full transcript + whiteboard snapshot. Was
