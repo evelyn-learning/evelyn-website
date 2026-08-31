@@ -10,6 +10,14 @@ export interface ITokenUsage {
   outputAudioTokens?: number;
   inputTextTokens?: number;
   outputTextTokens?: number;
+  // Claude-brain prompt-cache buckets + GPT-Realtime-2 cached input. The
+  // client has sent these since 2026-07-08 (A1) but the schema lacked them,
+  // so Mongoose silently DROPPED them on every save — added 2026-08-30.
+  cacheReadTokens?: number;
+  cacheCreationTokens?: number;
+  inputCachedTokens?: number;
+  // Serving model id (model-registry era) — lets admin views price per model.
+  model?: string;
 }
 
 export interface ITranscriptEntry {
@@ -116,6 +124,10 @@ const TokenUsageSchema = new Schema<ITokenUsage>(
     outputAudioTokens: { type: Number },
     inputTextTokens: { type: Number },
     outputTextTokens: { type: Number },
+    cacheReadTokens: { type: Number },
+    cacheCreationTokens: { type: Number },
+    inputCachedTokens: { type: Number },
+    model: { type: String },
   },
   { _id: false }
 );

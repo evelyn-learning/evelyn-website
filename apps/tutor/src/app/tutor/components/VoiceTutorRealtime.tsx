@@ -488,7 +488,7 @@ interface VoiceTutorRealtimeProps {
    *  attempt (kill+retry attempts each burn real tokens, so each reports).
    *  Anthropic semantics: inputTokens EXCLUDES cache reads/creations —
    *  consumers price the four buckets separately. */
-  onBrainUsage?: (usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number }) => void;
+  onBrainUsage?: (usage: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string }) => void;
   /** Fires once per pedagogical milestone as the orchestrator genuinely
    *  crosses it (a real concept completion / try-yourself success / reaching
    *  recap — NOT segment skips). Additive + optional; absent ⇒ no-op. The
@@ -9256,7 +9256,7 @@ export function VoiceTutorRealtime({
       let totalPaintedCount = 0;
       let aggregatedFullText = '';
       let lastStopReason = 'unknown';
-      let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number } | undefined;
+      let lastUsage: { inputTokens?: number; outputTokens?: number; cacheReadTokens?: number; cacheCreationTokens?: number; model?: string } | undefined;
       // Task X10 — brain-unavailability signal from the stream route. When the
       // server exhausts its bounded retries (or hits a non-retryable error)
       // with ZERO content produced, the terminal done event carries
@@ -12613,6 +12613,7 @@ export function VoiceTutorRealtime({
                       outputTokens: lastUsage.outputTokens ?? 0,
                       cacheReadTokens: lastUsage.cacheReadTokens ?? 0,
                       cacheCreationTokens: lastUsage.cacheCreationTokens ?? 0,
+                      model: lastUsage.model,
                     });
                   }
                 }

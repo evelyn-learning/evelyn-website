@@ -8,7 +8,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
-import { MODEL_RATES } from '@/lib/tutor/ai/model-rates';
+import { MODEL_RATES, lookupModelRate } from '@/lib/tutor/ai/model-rates';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare, ChevronDown } from 'lucide-react';
@@ -137,6 +137,9 @@ interface TokenUsage {
   // Anthropic's inputTokens EXCLUDES these — priced separately below.
   cacheReadTokens?: number;
   cacheCreationTokens?: number;
+  // Serving model id (registry era, 2026-08-30): stamped by the brain
+  // stream's done event so cost math prices the model actually used.
+  model?: string;
 }
 
 // Pricing per 1M tokens — sourced from the shared rate card (model-rates.ts)
@@ -681,12 +684,15 @@ function TutorPage() {
               + (textIn / 1_000_000) * rt.textInput
               + (textOut / 1_000_000) * rt.textOutput;
       } else {
-        // Claude API: standard text token pricing + prompt-cache buckets
-        // (brain-turn entries carry them; zero elsewhere).
-        cost += (u.inputTokens / 1_000_000) * PRICING.input
-              + (u.outputTokens / 1_000_000) * PRICING.output
-              + ((u.cacheReadTokens ?? 0) / 1_000_000) * PRICING.cacheRead
-              + ((u.cacheCreationTokens ?? 0) / 1_000_000) * PRICING.cacheWrite;
+        // Model-aware pricing (registry era, 2026-08-30): brain-turn entries
+        // carry the serving model id from the stream's done event — price the
+        // model actually used (Sonnet, DeepSeek, …). Entries without a model
+        // (greeting/chat/homework + historical records) fall back to PRICING.
+        const r = lookupModelRate(u.model);
+        cost += (u.inputTokens / 1_000_000) * (r?.input ?? PRICING.input)
+              + (u.outputTokens / 1_000_000) * (r?.output ?? PRICING.output)
+              + ((u.cacheReadTokens ?? 0) / 1_000_000) * (r ? (r.cacheRead ?? r.input * 0.1) : PRICING.cacheRead)
+              + ((u.cacheCreationTokens ?? 0) / 1_000_000) * (r ? (r.cacheWrite1h ?? 0) : PRICING.cacheWrite);
       }
     }
 
@@ -1899,13 +1905,14 @@ function TutorPage() {
   // brain-mode sessions recorded 0 tokens / $0. One TokenUsage entry per
   // stream attempt; the cost calc prices 'brain-turn' at Claude rates with
   // the cache buckets separate.
-  const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number }) => {
+  const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string }) => {
     if (u.inputTokens + u.outputTokens + u.cacheReadTokens + u.cacheCreationTokens === 0) return;
     setTokenUsage((prev) => [...prev, {
       inputTokens: u.inputTokens,
       outputTokens: u.outputTokens,
       cacheReadTokens: u.cacheReadTokens,
       cacheCreationTokens: u.cacheCreationTokens,
+      model: u.model,
       operation: 'brain-turn',
       timestamp: new Date(),
     }]);

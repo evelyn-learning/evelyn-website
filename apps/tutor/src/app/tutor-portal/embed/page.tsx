@@ -17,6 +17,7 @@ import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'rea
 import { useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { buildDisplayName } from '@/lib/tutor/topic-taxonomy';
+import { lookupModelRate } from '@/lib/tutor/ai/model-rates';
 import TutorSession from '@/app/tutor/components/session/TutorSession';
 import { type TutorMilestone, type TutorResumeState, type RealtimeHandle } from '@/app/tutor/components/VoiceTutorRealtime';
 import type { SessionResult, LessonProgress, SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
@@ -713,25 +714,29 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // token usage so the TutorSession record stops reading 0 tokens / $0 for
   // embed sessions (Vanshika's 25-min session recorded nothing — the usage
   // was on the brain stream's done event all along, never surfaced). Cost
-  // uses Claude Sonnet rates with the cache buckets priced separately;
+  // is model-aware (registry era, 2026-08-30): the done event stamps the
+  // serving model id, priced via the shared rate card; sessions predating
+  // the stamp fall back to Sonnet-4.6-era rates (the old hardcoded values).
   // inputTokens excludes cache reads/creations (Anthropic semantics), so
   // totalInputTokens below reports the full billed input volume.
-  const BRAIN_PRICING = { input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 }; // $/1M tok
-  const brainUsageRef = useRef({ inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 });
-  const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number }) => {
+  const FALLBACK_PRICING = { input: 3.0, output: 15.0, cacheRead: 0.3, cacheWrite: 3.75 }; // $/1M tok
+  const brainUsageRef = useRef({ inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0, model: undefined as string | undefined });
+  const handleBrainUsage = useCallback((u: { inputTokens: number; outputTokens: number; cacheReadTokens: number; cacheCreationTokens: number; model?: string }) => {
     const acc = brainUsageRef.current;
     acc.inputTokens += u.inputTokens;
     acc.outputTokens += u.outputTokens;
     acc.cacheReadTokens += u.cacheReadTokens;
     acc.cacheCreationTokens += u.cacheCreationTokens;
+    if (u.model) acc.model = u.model;
   }, []);
   const brainUsageTotals = useCallback(() => {
     const acc = brainUsageRef.current;
+    const r = lookupModelRate(acc.model);
     const cost =
-      (acc.inputTokens / 1_000_000) * BRAIN_PRICING.input +
-      (acc.outputTokens / 1_000_000) * BRAIN_PRICING.output +
-      (acc.cacheReadTokens / 1_000_000) * BRAIN_PRICING.cacheRead +
-      (acc.cacheCreationTokens / 1_000_000) * BRAIN_PRICING.cacheWrite;
+      (acc.inputTokens / 1_000_000) * (r?.input ?? FALLBACK_PRICING.input) +
+      (acc.outputTokens / 1_000_000) * (r?.output ?? FALLBACK_PRICING.output) +
+      (acc.cacheReadTokens / 1_000_000) * (r ? (r.cacheRead ?? r.input * 0.1) : FALLBACK_PRICING.cacheRead) +
+      (acc.cacheCreationTokens / 1_000_000) * (r ? (r.cacheWrite1h ?? 0) : FALLBACK_PRICING.cacheWrite);
     return {
       totalInputTokens: acc.inputTokens + acc.cacheReadTokens + acc.cacheCreationTokens,
       totalOutputTokens: acc.outputTokens,

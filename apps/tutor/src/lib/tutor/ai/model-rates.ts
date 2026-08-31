@@ -22,8 +22,14 @@ export const MODEL_RATES: Record<string, ModelRate> = {
   'claude-haiku-4-5': { input: 1, output: 5, cacheRead: 0.1, cacheWrite5m: 1.25, cacheWrite1h: 2 },
   'claude-haiku-4-5-20251001': { input: 1, output: 5, cacheRead: 0.1, cacheWrite5m: 1.25, cacheWrite1h: 2 },
   'claude-opus-5': { input: 5, output: 25, cacheRead: 0.5, cacheWrite5m: 6.25, cacheWrite1h: 10 },
-  // Non-Anthropic candidates (priced so a provider swap keeps dashboards honest)
-  'deepseek-chat': { input: 0.21, output: 0.32, cacheRead: 0.021 },
+  // Non-Anthropic (priced so a provider swap keeps dashboards honest).
+  // DeepSeek V4 Flash — what the `deepseek-chat` alias serves since Aug 2026.
+  // PEAK rates (peak = 01:00–04:00 + 06:00–10:00 UTC, which overlaps US-evening
+  // study hours, so peak avoids understating); off-peak is half on input/output
+  // and cacheRead $0.007. No cache-write charge — caching is automatic.
+  'deepseek-chat': { input: 0.44, output: 1.32, cacheRead: 0.014 },
+  'deepseek-v4-flash': { input: 0.44, output: 1.32, cacheRead: 0.014 },
+  'deepseek-v3.2': { input: 0.21, output: 0.32, cacheRead: 0.021 },
   'gpt-4o-mini': { input: 0.15, output: 0.6 },
   // Historical rows — price sessions recorded on old models; keep.
   'claude-sonnet-4-20250514': { input: 3, output: 15 },

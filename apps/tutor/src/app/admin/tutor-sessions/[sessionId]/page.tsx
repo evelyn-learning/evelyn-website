@@ -136,6 +136,19 @@ export default async function SessionDetailPage({ params }: SessionPageProps) {
               <p className="text-xs text-gray-500 uppercase">Est. Cost</p>
             </div>
             <p className="text-lg font-semibold">${(session.estimatedCost || 0).toFixed(3)}</p>
+            {(() => {
+              // Registry era: token entries carry the serving model id.
+              const models = [...new Set(
+                ((session.tokenUsage as Array<{ model?: string }> | undefined) ?? [])
+                  .map((u) => u.model)
+                  .filter((m): m is string => Boolean(m)),
+              )];
+              return models.length > 0 ? (
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {models.map((m) => m.replace('claude-', '').split('-202')[0]).join(' · ')}
+                </p>
+              ) : null;
+            })()}
           </div>
         </div>
 

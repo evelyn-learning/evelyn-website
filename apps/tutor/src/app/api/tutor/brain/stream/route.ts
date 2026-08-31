@@ -24,6 +24,7 @@ import { NextRequest } from 'next/server';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { runTutorTurn } from '@/lib/tutor/engine/orchestrator';
 import type { BrainTurnInput, BrainStreamEvent } from '@/lib/tutor/voice/claude-brain';
+import { BRAIN_MODEL_ID } from '@/lib/tutor/voice/claude-brain';
 import { WHITEBOARD_TOOLS } from '@/app/tutor/hooks/toolDefinitions';
 import {
   resolveToolSubjects,
@@ -499,7 +500,9 @@ export async function POST(req: NextRequest) {
       const turnSentences: string[] = [];
       let fullText = '';
       let stopReason = 'unknown';
-      const usage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
+      // `model` rides in the done event's usage so cost consumers can price
+      // per-model (registry era: the brain may be a non-Anthropic provider).
+      const usage = { model: BRAIN_MODEL_ID, inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0 };
       // Task X10 — bounded-retry telemetry. `turnRetries` counts whole-turn
       // re-dispatches performed on transient/overloaded failures;
       // `gaveUp` marks a turn that exhausted retries (or hit a non-retryable
