@@ -13,7 +13,7 @@
  * and keeps the swap from the Realtime-as-brain architecture localized.
  */
 import Anthropic from '@anthropic-ai/sdk';
-import { getModelClient, prepareParams } from '../ai/model-registry';
+import { getModelClient, getFallbackClient, stripAnthropicOnlyParams, type RoleClient } from '../ai/model-registry';
 import type { CatalogSnapshotEntry, Page } from '../whiteboard/catalog';
 import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
@@ -66,6 +66,117 @@ const DEFAULT_MAX_TOKENS = 2000;
 const MAX_AGENT_ITERATIONS = 9;
 
 const anthropic = brainModel.client;
+
+/* ── Brain provider failover (2026-08-31) ─────────────────────────────────
+ * When TUTOR_MODEL_BRAIN_FALLBACK{,_BASE_URL,_API_KEY} is configured, a
+ * PROVIDER failure on the primary (auth/billing/rate-limit/5xx/connection —
+ * never an ordinary 400) retries the call on the fallback, and latches a
+ * circuit breaker so subsequent calls go fallback-first for a window
+ * (TUTOR_BRAIN_FALLBACK_BREAKER_SECONDS, default 300) instead of paying the
+ * primary's failure latency on every turn. Streaming failover applies only
+ * BEFORE the first stream event — once audio has flowed, a mid-stream error
+ * falls to the route's existing whole-turn retry, which re-enters here with
+ * the breaker latched. An explicit per-call `input.model` override (test
+ * harnesses) pins the primary client and disables failover for that call. */
+const brainFallbackModel = getFallbackClient('brain');
+const FALLBACK_BREAKER_MS =
+  Number(process.env.TUTOR_BRAIN_FALLBACK_BREAKER_SECONDS || 300) * 1000;
+let brainFallbackLatchedUntil = 0;
+
+function brainCallTargets(modelOverride?: string): RoleClient[] {
+  if (modelOverride) return [{ ...brainModel, model: modelOverride }];
+  if (!brainFallbackModel) return [brainModel];
+  return Date.now() < brainFallbackLatchedUntil
+    ? [brainFallbackModel, brainModel]
+    : [brainModel, brainFallbackModel];
+}
+
+function isProviderFailure(err: unknown): boolean {
+  if (err instanceof Anthropic.APIConnectionError) return true;
+  const status = (err as { status?: number } | null)?.status;
+  if (status === 401 || status === 403 || status === 408 || status === 429) return true;
+  if (status !== undefined && status >= 500) return true;
+  // Anthropic reports credit exhaustion as a 400 invalid_request_error whose
+  // message names the credit balance — that one 400 IS a provider failure.
+  if (status === 400 && /credit balance|billing/i.test(String((err as Error | null)?.message ?? ''))) return true;
+  return false;
+}
+
+function latchBrainFallback(err: unknown, from: string, to: string): void {
+  brainFallbackLatchedUntil = Date.now() + FALLBACK_BREAKER_MS;
+  console.warn(
+    `[brain.failover] ${from} → ${to}: ${String((err as Error | null)?.message ?? err).slice(0, 200)} ` +
+    `(fallback-first for ${FALLBACK_BREAKER_MS / 1000}s)`,
+  );
+}
+
+function paramsForTarget<T extends { model: string }>(target: RoleClient, params: T): T {
+  const withModel = { ...params, model: target.model };
+  return target.native ? withModel : stripAnthropicOnlyParams(withModel);
+}
+
+/** Open a brain stream with first-event failover: try each target in order,
+ *  promoting to the next only when the stream fails before ANY event. */
+async function openBrainStream(
+  buildParams: (target: RoleClient) => Parameters<Anthropic['messages']['stream']>[0],
+  modelOverride?: string,
+): Promise<{
+  events: AsyncGenerator<Anthropic.MessageStreamEvent>;
+  finalMessage: () => Promise<Anthropic.Message>;
+  target: RoleClient;
+}> {
+  const targets = brainCallTargets(modelOverride);
+  let lastErr: unknown;
+  for (let i = 0; i < targets.length; i++) {
+    const target = targets[i];
+    const stream = target.client.messages.stream(buildParams(target));
+    const iter = (stream as AsyncIterable<Anthropic.MessageStreamEvent>)[Symbol.asyncIterator]();
+    try {
+      const first = await iter.next();
+      const events = (async function* () {
+        if (!first.done) yield first.value;
+        for (;;) {
+          const next = await iter.next();
+          if (next.done) return;
+          yield next.value;
+        }
+      })();
+      return { events, finalMessage: () => stream.finalMessage(), target };
+    } catch (err) {
+      lastErr = err;
+      if (i < targets.length - 1 && isProviderFailure(err)) {
+        latchBrainFallback(err, target.model, targets[i + 1].model);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr;
+}
+
+/** Non-streaming sibling of openBrainStream — same target order + failover. */
+async function createBrainMessage(
+  params: Anthropic.MessageCreateParamsNonStreaming,
+  modelOverride?: string,
+): Promise<{ response: Anthropic.Message; target: RoleClient }> {
+  const targets = brainCallTargets(modelOverride);
+  let lastErr: unknown;
+  for (let i = 0; i < targets.length; i++) {
+    const target = targets[i];
+    try {
+      const response = await target.client.messages.create(paramsForTarget(target, params));
+      return { response, target };
+    } catch (err) {
+      lastErr = err;
+      if (i < targets.length - 1 && isProviderFailure(err)) {
+        latchBrainFallback(err, target.model, targets[i + 1].model);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr;
+}
 
 export interface BrainTurnInput {
   /** System prompt — tutoring style + tool-API rules. NO domain examples. */
@@ -1514,7 +1625,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   let lastStopReason: string = 'unknown';
 
   for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
-    const response = await anthropic.messages.create(prepareParams('brain', {
+    const { response, target: servedBy } = await createBrainMessage({
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
       thinking: { type: 'disabled' as const },
@@ -1538,7 +1649,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    }));
+    }, input.model);
+    totalUsage.model = servedBy.model;
 
     totalUsage.inputTokens += response.usage.input_tokens;
     totalUsage.outputTokens += response.usage.output_tokens;
@@ -1721,7 +1833,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // as `input_json_delta` events; we parse it once on content_block_stop.
     let currentToolUse: { id: string; name: string; rawJson: string } | null = null;
 
-    const stream = anthropic.messages.stream(prepareParams('brain', {
+    const opened = await openBrainStream((target) => paramsForTarget(target, {
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
       thinking: { type: 'disabled' as const },
@@ -1745,9 +1857,10 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    }));
+    }), input.model);
+    totalUsage.model = opened.target.model;
 
-    for await (const event of stream) {
+    for await (const event of opened.events) {
       if (event.type === 'content_block_start') {
         if (event.content_block.type === 'tool_use') {
           currentToolUse = {
@@ -1816,7 +1929,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
 
     // Stream finished. Pull final metadata + assistant content for the
     // next agent-loop iteration.
-    const finalMessage = await stream.finalMessage();
+    const finalMessage = await opened.finalMessage();
     lastFinalMessage = finalMessage;
     totalUsage.inputTokens += finalMessage.usage.input_tokens;
     totalUsage.outputTokens += finalMessage.usage.output_tokens;
@@ -1923,7 +2036,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // because some Anthropic SDK versions treat [] as "no tools
     // available" while others raise on it; omitting is portable.
     try {
-      const rescueStream = anthropic.messages.stream(prepareParams('brain', {
+      const rescueOpened = await openBrainStream((target) => paramsForTarget(target, {
         model: input.model ?? BRAIN_MODEL_ID,
         max_tokens: 350, // was 250 — Sonnet 5 tokenizer headroom (see DEFAULT_MAX_TOKENS)
         thinking: { type: 'disabled' as const },
@@ -1935,9 +2048,9 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           },
         ],
         messages,
-      }));
+      }), input.model);
       const rescueBuffer = new SentenceBuffer();
-      for await (const event of rescueStream) {
+      for await (const event of rescueOpened.events) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
           accumulatedText += event.delta.text;
           for (const sentence of rescueBuffer.push(event.delta.text)) {
@@ -1948,7 +2061,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           if (remaining) yield { type: 'sentence', text: remaining };
         }
       }
-      const rescueFinal = await rescueStream.finalMessage();
+      const rescueFinal = await rescueOpened.finalMessage();
       totalUsage.inputTokens += rescueFinal.usage.input_tokens;
       totalUsage.outputTokens += rescueFinal.usage.output_tokens;
       totalUsage.cacheReadTokens += rescueFinal.usage.cache_read_input_tokens ?? 0;

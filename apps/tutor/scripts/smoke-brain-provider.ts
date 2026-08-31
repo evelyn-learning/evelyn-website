@@ -16,7 +16,9 @@ import { WHITEBOARD_TOOLS, toAnthropicTools } from '@/app/tutor/hooks/toolDefini
 async function main() {
   const r = resolveModel('brain');
   console.log('brain resolves to:', r.model, '| native:', r.native, '| baseURL:', r.baseURL ?? '(anthropic)');
-  if (r.native) throw new Error('override env vars not applied — refusing to run against Anthropic');
+  // Guard against accidental Anthropic spend; SMOKE_ALLOW_NATIVE=1 permits a
+  // deliberate A/B against the native provider (one full-prefix call ≈ $0.18).
+  if (r.native && process.env.SMOKE_ALLOW_NATIVE !== '1') throw new Error('override env vars not applied — refusing to run against Anthropic (set SMOKE_ALLOW_NATIVE=1 for a deliberate A/B)');
 
   const system = buildSystemPrompt({
     module: null,
@@ -33,7 +35,11 @@ async function main() {
     system: [{ type: 'text' as const, text: system, cache_control: { type: 'ephemeral' as const, ttl: '1h' as const } }],
     tools: toAnthropicTools(WHITEBOARD_TOOLS),
     messages: [
-      { role: 'user' as const, content: 'Hi! Can you show me the line y = 2x + 1 on the whiteboard and explain what the slope means?' },
+      {
+        role: 'user' as const,
+        content: process.env.SMOKE_STUDENT_MSG
+          || 'Hi! Can you show me the line y = 2x + 1 on the whiteboard and explain what the slope means?',
+      },
     ],
   });
   const hasThinking = 'thinking' in (params as Record<string, unknown>);

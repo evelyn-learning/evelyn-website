@@ -96,6 +96,23 @@ export interface ResolvedModel {
   native: boolean;
 }
 
+/**
+ * Optional per-role FALLBACK provider — used by call sites that implement
+ * failover (currently the brain): TUTOR_MODEL_<ROLE>_FALLBACK holds the
+ * fallback model id (its presence enables the fallback), with
+ * TUTOR_MODEL_<ROLE>_FALLBACK_BASE_URL / _API_KEY for its endpoint.
+ * Returns null when unconfigured.
+ */
+export function resolveFallback(role: ModelRole): ResolvedModel | null {
+  const suffix = envSuffix(role);
+  const model = process.env[`TUTOR_MODEL_${suffix}_FALLBACK`];
+  if (!model) return null;
+  const baseURL = process.env[`TUTOR_MODEL_${suffix}_FALLBACK_BASE_URL`] || undefined;
+  const apiKey =
+    process.env[`TUTOR_MODEL_${suffix}_FALLBACK_API_KEY`] || process.env.ANTHROPIC_API_KEY;
+  return { role, model, baseURL, apiKey, native: !baseURL };
+}
+
 export function resolveModel(role: ModelRole): ResolvedModel {
   const suffix = envSuffix(role);
   const legacy = LEGACY_MODEL_ENV[role];
@@ -127,7 +144,16 @@ export interface RoleClient {
  * lazy getters in tsx scripts that dotenv before first use.
  */
 export function getModelClient(role: ModelRole): RoleClient {
-  const resolved = resolveModel(role);
+  return clientFor(resolveModel(role));
+}
+
+/** Client for a role's configured fallback provider, or null when none. */
+export function getFallbackClient(role: ModelRole): RoleClient | null {
+  const resolved = resolveFallback(role);
+  return resolved ? clientFor(resolved) : null;
+}
+
+function clientFor(resolved: ResolvedModel): RoleClient {
   const cacheKey = `${resolved.baseURL ?? 'anthropic'}|${resolved.apiKey ?? ''}`;
   let client = clientCache.get(cacheKey);
   if (!client) {
@@ -148,6 +174,12 @@ export function getModelClient(role: ModelRole): RoleClient {
  */
 export function prepareParams<T>(role: ModelRole, params: T): T {
   if (resolveModel(role).native) return params;
+  return stripAnthropicOnly(params, true) as T;
+}
+
+/** Same stripping, but for an explicit target (failover call sites pick
+ *  primary vs fallback per call, so role-level resolution doesn't apply). */
+export function stripAnthropicOnlyParams<T>(params: T): T {
   return stripAnthropicOnly(params, true) as T;
 }
 
