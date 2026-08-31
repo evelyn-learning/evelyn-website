@@ -11076,6 +11076,14 @@ export function VoiceTutorRealtime({
                     || /\bactive problem\b|\bgreenlight to advance\b|\bmark (?:it|this|the)? *(?:segment )?complete\b|\b(?:current|active) *segment\s*[Ii][Dd]?\b|\bcanonicaltext\b|\btool[_ ]result\b/i
                     .test(updatedSentence)
                     || /\bthe student\b|\bno verdict\b|\bisn'?t (?:quite )?an answer\b|\bnot an answer\b|\bmy (?:last|earlier|previous) correction\b|\bmy correction was\b|\bnothing to walk back\b|\bno correction (?:is )?needed\b|\brequest pattern\b|\bclassify (?:away|silently)\b|\bgive (?:her|him|them) (?:room|space)\b|\bautomated review\b/i
+                    .test(updatedSentence)
+                    // 2026-08-31 (Haiku observation round): spoken self-audit
+                    // collocations that slipped the lists above — "I need to
+                    // check myself first / my prior turn", "Let me compute:
+                    // 8+8+5+5", "So my 'Not quite' was correct". Colon after
+                    // "compute" is load-bearing: "Let me compute the area
+                    // together" is legitimate teaching and must survive.
+                    || /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'“”]?not quite["'“”]? was\b/i
                     .test(updatedSentence);
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
@@ -12595,7 +12603,17 @@ export function VoiceTutorRealtime({
                   // incident: "said something but it got rejected" + stale
                   // caption replay). The server now backfills fullText from
                   // its sentence ledger too; this is the client-side guard.
-                  attemptText = (((ev.fullText as string) || attemptText) ?? '').trim();
+                  // 2026-08-31 (Haiku observation round): PREFER the locally
+                  // accumulated attemptText when non-empty — it contains only
+                  // sentences that SURVIVED the meta-narration/ghost-step
+                  // filters, whereas ev.fullText is the server's unfiltered
+                  // ledger. The old `fullText || attemptText` order
+                  // resurrected every dropped sentence into the transcript
+                  // bubble + history + brain memory (observed live: Haiku's
+                  // spoken self-audits reappeared in the pane despite 6
+                  // filter drops). fullText remains the backfill for the
+                  // empty-attemptText case the 2026-07-24 guard exists for.
+                  attemptText = ((attemptText || (ev.fullText as string)) ?? '').trim();
                   lastUsage = ev.usage as typeof lastUsage;
                   // Task X10: carry the server's brain-unavailable + retry
                   // signals out to the post-stream empty-turn fallback.
@@ -13762,7 +13780,8 @@ export function VoiceTutorRealtime({
           `[cadence note — not from the student] Your previous turn ran ${totalSentenceCount} spoken sentences ` +
           `with no whiteboard action — too long to follow by ear. From this turn on: at most ` +
           `${TURN_CAP_SOFT_SENTENCES} sentences in a row before you either anchor what you're saying on the ` +
-          `board or hand the turn back to the student.`;
+          `board or hand the turn back to the student. Apply this silently — never mention or reason ` +
+          `aloud about this note; your reply speaks only to the student.`;
         console.warn(`[brain-orchestrator] turn cap: ${totalSentenceCount} sentences, 0 tools — cadence note planted`);
         onDebugEvent?.('turn_cap_flagged', `${totalSentenceCount} sentences · 0 tool calls — cadence note planted for next turn`);
       } else if (TUTOR_TURN_CAP && totalWordCount > TURN_CAP_WORDS && totalToolNamesSeen.length === 0) {

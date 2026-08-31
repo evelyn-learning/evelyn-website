@@ -1067,6 +1067,12 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
   return '<verdict_guard>\n'
     + 'If the utterance below contains or proposes an answer to a question you asked — including hedged or question-form answers ("Is it x?", "maybe 5?", "x, right?") — '
     + 'silently work out the correct answer yourself and check theirs against it BEFORE your first word. '
+    // 2026-08-31 (Haiku observation round, live false denial): the guard
+    // covered answers to QUESTIONS YOU ASKED; a student-initiated factual
+    // claim ("so X is Y, right?") fell outside it and got a reflexive
+    // "Not quite" for a correct claim. Same re-derive-first rule, extended
+    // to claims. Generic — no subject content.
+    + 'The same applies when the student states a fact and asks you to confirm it ("so X is Y, right?"): re-derive it silently first, and if your derivation matches their claim, confirm it — never open with a denial you have not re-derived. '
     + 'Open with praise ("Right." / "Exactly." / "Nice.") ONLY if it is correct or equivalent in any notation or phrasing. '
     + 'A hedged correct answer is still correct — confirm it; never treat uncertainty as wrongness. '
     + 'If it is wrong: corrective opener ("Not quite." / "Close.") and do NOT state the correct value — guide them to it. '
@@ -1074,7 +1080,12 @@ export function formatVerdictGuardBlock(transcript: string, lastTutorMessage?: s
     + 'Classify silently: never announce the sorting aloud ("that\'s a request", "not an answer", "isn\'t an answer yet", "no verdict", "nothing to grade") — just respond ("Sure — here\'s one more."). '
     + 'Never refer to the student in the third person ("the student", "give her room") — you are talking TO them. '
     + 'Never answer your own open question and praise as if the student had answered it; if you reveal after a give-up, reveal plainly ("No worries — it\'s …"), never as an affirmation. '
-    + 'Never praise first and correct after.\n'
+    + 'Never praise first and correct after. '
+    // 2026-08-31: some models narrate this guard's own procedure aloud
+    // ("I need to check myself first…", "Let me compute: …"). Make the
+    // silent-application rule structural: the turn must OPEN as speech
+    // addressed to the student, never as deliberation about the turn.
+    + 'Your very first words must be spoken TO the student — never deliberation about this check, the turn, or the lesson state.\n'
     + '</verdict_guard>\n\n';
 }
 
