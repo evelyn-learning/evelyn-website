@@ -21,7 +21,7 @@
  * 402 `paid_plan_required` (library voices need any paid plan).
  */
 import { NextRequest } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '@/lib/tutor/ai/model-registry';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { resolveElevenLabsVoice } from '@/lib/tutor/voice/elevenlabs-voice-map';
 import { needsShortening, pickRecoveryLine, pcm16ToFloat32, RECOVERY_MAX_WORDS } from '@/lib/tutor/voice/tts-recovery';
@@ -33,10 +33,8 @@ const ELEVENLABS_TTS_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
 // already waited through Cartesia's retries.
 const ELEVENLABS_MODEL_ID = 'eleven_flash_v2_5';
 // Same model tier as the question-gist route: small, well-scoped rewrite.
-const SHORTEN_MODEL_ID = 'claude-haiku-4-5-20251001';
+const { client: anthropic, model: SHORTEN_MODEL_ID } = getModelClient('tts-shorten');
 const SHORTEN_TIMEOUT_MS = 1_800;
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const SHORTEN_SYSTEM = `A voice tutor's speech engine failed mid-sentence and a backup voice will speak ONE short recovery line instead. Compress the tutor's undelivered text into at most ${RECOVERY_MAX_WORDS} words, keeping the single most actionable part — if it asks the student something, keep that question; otherwise keep the key statement. First person, natural spoken tone, no preamble, no quotes. Preserve any inline $...$ LaTeX exactly as written.`;
 

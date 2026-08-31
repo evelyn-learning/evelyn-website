@@ -7,6 +7,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '../ai/model-registry';
 import {
   TutoringSession,
   TutoringSessionConfig,
@@ -53,9 +54,7 @@ export class TutorEngine {
   constructor(callbacks: TutorEngineCallbacks) {
     this.callbacks = callbacks;
     this.sessionId = uuidv4();
-    this.anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
+    this.anthropic = getModelClient('classic-engine').client;
 
     // Initialize session
     this.session = {
@@ -228,7 +227,7 @@ export class TutorEngine {
   async extractProblemsFromImage(imageData: string, mimeType: string): Promise<Problem[]> {
     try {
       const response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: getModelClient('classic-engine').model,
         max_tokens: 2000,
         messages: [
           {
@@ -351,7 +350,7 @@ Only return valid JSON, no other text.`,
 
     try {
       const response = await this.anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: getModelClient('classic-engine').model,
         max_tokens: 1000,
         system: systemPrompt,
         messages,

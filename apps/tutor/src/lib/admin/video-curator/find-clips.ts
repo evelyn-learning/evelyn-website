@@ -8,6 +8,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '../../tutor/ai/model-registry';
 import { randomUUID } from 'crypto';
 import {
   extractYouTubeId,
@@ -17,7 +18,7 @@ import {
 } from './youtube';
 import type { CedTopic, DraftClip, VideoMeta } from './types';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const { client: anthropic, model: CURATOR_MODEL } = getModelClient('video-curator');
 
 const PROPOSER_SYSTEM = `You are helping curate YouTube videos for an AP Macroeconomics tutoring app. Your job is to propose specific, real YouTube videos that teach a given AP CED topic. Use web search to find them.
 
@@ -144,7 +145,7 @@ async function proposeVideos(
 ): Promise<{ payload: ProposerPayload | null; error: string | null }> {
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: CURATOR_MODEL,
       max_tokens: 2048,
       // Static across every topic in the run — mark as ephemeral cache
       // so the second-and-onward call hit the cached prefix at ~10% of
@@ -218,7 +219,7 @@ Identify the SINGLE best clip (30-240s). Return JSON only.`;
   let raw: SegmenterPayload | null = null;
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: CURATOR_MODEL,
       max_tokens: 1024,
       system: [
         {

@@ -12,13 +12,13 @@
  * Runs ASYNCHRONOUSLY after `endSession` — the student doesn't wait.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '../ai/model-registry';
 import type { LessonPlan } from '@/lib/tutor/lesson-plan/types';
 import type { GradeBand } from '@/lib/tutor/pedagogy/grade-profile';
 import { getGradeProfile } from '@/lib/tutor/pedagogy/grade-profile';
 import type { PlanContentFillings } from './types';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const { client: anthropic, model: SUMMARY_MODEL } = getModelClient('recap');
 
 export interface SessionSummaryInput {
   /** Full transcript of the session (student + tutor turns). */
@@ -33,7 +33,8 @@ export interface SessionSummaryInput {
   losTouched?: string[];
 }
 
-const SUMMARY_MODEL = process.env.NOTES_MODEL || 'claude-haiku-4-5-20251001';
+// SUMMARY_MODEL resolves above via the model-registry (role 'recap');
+// the legacy NOTES_MODEL env var still works as an alias.
 
 const SYSTEM = `You produce one-paragraph plain-text recaps of tutoring sessions. Calibrate vocabulary to the student's grade band (named in the user message). Stay within what the transcript shows — don't invent or extrapolate. Output the paragraph and nothing else: no markdown, no quotes, no headings, no preamble.`;
 

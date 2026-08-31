@@ -7,10 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getModelClient } from "@/lib/tutor/ai/model-registry";
 import { denyIfNoDemoAccess } from "@/lib/tutor/demo-gate/enforce";
 
-const anthropic = new Anthropic();
+const { client: anthropic, model: ENRICH_MODEL } = getModelClient("whiteboard-enrich");
 
 // Rate limiting per session
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
@@ -230,7 +230,7 @@ export async function POST(request: NextRequest) {
       "\n\nGenerate the whiteboard command(s) that should accompany this tutor response. Focus on the mathematical, code, or visual content that the tutor described or referenced. Prefer the structured tools. Return empty if nothing visual needs to be added.";
 
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-6",
+      model: ENRICH_MODEL,
       max_tokens: 2000,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: userPrompt }],

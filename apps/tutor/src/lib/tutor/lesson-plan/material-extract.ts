@@ -31,6 +31,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, resolveModel } from '../ai/model-registry';
 import type { PlanMaterial } from '@evelyn/portal-contract/v1';
 import { extractDocxText, normalizeExtractedText } from '@core/utils/document-extract';
 
@@ -85,28 +86,21 @@ const DEFAULT_PIPELINE_TARGET_CHARS = 8000; // matches MAX_INPUT_CHARS in plan-f
 const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 // Same vision model extract-homework/route.ts uses for image reads.
-const VISION_MODEL_ID = 'claude-sonnet-4-6';
+const VISION_MODEL_ID = resolveModel('plangen-vision').model;
 // Same Haiku id generate-from-text.ts uses for its Stage 1/2 calls.
-const HAIKU_MODEL_ID = 'claude-haiku-4-5-20251001';
+const HAIKU_MODEL_ID = resolveModel('plangen-fast').model;
 const CONDENSE_MAX_TOKENS = 4096;
 // Vision output scales with how many images are in the batch (more images
 // → more transcription text needed) — see transcribeImagesBatch.
 const VISION_TOKENS_PER_IMAGE = 2500;
 const VISION_MAX_TOKENS_CAP = 8192;
 
-// Lazy singleton rather than a module-load-time `new Anthropic(...)`: in
-// Next.js, env vars are guaranteed loaded before request handling, but a
-// plain tsx test script that calls dotenv's config() and then imports this
-// module sees its own `import` hoisted ahead of that config() call, so
-// process.env.ANTHROPIC_API_KEY would be undefined if read at import time.
-// Reading it lazily on first call sidesteps that ordering entirely.
-let anthropicClient: Anthropic | null = null;
-function getAnthropicClient(): Anthropic {
-  if (!anthropicClient) {
-    anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  }
-  return anthropicClient;
-}
+// Clients resolve lazily per call via getModelClient(...) rather than a
+// module-load-time `new Anthropic(...)`: in Next.js, env vars are guaranteed
+// loaded before request handling, but a plain tsx test script that calls
+// dotenv's config() and then imports this module sees its own `import`
+// hoisted ahead of that config() call, so the API key would be undefined if
+// read at import time. (resolveModel above only reads model ids — safe.)
 
 /* ------------------------------------------------------------------ */
 /* extractMaterials                                                    */
@@ -398,7 +392,7 @@ async function transcribeImagesBatch(
 
   let raw = '';
   try {
-    const response = await getAnthropicClient().messages.create({
+    const response = await getModelClient('plangen-vision').client.messages.create({
       model: VISION_MODEL_ID,
       max_tokens: visionMaxTokens,
       system: buildBatchTranscribePrompt(n),
@@ -499,7 +493,7 @@ export async function condenseForPipeline(text: string, opts: { targetChars: num
 
   let condensed = '';
   try {
-    const response = await getAnthropicClient().messages.create({
+    const response = await getModelClient('plangen-fast').client.messages.create({
       model: HAIKU_MODEL_ID,
       max_tokens: CONDENSE_MAX_TOKENS,
       system: CONDENSE_SYSTEM_PROMPT,

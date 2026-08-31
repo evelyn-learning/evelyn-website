@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect, useMemo, Suspense } from 'react';
+import { MODEL_RATES } from '@/lib/tutor/ai/model-rates';
 import { useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { ArrowLeft, Play, Send, Loader2, Mic, MessageSquare, ChevronDown } from 'lucide-react';
@@ -138,13 +139,17 @@ interface TokenUsage {
   cacheCreationTokens?: number;
 }
 
-// Pricing per 1M tokens
+// Pricing per 1M tokens — sourced from the shared rate card (model-rates.ts)
+// so every estimate in the app prices from ONE table. Brain turns run the
+// prod brain model (Sonnet 5) with the 1h-TTL prompt cache, so cacheWrite
+// uses the 1h write rate. (Was hardcoded 3/15 Sonnet 4.6-era rates, which
+// overstated Sonnet 5 brain cost ~50%.)
+const BRAIN_RATE = MODEL_RATES['claude-sonnet-5'];
 const PRICING = {
-  // Claude Sonnet (text chat + brain turns)
-  input: 3.0,   // $3 per 1M input tokens
-  output: 15.0, // $15 per 1M output tokens
-  cacheRead: 0.3,   // $0.30 per 1M cache-read input tokens (A1, brain turns)
-  cacheWrite: 3.75, // $3.75 per 1M cache-creation input tokens (A1)
+  input: BRAIN_RATE.input,
+  output: BRAIN_RATE.output,
+  cacheRead: BRAIN_RATE.cacheRead ?? BRAIN_RATE.input * 0.1,
+  cacheWrite: BRAIN_RATE.cacheWrite1h ?? BRAIN_RATE.input * 2,
 };
 
 const REALTIME_PRICING = {

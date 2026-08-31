@@ -42,6 +42,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, resolveModel } from '../ai/model-registry';
 
 /** What the student handed over. */
 export type MaterialKind = 'problem_set' | 'explanatory_text' | 'mixed' | 'diagram' | 'unusable';
@@ -184,8 +185,8 @@ export function generationHintForKind(kind: MaterialKind, itemCount?: number): s
 /* The model call                                                      */
 /* ------------------------------------------------------------------ */
 
-/** Same Haiku id the rest of this pipeline uses for its cheap passes. */
-const HAIKU_MODEL_ID = 'claude-haiku-4-5-20251001';
+/** Same fast-pass model the rest of this pipeline uses (registry role 'plangen-fast'). */
+const HAIKU_MODEL_ID = resolveModel('plangen-fast').model;
 const CLASSIFY_MAX_TOKENS = 400;
 /** Only the head of the material is needed to tell WHAT it is. Bounded so a
  *  30-page PDF costs the same as a one-page worksheet. */
@@ -260,10 +261,8 @@ export async function classifyMaterial(
  * its import hoisted above that call, so reading the key at module load would
  * find it undefined.
  */
-let anthropicClient: Anthropic | null = null;
 export function getClassifierClient(): Anthropic {
-  if (!anthropicClient) anthropicClient = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  return anthropicClient;
+  return getModelClient('plangen-fast').client;
 }
 
 /** Production deps: one cheap Haiku call. */

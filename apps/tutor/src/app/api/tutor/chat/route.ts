@@ -7,14 +7,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '@/lib/tutor/ai/model-registry';
 import { denyIfNoDemoAccess } from '@/lib/tutor/demo-gate/enforce';
 import { buildSystemPrompt } from '@/lib/tutor/ai/system-prompt-builder';
 import { parseWhiteboardCommands } from '@/lib/tutor/ai/response-parser';
 import { loadModuleByParams } from '@core/knowledge/registry';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const { client: anthropic, model: CHAT_MODEL } = getModelClient('chat');
 
 /**
  * API Error Types for graceful handling
@@ -144,7 +143,7 @@ export async function POST(request: NextRequest) {
 
     // Call Claude
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: CHAT_MODEL,
       max_tokens: 1000,
       system: systemPrompt,
       messages,
@@ -175,7 +174,7 @@ export async function POST(request: NextRequest) {
 
       try {
         const followUp = await anthropic.messages.create({
-          model: 'claude-sonnet-4-6',
+          model: CHAT_MODEL,
           max_tokens: 500,
           system: `You are a whiteboard command generator. Given a tutor's spoken response, generate ONLY the whiteboard commands as \`\`\`whiteboard JSON blocks. No spoken text.
 
@@ -280,7 +279,7 @@ export async function PUT(request: NextRequest) {
 
     // Create streaming response
     const stream = await anthropic.messages.stream({
-      model: 'claude-sonnet-4-6',
+      model: CHAT_MODEL,
       max_tokens: 1000,
       system: systemPrompt,
       messages,

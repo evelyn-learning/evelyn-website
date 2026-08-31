@@ -16,16 +16,12 @@
  * fallback) lives in the wiring layer.
  */
 import { NextRequest } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, prepareParams } from '@/lib/tutor/ai/model-registry';
 
 export const runtime = 'nodejs';
 
-const CLASSIFIER_MODEL_ID = 'claude-haiku-4-5-20251001';
+const { client: anthropic, model: CLASSIFIER_MODEL_ID } = getModelClient('perception');
 const MAX_TOKENS = 80;
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 type PerceptionVerdict =
   | 'filler'
@@ -135,14 +131,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const t0 = Date.now();
   try {
-    const resp = await anthropic.messages.create({
+    const resp = await anthropic.messages.create(prepareParams('perception', {
       model: CLASSIFIER_MODEL_ID,
       max_tokens: MAX_TOKENS,
       system: [
-        { type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        { type: 'text' as const, text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' as const } },
       ],
-      messages: [{ role: 'user', content: userContent }],
-    });
+      messages: [{ role: 'user' as const, content: userContent }],
+    }));
     const ms = Date.now() - t0;
     const textBlock = resp.content.find((b) => b.type === 'text');
     const raw = (textBlock && textBlock.type === 'text') ? textBlock.text.trim() : '';

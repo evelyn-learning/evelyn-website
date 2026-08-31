@@ -25,17 +25,21 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '../ai/model-registry';
 import { ProblemBank, type IProblemBank } from '../../../models/ProblemBank';
 import { connectDB } from '@core/db';
 import type { LessonPlan, SegmentTryYourself } from '../lesson-plan/types';
 import { getTopicById } from '../topic-taxonomy';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 // Layer-2 brain-gen models. Generation + an INDEPENDENT fresh-context solve
 // for verification. Same model in fresh context is the design's decorrelation
-// (the verifier never sees the generator's claimed answer). Overridable.
-const BRAINGEN_MODEL = process.env.BRAINGEN_MODEL || 'claude-sonnet-5';
-export const BRAINGEN_VERIFY_MODEL = process.env.BRAINGEN_VERIFY_MODEL || 'claude-sonnet-5';
+// (the verifier never sees the generator's claimed answer). Resolved via the
+// model-registry (roles 'braingen' / 'braingen-verify'); the legacy
+// BRAINGEN_MODEL / BRAINGEN_VERIFY_MODEL env vars still work as aliases.
+const braingen = getModelClient('braingen');
+const braingenVerify = getModelClient('braingen-verify');
+const BRAINGEN_MODEL = braingen.model;
+export const BRAINGEN_VERIFY_MODEL = braingenVerify.model;
 
 /** 4-point anchored-relative difficulty scale (v1 design Q6). */
 export type Difficulty = 'slightly_easier' | 'same' | 'slightly_harder' | 'much_harder';
@@ -239,7 +243,9 @@ const BRAINGEN_VERIFY_SYSTEM = `You are a meticulous solver. Solve the problem a
 
 /** One Anthropic text call → trimmed string. */
 async function callModel(model: string, system: string, user: string, maxTokens: number): Promise<string> {
-  const res = await anthropic.messages.create({
+  // Each role may point at a different provider; route by which model id matched.
+  const { client } = model === braingenVerify.model ? braingenVerify : braingen;
+  const res = await client.messages.create({
     model,
     max_tokens: maxTokens,
     system,

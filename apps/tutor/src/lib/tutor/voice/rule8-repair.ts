@@ -22,6 +22,7 @@
  * Tests: npm run test:rule8-repair (pure halves only — no API calls).
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, resolveModel } from '../ai/model-registry';
 import {
   segment,
   autoWrapUnicodeMath,
@@ -29,7 +30,7 @@ import {
   decodeHtmlEntities,
 } from '../whiteboard/inline-math';
 
-export const RULE8_REPAIR_MODEL = 'claude-haiku-4-5-20251001';
+export const RULE8_REPAIR_MODEL = resolveModel('repair').model;
 
 /** Same shape the stream route has always logged RULE8_VIOLATION with —
  *  a first-person promise verb followed by a drawing verb. */
@@ -244,7 +245,6 @@ Rules — all hard:
 - If the tutor POSED a question or problem to the student ("here's a trap question: …"), \`handwrite\` the question itself — the literally spoken question, trimmed to its core. Anchor to the sentence that contains the question.
 - Fewer is better. Zero repairs is a valid answer (empty list).`;
 
-let sharedClient: Anthropic | null = null;
 
 /**
  * The one Haiku call. Any failure — API error, timeout, malformed output —
@@ -263,7 +263,7 @@ export async function generateRule8Repairs(
     detection.posedQuestionSentences.length ? `Sentences announcing a question/problem posed to the student: ${detection.posedQuestionSentences.join(', ')} (the question itself may be in the following sentence).` : '',
   ].filter(Boolean).join(' ');
   try {
-    const anthropic = client ?? (sharedClient ??= new Anthropic());
+    const anthropic = client ?? getModelClient('repair').client;
     const response = await anthropic.messages.create(
       {
         model: RULE8_REPAIR_MODEL,

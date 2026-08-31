@@ -6,6 +6,7 @@
  * labels) for atomic lessons or any failure along the way.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, resolveModel } from '../ai/model-registry';
 import { connectDB } from '@core/db';
 import { LessonPlanRailLabelsModel, buildRailLabelsId } from '@/models/LessonPlanRailLabels';
 import { buildLabelPrompt, parseLabelResponse, RAIL_LABELS_VERSION, type SegmentLabels } from './rail-labels';
@@ -13,11 +14,10 @@ import type { LessonPlan } from './types';
 
 export type CompleteFn = (prompt: string) => Promise<string>;
 
-const HAIKU_MODEL_ID = 'claude-haiku-4-5-20251001';
-let client: Anthropic | null = null;
+const HAIKU_MODEL_ID = resolveModel('plangen-fast').model;
 // Lazy so tsx test scripts can dotenv before first use (see material-extract.ts:97-100).
 function getClient(): Anthropic {
-  return (client ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY }));
+  return getModelClient('plangen-fast').client;
 }
 
 const realComplete: CompleteFn = async (prompt) => {

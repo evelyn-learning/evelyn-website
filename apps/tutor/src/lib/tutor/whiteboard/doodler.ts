@@ -6,11 +6,12 @@
  * Grilled 2026-06-22 — see memory project_tutor_sketch_capability.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, resolveModel } from '../ai/model-registry';
 import { SKETCH_TOOL_NAME, SKETCH_TOOL_SCHEMA, type SketchPrimitive } from './sketch-schema';
 import { validateSketch } from './sketch-validate';
 import { SKETCH_FEWSHOT } from './sketch-examples';
 
-export const DOODLER_MODEL = 'claude-haiku-4-5-20251001';
+export const DOODLER_MODEL = resolveModel('sketch').model;
 
 const FEWSHOT_JSON = SKETCH_FEWSHOT.map(
   (f) => `Concept: "${f.concept}"\nLabels: ${JSON.stringify(f.labels)}\n→ ${JSON.stringify(f.primitives)}`,
@@ -126,7 +127,6 @@ DRAWING RECIPES — avoid the common mistakes:
 EXAMPLES:
 ${FEWSHOT_JSON}`;
 
-let sharedClient: Anthropic | null = null;
 
 export interface DoodleResult {
   primitives: SketchPrimitive[] | null;
@@ -143,7 +143,7 @@ export async function generateDoodle(
   labels: string[] = [],
   client?: Anthropic,
 ): Promise<DoodleResult> {
-  const anthropic = client ?? (sharedClient ??= new Anthropic());
+  const anthropic = client ?? getModelClient('sketch').client;
   const userPrompt =
     `Concept: "${concept}"\n` +
     `Labels to place: ${labels.length ? JSON.stringify(labels) : '(none — add at most one or two if they help)'}\n\n` +

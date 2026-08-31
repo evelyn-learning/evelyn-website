@@ -11,10 +11,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '@/lib/tutor/ai/model-registry';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const { client: anthropic, model: VALIDATOR_MODEL } = getModelClient('validate-tool-call');
 
 // Tool calls worth validating (math-sensitive)
 const VALIDATABLE_TOOLS = new Set([
@@ -76,7 +75,7 @@ Check mathematical correctness, add missing elements (directrix, focus, etc.), f
     console.log(`[VALIDATE] Validating ${functionName}, data:`, JSON.stringify(args).slice(0, 500));
 
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: VALIDATOR_MODEL,
       max_tokens: 4000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],

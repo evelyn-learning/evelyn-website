@@ -17,16 +17,13 @@
  */
 import { NextRequest } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '@/lib/tutor/ai/model-registry';
 import { parseGistReply } from '@/lib/tutor/question-gist-text';
 
 export const runtime = 'nodejs';
 
-const GIST_MODEL_ID = 'claude-haiku-4-5-20251001';
+const { client: anthropic, model: GIST_MODEL_ID } = getModelClient('gist');
 const MAX_TOKENS = 120;
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 const SYSTEM = `You extract the question a tutor just asked a student, for a small reminder card pinned over the whiteboard while the student thinks.
 

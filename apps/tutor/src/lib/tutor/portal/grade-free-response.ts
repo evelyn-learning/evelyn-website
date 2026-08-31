@@ -111,13 +111,11 @@ export async function gradeFreeResponse(
 // Production deps — Claude-backed graders (lazy import keeps tests model-free).
 // ---------------------------------------------------------------------------
 
-const GRADER_MODEL = 'claude-sonnet-4-6';
-
 async function callClaudeJson(system: string, user: string): Promise<Record<string, unknown>> {
-  const Anthropic = (await import('@anthropic-ai/sdk')).default;
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const { getModelClient } = await import('../ai/model-registry');
+  const { client, model } = getModelClient('grader');
   const msg = await client.messages.create({
-    model: GRADER_MODEL,
+    model,
     max_tokens: 1000,
     system,
     messages: [{ role: 'user', content: user }],

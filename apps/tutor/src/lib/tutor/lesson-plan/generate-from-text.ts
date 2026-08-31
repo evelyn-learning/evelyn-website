@@ -35,7 +35,7 @@
  * tokens and regress the prompt-quality discipline tracked in MEMORY.
  */
 
-import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '../ai/model-registry';
 import { randomUUID } from 'node:crypto';
 import type {
   LessonPlan,
@@ -48,14 +48,12 @@ import { parseLessonPlan } from './parser';
 import type { LearnerHints } from '../learner-model/hints';
 import { TUNING } from '../learner-model/estimator';
 
-const HAIKU_MODEL_ID = 'claude-haiku-4-5-20251001';
+const HAIKU_MODEL_ID = getModelClient('plangen-fast').model;
 const MAX_OBJECTIVES = 12;
 const STAGE1_MAX_TOKENS = 1500; // LO list only — small payload.
 const STAGE2_MAX_TOKENS = 8192; // Per-LO expansion can be larger.
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const anthropic = getModelClient('plangen-fast').client;
 
 /* ------------------------------------------------------------------ */
 /* Plan-id + LO-id identity                                           */

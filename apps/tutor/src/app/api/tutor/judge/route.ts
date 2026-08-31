@@ -24,17 +24,13 @@
  * about board content.
  */
 import { NextRequest } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, prepareParams } from '@/lib/tutor/ai/model-registry';
 import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '@/lib/tutor/judge-prompt';
 
 export const runtime = 'nodejs';
 
-const JUDGE_MODEL_ID = 'claude-haiku-4-5-20251001';
+const { client: anthropic, model: JUDGE_MODEL_ID } = getModelClient('judge');
 const MAX_TOKENS = 600;
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 interface JudgeRequestBody {
   /** Compact prose dump of what's currently on the board — same shape
@@ -152,14 +148,14 @@ export async function POST(req: NextRequest): Promise<Response> {
 
   const t0 = Date.now();
   try {
-    const resp = await anthropic.messages.create({
+    const resp = await anthropic.messages.create(prepareParams('judge', {
       model: JUDGE_MODEL_ID,
       max_tokens: MAX_TOKENS,
       system: [
-        { type: 'text', text: JUDGE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } },
+        { type: 'text' as const, text: JUDGE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' as const } },
       ],
-      messages: [{ role: 'user', content: userContent }],
-    });
+      messages: [{ role: 'user' as const, content: userContent }],
+    }));
     const ms = Date.now() - t0;
 
     // Pull the first text block out of the response.

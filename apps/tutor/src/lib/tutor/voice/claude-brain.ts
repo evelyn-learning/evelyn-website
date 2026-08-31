@@ -13,6 +13,7 @@
  * and keeps the swap from the Realtime-as-brain architecture localized.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, prepareParams } from '../ai/model-registry';
 import type { CatalogSnapshotEntry, Page } from '../whiteboard/catalog';
 import type { ToolDefinition } from '../../../app/tutor/hooks/toolDefinitions';
 import { toAnthropicTools } from '../../../app/tutor/hooks/toolDefinitions';
@@ -40,7 +41,11 @@ import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 // Sonnet 5 turns on adaptive thinking when the field is OMITTED (adds latency,
 // bad for a live voice brain), whereas Sonnet 4.6 runs thinking-off on omit.
 // Explicit-disabled keeps both models at the same low-latency no-thinking path.
-export const BRAIN_MODEL_ID = process.env.TUTOR_BRAIN_MODEL || 'claude-sonnet-4-6';
+// Resolution moved to the model-registry (role 'brain'); TUTOR_BRAIN_MODEL
+// still works as a legacy alias, and TUTOR_MODEL_BRAIN{,_BASE_URL,_API_KEY}
+// can point this role at any Anthropic-compatible provider per deployment.
+const brainModel = getModelClient('brain');
+export const BRAIN_MODEL_ID = brainModel.model;
 // 2000 (was 1500): Sonnet 5's tokenizer emits ~30-36% more tokens for the same
 // text than Sonnet 4.6, so the old 1500 cap truncated equivalent output. This
 // is a ceiling, not a target — the brain's tool-call turns rarely approach it,
@@ -60,9 +65,7 @@ const DEFAULT_MAX_TOKENS = 2000;
  */
 const MAX_AGENT_ITERATIONS = 9;
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const anthropic = brainModel.client;
 
 export interface BrainTurnInput {
   /** System prompt — tutoring style + tool-API rules. NO domain examples. */
@@ -1511,7 +1514,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   let lastStopReason: string = 'unknown';
 
   for (let iter = 0; iter < MAX_AGENT_ITERATIONS; iter++) {
-    const response = await anthropic.messages.create({
+    const response = await anthropic.messages.create(prepareParams('brain', {
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
       thinking: { type: 'disabled' as const },
@@ -1535,7 +1538,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    });
+    }));
 
     totalUsage.inputTokens += response.usage.input_tokens;
     totalUsage.outputTokens += response.usage.output_tokens;
@@ -1718,7 +1721,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // as `input_json_delta` events; we parse it once on content_block_stop.
     let currentToolUse: { id: string; name: string; rawJson: string } | null = null;
 
-    const stream = anthropic.messages.stream({
+    const stream = anthropic.messages.stream(prepareParams('brain', {
       model: input.model ?? BRAIN_MODEL_ID,
       max_tokens: input.maxTokens ?? DEFAULT_MAX_TOKENS,
       thinking: { type: 'disabled' as const },
@@ -1742,7 +1745,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    });
+    }));
 
     for await (const event of stream) {
       if (event.type === 'content_block_start') {
@@ -1920,7 +1923,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     // because some Anthropic SDK versions treat [] as "no tools
     // available" while others raise on it; omitting is portable.
     try {
-      const rescueStream = anthropic.messages.stream({
+      const rescueStream = anthropic.messages.stream(prepareParams('brain', {
         model: input.model ?? BRAIN_MODEL_ID,
         max_tokens: 350, // was 250 — Sonnet 5 tokenizer headroom (see DEFAULT_MAX_TOKENS)
         thinking: { type: 'disabled' as const },
@@ -1932,7 +1935,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           },
         ],
         messages,
-      });
+      }));
       const rescueBuffer = new SentenceBuffer();
       for await (const event of rescueStream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

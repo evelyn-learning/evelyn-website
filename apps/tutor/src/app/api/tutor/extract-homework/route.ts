@@ -6,11 +6,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '@/lib/tutor/ai/model-registry';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
+const { client: anthropic, model: HOMEWORK_MODEL } = getModelClient('homework');
 
 /** Ink-OCR mode (Fix D): the caller is transcribing a student's whiteboard
  *  strokes, not extracting a homework photo. A homework-extraction prompt
@@ -39,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     if (mode === 'transcribe') {
       const transcribeResponse = await anthropic.messages.create({
-        model: 'claude-sonnet-4-6',
+        model: HOMEWORK_MODEL,
         max_tokens: 500,
         system: TRANSCRIBE_PROMPT,
         messages: [
@@ -87,7 +85,7 @@ Return a JSON object with these fields:
 Be precise and complete. Return ONLY valid JSON, no other text.`;
 
     const extractionResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: HOMEWORK_MODEL,
       max_tokens: 1500,
       system: extractionPrompt,
       messages: [
@@ -181,7 +179,7 @@ Keep your response SHORT (2-3 sentences max). This is a voice conversation.
 Remember: Guide them to discover the solution, don't just give it away.`;
 
     const tutorResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: HOMEWORK_MODEL,
       max_tokens: 500,
       system: tutorPrompt,
       messages: [

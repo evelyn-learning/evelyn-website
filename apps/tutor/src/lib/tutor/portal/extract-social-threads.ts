@@ -22,6 +22,7 @@
  * any LLM/parse failure yields empty results, never a throw.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient, resolveModel } from '../ai/model-registry';
 import type { SocialThread } from '@evelyn/portal-contract/v1';
 
 export type CompleteFn = (
@@ -32,7 +33,7 @@ export type CompleteFn = (
 /** Same Haiku id used elsewhere in this codebase (perception-classify,
  *  tutor judge, lesson-plan generate-from-text, doodler, session-summary,
  *  pedagogy-harness student simulator). */
-export const SOCIAL_THREADS_MODEL_ID = 'claude-haiku-4-5-20251001';
+export const SOCIAL_THREADS_MODEL_ID = resolveModel('social-threads').model;
 
 export type SocialThreadKind = 'interest' | 'event' | 'context';
 
@@ -52,10 +53,8 @@ const VALID_KINDS: ReadonlySet<string> = new Set(['interest', 'event', 'context'
 const MAX_NOTE_LENGTH = 120;
 const MAX_SUGGESTIONS = 5;
 
-let client: Anthropic | null = null;
 function getClient(): Anthropic {
-  if (!client) client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-  return client;
+  return getModelClient('social-threads').client;
 }
 
 /** Default `complete`: one real Haiku call, low temperature for stability. */

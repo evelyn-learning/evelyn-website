@@ -14,10 +14,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '@/lib/tutor/ai/model-registry';
 
 const WOLFRAM_APP_ID = process.env.WOLFRAM_APP_ID;
-const anthropic = new Anthropic();
+const { client: anthropic, model: WOLFRAM_FALLBACK_MODEL } = getModelClient('wolfram-fallback');
 
 interface DeclaredFunctionCtx {
   name: string;   // e.g. "f"
@@ -343,7 +343,7 @@ async function validateViaClaude(
 ): Promise<ValidationResult> {
   try {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: WOLFRAM_FALLBACK_MODEL,
       max_tokens: 500,
       system: `You are a math accuracy checker. Given a LaTeX equation from an AI tutor, verify the numerical calculations are correct.
 Respond with JSON only: {"correct": true/false, "issues": ["list of errors"], "correctedLatex": "fixed latex if needed"}

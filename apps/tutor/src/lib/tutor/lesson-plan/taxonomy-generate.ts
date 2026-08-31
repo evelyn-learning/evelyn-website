@@ -4,11 +4,12 @@
  * LLM pass, normalize/validate. Nothing is persisted engine-side.
  */
 import Anthropic from '@anthropic-ai/sdk';
+import { getModelClient } from '../ai/model-registry';
 import type { DraftTaxonomy, TaxonomyGenerateRequest } from '@evelyn/portal-contract/v1';
 import { DraftTaxonomySchema } from '@evelyn/portal-contract/v1';
 import { extractMaterials, condenseForPipeline } from './material-extract';
 
-export const TAXONOMY_MODEL_ID = process.env.TAXONOMY_MODEL || 'claude-sonnet-5';
+export const TAXONOMY_MODEL_ID = getModelClient('taxonomy').model;
 /** The prompt asks for 20-60 LOs, each with a title, a 1-2 sentence
  *  description, prereq ids and an order — a 60-LO outline can run past 8k
  *  tokens of JSON, and a response cut off mid-object fails `JSON.parse` and
@@ -257,7 +258,7 @@ export async function draftTaxonomyFromOutline(req: TaxonomyGenerateRequest): Pr
     los: [{ loId: `${topicKey}.main.overview`, title: 'Overview', description: 'Placeholder — drafting failed.', sectionKey: 'main', prerequisiteLoIds: [], suggestedOrder: 1 }],
   };
 
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const anthropic = getModelClient('taxonomy').client;
   let lastReason = 'no attempt ran';
 
   for (let attempt = 1; attempt <= TAXONOMY_ATTEMPTS; attempt++) {
