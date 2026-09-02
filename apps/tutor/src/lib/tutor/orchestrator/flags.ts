@@ -290,6 +290,15 @@ export const TUTOR_ANSWER_REVEAL_GUARD =
 export const TUTOR_DEDUP_RETRY_CONTEXT =
   process.env.NEXT_PUBLIC_TUTOR_DEDUP_RETRY_CONTEXT === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_DEDUP_RETRY_CONTEXT === 'true';
+// Issue B (2026-09-01 triage, portal-85b2c632 04:22:27 UTC). The
+// dedup-rejection path surfaces a suppressed show_segment_card /
+// show_problem as a kill+retry even when the suppressed duplicate IS the
+// card the student is already looking at — there's nothing to re-anchor
+// away from, so the retry produced a divergent resume. When on, that exact
+// case (duplicate target === active board card) is a round-7 silent drop
+// instead: no kill, no retry. Default ON per the standing flag-default rule.
+export const TUTOR_DEDUP_ACTIVE_SILENT =
+  process.env.NEXT_PUBLIC_TUTOR_DEDUP_ACTIVE_SILENT !== 'off';
 // A command that paints teaching content on the board (vs meta nav like
 // newPage / scrollTo / goToPage). Used by the board-anchor-assist fallback to
 // tell whether the brain drew anything this turn.

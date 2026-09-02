@@ -190,6 +190,7 @@ import {
   TUTOR_IDLE_NUDGE_V2,
   TUTOR_ANSWER_REVEAL_GUARD,
   TUTOR_DEDUP_RETRY_CONTEXT,
+  TUTOR_DEDUP_ACTIVE_SILENT,
   TUTOR_AGENDA_RAIL,
   TUTOR_VALIDATE_BEFORE_SPEAK,
   TUTOR_KEEP_VALIDATED_ON_KILL,
@@ -12529,6 +12530,29 @@ export function VoiceTutorRealtime({
                         : '';
                       if (askedForAnother) {
                         onDebugEvent?.('dedup_retry_wants_new', `"${lastStudentText.slice(0, 60)}"`);
+                      }
+                      // Issue B (2026-09-01 triage, portal-85b2c632
+                      // 04:22:27 UTC). When the suppressed duplicate's
+                      // target is the SAME card the student is already
+                      // looking at, killing this attempt and retrying has
+                      // nothing to re-anchor away from — the retry's
+                      // reason text talks about a card that's already on
+                      // the board, and the resulting speech diverged from
+                      // what the student saw. Round-7 semantics: silent
+                      // drop, no kill, no retry. Guard: the segment lookup
+                      // must have actually resolved (segmentAuthored
+                      // non-empty) and match the active card's statement
+                      // exactly — otherwise (no active card, lookup
+                      // miss, or a genuine mismatch, which is exactly
+                      // what activeIsOffSegment already flags) fall
+                      // through to the existing rejection path unchanged.
+                      const dedupTargetIsActiveCard = !!activeStatement
+                        && !!segmentAuthored
+                        && activeStatement === segmentAuthored;
+                      if (TUTOR_DEDUP_ACTIVE_SILENT && !askedForAnother && !activeIsOffSegment && !noProblemObserved && dedupTargetIsActiveCard) {
+                        console.warn(`[brain-orchestrator] dedup silent-drop (duplicate of active card): ${name} → ${segId}`);
+                        onDebugEvent?.('dedup_silent_dropped_active', `${name} → ${segId}`);
+                        continue;
                       }
                       const reason = anotherPrefix + (activeIsOffSegment
                         ? `Your ${name} call was suppressed because the active card is already on the board. NOTE: the active card is BRAIN-IMPROVISED / off-segment — the student is currently working on "${activeStatement.slice(0, 200)}", which differs from segment "${segId}"'s authored content. Do NOT try to re-render the segment's authored card; the student's focus is on the improvised one. RECOVERY: just continue the conversation against the active card — verify the student's answer, give a hint, or wait for their next attempt. If the student is genuinely done with the active card and wants to move on, call advance_lesson or ask them what they want next; do NOT silently render a different problem.`
