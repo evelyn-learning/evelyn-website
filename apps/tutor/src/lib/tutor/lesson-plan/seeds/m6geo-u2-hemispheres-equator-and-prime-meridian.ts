@@ -35,13 +35,22 @@
  *
  * ANSWER-CUE NOTE: written against deferred finding DF-3 (in the shipped Grade
  * 7 Geography bank the keyed answer was the strictly longest choice 67% of the
- * time, and 94% at difficulty 4). Every distractor here states a full wrong
- * reason rather than a short wrong label. Measured: the correct choice is the
- * strictly longest in NONE of the three items (the rule allows at most one),
- * and the three correct choices sit at ids b, d and a -- which is the id set
- * `(2 + 4) mod 4 = 2` requires, omitting c. The first item uses
- * parallel-structure options, all four exactly 50 characters by construction --
- * the cheapest way to make the length cue impossible.
+ * time, and 94% at difficulty 4; chance with four choices is 25%). The
+ * PER-ITEM discipline is the point: every distractor here states a full wrong
+ * reason rather than a short wrong label, and no key was built to be the
+ * longest choice BECAUSE it is the key. Measured as a diagnostic, not as a
+ * score: the key is the strictly longest in none of the three items, and the
+ * three keys sit at ids b, d and a -- the id set `(2 + 4) mod 4 = 2` requires,
+ * omitting c. Zero is NOT the target; see the note in
+ * `m6geo-u3-earths-moving-plates.ts`. A course-wide zero is the inverse tell,
+ * and the meaningful measurement is the 120-item course rate at registration,
+ * which should land near a quarter.
+ *
+ * The first item's four options came out at exactly 50 characters each. That
+ * is parallel structure helping, NOT a guarantee: it worked only because the
+ * words that vary ("Northern"/"Southern", "Eastern"/"Western") are the same
+ * length. Put "Africa" and "South America" in the same slot and the spread
+ * returns. Use the technique, but still count.
  *
  * NOTE ON prerequisites/followUps: the chain for this row is 2.3 -> 2.4 ->
  * 3.1, but rows 2.3 and 3.1 are authored in the fan-out that follows this

@@ -174,9 +174,9 @@ export const SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS: LessonPlan = {
         'A cliff shows three flat layers. From the bottom up they are mudstone, sandstone and limestone. A fault runs from the bottom of the cliff all the way to the top, cutting through all three layers, and the rock on one side of the fault has slipped down relative to the other side. Which formed most recently?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The mudstone, because a fault always forms before the rock it cuts.' },
-        { id: 'b', text: 'The limestone, because it is the layer at the top of the cliff.' },
-        { id: 'c', text: 'It cannot be worked out, because a fault leaves the layers disturbed.' },
+        { id: 'a', text: 'The mudstone, because the fault had to be there first for the layers to settle around it.' },
+        { id: 'b', text: 'The limestone, because it is the top layer of the cliff and nothing sits above it.' },
+        { id: 'c', text: 'It cannot be worked out, because a fault disturbs the layers and makes the order unreadable.' },
         { id: 'd', text: 'The fault, because it cuts through all three layers and nothing lies unbroken across it.', correct: true },
       ],
       expectedAnswer: 'The fault, because it cuts through all three layers and nothing lies unbroken across it.',

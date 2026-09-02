@@ -32,13 +32,21 @@
  *
  * ANSWER-CUE NOTE: the three MCQs below are written against deferred finding
  * DF-3 (in the shipped Grade 7 Geography bank the keyed answer was the
- * strictly longest choice 67% of the time). Every distractor here states a
- * full wrong reason rather than a short wrong label. Measured: the correct
- * choice is the strictly longest in NONE of the three items (the rule allows
- * at most one). Ranked by character count within each item, the correct choice
- * comes fourth, second and fourth of four, and the three correct choices sit
- * at ids c, a and d -- which is the id set `(3 + 2) mod 4 = 1` requires,
- * omitting b.
+ * strictly longest choice 67% of the time; chance with four choices is 25%).
+ * The PER-ITEM discipline is the point, and it is the only part you should
+ * copy: every distractor here states a full wrong reason rather than a short
+ * wrong label, and no key was built to be the longest choice BECAUSE it is the
+ * key. Measured as a diagnostic, not as a score: the key is the strictly
+ * longest choice in none of the three items, ranking fourth, second and fourth
+ * of four by character count. Do NOT read zero as the target. Chance alone
+ * produces zero in a three-item file about 42% of the time, so this number is
+ * not evidence that a technique worked, and a whole course at zero would be
+ * the same tell inverted -- beatable by never picking the longest. Some keys
+ * legitimately are the longest, because a correct answer often needs a
+ * qualifying clause. The real measurement is the course-level rate across all
+ * 40 files, taken at registration, and about a quarter is where it should
+ * land. The three keys sit at ids c, a and d, which is the id set
+ * `(3 + 2) mod 4 = 1` requires, omitting b.
  *
  * NOTE ON prerequisites/followUps: the chain for this row is 3.1 -> 3.2 ->
  * 3.3, but rows 3.1 and 3.3 are authored in the fan-out that follows this

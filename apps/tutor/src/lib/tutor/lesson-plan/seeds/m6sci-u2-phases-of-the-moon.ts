@@ -150,10 +150,10 @@ export const SEED_M6SCI_U2_PHASES_OF_THE_MOON: LessonPlan = {
       problem: 'Why does the Moon appear to change shape over the course of a month?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Earth\'s shadow falls across a different amount of the Moon each night.' },
+        { id: 'a', text: 'Earth\'s shadow falls across the Moon each night, and it covers a different amount as the month goes on.' },
         { id: 'b', text: 'The angle between the sun, Earth and the Moon changes, so we see a different amount of the always-lit half.', correct: true },
-        { id: 'c', text: 'The Moon moves in and out of the sunlight, so a different amount of it is lit each night.' },
-        { id: 'd', text: 'Clouds and Earth\'s atmosphere block part of the Moon from view.' },
+        { id: 'c', text: 'The Moon moves in and out of the sunlight as it orbits, so a different amount of it is lit each night.' },
+        { id: 'd', text: 'Clouds and Earth\'s atmosphere block part of the Moon from view, and they block a different amount each night.' },
       ],
       expectedAnswer: 'The angle between the sun, Earth and the Moon changes, so we see a different amount of the always-lit half.',
       hints: [
