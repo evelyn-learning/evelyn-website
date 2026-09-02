@@ -225,6 +225,7 @@ import {
   TUTOR_CORRECTION_NOTE_TIMEOUT,
   CORRECTION_NOTE_TIMEOUT_MS,
   TUTOR_POSED_PROBLEM_BOARD_CHECK,
+  TUTOR_THINK_TIME_HOLD,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -1196,6 +1197,14 @@ export function VoiceTutorRealtime({
   // only the fragment "All right, hold on I think I got this" reached
   // the brain because the corrected answer was lost to the gate).
   const perceptionMidUtteranceRef = useRef<boolean>(false);
+  // Issue C (2026-09-01, portal-85b2c632 04:27:22 UTC): epoch-ms until which
+  // the student has claimed think time ("give me a minute", "doing mental
+  // math"). Holds the correction-note volunteer timer so the tutor doesn't
+  // interrupt intermediate steps mid-think; cleared by any substantive
+  // student turn.
+  const studentThinkTimeUntilRef = useRef(0);
+  const THINK_TIME_HOLD_MS = 60_000;
+  const thinkTimeRe = /\b(give me a (?:minute|min|sec|second|moment)|let me think|(?:i'?m )?(?:just )?thinking|mental math|hold on a (?:sec|second|minute)|one (?:sec|second|minute|moment)|just a (?:sec|second|minute|moment))\b/i;
   // R42 (2026-08-10, session portal-cb2addf5): timestamp of the last VAD
   // edge (speech_started OR speech_stopped) of any kind — stamped on BOTH
   // events. Feeds decideStage2TimeoutRestore's msSinceLastVadActivity so a
@@ -3231,7 +3240,8 @@ export function VoiceTutorRealtime({
         productionStateRef.current === 'speaking' ||
         brainBusyRef.current ||
         perceptionMidUtteranceRef.current ||
-        studentTypingRef.current;
+        studentTypingRef.current ||
+        (TUTOR_THINK_TIME_HOLD && Date.now() < studentThinkTimeUntilRef.current);
       if (busy) {                                            // retry once the turn settles
         correctionNoteTimerRef.current = setTimeout(fire, CORRECTION_NOTE_TIMEOUT_MS);
         return;
@@ -15067,6 +15077,18 @@ export function VoiceTutorRealtime({
       resolveAwaitingDispatch();
       onListeningHintRef.current?.(null);
       studentHasSpokenRef.current = true;
+    }
+    // Issue C: same "real student turn has reached the orchestrator" gate as
+    // the "being heard" indicator above — detect a declared think-time claim
+    // (or a substantive turn that ends one already in force) on every
+    // accepted voice/typed student turn, synthetic/silent kickoffs excluded.
+    if (!opts?.silent && TUTOR_THINK_TIME_HOLD) {
+      if (thinkTimeRe.test(transcript)) {
+        studentThinkTimeUntilRef.current = Date.now() + THINK_TIME_HOLD_MS;
+        onDebugEvent?.('think_time_hold_set', transcript.slice(0, 60));
+      } else if (transcript.trim().split(/\s+/).length >= 3 || /\d/.test(transcript)) {
+        studentThinkTimeUntilRef.current = 0; // substantive turn ends the hold
+      }
     }
     // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
     // recent cancel armed the suppression slot AND this call did NOT

@@ -277,6 +277,13 @@ export const TUTOR_CORRECTION_NOTE_TIMEOUT =
  *  at ~33s after the plant, so a shorter bound repairs the silent case
  *  without pre-empting a student who is simply thinking. */
 export const CORRECTION_NOTE_TIMEOUT_MS = 20_000;
+// Issue C (2026-09-01, portal-85b2c632 04:27:22 UTC): the correction-note
+// deadline above fired while the student had declared think time ("I'm just
+// doing mental math"), volunteering intermediate steps mid-think. This adds
+// a student-declared-think-time hold to the timeout's busy check. Default ON
+// per the R49b standing rule.
+export const TUTOR_THINK_TIME_HOLD =
+  process.env.NEXT_PUBLIC_TUTOR_THINK_TIME_HOLD !== 'off';
 export const TUTOR_ANSWER_REVEAL_GUARD =
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'true';
