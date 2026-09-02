@@ -106,7 +106,7 @@ import { createTurnLatencyLedger, formatTurnLatency, hasNegativeLatency, type Tu
 import { shouldSpeakAck, pickAck, type AckInput } from '@/lib/tutor/voice/ack-layer';
 import { classifyCover, pickCoverPhrase, pickLivenessReply, COVER_FIRE_MS, createEscalationState, decideEscalation, TURN_GIVE_UP_MS, createNoiseNagState, recordNoiseDrop, NOISE_NAG_LINE, createNoiseFloorState, recordFloorSample, createWarmupState, decideWarmupAction, type CoverVerdict, type WarmupState , extractAnswerTokenDetailed } from '@/lib/tutor/voice/cover-layer';
 import { endsMidThought, mergeHeldTranscript, HOLD_MS as INCOMPLETE_HOLD_MS } from '@/lib/tutor/voice/utterance-hold';
-import { CancelStormGovernor } from '@/lib/tutor/voice/cancel-storm';
+import { CancelStormGovernor, STOP_IMPERATIVE_RE } from '@/lib/tutor/voice/cancel-storm';
 import { DispatchDeduper } from '@/lib/tutor/voice/dispatch-dedupe';
 import { selectDemoStopPayload } from '@/lib/tutor/voice/demo-stop-mode';
 import { derivePracticeMode } from '@/lib/tutor/voice/practice-mode';
@@ -16572,7 +16572,7 @@ export function VoiceTutorRealtime({
     // Cancel-storm breaker: repeated cancels with no delivered reply is
     // the "tutor is deaf" livelock — let the in-flight turn play out;
     // the student's transcript queues behind the busy brain instead.
-    if (!cancelStormRef.current.allowCancel(Date.now())) {
+    if (!cancelStormRef.current.allowCancel(Date.now(), { stopImperative: STOP_IMPERATIVE_RE.test(lastPerceptionTextRef.current) })) {
       console.warn('[PERCEPTION] retro-cancel suppressed — cancel storm (letting reply play out)');
       onDebugEvent?.('perception_cancel_storm_suppressed', `→${toState}`);
       return;
@@ -17633,7 +17633,7 @@ export function VoiceTutorRealtime({
         // Cancel-storm breaker: see retro-cancel site. Without this, a
         // student re-speaking into silence aborts every nascent reply
         // and no turn ever completes (session-1783615559112).
-        if (!cancelStormRef.current.allowCancel(Date.now())) {
+        if (!cancelStormRef.current.allowCancel(Date.now(), { stopImperative: STOP_IMPERATIVE_RE.test(lastPerceptionTextRef.current) })) {
           console.warn(`[PERCEPTION] cancel suppressed — cancel storm (letting reply play out, stage=${cancelStage})`);
           onDebugEvent?.('perception_cancel_storm_suppressed', `prev=${productionStateRef.current} stage=${cancelStage}`);
           return;

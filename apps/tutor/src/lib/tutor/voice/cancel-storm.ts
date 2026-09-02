@@ -21,11 +21,26 @@
 const WINDOW_MS = 45_000;
 const MAX_CANCELS_PER_WINDOW = 2;
 
+/** Issue G (embed-1788187567764): explicit stop imperatives must never be
+ *  storm-suppressed — a student shouting "stop" while the storm breaker is
+ *  engaged is exactly the moment the breaker exists to protect, inverted.
+ *
+ *  A bare `\bstop\b` also matches "the bus stop is far" (a noun mid-
+ *  sentence), so this anchors on IMPERATIVE POSITION instead: the
+ *  stop-word must be the first word of the utterance (however it's
+ *  followed — "stop", "stop talking") or the last word of it (however
+ *  it's preceded — "No, no, stop."). A stop-word buried mid-sentence
+ *  with content on both sides ("the bus stop is far", "I can't wait for
+ *  class") matches neither edge and is correctly rejected. */
+export const STOP_IMPERATIVE_RE =
+  /^\s*\b(?:stop|wait|pause|hold on|be quiet|quiet|shush)\b|\b(?:stop|wait|pause|hold on|be quiet|quiet|shush)\b[.!,]?\s*$/i;
+
 export class CancelStormGovernor {
   private cancelTimes: number[] = [];
 
   /** May a stage2/3 (or retro) cancel fire right now? */
-  allowCancel(now: number): boolean {
+  allowCancel(now: number, opts?: { stopImperative?: boolean }): boolean {
+    if (opts?.stopImperative) return true;
     this.prune(now);
     return this.cancelTimes.length < MAX_CANCELS_PER_WINDOW;
   }

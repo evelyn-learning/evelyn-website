@@ -12,7 +12,7 @@
  *
  * Run: npx tsx scripts/test-cancel-storm.ts
  */
-import { CancelStormGovernor } from '../src/lib/tutor/voice/cancel-storm';
+import { CancelStormGovernor, STOP_IMPERATIVE_RE } from '../src/lib/tutor/voice/cancel-storm';
 
 let failures = 0;
 function check(name: string, actual: boolean, expected: boolean) {
@@ -62,6 +62,35 @@ function check(name: string, actual: boolean, expected: boolean) {
   check('suppressed during storm', g.allowCancel(t0 + 10_000), false);
   g.recordDelivery();
   check('allowed after a delivered turn resets history', g.allowCancel(t0 + 11_000), true);
+}
+
+{
+  // Issue G (embed-1788187567764): "stop" spoken while the storm breaker
+  // is actively suppressing must still cancel — that's exactly the
+  // moment the breaker exists to protect, inverted, so it needs a bypass.
+  //
+  // Drive the governor into suppression first. Note: allowCancel() never
+  // mutates state on its own (only recordCancel does), so a loop that
+  // only calls allowCancel would never trip the storm and would spin
+  // forever — drive via recordCancel instead, and bound the loop.
+  const g = new CancelStormGovernor();
+  let t = 1_000_000;
+  for (let i = 0; i < 10 && g.allowCancel(t); i++) {
+    g.recordCancel(t);
+    t += 100;
+  }
+  check('storm driven into suppression', g.allowCancel(t), false);
+  check('stop imperative bypasses an active storm suppression', g.allowCancel(t, { stopImperative: true }), true);
+  check('the bypass itself is not recorded — still suppressed right after', g.allowCancel(t), false);
+}
+
+{
+  for (const s of ['stop', 'No, no, stop.', 'wait wait', 'hold on', 'pause please']) {
+    check(`STOP_IMPERATIVE_RE matches: "${s}"`, STOP_IMPERATIVE_RE.test(s), true);
+  }
+  for (const s of ['the bus stop is far', 'stopwatch', 'I can’t wait for class']) {
+    check(`STOP_IMPERATIVE_RE does NOT match: "${s}"`, STOP_IMPERATIVE_RE.test(s), false);
+  }
 }
 
 if (failures > 0) {
