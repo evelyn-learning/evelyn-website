@@ -103,6 +103,7 @@ interface Opts {
   groundingFromSeeds: boolean;
   msConventions: boolean;
   difficultySpread?: Array<1 | 2 | 3 | 4>;
+  scopeNote?: string;
 }
 
 function usage(): string {
@@ -110,7 +111,7 @@ function usage(): string {
     'Usage: npx tsx scripts/generate-bank-items.ts --los-file <path> --out-dir <path> ' +
     '--ced-prefix <STR> --subject-label "<free text>" [--items-per-lo 6] ' +
     '[--concurrency 4] [--limit N] [--only-lo <id>] [--grounding-from-seeds] ' +
-    '[--ms-conventions] [--difficulty-spread 1,2,2,3,3,4]'
+    '[--ms-conventions] [--difficulty-spread 1,2,2,3,3,4] [--scope-note-file <path>]'
   );
 }
 
@@ -171,6 +172,20 @@ function parseArgs(): Opts {
     difficultySpread = nums as Array<1 | 2 | 3 | 4>;
   }
 
+  const scopeNoteFile = get('scope-note-file');
+  let scopeNote: string | undefined;
+  if (scopeNoteFile !== undefined) {
+    if (!fs.existsSync(scopeNoteFile)) {
+      console.error(`✗ --scope-note-file ${scopeNoteFile} not found.`);
+      process.exit(1);
+    }
+    scopeNote = fs.readFileSync(scopeNoteFile, 'utf-8').trim();
+    if (!scopeNote) {
+      console.error(`✗ --scope-note-file ${scopeNoteFile} is empty.`);
+      process.exit(1);
+    }
+  }
+
   return {
     losFile,
     outDir,
@@ -183,6 +198,7 @@ function parseArgs(): Opts {
     groundingFromSeeds: args.includes('--grounding-from-seeds'),
     msConventions: args.includes('--ms-conventions'),
     difficultySpread,
+    scopeNote,
   };
 }
 
@@ -265,7 +281,12 @@ const DIFFICULTY_LABEL: Record<1 | 2 | 3 | 4, string> = {
 };
 
 function buildSystem(subjectLabel: string): string {
-  return `You are an expert ${subjectLabel} assessment item writer. Write ORIGINAL multiple-choice items that test genuine understanding of the stated learning objective — not just recognition of a keyword. Ground every item in the supplied lesson content so it is answerable from what was taught; never require outside knowledge or trivia the lesson didn't cover. Vary how each item is framed (a short applied scenario, a direct calculation or definition check, a compare/contrast, a spot-the-error) rather than repeating one template across items. Write ORIGINAL items only — never copy or closely paraphrase questions from any real exam, textbook, or published question bank.`;
+  return `You are an expert ${subjectLabel} assessment item writer. Write ORIGINAL multiple-choice items that test genuine understanding of the stated learning objective — not just recognition of a keyword. Ground every item in the supplied lesson content so it is answerable from what was taught; never require outside knowledge or trivia the lesson didn't cover. Vary how each item is framed (a short applied scenario, a direct calculation or definition check, a compare/contrast, a spot-the-error) rather than repeating one template across items. Write ORIGINAL items only — never copy or closely paraphrase questions from any real exam, textbook, or published question bank.
+
+ANSWER-CUE DISCIPLINE. A test-wise student must not be able to find the answer from the SHAPE of the choices instead of the content. Two habits give the answer away and you must avoid both:
+1. Length. Write the four choices of an item to a SIMILAR LENGTH: no choice should be more than about a quarter longer than the shortest one. Count roughly as you write. If the correct answer needs to state a full reason, computation, or definition, then EVERY distractor states a full reason, computation, or definition too — a wrong one. Reach the match by making the distractors as substantive as the key, never by padding them with filler and never by trimming the key until it is vague. Before you emit an item, compare its four choices: if the correct one is clearly the longest, rewrite the other three to carry the same weight.
+2. Position. Place each item's correct answer at the letter you are told to use for that item. Distribute is not enough — obey the specified letter exactly.
+Every distractor must be a claim a student could actually believe, wrong for a nameable reason. No joke options, no throwaway near-duplicates, and no choice that refers to another choice by letter or position (no "both A and B", no "none of the above").`;
 }
 
 function computeDifficulties(itemsPerLo: number, spread?: Array<1 | 2 | 3 | 4>): Array<1 | 2 | 3 | 4> {
@@ -279,12 +300,32 @@ function buildPrompt(
   difficulties: Array<1 | 2 | 3 | 4>,
   subjectLabel: string,
   exactlyTwoHints: boolean,
+  scopeNote?: string,
+  answerLetters?: string[],
 ): string {
   const itemsPerLo = difficulties.length;
   const spec = difficulties
-    .map((d, i) => `${i + 1}. difficulty ${d} — ${DIFFICULTY_LABEL[d]}`)
+    .map((d, i) =>
+      answerLetters
+        ? `${i + 1}. difficulty ${d} — ${DIFFICULTY_LABEL[d]} — correct answer MUST be choice ${answerLetters[i]}`
+        : `${i + 1}. difficulty ${d} — ${DIFFICULTY_LABEL[d]}`,
+    )
     .join('\n');
   const hintsInstruction = exactlyTwoHints ? 'exactly 2 short hints' : '1-2 short hints';
+  // The course's boundary. This lives in each seed file's SCOPE GUARD doc
+  // comment, which is a TypeScript comment and therefore reaches nothing —
+  // not the LessonPlan object, not `extractGrounding`, not this prompt. Item
+  // generation would otherwise see only the LO description and the lesson
+  // segments, neither of which states what the course deliberately withholds,
+  // so items could freely reach into the grade above. Placed LAST, next to
+  // the output instruction, because a constraint buried above the lesson
+  // content reads as background rather than as a rule for what to write.
+  const scopeSection = scopeNote
+    ? `Course scope boundary — these topics are deliberately reserved for later grades and MUST NOT appear in any item, distractor, or hint, even when the lesson content above brushes against them. Stay at the depth the lesson itself teaches:
+${scopeNote}
+
+`
+    : '';
   return `Subject: ${subjectLabel}
 Learning objective: "${lo.title}"
 LO description: ${lo.description}
@@ -297,7 +338,7 @@ ${spec}
 
 Each item needs exactly 4 choices (A-D), one clearly correct answer, and ${hintsInstruction} that nudge without giving away the answer. Choices must not have letter prefixes in the text itself. No item's problemText may be shorter than 2 sentences (or, for a terse computational item, at least one full sentence that fully states what is being asked).
 
-Return ONLY a JSON array of ${itemsPerLo} objects, this exact shape, no markdown fences, no commentary, in the same order as the difficulty list above:
+${scopeSection}Return ONLY a JSON array of ${itemsPerLo} objects, this exact shape, no markdown fences, no commentary, in the same order as the difficulty list above:
 [{"difficulty":1,"problemText":"...","choices":["...","...","...","..."],"answer":"A","hints":["..."]}, ...]`;
 }
 
@@ -312,6 +353,75 @@ function validateGenItem(it: GenItem, loId: string): string[] {
   }
   if (/\$(\d)/.test(it.problemText || '')) errs.push(`WARN ${loId} problemText has $<digit> (currency/KaTeX trap)`);
   return errs;
+}
+
+/** Items whose correct choice is strictly longest by more than `slack`
+ *  characters. That margin is the tell: a key two characters longer than its
+ *  nearest rival is a tie, one thirty characters longer is a signpost. */
+function answerCueOffenders(items: GenItem[], slack = 10): number[] {
+  const out: number[] = [];
+  items.forEach((it, i) => {
+    const idx = ['A', 'B', 'C', 'D'].indexOf(it.answer);
+    if (idx < 0 || !Array.isArray(it.choices) || idx >= it.choices.length) return;
+    const kl = it.choices[idx].length;
+    const others = it.choices.filter((_, j) => j !== idx).map((c) => c.length);
+    if (others.length && kl > Math.max(...others) + slack) out.push(i);
+  });
+  return out;
+}
+
+/** Second pass over the items a model cannot get right by instruction alone.
+ *  Three rounds of prompt tuning moved the "key is longest" rate 61.9% ->
+ *  57.1% -> 52.4% against a 25% chance baseline, while the median winning
+ *  margin went UP (25 -> 32 chars) — i.e. the wording changed nothing and the
+ *  movement was noise. So the fix is mechanical: hand the offending items back
+ *  and ask for LONGER DISTRACTORS, never a shorter key. Shortening the key is
+ *  what turns a length tell into an inverted length tell; the seeds of this
+ *  same wave were repaired the same way, twice, independently. */
+async function repairAnswerCues(
+  anthropic: Anthropic,
+  model: string,
+  system: string,
+  items: GenItem[],
+  offenders: number[],
+): Promise<{ items: GenItem[]; usageIn: number; usageOut: number }> {
+  const payload = offenders.map((i) => ({ index: i, ...items[i] }));
+  const prompt = `Each item below has a giveaway: its correct choice is visibly longer than the other three, so a student can pick it without understanding the question.
+
+Rewrite ONLY the three incorrect choices of each item so that all four choices carry comparable weight and length. Rules:
+- Do NOT change problemText, hints, difficulty, answer, or the text of the correct choice.
+- Do NOT shorten the correct choice. Lengthen the distractors instead, by making each state its full (wrong) reasoning, computation, or definition — the same job the correct choice does.
+- Every distractor must stay genuinely WRONG and remain a mistake a student could actually make. Never add filler words to pad length.
+- Keep the correct answer at the same letter it is now.
+
+${JSON.stringify(payload, null, 2)}
+
+Return ONLY a JSON array of the same objects with the same "index" fields and the rewritten "choices" arrays, no markdown fences, no commentary.`;
+  const params = { model, max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
+  const text = msg.content
+    .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+  const next = items.slice();
+  try {
+    const parsed = JSON.parse(stripFences(text));
+    if (!Array.isArray(parsed)) throw new Error('not an array');
+    for (const row of parsed as Array<{ index: number; choices: string[]; answer?: string }>) {
+      const i = row.index;
+      if (!Number.isInteger(i) || i < 0 || i >= next.length) continue;
+      if (!Array.isArray(row.choices) || row.choices.length !== next[i].choices.length) continue;
+      const idx = ['A', 'B', 'C', 'D'].indexOf(next[i].answer);
+      // The key must survive the rewrite untouched, or the repair has quietly
+      // changed what the item asks. Reject the row rather than trust it.
+      if (idx < 0 || row.choices[idx] !== next[i].choices[idx]) continue;
+      next[i] = { ...next[i], choices: row.choices };
+    }
+  } catch {
+    /* keep the originals — a failed repair must never lose items */
+  }
+  return { items: next, usageIn: msg.usage?.input_tokens ?? 0, usageOut: msg.usage?.output_tokens ?? 0 };
 }
 
 async function runPool<T, R>(items: T[], concurrency: number, fn: (t: T, i: number) => Promise<R>): Promise<R[]> {
@@ -379,6 +489,11 @@ async function main() {
   if (opts.onlyLo) los = los.filter((l) => l.loId === opts.onlyLo);
   if (opts.limit) los = los.slice(0, opts.limit);
   console.log(`Generating items for ${los.length} LO(s) [${opts.subjectLabel}]...`);
+  console.log(
+    opts.scopeNote
+      ? `Scope boundary: ${opts.scopeNote.length} chars from --scope-note-file (in every prompt).`
+      : 'Scope boundary: NONE — items are bounded only by the LO description and lesson content.',
+  );
 
   if (!opts.groundingFromSeeds) await mongoose.connect(process.env.MONGODB_URI!);
   const { client: anthropic, model } = getModelClient('content-gen');
@@ -400,6 +515,13 @@ async function main() {
 
     const grounding = await fetchGrounding(lo.planId, lo.loId, opts.groundingFromSeeds);
     const difficulties = computeDifficulties(opts.itemsPerLo, opts.difficultySpread);
+    // Target answer letters, rotated by (unit + topic index + item ordinal) —
+    // the same rule the lesson seeds use for their in-lesson practice, so one
+    // course does not carry two different answer-position conventions. Left
+    // undefined without --ms-conventions to keep prior behavior byte-identical.
+    const answerLetters = opts.msConventions
+      ? difficulties.map((_, i) => ['A', 'B', 'C', 'D'][(lo.unit + cedIndex + i) % 4])
+      : undefined;
     let items: GenItem[] = [];
     try {
       const params = {
@@ -409,7 +531,7 @@ async function main() {
         messages: [
           {
             role: 'user',
-            content: buildPrompt(lo, grounding, difficulties, opts.subjectLabel, opts.msConventions),
+            content: buildPrompt(lo, grounding, difficulties, opts.subjectLabel, opts.msConventions, opts.scopeNote, answerLetters),
           },
         ],
       };
@@ -426,6 +548,23 @@ async function main() {
       items = parsed as GenItem[];
     } catch (e) {
       console.log(`  ✗ generation FAILED for ${lo.loId} (${lo.title}): ${(e as Error).message}`);
+    }
+
+    if (opts.msConventions && items.length) {
+      const offenders = answerCueOffenders(items);
+      if (offenders.length) {
+        try {
+          const r = await repairAnswerCues(anthropic, model, SYSTEM, items, offenders);
+          usageIn += r.usageIn;
+          usageOut += r.usageOut;
+          const before = offenders.length;
+          const after = answerCueOffenders(r.items).length;
+          items = r.items;
+          console.log(`  ~ ${lo.loId}: answer-cue repair ${before} -> ${after} item(s) with an over-long key`);
+        } catch (e) {
+          console.log(`  ⚠️  ${lo.loId}: answer-cue repair failed (${(e as Error).message}) — keeping originals`);
+        }
+      }
     }
 
     const seedItems: SeedItem[] = [];
@@ -501,6 +640,45 @@ async function main() {
     const file = path.join(opts.outDir, `u${unit}.json`);
     fs.writeFileSync(file, JSON.stringify(items, null, 2) + '\n');
     console.log(`✓ wrote ${items.length} items -> ${path.relative(process.cwd(), file)}`);
+  }
+
+  // Answer-cue diagnostic. A model left to itself puts the key at A or B and
+  // makes it the longest choice — a measured 61.9% longest and ZERO D across a
+  // 42-item pilot, which is a bank answerable from the shape of the choices.
+  // Printed every run, because a defect nobody measures is a defect nobody
+  // sees: the numbers below are the only place this surfaces.
+  {
+    const all = perLoResults.flatMap((r) => r.seedItems);
+    const pos: Record<string, number> = {};
+    let longest = 0;
+    let shortest = 0;
+    let n = 0;
+    for (const it of all) {
+      const choices = (it as { choices?: string[] }).choices ?? [];
+      const ans = (it as { answer?: string }).answer ?? '';
+      const idx = ['A', 'B', 'C', 'D'].indexOf(ans);
+      if (idx < 0 || idx >= choices.length) continue;
+      n++;
+      pos[ans] = (pos[ans] ?? 0) + 1;
+      const kl = choices[idx].length;
+      const others = choices.filter((_, j) => j !== idx).map((c) => c.length);
+      if (others.length && kl > Math.max(...others)) longest++;
+      if (others.length && kl < Math.min(...others)) shortest++;
+    }
+    if (n) {
+      const spread = ['A', 'B', 'C', 'D'].map((l) => `${l}:${pos[l] ?? 0}`).join(' ');
+      const pct = ((longest / n) * 100).toFixed(1);
+      const pctS = ((shortest / n) * 100).toFixed(1);
+      console.log(`\nAnswer-cue check over ${n} item(s):`);
+      console.log(`  key position     ${spread}   (even spread = ${(n / 4).toFixed(1)} each)`);
+      console.log(`  key longest      ${longest}/${n} = ${pct}%   (chance 25%)`);
+      console.log(`  key shortest     ${shortest}/${n} = ${pctS}%   (chance 25%)`);
+      // Both directions matter. Repairing a length tell by lengthening
+      // distractors can overshoot into "the shortest answer is always right",
+      // which is the same tell inverted and just as exploitable.
+      if (longest / n > 0.4) console.log('  ⚠️  key is longest far above chance — the bank is guessable by length.');
+      if (shortest / n > 0.4) console.log('  ⚠️  key is shortest far above chance — the length tell has been INVERTED, not removed.');
+    }
   }
 
   const totalItems = perLoResults.reduce((s, r) => s + r.seedItems.length, 0);

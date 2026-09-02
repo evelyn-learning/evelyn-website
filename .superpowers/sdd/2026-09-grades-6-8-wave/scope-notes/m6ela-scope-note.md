@@ -1,0 +1,16 @@
+- RL.7.3's "elements interact" analysis (how setting shapes character or plot) and the full characterization / setting-as-story-element treatment — G7 U1.
+- RL.7.2's central-idea-*development*-across-a-text analysis — G7 U2.1.
+- RL.7.6's contrast between two or more narrators' or characters' points of view — G7 U2.2.
+- RL.7.4's analysis of the impact of rhyme and other sound repetition on a verse, stanza, or scene — G7 U2.3–2.4.
+- RI.7.2's two-or-more-central-ideas development analysis — G7 U3.1–3.2.
+- RI.7.4's word-choice-impact-on-meaning-and-tone for informational text — G7 U3.
+- RI.7.5's categories/hierarchies organizational analysis across a whole text — G7 U3.3, U4.1.
+- RI.7.6's analysis of how an author distinguishes their position from others' — G7 U4.2.
+- RI.7.8's assessment of whether reasoning is sound and evidence is sufficient — G7 U4.3.
+- RI.7.9's analysis of how authors' evidence choices or interpretations shape presentation — G7 U4.4.
+- L.7.1a (explaining phrase and clause function) and L.7.1b (choosing among simple, compound, complex, compound-complex sentences to signal relationships) — no Grade 6 CCSS antecedent; these begin at Grade 7 — G7 U6.
+- **L.6.1d (recognize and correct a vague pronoun reference)** — a real Grade 6 CCSS sub-point, deliberately NOT given its own G6 lesson. The shipped `m7ela-u5-pronouns-and-antecedents.ts` (Grade 7, generically cited `L.7.1`) already teaches pronoun-antecedent number agreement in full and both ambiguous-reference and vague/missing-reference repair, end to end. A G6 lesson on the same skill under its own code would duplicate that file's content almost exactly. 
+- W.7.1a's "acknowledge alternate or opposing claims" and the full counterclaim/rebuttal topic — no Grade 6 CCSS antecedent (W.6.1a has no counterclaim language) — G7 U8.3.
+- W.7.2's more demanding paragraph-development and transitions/cohesion work, and W.7.3b's narrative-technique craft moves (dialogue, pacing, description as deliberate choices) — G7 U9.
+- W.7.8's full citation format and plagiarism-avoidance apparatus ("Citing Sources") — G7 U10.4.
+- Speaking & Listening (SL.6, all standards) — not covered by this table, consistent with the shipped `grade-7-ela` course, which also has no dedicated SL unit.

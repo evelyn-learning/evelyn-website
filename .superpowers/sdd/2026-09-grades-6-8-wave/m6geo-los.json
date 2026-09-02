@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m6geo.what-is-geography",
+    "planId": "evelyn.ms.m6geo.what-is-geography.v1",
+    "title": "What Is Geography?",
+    "description": "Define geography as the study of Earth's physical and human features and introduce the five organizing ideas (location, place, region, movement, human-environment interaction) that the rest of this course and Grade 7 both build on (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 1
+  },
+  {
+    "loId": "m6geo.mental-maps-and-spatial-thinking",
+    "planId": "evelyn.ms.m6geo.mental-maps-and-spatial-thinking.v1",
+    "title": "Mental Maps & Spatial Thinking",
+    "description": "Sketch and describe a mental map of a familiar space and explain how mental maps help people organize and find their way around an area they know (National Geography Standard 2: how to use mental maps to organize information about people, places and environments).",
+    "unit": 1
+  },
+  {
+    "loId": "m6geo.absolute-and-relative-location",
+    "planId": "evelyn.ms.m6geo.absolute-and-relative-location.v1",
+    "title": "Absolute & Relative Location",
+    "description": "Distinguish an absolute location (a fixed address or coordinate) from a relative location (described by nearness to another place) and describe a place using both, without yet reading or writing a full latitude-longitude coordinate (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 1
+  },
+  {
+    "loId": "m6geo.site-and-situation",
+    "planId": "evelyn.ms.m6geo.site-and-situation.v1",
+    "title": "Site & Situation",
+    "description": "Distinguish a place's site (its exact physical spot) from its situation (its position relative to surrounding places) and use both to reason about why a settlement tends to form where it does (National Geography Standard 3: how to analyze the spatial organization of people, places and environments).",
+    "unit": 1
+  },
+  {
+    "loId": "m6geo.parts-of-a-map",
+    "planId": "evelyn.ms.m6geo.parts-of-a-map.v1",
+    "title": "Parts of a Map",
+    "description": "Identify the title, legend, compass rose, and scale bar on a map and state the one question each part is built to answer (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 2
+  },
+  {
+    "loId": "m6geo.types-of-maps",
+    "planId": "evelyn.ms.m6geo.types-of-maps.v1",
+    "title": "Types of Maps",
+    "description": "Distinguish a political map, a physical map, and a thematic map by what each is designed to show, choosing correctly among all three rather than recognizing one by name alone (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 2
+  },
+  {
+    "loId": "m6geo.continents-and-oceans",
+    "planId": "evelyn.ms.m6geo.continents-and-oceans.v1",
+    "title": "Continents & Oceans",
+    "description": "Name and locate Earth's seven continents and its major ocean basins relative to one another on a globe (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 2
+  },
+  {
+    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
+    "planId": "evelyn.ms.m6geo.hemispheres-equator-and-prime-meridian.v1",
+    "title": "Hemispheres, the Equator & the Prime Meridian",
+    "description": "Locate the Equator, the Prime Meridian, and the four hemispheres they create, and state which hemispheres contain a described place (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 2
+  },
+  {
+    "loId": "m6geo.layers-of-the-earth",
+    "planId": "evelyn.ms.m6geo.layers-of-the-earth.v1",
+    "title": "Layers of the Earth",
+    "description": "Identify Earth's crust, mantle, and core by their position and basic properties (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 3
+  },
+  {
+    "loId": "m6geo.earths-moving-plates",
+    "planId": "evelyn.ms.m6geo.earths-moving-plates.v1",
+    "title": "Earth's Moving Plates",
+    "description": "Describe, in plain language, that Earth's outer shell is broken into large plates that move very slowly, and that today's continents were once joined together in one landmass (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 3
+  },
+  {
+    "loId": "m6geo.the-rock-cycle",
+    "planId": "evelyn.ms.m6geo.the-rock-cycle.v1",
+    "title": "The Rock Cycle",
+    "description": "Describe igneous, sedimentary, and metamorphic rock and explain how the rock cycle slowly changes one type into another (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 3
+  },
+  {
+    "loId": "m6geo.weathering-erosion-and-deposition",
+    "planId": "evelyn.ms.m6geo.weathering-erosion-and-deposition.v1",
+    "title": "Weathering, Erosion & Deposition",
+    "description": "Define weathering, erosion, and deposition and correctly identify which process is at work in a described everyday example, choosing among all three rather than recalling one definition in isolation (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 3
+  },
+  {
+    "loId": "m6geo.major-landform-vocabulary",
+    "planId": "evelyn.ms.m6geo.major-landform-vocabulary.v1",
+    "title": "Major Landform Vocabulary",
+    "description": "Define and distinguish mountain, plain, plateau, hill, and valley by the properties that make each one what it is, using invented examples only -- no real-place anchoring or settlement-pattern reasoning, which is Grade 7's landforms-and-water-features lesson (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 4
+  },
+  {
+    "loId": "m6geo.coastal-and-connecting-landforms",
+    "planId": "evelyn.ms.m6geo.coastal-and-connecting-landforms.v1",
+    "title": "Coastal & Connecting Landforms",
+    "description": "Define and distinguish peninsula, isthmus, island, and coast by the properties that make each one what it is, using invented examples only (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 4
+  },
+  {
+    "loId": "m6geo.major-water-feature-vocabulary",
+    "planId": "evelyn.ms.m6geo.major-water-feature-vocabulary.v1",
+    "title": "Major Water Feature Vocabulary",
+    "description": "Define and distinguish river, lake, sea, gulf, and strait by the properties that make each one what it is, using invented examples only (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 4
+  },
+  {
+    "loId": "m6geo.reading-elevation-and-relief",
+    "planId": "evelyn.ms.m6geo.reading-elevation-and-relief.v1",
+    "title": "Reading Elevation & Relief",
+    "description": "Read a plain-language description of a place's elevation and relief and compare two described places using both terms correctly, without the elevation-changes-climate link, which is part of Grade 7's climate-controls lesson (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 4
+  },
+  {
+    "loId": "m6geo.weather-vs-climate",
+    "planId": "evelyn.ms.m6geo.weather-vs-climate.v1",
+    "title": "Weather vs. Climate",
+    "description": "Distinguish weather -- the atmosphere right now or over a few days -- from climate -- the long-term pattern of weather a place usually has -- using a described example of each (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m6geo.the-water-cycle",
+    "planId": "evelyn.ms.m6geo.the-water-cycle.v1",
+    "title": "The Water Cycle",
+    "description": "Describe evaporation, condensation, precipitation, and collection as the four stages of the water cycle and explain how water moves between them (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m6geo.what-is-a-biome",
+    "planId": "evelyn.ms.m6geo.what-is-a-biome.v1",
+    "title": "What Is a Biome?",
+    "description": "Define biome and match a described set of temperature, precipitation, and plant-life conditions to the correct major biome type (desert, rainforest, tundra, grassland, or forest), without the three-climate-zone-by-latitude mechanism that explains why, which is Grade 7's climate-zones-and-biomes lesson (National Geography Standard 8: the characteristics and spatial distribution of ecosystems and biomes on Earth's surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m6geo.ecosystems-and-habitats",
+    "planId": "evelyn.ms.m6geo.ecosystems-and-habitats.v1",
+    "title": "Ecosystems & Habitats",
+    "description": "Define ecosystem and habitat and identify the living and nonliving parts of a described ecosystem (National Geography Standard 8: the characteristics and spatial distribution of ecosystems and biomes on Earth's surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m6geo.renewable-and-nonrenewable-resources",
+    "planId": "evelyn.ms.m6geo.renewable-and-nonrenewable-resources.v1",
+    "title": "Renewable & Nonrenewable Resources",
+    "description": "Classify a named natural resource as renewable or nonrenewable and explain the reasoning behind the classification, choosing correctly among both categories rather than recalling one description (National Geography Standard 16: the changes that occur in the meaning, use, distribution and importance of resources).",
+    "unit": 6
+  },
+  {
+    "loId": "m6geo.resource-distribution-and-its-effects",
+    "planId": "evelyn.ms.m6geo.resource-distribution-and-its-effects.v1",
+    "title": "Resource Distribution & Its Effects",
+    "description": "Explain, using a described example, that natural resources are not evenly distributed across Earth and that the resources available in a place shape what activities are possible there (National Geography Standard 16: the changes that occur in the meaning, use, distribution and importance of resources).",
+    "unit": 6
+  },
+  {
+    "loId": "m6geo.conserving-natural-resources",
+    "planId": "evelyn.ms.m6geo.conserving-natural-resources.v1",
+    "title": "Conserving Natural Resources",
+    "description": "Describe reduce, reuse, and recycle plus one additional conservation practice, and explain why conserving a given resource matters (National Geography Standard 16: the changes that occur in the meaning, use, distribution and importance of resources).",
+    "unit": 6
+  },
+  {
+    "loId": "m6geo.how-people-adapt-to-different-climates",
+    "planId": "evelyn.ms.m6geo.how-people-adapt-to-different-climates.v1",
+    "title": "How People Adapt to Different Climates",
+    "description": "Match a described climate to the human adaptations (clothing, housing, food, or transportation) that suit it, and explain why that same adaptation would not suit a different climate (National Geography Standard 14: how human actions modify the physical environment).",
+    "unit": 6
+  },
+  {
+    "loId": "m6geo.satellite-images-and-aerial-views",
+    "planId": "evelyn.ms.m6geo.satellite-images-and-aerial-views.v1",
+    "title": "Satellite Images & Aerial Views",
+    "description": "Distinguish what a satellite or aerial image shows from what a hand-drawn map shows, and state one advantage of each (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 7
+  },
+  {
+    "loId": "m6geo.how-gps-finds-your-location",
+    "planId": "evelyn.ms.m6geo.how-gps-finds-your-location.v1",
+    "title": "How GPS Finds Your Location",
+    "description": "Describe, in plain language, how a GPS receiver uses signals from multiple satellites to determine a location (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 7
+  },
+  {
+    "loId": "m6geo.reading-a-thematic-map",
+    "planId": "evelyn.ms.m6geo.reading-a-thematic-map.v1",
+    "title": "Reading a Thematic Map",
+    "description": "Read a described thematic map that uses color or symbols to show one kind of information and use its key to answer a question about the data shown (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 7
+  },
+  {
+    "loId": "m6geo.reading-geographic-graphs-and-charts",
+    "planId": "evelyn.ms.m6geo.reading-geographic-graphs-and-charts.v1",
+    "title": "Reading Geographic Graphs & Charts",
+    "description": "Read a simple bar graph, pie chart, or table of geographic data and answer a comparison question about it (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 7
+  },
+  {
+    "loId": "m6geo.what-makes-a-place-unique",
+    "planId": "evelyn.ms.m6geo.what-makes-a-place-unique.v1",
+    "title": "What Makes a Place Unique",
+    "description": "Describe a place using both its physical characteristics (landforms, climate) and its human characteristics (buildings, activities) (National Geography Standard 4: the physical and human characteristics of places).",
+    "unit": 8
+  },
+  {
+    "loId": "m6geo.how-people-perceive-places-differently",
+    "planId": "evelyn.ms.m6geo.how-people-perceive-places-differently.v1",
+    "title": "How People Perceive Places Differently",
+    "description": "Explain, using a described scenario, how two people's different experiences (such as a resident's and a visitor's) can lead them to describe the very same place differently (National Geography Standard 6: how culture and experience influence people's perceptions of places and regions).",
+    "unit": 8
+  },
+  {
+    "loId": "m6geo.comparing-two-places",
+    "planId": "evelyn.ms.m6geo.comparing-two-places.v1",
+    "title": "Comparing Two Places",
+    "description": "Compare and contrast two described places using their shared physical and human characteristics, identifying genuine similarities and differences rather than ranking one place as simply \"better\" (National Geography Standard 4: the physical and human characteristics of places).",
+    "unit": 8
+  },
+  {
+    "loId": "m6geo.mapping-your-own-community",
+    "planId": "evelyn.ms.m6geo.mapping-your-own-community.v1",
+    "title": "Mapping Your Own Community",
+    "description": "Apply the mental-mapping and place-description skills from Units 1 and 8 to sketch and describe a map of a familiar community, correctly labeling its key landmarks and features (National Geography Standard 2: how to use mental maps to organize information about people, places and environments).",
+    "unit": 8
+  },
+  {
+    "loId": "m6geo.continents-subregions-and-how-geographers-group-them",
+    "planId": "evelyn.ms.m6geo.continents-subregions-and-how-geographers-group-them.v1",
+    "title": "How Geographers Group the World into Regions",
+    "description": "Explain that geographers group countries into named world regions, such as Latin America or the Middle East, to make a large world easier to study -- pure naming and framing only, without the formal, functional, and perceptual region typology, which is Grade 7's regions-and-place lesson (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 9
+  },
+  {
+    "loId": "m6geo.locating-the-americas",
+    "planId": "evelyn.ms.m6geo.locating-the-americas.v1",
+    "title": "Locating the Americas",
+    "description": "Name and locate North America, Central America, the Caribbean, and South America relative to one another and to the Equator, with no content about any region's physical or human characteristics (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 9
+  },
+  {
+    "loId": "m6geo.locating-europe-africa-and-the-middle-east",
+    "planId": "evelyn.ms.m6geo.locating-europe-africa-and-the-middle-east.v1",
+    "title": "Locating Europe, Africa & the Middle East",
+    "description": "Name and locate Europe, Sub-Saharan Africa, and the Middle East relative to one another and to the Mediterranean Sea (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 9
+  },
+  {
+    "loId": "m6geo.locating-asia-and-oceania",
+    "planId": "evelyn.ms.m6geo.locating-asia-and-oceania.v1",
+    "title": "Locating Asia & Oceania",
+    "description": "Name and locate South Asia, East Asia, Southeast Asia, Central Asia, and Oceania relative to one another and to the Pacific and Indian Oceans (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 9
+  },
+  {
+    "loId": "m6geo.geographic-reasoning-in-everyday-decisions",
+    "planId": "evelyn.ms.m6geo.geographic-reasoning-in-everyday-decisions.v1",
+    "title": "Geographic Reasoning in Everyday Decisions",
+    "description": "Apply the site-and-situation reasoning from Unit 1 to a new, described scenario (such as choosing a location for a school or a park) and justify the choice using geographic factors (National Geography Standard 3: how to analyze the spatial organization of people, places and environments).",
+    "unit": 10
+  },
+  {
+    "loId": "m6geo.map-based-problem-solving",
+    "planId": "evelyn.ms.m6geo.map-based-problem-solving.v1",
+    "title": "Map-Based Problem Solving",
+    "description": "Use a described map's legend, scale, and compass rose together to solve a multi-step navigation or planning problem, synthesizing the Unit 2 map skills (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 10
+  },
+  {
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "planId": "evelyn.ms.m6geo.how-physical-geography-changes-over-time.v1",
+    "title": "How Physical Geography Changes Over Time",
+    "description": "Describe, using a general example such as a river changing course or a coastline eroding, that physical geography is not fixed and changes gradually over time (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 10
+  },
+  {
+    "loId": "m6geo.using-geography-to-plan-a-community",
+    "planId": "evelyn.ms.m6geo.using-geography-to-plan-a-community.v1",
+    "title": "Using Geography to Plan a Community",
+    "description": "Explain how a community planner uses information about land, water, and resources to decide where to place roads, parks, farms, and housing (National Geography Standard 18: how to apply geography to interpret the present and plan for the future).",
+    "unit": 10
+  }
+]

@@ -1,0 +1,8 @@
+- Arithmetic operations (+, −, ×, ÷) on negative/rational numbers — G7 U1–U2.
+- Constant of proportionality, proportional-relationship equations (y = kx), graphing proportionality tests, complex-fraction unit rates — G7 U3.
+- Percent increase/decrease, simple interest, percent error, tax/tip/discount/markup — G7 U4.
+- Two-step equations, inequalities with negative coefficients, factoring with negative or rational coefficients — G7 U5–U6.
+- Angle relationships, scale drawings, triangle side/angle conditions, cross-sections of solids — G7 U7 (no G6 antecedent).
+- Circumference/area of circles, surface area and volume of pyramids and composite solids — G7 U8.
+- Random sampling, inference from samples, comparing two populations — G7 U9.
+- Probability (all forms) — no CCSS Grade 6 probability standard; begins at 7.SP.C (G7 U10).

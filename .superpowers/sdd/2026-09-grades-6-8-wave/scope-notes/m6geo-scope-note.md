@@ -1,0 +1,15 @@
+- Map projections and projection choice-by-purpose (Mercator, equal-area, compromise) — G7 U1.1.
+- Reading/writing a full latitude-longitude coordinate pair with hemisphere letters — G7 U1.2.
+- The large-scale/small-scale map reversal and full map-grid systems — G7 U1.3.
+- The formal/functional/perceptual region typology and the adapt/modify/depend human-environment-interaction framework — G7 U1.4.
+- Erosion and deposition as landform-*building* mechanisms tied to real places, and the settlement-pattern payoff — G7 U2.1.
+- The three tectonic-plate-boundary types and the hazard-vs-disaster distinction — G7 U2.2.
+- The five controls on climate (latitude, elevation, distance from water, ocean currents, mountain barriers) — G7 U2.3.
+- The three climate zones by latitude and the biome-by-latitude / farming-population payoff — G7 U2.4.
+- Population distribution, density, growth, structure, migration, and urbanization — G7 U3.
+- Culture, language families, diffusion, and world religions — G7 U4.
+- Economic systems, levels of development, and resource-based trade/interdependence — G7 U5.
+- Types of government, citizenship and rights, borders/conflict, and international cooperation — G7 U6.
+- The regional content itself — physical geography, history/culture, economy/cities, and current issues of Latin America, Europe & Russia, Africa & the Middle East, and Asia & Oceania — G7 U7–U10.
+- Historical/political/cultural content about any named ancient or modern civilization (Egypt, Mesopotamia, China, India, Greece, Rome, etc.) — this is History content already covered elsewhere in the seed library (the shipped `g6-ss-ancient-egypt.ts` and the Grade 9–10 `world-history` course's Unit 1, "Origins of Civilization") and stays out of this geography course entirely, at any grade.
+- GIS software / advanced remote-sensing analysis, and the regional geography of North America / the United States & Canada — open territory for a possible Grade 8 geography course (see the Grade 8 implication above).
