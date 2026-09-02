@@ -16443,13 +16443,21 @@ export function VoiceTutorRealtime({
    *  real multi-word utterance. A ≥3-word transcript that is NOT a substring of
    *  the opener's own text is a human, not echo/noise — allow the cancel.
    *  The echo check is what keeps the 2026-07-04 guard's protection: phantom
-   *  self-echo transcripts repeat the opener's own words. */
+   *  self-echo transcripts repeat the opener's own words. Both sides are
+   *  normalized to bare lowercase word tokens (punctuation stripped, whitespace
+   *  collapsed) before the substring check — an STT transcript and the raw
+   *  streamed opener text punctuate/case differently even when they're the
+   *  same words, and a literal-text substring check would miss that and wrongly
+   *  escape a genuine self-echo. Stronger normalization only ever collapses MORE
+   *  text together, which fails toward suppression — the safe direction. */
   const openerBargeEscape = useCallback((text: string): boolean => {
     if (!TUTOR_OPENING_BARGEIN_ESCAPE) return false;
-    const words = text.trim().split(/\s+/).filter(Boolean);
+    const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    const normalizedText = normalize(text);
+    const words = normalizedText.split(/\s+/).filter(Boolean);
     if (words.length < 3) return false;
-    const openerText = (openingTurnTextRef.current ?? '').toLowerCase();
-    return !openerText.includes(text.trim().toLowerCase());
+    const openerText = normalize(openingTurnTextRef.current ?? '');
+    return !openerText.includes(normalizedText);
   }, []);
   // Latch the audio-done flag: state leaves 'speaking' after having been
   // 'speaking', with the first turn's text already done. (If the audio
@@ -17972,20 +17980,42 @@ export function VoiceTutorRealtime({
               onDebugEvent?.('perception_bargein_deferred_abandoned', `prod=${productionStateRef.current} (opening turn)`);
             }
           }, OPENER_BARGEIN_SUSTAIN_MS);
-        } else if (openerBargeEscape(lastPerceptionTextRef.current)) {
-          // Issue F escape hatch: a real ≥3-word non-echo transcript is
-          // already on record (most recent perception transcript seen) —
-          // this is a human, not the phantom self-echo the blanket
-          // suppression below exists to protect against. Proceed to the
-          // same kill the deferred-fire branch above would eventually have
-          // performed, at the cancel stage actually in effect.
+          // (getOpenerWindow-true above already returned inside its own
+          // branch; this is the no-energy-window deferred-timer path.)
+          return;
+        }
+        // Narrow race: canStage3 true (prodState already flipped to
+        // 'speaking') but firstTurnSawSpeakingRef.current still false —
+        // the realtime-state effect that latches it hasn't run yet for
+        // this render. Falls to the same escape/suppress handling below
+        // as the canStage2 case; resolves itself within a render or two.
+        if (canStage3 && openerBargeEscape(lastPerceptionTextRef.current)) {
+          // Issue F escape hatch, Stage 3: a real ≥3-word non-echo
+          // transcript is already on record (most recent perception
+          // transcript seen) — this is a human, not the phantom self-echo
+          // the blanket suppression below exists to protect against.
+          // Proceed to the same eager kill the deferred-fire branch above
+          // would eventually have performed.
           onDebugEvent?.('perception_opening_bargein_escape', lastPerceptionTextRef.current.slice(0, 60));
-          runPerceptionKill(canStage3 ? 'speaking' : 'processing');
+          runPerceptionKill('speaking');
+          return;
+        }
+        if (canStage2 && openerBargeEscape(lastPerceptionTextRef.current)) {
+          // Issue F escape hatch, Stage 2: unlike Stage 3, never eager-kill
+          // here — an ungated instant kill during 'processing' is exactly
+          // the repeat-storm hazard the E1 rewrite fixed for the raw
+          // (non-opening-turn) onset path below (see its comment). Mirror
+          // the retro path's canRetroStage2 treatment instead: escaping
+          // only lifts the opening-turn SUPPRESSION, it never skips the
+          // lazy-arm safety net — emit the escape event and fall through
+          // (no return) to the ordinary `if (canStage2) {...}` lazy-arm
+          // block immediately below this guard.
+          onDebugEvent?.('perception_opening_bargein_escape', lastPerceptionTextRef.current.slice(0, 60));
         } else {
           console.warn('[PERCEPTION] cancel suppressed — opening turn not yet delivered');
           onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);
+          return;
         }
-        return;
       }
       // Stage 2 ('processing'): E1 LAZY cancel (was: INSTANT kill, no energy
       // gate). The old eager abort here was the root cause of a real
