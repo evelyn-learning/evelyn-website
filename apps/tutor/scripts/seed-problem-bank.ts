@@ -31,8 +31,9 @@ import mongoose from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
 import { ProblemBank } from '../src/models/ProblemBank';
 import { resolvePassage } from '../src/lib/tutor/passages/store';
+import { getModelClient, prepareParams, resolveModel } from '../src/lib/tutor/ai/model-registry';
+import { lookupModelRate } from '../src/lib/tutor/ai/model-rates';
 
-const VERIFIER_MODEL = 'claude-sonnet-5';
 // Display names for the verify prompt (fall back to the dir name if unlisted).
 const COURSE_NAMES: Record<string, string> = {
   'ap-statistics': 'AP Statistics',
@@ -150,6 +151,8 @@ interface VerifyResult {
   ok: boolean;
   modelAnswer: string;
   note?: string;
+  usageIn?: number;
+  usageOut?: number;
 }
 
 /** Parse a numeric answer that may be a decimal, a fraction (a/b), or a percent
@@ -170,7 +173,7 @@ function numericMatch(expected: string, got: string): boolean {
   return Math.abs(a - b) <= tol;
 }
 
-async function verifyItem(anthropic: Anthropic, item: SeedItem, courseName: string): Promise<VerifyResult> {
+async function verifyItem(anthropic: Anthropic, model: string, item: SeedItem, courseName: string): Promise<VerifyResult> {
   const isMcq = item.responseFormat === 'mcq';
   const choicesBlock = isMcq
     ? '\n' + item.choices!.map((c, i) => `${LETTERS[i]}. ${c}`).join('\n')
@@ -188,7 +191,7 @@ async function verifyItem(anthropic: Anthropic, item: SeedItem, courseName: stri
   // Newer body fields (adaptive thinking, output_config.effort) aren't in the
   // installed SDK's types but serialize over the wire — cast to bypass TS.
   const params = {
-    model: VERIFIER_MODEL,
+    model,
     max_tokens: 4000,
     thinking: { type: 'adaptive' },
     output_config: { effort: 'high' },
@@ -197,7 +200,10 @@ async function verifyItem(anthropic: Anthropic, item: SeedItem, courseName: stri
     messages: [{ role: 'user', content: `${instruction}\n\n${passageBlock}Question:\n${item.problemText}${choicesBlock}` }],
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const msg = (await anthropic.messages.create(params as any)) as { content: Array<{ type: string; text?: string }> };
+  const msg = (await anthropic.messages.create(prepareParams('content-verify', params) as any)) as {
+    content: Array<{ type: string; text?: string }>;
+    usage?: { input_tokens?: number; output_tokens?: number };
+  };
 
   const textBlock = msg.content.find((b) => b.type === 'text');
   const raw = textBlock && textBlock.text ? textBlock.text.trim() : '';
@@ -222,7 +228,13 @@ async function verifyItem(anthropic: Anthropic, item: SeedItem, courseName: stri
   const ok = isMcq
     ? modelAnswer.toUpperCase().startsWith(item.answer.toUpperCase())
     : numericMatch(item.answer, modelAnswer);
-  return { ok, modelAnswer, note: fell ? 'unparsed→fallback' : undefined };
+  return {
+    ok,
+    modelAnswer,
+    note: fell ? 'unparsed→fallback' : undefined,
+    usageIn: msg.usage?.input_tokens,
+    usageOut: msg.usage?.output_tokens,
+  };
 }
 
 async function runPool<T, R>(items: T[], concurrency: number, fn: (t: T, i: number) => Promise<R>): Promise<R[]> {
@@ -275,25 +287,31 @@ async function main() {
 
   // Verify.
   let verified = items;
+  let verifierModelUsed = 'unverified';
   if (opts.noVerify) {
     console.log('⚠️  --no-verify: skipping the Sonnet verify gate.');
   } else {
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!resolveModel('content-verify').apiKey) {
       console.error('✗ ANTHROPIC_API_KEY not set (needed for the verify gate). Use --no-verify to skip.');
       process.exit(1);
     }
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const { client: anthropic, model: verifierModel } = getModelClient('content-verify');
+    verifierModelUsed = verifierModel;
     const courseName = COURSE_NAMES[opts.course] ?? opts.course;
-    console.log(`\nVerifying ${items.length} items via ${VERIFIER_MODEL} (concurrency ${opts.concurrency})...`);
+    console.log(`\nVerifying ${items.length} items via ${verifierModel} (concurrency ${opts.concurrency})...`);
     let done = 0;
+    let usageIn = 0;
+    let usageOut = 0;
     const verdicts = await runPool(items, opts.concurrency, async (item) => {
       let r: VerifyResult;
       try {
-        r = await verifyItem(anthropic, item, courseName);
+        r = await verifyItem(anthropic, verifierModel, item, courseName);
       } catch (e) {
         r = { ok: false, modelAnswer: '', note: `ERROR ${(e as Error).message}` };
       }
       done++;
+      usageIn += r.usageIn ?? 0;
+      usageOut += r.usageOut ?? 0;
       if (!r.ok) console.log(`  ✗ MISMATCH ${item.id}: key='${item.answer}' model='${r.modelAnswer}'${r.note ? ' (' + r.note + ')' : ''}`);
       if (done % 10 === 0) console.log(`  ...${done}/${items.length}`);
       return r;
@@ -305,11 +323,17 @@ async function main() {
       console.log('Rejected ids (excluded from upsert — review the answer keys):');
       failed.forEach((it) => console.log(`  - ${it.id}`));
     }
+    const rate = lookupModelRate(verifierModel);
+    const cost = rate ? (usageIn / 1e6) * rate.input + (usageOut / 1e6) * rate.output : undefined;
+    console.log(
+      `Token usage: ${usageIn} in / ${usageOut} out.` +
+        (cost !== undefined ? ` Est. verify cost: $${cost.toFixed(3)} (informational)` : ' (no rate row for this model)'),
+    );
   }
 
   // Upsert.
   if (opts.dryRun) {
-    console.log(`\n[dry-run] Would upsert ${verified.length} verified items. No DB write.`);
+    console.log(`\nDRY RUN — nothing upserted (${verified.length} verified item(s) would have been upserted).`);
     return;
   }
   if (!process.env.MONGODB_URI) {
@@ -318,7 +342,7 @@ async function main() {
   }
   await mongoose.connect(process.env.MONGODB_URI);
   const verifiedAt = new Date();
-  const verifierModel = opts.noVerify ? 'unverified' : VERIFIER_MODEL;
+  const verifierModel = opts.noVerify ? 'unverified' : verifierModelUsed;
   let up = 0;
   // ProblemBank is exported as a `models.X || model(...)` union — cast for calls.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
