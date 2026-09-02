@@ -187,6 +187,17 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'topic_shift', 'fatigue_detected', 'long_session_checkin', 'session_',
   'resume_from_clause', 'mid_session_regreet_dropped', 'duplicate_response',
   'skip_button', 'opener_', 'student_turn_detection_error',
+  // Session-triage fixes (2026-09-01): one of the two evidence sessions
+  // fixed by this branch was an embed session — these three are its
+  // diagnostics, so they must persist for embed sessions too. Full names
+  // (not broad prefixes) so unrelated future events under the same
+  // family root don't get swept in unintentionally.
+  //   a false-assertion kill downgraded because its anchor had gone stale:
+  'false_assertion_downgraded_stale_anchor',
+  //   a queue-time merge/drop decision for a near-duplicate student final:
+  'student_turn_coalesced',
+  //   the "give me a moment" think-time hold armed for a turn:
+  'think_time_hold_set',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

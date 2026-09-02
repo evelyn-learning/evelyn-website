@@ -357,6 +357,45 @@ const emitTurnLatencyEvent = (
   onDebugEvent?.('turn_latency', formatTurnLatency(lat));
 };
 
+// Stage 3 fix #15 (2026-06-15): fuzzy similarity helper for near-duplicate
+// dedup. Perception WS and production WS often transcribe the same audio
+// with minor differences ("Can it speak in Tamil?" vs "Can I speak in
+// Tamil?"). Exact-match dedup misses these. Use length-normalized
+// Levenshtein distance — if <15% edit distance (i.e., >85% character
+// similarity), treat as duplicate. Module-level (not inline in the
+// queue-drain loop) so other dedup sites — e.g. the queue-time merge
+// branch — can reuse the exact same check instead of re-implementing it.
+const levenshteinDistance = (a: string, b: string): number => {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  // Single-row DP — O(min(a, b)) memory.
+  let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  let curr = new Array<number>(b.length + 1);
+  for (let i = 1; i <= a.length; i++) {
+    curr[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
+      curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    [prev, curr] = [curr, prev];
+  }
+  return prev[b.length];
+};
+const isFuzzyDupTranscript = (a: string, b: string): boolean => {
+  if (a === b) return true;
+  const maxLen = Math.max(a.length, b.length);
+  // Skip fuzzy for short strings — short questions can differ
+  // semantically with very few edits ("what is an AP" vs
+  // "what is an MP" → lev=1, ratio 0.07, would wrongly dedup).
+  // 20-char minimum keeps short-clause questions safe while
+  // catching real perception/production transcript variants of
+  // longer utterances (Tamil case = 21 chars, diagram-demo = 71).
+  if (maxLen < 20) return false;
+  const d = levenshteinDistance(a, b);
+  return d / maxLen <= 0.15;
+};
+
 const isBoardRenderCommand = (c: unknown): boolean => {
   const a = String((c as { action?: string })?.action ?? '');
   if (BOARD_RENDER_META_ACTIONS.has(a)) return false;
@@ -740,6 +779,13 @@ interface VoiceTutorRealtimeProps {
 // opening turn's audio has finished before showing the banner, provided the
 // student still hasn't been heard at all. See pendingMicNoticeRef.
 const MIC_NOTICE_GRACE_MS = 20_000;
+
+// Final-review Finding 2 (minor hardening): max age of lastPerceptionTextRef
+// for it to count as "this utterance's" signal on the ONSET path, where the
+// current utterance has no transcript of its own yet. Without a recency
+// bound, a stale prior-utterance transcript could be misread as belonging
+// to a brand-new onset (e.g. an echo/cough) in a narrow race.
+const ONSET_ESCAPE_MAX_TEXT_AGE_MS = 5_000;
 
 // Task 11 (review ruling) — segment kinds that carry an actual assessed
 // outcome (the student did something gradeable) vs. pure exposure. Only
@@ -1190,6 +1236,13 @@ export function VoiceTutorRealtime({
   // student most recently say" without threading a param through every
   // call site.
   const lastPerceptionTextRef = useRef<string>('');
+  // Final-review Finding 2 (minor hardening): wallclock time of the last
+  // lastPerceptionTextRef update, set alongside it. Lets an ONSET-path
+  // consumer (no transcript for the CURRENT utterance yet) require that
+  // text to be recent before treating it as this utterance's signal —
+  // otherwise a stale prior-utterance transcript can be misread as
+  // belonging to the new one.
+  const lastPerceptionTextAtRef = useRef<number>(0);
   // Bug 2 fix: after a Stage-2 cancel, record the perception transcript
   // that drove the merge so we can dedupe the inevitable production-WS
   // transcript of the same utterance (production WS still mics during
@@ -15213,7 +15266,24 @@ export function VoiceTutorRealtime({
         Date.now() - queuedTranscriptCoalesceAtRef.current < TURN_COALESCE_MS
       ) {
         const lastIndex = queuedTranscriptsRef.current.length - 1;
-        const merged = `${queuedTranscriptsRef.current[lastIndex]} ${transcript}`.trim();
+        const queuedTail = queuedTranscriptsRef.current[lastIndex];
+        // Final-review Finding 1: a straight concatenation here bypasses the
+        // queue-drain loop's fuzzy dedup below — two near-duplicate finals
+        // for the same utterance (perception vs. production transcribing it
+        // slightly differently) used to collapse via that per-entry dedup;
+        // merged into one entry up front, the drain can no longer split
+        // them apart and the duplication reaches the brain. Reuse the same
+        // fuzzy-match helper the drain uses: if the new final is a
+        // near-duplicate of the queued tail, drop it instead of merging.
+        const queuedTailNorm = queuedTail.trim().toLowerCase().replace(/\s+/g, ' ');
+        const transcriptNorm = transcript.trim().toLowerCase().replace(/\s+/g, ' ');
+        if (isFuzzyDupTranscript(queuedTailNorm, transcriptNorm)) {
+          queuedTranscriptCoalesceAtRef.current = Date.now();
+          console.log('[brain-orchestrator] dropped near-dup queued final (brain busy):', JSON.stringify(transcript).slice(0, 100));
+          onDebugEvent?.('student_turn_coalesced', `dup-drop: ${transcript.slice(0, 80)}`);
+          return;
+        }
+        const merged = `${queuedTail} ${transcript}`.trim();
         queuedTranscriptsRef.current[lastIndex] = merged;
         queuedTranscriptCoalesceAtRef.current = Date.now();
         console.log('[brain-orchestrator] coalesced into queued (brain busy):', JSON.stringify(merged).slice(0, 100));
@@ -15450,48 +15520,14 @@ export function VoiceTutorRealtime({
         // (see that ref's declaration comment), so a non-empty splice
         // means the student actually spoke during this busy cycle.
         if (all.length > 0) studentSpokeDuringBusyWindow = true;
-        // Stage 3 fix #15 (2026-06-15): fuzzy similarity helper for
-        // near-duplicate dedup. Perception WS (gpt-realtime-2) and
-        // production WS (Whisper) often transcribe the same audio
-        // with minor differences ("Can it speak in Tamil?" vs "Can I
-        // speak in Tamil?"). Fix #12's exact-match dedup misses these.
-        // Use length-normalized Levenshtein distance — if <15% edit
-        // distance (i.e., >85% character similarity), treat as duplicate.
-        const lev = (a: string, b: string): number => {
-          if (a === b) return 0;
-          if (!a.length) return b.length;
-          if (!b.length) return a.length;
-          // Single-row DP — O(min(a, b)) memory.
-          let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-          let curr = new Array<number>(b.length + 1);
-          for (let i = 1; i <= a.length; i++) {
-            curr[0] = i;
-            for (let j = 1; j <= b.length; j++) {
-              const cost = a.charCodeAt(i - 1) === b.charCodeAt(j - 1) ? 0 : 1;
-              curr[j] = Math.min(curr[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
-            }
-            [prev, curr] = [curr, prev];
-          }
-          return prev[b.length];
-        };
-        const isFuzzyDup = (a: string, b: string): boolean => {
-          if (a === b) return true;
-          const maxLen = Math.max(a.length, b.length);
-          // Skip fuzzy for short strings — short questions can differ
-          // semantically with very few edits ("what is an AP" vs
-          // "what is an MP" → lev=1, ratio 0.07, would wrongly dedup).
-          // 20-char minimum keeps short-clause questions safe while
-          // catching real perception/production transcript variants of
-          // longer utterances (Tamil case = 21 chars, diagram-demo = 71).
-          if (maxLen < 20) return false;
-          const d = lev(a, b);
-          return d / maxLen <= 0.15;
-        };
+        // Fuzzy near-duplicate dedup — see the module-level
+        // isFuzzyDupTranscript comment for rationale (also reused by the
+        // queue-time merge branch above, so both dedup paths agree).
         const dedupedNorms: string[] = [];
         const deduped = all.filter((t) => {
           const norm = t.trim().toLowerCase().replace(/\s+/g, ' ');
           if (!norm) return false;
-          if (dedupedNorms.some((seenNorm) => isFuzzyDup(seenNorm, norm))) {
+          if (dedupedNorms.some((seenNorm) => isFuzzyDupTranscript(seenNorm, norm))) {
             return false;
           }
           dedupedNorms.push(norm);
@@ -15516,7 +15552,7 @@ export function VoiceTutorRealtime({
         const lastEntryNorm = lastEntry?.role === 'student'
           ? lastEntry.text.trim().toLowerCase().replace(/\s+/g, ' ')
           : '';
-        const alreadyInChat = !!lastEntryNorm && isFuzzyDup(lastEntryNorm, normalizedCombined);
+        const alreadyInChat = !!lastEntryNorm && isFuzzyDupTranscript(lastEntryNorm, normalizedCombined);
         if (alreadyInChat) {
           console.log('[brain-orchestrator] STAGE-3 fix #12: combined matches last chat entry — dispatching silent');
           onDebugEvent?.('queue_drain_silent', 'matches_last_chat');
@@ -16762,6 +16798,7 @@ export function VoiceTutorRealtime({
       // sites need "what did the student most recently say" even on a
       // transcript this function goes on to drop/hold/merge.
       lastPerceptionTextRef.current = t.text;
+      lastPerceptionTextAtRef.current = Date.now();
       // Any real ASR final proves the mic is capturing — clear the
       // mic-silent notice (and any pending device-switch offer) so it
       // can't linger over a working session.
@@ -18019,7 +18056,14 @@ export function VoiceTutorRealtime({
         // the realtime-state effect that latches it hasn't run yet for
         // this render. Falls to the same escape/suppress handling below
         // as the canStage2 case; resolves itself within a render or two.
-        if (canStage3 && openerBargeEscape(lastPerceptionTextRef.current)) {
+        // Final-review Finding 2: this is the ONSET path — the CURRENT
+        // utterance has no transcript yet, so lastPerceptionTextRef here is
+        // necessarily the PREVIOUS utterance's text. Require it to be
+        // recent before letting it drive the escape, so a stale prior
+        // transcript can't eager-kill on an unrelated onset (echo/cough).
+        const onsetPerceptionTextIsRecent =
+          Date.now() - lastPerceptionTextAtRef.current < ONSET_ESCAPE_MAX_TEXT_AGE_MS;
+        if (canStage3 && onsetPerceptionTextIsRecent && openerBargeEscape(lastPerceptionTextRef.current)) {
           // Issue F escape hatch, Stage 3: a real ≥3-word non-echo
           // transcript is already on record (most recent perception
           // transcript seen) — this is a human, not the phantom self-echo
@@ -18030,7 +18074,7 @@ export function VoiceTutorRealtime({
           runPerceptionKill('speaking');
           return;
         }
-        if (canStage2 && openerBargeEscape(lastPerceptionTextRef.current)) {
+        if (canStage2 && onsetPerceptionTextIsRecent && openerBargeEscape(lastPerceptionTextRef.current)) {
           // Issue F escape hatch, Stage 2: unlike Stage 3, never eager-kill
           // here — an ungated instant kill during 'processing' is exactly
           // the repeat-storm hazard the E1 rewrite fixed for the raw
