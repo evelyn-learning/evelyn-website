@@ -383,7 +383,10 @@ async function main() {
     console.log('⚠️  --no-verify: skipping the Sonnet verify gate.');
   } else {
     if (!resolveModel('content-verify').apiKey) {
-      console.error('✗ ANTHROPIC_API_KEY not set (needed for the verify gate). Use --no-verify to skip.');
+      console.error(
+        '✗ No API key found for the content-verify role (checked TUTOR_MODEL_CONTENT_VERIFY_API_KEY, ' +
+          'TUTOR_MODEL_API_KEY, and ANTHROPIC_API_KEY — needed for the verify gate). Use --no-verify to skip.'
+      );
       process.exit(1);
     }
     if (opts.batch && !resolveModel('content-verify').native) {

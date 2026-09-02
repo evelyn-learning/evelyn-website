@@ -128,13 +128,18 @@ function parseArgs(): Opts {
     process.exit(1);
   }
   const concurrencyRaw = get('concurrency');
+  const concurrency = concurrencyRaw ? parseInt(concurrencyRaw, 10) : 4;
+  if (!Number.isInteger(concurrency) || concurrency < 1) {
+    console.error(`✗ --concurrency must be a positive integer, got '${concurrencyRaw}'`);
+    process.exit(1);
+  }
   return {
     losFile,
     outDir,
     cedPrefix,
     subjectLabel,
     itemsPerLo,
-    concurrency: concurrencyRaw ? parseInt(concurrencyRaw, 10) : 4,
+    concurrency,
     limit: get('limit') ? parseInt(get('limit')!, 10) : undefined,
     onlyLo: get('only-lo'),
     groundingFromSeeds: args.includes('--grounding-from-seeds'),
@@ -294,7 +299,31 @@ async function main() {
     console.error(`✗ ${opts.losFile} not found.`);
     process.exit(1);
   }
-  let los: Lo[] = JSON.parse(fs.readFileSync(opts.losFile, 'utf-8'));
+  const rawLos: Lo[] = JSON.parse(fs.readFileSync(opts.losFile, 'utf-8'));
+
+  // cedCode/slug: <prefix>-U<unit>.<index-within-unit>, computed from the
+  // FULL, UNFILTERED file's already-unit-grouped order, synchronously and
+  // before --only-lo/--limit filtering and before runPool. This guarantees
+  // a given LO always gets the same cedCode/slug regardless of which subset
+  // is being (re)generated (--only-lo/--limit) or the completion order of
+  // concurrent workers (--concurrency > 1).
+  const cedIndexByLoId = new Map<string, number>();
+  const slugByLoId = new Map<string, string>();
+  {
+    const unitCounters: Record<number, number> = {};
+    const usedSlugs = new Set<string>();
+    for (const lo of rawLos) {
+      unitCounters[lo.unit] = (unitCounters[lo.unit] ?? 0) + 1;
+      const cedIndex = unitCounters[lo.unit];
+      cedIndexByLoId.set(lo.loId, cedIndex);
+      let slug = slugify(lo.title);
+      if (usedSlugs.has(slug)) slug = `${slug}-${cedIndex}`;
+      usedSlugs.add(slug);
+      slugByLoId.set(lo.loId, slug);
+    }
+  }
+
+  let los: Lo[] = rawLos;
   if (opts.onlyLo) los = los.filter((l) => l.loId === opts.onlyLo);
   if (opts.limit) los = los.slice(0, opts.limit);
   console.log(`Generating items for ${los.length} LO(s) [${opts.subjectLabel}]...`);
@@ -303,21 +332,15 @@ async function main() {
   const { client: anthropic, model } = getModelClient('content-gen');
   const SYSTEM = buildSystem(opts.subjectLabel);
 
-  // cedCode: <prefix>-U<unit>.<index-within-unit>, computed from the file's
-  // already-unit-grouped order.
-  const unitCounters: Record<number, number> = {};
-  const usedSlugs = new Set<string>();
-  const idPrefix = slugify(opts.cedPrefix) || 'gen';
+  const rawIdPrefix = slugify(opts.cedPrefix) || 'gen';
+  const idPrefix = rawIdPrefix.replace(/-gen$/, '') || 'gen';
 
   let done = 0;
   let usageIn = 0;
   let usageOut = 0;
   const perLoResults = await runPool(los, opts.concurrency, async (lo) => {
-    unitCounters[lo.unit] = (unitCounters[lo.unit] ?? 0) + 1;
-    const cedIndex = unitCounters[lo.unit];
-    let slug = slugify(lo.title);
-    if (usedSlugs.has(slug)) slug = `${slug}-${cedIndex}`;
-    usedSlugs.add(slug);
+    const cedIndex = cedIndexByLoId.get(lo.loId)!;
+    const slug = slugByLoId.get(lo.loId)!;
 
     const grounding = await fetchGrounding(lo.planId, lo.loId, opts.groundingFromSeeds);
     let items: GenItem[] = [];
@@ -368,7 +391,13 @@ async function main() {
     return { lo, seedItems };
   });
 
-  if (!opts.groundingFromSeeds) await mongoose.disconnect();
+  // Unconditional: under --grounding-from-seeds, a planId missing from the
+  // seed catalog falls back to Mongo via getLessonPlan() (which calls
+  // connectDB() itself), so a connection can be open here even though this
+  // script never called mongoose.connect() directly. disconnect() is a
+  // no-op when nothing is connected (verified against this repo's mongoose
+  // 8.24.3: readyState 0, resolves without throwing) so it's always safe.
+  await mongoose.disconnect();
 
   // Group by unit -> u<unit>.json, merging with any existing file content
   // (so --only-lo=<id> targeted regen doesn't clobber the other LOs in that unit).
