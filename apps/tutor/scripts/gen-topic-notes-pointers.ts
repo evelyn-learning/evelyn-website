@@ -24,16 +24,18 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import Anthropic from '@anthropic-ai/sdk';
 import type { LessonPlan, Segment } from '../src/lib/tutor/lesson-plan/types';
+import { getModelClient, prepareParams, resolveModel } from '../src/lib/tutor/ai/model-registry';
+import type { RoleClient } from '../src/lib/tutor/ai/model-registry';
+import { lookupModelRate } from '../src/lib/tutor/ai/model-rates';
 
-const MODEL = process.env.POINTER_GEN_MODEL || 'claude-opus-5';
+let _rc: RoleClient | null = null;
+const rc = () => (_rc ??= getModelClient('notes-pointers'));
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  console.error('✗ ANTHROPIC_API_KEY not set');
-  process.exit(2);
-}
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// Accumulated across every messages.create call in this run — printed at
+// the end alongside an informational cost estimate (see main()).
+let usageIn = 0;
+let usageOut = 0;
 
 interface PointerProposal {
   content: string;
@@ -440,12 +442,16 @@ async function genPointers(plan: LessonPlan): Promise<PointerProposal[]> {
         : isMS(plan)
           ? msSystem(plan)
           : SYSTEM_AP;
-  const response = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 4000,
-    system,
-    messages: [{ role: 'user', content: userMessage }],
-  });
+  const response = await rc().client.messages.create(
+    prepareParams('notes-pointers', {
+      model: rc().model,
+      max_tokens: 4000,
+      system,
+      messages: [{ role: 'user', content: userMessage }],
+    }),
+  );
+  usageIn += response.usage?.input_tokens ?? 0;
+  usageOut += response.usage?.output_tokens ?? 0;
   const text = response.content
     .filter((b) => b.type === 'text')
     .map((b) => (b as { type: 'text'; text: string }).text)
@@ -487,7 +493,7 @@ async function genOne(planId: string): Promise<boolean> {
     return false;
   }
 
-  console.log(`→ generating pointers for ${planId} via ${MODEL}...`);
+  console.log(`→ generating pointers for ${planId} via ${rc().model}...`);
   const pointers = await genPointers(plan);
   console.log(`✓ got ${pointers.length} pointer proposals`);
 
@@ -498,6 +504,14 @@ async function genOne(planId: string): Promise<boolean> {
 }
 
 async function main(): Promise<void> {
+  if (!resolveModel('notes-pointers').apiKey) {
+    console.error(
+      '✗ No API key found for the notes-pointers role (checked TUTOR_MODEL_NOTES_POINTERS_API_KEY, ' +
+        'TUTOR_MODEL_API_KEY, and ANTHROPIC_API_KEY). Note: POINTER_GEN_MODEL only selects the model, not the key.',
+    );
+    process.exit(2);
+  }
+
   // Accepts one or more space-separated planIds. Each still gets its
   // own Opus call (this is the paid step) — batching only amortizes
   // the loadAllPlans() cost and lets a whole course run in one process.
@@ -513,6 +527,13 @@ async function main(): Promise<void> {
     if (ok) okCount++;
     console.log('');
   }
+
+  const rate = lookupModelRate(rc().model);
+  const cost = rate ? (usageIn / 1e6) * rate.input + (usageOut / 1e6) * rate.output : undefined;
+  console.log(
+    `Token usage: ${usageIn} in / ${usageOut} out.` +
+      (cost !== undefined ? ` Est. cost: $${cost.toFixed(3)} (informational)` : ' (no rate row for this model)'),
+  );
 
   console.log(`Done: ${okCount}/${planIds.length} pointer drafts generated.`);
   console.log('Next:');
