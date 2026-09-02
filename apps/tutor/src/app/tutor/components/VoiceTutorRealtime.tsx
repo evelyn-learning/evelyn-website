@@ -1631,6 +1631,17 @@ export function VoiceTutorRealtime({
   // exempt from the noise filter — a real greeting was being dropped as
   // a Whisper hallucination (session-1783615226008).
   const studentHasSpokenRef = useRef<boolean>(false);
+  // Issue H (2026-09-01, session embed-1788187567764): unlike
+  // studentHasSpokenRef above — which flips at the earlier "being heard"
+  // point inside handleStudentTranscriptForBrain and can therefore be set
+  // by a dispatch ATTEMPT that a later guard (e.g. the production-WS
+  // dedupe-suppression check) still rejects — this ref is set only once a
+  // turn survives every rejection guard, at the same accepted-turn ingress
+  // Task 3's think-time detector uses. A genuine "Hello." was dropped as
+  // noise while no turn had truly been accepted yet, because an earlier
+  // rejected/duplicate attempt had already closed the greeting window via
+  // studentHasSpokenRef.
+  const firstStudentTurnAcceptedRef = useRef<boolean>(false);
   // Teacher-persona mid-session style salience (2026-07-04): the compact
   // per-turn <teacher_style> body (renderTeacherStyleReminder output),
   // seeded once under the same one-shot latch as the opening directive.
@@ -8255,6 +8266,11 @@ export function VoiceTutorRealtime({
       // A resumed session is past the greeting window — greeting-only
       // utterances go back to being hallucination noise.
       studentHasSpokenRef.current = true;
+      // Issue H (2026-09-01, session embed-1788187567764): keep in sync
+      // with studentHasSpokenRef above — a resumed session already has an
+      // accepted turn, so the Issue H pre-turn greeting exemption must
+      // close here too, not just on the first live dispatch.
+      firstStudentTurnAcceptedRef.current = true;
     }
     // Whiteboard → restore prior figures both in the runtime's own ref (so its
     // board-awareness / dedup logic doesn't think the board is empty) and in
@@ -15150,6 +15166,12 @@ export function VoiceTutorRealtime({
       // Window expired — clean up the stale slot.
       productionWsTranscriptSuppressRef.current = null;
     }
+    // Issue H (2026-09-01, session embed-1788187567764): same placement
+    // rationale as Issue C immediately below — past the dedupe-suppression
+    // return, so a rejected/duplicate attempt never marks a turn accepted.
+    if (!opts?.silent) {
+      firstStudentTurnAcceptedRef.current = true;
+    }
     // Issue C: placed AFTER the production-WS dedupe check above (not at the
     // "being heard" indicator further up) so a duplicate/interim fragment
     // that gets dropped as a dedupe-suppressed re-transcription never
@@ -17014,7 +17036,15 @@ export function VoiceTutorRealtime({
       // phantom "Thanks for watching!" reached the brain and produced a
       // wasted "Sorry, could you say that again?" turn. Match production
       // WS's behaviour exactly — same filter, same drop.
-      const noiseCheck = classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current });
+      // Issue H (2026-09-01, session embed-1788187567764): a genuine
+      // "Hello." was dropped as noise here while the student was still
+      // trying to establish contact — no turn had actually been accepted
+      // yet. Before the session's first accepted turn, a bare greeting
+      // always passes, regardless of classifyTranscript's own rules;
+      // gated on firstStudentTurnAcceptedRef (not studentHasSpokenRef)
+      // so an earlier rejected/duplicate attempt can't close this window.
+      const isPreTurnGreeting = !firstStudentTurnAcceptedRef.current && /^(hello|hi|hey)[.!?]?$/i.test(t.text.trim());
+      const noiseCheck = isPreTurnGreeting ? 'clean' : classifyTranscript(t.text, { allowGreetings: !studentHasSpokenRef.current });
       if (noiseCheck === 'noise') {
         console.warn(`[PERCEPTION] dropped as noise (classifyTranscript): ${JSON.stringify(t.text)}`);
         onDebugEvent?.('perception_noise_dropped', t.text.slice(0, 80));
