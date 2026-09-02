@@ -439,8 +439,15 @@ async function main() {
       const nDigits = opts.msConventions ? 3 : 2;
       const n = String(seedItems.length + 1).padStart(nDigits, '0');
       // When an explicit spread is given, stamp difficulty from the intended
-      // per-position sequence rather than trusting the model's echoed value —
-      // guarantees the output sequence matches --difficulty-spread exactly.
+      // per-position (authored slot) sequence rather than trusting the
+      // model's echoed value — each kept item's difficulty is truthful to
+      // the slot it was generated for. This does NOT guarantee the output
+      // sequence matches --difficulty-spread exactly: a dropped item (failed
+      // validation) leaves a gap at its slot rather than pulling later
+      // difficulties forward, so a run with drops can end up short one or
+      // more spread values. That's by design — label/content truth is
+      // preserved over spread completeness, and problem-bank-gap-manifest.ts
+      // is what catches the resulting shortfall and forces an LO regen.
       const difficulty = opts.difficultySpread ? (difficulties[idx] ?? it.difficulty) : it.difficulty;
       let hints = it.hints ?? [];
       if (opts.msConventions) hints = hints.slice(0, 2);

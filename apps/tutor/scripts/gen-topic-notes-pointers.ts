@@ -65,6 +65,14 @@ const MS_COURSE_NAMES: Record<string, string> = {
   m7ela: 'Grade 7 English Language Arts',
   m7sci: 'Grade 7 Science',
   m7geo: 'Grade 7 World Geography',
+  m6math: 'Grade 6 Math',
+  m6ela: 'Grade 6 English Language Arts',
+  m6sci: 'Grade 6 Science',
+  m6geo: 'Grade 6 World Geography',
+  m8math: 'Grade 8 Math',
+  m8ela: 'Grade 8 English Language Arts',
+  m8sci: 'Grade 8 Science',
+  m8geo: 'Grade 8 World Geography',
 };
 
 // The MS system prompt names the teacher's subject, so an ELA note never
