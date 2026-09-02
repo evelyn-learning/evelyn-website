@@ -74,7 +74,7 @@ Grounding: shipped `grade-7-math` unit titles (`unit-titles.ts`) + `m7math-u*.ts
 | `numerical-expressions-with-exponents` | Numerical Expressions with Exponents | 6.EE.A.1 | Write and evaluate numerical expressions involving whole-number exponents. | none |
 | `writing-and-evaluating-algebraic-expressions` | Writing & Evaluating Algebraic Expressions | 6.EE.A.2a/c | Write an algebraic expression from a word phrase and evaluate expressions (including formulas) for given variable values. | none |
 | `parts-of-an-expression` | Parts of an Expression | 6.EE.A.2b | Identify parts of an expression — terms, factors, coefficients — using correct mathematical vocabulary. | none |
-| `equivalent-expressions` | Equivalent Expressions | 6.EE.A.3/A.4 | Apply properties of operations (distributive property, combining like terms) to generate and identify equivalent expressions with nonnegative whole-number coefficients. | `g7-math-distributive-combine.ts` ("Distributive Property and Combining Like Terms") — directly adjacent; G7 escalates to negative/rational coefficients and factoring. Salvage for example shapes only; keep G6 coefficients nonnegative whole numbers |
+| `equivalent-expressions` | Equivalent Expressions | 6.EE.A.3/A.4 | Apply properties of operations (distributive property, combining like terms) to generate and identify equivalent expressions with nonnegative whole-number coefficients. | `g7-math-distributive-combine.ts` ("Distributive Property and Combining Like Terms") — directly adjacent; G7 escalates to negative/rational coefficients. Salvage for example shapes only; keep G6 coefficients nonnegative whole numbers. NOTE (corrected 2026-09-02): factoring a numeric GCF out of an algebraic expression IS Grade 6 — it is 6.EE.A.3's own illustrative example (24x + 18y = 6(4x + 3y)) — and this row teaches it as the distributive move run backward |
 
 ## Unit 8 — Equations, Inequalities & Relationships
 
@@ -110,7 +110,7 @@ Grounding: shipped `grade-7-math` unit titles (`unit-titles.ts`) + `m7math-u*.ts
 - **Ratios → proportional relationships**: Unit 1–2 build ratio language, tables, unit rate, and rate-per-100 percent — G7 U3 (`Ratios & Proportional Relationships`) opens by citing 6.RP.A.2 directly and escalates to constant of proportionality and fraction-valued unit rates, which G6 never touches.
 - **Number system → rational numbers**: Unit 5–6 build the number line, absolute value, ordering, and the four-quadrant coordinate plane with rational-number *values* but no negative-number *arithmetic* — G7 U1–U2 (`Rational Numbers` / `Operations with Rational Numbers`) is exactly where +,−,×,÷ on signed numbers is introduced.
 - **Percent basics → percent applications**: Unit 2 stops at rate-per-100 and part/whole percent — G7 U4 (`Percent & Applications`) is where tax, tip, discount, markup, percent change, and simple interest live.
-- **Expressions/equations → their two-step, signed-coefficient forms**: Unit 7–8 stay nonnegative, one-step, one-variable — G7 U5–U6 add negative/rational coefficients, factoring, and two-step equations.
+- **Expressions/equations → their two-step, signed-coefficient forms**: Unit 7–8 stay nonnegative, one-step, one-variable — G7 U5–U6 add negative/rational coefficients and two-step equations. Factoring a numeric GCF out is Grade 6 (6.EE.A.3) and lives in row 7.4; what G7 adds is factoring with negative and rational coefficients.
 - **Geometry**: Unit 9 covers polygon area, rectangular-prism volume, and nets/surface area — G7 U8 adds circles and pyramid/composite-solid volume and surface area; G7 U7 (angles, scale drawings, cross-sections) has no G6 antecedent by design (new in 7th grade).
 - **Statistics**: Unit 10 establishes a single data set's center and spread — G7 U9 (`Statistics & Sampling`) moves to populations, random sampling, and comparing two data sets.
 
@@ -119,7 +119,7 @@ Grounding: shipped `grade-7-math` unit titles (`unit-titles.ts`) + `m7math-u*.ts
 - Arithmetic operations (+, −, ×, ÷) on negative/rational numbers — G7 U1–U2.
 - Constant of proportionality, proportional-relationship equations (y = kx), graphing proportionality tests, complex-fraction unit rates — G7 U3.
 - Percent increase/decrease, simple interest, percent error, tax/tip/discount/markup — G7 U4.
-- Two-step equations, inequalities with negative coefficients, factoring expressions — G7 U5–U6.
+- Two-step equations, inequalities with negative coefficients, factoring with negative or rational coefficients — G7 U5–U6. (CORRECTED 2026-09-02: this line previously read "factoring expressions" wholesale, which under-covered 6.EE.A.3 — pulling a numeric GCF out of an algebraic expression is a Grade 6 skill and is taught in row 7.4.)
 - Angle relationships, scale drawings, triangle side/angle conditions, cross-sections of solids — G7 U7 (no G6 antecedent).
 - Circumference/area of circles, surface area and volume of pyramids and composite solids — G7 U8.
 - Random sampling, inference from samples, comparing two populations — G7 U9.
