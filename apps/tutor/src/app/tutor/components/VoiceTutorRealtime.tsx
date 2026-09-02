@@ -226,6 +226,7 @@ import {
   CORRECTION_NOTE_TIMEOUT_MS,
   TUTOR_POSED_PROBLEM_BOARD_CHECK,
   TUTOR_THINK_TIME_HOLD,
+  TUTOR_TURN_COALESCE,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -2293,6 +2294,14 @@ export function VoiceTutorRealtime({
   // keep, so a valid render the student asked for doesn't vanish).
   const winningAttemptRenderedRef = useRef(false);
   const queuedTranscriptsRef = useRef<string[]>([]);
+  // Issue E (2026-09-01, embed-1788187567764): timestamp of the most recent
+  // push onto queuedTranscriptsRef via the busy-queue path below. The queue
+  // itself stores plain strings (no per-entry timestamp), so this single
+  // ref is the minimal wrapper needed to know whether the LAST queued
+  // (not-yet-dispatched) entry is still fresh enough to merge a new final
+  // into, vs. stale enough that the new final should start its own entry.
+  const queuedTranscriptCoalesceAtRef = useRef<number>(0);
+  const TURN_COALESCE_MS = 5000;
   // R32 (H1 review round 1, Finding 1): a queueOnMidUtterance push has a
   // guaranteed drain ONLY when brainBusyRef was true at push time (the
   // while-loop drain / 90s busy-watchdog own it then). When brainBusyRef is
@@ -15134,8 +15143,33 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('queue_skip_synthetic', transcript.slice(0, 40));
         return;
       }
+      // Issue E (embed-1788187567764): the transcriber routinely splits one
+      // continuous student utterance into 2+ finals. Without this, each
+      // final that lands here while the brain is busy pushes its own queue
+      // entry and later drains as its OWN full brain turn — observed live:
+      // two full answers ~1s apart for what was one utterance. If an
+      // undrained entry is already queued and this final arrives within
+      // TURN_COALESCE_MS of it, merge into that entry instead of adding a
+      // second one. Does NOT touch the call already in flight — killing an
+      // in-flight turn on a new arrival regressed before (see the E1
+      // lazy-cancel comments elsewhere in this file); this only affects
+      // turns that haven't dispatched yet.
+      if (
+        TUTOR_TURN_COALESCE &&
+        queuedTranscriptsRef.current.length > 0 &&
+        Date.now() - queuedTranscriptCoalesceAtRef.current < TURN_COALESCE_MS
+      ) {
+        const lastIndex = queuedTranscriptsRef.current.length - 1;
+        const merged = `${queuedTranscriptsRef.current[lastIndex]} ${transcript}`.trim();
+        queuedTranscriptsRef.current[lastIndex] = merged;
+        queuedTranscriptCoalesceAtRef.current = Date.now();
+        console.log('[brain-orchestrator] coalesced into queued (brain busy):', JSON.stringify(merged).slice(0, 100));
+        onDebugEvent?.('student_turn_coalesced', merged.slice(0, 80));
+        return;
+      }
       console.log('[brain-orchestrator] queued (brain busy):', JSON.stringify(transcript).slice(0, 80));
       queuedTranscriptsRef.current.push(transcript);
+      queuedTranscriptCoalesceAtRef.current = Date.now();
       return;
     }
     setBrainBusy(true);

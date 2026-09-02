@@ -284,6 +284,16 @@ export const CORRECTION_NOTE_TIMEOUT_MS = 20_000;
 // per the R49b standing rule.
 export const TUTOR_THINK_TIME_HOLD =
   process.env.NEXT_PUBLIC_TUTOR_THINK_TIME_HOLD !== 'off';
+// Issue E (2026-09-01, embed-1788187567764 16:47:15->16:47:20 UTC): one
+// continuous student utterance got split into two finals by the
+// transcriber; each landed in the busy-turn queue separately and drained
+// as its OWN full brain turn a second apart, so the student got two
+// answers to what was one thought. When a new final arrives while the
+// brain is busy and something is already queued (not yet dispatched),
+// merge it into that queued utterance instead of adding a second entry.
+// Default ON per the R49b standing rule.
+export const TUTOR_TURN_COALESCE =
+  process.env.NEXT_PUBLIC_TUTOR_TURN_COALESCE !== 'off';
 export const TUTOR_ANSWER_REVEAL_GUARD =
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'on' ||
   process.env.NEXT_PUBLIC_TUTOR_ANSWER_REVEAL_GUARD === 'true';
