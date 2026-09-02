@@ -259,8 +259,8 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'ecology', label: 'Ecology' },
       { id: 'physical-science', label: 'Physical Science' },
       { id: 'grade-7-life-science', label: 'Grade 7 Science (Life Science)' },
-      { id: 'grade-6-science', label: 'Grade 6 Science' },
-      { id: 'grade-8-science', label: 'Grade 8 Science' },
+      { id: 'grade-6-earth-space-science', label: 'Grade 6 Science (Earth & Space Science)' },
+      { id: 'grade-8-physical-science', label: 'Grade 8 Science (Physical Science)' },
     ],
     '9-10': [
       { id: 'biology', label: 'Biology' },

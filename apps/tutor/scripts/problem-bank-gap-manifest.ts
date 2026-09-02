@@ -39,11 +39,11 @@ export const COURSE_PREFIX: Record<string, string> = {
   'grade-7-world-geography': 'm7geo',
   'grade-6-math': 'm6math',
   'grade-6-ela': 'm6ela',
-  'grade-6-science': 'm6sci',
+  'grade-6-earth-space-science': 'm6sci',
   'grade-6-world-geography': 'm6geo',
   'grade-8-math': 'm8math',
   'grade-8-ela': 'm8ela',
-  'grade-8-science': 'm8sci',
+  'grade-8-physical-science': 'm8sci',
   'grade-8-world-geography': 'm8geo',
 };
 

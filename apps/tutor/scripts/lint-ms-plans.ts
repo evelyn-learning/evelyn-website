@@ -33,11 +33,11 @@ const COURSES: Record<
   // lint failure.
   m6math: { subject: 'math', topic: 'grade-6-math', loPrefix: 'm6math', std: 'M6MATH', grade: '6', tryFormat: 'two-mcq-one-numeric' },
   m6ela: { subject: 'ela', topic: 'grade-6-ela', loPrefix: 'm6ela', std: 'M6ELA', grade: '6', tryFormat: 'three-mcq' },
-  m6sci: { subject: 'science', topic: 'grade-6-science', loPrefix: 'm6sci', std: 'M6SCI', grade: '6', tryFormat: 'three-mcq' },
+  m6sci: { subject: 'science', topic: 'grade-6-earth-space-science', loPrefix: 'm6sci', std: 'M6SCI', grade: '6', tryFormat: 'three-mcq' },
   m6geo: { subject: 'social-studies', topic: 'grade-6-world-geography', loPrefix: 'm6geo', std: 'M6GEO', grade: '6', tryFormat: 'three-mcq' },
   m8math: { subject: 'math', topic: 'grade-8-math', loPrefix: 'm8math', std: 'M8MATH', grade: '8', tryFormat: 'two-mcq-one-numeric' },
   m8ela: { subject: 'ela', topic: 'grade-8-ela', loPrefix: 'm8ela', std: 'M8ELA', grade: '8', tryFormat: 'three-mcq' },
-  m8sci: { subject: 'science', topic: 'grade-8-science', loPrefix: 'm8sci', std: 'M8SCI', grade: '8', tryFormat: 'three-mcq' },
+  m8sci: { subject: 'science', topic: 'grade-8-physical-science', loPrefix: 'm8sci', std: 'M8SCI', grade: '8', tryFormat: 'three-mcq' },
   m8geo: { subject: 'social-studies', topic: 'grade-8-world-geography', loPrefix: 'm8geo', std: 'M8GEO', grade: '8', tryFormat: 'three-mcq' },
 };
 

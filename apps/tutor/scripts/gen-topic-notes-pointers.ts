@@ -110,11 +110,14 @@ const MS_SUBJECT_PHRASE: Record<
     edges: 'places that sit in two regions at once, a factor that pushes people out of one place and pulls them into another, borders that follow rivers rather than straight lines',
   },
   // Grade 6/8 rows — Task 0.2 scaffolding, mirrored from the m7 rows above
-  // with the grade substituted. Phrasing (imperative/slips/edges) is a
-  // placeholder carried from m7's course-specific wording; it is generic
-  // enough to hold until Phase 1 curriculum authoring may want to tune it
-  // per grade, but no MS plans for these courses exist yet so this map is
-  // inert until then.
+  // with the grade substituted. ELA/geo/math rows are placeholder wording
+  // carried from m7's course-specific text; it is generic enough to hold
+  // until Phase 1 curriculum authoring may want to tune it per grade. The
+  // science rows are NOT placeholders: m6sci follows the NGSS grade-6
+  // earth & space science domain and m8sci the grade-8 physical science
+  // domain (2026-09-02 taxonomy ruling), each written for its own domain
+  // rather than mirroring m7's life-science content. No MS plans for any
+  // of these courses exist yet, so this map is inert until Phase 1 lands.
   m6math: {
     teacher: 'middle-school math teacher',
     course: '6th-grade math course',
@@ -130,11 +133,11 @@ const MS_SUBJECT_PHRASE: Record<
     edges: 'a character who says one thing and does another, a text with more than one central idea, a word whose everyday meaning differs from its meaning here',
   },
   m6sci: {
-    teacher: 'middle-school science teacher',
-    course: '6th-grade science course',
-    imperative: '"Always say where the energy came from before you say where it went"',
-    slips: 'saying a cell part "makes" energy rather than releases it, confusing genotype with phenotype, treating an individual as if it adapts during its lifetime',
-    edges: 'organisms that do not fit the usual pattern, traits that are common but recessive, ratios that are probabilities rather than guarantees',
+    teacher: 'middle-school earth and space science teacher',
+    course: '6th-grade earth and space science course',
+    imperative: '"Always say what process caused it before you name the landform"',
+    slips: 'confusing weathering with erosion, mixing up the rock cycle\'s three rock types, saying the Earth is closer to the sun in summer, confusing weather with climate',
+    edges: 'a landform shaped by more than one process, a plate boundary that does not fit the usual push/pull/slide pattern, a scale model of the solar system where distances dwarf the planet sizes',
   },
   m6geo: {
     teacher: 'middle-school world geography teacher',
@@ -158,11 +161,11 @@ const MS_SUBJECT_PHRASE: Record<
     edges: 'a character who says one thing and does another, a text with more than one central idea, a word whose everyday meaning differs from its meaning here',
   },
   m8sci: {
-    teacher: 'middle-school science teacher',
-    course: '8th-grade science course',
+    teacher: 'middle-school physical science teacher',
+    course: '8th-grade physical science course',
     imperative: '"Always say where the energy came from before you say where it went"',
-    slips: 'saying a cell part "makes" energy rather than releases it, confusing genotype with phenotype, treating an individual as if it adapts during its lifetime',
-    edges: 'organisms that do not fit the usual pattern, traits that are common but recessive, ratios that are probabilities rather than guarantees',
+    slips: 'confusing mass with weight, saying an object "has" force rather than force acting on it, confusing an atom\'s mass number with its atomic number, treating a chemical equation as balanced by matching molecule counts instead of atom counts',
+    edges: 'a system where the net force is zero but forces are still acting, a reaction that looks like mass is lost or gained, a wave whose medium does not travel with it',
   },
   m8geo: {
     teacher: 'middle-school world geography teacher',
