@@ -1941,9 +1941,46 @@ import { SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY } from './seeds
 import { SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS } from './seeds/m7math-u10-probability-models-and-simulations';
 import { SEED_M7MATH_U10_COMPOUND_EVENTS } from './seeds/m7math-u10-compound-events';
 // MS-core — Grade 6 Math (CCSS 6.RP / 6.NS / 6.EE / 6.G / 6.SP, units 1-10).
-// Exemplar seeds; the remaining 38 rows fan out.
+import { SEED_M6MATH_U1_RATIO_LANGUAGE_AND_NOTATION } from './seeds/m6math-u1-ratio-language-and-notation';
+import { SEED_M6MATH_U1_REPRESENTING_RATIOS_WITH_TABLES_AND_DIAGRAMS } from './seeds/m6math-u1-representing-ratios-with-tables-and-diagrams';
+import { SEED_M6MATH_U1_SOLVING_MISSING_VALUE_RATIO_PROBLEMS } from './seeds/m6math-u1-solving-missing-value-ratio-problems';
+import { SEED_M6MATH_U1_UNIT_RATES_AND_UNIT_PRICING } from './seeds/m6math-u1-unit-rates-and-unit-pricing';
+import { SEED_M6MATH_U2_PERCENT_AS_RATE_PER_100 } from './seeds/m6math-u2-percent-as-rate-per-100';
+import { SEED_M6MATH_U2_FINDING_THE_PERCENT_OF_A_QUANTITY } from './seeds/m6math-u2-finding-the-percent-of-a-quantity';
+import { SEED_M6MATH_U2_FINDING_THE_WHOLE_GIVEN_A_PART_AND_PERCENT } from './seeds/m6math-u2-finding-the-whole-given-a-part-and-percent';
+import { SEED_M6MATH_U2_CONVERTING_MEASUREMENT_UNITS } from './seeds/m6math-u2-converting-measurement-units';
+import { SEED_M6MATH_U3_MEANING_OF_FRACTION_DIVISION } from './seeds/m6math-u3-meaning-of-fraction-division';
 import { SEED_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS } from './seeds/m6math-u3-dividing-fractions-by-fractions';
+import { SEED_M6MATH_U3_DIVIDING_MIXED_NUMBERS } from './seeds/m6math-u3-dividing-mixed-numbers';
+import { SEED_M6MATH_U3_WORD_PROBLEMS_WITH_FRACTION_DIVISION } from './seeds/m6math-u3-word-problems-with-fraction-division';
+import { SEED_M6MATH_U4_DIVIDING_MULTI_DIGIT_WHOLE_NUMBERS } from './seeds/m6math-u4-dividing-multi-digit-whole-numbers';
+import { SEED_M6MATH_U4_ADDING_AND_SUBTRACTING_DECIMALS } from './seeds/m6math-u4-adding-and-subtracting-decimals';
+import { SEED_M6MATH_U4_MULTIPLYING_AND_DIVIDING_DECIMALS } from './seeds/m6math-u4-multiplying-and-dividing-decimals';
+import { SEED_M6MATH_U4_GCF_LCM_AND_THE_DISTRIBUTIVE_PROPERTY } from './seeds/m6math-u4-gcf-lcm-and-the-distributive-property';
 import { SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT } from './seeds/m6math-u5-negative-numbers-in-context';
+import { SEED_M6MATH_U5_RATIONAL_NUMBERS_ON_THE_NUMBER_LINE } from './seeds/m6math-u5-rational-numbers-on-the-number-line';
+import { SEED_M6MATH_U5_ABSOLUTE_VALUE } from './seeds/m6math-u5-absolute-value';
+import { SEED_M6MATH_U5_ORDERING_RATIONAL_NUMBERS } from './seeds/m6math-u5-ordering-rational-numbers';
+import { SEED_M6MATH_U6_PLOTTING_POINTS_IN_ALL_FOUR_QUADRANTS } from './seeds/m6math-u6-plotting-points-in-all-four-quadrants';
+import { SEED_M6MATH_U6_REFLECTING_POINTS_ACROSS_THE_AXES } from './seeds/m6math-u6-reflecting-points-across-the-axes';
+import { SEED_M6MATH_U6_FINDING_DISTANCE_BETWEEN_POINTS } from './seeds/m6math-u6-finding-distance-between-points';
+import { SEED_M6MATH_U6_SOLVING_REAL_WORLD_COORDINATE_PLANE_PROBLEMS } from './seeds/m6math-u6-solving-real-world-coordinate-plane-problems';
+import { SEED_M6MATH_U7_NUMERICAL_EXPRESSIONS_WITH_EXPONENTS } from './seeds/m6math-u7-numerical-expressions-with-exponents';
+import { SEED_M6MATH_U7_WRITING_AND_EVALUATING_ALGEBRAIC_EXPRESSIONS } from './seeds/m6math-u7-writing-and-evaluating-algebraic-expressions';
+import { SEED_M6MATH_U7_PARTS_OF_AN_EXPRESSION } from './seeds/m6math-u7-parts-of-an-expression';
+import { SEED_M6MATH_U7_EQUIVALENT_EXPRESSIONS } from './seeds/m6math-u7-equivalent-expressions';
+import { SEED_M6MATH_U8_WHAT_IT_MEANS_TO_SOLVE_AN_EQUATION } from './seeds/m6math-u8-what-it-means-to-solve-an-equation';
+import { SEED_M6MATH_U8_SOLVING_ONE_STEP_EQUATIONS } from './seeds/m6math-u8-solving-one-step-equations';
+import { SEED_M6MATH_U8_WRITING_AND_GRAPHING_INEQUALITIES } from './seeds/m6math-u8-writing-and-graphing-inequalities';
+import { SEED_M6MATH_U8_DEPENDENT_AND_INDEPENDENT_VARIABLES } from './seeds/m6math-u8-dependent-and-independent-variables';
+import { SEED_M6MATH_U9_AREA_OF_TRIANGLES_AND_QUADRILATERALS } from './seeds/m6math-u9-area-of-triangles-and-quadrilaterals';
+import { SEED_M6MATH_U9_POLYGONS_IN_THE_COORDINATE_PLANE } from './seeds/m6math-u9-polygons-in-the-coordinate-plane';
+import { SEED_M6MATH_U9_VOLUME_OF_RECTANGULAR_PRISMS } from './seeds/m6math-u9-volume-of-rectangular-prisms';
+import { SEED_M6MATH_U9_NETS_AND_SURFACE_AREA } from './seeds/m6math-u9-nets-and-surface-area';
+import { SEED_M6MATH_U10_STATISTICAL_QUESTIONS } from './seeds/m6math-u10-statistical-questions';
+import { SEED_M6MATH_U10_DOT_PLOTS_AND_HISTOGRAMS } from './seeds/m6math-u10-dot-plots-and-histograms';
+import { SEED_M6MATH_U10_MEASURES_OF_CENTER } from './seeds/m6math-u10-measures-of-center';
+import { SEED_M6MATH_U10_MEASURES_OF_SPREAD_AND_SUMMARIZING_DATA } from './seeds/m6math-u10-measures-of-spread-and-summarizing-data';
 import { SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE } from './seeds/m7ela-u1-text-evidence-and-inference';
 import { SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT } from './seeds/m7ela-u1-plot-structure-and-conflict';
 import { SEED_M7ELA_U1_CHARACTERIZATION } from './seeds/m7ela-u1-characterization';
@@ -3927,8 +3964,46 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS,
   SEED_M7MATH_U10_COMPOUND_EVENTS,
   // MS-core — Grade 6 Math.
+  SEED_M6MATH_U1_RATIO_LANGUAGE_AND_NOTATION,
+  SEED_M6MATH_U1_REPRESENTING_RATIOS_WITH_TABLES_AND_DIAGRAMS,
+  SEED_M6MATH_U1_SOLVING_MISSING_VALUE_RATIO_PROBLEMS,
+  SEED_M6MATH_U1_UNIT_RATES_AND_UNIT_PRICING,
+  SEED_M6MATH_U2_PERCENT_AS_RATE_PER_100,
+  SEED_M6MATH_U2_FINDING_THE_PERCENT_OF_A_QUANTITY,
+  SEED_M6MATH_U2_FINDING_THE_WHOLE_GIVEN_A_PART_AND_PERCENT,
+  SEED_M6MATH_U2_CONVERTING_MEASUREMENT_UNITS,
+  SEED_M6MATH_U3_MEANING_OF_FRACTION_DIVISION,
   SEED_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS,
+  SEED_M6MATH_U3_DIVIDING_MIXED_NUMBERS,
+  SEED_M6MATH_U3_WORD_PROBLEMS_WITH_FRACTION_DIVISION,
+  SEED_M6MATH_U4_DIVIDING_MULTI_DIGIT_WHOLE_NUMBERS,
+  SEED_M6MATH_U4_ADDING_AND_SUBTRACTING_DECIMALS,
+  SEED_M6MATH_U4_MULTIPLYING_AND_DIVIDING_DECIMALS,
+  SEED_M6MATH_U4_GCF_LCM_AND_THE_DISTRIBUTIVE_PROPERTY,
   SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT,
+  SEED_M6MATH_U5_RATIONAL_NUMBERS_ON_THE_NUMBER_LINE,
+  SEED_M6MATH_U5_ABSOLUTE_VALUE,
+  SEED_M6MATH_U5_ORDERING_RATIONAL_NUMBERS,
+  SEED_M6MATH_U6_PLOTTING_POINTS_IN_ALL_FOUR_QUADRANTS,
+  SEED_M6MATH_U6_REFLECTING_POINTS_ACROSS_THE_AXES,
+  SEED_M6MATH_U6_FINDING_DISTANCE_BETWEEN_POINTS,
+  SEED_M6MATH_U6_SOLVING_REAL_WORLD_COORDINATE_PLANE_PROBLEMS,
+  SEED_M6MATH_U7_NUMERICAL_EXPRESSIONS_WITH_EXPONENTS,
+  SEED_M6MATH_U7_WRITING_AND_EVALUATING_ALGEBRAIC_EXPRESSIONS,
+  SEED_M6MATH_U7_PARTS_OF_AN_EXPRESSION,
+  SEED_M6MATH_U7_EQUIVALENT_EXPRESSIONS,
+  SEED_M6MATH_U8_WHAT_IT_MEANS_TO_SOLVE_AN_EQUATION,
+  SEED_M6MATH_U8_SOLVING_ONE_STEP_EQUATIONS,
+  SEED_M6MATH_U8_WRITING_AND_GRAPHING_INEQUALITIES,
+  SEED_M6MATH_U8_DEPENDENT_AND_INDEPENDENT_VARIABLES,
+  SEED_M6MATH_U9_AREA_OF_TRIANGLES_AND_QUADRILATERALS,
+  SEED_M6MATH_U9_POLYGONS_IN_THE_COORDINATE_PLANE,
+  SEED_M6MATH_U9_VOLUME_OF_RECTANGULAR_PRISMS,
+  SEED_M6MATH_U9_NETS_AND_SURFACE_AREA,
+  SEED_M6MATH_U10_STATISTICAL_QUESTIONS,
+  SEED_M6MATH_U10_DOT_PLOTS_AND_HISTOGRAMS,
+  SEED_M6MATH_U10_MEASURES_OF_CENTER,
+  SEED_M6MATH_U10_MEASURES_OF_SPREAD_AND_SUMMARIZING_DATA,
   // MS-core — Grade 7 English Language Arts.
   SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE,
   SEED_M7ELA_U1_PLOT_STRUCTURE_AND_CONFLICT,

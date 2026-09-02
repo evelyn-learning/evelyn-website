@@ -18,11 +18,10 @@
  * Dividing mixed numbers is row 3.3 and word problems are row 3.4, so neither
  * appears in the try_yourself items here.
  *
- * NOTE ON prerequisites/followUps: the chain for this row is 3.1 -> 3.2 -> 3.3,
- * but rows 3.1 and 3.3 are authored in the fan-out that follows this commit.
- * `lint-ms-plans` rejects a prerequisite/followUp that does not resolve to a
- * registered LO, so both arrays stay empty until the full 40-row batch lands
- * and the controller wires the chain.
+ * NOTE ON prerequisites/followUps: the chain for this row is 3.1 -> 3.2 -> 3.3.
+ * Rows 3.1 and 3.3 are now registered alongside this one, so the chain is
+ * wired: prerequisites points at row 3.1 (`meaning-of-fraction-division`) and
+ * followUps points at row 3.3 (`dividing-mixed-numbers`).
  */
 
 import type { LessonPlan } from '../types';
@@ -44,8 +43,8 @@ export const SEED_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS: LessonPlan = {
         'Fluently divide a fraction by a fraction using the invert-and-multiply algorithm, then simplify the result and check it by multiplying back (CCSS 6.NS.A.1).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6math.meaning-of-fraction-division'],
+  followUps: ['m6math.dividing-mixed-numbers'],
   estimatedMinutes: 20,
   segments: [
     {

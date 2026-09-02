@@ -20,11 +20,10 @@
  * are row 5.4, and absolute-value notation is row 5.3, so none of those is
  * taught or assessed here.
  *
- * NOTE ON prerequisites/followUps: the chain for this row is 4.4 -> 5.1 -> 5.2,
- * but rows 4.4 and 5.2 are authored in the fan-out that follows this commit.
- * `lint-ms-plans` rejects a prerequisite/followUp that does not resolve to a
- * registered LO, so both arrays stay empty until the full 40-row batch lands
- * and the controller wires the chain.
+ * NOTE ON prerequisites/followUps: the chain for this row is 4.4 -> 5.1 -> 5.2.
+ * Rows 4.4 and 5.2 are now registered alongside this one, so the chain is
+ * wired: prerequisites points at row 4.4 (`gcf-lcm-and-the-distributive-property`)
+ * and followUps points at row 5.2 (`rational-numbers-on-the-number-line`).
  */
 
 import type { LessonPlan } from '../types';
@@ -46,8 +45,8 @@ export const SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT: LessonPlan = {
         'Understand that positive and negative numbers describe quantities with opposite directions or values, such as elevation, temperature, and credit/debit, and explain what zero means in each situation (CCSS 6.NS.C.5).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6math.gcf-lcm-and-the-distributive-property'],
+  followUps: ['m6math.rational-numbers-on-the-number-line'],
   estimatedMinutes: 20,
   segments: [
     {
