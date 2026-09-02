@@ -227,6 +227,7 @@ import {
   TUTOR_POSED_PROBLEM_BOARD_CHECK,
   TUTOR_THINK_TIME_HOLD,
   TUTOR_TURN_COALESCE,
+  TUTOR_OPENING_BARGEIN_ESCAPE,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -1181,6 +1182,14 @@ export function VoiceTutorRealtime({
   // so the then-handler can check whether its verdict is still fresh
   // when the dispatch slot is opened.
   const perceptionTranscriptSeqRef = useRef(0);
+  // Issue F/Task 6 (2026-09-01): the most recent perception transcript text
+  // seen, interim or final — updated unconditionally at the very top of
+  // perceptionOnTranscript (every call, before any filtering) so both the
+  // opening-turn escape hatch (openerBargeEscape, this task) and the
+  // cancel-storm allowCancel call sites (Task 6) can consult "what did the
+  // student most recently say" without threading a param through every
+  // call site.
+  const lastPerceptionTextRef = useRef<string>('');
   // Bug 2 fix: after a Stage-2 cancel, record the perception transcript
   // that drove the merge so we can dedupe the inevitable production-WS
   // transcript of the same utterance (production WS still mics during
@@ -1277,6 +1286,13 @@ export function VoiceTutorRealtime({
   // definition point) to tell a late/re-fired MicSilentWarning whether the
   // 20s mic-notice grace period has already elapsed.
   const openingAudioDoneAtRef = useRef<number>(0);
+  // Issue F (2026-09-01, embed-1788187567764): the opening turn's own
+  // spoken text, captured ONCE when the first brain turn's text stream
+  // finishes (see tutorFirstTurnDoneRef's set-site) — openerBargeEscape
+  // compares an incoming perception transcript against this to tell a
+  // real human barge-in from a phantom self-echo of the opener's own
+  // words (same 2026-07-04 guard this escape hatch narrowly relaxes).
+  const openingTurnTextRef = useRef<string>('');
   // Stage 3 fix #11 (2026-05-28): watchdog timeout for the mid-utterance
   // flag. If perception WS misses a speech_stopped event (network blip,
   // server bug), the flag would stay stuck → all subsequent brain
@@ -13977,6 +13993,13 @@ export function VoiceTutorRealtime({
       // audio died at "…teaching AP Calc for year—" while captions ran on).
       // The cancel sites therefore ALSO wait for firstTurnAudioDoneRef —
       // see the state-watcher effect near the perception wiring.
+      // Issue F: capture the opener's own text ONCE, before the flip below
+      // — this block runs at the end of EVERY brain turn (callBrainOnce),
+      // and tutorFirstTurnDoneRef.current is only ever false the first
+      // time through, so this is exactly the opening turn's fullText.
+      if (!tutorFirstTurnDoneRef.current) {
+        openingTurnTextRef.current = fullText;
+      }
       tutorFirstTurnDoneRef.current = true;
       tutorFirstTurnDoneAtRef.current = Date.now();
 
@@ -16415,6 +16438,19 @@ export function VoiceTutorRealtime({
     return tutorFirstTurnDoneAtRef.current > 0
       && Date.now() - tutorFirstTurnDoneAtRef.current > FIRST_TURN_AUDIO_CAP_MS;
   }, []);
+  /** Issue F (embed-1788187567764): during the opening turn every cancel was
+   *  suppressed (2026-07-04 phantom-echo guard) even when the student produced a
+   *  real multi-word utterance. A ≥3-word transcript that is NOT a substring of
+   *  the opener's own text is a human, not echo/noise — allow the cancel.
+   *  The echo check is what keeps the 2026-07-04 guard's protection: phantom
+   *  self-echo transcripts repeat the opener's own words. */
+  const openerBargeEscape = useCallback((text: string): boolean => {
+    if (!TUTOR_OPENING_BARGEIN_ESCAPE) return false;
+    const words = text.trim().split(/\s+/).filter(Boolean);
+    if (words.length < 3) return false;
+    const openerText = (openingTurnTextRef.current ?? '').toLowerCase();
+    return !openerText.includes(text.trim().toLowerCase());
+  }, []);
   // Latch the audio-done flag: state leaves 'speaking' after having been
   // 'speaking', with the first turn's text already done. (If the audio
   // finished before text-done, the leave-'speaking' transition after the
@@ -16493,10 +16529,18 @@ export function VoiceTutorRealtime({
     // kickoff turn before the tutor has FULLY delivered it — text AND audio.
     // (2026-07-04: phantom self-echo transcripts were cancelling the long
     // teacher-intro opener's still-playing audio after the text stream done.)
+    // Issue F escape hatch: a real ≥3-word non-echo transcript is a human,
+    // not a phantom self-echo — let it fall through to the normal cancel
+    // path below instead of suppressing.
     if (!openingTurnFullyDelivered()) {
-      console.warn('[PERCEPTION] retro-cancel suppressed — opening turn not yet delivered');
-      onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
-      return;
+      if (openerBargeEscape(lastPerceptionTextRef.current)) {
+        onDebugEvent?.('perception_opening_bargein_escape', lastPerceptionTextRef.current.slice(0, 60));
+        // fall through to the normal cancel path below
+      } else {
+        console.warn('[PERCEPTION] retro-cancel suppressed — opening turn not yet delivered');
+        onDebugEvent?.('perception_cancel_suppressed_opening', `→${toState}`);
+        return;
+      }
     }
     // Review-round-1 ruling 6: a 'processing' retro-transition is the SAME
     // bug class as an onset-time 'processing' cancel (perceptionOnSpeechStart)
@@ -16682,6 +16726,12 @@ export function VoiceTutorRealtime({
       console.warn(
         `[PERCEPTION] (prod=${prodState}, t=${t.tMs}ms, lat=${t.latencyMs}ms, seq=${mySeq}): ${JSON.stringify(t.text)}`,
       );
+      // Issue F/Task 6 (2026-09-01): record the latest perception transcript
+      // text unconditionally, before any filtering/hold/dedupe branch below
+      // — the opening-turn escape hatch and the cancel-storm allowCancel
+      // sites need "what did the student most recently say" even on a
+      // transcript this function goes on to drop/hold/merge.
+      lastPerceptionTextRef.current = t.text;
       // Any real ASR final proves the mic is capturing — clear the
       // mic-silent notice (and any pending device-switch offer) so it
       // can't linger over a working session.
@@ -17922,6 +17972,15 @@ export function VoiceTutorRealtime({
               onDebugEvent?.('perception_bargein_deferred_abandoned', `prod=${productionStateRef.current} (opening turn)`);
             }
           }, OPENER_BARGEIN_SUSTAIN_MS);
+        } else if (openerBargeEscape(lastPerceptionTextRef.current)) {
+          // Issue F escape hatch: a real ≥3-word non-echo transcript is
+          // already on record (most recent perception transcript seen) —
+          // this is a human, not the phantom self-echo the blanket
+          // suppression below exists to protect against. Proceed to the
+          // same kill the deferred-fire branch above would eventually have
+          // performed, at the cancel stage actually in effect.
+          onDebugEvent?.('perception_opening_bargein_escape', lastPerceptionTextRef.current.slice(0, 60));
+          runPerceptionKill(canStage3 ? 'speaking' : 'processing');
         } else {
           console.warn('[PERCEPTION] cancel suppressed — opening turn not yet delivered');
           onDebugEvent?.('perception_cancel_suppressed_opening', `prev=${prodState}`);

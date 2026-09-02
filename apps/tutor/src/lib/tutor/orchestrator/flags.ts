@@ -611,3 +611,17 @@ export const TUTOR_CONTENT_VARIETY =
 // single-variable rollout discipline.
 export const TUTOR_STT_ENGINE_INK2 =
   process.env.NEXT_PUBLIC_TUTOR_STT_ENGINE === 'ink2';
+// Issue F (2026-09-01, embed-1788187567764 16:46:33->35 UTC): during the
+// opening turn every perception cancel is suppressed (2026-07-04 phantom
+// self-echo guard, project_tutor_r50_round) — even a REAL student
+// utterance. Observed live: perception_cancel_suppressed_opening fired
+// three times while the student asked a genuine ≥3-word question and the
+// tutor spoke over them. This adds a narrow escape hatch: a ≥3-word
+// transcript that is NOT a substring of the opener's own spoken text is a
+// human, not echo/noise — the suppression lifts for that one cancel. The
+// echo-substring check is exactly what preserves the 2026-07-04 guard's
+// protection (a phantom self-echo transcript repeats the opener's own
+// words, so it stays a substring and stays suppressed). Default ON per the
+// standing flag-default rule.
+export const TUTOR_OPENING_BARGEIN_ESCAPE =
+  process.env.NEXT_PUBLIC_TUTOR_OPENING_BARGEIN_ESCAPE !== 'off';
