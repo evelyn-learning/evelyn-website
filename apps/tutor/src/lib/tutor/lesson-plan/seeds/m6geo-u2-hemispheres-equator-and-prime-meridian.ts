@@ -4,11 +4,11 @@
  *
  * PROCEDURE-LED exemplar for the m6geo fan-out (National Geography Standard
  * 1). The shape is deliberately different from the concept-led exemplar: the
- * concept segment is a short ordered routine rather than a mental model, both
- * worked examples run the same two questions in the same order so the pattern
- * is unmistakable, and every answer ends with a check. Two traps this plan is
- * built to kill: swapping which line does which job, and believing a place
- * sits in only one hemisphere.
+ * concept segment is a short ordered routine rather than a mental model, the
+ * first worked example runs the routine straight through and the second runs
+ * the same two questions again to repair a wrong answer, and every answer ends
+ * with a check. Two traps this plan is built to kill: swapping which line does
+ * which job, and believing a place sits in only one hemisphere.
  *
  * THE PROCEDURE, in the order it is always run:
  *   1. Is the place north or south of the Equator?  -> Northern or Southern.
@@ -16,12 +16,17 @@
  *   Name the north-south answer first, then the east-west answer.
  *
  * SCOPE GUARD: this row LOCATES the two lines and names the four halves they
- * make. It never uses degrees and never writes a coordinate. Reading or
- * writing a full latitude-longitude pair with its hemisphere letters, and the
- * ranges those numbers run through, are Grade 7
- * (`m7geo-u1-latitude-longitude-and-location.ts`) and must not appear here.
- * Sideways, absolute versus relative location is Grade 6 row 1.3 and stays out
- * of this file too.
+ * make. No measurement appears anywhere in the lesson prose: no degrees, no
+ * coordinate, no hemisphere letters. Reading or writing a full
+ * latitude-longitude pair with its letters, and the ranges those numbers run
+ * through, are Grade 7 (`m7geo-u1-latitude-longitude-and-location.ts`) and
+ * must not appear here. Sideways, absolute versus relative location is Grade 6
+ * row 1.3 and stays out of this file too. What IS deliberately allowed,
+ * because row 1.3 and the Grade 7 row both sit close: naming Greenwich as the
+ * place the Prime Meridian passes through, and naming the line opposite it as
+ * the thing that completes the east-west split. Both are LOCATING facts about
+ * the two lines themselves, which is this row, and neither describes a place
+ * by what it is near or attaches a number to anything.
  *
  * DEPTH CEILING NOTE FOR THE FAN-OUT: every item in this lesson is answered by
  * LOCATE or IDENTIFY. Nothing here asks why the lines are where they are, and
@@ -31,9 +36,11 @@
  * ANSWER-CUE NOTE: written against deferred finding DF-3 (in the shipped Grade
  * 7 Geography bank the keyed answer was the strictly longest choice 67% of the
  * time, and 94% at difficulty 4). Every distractor here states a full wrong
- * reason rather than a short wrong label, so the correct choice is the
- * strictly longest in at most one of the three items. The first item uses
- * parallel-structure options, which are all the same length by construction --
+ * reason rather than a short wrong label. Measured: the correct choice is the
+ * strictly longest in NONE of the three items (the rule allows at most one),
+ * and the three correct choices sit at ids b, d and a -- which is the id set
+ * `(2 + 4) mod 4 = 2` requires, omitting c. The first item uses
+ * parallel-structure options, all four exactly 50 characters by construction --
  * the cheapest way to make the length cue impossible.
  *
  * NOTE ON prerequisites/followUps: the chain for this row is 2.3 -> 2.4 ->
@@ -87,7 +94,7 @@ export const SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN: LessonPlan = 
         'THE EQUATOR MAKES THE NORTH-SOUTH PAIR. The Equator is a line that runs east and west all the way around the widest part of Earth, halfway between the North Pole and the South Pole. Everything north of it is in the NORTHERN HEMISPHERE. Everything south of it is in the SOUTHERN HEMISPHERE.',
         'THE PRIME MERIDIAN MAKES THE EAST-WEST PAIR. The Prime Meridian is a line that runs from the North Pole to the South Pole, passing through Greenwich, a part of London in England. Going one way from it puts you in the EASTERN HEMISPHERE, and going the other way puts you in the WESTERN HEMISPHERE. The two halves are completed by the line directly opposite the Prime Meridian, on the far side of the globe.',
         'BOTH LINES ARE AGREED ON, NOT PAINTED ON. Neither line is a stripe you could see from a plane or stand on and photograph. They are imaginary lines that people agreed to draw on maps and globes so that everybody means the same halves. The Equator sits where it does because of the shape of Earth and where the poles are. The Prime Meridian sits where it does because people chose that spot.',
-        'THE TWO QUESTIONS, ALWAYS IN THIS ORDER. Question 1: is the place north or south of the Equator? That gives you Northern or Southern. Question 2: is the place east or west of the Prime Meridian? That gives you Eastern or Western. Say the north-south answer first and the east-west answer second. Every single place on Earth is in two hemispheres, one from each pair -- never just one.',
+        'THE TWO QUESTIONS, ALWAYS IN THIS ORDER. Question 1: is the place north or south of the Equator? That gives you Northern or Southern. Question 2: is the place east or west of the Prime Meridian? That gives you Eastern or Western. Say the north-south answer first and the east-west answer second. Almost every place on Earth is in two hemispheres, one from each pair -- never just one. The one exception is a place sitting exactly on one of the two lines, which is on the boundary rather than inside either half of that pair.',
         'A BIG AREA CAN SPREAD ACROSS A LINE AND SIT IN MORE THAN TWO. One point is in exactly two hemispheres, but a whole continent is not a point. Both lines cross Africa: the Equator runs across the middle of it and the Prime Meridian runs down through its western part, so Africa has land in all four hemispheres. Compare that with Antarctica, which lies entirely south of the Equator, so all of it is in the Southern Hemisphere.',
       ],
       vocabulary: [
@@ -122,13 +129,13 @@ export const SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN: LessonPlan = 
       steps: [
         'Take the Australia claim first. WRONG: "Australia is in the Southern Hemisphere, so it is not in any other hemisphere." The mistake is stopping after question 1 and never running question 2.',
         'Run both questions on Australia. Question 1: Australia lies entirely south of the Equator, so it is in the Southern Hemisphere. Question 2: Australia lies east of the Prime Meridian, so it is in the Eastern Hemisphere. CORRECT: Australia is in the Southern Hemisphere and the Eastern Hemisphere.',
-        'State the rule the student was missing. Every place is in two hemispheres, one from each pair. An answer that names only one half is an unfinished answer, because it has answered only one of the two questions.',
-        'Now take the Africa claim. The student is right that a single point sits in exactly two hemispheres. The mistake is treating a whole continent as if it were a point.',
+        'State the rule the student was missing. A place is in two hemispheres, one from each pair. An answer that names only one half is an unfinished answer, because it has answered only one of the two questions.',
+        'Now take the Africa claim. The student is right that a single point away from the two lines sits in exactly two hemispheres. The mistake is treating a whole continent as if it were a point.',
         'Check whether either line crosses Africa. The Equator runs across the middle of Africa, so Africa has land north of it and land south of it. The Prime Meridian runs down through the western part of Africa, so Africa has land east of it and land west of it. CORRECT: Africa has land in all four hemispheres.',
-        'Finish with a contrasting case so the idea is not overlearned. Antarctica lies entirely south of the Equator, with no part of it north of that line, so every bit of Antarctica is in the Southern Hemisphere. A large area crosses a line only when the line actually runs through it.',
+        'Finish with a contrasting case so the idea is not overlearned. Antarctica lies entirely south of the Equator, with no part of it north of that line, so every bit of Antarctica is in the Southern Hemisphere. Check each line on its own, and only for the pair it decides: the Equator is the line that decides Northern or Southern, and no part of Antarctica lies north of it.',
       ],
       answer:
-        'Australia is in the Southern Hemisphere AND the Eastern Hemisphere, because every place sits in two hemispheres, one from each pair. Africa is not limited to two: both the Equator and the Prime Meridian cross it, so Africa has land in all four hemispheres.',
+        'Australia is in the Southern Hemisphere AND the Eastern Hemisphere, because a place sits in two hemispheres, one from each pair. Africa is not limited to two: both the Equator and the Prime Meridian cross it, so Africa has land in all four hemispheres.',
       estimatedMinutes: 3,
     },
     {
@@ -205,7 +212,7 @@ export const SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN: LessonPlan = 
           misconception:
             'Treating the four hemispheres as four boxes and assuming a place goes into exactly one of them, so the first correct label found must be the whole answer.',
           correctsTo:
-            'The four hemispheres are two separate pairs, not four boxes. Every place has to be either north or south of the Equator, and it also has to be either east or west of the Prime Meridian. So every place is in two hemispheres at once, one from each pair. Knowing that a place is in the Southern Hemisphere answers question 1 and leaves question 2 untouched. Australia is in the Southern Hemisphere and the Eastern Hemisphere. Naming only one half is an unfinished answer.',
+            'The four hemispheres are two separate pairs, not four boxes. A place away from the two lines has to be either north or south of the Equator, and it also has to be either east or west of the Prime Meridian. So it sits in two hemispheres at once, one from each pair. Knowing that a place is in the Southern Hemisphere answers question 1 and leaves question 2 untouched. Australia is in the Southern Hemisphere and the Eastern Hemisphere. Naming only one half is an unfinished answer.',
         },
       ],
       estimatedMinutes: 1,
@@ -218,7 +225,7 @@ export const SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN: LessonPlan = 
         'The Equator runs east and west around the middle of Earth, halfway between the poles, and it separates the Northern Hemisphere from the Southern Hemisphere.',
         'The Prime Meridian runs from pole to pole through Greenwich, in London, England, and it separates the Eastern Hemisphere from the Western Hemisphere.',
         'The routine is two questions, always in this order: north or south of the Equator, then east or west of the Prime Meridian. Name the north-south answer first.',
-        'Every place on Earth is in two hemispheres, one from each pair. Naming only one is an unfinished answer.',
+        'Almost every place on Earth is in two hemispheres, one from each pair; only a place sitting exactly on one of the lines is not. Naming only one is an unfinished answer.',
         'A large area can spread across a line. Both lines cross Africa, so Africa has land in all four hemispheres, while Antarctica lies entirely in the Southern Hemisphere.',
         'Both lines are agreed on rather than painted on. Nobody can see them from a plane.',
       ],

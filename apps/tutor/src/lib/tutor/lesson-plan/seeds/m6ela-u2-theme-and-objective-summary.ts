@@ -11,12 +11,22 @@
  * writing a command ("always tell the truth") instead of a theme, and letting
  * a judgment ("the best part", "kind of boring") ride along inside a summary.
  *
- * SCOPE GUARD: Grade 6 row 2.1 finds ONE theme from particular details and
- * writes ONE opinion-free summary. It never traces how a theme DEVELOPS or
- * deepens across a whole text, and it never handles two or more themes at
- * once — that is RL.7.2, taught by the shipped m7ela U2.1 lesson, and must
- * not appear here. It also stays out of Unit 1's plot-stage naming and Unit
- * 3's informational central idea.
+ * SCOPE GUARD: Grade 6 row 2.1 determines ONE theme of a literary text from
+ * particular details, and produces a summary of that text free of personal
+ * opinion or judgment. DELIBERATELY EXCLUDED: tracing how a theme DEVELOPS or
+ * deepens across a whole text, and handling two or more themes at once — that
+ * is RL.7.2, taught by the shipped m7ela U2.1 lesson, and it must not appear
+ * here. Also excluded: naming the plot stages exposition, rising action,
+ * climax and resolution (row 1.2 owns those), and the central idea of an
+ * INFORMATIONAL text with its own summary (rows 3.1 and 3.2). DELIBERATELY
+ * ALLOWED, because those neighbouring rows sit close: (a) the phrase "central
+ * idea" appears in this plan's LO description because it is RL.6.2's own
+ * wording for a literary text, not because this lesson reaches into row 3.1;
+ * (b) the worked example asks what the character wants, what gets in the way
+ * and what is different by the end — that is the route to a theme, and it
+ * names no plot stage anywhere; (c) every excerpt in this file is narrative
+ * fiction, which is what keeps the summary work on this side of the row 3.2
+ * boundary.
  *
  * NOTE FOR FUTURE AUTHORS: every story in this file is original prose written
  * for the item. This course carries no passage machinery — no passageId, no

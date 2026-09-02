@@ -2101,6 +2101,16 @@ import { SEED_M7GEO_U10_ASIA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u10-asia-p
 import { SEED_M7GEO_U10_SOUTH_AND_EAST_ASIA_CULTURE } from './seeds/m7geo-u10-south-and-east-asia-culture';
 import { SEED_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY } from './seeds/m7geo-u10-asia-population-and-economy';
 import { SEED_M7GEO_U10_OCEANIA_AND_ANTARCTICA } from './seeds/m7geo-u10-oceania-and-antarctica';
+// MS-core — Grade 6 English Language Arts. Exemplar seeds; the remaining
+// rows fan out.
+import { SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY } from './seeds/m6ela-u2-theme-and-objective-summary';
+import { SEED_M6ELA_U5_PRONOUN_CASE } from './seeds/m6ela-u5-pronoun-case';
+// MS-core — Grade 6 Science. Exemplar seeds; the remaining rows fan out.
+import { SEED_M6SCI_U2_PHASES_OF_THE_MOON } from './seeds/m6sci-u2-phases-of-the-moon';
+import { SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS } from './seeds/m6sci-u5-relative-dating-and-rock-layers';
+// MS-core — Grade 6 Geography. Exemplar seeds; the remaining rows fan out.
+import { SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN } from './seeds/m6geo-u2-hemispheres-equator-and-prime-meridian';
+import { SEED_M6GEO_U3_EARTHS_MOVING_PLATES } from './seeds/m6geo-u3-earths-moving-plates';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -4126,6 +4136,15 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M7GEO_U10_SOUTH_AND_EAST_ASIA_CULTURE,
   SEED_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY,
   SEED_M7GEO_U10_OCEANIA_AND_ANTARCTICA,
+  // MS-core — Grade 6 English Language Arts.
+  SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY,
+  SEED_M6ELA_U5_PRONOUN_CASE,
+  // MS-core — Grade 6 Science.
+  SEED_M6SCI_U2_PHASES_OF_THE_MOON,
+  SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS,
+  // MS-core — Grade 6 Geography.
+  SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN,
+  SEED_M6GEO_U3_EARTHS_MOVING_PLATES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
