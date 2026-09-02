@@ -53,8 +53,9 @@ import { MockForm } from '../src/models/MockForm';
 import { ProblemBank } from '../src/models/ProblemBank';
 import { resolvePassage } from '../src/lib/tutor/passages/store';
 import { getBlueprint, validateBlueprint } from '../src/lib/tutor/mock-exam/blueprints';
+import { getModelClient, prepareParams, resolveModel } from '../src/lib/tutor/ai/model-registry';
+import { lookupModelRate } from '../src/lib/tutor/ai/model-rates';
 
-const VERIFIER_MODEL = 'claude-sonnet-5';
 const SOURCE = { name: 'Evelyn (original)' };
 const LICENSE = 'internal-original';
 const LETTERS = ['A', 'B', 'C', 'D', 'E'];
@@ -295,6 +296,8 @@ interface VerifyResult {
   ok: boolean;
   modelAnswer?: string;
   note?: string;
+  usageIn?: number;
+  usageOut?: number;
 }
 
 function parseNum(s: string): number {
@@ -318,7 +321,7 @@ function numericMatch(expected: string, got: string): boolean {
   return Math.abs(a - b) <= tol;
 }
 
-async function verifyItem(anthropic: Anthropic, item: SeedableItem): Promise<VerifyResult> {
+async function verifyItem(anthropic: Anthropic, model: string, item: SeedableItem): Promise<VerifyResult> {
   const isMcq = item.responseFormat === 'mcq';
   const choicesBlock = isMcq ? '\n' + item.choices!.map((c, i) => `${LETTERS[i]}. ${c}`).join('\n') : '';
   const passage = item.passageId ? resolvePassage(item.passageId) : undefined;
@@ -332,7 +335,7 @@ async function verifyItem(anthropic: Anthropic, item: SeedableItem): Promise<Ver
   // Newer body fields (adaptive thinking, output_config.effort) aren't in the
   // installed SDK's types but serialize over the wire — cast to bypass TS.
   const params = {
-    model: VERIFIER_MODEL,
+    model,
     max_tokens: 4000,
     thinking: { type: 'adaptive' },
     output_config: { effort: 'high' },
@@ -341,7 +344,10 @@ async function verifyItem(anthropic: Anthropic, item: SeedableItem): Promise<Ver
     messages: [{ role: 'user', content: `${instruction}\n\n${passageBlock}Question:\n${item.problemText}${choicesBlock}` }],
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const msg = (await anthropic.messages.create(params as any)) as { content: Array<{ type: string; text?: string }> };
+  const msg = (await anthropic.messages.create(prepareParams('content-verify', params) as any)) as {
+    content: Array<{ type: string; text?: string }>;
+    usage?: { input_tokens?: number; output_tokens?: number };
+  };
 
   const textBlock = msg.content.find((b) => b.type === 'text');
   const raw = textBlock && textBlock.text ? textBlock.text.trim() : '';
@@ -364,7 +370,13 @@ async function verifyItem(anthropic: Anthropic, item: SeedableItem): Promise<Ver
   const ok = isMcq
     ? modelAnswer.toUpperCase().startsWith(item.answer.toUpperCase())
     : numericMatch(item.answer, modelAnswer);
-  return { ok, modelAnswer, note: fell ? 'unparsed→fallback' : undefined };
+  return {
+    ok,
+    modelAnswer,
+    note: fell ? 'unparsed→fallback' : undefined,
+    usageIn: msg.usage?.input_tokens,
+    usageOut: msg.usage?.output_tokens,
+  };
 }
 
 /** FRQ items skip auto-solve — check the rubric part points sum > 0
@@ -466,26 +478,35 @@ async function main() {
   // publish anyway; see the early --no-verify/--go-live guard above).
   let allVerified = true;
   let verifiedItems: SeedableItem[] = items;
+  let verifierModelUsed = 'unverified';
   if (opts.noVerify) {
     console.log('\n⚠️  --no-verify: skipping the Sonnet verify gate (items are NOT verified; upserted as unverified drafts).');
     allVerified = false;
   } else {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      console.error('✗ ANTHROPIC_API_KEY not set (needed for the verify gate). Use --no-verify to skip.');
+    if (!resolveModel('content-verify').apiKey) {
+      console.error(
+        '✗ No API key found for the content-verify role (checked TUTOR_MODEL_CONTENT_VERIFY_API_KEY, ' +
+          'TUTOR_MODEL_API_KEY, and ANTHROPIC_API_KEY — needed for the verify gate). Use --no-verify to skip.'
+      );
       if (mongoNeeded) await mongoose.disconnect();
       process.exit(1);
     }
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-    console.log(`\nVerifying ${items.length} items via ${VERIFIER_MODEL}...`);
+    const { client: anthropic, model: verifierModel } = getModelClient('content-verify');
+    verifierModelUsed = verifierModel;
+    console.log(`\nVerifying ${items.length} items via ${verifierModel}...`);
     let done = 0;
+    let usageIn = 0;
+    let usageOut = 0;
     const verdicts = await runPool(items, 6, async (item) => {
       let r: VerifyResult;
       try {
-        r = item.responseFormat === 'frq' ? verifyFrqItem(item) : await verifyItem(anthropic, item);
+        r = item.responseFormat === 'frq' ? verifyFrqItem(item) : await verifyItem(anthropic, verifierModel, item);
       } catch (e) {
         r = { ok: false, note: `ERROR ${(e as Error).message}` };
       }
       done++;
+      usageIn += r.usageIn ?? 0;
+      usageOut += r.usageOut ?? 0;
       if (!r.ok) {
         console.log(
           `  ✗ MISMATCH ${item.id}${r.modelAnswer !== undefined ? `: key='${item.answer}' model='${r.modelAnswer}'` : ''}${r.note ? ' (' + r.note + ')' : ''}`
@@ -502,6 +523,12 @@ async function main() {
       console.log('Rejected ids (excluded from upsert — review the answer keys/rubrics):');
       failed.forEach((it) => console.log(`  - ${it.id}`));
     }
+    const rate = lookupModelRate(verifierModel);
+    const cost = rate ? (usageIn / 1e6) * rate.input + (usageOut / 1e6) * rate.output : undefined;
+    console.log(
+      `Token usage: ${usageIn} in / ${usageOut} out.` +
+        (cost !== undefined ? ` Est. verify cost: $${cost.toFixed(3)} (informational)` : ' (no rate row for this model)'),
+    );
   }
 
   // --- Upsert (skipped for --dry-run) ---
@@ -520,7 +547,7 @@ async function main() {
   }
 
   const verifiedAt = new Date();
-  const verifierModel = opts.noVerify ? 'unverified' : VERIFIER_MODEL;
+  const verifierModel = opts.noVerify ? 'unverified' : verifierModelUsed;
   // Mongoose models here are exported as a `models.X || model(...)` union —
   // cast for calls (matches seed-problem-bank.ts).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
