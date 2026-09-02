@@ -45,7 +45,10 @@ export type ModelRole =
   | 'video-curator'
   | 'plangen-fast'      // lesson-plan text generation / labels / classify / condense
   | 'plangen-vision'    // lesson-plan material vision extraction
-  | 'taxonomy';         // taxonomy generation (legacy TAXONOMY_MODEL)
+  | 'taxonomy'          // taxonomy generation (legacy TAXONOMY_MODEL)
+  | 'content-gen'       // offline course-content generation (bank items, batch authoring scripts)
+  | 'content-verify'    // offline fresh-context solve-verify gate (problem bank, mock forms)
+  | 'notes-pointers';   // topic-notes pointer enrichment (legacy POINTER_GEN_MODEL)
 
 const DEFAULT_MODEL: Record<ModelRole, string> = {
   brain: 'claude-sonnet-4-6', // prod ships claude-sonnet-5 via TUTOR_BRAIN_MODEL
@@ -70,6 +73,9 @@ const DEFAULT_MODEL: Record<ModelRole, string> = {
   'plangen-fast': 'claude-haiku-4-5-20251001',
   'plangen-vision': 'claude-sonnet-4-6',
   taxonomy: 'claude-sonnet-5',
+  'content-gen': 'claude-sonnet-5',
+  'content-verify': 'claude-sonnet-5',
+  'notes-pointers': 'claude-opus-5',
 };
 
 /** Pre-registry env vars that must keep working (prod env files set these). */
@@ -79,6 +85,7 @@ const LEGACY_MODEL_ENV: Partial<Record<ModelRole, string>> = {
   'braingen-verify': 'BRAINGEN_VERIFY_MODEL',
   recap: 'NOTES_MODEL',
   taxonomy: 'TAXONOMY_MODEL',
+  'notes-pointers': 'POINTER_GEN_MODEL',
 };
 
 function envSuffix(role: ModelRole): string {
