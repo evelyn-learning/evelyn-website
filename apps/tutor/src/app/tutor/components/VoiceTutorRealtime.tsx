@@ -15078,18 +15078,6 @@ export function VoiceTutorRealtime({
       onListeningHintRef.current?.(null);
       studentHasSpokenRef.current = true;
     }
-    // Issue C: same "real student turn has reached the orchestrator" gate as
-    // the "being heard" indicator above — detect a declared think-time claim
-    // (or a substantive turn that ends one already in force) on every
-    // accepted voice/typed student turn, synthetic/silent kickoffs excluded.
-    if (!opts?.silent && TUTOR_THINK_TIME_HOLD) {
-      if (thinkTimeRe.test(transcript)) {
-        studentThinkTimeUntilRef.current = Date.now() + THINK_TIME_HOLD_MS;
-        onDebugEvent?.('think_time_hold_set', transcript.slice(0, 60));
-      } else if (transcript.trim().split(/\s+/).length >= 3 || /\d/.test(transcript)) {
-        studentThinkTimeUntilRef.current = 0; // substantive turn ends the hold
-      }
-    }
     // Bug 2 fix: production-WS dedupe after a Stage-2 cancel. If a
     // recent cancel armed the suppression slot AND this call did NOT
     // come from the perception refire path, drop it — perception is
@@ -15121,6 +15109,19 @@ export function VoiceTutorRealtime({
       }
       // Window expired — clean up the stale slot.
       productionWsTranscriptSuppressRef.current = null;
+    }
+    // Issue C: placed AFTER the production-WS dedupe check above (not at the
+    // "being heard" indicator further up) so a duplicate/interim fragment
+    // that gets dropped as a dedupe-suppressed re-transcription never
+    // touches the hold — only a transcript that actually survives to be
+    // dispatched (or queued below) can declare or clear think time.
+    if (!opts?.silent && TUTOR_THINK_TIME_HOLD) {
+      if (thinkTimeRe.test(transcript)) {
+        studentThinkTimeUntilRef.current = Date.now() + THINK_TIME_HOLD_MS;
+        onDebugEvent?.('think_time_hold_set', transcript.slice(0, 60));
+      } else if (transcript.trim().split(/\s+/).length >= 3 || /\d/.test(transcript)) {
+        studentThinkTimeUntilRef.current = 0; // substantive turn ends the hold
+      }
     }
     if (brainBusyRef.current) {
       // Final-review Finding 2: same synthetic-marker isolation as the
