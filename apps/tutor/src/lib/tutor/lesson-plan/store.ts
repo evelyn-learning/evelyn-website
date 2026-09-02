@@ -2183,9 +2183,47 @@ import { SEED_M6SCI_U10_THE_CARBON_CYCLE_IN_ROCKS_OCEAN_AND_AIR } from './seeds/
 import { SEED_M6SCI_U10_EVIDENCE_FOR_RISING_GLOBAL_TEMPERATURES } from './seeds/m6sci-u10-evidence-for-rising-global-temperatures';
 import { SEED_M6SCI_U10_MONITORING_AND_REDUCING_HUMAN_IMPACT_ON_EARTH_SYSTEMS } from './seeds/m6sci-u10-monitoring-and-reducing-human-impact-on-earth-systems';
 import { SEED_M6SCI_U10_POPULATION_GROWTH_AND_RESOURCE_DEMAND } from './seeds/m6sci-u10-population-growth-and-resource-demand';
-// MS-core — Grade 6 Geography. Exemplar seeds; the remaining rows fan out.
+// MS-core — Grade 6 Geography (40 plans, 10 units x 4 topics).
+import { SEED_M6GEO_U1_WHAT_IS_GEOGRAPHY } from './seeds/m6geo-u1-what-is-geography';
+import { SEED_M6GEO_U1_MENTAL_MAPS_AND_SPATIAL_THINKING } from './seeds/m6geo-u1-mental-maps-and-spatial-thinking';
+import { SEED_M6GEO_U1_ABSOLUTE_AND_RELATIVE_LOCATION } from './seeds/m6geo-u1-absolute-and-relative-location';
+import { SEED_M6GEO_U1_SITE_AND_SITUATION } from './seeds/m6geo-u1-site-and-situation';
+import { SEED_M6GEO_U2_PARTS_OF_A_MAP } from './seeds/m6geo-u2-parts-of-a-map';
+import { SEED_M6GEO_U2_TYPES_OF_MAPS } from './seeds/m6geo-u2-types-of-maps';
+import { SEED_M6GEO_U2_CONTINENTS_AND_OCEANS } from './seeds/m6geo-u2-continents-and-oceans';
 import { SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN } from './seeds/m6geo-u2-hemispheres-equator-and-prime-meridian';
+import { SEED_M6GEO_U3_LAYERS_OF_THE_EARTH } from './seeds/m6geo-u3-layers-of-the-earth';
 import { SEED_M6GEO_U3_EARTHS_MOVING_PLATES } from './seeds/m6geo-u3-earths-moving-plates';
+import { SEED_M6GEO_U3_THE_ROCK_CYCLE } from './seeds/m6geo-u3-the-rock-cycle';
+import { SEED_M6GEO_U3_WEATHERING_EROSION_AND_DEPOSITION } from './seeds/m6geo-u3-weathering-erosion-and-deposition';
+import { SEED_M6GEO_U4_MAJOR_LANDFORM_VOCABULARY } from './seeds/m6geo-u4-major-landform-vocabulary';
+import { SEED_M6GEO_U4_COASTAL_AND_CONNECTING_LANDFORMS } from './seeds/m6geo-u4-coastal-and-connecting-landforms';
+import { SEED_M6GEO_U4_MAJOR_WATER_FEATURE_VOCABULARY } from './seeds/m6geo-u4-major-water-feature-vocabulary';
+import { SEED_M6GEO_U4_READING_ELEVATION_AND_RELIEF } from './seeds/m6geo-u4-reading-elevation-and-relief';
+import { SEED_M6GEO_U5_WEATHER_VS_CLIMATE } from './seeds/m6geo-u5-weather-vs-climate';
+import { SEED_M6GEO_U5_THE_WATER_CYCLE } from './seeds/m6geo-u5-the-water-cycle';
+import { SEED_M6GEO_U5_WHAT_IS_A_BIOME } from './seeds/m6geo-u5-what-is-a-biome';
+import { SEED_M6GEO_U5_ECOSYSTEMS_AND_HABITATS } from './seeds/m6geo-u5-ecosystems-and-habitats';
+import { SEED_M6GEO_U6_RENEWABLE_AND_NONRENEWABLE_RESOURCES } from './seeds/m6geo-u6-renewable-and-nonrenewable-resources';
+import { SEED_M6GEO_U6_RESOURCE_DISTRIBUTION_AND_ITS_EFFECTS } from './seeds/m6geo-u6-resource-distribution-and-its-effects';
+import { SEED_M6GEO_U6_CONSERVING_NATURAL_RESOURCES } from './seeds/m6geo-u6-conserving-natural-resources';
+import { SEED_M6GEO_U6_HOW_PEOPLE_ADAPT_TO_DIFFERENT_CLIMATES } from './seeds/m6geo-u6-how-people-adapt-to-different-climates';
+import { SEED_M6GEO_U7_SATELLITE_IMAGES_AND_AERIAL_VIEWS } from './seeds/m6geo-u7-satellite-images-and-aerial-views';
+import { SEED_M6GEO_U7_HOW_GPS_FINDS_YOUR_LOCATION } from './seeds/m6geo-u7-how-gps-finds-your-location';
+import { SEED_M6GEO_U7_READING_A_THEMATIC_MAP } from './seeds/m6geo-u7-reading-a-thematic-map';
+import { SEED_M6GEO_U7_READING_GEOGRAPHIC_GRAPHS_AND_CHARTS } from './seeds/m6geo-u7-reading-geographic-graphs-and-charts';
+import { SEED_M6GEO_U8_WHAT_MAKES_A_PLACE_UNIQUE } from './seeds/m6geo-u8-what-makes-a-place-unique';
+import { SEED_M6GEO_U8_HOW_PEOPLE_PERCEIVE_PLACES_DIFFERENTLY } from './seeds/m6geo-u8-how-people-perceive-places-differently';
+import { SEED_M6GEO_U8_COMPARING_TWO_PLACES } from './seeds/m6geo-u8-comparing-two-places';
+import { SEED_M6GEO_U8_MAPPING_YOUR_OWN_COMMUNITY } from './seeds/m6geo-u8-mapping-your-own-community';
+import { SEED_M6GEO_U9_CONTINENTS_SUBREGIONS_AND_HOW_GEOGRAPHERS_GROUP_THEM } from './seeds/m6geo-u9-continents-subregions-and-how-geographers-group-them';
+import { SEED_M6GEO_U9_LOCATING_THE_AMERICAS } from './seeds/m6geo-u9-locating-the-americas';
+import { SEED_M6GEO_U9_LOCATING_EUROPE_AFRICA_AND_THE_MIDDLE_EAST } from './seeds/m6geo-u9-locating-europe-africa-and-the-middle-east';
+import { SEED_M6GEO_U9_LOCATING_ASIA_AND_OCEANIA } from './seeds/m6geo-u9-locating-asia-and-oceania';
+import { SEED_M6GEO_U10_GEOGRAPHIC_REASONING_IN_EVERYDAY_DECISIONS } from './seeds/m6geo-u10-geographic-reasoning-in-everyday-decisions';
+import { SEED_M6GEO_U10_MAP_BASED_PROBLEM_SOLVING } from './seeds/m6geo-u10-map-based-problem-solving';
+import { SEED_M6GEO_U10_HOW_PHYSICAL_GEOGRAPHY_CHANGES_OVER_TIME } from './seeds/m6geo-u10-how-physical-geography-changes-over-time';
+import { SEED_M6GEO_U10_USING_GEOGRAPHY_TO_PLAN_A_COMMUNITY } from './seeds/m6geo-u10-using-geography-to-plan-a-community';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -4294,8 +4332,46 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M6SCI_U10_MONITORING_AND_REDUCING_HUMAN_IMPACT_ON_EARTH_SYSTEMS,
   SEED_M6SCI_U10_POPULATION_GROWTH_AND_RESOURCE_DEMAND,
   // MS-core — Grade 6 Geography.
+  SEED_M6GEO_U1_WHAT_IS_GEOGRAPHY,
+  SEED_M6GEO_U1_MENTAL_MAPS_AND_SPATIAL_THINKING,
+  SEED_M6GEO_U1_ABSOLUTE_AND_RELATIVE_LOCATION,
+  SEED_M6GEO_U1_SITE_AND_SITUATION,
+  SEED_M6GEO_U2_PARTS_OF_A_MAP,
+  SEED_M6GEO_U2_TYPES_OF_MAPS,
+  SEED_M6GEO_U2_CONTINENTS_AND_OCEANS,
   SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN,
+  SEED_M6GEO_U3_LAYERS_OF_THE_EARTH,
   SEED_M6GEO_U3_EARTHS_MOVING_PLATES,
+  SEED_M6GEO_U3_THE_ROCK_CYCLE,
+  SEED_M6GEO_U3_WEATHERING_EROSION_AND_DEPOSITION,
+  SEED_M6GEO_U4_MAJOR_LANDFORM_VOCABULARY,
+  SEED_M6GEO_U4_COASTAL_AND_CONNECTING_LANDFORMS,
+  SEED_M6GEO_U4_MAJOR_WATER_FEATURE_VOCABULARY,
+  SEED_M6GEO_U4_READING_ELEVATION_AND_RELIEF,
+  SEED_M6GEO_U5_WEATHER_VS_CLIMATE,
+  SEED_M6GEO_U5_THE_WATER_CYCLE,
+  SEED_M6GEO_U5_WHAT_IS_A_BIOME,
+  SEED_M6GEO_U5_ECOSYSTEMS_AND_HABITATS,
+  SEED_M6GEO_U6_RENEWABLE_AND_NONRENEWABLE_RESOURCES,
+  SEED_M6GEO_U6_RESOURCE_DISTRIBUTION_AND_ITS_EFFECTS,
+  SEED_M6GEO_U6_CONSERVING_NATURAL_RESOURCES,
+  SEED_M6GEO_U6_HOW_PEOPLE_ADAPT_TO_DIFFERENT_CLIMATES,
+  SEED_M6GEO_U7_SATELLITE_IMAGES_AND_AERIAL_VIEWS,
+  SEED_M6GEO_U7_HOW_GPS_FINDS_YOUR_LOCATION,
+  SEED_M6GEO_U7_READING_A_THEMATIC_MAP,
+  SEED_M6GEO_U7_READING_GEOGRAPHIC_GRAPHS_AND_CHARTS,
+  SEED_M6GEO_U8_WHAT_MAKES_A_PLACE_UNIQUE,
+  SEED_M6GEO_U8_HOW_PEOPLE_PERCEIVE_PLACES_DIFFERENTLY,
+  SEED_M6GEO_U8_COMPARING_TWO_PLACES,
+  SEED_M6GEO_U8_MAPPING_YOUR_OWN_COMMUNITY,
+  SEED_M6GEO_U9_CONTINENTS_SUBREGIONS_AND_HOW_GEOGRAPHERS_GROUP_THEM,
+  SEED_M6GEO_U9_LOCATING_THE_AMERICAS,
+  SEED_M6GEO_U9_LOCATING_EUROPE_AFRICA_AND_THE_MIDDLE_EAST,
+  SEED_M6GEO_U9_LOCATING_ASIA_AND_OCEANIA,
+  SEED_M6GEO_U10_GEOGRAPHIC_REASONING_IN_EVERYDAY_DECISIONS,
+  SEED_M6GEO_U10_MAP_BASED_PROBLEM_SOLVING,
+  SEED_M6GEO_U10_HOW_PHYSICAL_GEOGRAPHY_CHANGES_OVER_TIME,
+  SEED_M6GEO_U10_USING_GEOGRAPHY_TO_PLAN_A_COMMUNITY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

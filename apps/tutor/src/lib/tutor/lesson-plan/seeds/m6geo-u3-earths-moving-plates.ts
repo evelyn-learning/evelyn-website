@@ -48,12 +48,12 @@
  * land. The three keys sit at ids c, a and d, which is the id set
  * `(3 + 2) mod 4 = 1` requires, omitting b.
  *
- * NOTE ON prerequisites/followUps: the chain for this row is 3.1 -> 3.2 ->
+ * NOTE ON prerequisites/followUps (RESOLVED at registration): the chain for this row is 3.1 -> 3.2 ->
  * 3.3, but rows 3.1 and 3.3 are authored in the fan-out that follows this
  * commit. `lint-ms-plans` rejects a prerequisite/followUp that does not
- * resolve to a registered LO, so both arrays stay empty until the full 40-row
- * batch lands and the controller wires the chain. Do NOT copy the empty
- * arrays into your own file.
+ * resolve to a registered LO, so both arrays stayed empty until the full 40-row
+ * batch landed; the controller wired them in the registration commit. Do NOT
+ * copy empty arrays into your own file.
  *
  * There are NO MAPS AND NO IMAGES in this course. Every item is solvable from
  * the words printed inside it.
@@ -78,8 +78,8 @@ export const SEED_M6GEO_U3_EARTHS_MOVING_PLATES: LessonPlan = {
         "Describe, in plain language, that Earth's outer shell is broken into large plates that move very slowly, and that today's continents were once joined together in one landmass (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6geo.layers-of-the-earth'],
+  followUps: ['m6geo.the-rock-cycle'],
   estimatedMinutes: 21,
   segments: [
     {

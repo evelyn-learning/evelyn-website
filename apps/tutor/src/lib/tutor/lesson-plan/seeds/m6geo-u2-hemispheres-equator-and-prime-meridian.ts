@@ -52,12 +52,12 @@
  * length. Put "Africa" and "South America" in the same slot and the spread
  * returns. Use the technique, but still count.
  *
- * NOTE ON prerequisites/followUps: the chain for this row is 2.3 -> 2.4 ->
+ * NOTE ON prerequisites/followUps (RESOLVED at registration): the chain for this row is 2.3 -> 2.4 ->
  * 3.1, but rows 2.3 and 3.1 are authored in the fan-out that follows this
  * commit. `lint-ms-plans` rejects a prerequisite/followUp that does not
- * resolve to a registered LO, so both arrays stay empty until the full 40-row
- * batch lands and the controller wires the chain. Do NOT copy the empty
- * arrays into your own file.
+ * resolve to a registered LO, so both arrays stayed empty until the full 40-row
+ * batch landed; the controller wired them in the registration commit. Do NOT
+ * copy empty arrays into your own file.
  *
  * There are NO MAPS AND NO IMAGES in this course. Every item is solvable from
  * the words printed inside it.
@@ -82,8 +82,8 @@ export const SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN: LessonPlan = 
         'Locate the Equator, the Prime Meridian, and the four hemispheres they create, and state which hemispheres contain a described place (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6geo.continents-and-oceans'],
+  followUps: ['m6geo.layers-of-the-earth'],
   estimatedMinutes: 21,
   segments: [
     {
