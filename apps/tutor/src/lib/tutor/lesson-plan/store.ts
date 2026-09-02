@@ -2101,10 +2101,47 @@ import { SEED_M7GEO_U10_ASIA_PHYSICAL_GEOGRAPHY } from './seeds/m7geo-u10-asia-p
 import { SEED_M7GEO_U10_SOUTH_AND_EAST_ASIA_CULTURE } from './seeds/m7geo-u10-south-and-east-asia-culture';
 import { SEED_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY } from './seeds/m7geo-u10-asia-population-and-economy';
 import { SEED_M7GEO_U10_OCEANIA_AND_ANTARCTICA } from './seeds/m7geo-u10-oceania-and-antarctica';
-// MS-core — Grade 6 English Language Arts. Exemplar seeds; the remaining
-// rows fan out.
+// MS-core — Grade 6 English Language Arts (CCSS RL.6 / RI.6 / L.6 / W.6, units 1-10).
+import { SEED_M6ELA_U1_TEXT_EVIDENCE_AND_INFERENCE } from './seeds/m6ela-u1-text-evidence-and-inference';
+import { SEED_M6ELA_U1_HOW_A_STORYS_PLOT_UNFOLDS } from './seeds/m6ela-u1-how-a-storys-plot-unfolds';
+import { SEED_M6ELA_U1_HOW_CHARACTERS_RESPOND_AND_CHANGE } from './seeds/m6ela-u1-how-characters-respond-and-change';
+import { SEED_M6ELA_U1_HOW_A_SCENE_FITS_THE_WHOLE_STORY } from './seeds/m6ela-u1-how-a-scene-fits-the-whole-story';
 import { SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY } from './seeds/m6ela-u2-theme-and-objective-summary';
+import { SEED_M6ELA_U2_POINT_OF_VIEW_OF_THE_NARRATOR } from './seeds/m6ela-u2-point-of-view-of-the-narrator';
+import { SEED_M6ELA_U2_FIGURATIVE_LANGUAGE } from './seeds/m6ela-u2-figurative-language';
+import { SEED_M6ELA_U2_WORD_CHOICE_AND_TONE } from './seeds/m6ela-u2-word-choice-and-tone';
+import { SEED_M6ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS } from './seeds/m6ela-u3-central-idea-and-supporting-details';
+import { SEED_M6ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT } from './seeds/m6ela-u3-summarizing-informational-text';
+import { SEED_M6ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY } from './seeds/m6ela-u3-technical-and-domain-vocabulary';
+import { SEED_M6ELA_U3_TEXT_FEATURES_AND_HOW_THEY_AID_UNDERSTANDING } from './seeds/m6ela-u3-text-features-and-how-they-aid-understanding';
+import { SEED_M6ELA_U4_HOW_A_TEXT_IS_ORGANIZED } from './seeds/m6ela-u4-how-a-text-is-organized';
+import { SEED_M6ELA_U4_AUTHORS_PURPOSE } from './seeds/m6ela-u4-authors-purpose';
+import { SEED_M6ELA_U4_TRACING_AN_ARGUMENT } from './seeds/m6ela-u4-tracing-an-argument';
+import { SEED_M6ELA_U4_COMPARING_TWO_AUTHORS_ACCOUNTS } from './seeds/m6ela-u4-comparing-two-authors-accounts';
 import { SEED_M6ELA_U5_PRONOUN_CASE } from './seeds/m6ela-u5-pronoun-case';
+import { SEED_M6ELA_U5_INTENSIVE_PRONOUNS } from './seeds/m6ela-u5-intensive-pronouns';
+import { SEED_M6ELA_U5_KEEPING_PRONOUN_NUMBER_AND_PERSON_CONSISTENT } from './seeds/m6ela-u5-keeping-pronoun-number-and-person-consistent';
+import { SEED_M6ELA_U5_STANDARD_AND_NONSTANDARD_ENGLISH } from './seeds/m6ela-u5-standard-and-nonstandard-english';
+import { SEED_M6ELA_U6_SENTENCE_FRAGMENTS_AND_RUN_ONS } from './seeds/m6ela-u6-sentence-fragments-and-run-ons';
+import { SEED_M6ELA_U6_VARYING_SENTENCE_PATTERNS_FOR_STYLE } from './seeds/m6ela-u6-varying-sentence-patterns-for-style';
+import { SEED_M6ELA_U6_COMMAS_FOR_NONRESTRICTIVE_AND_PARENTHETICAL_ELEMENTS } from './seeds/m6ela-u6-commas-for-nonrestrictive-and-parenthetical-elements';
+import { SEED_M6ELA_U6_MAINTAINING_CONSISTENT_STYLE_AND_TONE } from './seeds/m6ela-u6-maintaining-consistent-style-and-tone';
+import { SEED_M6ELA_U7_CONTEXT_CLUES } from './seeds/m6ela-u7-context-clues';
+import { SEED_M6ELA_U7_GREEK_AND_LATIN_ROOTS_AND_AFFIXES } from './seeds/m6ela-u7-greek-and-latin-roots-and-affixes';
+import { SEED_M6ELA_U7_CONNOTATION_AND_DENOTATION } from './seeds/m6ela-u7-connotation-and-denotation';
+import { SEED_M6ELA_U7_WORD_RELATIONSHIPS_AND_ANALOGIES } from './seeds/m6ela-u7-word-relationships-and-analogies';
+import { SEED_M6ELA_U8_INTRODUCING_A_CLAIM } from './seeds/m6ela-u8-introducing-a-claim';
+import { SEED_M6ELA_U8_SUPPORTING_A_CLAIM_WITH_REASONS_AND_EVIDENCE } from './seeds/m6ela-u8-supporting-a-claim-with-reasons-and-evidence';
+import { SEED_M6ELA_U8_LINKING_WORDS_FOR_CLAIMS_AND_REASONS } from './seeds/m6ela-u8-linking-words-for-claims-and-reasons';
+import { SEED_M6ELA_U8_WRITING_A_CONCLUDING_STATEMENT } from './seeds/m6ela-u8-writing-a-concluding-statement';
+import { SEED_M6ELA_U9_ORGANIZING_AN_INFORMATIVE_TEXT } from './seeds/m6ela-u9-organizing-an-informative-text';
+import { SEED_M6ELA_U9_DEVELOPING_A_TOPIC_WITH_FACTS_AND_DETAILS } from './seeds/m6ela-u9-developing-a-topic-with-facts-and-details';
+import { SEED_M6ELA_U9_TRANSITIONS_IN_INFORMATIVE_WRITING } from './seeds/m6ela-u9-transitions-in-informative-writing';
+import { SEED_M6ELA_U9_ORIENTING_THE_READER_IN_A_NARRATIVE } from './seeds/m6ela-u9-orienting-the-reader-in-a-narrative';
+import { SEED_M6ELA_U10_ASKING_A_RESEARCH_QUESTION } from './seeds/m6ela-u10-asking-a-research-question';
+import { SEED_M6ELA_U10_EVALUATING_SOURCE_CREDIBILITY } from './seeds/m6ela-u10-evaluating-source-credibility';
+import { SEED_M6ELA_U10_QUOTING_AND_PARAPHRASING_WITHOUT_PLAGIARIZING } from './seeds/m6ela-u10-quoting-and-paraphrasing-without-plagiarizing';
+import { SEED_M6ELA_U10_GIVING_BASIC_SOURCE_INFORMATION } from './seeds/m6ela-u10-giving-basic-source-information';
 // MS-core — Grade 6 Science. Exemplar seeds; the remaining rows fan out.
 import { SEED_M6SCI_U2_PHASES_OF_THE_MOON } from './seeds/m6sci-u2-phases-of-the-moon';
 import { SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS } from './seeds/m6sci-u5-relative-dating-and-rock-layers';
@@ -4137,8 +4174,46 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M7GEO_U10_ASIA_POPULATION_AND_ECONOMY,
   SEED_M7GEO_U10_OCEANIA_AND_ANTARCTICA,
   // MS-core — Grade 6 English Language Arts.
+  SEED_M6ELA_U1_TEXT_EVIDENCE_AND_INFERENCE,
+  SEED_M6ELA_U1_HOW_A_STORYS_PLOT_UNFOLDS,
+  SEED_M6ELA_U1_HOW_CHARACTERS_RESPOND_AND_CHANGE,
+  SEED_M6ELA_U1_HOW_A_SCENE_FITS_THE_WHOLE_STORY,
   SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY,
+  SEED_M6ELA_U2_POINT_OF_VIEW_OF_THE_NARRATOR,
+  SEED_M6ELA_U2_FIGURATIVE_LANGUAGE,
+  SEED_M6ELA_U2_WORD_CHOICE_AND_TONE,
+  SEED_M6ELA_U3_CENTRAL_IDEA_AND_SUPPORTING_DETAILS,
+  SEED_M6ELA_U3_SUMMARIZING_INFORMATIONAL_TEXT,
+  SEED_M6ELA_U3_TECHNICAL_AND_DOMAIN_VOCABULARY,
+  SEED_M6ELA_U3_TEXT_FEATURES_AND_HOW_THEY_AID_UNDERSTANDING,
+  SEED_M6ELA_U4_HOW_A_TEXT_IS_ORGANIZED,
+  SEED_M6ELA_U4_AUTHORS_PURPOSE,
+  SEED_M6ELA_U4_TRACING_AN_ARGUMENT,
+  SEED_M6ELA_U4_COMPARING_TWO_AUTHORS_ACCOUNTS,
   SEED_M6ELA_U5_PRONOUN_CASE,
+  SEED_M6ELA_U5_INTENSIVE_PRONOUNS,
+  SEED_M6ELA_U5_KEEPING_PRONOUN_NUMBER_AND_PERSON_CONSISTENT,
+  SEED_M6ELA_U5_STANDARD_AND_NONSTANDARD_ENGLISH,
+  SEED_M6ELA_U6_SENTENCE_FRAGMENTS_AND_RUN_ONS,
+  SEED_M6ELA_U6_VARYING_SENTENCE_PATTERNS_FOR_STYLE,
+  SEED_M6ELA_U6_COMMAS_FOR_NONRESTRICTIVE_AND_PARENTHETICAL_ELEMENTS,
+  SEED_M6ELA_U6_MAINTAINING_CONSISTENT_STYLE_AND_TONE,
+  SEED_M6ELA_U7_CONTEXT_CLUES,
+  SEED_M6ELA_U7_GREEK_AND_LATIN_ROOTS_AND_AFFIXES,
+  SEED_M6ELA_U7_CONNOTATION_AND_DENOTATION,
+  SEED_M6ELA_U7_WORD_RELATIONSHIPS_AND_ANALOGIES,
+  SEED_M6ELA_U8_INTRODUCING_A_CLAIM,
+  SEED_M6ELA_U8_SUPPORTING_A_CLAIM_WITH_REASONS_AND_EVIDENCE,
+  SEED_M6ELA_U8_LINKING_WORDS_FOR_CLAIMS_AND_REASONS,
+  SEED_M6ELA_U8_WRITING_A_CONCLUDING_STATEMENT,
+  SEED_M6ELA_U9_ORGANIZING_AN_INFORMATIVE_TEXT,
+  SEED_M6ELA_U9_DEVELOPING_A_TOPIC_WITH_FACTS_AND_DETAILS,
+  SEED_M6ELA_U9_TRANSITIONS_IN_INFORMATIVE_WRITING,
+  SEED_M6ELA_U9_ORIENTING_THE_READER_IN_A_NARRATIVE,
+  SEED_M6ELA_U10_ASKING_A_RESEARCH_QUESTION,
+  SEED_M6ELA_U10_EVALUATING_SOURCE_CREDIBILITY,
+  SEED_M6ELA_U10_QUOTING_AND_PARAPHRASING_WITHOUT_PLAGIARIZING,
+  SEED_M6ELA_U10_GIVING_BASIC_SOURCE_INFORMATION,
   // MS-core — Grade 6 Science.
   SEED_M6SCI_U2_PHASES_OF_THE_MOON,
   SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS,

@@ -36,12 +36,17 @@
  * character in the excerpt above it; quote your own excerpt exactly, never
  * from memory.
  *
+ *
+ * CLAIM LEDGER: none required. Every excerpt in this file is invented
+ * narrative fiction, which is true by construction, so there is no factual
+ * claim to verify. Rows whose passages are INFORMATIONAL (all of Units 3 and
+ * 4, and any other row needing nonfiction) must carry the three-column claim
+ * ledger described in the fan-out contract instead of this line.
+ *
  * NOTE ON prerequisites/followUps: the chain for this row is 1.4 -> 2.1 ->
- * 2.2, but rows 1.4 and 2.2 are authored in the fan-out that follows this
- * commit. `lint-ms-plans` rejects a prerequisite/followUp that does not
- * resolve to a registered LO, so both arrays stay empty until the full 40-row
- * batch lands and the controller wires the chain. Do not copy the empty
- * arrays into a fan-out file.
+ * 2.2. All 40 rows are now registered, so this row's prerequisite (row 1.4,
+ * How a Scene Fits the Whole Story) and followUp (row 2.2, Point of View of
+ * the Narrator) are wired below.
  */
 
 import type { LessonPlan } from '../types';
@@ -63,8 +68,8 @@ export const SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY: LessonPlan = {
         'Determine a text\'s theme or central idea from particular details, state it as a complete sentence rather than a one-word topic or a command, and provide a summary of the text that is distinct from personal opinion or judgment (CCSS RL.6.2).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6ela.how-a-scene-fits-the-whole-story'],
+  followUps: ['m6ela.point-of-view-of-the-narrator'],
   estimatedMinutes: 20,
   segments: [
     {
@@ -139,14 +144,14 @@ export const SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY: LessonPlan = {
         'Read the story, then choose the statement that is a THEME.\n\n"Jae practiced her lines in the bathroom mirror for two weeks and told nobody she had auditioned. When the cast list went up with her name on it, she read it three times before she believed it. At dinner she still said it was probably a mistake."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Acting.' },
-        { id: 'b', text: 'Always believe in yourself.' },
-        { id: 'c', text: 'Jae practices her lines in the bathroom mirror for two weeks.' },
+        { id: 'a', text: 'The nervous excitement of trying out for a part in a school play.' },
+        { id: 'b', text: 'Always believe in yourself, even when nobody else knows what you are doing.' },
+        { id: 'c', text: 'Jae reads the cast list three times before she believes her own name.' },
         { id: 'd', text: 'Working in secret can make a success hard to believe when it arrives.', correct: true },
       ],
       expectedAnswer: 'Working in secret can make a success hard to believe when it arrives.',
       hints: [
-        'Three of these are not sentences that say something about people. One is a single word, one gives an order, and one only repeats an event from the story.',
+        'Three of these are not sentences that say something about people. One names a subject without claiming anything about it, one gives an order, and one only repeats an event from the story.',
         'A theme is one sentence about people in general that the details support. Ask what Jae keeping the audition secret cost her at the moment she saw her own name.',
       ],
       estimatedMinutes: 2,
@@ -158,10 +163,10 @@ export const SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY: LessonPlan = {
         'Read the story, then choose the theme that the particular details actually support.\n\n"Ravi promised to walk the Bhatt family\'s dog every day in July. On the eighth morning he slept through his alarm, and on the ninth he went to the pool instead. When Mrs. Bhatt paid him the full amount they had agreed on at the end of the month, Ravi handed some of it back without being asked and told her why."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Summer jobs are harder than they look.' },
-        { id: 'b', text: 'Admitting what you did not do can matter more than keeping what you were paid.', correct: true },
-        { id: 'c', text: 'Never take on a job you cannot finish.' },
-        { id: 'd', text: 'Ravi walked the Bhatt family\'s dog in July.' },
+        { id: 'a', text: 'Admitting what you did not do can matter more than keeping what you were paid.', correct: true },
+        { id: 'b', text: 'Summer jobs always turn out to pay less than they are worth once you count up all the hours.' },
+        { id: 'c', text: 'Never take on a job unless you are certain you can finish every day of it.' },
+        { id: 'd', text: 'Ravi walked the Bhatt family\'s dog every morning in July except for two.' },
       ],
       expectedAnswer: 'Admitting what you did not do can matter more than keeping what you were paid.',
       hints: [
@@ -177,10 +182,10 @@ export const SEED_M6ELA_U2_THEME_AND_OBJECTIVE_SUMMARY: LessonPlan = {
         'Read the story, then choose the best OBJECTIVE SUMMARY.\n\n"The sixth grade band had one working music stand for eleven players, so Nora spent two weekends repairing the broken ones with parts from her uncle\'s shop. Mr. Colley told her the school would not pay her back for the screws. She fixed ten stands anyway, and in December the band played its first concert with every player reading from a stand."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Students should not have to repair their own school equipment.' },
-        { id: 'b', text: 'Nora is incredibly generous, and the best part is that the concert went so well.' },
-        { id: 'c', text: 'Nora\'s uncle has a shop. Mr. Colley would not pay for screws. There were eleven players. The band played a concert.' },
-        { id: 'd', text: 'The sixth grade band has one working music stand for eleven players, so Nora spends two weekends repairing ten of them with parts from her uncle\'s shop, even after Mr. Colley tells her the school will not pay for the screws. In December the band plays its first concert with every player reading from a stand.', correct: true },
+        { id: 'a', text: 'Schools should make sure their music programs have working equipment, because a student like Nora should not have to give up two weekends and her own family\'s supplies to repair what the school already owns. The December concert showed that the band deserved that support all along.' },
+        { id: 'b', text: 'The sixth grade band has one working music stand for eleven players, so Nora spends two weekends repairing ten of them with parts from her uncle\'s shop, even after Mr. Colley tells her the school will not pay for the screws. In December the band plays its first concert with every player reading from a stand.', correct: true },
+        { id: 'c', text: 'Nora is incredibly generous, and the best part of the whole story is how patient she stays about the whole thing. The band having only one decent stand was honestly unfair to everybody, and Mr. Colley was not very helpful when she came to him. It all works out beautifully at the concert in December, which was easily the best part of the whole year.' },
+        { id: 'd', text: 'Nora\'s uncle has a shop with parts in it. Mr. Colley spoke to Nora about screws and about what the school pays for. The sixth grade band has eleven players. There are music stands at the school, and some of them were broken. Two weekends went by. A concert happened in December.' },
       ],
       expectedAnswer: 'The sixth grade band has one working music stand for eleven players, so Nora spends two weekends repairing ten of them with parts from her uncle\'s shop, even after Mr. Colley tells her the school will not pay for the screws. In December the band plays its first concert with every player reading from a stand.',
       hints: [

@@ -31,20 +31,29 @@
  * NOTE FOR FUTURE AUTHORS: every sentence in this file is original prose
  * written for the item. This course carries no passage machinery — no
  * passageId, no shared texts — so each question must be solvable from the
- * words printed inside it. Every ungrammatical example is explicitly labeled
- * WRONG, with the CORRECT version beside it: a tutor reads these lines aloud,
- * and an unlabeled "between you and I" is handed to the student as a model.
- * Never write a broken example bare. Every contraction in this file is printed
+ * words printed inside it. Every ungrammatical example IN THE TUTOR'S OWN
+ * PROSE is explicitly labeled WRONG, with the CORRECT version beside it: a
+ * tutor reads those lines aloud, and an unlabeled "between you and I" would be
+ * handed to the student as a model. Never write a broken example bare in
+ * prose. The only unlabeled wrong forms in this file are the MCQ distractors
+ * the three try_yourself items ask the student to reject, which is exactly
+ * what those items are for; each one is then named in that item's hints or in
+ * the misconception check. Every contraction in this file is printed
  * inside quotation marks as the object of study rather than as the lesson's
  * own voice, which is the only place a contraction is allowed in authored
  * prose in this course.
  *
+ *
+ * CLAIM LEDGER: none required. Every excerpt in this file is invented
+ * narrative fiction, which is true by construction, so there is no factual
+ * claim to verify. Rows whose passages are INFORMATIONAL (all of Units 3 and
+ * 4, and any other row needing nonfiction) must carry the three-column claim
+ * ledger described in the fan-out contract instead of this line.
+ *
  * NOTE ON prerequisites/followUps: the chain for this row is 4.4 -> 5.1 ->
- * 5.2, but rows 4.4 and 5.2 are authored in the fan-out that follows this
- * commit. `lint-ms-plans` rejects a prerequisite/followUp that does not
- * resolve to a registered LO, so both arrays stay empty until the full 40-row
- * batch lands and the controller wires the chain. Do not copy the empty
- * arrays into a fan-out file.
+ * 5.2. All 40 rows are now registered, so this row's prerequisite (row 4.4,
+ * Comparing Two Authors' Accounts) and followUp (row 5.2, Intensive
+ * Pronouns) are wired below.
  */
 
 import type { LessonPlan } from '../types';
@@ -66,8 +75,8 @@ export const SEED_M6ELA_U5_PRONOUN_CASE: LessonPlan = {
         'Choose the correct case of a pronoun — subjective, objective or possessive — based on the job it does in the sentence, using the drop test on compound subjects and objects and applying the rule that object case always follows a preposition, as in "between you and me" rather than "between you and I" (CCSS L.6.1a).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6ela.comparing-two-authors-accounts'],
+  followUps: ['m6ela.intensive-pronouns'],
   estimatedMinutes: 20,
   segments: [
     {
@@ -142,14 +151,14 @@ export const SEED_M6ELA_U5_PRONOUN_CASE: LessonPlan = {
       responseFormat: 'mcq',
       choices: [
         { id: 'a', text: 'Ms. Ruiz handed the sign-up sheet to Jonah and I.' },
-        { id: 'b', text: 'Ms. Ruiz handed the sign-up sheet to Jonah and me.', correct: true },
-        { id: 'c', text: 'Ms. Ruiz handed the sign-up sheet to he and me.' },
+        { id: 'b', text: 'Ms. Ruiz handed the sign-up sheet to he and me.' },
+        { id: 'c', text: 'Ms. Ruiz handed the sign-up sheet to Jonah and me.', correct: true },
         { id: 'd', text: 'Ms. Ruiz handed the sign-up sheet to Jonah and mine.' },
       ],
       expectedAnswer: 'Ms. Ruiz handed the sign-up sheet to Jonah and me.',
       hints: [
         'Find the preposition in the sentence first. Then remember which case always follows one.',
-        'Cover the other name and read each ending alone: "to I", "to me", "to he", "to mine". Only one of those four is something an English sentence can say.',
+        'Cover the other name and read each ending alone: "to I", "to he", "to me", "to mine". Only one of those four is something an English sentence can say.',
       ],
       estimatedMinutes: 2,
     },
@@ -161,8 +170,8 @@ export const SEED_M6ELA_U5_PRONOUN_CASE: LessonPlan = {
       choices: [
         { id: 'a', text: 'Her and Malik built the whole ramp in one afternoon.' },
         { id: 'b', text: 'Her and him built the whole ramp in one afternoon.' },
-        { id: 'c', text: 'She and Malik built the whole ramp in one afternoon.', correct: true },
-        { id: 'd', text: 'Hers and Malik built the whole ramp in one afternoon.' },
+        { id: 'c', text: 'Hers and Malik built the whole ramp in one afternoon.' },
+        { id: 'd', text: 'She and Malik built the whole ramp in one afternoon.', correct: true },
       ],
       expectedAnswer: 'She and Malik built the whole ramp in one afternoon.',
       hints: [
@@ -177,10 +186,10 @@ export const SEED_M6ELA_U5_PRONOUN_CASE: LessonPlan = {
       problem: 'Which sentence is written correctly?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'The team left it\'s water bottles on the bench, so ours got mixed in with their\'s.' },
-        { id: 'b', text: 'The team left its water bottles on the bench, so our\'s got mixed in with theirs.' },
-        { id: 'c', text: 'The team left it\'s water bottles on the bench, so ours got mixed in with theirs.' },
-        { id: 'd', text: 'The team left its water bottles on the bench, so ours got mixed in with theirs.', correct: true },
+        { id: 'a', text: 'The team left its water bottles on the bench, so ours got mixed in with theirs.', correct: true },
+        { id: 'b', text: 'The team left it\'s water bottles on the bench, so ours got mixed in with their\'s.' },
+        { id: 'c', text: 'The team left its water bottles on the bench, so our\'s got mixed in with theirs.' },
+        { id: 'd', text: 'The team left it\'s water bottles on the bench, so ours got mixed in with theirs.' },
       ],
       expectedAnswer: 'The team left its water bottles on the bench, so ours got mixed in with theirs.',
       hints: [
