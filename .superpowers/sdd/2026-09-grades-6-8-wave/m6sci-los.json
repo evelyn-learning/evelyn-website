@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m6sci.scale-of-the-solar-system",
+    "planId": "evelyn.ms.m6sci.scale-of-the-solar-system.v1",
+    "title": "Scale of the Solar System",
+    "description": "Use relative-size and relative-distance models (not to-scale drawings) to compare the sizes of the sun and planets and their distances from the sun and from Earth (NGSS MS-ESS1-3).",
+    "unit": 1
+  },
+  {
+    "loId": "m6sci.classifying-the-planets",
+    "planId": "evelyn.ms.m6sci.classifying-the-planets.v1",
+    "title": "Classifying the Planets",
+    "description": "Sort the eight planets into terrestrial (rocky, small, close) and gas/ice giant (large, distant) groups by their observed properties (DCI ESS1.B; no MS-ESS1 performance expectation names planet classification directly, so it is cited as foundational to MS-ESS1-3).",
+    "unit": 1
+  },
+  {
+    "loId": "m6sci.gravity-and-orbital-motion",
+    "planId": "evelyn.ms.m6sci.gravity-and-orbital-motion.v1",
+    "title": "Gravity & Orbital Motion",
+    "description": "Use a model to explain qualitatively how gravity keeps planets, moons, and satellites in orbit rather than flying off in a straight line, without calculating gravitational force (NGSS MS-ESS1-2).",
+    "unit": 1
+  },
+  {
+    "loId": "m6sci.asteroids-comets-and-other-solar-system-objects",
+    "planId": "evelyn.ms.m6sci.asteroids-comets-and-other-solar-system-objects.v1",
+    "title": "Asteroids, Comets & Other Solar System Objects",
+    "description": "Distinguish asteroids, comets, dwarf planets, and meteors by composition and orbital path, and locate the asteroid belt and Kuiper Belt on a solar-system model, sharing MS-ESS1-3 with the course's scale-of-the-solar-system row: that lesson compares scale, this one inventories object types (NGSS MS-ESS1-3).",
+    "unit": 1
+  },
+  {
+    "loId": "m6sci.earths-rotation-day-and-night",
+    "planId": "evelyn.ms.m6sci.earths-rotation-day-and-night.v1",
+    "title": "Earth's Rotation: Day & Night",
+    "description": "Use a model of Earth spinning on its tilted axis to explain why day and night occur and why their length changes little across the year at a given latitude (NGSS MS-ESS1-1).",
+    "unit": 2
+  },
+  {
+    "loId": "m6sci.earths-revolution-and-the-seasons",
+    "planId": "evelyn.ms.m6sci.earths-revolution-and-the-seasons.v1",
+    "title": "Earth's Revolution & the Seasons",
+    "description": "Use a model of Earth's tilted axis and its year-long revolution around the sun to explain why seasons occur and why they are opposite in the Northern and Southern Hemispheres at the same time, sharing MS-ESS1-1 with the rest of Unit 2 as a coarse, model-by-model split (NGSS MS-ESS1-1).",
+    "unit": 2
+  },
+  {
+    "loId": "m6sci.phases-of-the-moon",
+    "planId": "evelyn.ms.m6sci.phases-of-the-moon.v1",
+    "title": "Phases of the Moon",
+    "description": "Use a model of the Moon orbiting Earth to explain why the illuminated shape of the Moon appears to change over about 29.5 days, naming the phases in order and accounting for the change by the Sun-Moon-Earth angle rather than by Earth's shadow (NGSS MS-ESS1-1).",
+    "unit": 2
+  },
+  {
+    "loId": "m6sci.solar-and-lunar-eclipses",
+    "planId": "evelyn.ms.m6sci.solar-and-lunar-eclipses.v1",
+    "title": "Solar & Lunar Eclipses",
+    "description": "Use a model of Sun-Earth-Moon alignment to distinguish a solar eclipse (Moon between Sun and Earth) from a lunar eclipse (Earth between Sun and Moon) and explain why eclipses do not occur every month (NGSS MS-ESS1-1).",
+    "unit": 2
+  },
+  {
+    "loId": "m6sci.earths-layered-structure",
+    "planId": "evelyn.ms.m6sci.earths-layered-structure.v1",
+    "title": "Earth's Layered Structure",
+    "description": "Identify Earth's crust, mantle, outer core, and inner core by relative position, thickness, and physical state (solid vs. molten/plastic) (DCI ESS2.A, foundational to MS-ESS2-1; no PE names Earth's internal layering directly).",
+    "unit": 3
+  },
+  {
+    "loId": "m6sci.identifying-minerals-by-their-properties",
+    "planId": "evelyn.ms.m6sci.identifying-minerals-by-their-properties.v1",
+    "title": "Identifying Minerals by Their Properties",
+    "description": "Use hardness, streak, luster, and cleavage/fracture to identify a mineral sample, and distinguish a mineral (one substance, defined crystal structure) from a rock (mixture of minerals) (DCI ESS2.A; foundational to Topics 3-4, not named by an MS-ESS PE).",
+    "unit": 3
+  },
+  {
+    "loId": "m6sci.the-three-rock-types",
+    "planId": "evelyn.ms.m6sci.the-three-rock-types.v1",
+    "title": "The Three Rock Types",
+    "description": "Classify a rock as igneous, sedimentary, or metamorphic from a description of how it formed -- cooled from magma or lava, compacted and cemented from sediment, or an existing rock altered by heat and pressure without melting (NGSS MS-ESS2-1).",
+    "unit": 3
+  },
+  {
+    "loId": "m6sci.the-rock-cycle",
+    "planId": "evelyn.ms.m6sci.the-rock-cycle.v1",
+    "title": "The Rock Cycle",
+    "description": "Trace a rock-cycle pathway described in words to predict which processes -- melting, cooling, weathering, erosion, deposition, compaction/cementation, or heat and pressure -- could turn a given rock into a different rock type, recognizing that the rock cycle has no fixed order and any rock type can become any other depending on which process acts (NGSS MS-ESS2-1; shares MS-ESS2-1 with the-three-rock-types, which classifies rock types by how they formed, while this lesson models the transformations between them).",
+    "unit": 3
+  },
+  {
+    "loId": "m6sci.evidence-for-continental-drift",
+    "planId": "evelyn.ms.m6sci.evidence-for-continental-drift.v1",
+    "title": "Evidence for Continental Drift",
+    "description": "Analyze matching coastlines, cross-continental fossil distributions, matching rock layers, and seafloor magnetic-stripe patterns as independent lines of evidence that continents have moved over time (NGSS MS-ESS2-3).",
+    "unit": 4
+  },
+  {
+    "loId": "m6sci.earths-plates-and-mantle-convection",
+    "planId": "evelyn.ms.m6sci.earths-plates-and-mantle-convection.v1",
+    "title": "Earth's Plates & Mantle Convection",
+    "description": "Describe Earth's lithosphere as broken into plates that move atop the flowing asthenosphere, driven qualitatively by mantle convection, without teaching heat-transfer mechanisms or the physics of convective flow -- those mechanisms are Grade 8 physical science (DCI ESS2.B).",
+    "unit": 4
+  },
+  {
+    "loId": "m6sci.types-of-plate-boundaries",
+    "planId": "evelyn.ms.m6sci.types-of-plate-boundaries.v1",
+    "title": "Types of Plate Boundaries",
+    "description": "Distinguish convergent, divergent, and transform plate boundaries by the direction plates move relative to each other (NGSS MS-ESS2-2).",
+    "unit": 4
+  },
+  {
+    "loId": "m6sci.landforms-built-by-plate-motion",
+    "planId": "evelyn.ms.m6sci.landforms-built-by-plate-motion.v1",
+    "title": "Landforms Built by Plate Motion",
+    "description": "Match a named landform (fold mountains, ocean trench, mid-ocean ridge, rift valley, volcanic island arc) to the plate-boundary type and rock-density combination that produces it (shares MS-ESS2-2 with Topic 3: that lesson classifies boundary types, this one classifies their surface products).",
+    "unit": 4
+  },
+  {
+    "loId": "m6sci.relative-dating-and-rock-layers",
+    "planId": "evelyn.ms.m6sci.relative-dating-and-rock-layers.v1",
+    "title": "Relative Dating & Rock Layers",
+    "description": "Apply the law of superposition to order undisturbed rock layers from oldest to youngest, and identify when a sequence has been disturbed by folding, tilting or a later feature cutting across it (NGSS MS-ESS1-4).",
+    "unit": 5
+  },
+  {
+    "loId": "m6sci.absolute-dating-and-the-geologic-time-scale",
+    "planId": "evelyn.ms.m6sci.absolute-dating-and-the-geologic-time-scale.v1",
+    "title": "Absolute Dating & the Geologic Time Scale",
+    "description": "Explain how radiometric dating (e.g., carbon-14 for organic material, uranium-lead for rock) gives an age in years, and place that age within the eon-era-period divisions of the geologic time scale (shares MS-ESS1-4 with the rest of Unit 5 as a coarse split by pedagogical stage).",
+    "unit": 5
+  },
+  {
+    "loId": "m6sci.fossils-as-evidence-of-earths-history",
+    "planId": "evelyn.ms.m6sci.fossils-as-evidence-of-earths-history.v1",
+    "title": "Fossils as Evidence of Earth's History",
+    "description": "Use an index fossil's known time range and its position in the rock record to date the layer it is found in, treating fossils strictly as time markers rather than as evidence for how species changed (NGSS MS-ESS1-4).",
+    "unit": 5
+  },
+  {
+    "loId": "m6sci.mass-extinctions-as-time-markers",
+    "planId": "evelyn.ms.m6sci.mass-extinctions-as-time-markers.v1",
+    "title": "Mass Extinctions as Time Markers",
+    "description": "Identify the five major mass-extinction boundaries (end-Ordovician, end-Devonian, end-Permian, end-Triassic, end-Cretaceous) as the events that divide the Phanerozoic eon into its eras and periods, without addressing the biological causes of extinction or natural selection (NGSS MS-ESS1-4).",
+    "unit": 5
+  },
+  {
+    "loId": "m6sci.layers-and-composition-of-the-atmosphere",
+    "planId": "evelyn.ms.m6sci.layers-and-composition-of-the-atmosphere.v1",
+    "title": "Layers & Composition of the Atmosphere",
+    "description": "Identify the troposphere, stratosphere, mesosphere, and thermosphere by their approximate altitude ranges and temperature trend, and state the atmosphere's major gas composition by volume (DCI ESS2.D, foundational to MS-ESS2-5; no NGSS performance expectation names atmospheric layering directly).",
+    "unit": 6
+  },
+  {
+    "loId": "m6sci.air-masses-and-fronts",
+    "planId": "evelyn.ms.m6sci.air-masses-and-fronts.v1",
+    "title": "Air Masses & Fronts",
+    "description": "Describe how an air mass's temperature and moisture depend on where it formed, and predict the weather produced when a cold front or warm front passes through a location (NGSS MS-ESS2-5).",
+    "unit": 6
+  },
+  {
+    "loId": "m6sci.reading-weather-maps",
+    "planId": "evelyn.ms.m6sci.reading-weather-maps.v1",
+    "title": "Reading Weather Maps",
+    "description": "Interpret a weather map's fronts, pressure centers, and symbols to describe current conditions and predict short-term local weather changes (NGSS MS-ESS2-5; shares this standard with the rest of Unit 6 as a coarse split by pedagogical stage).",
+    "unit": 6
+  },
+  {
+    "loId": "m6sci.how-air-mass-interactions-produce-severe-weather",
+    "planId": "evelyn.ms.m6sci.how-air-mass-interactions-produce-severe-weather.v1",
+    "title": "How Air-Mass Interactions Produce Severe Weather",
+    "description": "Explain thunderstorms, tornadoes, and hurricanes as the product of specific air-mass interactions and conditions, describing the phenomenon rather than forecasting or mitigation strategy (preparedness and mitigation are Unit 9) (NGSS MS-ESS2-5).",
+    "unit": 6
+  },
+  {
+    "loId": "m6sci.earths-four-spheres-interacting",
+    "planId": "evelyn.ms.m6sci.earths-four-spheres-interacting.v1",
+    "title": "Earth's Four Spheres Interacting",
+    "description": "Identify the geosphere, hydrosphere, atmosphere, and biosphere in a described scenario and trace one example of matter or energy moving between two of them (shares MS-ESS2-1 with Unit 3's rock-type topics: those lessons model the rock cycle specifically, this one models systems-level interaction generally, as the entry point to the water-cycle topics that follow) (NGSS MS-ESS2-1).",
+    "unit": 7
+  },
+  {
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "planId": "evelyn.ms.m6sci.the-water-cycle-evaporation-condensation-precipitation.v1",
+    "title": "The Water Cycle: Evaporation, Condensation & Precipitation",
+    "description": "Model how energy from the sun drives evaporation and how condensation and precipitation return water to Earth's surface, in the atmospheric portion of the water cycle (NGSS MS-ESS2-4).",
+    "unit": 7
+  },
+  {
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "planId": "evelyn.ms.m6sci.the-water-cycle-groundwater-and-runoff.v1",
+    "title": "The Water Cycle: Groundwater & Runoff",
+    "description": "Model how precipitation becomes surface runoff, infiltrates into groundwater, or is taken up by plants, in the surface/subsurface portion of the water cycle (shares MS-ESS2-4 with Topic 2 as a coarse split between the atmospheric and surface/subsurface halves of the cycle).",
+    "unit": 7
+  },
+  {
+    "loId": "m6sci.weathering-erosion-and-deposition-by-water",
+    "planId": "evelyn.ms.m6sci.weathering-erosion-and-deposition-by-water.v1",
+    "title": "Weathering, Erosion & Deposition by Water",
+    "description": "Explain how moving water mechanically and chemically weathers rock, erodes and transports the resulting sediment, and deposits it to build new landforms (deltas, canyons, floodplains) -- distinct from the rock-type transformations covered in Unit 3 (DCI ESS2.A).",
+    "unit": 7
+  },
+  {
+    "loId": "m6sci.weather-versus-climate",
+    "planId": "evelyn.ms.m6sci.weather-versus-climate.v1",
+    "title": "Weather versus Climate",
+    "description": "Distinguish weather (a location's short-term atmospheric conditions) from climate (a region's typical weather pattern averaged over decades), and give an example that could be true of one but not the other (DCI ESS2.D, foundational to MS-ESS2-6).",
+    "unit": 8
+  },
+  {
+    "loId": "m6sci.what-determines-a-regions-climate",
+    "planId": "evelyn.ms.m6sci.what-determines-a-regions-climate.v1",
+    "title": "What Determines a Region's Climate",
+    "description": "Explain how latitude, elevation, and distance from a large body of water combine to determine a region's typical temperature and precipitation pattern, without naming or classifying biomes -- biome classification by resident species is Grade 7 life science (NGSS MS-ESS2-6).",
+    "unit": 8
+  },
+  {
+    "loId": "m6sci.how-ocean-currents-move-heat-around-the-globe",
+    "planId": "evelyn.ms.m6sci.how-ocean-currents-move-heat-around-the-globe.v1",
+    "title": "How Ocean Currents Move Heat Around the Globe",
+    "description": "Trace how a named warm or cold ocean current changes the climate of the coastline it passes, using the current's surface direction and place of origin rather than the physics of what drives the current (NGSS MS-ESS2-6).",
+    "unit": 8
+  },
+  {
+    "loId": "m6sci.reading-climate-graphs",
+    "planId": "evelyn.ms.m6sci.reading-climate-graphs.v1",
+    "title": "Reading Climate Graphs",
+    "description": "Read a climatograph (monthly temperature and precipitation averages) to classify a location's climate pattern and compare it against a second location's graph (NGSS MS-ESS2-6; shares this standard with the rest of Unit 8 as a coarse split by pedagogical stage).",
+    "unit": 8
+  },
+  {
+    "loId": "m6sci.renewable-and-nonrenewable-resources",
+    "planId": "evelyn.ms.m6sci.renewable-and-nonrenewable-resources.v1",
+    "title": "Renewable & Nonrenewable Resources",
+    "description": "Classify a named Earth resource (fossil fuel, mineral ore, groundwater, timber, solar energy) as renewable or nonrenewable based on the rate it can be replaced compared to the rate it is used (NGSS MS-ESS3-1).",
+    "unit": 9
+  },
+  {
+    "loId": "m6sci.how-geologic-processes-distribute-resources-unevenly",
+    "planId": "evelyn.ms.m6sci.how-geologic-processes-distribute-resources-unevenly.v1",
+    "title": "How Geologic Processes Distribute Resources Unevenly",
+    "description": "Explain why a specific resource (an ore deposit, a fossil-fuel reserve, a productive aquifer) occurs in some locations and not others, by tracing the geologic process (ancient sedimentation, past volcanic activity) that formed it there (NGSS MS-ESS3-1).",
+    "unit": 9
+  },
+  {
+    "loId": "m6sci.mapping-geologic-hazards",
+    "planId": "evelyn.ms.m6sci.mapping-geologic-hazards.v1",
+    "title": "Mapping Geologic Hazards",
+    "description": "Use the geographic pattern of past earthquakes, volcanic eruptions, and tsunamis -- clustered largely along the plate boundaries classified in Unit 4 -- to identify locations at elevated risk today, without predicting when or whether a specific future event will occur (NGSS MS-ESS3-2).",
+    "unit": 9
+  },
+  {
+    "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
+    "planId": "evelyn.ms.m6sci.forecasting-and-preparing-for-weather-hazards.v1",
+    "title": "Forecasting & Preparing for Weather Hazards",
+    "description": "Use weather-forecast data and historical storm tracks to evaluate a proposed preparedness or mitigation action for a hurricane, tornado, or flood risk (shares MS-ESS3-2 with Topic 3: that lesson locates geologic hazards, this one addresses weather hazards and human response) (NGSS MS-ESS3-2).",
+    "unit": 9
+  },
+  {
+    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
+    "planId": "evelyn.ms.m6sci.the-carbon-cycle-in-rocks-ocean-and-air.v1",
+    "title": "The Carbon Cycle in Rocks, Ocean & Air",
+    "description": "Trace carbon moving between the atmosphere, ocean, and geosphere (as carbon dioxide, dissolved carbon, and carbonate rock), keeping the cycle at the geosphere/atmosphere/ocean level rather than the organism-level carbon cycling covered in Grade 7's ecosystems units (DCI ESS2.A, foundational to MS-ESS3-5).",
+    "unit": 10
+  },
+  {
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "planId": "evelyn.ms.m6sci.evidence-for-rising-global-temperatures.v1",
+    "title": "Evidence for Rising Global Temperatures",
+    "description": "Evaluate graphed temperature and atmospheric-CO2 data over the past century as evidence for a warming trend and its association with human fossil-fuel use (NGSS MS-ESS3-5).",
+    "unit": 10
+  },
+  {
+    "loId": "m6sci.monitoring-and-reducing-human-impact-on-earth-systems",
+    "planId": "evelyn.ms.m6sci.monitoring-and-reducing-human-impact-on-earth-systems.v1",
+    "title": "Monitoring & Reducing Human Impact on Earth's Systems",
+    "description": "Evaluate a proposed design or policy solution for monitoring or minimizing a specific human impact on the land, water, or atmosphere (for example, an emissions filter, a water-treatment step, or a land-reclamation plan) by checking whether its mechanism addresses the impact it claims to and identifying what matched before-and-after evidence would show whether it worked (NGSS MS-ESS3-3).",
+    "unit": 10
+  },
+  {
+    "loId": "m6sci.population-growth-and-resource-demand",
+    "planId": "evelyn.ms.m6sci.population-growth-and-resource-demand.v1",
+    "title": "Population Growth & Resource Demand",
+    "description": "Use population and per-person consumption data to explain how human population growth increases the demand placed on a named natural resource or the human footprint on a natural system (NGSS MS-ESS3-4).",
+    "unit": 10
+  }
+]

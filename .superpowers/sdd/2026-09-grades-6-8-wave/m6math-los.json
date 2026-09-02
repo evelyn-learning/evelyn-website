@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m6math.ratio-language-and-notation",
+    "planId": "evelyn.ms.m6math.ratio-language-and-notation.v1",
+    "title": "Ratio Language & Notation",
+    "description": "Read, write, and interpret ratio language and notation (a:b, a to b, a/b) to describe a relationship between two quantities (CCSS 6.RP.A.1).",
+    "unit": 1
+  },
+  {
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "planId": "evelyn.ms.m6math.representing-ratios-with-tables-and-diagrams.v1",
+    "title": "Representing Ratios with Tables & Diagrams",
+    "description": "Build ratio tables, tape diagrams, and double number lines to represent a ratio and generate a sequence of equivalent ratios by scaling both quantities by the same factor (CCSS 6.RP.A.3a).",
+    "unit": 1
+  },
+  {
+    "loId": "m6math.solving-missing-value-ratio-problems",
+    "planId": "evelyn.ms.m6math.solving-missing-value-ratio-problems.v1",
+    "title": "Solving Missing-Value Ratio Problems",
+    "description": "Use a ratio table or double number line to find a missing value in a set of equivalent ratios, and plot the known and computed ratio pairs on the coordinate plane (CCSS 6.RP.A.3a).",
+    "unit": 1
+  },
+  {
+    "loId": "m6math.unit-rates-and-unit-pricing",
+    "planId": "evelyn.ms.m6math.unit-rates-and-unit-pricing.v1",
+    "title": "Unit Rates & Unit Pricing",
+    "description": "Compute the unit rate a/b for a ratio a:b with b not equal to zero, and use unit rates to compare unit prices between two offers (CCSS 6.RP.A.2).",
+    "unit": 1
+  },
+  {
+    "loId": "m6math.percent-as-rate-per-100",
+    "planId": "evelyn.ms.m6math.percent-as-rate-per-100.v1",
+    "title": "Percent as a Rate per 100",
+    "description": "Understand percent as a rate per 100, and convert fluently between a percent, its fraction form, and its decimal form (CCSS 6.RP.A.3c).",
+    "unit": 2
+  },
+  {
+    "loId": "m6math.finding-the-percent-of-a-quantity",
+    "planId": "evelyn.ms.m6math.finding-the-percent-of-a-quantity.v1",
+    "title": "Finding the Percent of a Quantity",
+    "description": "Find the percent of a whole-number quantity (e.g., 30% of 60) using rate-per-100 reasoning: find the value of 1% by dividing the whole by 100, then multiply by the percent number (CCSS 6.RP.A.3c).",
+    "unit": 2
+  },
+  {
+    "loId": "m6math.finding-the-whole-given-a-part-and-percent",
+    "planId": "evelyn.ms.m6math.finding-the-whole-given-a-part-and-percent.v1",
+    "title": "Finding the Whole Given a Part & Percent",
+    "description": "Given a part and the percent it represents, find the whole quantity by converting the percent to a decimal and dividing the part by that decimal, then check the result by multiplying back (CCSS 6.RP.A.3c).",
+    "unit": 2
+  },
+  {
+    "loId": "m6math.converting-measurement-units",
+    "planId": "evelyn.ms.m6math.converting-measurement-units.v1",
+    "title": "Converting Measurement Units",
+    "description": "Use ratio reasoning to convert measurement units within a system (e.g., feet to inches, grams to kilograms) (CCSS 6.RP.A.3d).",
+    "unit": 2
+  },
+  {
+    "loId": "m6math.meaning-of-fraction-division",
+    "planId": "evelyn.ms.m6math.meaning-of-fraction-division.v1",
+    "title": "The Meaning of Fraction Division",
+    "description": "Build meaning for dividing a fraction by a fraction using visual models (area models, number lines) before any algorithm (CCSS 6.NS.A.1).",
+    "unit": 3
+  },
+  {
+    "loId": "m6math.dividing-fractions-by-fractions",
+    "planId": "evelyn.ms.m6math.dividing-fractions-by-fractions.v1",
+    "title": "Dividing Fractions by Fractions",
+    "description": "Fluently divide a fraction by a fraction using the invert-and-multiply algorithm, then simplify the result and check it by multiplying back (CCSS 6.NS.A.1).",
+    "unit": 3
+  },
+  {
+    "loId": "m6math.dividing-mixed-numbers",
+    "planId": "evelyn.ms.m6math.dividing-mixed-numbers.v1",
+    "title": "Dividing Mixed Numbers",
+    "description": "Convert mixed numbers to improper fractions, then divide fluently.",
+    "unit": 3
+  },
+  {
+    "loId": "m6math.word-problems-with-fraction-division",
+    "planId": "evelyn.ms.m6math.word-problems-with-fraction-division.v1",
+    "title": "Word Problems with Fraction Division",
+    "description": "Solve real-world word problems that require dividing a fraction (or mixed number) by a fraction (CCSS 6.NS.A.1).",
+    "unit": 3
+  },
+  {
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "planId": "evelyn.ms.m6math.dividing-multi-digit-whole-numbers.v1",
+    "title": "Dividing Multi-Digit Whole Numbers",
+    "description": "Fluently divide multi-digit whole numbers using the standard algorithm, checking every quotient by multiplying it back with the divisor and adding any remainder (CCSS 6.NS.B.2).",
+    "unit": 4
+  },
+  {
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "planId": "evelyn.ms.m6math.adding-and-subtracting-decimals.v1",
+    "title": "Adding & Subtracting Decimals",
+    "description": "Fluently add and subtract multi-digit decimals using the standard algorithm (CCSS 6.NS.B.3).",
+    "unit": 4
+  },
+  {
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "planId": "evelyn.ms.m6math.multiplying-and-dividing-decimals.v1",
+    "title": "Multiplying & Dividing Decimals",
+    "description": "Fluently multiply and divide multi-digit decimals using the standard algorithm (CCSS 6.NS.B.3).",
+    "unit": 4
+  },
+  {
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "planId": "evelyn.ms.m6math.gcf-lcm-and-the-distributive-property.v1",
+    "title": "GCF, LCM & the Distributive Property",
+    "description": "Find the GCF and LCM of two whole numbers ≤100/≤12; use the distributive property to express a sum of two whole numbers with a common factor (CCSS 6.NS.B.4).",
+    "unit": 4
+  },
+  {
+    "loId": "m6math.negative-numbers-in-context",
+    "planId": "evelyn.ms.m6math.negative-numbers-in-context.v1",
+    "title": "Negative Numbers in Context",
+    "description": "Understand that positive and negative numbers describe quantities with opposite directions or values, such as elevation, temperature, and credit/debit, and explain what zero means in each situation (CCSS 6.NS.C.5).",
+    "unit": 5
+  },
+  {
+    "loId": "m6math.rational-numbers-on-the-number-line",
+    "planId": "evelyn.ms.m6math.rational-numbers-on-the-number-line.v1",
+    "title": "Rational Numbers on the Number Line",
+    "description": "Place integers and other rational numbers on a number line; understand that the opposite of the opposite of a number is the number itself (CCSS 6.NS.C.6a).",
+    "unit": 5
+  },
+  {
+    "loId": "m6math.absolute-value",
+    "planId": "evelyn.ms.m6math.absolute-value.v1",
+    "title": "Absolute Value",
+    "description": "Interpret absolute value as a number's magnitude/distance from zero; distinguish an absolute-value comparison from an order comparison (CCSS 6.NS.C.7c/d).",
+    "unit": 5
+  },
+  {
+    "loId": "m6math.ordering-rational-numbers",
+    "planId": "evelyn.ms.m6math.ordering-rational-numbers.v1",
+    "title": "Ordering Rational Numbers",
+    "description": "Write, interpret, and order statements of inequality about rational numbers in real-world contexts (CCSS 6.NS.C.7a/b).",
+    "unit": 5
+  },
+  {
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "planId": "evelyn.ms.m6math.plotting-points-in-all-four-quadrants.v1",
+    "title": "Plotting Points in All Four Quadrants",
+    "description": "Extend number-line understanding to plot ordered pairs of rational numbers in all four quadrants of the coordinate plane (CCSS 6.NS.C.6b/c).",
+    "unit": 6
+  },
+  {
+    "loId": "m6math.reflecting-points-across-the-axes",
+    "planId": "evelyn.ms.m6math.reflecting-points-across-the-axes.v1",
+    "title": "Reflecting Points Across the Axes",
+    "description": "Find and interpret the reflection of a plotted point across one or both axes using sign changes in its coordinates (CCSS 6.NS.C.6b).",
+    "unit": 6
+  },
+  {
+    "loId": "m6math.finding-distance-between-points",
+    "planId": "evelyn.ms.m6math.finding-distance-between-points.v1",
+    "title": "Finding Distance Between Points",
+    "description": "Find the distance between two points that share a first or second coordinate, using absolute value (CCSS 6.NS.C.8).",
+    "unit": 6
+  },
+  {
+    "loId": "m6math.solving-real-world-coordinate-plane-problems",
+    "planId": "evelyn.ms.m6math.solving-real-world-coordinate-plane-problems.v1",
+    "title": "Real-World Coordinate Plane Problems",
+    "description": "Solve real-world and mathematical problems by graphing points in all four quadrants of the coordinate plane (CCSS 6.NS.C.8).",
+    "unit": 6
+  },
+  {
+    "loId": "m6math.numerical-expressions-with-exponents",
+    "planId": "evelyn.ms.m6math.numerical-expressions-with-exponents.v1",
+    "title": "Numerical Expressions with Exponents",
+    "description": "Write and evaluate numerical expressions involving whole-number exponents (CCSS 6.EE.A.1).",
+    "unit": 7
+  },
+  {
+    "loId": "m6math.writing-and-evaluating-algebraic-expressions",
+    "planId": "evelyn.ms.m6math.writing-and-evaluating-algebraic-expressions.v1",
+    "title": "Writing & Evaluating Algebraic Expressions",
+    "description": "Write an algebraic expression from a word phrase and evaluate expressions (including formulas) for given variable values (CCSS 6.EE.A.2a/c).",
+    "unit": 7
+  },
+  {
+    "loId": "m6math.parts-of-an-expression",
+    "planId": "evelyn.ms.m6math.parts-of-an-expression.v1",
+    "title": "Parts of an Expression",
+    "description": "Identify parts of an expression — terms, factors, coefficients — using correct mathematical vocabulary (CCSS 6.EE.A.2b).",
+    "unit": 7
+  },
+  {
+    "loId": "m6math.equivalent-expressions",
+    "planId": "evelyn.ms.m6math.equivalent-expressions.v1",
+    "title": "Equivalent Expressions",
+    "description": "Apply properties of operations (distributive property, combining like terms) to generate and identify equivalent expressions with nonnegative whole-number coefficients (CCSS 6.EE.A.3, 6.EE.A.4).",
+    "unit": 7
+  },
+  {
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "planId": "evelyn.ms.m6math.what-it-means-to-solve-an-equation.v1",
+    "title": "What It Means to Solve an Equation",
+    "description": "Understand solving an equation or inequality as finding the values from a set that make it true; use substitution to check a candidate solution (CCSS 6.EE.B.5).",
+    "unit": 8
+  },
+  {
+    "loId": "m6math.solving-one-step-equations",
+    "planId": "evelyn.ms.m6math.solving-one-step-equations.v1",
+    "title": "Solving One-Step Equations",
+    "description": "Write and solve one-step equations of the form x+p=q and px=q for nonnegative rational numbers (CCSS 6.EE.B.6, 6.EE.B.7).",
+    "unit": 8
+  },
+  {
+    "loId": "m6math.writing-and-graphing-inequalities",
+    "planId": "evelyn.ms.m6math.writing-and-graphing-inequalities.v1",
+    "title": "Writing & Graphing Inequalities",
+    "description": "Write an inequality to represent a real-world constraint and represent its infinitely many solutions on a number line (CCSS 6.EE.B.8).",
+    "unit": 8
+  },
+  {
+    "loId": "m6math.dependent-and-independent-variables",
+    "planId": "evelyn.ms.m6math.dependent-and-independent-variables.v1",
+    "title": "Dependent & Independent Variables",
+    "description": "Use variables to represent two quantities in a real-world relationship, write an equation expressing one in terms of the other, and analyze the relationship with tables and graphs (CCSS 6.EE.C.9).",
+    "unit": 8
+  },
+  {
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "planId": "evelyn.ms.m6math.area-of-triangles-and-quadrilaterals.v1",
+    "title": "Area of Triangles & Quadrilaterals",
+    "description": "Find the area of triangles and special quadrilaterals by composing/decomposing into rectangles and triangles (CCSS 6.G.A.1).",
+    "unit": 9
+  },
+  {
+    "loId": "m6math.polygons-in-the-coordinate-plane",
+    "planId": "evelyn.ms.m6math.polygons-in-the-coordinate-plane.v1",
+    "title": "Polygons in the Coordinate Plane",
+    "description": "Draw a polygon in the coordinate plane given the coordinates of its vertices, and find a side length using coordinates (CCSS 6.G.A.3).",
+    "unit": 9
+  },
+  {
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "planId": "evelyn.ms.m6math.volume-of-rectangular-prisms.v1",
+    "title": "Volume of Rectangular Prisms",
+    "description": "Find the volume of a right rectangular prism with fractional edge lengths by packing unit cubes and applying V = lwh (CCSS 6.G.A.2).",
+    "unit": 9
+  },
+  {
+    "loId": "m6math.nets-and-surface-area",
+    "planId": "evelyn.ms.m6math.nets-and-surface-area.v1",
+    "title": "Nets & Surface Area",
+    "description": "Represent a 3D figure using a net of rectangles and triangles; use the net to find surface area (CCSS 6.G.A.4).",
+    "unit": 9
+  },
+  {
+    "loId": "m6math.statistical-questions",
+    "planId": "evelyn.ms.m6math.statistical-questions.v1",
+    "title": "Statistical Questions",
+    "description": "Recognize and formulate a statistical question as one that anticipates variability in the data collected to answer it (CCSS 6.SP.A.1).",
+    "unit": 10
+  },
+  {
+    "loId": "m6math.dot-plots-and-histograms",
+    "planId": "evelyn.ms.m6math.dot-plots-and-histograms.v1",
+    "title": "Dot Plots & Histograms",
+    "description": "Display a numerical data set using dot plots and histograms on a number line. (CCSS 6.SP.B.4)",
+    "unit": 10
+  },
+  {
+    "loId": "m6math.measures-of-center",
+    "planId": "evelyn.ms.m6math.measures-of-center.v1",
+    "title": "Measures of Center",
+    "description": "Find and interpret the mean and median of a data set as measures of center; choose the more appropriate measure given the data's shape (CCSS 6.SP.A.3/B.5).",
+    "unit": 10
+  },
+  {
+    "loId": "m6math.measures-of-spread-and-summarizing-data",
+    "planId": "evelyn.ms.m6math.measures-of-spread-and-summarizing-data.v1",
+    "title": "Measures of Spread & Summarizing Data",
+    "description": "Describe the spread (range, interquartile range, box plots) and overall shape of a distribution, and summarize a data set in the context it was collected (CCSS 6.SP.A.2/B.4/B.5).",
+    "unit": 10
+  }
+]

@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m6ela.text-evidence-and-inference",
+    "planId": "evelyn.ms.m6ela.text-evidence-and-inference.v1",
+    "title": "Text Evidence & Inference",
+    "description": "Cite specific textual evidence to support both an explicit statement made in a text and an inference drawn from it, and distinguish a claim the text states directly from a conclusion the reader has to build from its details (CCSS RL.6.1).",
+    "unit": 1
+  },
+  {
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "planId": "evelyn.ms.m6ela.how-a-storys-plot-unfolds.v1",
+    "title": "How a Story's Plot Unfolds",
+    "description": "Describe how a story's plot moves through a series of episodes — exposition, rising action, climax, resolution — using the stages themselves, not yet how one story element such as setting or character shapes another (CCSS RL.6.3).",
+    "unit": 1
+  },
+  {
+    "loId": "m6ela.how-characters-respond-and-change",
+    "planId": "evelyn.ms.m6ela.how-characters-respond-and-change.v1",
+    "title": "How Characters Respond & Change",
+    "description": "Describe how a character responds to events, or changes, as the plot moves toward its resolution. RL.6.3 covers both the plot's shape (previous topic) and the character's arc within it (this topic); split here by pedagogical stage (CCSS RL.6.3).",
+    "unit": 1
+  },
+  {
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "planId": "evelyn.ms.m6ela.how-a-scene-fits-the-whole-story.v1",
+    "title": "How a Scene Fits the Whole Story",
+    "description": "Analyze how one sentence, chapter, or scene fits into a text's overall structure and contributes to the development of its theme, setting, or plot (CCSS RL.6.5).",
+    "unit": 1
+  },
+  {
+    "loId": "m6ela.theme-and-objective-summary",
+    "planId": "evelyn.ms.m6ela.theme-and-objective-summary.v1",
+    "title": "Theme & Objective Summary",
+    "description": "Determine a text's theme or central idea from particular details, state it as a complete sentence rather than a one-word topic or a command, and provide a summary of the text that is distinct from personal opinion or judgment (CCSS RL.6.2).",
+    "unit": 2
+  },
+  {
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "planId": "evelyn.ms.m6ela.point-of-view-of-the-narrator.v1",
+    "title": "Point of View of the Narrator",
+    "description": "Explain how an author develops the point of view of a single narrator or speaker in a text, naming first person, second person, third person limited and third person omniscient and stating what that one teller's position lets the reader know, without yet contrasting two narrators' or characters' points of view against each other, the move RL.7.6 asks for next (CCSS RL.6.6).",
+    "unit": 2
+  },
+  {
+    "loId": "m6ela.figurative-language",
+    "planId": "evelyn.ms.m6ela.figurative-language.v1",
+    "title": "Figurative Language",
+    "description": "Identify simile, metaphor, personification and hyperbole in a text and state the figurative meaning each one creates, rather than stopping once the device is named (CCSS RL.6.4).",
+    "unit": 2
+  },
+  {
+    "loId": "m6ela.word-choice-and-tone",
+    "planId": "evelyn.ms.m6ela.word-choice-and-tone.v1",
+    "title": "Word Choice & Tone",
+    "description": "Analyze the impact of a specific word choice on a text's meaning and tone, building on the figurative and connotative meanings established in the previous topic (CCSS RL.6.4).",
+    "unit": 2
+  },
+  {
+    "loId": "m6ela.central-idea-and-supporting-details",
+    "planId": "evelyn.ms.m6ela.central-idea-and-supporting-details.v1",
+    "title": "Central Idea & Supporting Details",
+    "description": "Determine a text's central idea and identify the particular details that convey it, stopping short of analyzing two or more central ideas and how they develop across a text (CCSS RI.6.2; that fuller analysis is RI.7.2).",
+    "unit": 3
+  },
+  {
+    "loId": "m6ela.summarizing-informational-text",
+    "planId": "evelyn.ms.m6ela.summarizing-informational-text.v1",
+    "title": "Summarizing Informational Text",
+    "description": "Write an objective summary of an informational text that states its already-identified central idea and only the details that support it, leaving out the summarizer's own reactions and conclusions entirely, including a quiet conclusion introduced by a phrase such as \"this shows that\" (CCSS RI.6.2; determining the central idea itself is the separate, prior skill taught by row 3.1).",
+    "unit": 3
+  },
+  {
+    "loId": "m6ela.technical-and-domain-vocabulary",
+    "planId": "evelyn.ms.m6ela.technical-and-domain-vocabulary.v1",
+    "title": "Technical & Domain Vocabulary",
+    "description": "Determine the meaning of technical and domain-specific words and phrases as used in an informational text, using context and the definitions or examples the text itself supplies (CCSS RI.6.4).",
+    "unit": 3
+  },
+  {
+    "loId": "m6ela.text-features-and-how-they-aid-understanding",
+    "planId": "evelyn.ms.m6ela.text-features-and-how-they-aid-understanding.v1",
+    "title": "Text Features & How They Aid Understanding",
+    "description": "Identify how a heading, caption, sidebar, or graphic fits into one section of an informational text and explain what it contributes to a reader's understanding of that section (CCSS RI.6.5).",
+    "unit": 3
+  },
+  {
+    "loId": "m6ela.how-a-text-is-organized",
+    "planId": "evelyn.ms.m6ela.how-a-text-is-organized.v1",
+    "title": "How a Text Is Organized",
+    "description": "Identify a whole informational text's organizational pattern — chronological, cause/effect, problem/solution or compare/contrast — from how its paragraphs connect to one another, and explain how that pattern fits the topic the text is explaining (CCSS RI.6.5).",
+    "unit": 4
+  },
+  {
+    "loId": "m6ela.authors-purpose",
+    "planId": "evelyn.ms.m6ela.authors-purpose.v1",
+    "title": "Author's Purpose",
+    "description": "Determine an author's point of view or purpose in an informational text and explain how it is conveyed through word choice and selected details (CCSS RI.6.6) — explaining how it is conveyed, not yet analyzing how the author distinguishes their position from someone else's (RI.7.6).",
+    "unit": 4
+  },
+  {
+    "loId": "m6ela.tracing-an-argument",
+    "planId": "evelyn.ms.m6ela.tracing-an-argument.v1",
+    "title": "Tracing an Argument",
+    "description": "Trace an informational text's argument and its specific claims, sorting each specific claim into supported by reasons and evidence or not supported — a binary sort that does not yet assess whether the reasoning is sound or the evidence is sufficient (CCSS RI.6.8; that fuller evaluation is RI.7.8).",
+    "unit": 4
+  },
+  {
+    "loId": "m6ela.comparing-two-authors-accounts",
+    "planId": "evelyn.ms.m6ela.comparing-two-authors-accounts.v1",
+    "title": "Comparing Two Authors' Accounts",
+    "description": "Compare and contrast how two authors present the same real events, noting what each account includes and what each leaves out, without yet analyzing how an author's choice of evidence or interpretation shapes the presentation (CCSS RI.6.9).",
+    "unit": 4
+  },
+  {
+    "loId": "m6ela.pronoun-case",
+    "planId": "evelyn.ms.m6ela.pronoun-case.v1",
+    "title": "Pronoun Case",
+    "description": "Choose the correct case of a pronoun — subjective, objective or possessive — based on the job it does in the sentence, using the drop test on compound subjects and objects and applying the rule that object case always follows a preposition, as in \"between you and me\" rather than \"between you and I\" (CCSS L.6.1a).",
+    "unit": 5
+  },
+  {
+    "loId": "m6ela.intensive-pronouns",
+    "planId": "evelyn.ms.m6ela.intensive-pronouns.v1",
+    "title": "Intensive Pronouns",
+    "description": "Use an intensive pronoun (myself, ourselves, itself) correctly for emphasis, and recognize when a reflexive-looking pronoun is wrongly substituted for a subject or object pronoun, as in \"Mark and myself went\" where \"Mark and I went\" is required (CCSS L.6.1b).",
+    "unit": 5
+  },
+  {
+    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
+    "planId": "evelyn.ms.m6ela.keeping-pronoun-number-and-person-consistent.v1",
+    "title": "Keeping Pronoun Number & Person Consistent",
+    "description": "Recognize and correct an inappropriate shift in pronoun number or person within one piece of writing, such as sliding from \"I\" to \"you\" mid-paragraph, by holding the person and number the writing opens with against every later pronoun that refers back to the same person or group (CCSS L.6.1c).",
+    "unit": 5
+  },
+  {
+    "loId": "m6ela.standard-and-nonstandard-english",
+    "planId": "evelyn.ms.m6ela.standard-and-nonstandard-english.v1",
+    "title": "Standard & Nonstandard English",
+    "description": "Recognize a nonstandard grammatical form in an isolated sentence (e.g., a double negative, \"ain't,\" \"we was\") and revise it to standard English appropriate for formal writing (CCSS L.6.1e).",
+    "unit": 5
+  },
+  {
+    "loId": "m6ela.sentence-fragments-and-run-ons",
+    "planId": "evelyn.ms.m6ela.sentence-fragments-and-run-ons.v1",
+    "title": "Sentence Fragments & Run-Ons",
+    "description": "Identify a sentence fragment or a run-on sentence, including a comma splice, using a subject-verb-finished-thought test, and correct it by supplying the missing part or by fixing the punctuation between two complete sentences (CCSS L.6.1).",
+    "unit": 6
+  },
+  {
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "planId": "evelyn.ms.m6ela.varying-sentence-patterns-for-style.v1",
+    "title": "Varying Sentence Patterns for Style",
+    "description": "Vary sentence length and opening — combining short, related sentences with a connector, and changing where a sentence starts instead of repeating the same opening word — to hold a reader's interest and suit a piece's style, without yet naming a sentence as simple, compound, complex or compound-complex, which is how Grade 7 signals relationships between ideas (CCSS L.6.3a; the excluded skill is L.7.1b).",
+    "unit": 6
+  },
+  {
+    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
+    "planId": "evelyn.ms.m6ela.commas-for-nonrestrictive-and-parenthetical-elements.v1",
+    "title": "Commas for Extra Information",
+    "description": "Set off a nonrestrictive or parenthetical element — information a sentence does not need in order to keep its core meaning — using a comma, a pair of parentheses, or a pair of dashes, deciding with the removal test: cover the part in question and ask whether the sentence still identifies the exact same person, place, or thing without it (CCSS L.6.2a).",
+    "unit": 6
+  },
+  {
+    "loId": "m6ela.maintaining-consistent-style-and-tone",
+    "planId": "evelyn.ms.m6ela.maintaining-consistent-style-and-tone.v1",
+    "title": "Maintaining Consistent Style & Tone",
+    "description": "Keep one piece of writing's level of formality and tone consistent from start to finish, revising the one sentence whose register breaks that consistency — a whole-passage style check, distinct from Unit 5's sentence-level standard-English check (CCSS L.6.3b).",
+    "unit": 6
+  },
+  {
+    "loId": "m6ela.context-clues",
+    "planId": "evelyn.ms.m6ela.context-clues.v1",
+    "title": "Context Clues",
+    "description": "Use the overall meaning of a sentence or paragraph, or a word's position and function within it, as a clue to an unfamiliar word's meaning, drawing on the definitions, restatements, contrasts and examples a text supplies and confirming a guess by substituting it back into the sentence (CCSS L.6.4a).",
+    "unit": 7
+  },
+  {
+    "loId": "m6ela.greek-and-latin-roots-and-affixes",
+    "planId": "evelyn.ms.m6ela.greek-and-latin-roots-and-affixes.v1",
+    "title": "Greek & Latin Roots & Affixes",
+    "description": "Use a common, grade-appropriate Greek or Latin root or affix — such as aud-, scrib/script or tele- — as a clue to an unfamiliar word's meaning, testing a candidate meaning drawn from a familiar word family against the sentence where the new word appears (CCSS L.6.4b).",
+    "unit": 7
+  },
+  {
+    "loId": "m6ela.connotation-and-denotation",
+    "planId": "evelyn.ms.m6ela.connotation-and-denotation.v1",
+    "title": "Connotation & Denotation",
+    "description": "Distinguish among the connotations of words that share a similar denotation (e.g., stingy, thrifty, economical) and choose the word whose shade of meaning fits the context (CCSS L.6.5c).",
+    "unit": 7
+  },
+  {
+    "loId": "m6ela.word-relationships-and-analogies",
+    "planId": "evelyn.ms.m6ela.word-relationships-and-analogies.v1",
+    "title": "Word Relationships & Analogies",
+    "description": "Use the relationship between two particular words — cause/effect, part/whole, item/category, or degree along one shared scale — to sharpen the meaning of each word in the pair (CCSS L.6.5b).",
+    "unit": 7
+  },
+  {
+    "loId": "m6ela.introducing-a-claim",
+    "planId": "evelyn.ms.m6ela.introducing-a-claim.v1",
+    "title": "Introducing a Claim",
+    "description": "Introduce a claim and organize the reasons and evidence that will support it in a clear order, stating the claim plainly as one sentence distinct from a fact, a question, or a bare topic, and pairing each reason with its own matching evidence — introducing one claim plainly, not yet acknowledging an opposing claim, which begins at Grade 7 (CCSS W.6.1a; that acknowledgment is W.7.1a).",
+    "unit": 8
+  },
+  {
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "planId": "evelyn.ms.m6ela.supporting-a-claim-with-reasons-and-evidence.v1",
+    "title": "Supporting a Claim with Reasons & Evidence",
+    "description": "Support a claim with a clear reason that explains why the claim is true and relevant evidence — an observation, a documented example, or a statement from a credible source — that shows the reason is real, distinguishing a genuine reason from one that only restates the claim, and evidence that backs the specific reason it sits under from evidence that merely relates to the topic (CCSS W.6.1b).",
+    "unit": 8
+  },
+  {
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "planId": "evelyn.ms.m6ela.linking-words-for-claims-and-reasons.v1",
+    "title": "Linking Words for Claims & Reasons",
+    "description": "Use a linking word, phrase, or clause (because, therefore, for example, consequently) to clarify the relationship between a claim and the reasons given for it (CCSS W.6.1c).",
+    "unit": 8
+  },
+  {
+    "loId": "m6ela.writing-a-concluding-statement",
+    "planId": "evelyn.ms.m6ela.writing-a-concluding-statement.v1",
+    "title": "Writing a Concluding Statement",
+    "description": "Write a concluding statement or section for an argument that follows logically from the claim and reasons already presented, restating the claim in new words and tying back to the specific reasons given, without introducing a reason that never appeared earlier or drifting into a general appeal that could close a different argument (CCSS W.6.1e).",
+    "unit": 8
+  },
+  {
+    "loId": "m6ela.organizing-an-informative-text",
+    "planId": "evelyn.ms.m6ela.organizing-an-informative-text.v1",
+    "title": "Organizing an Informative Text",
+    "description": "Introduce an informative topic and organize its supporting ideas using one clear strategy — definition, classification, comparison/contrast, or cause/effect — choosing the strategy that fits the information already gathered and carrying it through the whole piece instead of blending two strategies together (CCSS W.6.2a).",
+    "unit": 9
+  },
+  {
+    "loId": "m6ela.developing-a-topic-with-facts-and-details",
+    "planId": "evelyn.ms.m6ela.developing-a-topic-with-facts-and-details.v1",
+    "title": "Developing a Topic with Facts & Details",
+    "description": "Develop an informative topic sentence using relevant facts, concrete details, and examples appropriate to the topic — testing every added sentence against the topic sentence so it supplies new, checkable information instead of only restating it, and against the topic itself so a true general fact still gets rejected if it does not develop this specific topic (CCSS W.6.2b).",
+    "unit": 9
+  },
+  {
+    "loId": "m6ela.transitions-in-informative-writing",
+    "planId": "evelyn.ms.m6ela.transitions-in-informative-writing.v1",
+    "title": "Transitions in Informative Writing",
+    "description": "Use an appropriate transition word or phrase to clarify the relationship between two ideas or concepts in an informative text (CCSS W.6.2c).",
+    "unit": 9
+  },
+  {
+    "loId": "m6ela.orienting-the-reader-in-a-narrative",
+    "planId": "evelyn.ms.m6ela.orienting-the-reader-in-a-narrative.v1",
+    "title": "Orienting the Reader in a Narrative",
+    "description": "Engage and orient a reader by establishing a context and introducing a narrator or characters, and organize an event sequence that unfolds naturally, starting at the story's true first event rather than reporting its middle or its ending in advance (CCSS W.6.3a).",
+    "unit": 9
+  },
+  {
+    "loId": "m6ela.asking-a-research-question",
+    "planId": "evelyn.ms.m6ela.asking-a-research-question.v1",
+    "title": "Asking a Research Question",
+    "description": "Conduct a short research project to answer a question that is narrow enough to answer inside the project, broad enough to need more than one source, and answerable by evidence rather than personal preference, drawing on several sources and narrowing or refocusing the question as needed (CCSS W.6.7).",
+    "unit": 10
+  },
+  {
+    "loId": "m6ela.evaluating-source-credibility",
+    "planId": "evelyn.ms.m6ela.evaluating-source-credibility.v1",
+    "title": "Evaluating Source Credibility",
+    "description": "Gather information about one research question from more than one print or digital source, and decide which sources are credible by asking who wrote it, whether that person or group could actually know what they claim, and what they would gain if the reader believed it, reasoning through each source rather than judging it by its design or by a memorized checklist word (CCSS W.6.8).",
+    "unit": 10
+  },
+  {
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "planId": "evelyn.ms.m6ela.quoting-and-paraphrasing-without-plagiarizing.v1",
+    "title": "Quoting & Paraphrasing Without Plagiarizing",
+    "description": "Quote or paraphrase a source's data or conclusions accurately and distinguish the two, so another person's words or ideas are never presented as the student's own (CCSS W.6.8).",
+    "unit": 10
+  },
+  {
+    "loId": "m6ela.giving-basic-source-information",
+    "planId": "evelyn.ms.m6ela.giving-basic-source-information.v1",
+    "title": "Giving Basic Source Information",
+    "description": "Record the basic bibliographic information for a source used in research — who made it, what it is called, and where it was found — as a labeled three-piece record that lets the source be located again (CCSS W.6.8).",
+    "unit": 10
+  }
+]
