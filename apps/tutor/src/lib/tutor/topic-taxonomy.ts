@@ -186,6 +186,8 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'statistics-probability', label: 'Statistics & Probability' },
       { id: 'coordinate-plane', label: 'Coordinate Plane' },
       { id: 'grade-7-math', label: 'Grade 7 Math' },
+      { id: 'grade-6-math', label: 'Grade 6 Math' },
+      { id: 'grade-8-math', label: 'Grade 8 Math' },
     ],
     '9-10': [
       { id: 'algebra-1', label: 'Algebra 1' },
@@ -257,6 +259,8 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'ecology', label: 'Ecology' },
       { id: 'physical-science', label: 'Physical Science' },
       { id: 'grade-7-life-science', label: 'Grade 7 Science (Life Science)' },
+      { id: 'grade-6-science', label: 'Grade 6 Science' },
+      { id: 'grade-8-science', label: 'Grade 8 Science' },
     ],
     '9-10': [
       { id: 'biology', label: 'Biology' },
@@ -403,6 +407,8 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'narrative-writing', label: 'Narrative Writing' },
       { id: 'research-skills', label: 'Research Skills' },
       { id: 'grade-7-ela', label: 'Grade 7 English Language Arts' },
+      { id: 'grade-6-ela', label: 'Grade 6 English Language Arts' },
+      { id: 'grade-8-ela', label: 'Grade 8 English Language Arts' },
     ],
     '9-10': [
       { id: 'literature-fiction', label: 'Literature (Fiction)' },
@@ -459,6 +465,8 @@ const TOPIC_MAP: Record<string, Record<string, TutorTopic[]>> = {
       { id: 'civics-government', label: 'Civics & Government' },
       { id: 'economics-ms', label: 'Economics' },
       { id: 'grade-7-world-geography', label: 'Grade 7 World Geography' },
+      { id: 'grade-6-world-geography', label: 'Grade 6 World Geography' },
+      { id: 'grade-8-world-geography', label: 'Grade 8 World Geography' },
     ],
     '9-10': [
       { id: 'world-history', label: 'World History' },

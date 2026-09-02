@@ -27,6 +27,18 @@ const COURSES: Record<
   m7ela: { subject: 'ela', topic: 'grade-7-ela', loPrefix: 'm7ela', std: 'M7ELA', grade: '7', tryFormat: 'three-mcq' },
   m7sci: { subject: 'science', topic: 'grade-7-life-science', loPrefix: 'm7sci', std: 'M7SCI', grade: '7', tryFormat: 'three-mcq' },
   m7geo: { subject: 'social-studies', topic: 'grade-7-world-geography', loPrefix: 'm7geo', std: 'M7GEO', grade: '7', tryFormat: 'three-mcq' },
+  // Grade 6/8 course rows — Task 0.2 scaffolding. Zero plans exist yet
+  // (curriculum lands per-course in Phase 1); COURSE_SEL selects by plan id
+  // infix, so an entry with no matching seed files is inert here, not a
+  // lint failure.
+  m6math: { subject: 'math', topic: 'grade-6-math', loPrefix: 'm6math', std: 'M6MATH', grade: '6', tryFormat: 'two-mcq-one-numeric' },
+  m6ela: { subject: 'ela', topic: 'grade-6-ela', loPrefix: 'm6ela', std: 'M6ELA', grade: '6', tryFormat: 'three-mcq' },
+  m6sci: { subject: 'science', topic: 'grade-6-science', loPrefix: 'm6sci', std: 'M6SCI', grade: '6', tryFormat: 'three-mcq' },
+  m6geo: { subject: 'social-studies', topic: 'grade-6-world-geography', loPrefix: 'm6geo', std: 'M6GEO', grade: '6', tryFormat: 'three-mcq' },
+  m8math: { subject: 'math', topic: 'grade-8-math', loPrefix: 'm8math', std: 'M8MATH', grade: '8', tryFormat: 'two-mcq-one-numeric' },
+  m8ela: { subject: 'ela', topic: 'grade-8-ela', loPrefix: 'm8ela', std: 'M8ELA', grade: '8', tryFormat: 'three-mcq' },
+  m8sci: { subject: 'science', topic: 'grade-8-science', loPrefix: 'm8sci', std: 'M8SCI', grade: '8', tryFormat: 'three-mcq' },
+  m8geo: { subject: 'social-studies', topic: 'grade-8-world-geography', loPrefix: 'm8geo', std: 'M8GEO', grade: '8', tryFormat: 'three-mcq' },
 };
 
 const COURSE_SEL = new RegExp(`^evelyn\\.ms\\.(${Object.keys(COURSES).join('|')})\\.`);

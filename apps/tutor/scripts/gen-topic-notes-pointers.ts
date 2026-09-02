@@ -101,6 +101,68 @@ const MS_SUBJECT_PHRASE: Record<
     slips: 'swapping latitude and longitude, confusing climate with weather, confusing a country with a continent or a region',
     edges: 'places that sit in two regions at once, a factor that pushes people out of one place and pulls them into another, borders that follow rivers rather than straight lines',
   },
+  // Grade 6/8 rows — Task 0.2 scaffolding, mirrored from the m7 rows above
+  // with the grade substituted. Phrasing (imperative/slips/edges) is a
+  // placeholder carried from m7's course-specific wording; it is generic
+  // enough to hold until Phase 1 curriculum authoring may want to tune it
+  // per grade, but no MS plans for these courses exist yet so this map is
+  // inert until then.
+  m6math: {
+    teacher: 'middle-school math teacher',
+    course: '6th-grade math course',
+    imperative: '"Always check the sign before you simplify"',
+    slips: 'sign errors, mixing up related terms, dropping units',
+    edges: 'zero, negative numbers, non-integer answers',
+  },
+  m6ela: {
+    teacher: 'middle-school English language arts teacher',
+    course: '6th-grade English language arts course',
+    imperative: '"Always point at the line in the text before you name the trait"',
+    slips: 'confusing a summary with a theme, calling every comparison a metaphor, mixing up the narrator and the author',
+    edges: 'a character who says one thing and does another, a text with more than one central idea, a word whose everyday meaning differs from its meaning here',
+  },
+  m6sci: {
+    teacher: 'middle-school science teacher',
+    course: '6th-grade science course',
+    imperative: '"Always say where the energy came from before you say where it went"',
+    slips: 'saying a cell part "makes" energy rather than releases it, confusing genotype with phenotype, treating an individual as if it adapts during its lifetime',
+    edges: 'organisms that do not fit the usual pattern, traits that are common but recessive, ratios that are probabilities rather than guarantees',
+  },
+  m6geo: {
+    teacher: 'middle-school world geography teacher',
+    course: '6th-grade world geography course',
+    imperative: '"Always say latitude before longitude"',
+    slips: 'swapping latitude and longitude, confusing climate with weather, confusing a country with a continent or a region',
+    edges: 'places that sit in two regions at once, a factor that pushes people out of one place and pulls them into another, borders that follow rivers rather than straight lines',
+  },
+  m8math: {
+    teacher: 'middle-school math teacher',
+    course: '8th-grade math course',
+    imperative: '"Always check the sign before you simplify"',
+    slips: 'sign errors, mixing up related terms, dropping units',
+    edges: 'zero, negative numbers, non-integer answers',
+  },
+  m8ela: {
+    teacher: 'middle-school English language arts teacher',
+    course: '8th-grade English language arts course',
+    imperative: '"Always point at the line in the text before you name the trait"',
+    slips: 'confusing a summary with a theme, calling every comparison a metaphor, mixing up the narrator and the author',
+    edges: 'a character who says one thing and does another, a text with more than one central idea, a word whose everyday meaning differs from its meaning here',
+  },
+  m8sci: {
+    teacher: 'middle-school science teacher',
+    course: '8th-grade science course',
+    imperative: '"Always say where the energy came from before you say where it went"',
+    slips: 'saying a cell part "makes" energy rather than releases it, confusing genotype with phenotype, treating an individual as if it adapts during its lifetime',
+    edges: 'organisms that do not fit the usual pattern, traits that are common but recessive, ratios that are probabilities rather than guarantees',
+  },
+  m8geo: {
+    teacher: 'middle-school world geography teacher',
+    course: '8th-grade world geography course',
+    imperative: '"Always say latitude before longitude"',
+    slips: 'swapping latitude and longitude, confusing climate with weather, confusing a country with a continent or a region',
+    edges: 'places that sit in two regions at once, a factor that pushes people out of one place and pulls them into another, borders that follow rivers rather than straight lines',
+  },
 };
 
 function isHS(plan: LessonPlan): boolean {
