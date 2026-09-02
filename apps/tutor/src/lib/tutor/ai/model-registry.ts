@@ -196,7 +196,7 @@ function stripAnthropicOnly(value: unknown, topLevel: boolean): unknown {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
       if (k === 'cache_control') continue;
-      if (topLevel && k === 'thinking') continue;
+      if (topLevel && (k === 'thinking' || k === 'output_config')) continue;
       out[k] = stripAnthropicOnly(v, false);
     }
     return out;

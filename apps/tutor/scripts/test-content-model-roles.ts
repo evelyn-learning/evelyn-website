@@ -1,6 +1,6 @@
 /* Content-generation model roles resolve through the registry with correct
  * defaults, env override, and legacy alias. Run: npm run test:content-model-roles */
-import { resolveModel } from '../src/lib/tutor/ai/model-registry';
+import { resolveModel, prepareParams } from '../src/lib/tutor/ai/model-registry';
 
 let failures = 0;
 function check(name: string, cond: boolean) {
@@ -31,7 +31,18 @@ check('TUTOR_MODEL_NOTES_POINTERS outranks legacy', resolveModel('notes-pointers
 // Base-URL override flips native off (DeepSeek-style routing)
 process.env.TUTOR_MODEL_CONTENT_VERIFY_BASE_URL = 'https://api.deepseek.com/anthropic';
 check('base URL override → native:false', resolveModel('content-verify').native === false);
+
+// prepareParams strips output_config + thinking for non-native endpoints
+const testParams = { model: 'x', output_config: { effort: 'high' }, thinking: { type: 'adaptive' }, max_tokens: 1 };
+const strippedParams = prepareParams('content-verify', testParams);
+check('prepareParams strips output_config for non-native', !('output_config' in strippedParams));
+check('prepareParams strips thinking for non-native', !('thinking' in strippedParams));
+check('prepareParams preserves max_tokens for non-native', strippedParams.max_tokens === 1);
 delete process.env.TUTOR_MODEL_CONTENT_VERIFY_BASE_URL;
+
+// prepareParams returns unchanged params for native endpoints
+const nativeParams = prepareParams('content-verify', testParams);
+check('prepareParams returns unchanged for native', nativeParams === testParams);
 
 if (failures) { console.error(`${failures} failure(s)`); process.exit(1); }
 console.log('content-model-roles: all assertions passed');
