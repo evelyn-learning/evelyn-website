@@ -51,11 +51,10 @@
  * text printed inside it. Never write "see the cross-section above", and
  * never assume the student has a rock sample in front of them.
  *
- * NOTE ON prerequisites/followUps: the chain for this row is 4.4 -> 5.1 -> 5.2,
- * but rows 4.4 and 5.2 are authored in the fan-out that follows this commit.
- * `lint-ms-plans` rejects a prerequisite/followUp that does not resolve to a
- * registered LO, so both arrays stay empty until the full 40-row batch lands
- * and the controller wires the chain. Do not copy the empty arrays.
+ * NOTE ON prerequisites/followUps: the chain for this row is 4.4 -> 5.1 -> 5.2.
+ * Rows 4.4 and 5.2 are now registered alongside this one, so the chain is
+ * wired: prerequisites points at row 4.4 (`landforms-built-by-plate-motion`)
+ * and followUps points at row 5.2 (`absolute-dating-and-the-geologic-time-scale`).
  */
 
 import type { LessonPlan } from '../types';
@@ -77,8 +76,8 @@ export const SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS: LessonPlan = {
         'Apply the law of superposition to order undisturbed rock layers from oldest to youngest, and identify when a sequence has been disturbed by folding, tilting or a later feature cutting across it (NGSS MS-ESS1-4).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6sci.landforms-built-by-plate-motion'],
+  followUps: ['m6sci.absolute-dating-and-the-geologic-time-scale'],
   estimatedMinutes: 21,
   segments: [
     {

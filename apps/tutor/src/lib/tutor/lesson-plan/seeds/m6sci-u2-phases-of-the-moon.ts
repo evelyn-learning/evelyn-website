@@ -46,11 +46,10 @@
  * assume the student has a flashlight, a ball, a globe, or a clear sky
  * tonight.
  *
- * NOTE ON prerequisites/followUps: the chain for this row is 2.2 -> 2.3 -> 2.4,
- * but rows 2.2 and 2.4 are authored in the fan-out that follows this commit.
- * `lint-ms-plans` rejects a prerequisite/followUp that does not resolve to a
- * registered LO, so both arrays stay empty until the full 40-row batch lands
- * and the controller wires the chain. Do not copy the empty arrays.
+ * NOTE ON prerequisites/followUps: the chain for this row is 2.2 -> 2.3 -> 2.4.
+ * Rows 2.2 and 2.4 are now registered alongside this one, so the chain is
+ * wired: prerequisites points at row 2.2 (`earths-revolution-and-the-seasons`)
+ * and followUps points at row 2.4 (`solar-and-lunar-eclipses`).
  */
 
 import type { LessonPlan } from '../types';
@@ -72,8 +71,8 @@ export const SEED_M6SCI_U2_PHASES_OF_THE_MOON: LessonPlan = {
         'Use a model of the Moon orbiting Earth to explain why the illuminated shape of the Moon appears to change over about 29.5 days, naming the phases in order and accounting for the change by the Sun-Moon-Earth angle rather than by Earth\'s shadow (NGSS MS-ESS1-1).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m6sci.earths-revolution-and-the-seasons'],
+  followUps: ['m6sci.solar-and-lunar-eclipses'],
   estimatedMinutes: 22,
   segments: [
     {

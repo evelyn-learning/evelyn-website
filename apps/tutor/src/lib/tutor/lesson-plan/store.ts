@@ -2142,9 +2142,47 @@ import { SEED_M6ELA_U10_ASKING_A_RESEARCH_QUESTION } from './seeds/m6ela-u10-ask
 import { SEED_M6ELA_U10_EVALUATING_SOURCE_CREDIBILITY } from './seeds/m6ela-u10-evaluating-source-credibility';
 import { SEED_M6ELA_U10_QUOTING_AND_PARAPHRASING_WITHOUT_PLAGIARIZING } from './seeds/m6ela-u10-quoting-and-paraphrasing-without-plagiarizing';
 import { SEED_M6ELA_U10_GIVING_BASIC_SOURCE_INFORMATION } from './seeds/m6ela-u10-giving-basic-source-information';
-// MS-core — Grade 6 Science. Exemplar seeds; the remaining rows fan out.
+// MS-core — Grade 6 Science (NGSS MS-ESS1/ESS2/ESS3, units 1-10).
+import { SEED_M6SCI_U1_SCALE_OF_THE_SOLAR_SYSTEM } from './seeds/m6sci-u1-scale-of-the-solar-system';
+import { SEED_M6SCI_U1_CLASSIFYING_THE_PLANETS } from './seeds/m6sci-u1-classifying-the-planets';
+import { SEED_M6SCI_U1_GRAVITY_AND_ORBITAL_MOTION } from './seeds/m6sci-u1-gravity-and-orbital-motion';
+import { SEED_M6SCI_U1_ASTEROIDS_COMETS_AND_OTHER_SOLAR_SYSTEM_OBJECTS } from './seeds/m6sci-u1-asteroids-comets-and-other-solar-system-objects';
+import { SEED_M6SCI_U2_EARTHS_ROTATION_DAY_AND_NIGHT } from './seeds/m6sci-u2-earths-rotation-day-and-night';
+import { SEED_M6SCI_U2_EARTHS_REVOLUTION_AND_THE_SEASONS } from './seeds/m6sci-u2-earths-revolution-and-the-seasons';
 import { SEED_M6SCI_U2_PHASES_OF_THE_MOON } from './seeds/m6sci-u2-phases-of-the-moon';
+import { SEED_M6SCI_U2_SOLAR_AND_LUNAR_ECLIPSES } from './seeds/m6sci-u2-solar-and-lunar-eclipses';
+import { SEED_M6SCI_U3_EARTHS_LAYERED_STRUCTURE } from './seeds/m6sci-u3-earths-layered-structure';
+import { SEED_M6SCI_U3_IDENTIFYING_MINERALS_BY_THEIR_PROPERTIES } from './seeds/m6sci-u3-identifying-minerals-by-their-properties';
+import { SEED_M6SCI_U3_THE_THREE_ROCK_TYPES } from './seeds/m6sci-u3-the-three-rock-types';
+import { SEED_M6SCI_U3_THE_ROCK_CYCLE } from './seeds/m6sci-u3-the-rock-cycle';
+import { SEED_M6SCI_U4_EVIDENCE_FOR_CONTINENTAL_DRIFT } from './seeds/m6sci-u4-evidence-for-continental-drift';
+import { SEED_M6SCI_U4_EARTHS_PLATES_AND_MANTLE_CONVECTION } from './seeds/m6sci-u4-earths-plates-and-mantle-convection';
+import { SEED_M6SCI_U4_TYPES_OF_PLATE_BOUNDARIES } from './seeds/m6sci-u4-types-of-plate-boundaries';
+import { SEED_M6SCI_U4_LANDFORMS_BUILT_BY_PLATE_MOTION } from './seeds/m6sci-u4-landforms-built-by-plate-motion';
 import { SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS } from './seeds/m6sci-u5-relative-dating-and-rock-layers';
+import { SEED_M6SCI_U5_ABSOLUTE_DATING_AND_THE_GEOLOGIC_TIME_SCALE } from './seeds/m6sci-u5-absolute-dating-and-the-geologic-time-scale';
+import { SEED_M6SCI_U5_FOSSILS_AS_EVIDENCE_OF_EARTHS_HISTORY } from './seeds/m6sci-u5-fossils-as-evidence-of-earths-history';
+import { SEED_M6SCI_U5_MASS_EXTINCTIONS_AS_TIME_MARKERS } from './seeds/m6sci-u5-mass-extinctions-as-time-markers';
+import { SEED_M6SCI_U6_LAYERS_AND_COMPOSITION_OF_THE_ATMOSPHERE } from './seeds/m6sci-u6-layers-and-composition-of-the-atmosphere';
+import { SEED_M6SCI_U6_AIR_MASSES_AND_FRONTS } from './seeds/m6sci-u6-air-masses-and-fronts';
+import { SEED_M6SCI_U6_READING_WEATHER_MAPS } from './seeds/m6sci-u6-reading-weather-maps';
+import { SEED_M6SCI_U6_HOW_AIR_MASS_INTERACTIONS_PRODUCE_SEVERE_WEATHER } from './seeds/m6sci-u6-how-air-mass-interactions-produce-severe-weather';
+import { SEED_M6SCI_U7_EARTHS_FOUR_SPHERES_INTERACTING } from './seeds/m6sci-u7-earths-four-spheres-interacting';
+import { SEED_M6SCI_U7_THE_WATER_CYCLE_EVAPORATION_CONDENSATION_PRECIPITATION } from './seeds/m6sci-u7-the-water-cycle-evaporation-condensation-precipitation';
+import { SEED_M6SCI_U7_THE_WATER_CYCLE_GROUNDWATER_AND_RUNOFF } from './seeds/m6sci-u7-the-water-cycle-groundwater-and-runoff';
+import { SEED_M6SCI_U7_WEATHERING_EROSION_AND_DEPOSITION_BY_WATER } from './seeds/m6sci-u7-weathering-erosion-and-deposition-by-water';
+import { SEED_M6SCI_U8_WEATHER_VERSUS_CLIMATE } from './seeds/m6sci-u8-weather-versus-climate';
+import { SEED_M6SCI_U8_WHAT_DETERMINES_A_REGIONS_CLIMATE } from './seeds/m6sci-u8-what-determines-a-regions-climate';
+import { SEED_M6SCI_U8_HOW_OCEAN_CURRENTS_MOVE_HEAT_AROUND_THE_GLOBE } from './seeds/m6sci-u8-how-ocean-currents-move-heat-around-the-globe';
+import { SEED_M6SCI_U8_READING_CLIMATE_GRAPHS } from './seeds/m6sci-u8-reading-climate-graphs';
+import { SEED_M6SCI_U9_RENEWABLE_AND_NONRENEWABLE_RESOURCES } from './seeds/m6sci-u9-renewable-and-nonrenewable-resources';
+import { SEED_M6SCI_U9_HOW_GEOLOGIC_PROCESSES_DISTRIBUTE_RESOURCES_UNEVENLY } from './seeds/m6sci-u9-how-geologic-processes-distribute-resources-unevenly';
+import { SEED_M6SCI_U9_MAPPING_GEOLOGIC_HAZARDS } from './seeds/m6sci-u9-mapping-geologic-hazards';
+import { SEED_M6SCI_U9_FORECASTING_AND_PREPARING_FOR_WEATHER_HAZARDS } from './seeds/m6sci-u9-forecasting-and-preparing-for-weather-hazards';
+import { SEED_M6SCI_U10_THE_CARBON_CYCLE_IN_ROCKS_OCEAN_AND_AIR } from './seeds/m6sci-u10-the-carbon-cycle-in-rocks-ocean-and-air';
+import { SEED_M6SCI_U10_EVIDENCE_FOR_RISING_GLOBAL_TEMPERATURES } from './seeds/m6sci-u10-evidence-for-rising-global-temperatures';
+import { SEED_M6SCI_U10_MONITORING_AND_REDUCING_HUMAN_IMPACT_ON_EARTH_SYSTEMS } from './seeds/m6sci-u10-monitoring-and-reducing-human-impact-on-earth-systems';
+import { SEED_M6SCI_U10_POPULATION_GROWTH_AND_RESOURCE_DEMAND } from './seeds/m6sci-u10-population-growth-and-resource-demand';
 // MS-core — Grade 6 Geography. Exemplar seeds; the remaining rows fan out.
 import { SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN } from './seeds/m6geo-u2-hemispheres-equator-and-prime-meridian';
 import { SEED_M6GEO_U3_EARTHS_MOVING_PLATES } from './seeds/m6geo-u3-earths-moving-plates';
@@ -4215,8 +4253,46 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M6ELA_U10_QUOTING_AND_PARAPHRASING_WITHOUT_PLAGIARIZING,
   SEED_M6ELA_U10_GIVING_BASIC_SOURCE_INFORMATION,
   // MS-core — Grade 6 Science.
+  SEED_M6SCI_U1_SCALE_OF_THE_SOLAR_SYSTEM,
+  SEED_M6SCI_U1_CLASSIFYING_THE_PLANETS,
+  SEED_M6SCI_U1_GRAVITY_AND_ORBITAL_MOTION,
+  SEED_M6SCI_U1_ASTEROIDS_COMETS_AND_OTHER_SOLAR_SYSTEM_OBJECTS,
+  SEED_M6SCI_U2_EARTHS_ROTATION_DAY_AND_NIGHT,
+  SEED_M6SCI_U2_EARTHS_REVOLUTION_AND_THE_SEASONS,
   SEED_M6SCI_U2_PHASES_OF_THE_MOON,
+  SEED_M6SCI_U2_SOLAR_AND_LUNAR_ECLIPSES,
+  SEED_M6SCI_U3_EARTHS_LAYERED_STRUCTURE,
+  SEED_M6SCI_U3_IDENTIFYING_MINERALS_BY_THEIR_PROPERTIES,
+  SEED_M6SCI_U3_THE_THREE_ROCK_TYPES,
+  SEED_M6SCI_U3_THE_ROCK_CYCLE,
+  SEED_M6SCI_U4_EVIDENCE_FOR_CONTINENTAL_DRIFT,
+  SEED_M6SCI_U4_EARTHS_PLATES_AND_MANTLE_CONVECTION,
+  SEED_M6SCI_U4_TYPES_OF_PLATE_BOUNDARIES,
+  SEED_M6SCI_U4_LANDFORMS_BUILT_BY_PLATE_MOTION,
   SEED_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS,
+  SEED_M6SCI_U5_ABSOLUTE_DATING_AND_THE_GEOLOGIC_TIME_SCALE,
+  SEED_M6SCI_U5_FOSSILS_AS_EVIDENCE_OF_EARTHS_HISTORY,
+  SEED_M6SCI_U5_MASS_EXTINCTIONS_AS_TIME_MARKERS,
+  SEED_M6SCI_U6_LAYERS_AND_COMPOSITION_OF_THE_ATMOSPHERE,
+  SEED_M6SCI_U6_AIR_MASSES_AND_FRONTS,
+  SEED_M6SCI_U6_READING_WEATHER_MAPS,
+  SEED_M6SCI_U6_HOW_AIR_MASS_INTERACTIONS_PRODUCE_SEVERE_WEATHER,
+  SEED_M6SCI_U7_EARTHS_FOUR_SPHERES_INTERACTING,
+  SEED_M6SCI_U7_THE_WATER_CYCLE_EVAPORATION_CONDENSATION_PRECIPITATION,
+  SEED_M6SCI_U7_THE_WATER_CYCLE_GROUNDWATER_AND_RUNOFF,
+  SEED_M6SCI_U7_WEATHERING_EROSION_AND_DEPOSITION_BY_WATER,
+  SEED_M6SCI_U8_WEATHER_VERSUS_CLIMATE,
+  SEED_M6SCI_U8_WHAT_DETERMINES_A_REGIONS_CLIMATE,
+  SEED_M6SCI_U8_HOW_OCEAN_CURRENTS_MOVE_HEAT_AROUND_THE_GLOBE,
+  SEED_M6SCI_U8_READING_CLIMATE_GRAPHS,
+  SEED_M6SCI_U9_RENEWABLE_AND_NONRENEWABLE_RESOURCES,
+  SEED_M6SCI_U9_HOW_GEOLOGIC_PROCESSES_DISTRIBUTE_RESOURCES_UNEVENLY,
+  SEED_M6SCI_U9_MAPPING_GEOLOGIC_HAZARDS,
+  SEED_M6SCI_U9_FORECASTING_AND_PREPARING_FOR_WEATHER_HAZARDS,
+  SEED_M6SCI_U10_THE_CARBON_CYCLE_IN_ROCKS_OCEAN_AND_AIR,
+  SEED_M6SCI_U10_EVIDENCE_FOR_RISING_GLOBAL_TEMPERATURES,
+  SEED_M6SCI_U10_MONITORING_AND_REDUCING_HUMAN_IMPACT_ON_EARTH_SYSTEMS,
+  SEED_M6SCI_U10_POPULATION_GROWTH_AND_RESOURCE_DEMAND,
   // MS-core — Grade 6 Geography.
   SEED_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN,
   SEED_M6GEO_U3_EARTHS_MOVING_PLATES,
