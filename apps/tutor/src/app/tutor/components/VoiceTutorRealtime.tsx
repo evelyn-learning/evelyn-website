@@ -15027,6 +15027,14 @@ export function VoiceTutorRealtime({
           return;
         }
         queuedTranscriptsRef.current.push(transcript);
+        // Issue E fix-round-1: this ref tracks the shared queue's true last-
+        // push time regardless of which of the two push sites wrote the
+        // entry — the busy-branch coalesce check below reads it to decide
+        // whether the array's trailing element is still fresh. Without this
+        // line a mid-utterance-queued entry could become that trailing
+        // element while the ref still held a stale (or zero) timestamp,
+        // silently under-coalescing a rapid successor final.
+        queuedTranscriptCoalesceAtRef.current = Date.now();
         onDebugEvent?.('dispatch_queued_mid_utterance', transcript.slice(0, 60));
         // R32 (H1 review round 1, Finding 1): this push has a guaranteed
         // drain only when brainBusyRef is true right now (the while-loop
