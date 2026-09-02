@@ -22,11 +22,24 @@
  *     --los-file <path> --out-dir <path> --ced-prefix <STR> \
  *     --subject-label "<free text>" \
  *     [--items-per-lo 6] [--concurrency 4] [--limit N] [--only-lo <id>] \
- *     [--grounding-from-seeds]
+ *     [--grounding-from-seeds] [--ms-conventions] \
+ *     [--difficulty-spread 1,2,2,3,3,4]
  *
  * Required: --los-file, --out-dir, --ced-prefix, --subject-label.
  * Optional: --items-per-lo (default 6, difficulties cycle 1..4 across the
- * count), --concurrency (default 4), --limit N, --only-lo <id>.
+ * count unless --difficulty-spread is given), --concurrency (default 4),
+ * --limit N, --only-lo <id>.
+ *
+ * --difficulty-spread <comma-list>: explicit per-item difficulty sequence
+ * (integers 1-4), replacing the default 1..4 modulo cycle. Length MUST equal
+ * --items-per-lo (validated before any API calls). Works with or without
+ * --ms-conventions.
+ *
+ * --ms-conventions: switches output to the shipped Grade-7 bank convention —
+ * item id `<lowercased-ced-prefix>-<slug>-NNN` (3-digit ordinal, no "gen"
+ * segment), cedCode `<PREFIX>-<unit>.<topicIndex>` (no "U"), and exactly 2
+ * hints per item. Without this flag, output is byte-identical to prior
+ * behavior.
  *
  * --grounding-from-seeds: pull lesson content from the in-repo curated
  * `SEED_PLANS` catalog (via `getLessonPlan`) instead of Mongo — no DB
@@ -88,13 +101,16 @@ interface Opts {
   limit?: number;
   onlyLo?: string;
   groundingFromSeeds: boolean;
+  msConventions: boolean;
+  difficultySpread?: Array<1 | 2 | 3 | 4>;
 }
 
 function usage(): string {
   return (
     'Usage: npx tsx scripts/generate-bank-items.ts --los-file <path> --out-dir <path> ' +
     '--ced-prefix <STR> --subject-label "<free text>" [--items-per-lo 6] ' +
-    '[--concurrency 4] [--limit N] [--only-lo <id>] [--grounding-from-seeds]'
+    '[--concurrency 4] [--limit N] [--only-lo <id>] [--grounding-from-seeds] ' +
+    '[--ms-conventions] [--difficulty-spread 1,2,2,3,3,4]'
   );
 }
 
@@ -133,6 +149,28 @@ function parseArgs(): Opts {
     console.error(`✗ --concurrency must be a positive integer, got '${concurrencyRaw}'`);
     process.exit(1);
   }
+
+  const difficultySpreadRaw = get('difficulty-spread');
+  let difficultySpread: Array<1 | 2 | 3 | 4> | undefined;
+  if (difficultySpreadRaw !== undefined) {
+    const parts = difficultySpreadRaw.split(',').map((s) => s.trim());
+    const nums = parts.map((p) => Number(p));
+    const allValidInts = nums.every((n) => Number.isInteger(n) && n >= 1 && n <= 4);
+    if (!allValidInts) {
+      console.error(
+        `✗ --difficulty-spread must be a comma-separated list of integers 1-4, got '${difficultySpreadRaw}'`
+      );
+      process.exit(1);
+    }
+    if (nums.length !== itemsPerLo) {
+      console.error(
+        `✗ --difficulty-spread has ${nums.length} value(s) but --items-per-lo is ${itemsPerLo} — lengths must match. Got '${difficultySpreadRaw}'`
+      );
+      process.exit(1);
+    }
+    difficultySpread = nums as Array<1 | 2 | 3 | 4>;
+  }
+
   return {
     losFile,
     outDir,
@@ -143,6 +181,8 @@ function parseArgs(): Opts {
     limit: get('limit') ? parseInt(get('limit')!, 10) : undefined,
     onlyLo: get('only-lo'),
     groundingFromSeeds: args.includes('--grounding-from-seeds'),
+    msConventions: args.includes('--ms-conventions'),
+    difficultySpread,
   };
 }
 
@@ -228,11 +268,23 @@ function buildSystem(subjectLabel: string): string {
   return `You are an expert ${subjectLabel} assessment item writer. Write ORIGINAL multiple-choice items that test genuine understanding of the stated learning objective — not just recognition of a keyword. Ground every item in the supplied lesson content so it is answerable from what was taught; never require outside knowledge or trivia the lesson didn't cover. Vary how each item is framed (a short applied scenario, a direct calculation or definition check, a compare/contrast, a spot-the-error) rather than repeating one template across items. Write ORIGINAL items only — never copy or closely paraphrase questions from any real exam, textbook, or published question bank.`;
 }
 
-function buildPrompt(lo: Lo, grounding: string, itemsPerLo: number, subjectLabel: string): string {
-  const difficulties: Array<1 | 2 | 3 | 4> = Array.from({ length: itemsPerLo }, (_, i) => (((i % 4) + 1) as 1 | 2 | 3 | 4));
+function computeDifficulties(itemsPerLo: number, spread?: Array<1 | 2 | 3 | 4>): Array<1 | 2 | 3 | 4> {
+  if (spread) return spread;
+  return Array.from({ length: itemsPerLo }, (_, i) => (((i % 4) + 1) as 1 | 2 | 3 | 4));
+}
+
+function buildPrompt(
+  lo: Lo,
+  grounding: string,
+  difficulties: Array<1 | 2 | 3 | 4>,
+  subjectLabel: string,
+  exactlyTwoHints: boolean,
+): string {
+  const itemsPerLo = difficulties.length;
   const spec = difficulties
     .map((d, i) => `${i + 1}. difficulty ${d} — ${DIFFICULTY_LABEL[d]}`)
     .join('\n');
+  const hintsInstruction = exactlyTwoHints ? 'exactly 2 short hints' : '1-2 short hints';
   return `Subject: ${subjectLabel}
 Learning objective: "${lo.title}"
 LO description: ${lo.description}
@@ -243,7 +295,7 @@ ${grounding || '(no additional lesson content retrieved — ground items in the 
 Write EXACTLY ${itemsPerLo} original multiple-choice items for this LO, one per line below, at the difficulty specified for that position:
 ${spec}
 
-Each item needs exactly 4 choices (A-D), one clearly correct answer, and 1-2 short hints that nudge without giving away the answer. Choices must not have letter prefixes in the text itself. No item's problemText may be shorter than 2 sentences (or, for a terse computational item, at least one full sentence that fully states what is being asked).
+Each item needs exactly 4 choices (A-D), one clearly correct answer, and ${hintsInstruction} that nudge without giving away the answer. Choices must not have letter prefixes in the text itself. No item's problemText may be shorter than 2 sentences (or, for a terse computational item, at least one full sentence that fully states what is being asked).
 
 Return ONLY a JSON array of ${itemsPerLo} objects, this exact shape, no markdown fences, no commentary, in the same order as the difficulty list above:
 [{"difficulty":1,"problemText":"...","choices":["...","...","...","..."],"answer":"A","hints":["..."]}, ...]`;
@@ -334,6 +386,10 @@ async function main() {
 
   const rawIdPrefix = slugify(opts.cedPrefix) || 'gen';
   const idPrefix = rawIdPrefix.replace(/-gen$/, '') || 'gen';
+  // --ms-conventions id prefix: lowercased ced-prefix with trailing dashes
+  // stripped (slugify already does both) and NO "-gen" segment stripping —
+  // there is no "gen" segment in this template to begin with.
+  const msIdPrefix = rawIdPrefix;
 
   let done = 0;
   let usageIn = 0;
@@ -343,13 +399,19 @@ async function main() {
     const slug = slugByLoId.get(lo.loId)!;
 
     const grounding = await fetchGrounding(lo.planId, lo.loId, opts.groundingFromSeeds);
+    const difficulties = computeDifficulties(opts.itemsPerLo, opts.difficultySpread);
     let items: GenItem[] = [];
     try {
       const params = {
         model,
         max_tokens: 4000,
         system: SYSTEM,
-        messages: [{ role: 'user', content: buildPrompt(lo, grounding, opts.itemsPerLo, opts.subjectLabel) }],
+        messages: [
+          {
+            role: 'user',
+            content: buildPrompt(lo, grounding, difficulties, opts.subjectLabel, opts.msConventions),
+          },
+        ],
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
@@ -367,23 +429,33 @@ async function main() {
     }
 
     const seedItems: SeedItem[] = [];
-    for (const it of items) {
+    for (let idx = 0; idx < items.length; idx++) {
+      const it = items[idx];
       const errs = validateGenItem(it, lo.loId).filter((e) => !e.startsWith('WARN'));
       if (errs.length) {
         console.log(`  [FAIL] ${lo.loId} d${it.difficulty}: ${errs.join('; ')}`);
         continue;
       }
-      const n = String(seedItems.length + 1).padStart(2, '0');
+      const nDigits = opts.msConventions ? 3 : 2;
+      const n = String(seedItems.length + 1).padStart(nDigits, '0');
+      // When an explicit spread is given, stamp difficulty from the intended
+      // per-position sequence rather than trusting the model's echoed value —
+      // guarantees the output sequence matches --difficulty-spread exactly.
+      const difficulty = opts.difficultySpread ? (difficulties[idx] ?? it.difficulty) : it.difficulty;
+      let hints = it.hints ?? [];
+      if (opts.msConventions) hints = hints.slice(0, 2);
       seedItems.push({
-        id: `${idPrefix}-gen.${slug}.${n}`,
+        id: opts.msConventions ? `${msIdPrefix}-${slug}-${n}` : `${idPrefix}-gen.${slug}.${n}`,
         loId: lo.loId,
-        cedCode: `${opts.cedPrefix}-U${lo.unit}.${cedIndex}`,
-        difficulty: it.difficulty,
+        cedCode: opts.msConventions
+          ? `${opts.cedPrefix}-${lo.unit}.${cedIndex}`
+          : `${opts.cedPrefix}-U${lo.unit}.${cedIndex}`,
+        difficulty,
         responseFormat: 'mcq',
         problemText: it.problemText,
         choices: it.choices,
         answer: it.answer,
-        hints: it.hints ?? [],
+        hints,
       });
     }
     done++;
