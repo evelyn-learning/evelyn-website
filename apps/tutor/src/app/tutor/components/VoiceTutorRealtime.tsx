@@ -181,6 +181,7 @@ import {
   TUTOR_BRAIN_STALL_GUARD,
   TUTOR_SPOKEN_MONEY,
   TUTOR_FALSE_ASSERTION_KILL,
+  TUTOR_FA_STALE_ANCHOR_DOWNGRADE,
   TUTOR_STUDENT_HOLD,
   TUTOR_FIRST_SESSION_TIP,
   TUTOR_NOISE_FLOOR_NUDGE,
@@ -9206,6 +9207,12 @@ export function VoiceTutorRealtime({
         runTranscript = `${pendingNoAdvanceNoteRef.current}\n\n${runTranscript}`;
         pendingNoAdvanceNoteRef.current = null;
       }
+      // Issue A: a board-anchor note pending at turn start means last turn asked a
+      // question that was never boarded — the active-problem anchor may not be the
+      // question the student is answering. Captured ONCE here, before the note
+      // below is consumed and cleared, so it reflects this turn's start state for
+      // the whole attempt loop (not per-sentence, not per-retry).
+      const anchorSuspectThisTurn = pendingBoardAnchorNoteRef.current != null;
       // R2 E2: board-anchor corrective — same convention, own concern.
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
@@ -10763,15 +10770,26 @@ export function VoiceTutorRealtime({
                       spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
                     });
                     if (fa.verdict === 'false_assertion') {
-                      const reason =
-                        `You asserted ${fa.answerVar} = ${fa.asserted}, but the verified answer for the active problem is ${fa.expected}. ` +
-                        `Re-derive the value step by step and re-deliver the turn with the correct final value — never state ${fa.answerVar} = ${fa.asserted} again.`;
-                      rejectionsThisAttempt.push({ action: 'false_final_assertion', reason });
-                      judgeRetriesUsed++;
-                      await performKill();
-                      console.warn(`[brain-orchestrator] false-assertion check: asserted ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected} — kill + retry`);
-                      onDebugEvent?.('false_assertion_kill', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)} (${fa.matchReason})`);
-                      continue;
+                      // Issue A: last turn's board-anchor note (planted because that
+                      // question got no board write) means the active-problem anchor
+                      // may be stale — the sentence could be answering last turn's
+                      // spoken side-question, not the tracked problem. Downgrade the
+                      // kill to an advisory log rather than killing a possibly-correct
+                      // answer against the wrong verified value.
+                      if (TUTOR_FA_STALE_ANCHOR_DOWNGRADE && anchorSuspectThisTurn) {
+                        console.warn(`[brain-orchestrator] false-assertion DOWNGRADED (stale anchor — unboarded question last turn): ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected}`);
+                        onDebugEvent?.('false_assertion_downgraded_stale_anchor', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)}`);
+                      } else {
+                        const reason =
+                          `You asserted ${fa.answerVar} = ${fa.asserted}, but the verified answer for the active problem is ${fa.expected}. ` +
+                          `Re-derive the value step by step and re-deliver the turn with the correct final value — never state ${fa.answerVar} = ${fa.asserted} again.`;
+                        rejectionsThisAttempt.push({ action: 'false_final_assertion', reason });
+                        judgeRetriesUsed++;
+                        await performKill();
+                        console.warn(`[brain-orchestrator] false-assertion check: asserted ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected} — kill + retry`);
+                        onDebugEvent?.('false_assertion_kill', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)} (${fa.matchReason})`);
+                        continue;
+                      }
                     }
                   }
                   // Praise-echo check (verdict-detector round, session portal-cb2addf5):

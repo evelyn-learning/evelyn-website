@@ -102,6 +102,12 @@ export const TUTOR_IDLE_NUDGE =
 // Default ON; NEXT_PUBLIC_TUTOR_FALSE_ASSERTION_KILL=off is the kill switch.
 export const TUTOR_FALSE_ASSERTION_KILL =
   process.env.NEXT_PUBLIC_TUTOR_FALSE_ASSERTION_KILL !== 'off';
+/** Issue-A fix (portal-85b2c632, 2026-09-01): when the previous turn posed a
+ *  question with NO board write (board-anchor note planted), the active-problem
+ *  anchor is suspect — downgrade a false-assertion KILL to an advisory log so a
+ *  correct answer to the spoken side-question isn't killed against a stale
+ *  anchor. Default ON. */
+export const TUTOR_FA_STALE_ANCHOR_DOWNGRADE = process.env.NEXT_PUBLIC_TUTOR_FA_STALE_ANCHOR_DOWNGRADE !== 'off';
 // R58 student-declared hold (live, portal-2f23ece4: "ignore everything I
 // say until I say candle" — the tutor kept answering every overheard
 // utterance and the private aside landed in the transcript). While
