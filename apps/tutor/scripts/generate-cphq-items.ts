@@ -29,8 +29,8 @@ import mongoose from 'mongoose';
 import Anthropic from '@anthropic-ai/sdk';
 import { LessonPlanModel, toLessonPlan } from '../src/models/LessonPlan';
 import type { Segment } from '../src/lib/tutor/lesson-plan/types';
-
-const MODEL = 'claude-sonnet-5';
+import { getModelClient, prepareParams, resolveModel } from '../src/lib/tutor/ai/model-registry';
+import { lookupModelRate } from '../src/lib/tutor/ai/model-rates';
 const OUT_DIR = path.join(__dirname, '..', 'src', 'data', 'problem-bank', 'cphq');
 const LOS_FILE = path.join(__dirname, '..', '..', '..', '.cphq-los.json');
 const DIFFICULTIES: Array<1 | 2 | 3 | 4> = [1, 2, 3, 4];
@@ -158,13 +158,15 @@ Return ONLY a JSON array of 4 objects, this exact shape, no markdown fences, no 
 [{"difficulty":1,"problemText":"...","choices":["...","...","...","..."],"answer":"A","hints":["..."]}, ...]`;
 }
 
-async function generateForLo(anthropic: Anthropic, lo: CphqLo, grounding: string): Promise<GenItem[]> {
-  const msg = await anthropic.messages.create({
-    model: MODEL,
+async function generateForLo(anthropic: Anthropic, model: string, lo: CphqLo, grounding: string): Promise<GenItem[]> {
+  const params = {
+    model,
     max_tokens: 4000,
     system: SYSTEM,
     messages: [{ role: 'user', content: buildPrompt(lo, grounding) }],
-  });
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
   const text = msg.content
     .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
     .map((b) => b.text)
@@ -207,8 +209,11 @@ async function runPool<T, R>(items: T[], concurrency: number, fn: (t: T, i: numb
 async function main() {
   const opts = parseArgs();
   dotenv.config({ path: path.join(__dirname, '..', '..', '..', '.env.local.production') });
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('✗ ANTHROPIC_API_KEY not set.');
+  if (!resolveModel('content-gen').apiKey) {
+    console.error(
+      '✗ No API key found for the content-gen role (checked TUTOR_MODEL_CONTENT_GEN_API_KEY, ' +
+        'TUTOR_MODEL_API_KEY, and ANTHROPIC_API_KEY — needed for generation).'
+    );
     process.exit(1);
   }
   if (!process.env.MONGODB_URI) {
@@ -225,7 +230,7 @@ async function main() {
   console.log(`Generating items for ${los.length} CPHQ LO(s)...`);
 
   await mongoose.connect(process.env.MONGODB_URI);
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const { client: anthropic, model } = getModelClient('content-gen');
 
   // cedCode: CPHQ-U<unit>.<index-within-unit>, computed from the file's
   // already-unit-grouped order.
@@ -245,12 +250,14 @@ async function main() {
     const grounding = await fetchGrounding(lo.planId, lo.loId);
     let items: GenItem[] = [];
     try {
-      const msg = await anthropic.messages.create({
-        model: MODEL,
+      const params = {
+        model,
         max_tokens: 4000,
         system: SYSTEM,
         messages: [{ role: 'user', content: buildPrompt(lo, grounding) }],
-      });
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
       usageIn += msg.usage?.input_tokens ?? 0;
       usageOut += msg.usage?.output_tokens ?? 0;
       const text = msg.content
@@ -322,10 +329,12 @@ async function main() {
   const shortLos = perLoResults.filter((r) => r.seedItems.length < 4).map((r) => `${r.lo.loId} (${r.seedItems.length})`);
   console.log(`\nDone. ${totalItems} items generated across ${perLoResults.length} LOs.`);
   if (shortLos.length) console.log(`LOs with <4 items: ${shortLos.join(', ')}`);
-  // Rough cost estimate — Sonnet 5 intro pricing through 2026-08-31 is
-  // $2/$10 per Mtok in/out (standard $3/$15 after) — informational only.
-  const costEstimate = (usageIn / 1_000_000) * 2 + (usageOut / 1_000_000) * 10;
-  console.log(`Token usage: ${usageIn} in / ${usageOut} out. Est. generation cost: $${costEstimate.toFixed(3)}`);
+  const rate = lookupModelRate(model);
+  const cost = rate ? (usageIn / 1e6) * rate.input + (usageOut / 1e6) * rate.output : undefined;
+  console.log(
+    `Token usage: ${usageIn} in / ${usageOut} out.` +
+      (cost !== undefined ? ` Est. generation cost: $${cost.toFixed(3)} (informational)` : ' (no rate row for this model)'),
+  );
 }
 
 main().catch((e) => {
