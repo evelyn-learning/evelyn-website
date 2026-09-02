@@ -11,9 +11,12 @@
  * flipping the FIRST fraction instead of the second, and multiplying the two
  * fractions as they stand without flipping anything.
  *
- * SCOPE GUARD: Grade 6 row 3.2 is fraction divided by fraction. Mixed numbers
- * are row 3.3 and word problems are row 3.4, so both stay out of the items
- * here; every quantity in this plan is a proper fraction.
+ * SCOPE GUARD: Grade 6 row 3.2 is fraction divided by fraction. Every DIVIDEND
+ * and DIVISOR in this plan is a proper fraction. Improper-fraction and mixed-
+ * number RESULTS are fine and do appear (6/4, 3/2, "1 and 1/2"): naming those
+ * is Grade 4/5 material, not row 3.3, whose skill is DIVIDING mixed numbers.
+ * Dividing mixed numbers is row 3.3 and word problems are row 3.4, so neither
+ * appears in the try_yourself items here.
  *
  * NOTE ON prerequisites/followUps: the chain for this row is 3.1 -> 3.2 -> 3.3,
  * but rows 3.1 and 3.3 are authored in the fan-out that follows this commit.
@@ -60,7 +63,7 @@ export const SEED_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS: LessonPlan = {
       goal: 'Install the three-move algorithm, the reason it works, and the two checks that catch a slip.',
       keyIdeas: [
         'DIVISION ASKS HOW MANY FIT — 3/4 divided by 1/2 asks how many halves fit inside three-fourths. Holding on to that question is what makes an answer believable, especially when the answer comes out bigger than the number you started with.',
-        'EVERY FRACTION HAS A RECIPROCAL — the reciprocal of a fraction is that fraction flipped over. The reciprocal of 2/5 is 5/2, and the reciprocal of 3/4 is 4/3. A fraction times its own reciprocal is always 1, because 3/4 × 4/3 = 12/12 = 1. That fact is the reason the rule below works.',
+        'EVERY FRACTION HAS A RECIPROCAL — the reciprocal of a fraction is that fraction flipped over. The reciprocal of 2/5 is 5/2, and the reciprocal of 3/4 is 4/3. A fraction times its own reciprocal is always 1, because 3/4 × 4/3 = 12/12 = 1. Here is why that makes the rule below work: multiply BOTH numbers in the division by the reciprocal of the second one, and the second one turns into 1. Dividing by 1 leaves a number alone, so what is left is the first fraction times that reciprocal, which is exactly the rule.',
         'KEEP, CHANGE, FLIP — keep the first fraction exactly as it is, change the division sign into a multiplication sign, and flip the second fraction into its reciprocal. Then multiply straight across: top times top, bottom times bottom.',
         'ONLY THE SECOND FRACTION FLIPS — the fraction that gets turned upside down is the one you are dividing BY, the one written after the division sign. Flipping the first one instead produces a completely different number. Say it out loud before you write anything: the second one flips.',
         'SIMPLIFY, THEN CHECK BY MULTIPLYING BACK — after multiplying, reduce the fraction by any factor the top and the bottom share. Then check: your answer times the second fraction should give the first fraction back. If it does not, one of the three moves went wrong.',
@@ -110,7 +113,7 @@ export const SEED_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS: LessonPlan = {
     {
       id: 'try-two-thirds-by-one-sixth',
       kind: 'try_yourself',
-      problem: 'What is 2/3 ÷ 1/6 ?',
+      problem: 'What is 2/3 ÷ 1/6?',
       responseFormat: 'mcq',
       choices: [
         { id: 'a', text: '1/9' },
@@ -128,7 +131,7 @@ export const SEED_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS: LessonPlan = {
     {
       id: 'try-identify-the-setup',
       kind: 'try_yourself',
-      problem: 'Which expression is equal to 5/8 ÷ 3/4 ?',
+      problem: 'Which expression is equal to 5/8 ÷ 3/4?',
       responseFormat: 'mcq',
       choices: [
         { id: 'a', text: '5/8 × 3/4' },

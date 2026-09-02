@@ -14,7 +14,11 @@
  *
  * SCOPE GUARD: Grade 6 places and interprets signed numbers. It never computes
  * with them. Adding, subtracting, multiplying or dividing negative numbers is
- * Grade 7 (m7math U1-U2) and must not appear here.
+ * Grade 7 (m7math U1-U2) and must not appear here. The number line appears as a
+ * REPRESENTATION of the two directions, never as the lesson objective: building
+ * the line and placing rational numbers on it is row 5.2, ordering statements
+ * are row 5.4, and absolute-value notation is row 5.3, so none of those is
+ * taught or assessed here.
  *
  * NOTE ON prerequisites/followUps: the chain for this row is 4.4 -> 5.1 -> 5.2,
  * but rows 4.4 and 5.2 are authored in the fan-out that follows this commit.
@@ -60,9 +64,9 @@ export const SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT: LessonPlan = {
       kind: 'concept',
       goal: 'Build the sign as a direction label from a chosen zero, and make naming zero the first move in every problem.',
       keyIdeas: [
-        'TWO DIRECTIONS FROM ONE STARTING LINE — every situation that needs negative numbers has a starting line and two opposite ways to go from it: above the water or below it, warmer than the zero mark or colder, money added to an account or money taken out. Positive numbers name one direction. Negative numbers name the other.',
+        'TWO DIRECTIONS FROM ONE STARTING LINE — every situation that needs negative numbers has a starting line and two opposite ways to go from it: above the water or below it, warmer than zero degrees or colder, money added to an account or money taken out. Positive numbers name one direction. Negative numbers name the other.',
         'THE MINUS SIGN IS A LABEL, NOT A SUBTRACTION — in -12 feet, the minus sign does not mean take away 12. It means the position sits 12 units on the negative side of the starting line. The digits tell you how far. The sign tells you which side.',
-        'ZERO MEANS SOMETHING DIFFERENT EVERY TIME — for elevation, zero is sea level. For a thermometer, zero is the zero-degree mark. For a bank account, zero is an empty account. For the pool, zero is the surface of the water. Zero is not nothing; it is the agreed line that both directions are measured from. Name what zero means before you write a single sign.',
+        'ZERO MEANS SOMETHING DIFFERENT EVERY TIME — on a Celsius thermometer, zero is the temperature at which water freezes, so a negative reading means colder than freezing. For a bank account, zero is an empty account. For the pool, zero is the surface of the water. For elevation on a map, zero is usually sea level, though a cave map may set zero at the entrance instead. Zero is not nothing; it is the agreed line that both directions are measured from, and whoever writes the numbers chooses it. Name what zero means before you write a single sign.',
         'OPPOSITES SIT THE SAME DISTANCE ON OPPOSITE SIDES — +3 and -3 are opposites. Both are 3 units from zero, and they sit on opposite sides of it. Three feet above the water and three feet below it are a matched pair, and that pairing is exactly what the two signs record.',
         'THE NUMBER LINE TURNS THE TWO DIRECTIONS INTO LEFT AND RIGHT — draw a line, mark zero in the middle, put positive numbers to the right and negative numbers to the left. So -12 sits twelve units left of zero and +10 sits ten units right of it. When the story is about up and down, like elevation or temperature, draw the line standing up instead, with the positives on top.',
         'THE SIGN ALREADY SAYS THE DIRECTION WORD — "12 feet below the surface" and "-12 feet" carry the same information. Writing -12 feet below the surface says below twice, which is not what you mean. Use the sign or use the word, never both at once.',
@@ -80,15 +84,15 @@ export const SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT: LessonPlan = {
       id: 'worked-translate-contexts',
       kind: 'worked_example',
       problem:
-        'Write each of these as a signed number, and say what zero means in that situation. (a) The temperature is 8 degrees below zero. (b) A submarine sits 240 feet below sea level. (c) Nina puts $15 into a savings account that was empty.',
+        'Write each of these as a signed number, and say what zero means in that situation. (a) The temperature on a Celsius thermometer is 8 degrees below zero. (b) A submarine sits 240 feet below sea level. (c) Nina puts $15 into a savings account that was empty.',
       steps: [
-        'Start every one of these by naming zero. On a thermometer, zero is the zero-degree mark. For the submarine, zero is sea level, the surface of the ocean. For the savings account, zero is an empty account with no money in it.',
-        '(a) The words say below zero, which is the colder direction, so the sign is negative. Eight degrees below zero is -8 degrees.',
+        'Start every one of these by naming zero. On a Celsius thermometer, zero is the temperature at which water freezes. For the submarine, zero is sea level, the surface of the ocean. For the savings account, zero is an empty account with no money in it.',
+        '(a) The words say below zero, which is the colder direction, so the sign is negative. Eight degrees below zero is -8 degrees Celsius.',
         '(b) The words say below sea level, which is the downward direction, so the sign is negative again. 240 feet below sea level is -240 feet.',
         '(c) Putting money in builds the balance up, which is the opposite of taking money out, so a deposit is positive. Putting in $15 is +15 dollars. Taking $15 out instead would be the opposite direction, which is -15 dollars.',
-        'Read each answer back in words as a check. -8 degrees means eight degrees colder than the zero mark. -240 feet means 240 feet under the surface of the ocean. +15 dollars means fifteen dollars added to an account that started empty. All three match their stories.',
+        'Read each answer back in words as a check. -8 degrees Celsius means eight degrees colder than freezing. -240 feet means 240 feet under the surface of the ocean. +15 dollars means fifteen dollars added to an account that started empty. All three match their stories.',
       ],
-      answer: '(a) -8 degrees, (b) -240 feet, (c) +15 dollars',
+      answer: '(a) -8 degrees Celsius, (b) -240 feet, (c) +15 dollars',
       estimatedMinutes: 3,
     },
     {
@@ -121,38 +125,38 @@ export const SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT: LessonPlan = {
       ],
       expectedAnswer: 'Sea level, the surface of the ocean',
       hints: [
-        'Zero is the starting line that both directions are measured from. Ask what line an elevation is always measured from.',
-        'A trail can go below zero, so zero cannot be the lowest point. For elevation, everybody agrees on the same starting line: the surface of the ocean.',
+        'Zero is the starting line that both directions are measured from. Ask what line a hiking app measures its elevations from.',
+        'A trail can go below zero, so zero cannot be the lowest point. For an elevation reading like this one, the agreed line is the surface of the ocean.',
       ],
       estimatedMinutes: 2,
     },
     {
-      id: 'try-opposite-elevation',
+      id: 'try-opposite-temperature',
       kind: 'try_yourself',
-      problem: 'A diver is at an elevation of -30 feet. A drone hovers at the opposite elevation. What is the elevation of the drone?',
+      problem: 'Monday morning the temperature was -12 degrees Celsius. Friday morning it was the opposite of the Monday reading. What was the temperature on Friday morning?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: '-30 feet' },
-        { id: 'b', text: '0 feet' },
-        { id: 'c', text: '+30 feet', correct: true },
-        { id: 'd', text: '+60 feet' },
+        { id: 'a', text: '-12 degrees Celsius' },
+        { id: 'b', text: '0 degrees Celsius' },
+        { id: 'c', text: '+12 degrees Celsius', correct: true },
+        { id: 'd', text: '+24 degrees Celsius' },
       ],
-      expectedAnswer: '+30 feet',
+      expectedAnswer: '+12 degrees Celsius',
       hints: [
         'Opposites are the same distance from zero, but on opposite sides of it.',
-        'The diver is 30 units below zero, so the opposite position is 30 units above zero. Measure from zero, not from the diver.',
+        'Monday sits 12 degrees below zero, so Friday sits 12 degrees above zero. Count from zero, and do not stop when you reach it.',
       ],
       estimatedMinutes: 2,
     },
     {
-      id: 'try-numeric-cave-elevation',
+      id: 'try-numeric-cave-position',
       kind: 'try_yourself',
       problem:
-        'Your class tours a cave. The map marks the entrance as 0 feet. The tour walks down to a chamber 45 feet below the entrance. Write the elevation of that chamber as a signed number. Type your answer as a number.',
+        'Your class tours a cave. The cave map does not use sea level. It marks the entrance as 0 feet, and every position is measured from there. The tour walks down to a chamber 45 feet below the entrance. Write the position of that chamber on this map as a signed number. Type your answer as a number.',
       responseFormat: 'numeric',
       expectedAnswer: '-45',
       hints: [
-        'The entrance is the zero line. Decide which direction the chamber sits from that line: up or down.',
+        'This map chooses its own zero: the entrance. Decide which direction the chamber sits from that line, up or down.',
         'Down from zero is the negative direction, so the number needs a minus sign in front of the 45.',
       ],
       estimatedMinutes: 2,
@@ -184,7 +188,7 @@ export const SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT: LessonPlan = {
       mustRemember: [
         'Positive and negative numbers record two opposite directions from one starting line.',
         'The minus sign is a direction label, not a subtraction: in -12 feet, the 12 says how far and the minus says which side.',
-        'Zero means something different in every situation — sea level, the zero-degree mark, an empty account — so name it first.',
+        'Zero means something different in every situation — the freezing point on a Celsius thermometer, sea level on a map, an empty account — so name it first.',
         'Opposites such as +3 and -3 sit the same distance from zero on opposite sides.',
         'On a number line, negatives go left of zero and positives go right; draw the line standing up when the story is about up and down.',
         'Use the sign or use the direction word, never both: -12 feet, or 12 feet below, but not -12 feet below.',

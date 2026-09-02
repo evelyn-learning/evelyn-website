@@ -1940,7 +1940,8 @@ import { SEED_M7MATH_U10_PROBABILITY_OF_SIMPLE_EVENTS } from './seeds/m7math-u10
 import { SEED_M7MATH_U10_EXPERIMENTAL_VS_THEORETICAL_PROBABILITY } from './seeds/m7math-u10-experimental-vs-theoretical-probability';
 import { SEED_M7MATH_U10_PROBABILITY_MODELS_AND_SIMULATIONS } from './seeds/m7math-u10-probability-models-and-simulations';
 import { SEED_M7MATH_U10_COMPOUND_EVENTS } from './seeds/m7math-u10-compound-events';
-// MS-core — Grade 6 Math (CCSS 6.NS). Exemplar seeds; remaining 38 rows fan out.
+// MS-core — Grade 6 Math (CCSS 6.RP / 6.NS / 6.EE / 6.G / 6.SP, units 1-10).
+// Exemplar seeds; the remaining 38 rows fan out.
 import { SEED_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS } from './seeds/m6math-u3-dividing-fractions-by-fractions';
 import { SEED_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT } from './seeds/m6math-u5-negative-numbers-in-context';
 import { SEED_M7ELA_U1_TEXT_EVIDENCE_AND_INFERENCE } from './seeds/m7ela-u1-text-evidence-and-inference';
