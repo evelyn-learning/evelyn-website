@@ -103,8 +103,8 @@ export const SEED_M8ELA_U5_ACTIVE_AND_PASSIVE_VOICE: LessonPlan = {
         'Form and identify the active and passive voice: find the doer, check whether the subject IS the doer (active) or RECEIVES the action (passive: a form of "be" + past participle, doer optional in a "by" phrase), and convert a sentence each way (CCSS L.8.1b).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m8ela.infinitives-and-verbal-phrases'],
+  followUps: ['m8ela.verb-moods'],
   estimatedMinutes: 20,
   segments: [
     {

@@ -2270,6 +2270,44 @@ import { SEED_M8MATH_U10_SCATTER_PLOTS_AND_ASSOCIATION } from './seeds/m8math-u1
 import { SEED_M8MATH_U10_FITTING_A_LINE_TO_A_SCATTER_PLOT } from './seeds/m8math-u10-fitting-a-line-to-a-scatter-plot';
 import { SEED_M8MATH_U10_USING_A_LINEAR_MODEL_WITH_BIVARIATE_DATA } from './seeds/m8math-u10-using-a-linear-model-with-bivariate-data';
 import { SEED_M8MATH_U10_TWO_WAY_TABLES_AND_RELATIVE_FREQUENCIES } from './seeds/m8math-u10-two-way-tables-and-relative-frequencies';
+import { SEED_M8ELA_U1_STRONGEST_TEXTUAL_EVIDENCE } from './seeds/m8ela-u1-strongest-textual-evidence';
+import { SEED_M8ELA_U1_HOW_DIALOGUE_PROPELS_ACTION_AND_REVEALS_CHARACTER } from './seeds/m8ela-u1-how-dialogue-propels-action-and-reveals-character';
+import { SEED_M8ELA_U1_HOW_AN_INCIDENT_PROVOKES_A_DECISION } from './seeds/m8ela-u1-how-an-incident-provokes-a-decision';
+import { SEED_M8ELA_U1_COMPARING_THE_STRUCTURE_OF_TWO_TEXTS } from './seeds/m8ela-u1-comparing-the-structure-of-two-texts';
+import { SEED_M8ELA_U2_HOW_A_THEME_DEVELOPS_THROUGH_CHARACTER_AND_SETTING } from './seeds/m8ela-u2-how-a-theme-develops-through-character-and-setting';
+import { SEED_M8ELA_U2_ALLUSIONS_AND_ANALOGIES_IN_LITERATURE } from './seeds/m8ela-u2-allusions-and-analogies-in-literature';
+import { SEED_M8ELA_U2_MODERN_STORIES_AND_TRADITIONAL_PATTERNS } from './seeds/m8ela-u2-modern-stories-and-traditional-patterns';
+import { SEED_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS } from './seeds/m8ela-u3-how-a-central-idea-develops';
+import { SEED_M8ELA_U3_CONNECTIONS_AND_DISTINCTIONS_AMONG_IDEAS } from './seeds/m8ela-u3-connections-and-distinctions-among-ideas';
+import { SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT } from './seeds/m8ela-u3-word-choice-and-analogy-in-informational-text';
+import { SEED_M8ELA_U3_THE_ROLE_OF_A_SENTENCE_IN_A_PARAGRAPH } from './seeds/m8ela-u3-the-role-of-a-sentence-in-a-paragraph';
+import { SEED_M8ELA_U4_HOW_AN_AUTHOR_RESPONDS_TO_OPPOSING_VIEWS } from './seeds/m8ela-u4-how-an-author-responds-to-opposing-views';
+import { SEED_M8ELA_U4_IS_THE_REASONING_SOUND } from './seeds/m8ela-u4-is-the-reasoning-sound';
+import { SEED_M8ELA_U4_WHERE_TWO_TEXTS_DISAGREE_FACT_OR_INTERPRETATION } from './seeds/m8ela-u4-where-two-texts-disagree-fact-or-interpretation';
+import { SEED_M8ELA_U4_CHOOSING_THE_MEDIUM_FOR_AN_IDEA } from './seeds/m8ela-u4-choosing-the-medium-for-an-idea';
+import { SEED_M8ELA_U5_GERUNDS_AND_PARTICIPLES } from './seeds/m8ela-u5-gerunds-and-participles';
+import { SEED_M8ELA_U5_INFINITIVES_AND_VERBAL_PHRASES } from './seeds/m8ela-u5-infinitives-and-verbal-phrases';
+import { SEED_M8ELA_U5_VERB_MOODS } from './seeds/m8ela-u5-verb-moods';
+import { SEED_M8ELA_U6_SHIFTS_IN_VOICE_AND_MOOD } from './seeds/m8ela-u6-shifts-in-voice-and-mood';
+import { SEED_M8ELA_U6_VOICE_AND_MOOD_FOR_EFFECT } from './seeds/m8ela-u6-voice-and-mood-for-effect';
+import { SEED_M8ELA_U6_DASHES_AND_COMMAS_FOR_A_BREAK } from './seeds/m8ela-u6-dashes-and-commas-for-a-break';
+import { SEED_M8ELA_U6_ELLIPSIS_FOR_A_PAUSE_OR_AN_OMISSION } from './seeds/m8ela-u6-ellipsis-for-a-pause-or-an-omission';
+import { SEED_M8ELA_U7_VERIFYING_WORD_MEANING_WITH_CONTEXT_AND_A_DICTIONARY } from './seeds/m8ela-u7-verifying-word-meaning-with-context-and-a-dictionary';
+import { SEED_M8ELA_U7_WORD_FAMILIES_FROM_A_SHARED_ROOT } from './seeds/m8ela-u7-word-families-from-a-shared-root';
+import { SEED_M8ELA_U7_VERBAL_IRONY_AND_PUNS } from './seeds/m8ela-u7-verbal-irony-and-puns';
+import { SEED_M8ELA_U7_SHADES_OF_MEANING_DEGREE_AND_FORMALITY } from './seeds/m8ela-u7-shades-of-meaning-degree-and-formality';
+import { SEED_M8ELA_U8_A_CLAIM_THAT_ANSWERS_THE_OPPOSING_CLAIM } from './seeds/m8ela-u8-a-claim-that-answers-the-opposing-claim';
+import { SEED_M8ELA_U8_REBUTTING_WITH_EVIDENCE_FROM_CREDIBLE_SOURCES } from './seeds/m8ela-u8-rebutting-with-evidence-from-credible-sources';
+import { SEED_M8ELA_U8_COHESION_AMONG_CLAIM_COUNTERCLAIM_AND_EVIDENCE } from './seeds/m8ela-u8-cohesion-among-claim-counterclaim-and-evidence';
+import { SEED_M8ELA_U8_FORMAL_STYLE_IN_ARGUMENT } from './seeds/m8ela-u8-formal-style-in-argument';
+import { SEED_M8ELA_U9_ORGANIZING_INFORMATION_INTO_BROADER_CATEGORIES } from './seeds/m8ela-u9-organizing-information-into-broader-categories';
+import { SEED_M8ELA_U9_PRECISE_LANGUAGE_AND_DOMAIN_VOCABULARY } from './seeds/m8ela-u9-precise-language-and-domain-vocabulary';
+import { SEED_M8ELA_U9_ESTABLISHING_POINT_OF_VIEW_AND_SHIFTING_TIME_IN_A_NARRATIVE } from './seeds/m8ela-u9-establishing-point-of-view-and-shifting-time-in-a-narrative';
+import { SEED_M8ELA_U9_REFLECTION_AND_A_NARRATIVE_CONCLUSION } from './seeds/m8ela-u9-reflection-and-a-narrative-conclusion';
+import { SEED_M8ELA_U10_GENERATING_RELATED_RESEARCH_QUESTIONS } from './seeds/m8ela-u10-generating-related-research-questions';
+import { SEED_M8ELA_U10_USING_SEARCH_TERMS_EFFECTIVELY } from './seeds/m8ela-u10-using-search-terms-effectively';
+import { SEED_M8ELA_U10_BLENDING_A_QUOTATION_INTO_YOUR_OWN_SENTENCE } from './seeds/m8ela-u10-blending-a-quotation-into-your-own-sentence';
+import { SEED_M8ELA_U10_FOLLOWING_A_STANDARD_CITATION_FORMAT } from './seeds/m8ela-u10-following-a-standard-citation-format';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -4464,6 +4502,44 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M8MATH_U10_FITTING_A_LINE_TO_A_SCATTER_PLOT,
   SEED_M8MATH_U10_USING_A_LINEAR_MODEL_WITH_BIVARIATE_DATA,
   SEED_M8MATH_U10_TWO_WAY_TABLES_AND_RELATIVE_FREQUENCIES,
+  SEED_M8ELA_U1_STRONGEST_TEXTUAL_EVIDENCE,
+  SEED_M8ELA_U1_HOW_DIALOGUE_PROPELS_ACTION_AND_REVEALS_CHARACTER,
+  SEED_M8ELA_U1_HOW_AN_INCIDENT_PROVOKES_A_DECISION,
+  SEED_M8ELA_U1_COMPARING_THE_STRUCTURE_OF_TWO_TEXTS,
+  SEED_M8ELA_U2_HOW_A_THEME_DEVELOPS_THROUGH_CHARACTER_AND_SETTING,
+  SEED_M8ELA_U2_ALLUSIONS_AND_ANALOGIES_IN_LITERATURE,
+  SEED_M8ELA_U2_MODERN_STORIES_AND_TRADITIONAL_PATTERNS,
+  SEED_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS,
+  SEED_M8ELA_U3_CONNECTIONS_AND_DISTINCTIONS_AMONG_IDEAS,
+  SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT,
+  SEED_M8ELA_U3_THE_ROLE_OF_A_SENTENCE_IN_A_PARAGRAPH,
+  SEED_M8ELA_U4_HOW_AN_AUTHOR_RESPONDS_TO_OPPOSING_VIEWS,
+  SEED_M8ELA_U4_IS_THE_REASONING_SOUND,
+  SEED_M8ELA_U4_WHERE_TWO_TEXTS_DISAGREE_FACT_OR_INTERPRETATION,
+  SEED_M8ELA_U4_CHOOSING_THE_MEDIUM_FOR_AN_IDEA,
+  SEED_M8ELA_U5_GERUNDS_AND_PARTICIPLES,
+  SEED_M8ELA_U5_INFINITIVES_AND_VERBAL_PHRASES,
+  SEED_M8ELA_U5_VERB_MOODS,
+  SEED_M8ELA_U6_SHIFTS_IN_VOICE_AND_MOOD,
+  SEED_M8ELA_U6_VOICE_AND_MOOD_FOR_EFFECT,
+  SEED_M8ELA_U6_DASHES_AND_COMMAS_FOR_A_BREAK,
+  SEED_M8ELA_U6_ELLIPSIS_FOR_A_PAUSE_OR_AN_OMISSION,
+  SEED_M8ELA_U7_VERIFYING_WORD_MEANING_WITH_CONTEXT_AND_A_DICTIONARY,
+  SEED_M8ELA_U7_WORD_FAMILIES_FROM_A_SHARED_ROOT,
+  SEED_M8ELA_U7_VERBAL_IRONY_AND_PUNS,
+  SEED_M8ELA_U7_SHADES_OF_MEANING_DEGREE_AND_FORMALITY,
+  SEED_M8ELA_U8_A_CLAIM_THAT_ANSWERS_THE_OPPOSING_CLAIM,
+  SEED_M8ELA_U8_REBUTTING_WITH_EVIDENCE_FROM_CREDIBLE_SOURCES,
+  SEED_M8ELA_U8_COHESION_AMONG_CLAIM_COUNTERCLAIM_AND_EVIDENCE,
+  SEED_M8ELA_U8_FORMAL_STYLE_IN_ARGUMENT,
+  SEED_M8ELA_U9_ORGANIZING_INFORMATION_INTO_BROADER_CATEGORIES,
+  SEED_M8ELA_U9_PRECISE_LANGUAGE_AND_DOMAIN_VOCABULARY,
+  SEED_M8ELA_U9_ESTABLISHING_POINT_OF_VIEW_AND_SHIFTING_TIME_IN_A_NARRATIVE,
+  SEED_M8ELA_U9_REFLECTION_AND_A_NARRATIVE_CONCLUSION,
+  SEED_M8ELA_U10_GENERATING_RELATED_RESEARCH_QUESTIONS,
+  SEED_M8ELA_U10_USING_SEARCH_TERMS_EFFECTIVELY,
+  SEED_M8ELA_U10_BLENDING_A_QUOTATION_INTO_YOUR_OWN_SENTENCE,
+  SEED_M8ELA_U10_FOLLOWING_A_STANDARD_CITATION_FORMAT,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));

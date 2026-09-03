@@ -97,8 +97,8 @@ export const SEED_M8ELA_U2_DRAMATIC_IRONY_SUSPENSE_AND_HUMOR: LessonPlan = {
         'Analyze how a difference between what the reader knows and what a character knows (dramatic irony) creates suspense or humor in a short excerpt, and name which of the two effects it creates and why (CCSS RL.8.6).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m8ela.how-a-theme-develops-through-character-and-setting'],
+  followUps: ['m8ela.allusions-and-analogies-in-literature'],
   estimatedMinutes: 20,
   segments: [
     {
