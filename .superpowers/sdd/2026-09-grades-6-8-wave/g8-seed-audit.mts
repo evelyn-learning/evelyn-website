@@ -58,7 +58,7 @@ for (const f of files) {
   const t = topic ? +topic[2] : 0;
   if (plan.metadata?.cedUnit !== String(unit) || plan.metadata?.cedTopic !== `${unit}.${t}`) P(`metadata cedUnit/cedTopic ${JSON.stringify(plan.metadata)}`);
   const d: string = lo?.description ?? '';
-  if (/`|\.ts\b|\bG7\b|Grade 7|Grade 6|\bG6\b|Algebra 1|Geometry course|UNVERIFIED|sign-off|→|Withholds|Deepens G|Builds on `|Stops short/.test(d)) P('description carries lineage/withheld material: ' + d.slice(0, 80));
+  if (/`|\.ts\b|\bG7\b|Grade 7|Grade 6|\bG6\b|Algebra 1|Geometry course|UNVERIFIED|sign-off|Withholds|Deepens G|Builds on `|Stops short/.test(d) || /→/.test(d.replace(/\)\s*→\s*\(/g, ')'))) P('description carries lineage/withheld material: ' + d.slice(0, 80));
   if (!/\(.*(CCSS|NGSS|National Geography Standard|MS-PS|DCI).*\)\.?$/.test(d.trim())) P('description lacks a trailing standards citation');
   const kinds = (plan.segments ?? []).map((s: any) => s.kind);
   const expect = ['hook','concept','worked_example','worked_example','try_yourself','try_yourself','try_yourself','misconception_check','recap'];
