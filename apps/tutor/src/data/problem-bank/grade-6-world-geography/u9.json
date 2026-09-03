@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6geo-how-geographers-group-the-world-into-regions-001",
+    "loId": "m6geo.continents-subregions-and-how-geographers-group-them",
+    "cedCode": "M6GEO-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to geographers, what is a region? Which choice provides the most complete definition?",
+    "choices": [
+      "A single country that has its own government and recognized borders",
+      "An area of land that spans an entire continent from coast to coast",
+      "A named group of two or more neighboring countries that share something in common",
+      "A coastline or physical feature that separates one place from another"
+    ],
+    "answer": "C",
+    "hints": [
+      "A region is made up of more than one place, but it is smaller than a whole continent.",
+      "Geographers create a region name because the countries in it have a shared trait."
+    ]
+  },
+  {
+    "id": "m6geo-how-geographers-group-the-world-into-regions-002",
+    "loId": "m6geo.continents-subregions-and-how-geographers-group-them",
+    "cedCode": "M6GEO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Three countries—Alpinia, Betula, and Calix—all border the same large lake and depend heavily on fishing and water trade to survive. A geographer groups these three countries together and calls the region 'Lake Alliance.' Which of the following explains why the geographer's grouping makes sense?",
+    "choices": [
+      "Because the three countries are the only countries in the world that fish in lakes",
+      "Because Alpinia, Betula, and Calix are the alphabetically first countries on their continent",
+      "Because the three countries happen to be drawn next to each other on any map",
+      "Because all three countries share a trait—they depend on the same lake for fishing and trade"
+    ],
+    "answer": "D",
+    "hints": [
+      "Merely being neighbors on a map is not enough to make a region; there must be a specific shared characteristic.",
+      "Look back at what the three countries actually have in common: what resource do they all rely on?"
+    ]
+  },
+  {
+    "id": "m6geo-how-geographers-group-the-world-into-regions-003",
+    "loId": "m6geo.continents-subregions-and-how-geographers-group-them",
+    "cedCode": "M6GEO-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A region's border does not follow a coastline the way a continent's border does. What does this difference tell us about how a region's border is created?",
+    "choices": [
+      "A region's border is drawn by people based on a trait they choose to group by, not set by nature",
+      "A region's border must be exactly the same on every map that shows it",
+      "A region's border is always less important than a country's border because it is not official",
+      "A region's border follows rivers and mountains, just as a continent's border does"
+    ],
+    "answer": "A",
+    "hints": [
+      "A coastline is a physical fact that exists whether or not anyone is looking at it.",
+      "Think about who decides where a region's border goes and why they place it in one spot rather than another."
+    ]
+  },
+  {
+    "id": "m6geo-how-geographers-group-the-world-into-regions-004",
+    "loId": "m6geo.continents-subregions-and-how-geographers-group-them",
+    "cedCode": "M6GEO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two different organizations create regions from the very same seven countries. Organization X groups them by shared language, while Organization Y groups them by shared religion. When you compare the two maps, you find that four countries appear in different regions depending on which organization's map you look at. Why is this outcome not a mistake or contradiction?",
+    "choices": [
+      "Because one organization must have made an error in identifying the shared traits, leaving only one correct map for how the countries should actually be grouped",
+      "Because a region's border is a choice based on the shared trait the grouper cares about, and different traits can put the same country into different regions",
+      "Because the four countries that shift between maps must not share the language or religion with any neighbors, making them impossible to place consistently",
+      "Because regions have no scientific basis in geography and therefore different organizations are allowed to create completely unrelated groupings"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson showed that two different sources can group the same countries differently, and neither has to be wrong.",
+      "Ask yourself: is a region a fixed physical fact like a coastline, or a convention chosen by the person doing the grouping?"
+    ]
+  },
+  {
+    "id": "m6geo-how-geographers-group-the-world-into-regions-005",
+    "loId": "m6geo.continents-subregions-and-how-geographers-group-them",
+    "cedCode": "M6GEO-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geographer is studying 12 countries and needs to decide how to group them into regions to make study easier. She realizes that some of the 12 countries share a history of trade, while a different set of those same countries share a similar climate. What does this situation reveal about the relationship between a region and the trait used to define it?",
+    "choices": [
+      "The geographer must choose only one trait and ignore all the others, because a region can be based on only one shared characteristic",
+      "The same country can belong to different regions depending on which shared trait is used as the grouping rule, and both groupings can serve different purposes",
+      "The geographer has found evidence that these 12 countries should not be grouped into regions at all",
+      "The trade-based grouping and the climate-based grouping must cover exactly the same set of countries"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about why geographers create regions in the first place: to make a large world easier to study for a particular purpose.",
+      "If one grouping works well for studying trade and another works well for studying climate, can both groupings be useful?"
+    ]
+  },
+  {
+    "id": "m6geo-how-geographers-group-the-world-into-regions-006",
+    "loId": "m6geo.continents-subregions-and-how-geographers-group-them",
+    "cedCode": "M6GEO-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student finds a map labeled 'Pacific Trade Region' that includes ten countries, all of which are located near the Pacific Ocean. The student then finds a different map showing a region called 'Monsoon Lands' that includes some of the same ten countries, plus three additional countries not on the trade map. The student concludes that 'Monsoon Lands' is the incorrect grouping because it is larger and overlaps with the trade region. Explain what is flawed in the student's reasoning, and describe what would need to be true for both groupings to be valid at the same time.",
+    "choices": [
+      "The student is correct; a region can only be valid if it is smaller than other regions on the globe",
+      "The student has failed to consider that each map likely groups countries by a different shared trait for a different purpose, and both can be valid if each is internally consistent",
+      "The student is confusing regions with countries; only countries can be grouped into different sizes on a map",
+      "The student does not understand that one grouping must be correct and the other must be wrong, because regions cannot overlap"
+    ],
+    "answer": "D",
+    "hints": [
+      "A region's border is a convention chosen by whoever drew the map, based on the shared trait they cared about.",
+      "The lesson's second worked example showed two groupings of the same countries by climate and by airport travel—could the same principle apply here to trade and monsoon patterns?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-the-americas-001",
+    "loId": "m6geo.locating-the-americas",
+    "cedCode": "M6GEO-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An isthmus is a narrow strip of land connecting two larger areas of land. Which of the four American regions is an isthmus that directly joins North America and South America?",
+    "choices": [
+      "The Caribbean",
+      "North America",
+      "South America",
+      "Central America"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that an isthmus is the type of landform that acts as a bridge between two continents.",
+      "This region lies between the two continents and connects them directly over land."
+    ]
+  },
+  {
+    "id": "m6geo-locating-the-americas-002",
+    "loId": "m6geo.locating-the-americas",
+    "cedCode": "M6GEO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A map shows a line drawn across Earth labeled 'Equator.' You are asked to identify which of the four American regions has land on both sides of this line. Which region should you choose, and why?",
+    "choices": [
+      "South America, because the Equator crosses through its northern part rather than running along one edge",
+      "Central America, because it is positioned between North and South America and extends far enough to straddle the hemispheric divide",
+      "North America, because it is larger in land area than the other regions and spans a greater distance from north to south",
+      "The Caribbean, because it consists of numerous islands distributed across a large geographic area with substantial north-south extent"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which region is large enough to stretch far enough south for the Equator to pass through it.",
+      "The Equator separates the Northern Hemisphere from the Southern Hemisphere, so you need a region that reaches across that imaginary line."
+    ]
+  },
+  {
+    "id": "m6geo-locating-the-americas-003",
+    "loId": "m6geo.locating-the-americas",
+    "cedCode": "M6GEO-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geographer is describing a region as 'made up of many islands lying in and around a named sea, rather than being part of one connected mainland.' Which of the four American regions matches this description?",
+    "choices": [
+      "Central America",
+      "The Caribbean",
+      "South America",
+      "North America"
+    ],
+    "answer": "B",
+    "hints": [
+      "This region is not a single piece of land but rather broken up by water into separate pieces.",
+      "The name of the sea it surrounds is the same as the name of the region itself."
+    ]
+  },
+  {
+    "id": "m6geo-locating-the-americas-004",
+    "loId": "m6geo.locating-the-americas",
+    "cedCode": "M6GEO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that all four American regions lie entirely north of the Equator because they are all part of the Americas. Which statement correctly identifies the error in this claim and fixes it?",
+    "choices": [
+      "The error is that the Equator does not actually run through the Americas at all; it stays in Africa and Asia.",
+      "The error is that Central America and the Caribbean extend south of the Equator, even though North America does not.",
+      "The error is that only South America has land south of the Equator; the other three regions lie entirely in the Northern Hemisphere.",
+      "The error is that North America and South America both have land south of the Equator, but Central America and the Caribbean do not."
+    ],
+    "answer": "C",
+    "hints": [
+      "Test each region one at a time against the Equator instead of assuming all neighbors match.",
+      "One region is big enough and stretches far enough south that the Equator actually cuts across it."
+    ]
+  },
+  {
+    "id": "m6geo-locating-the-americas-005",
+    "loId": "m6geo.locating-the-americas",
+    "cedCode": "M6GEO-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A delivery truck must drive over land only, never crossing open ocean or driving onto an island, from the northern edge of North America to the southern tip of South America. In what order will the truck pass through the four American regions, and which one will it never reach?",
+    "choices": [
+      "North America, the Caribbean, Central America, South America; it will never reach North America because it starts there",
+      "Central America, South America; it will never reach North America or the Caribbean",
+      "North America, Central America, South America; it will never reach the Caribbean because the Caribbean is made of islands",
+      "North America, South America; it will never reach Central America or the Caribbean because they are too small"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that Central America is the only strip of land connecting the two continents over land, so the truck must pass through it.",
+      "The Caribbean cannot be reached without crossing open ocean or driving onto islands, which the truck never does."
+    ]
+  },
+  {
+    "id": "m6geo-locating-the-americas-006",
+    "loId": "m6geo.locating-the-americas",
+    "cedCode": "M6GEO-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student argues that Central America and the Caribbean should be treated as one region because they both lie between North America and South America. Using the definitions taught in this lesson, explain why this argument is wrong and identify what makes Central America and the Caribbean fundamentally different in how they connect to the continents.",
+    "choices": [
+      "Central America is a connected mainland isthmus that links the two continents directly over land; the Caribbean is a region of islands not part of that north-to-south land connection, lying east of Central America instead",
+      "Central America is formed from a continuous strip of land that physically bridges North and South America, while the Caribbean consists of separated islands positioned to the east with no continuous land bridge between the continents",
+      "The Caribbean lies north of the Equator while Central America lies south, which means they experience different climate patterns and therefore should not be combined into a single geographic region",
+      "Central America has a larger total population and more countries than the Caribbean region, so treating them as one would create an unbalanced grouping that does not reflect the true distribution of people and nations"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the difference between a mainland and islands: one is connected all the way across, the other is broken up by water.",
+      "Consider how a truck driving overland from north to south would interact with each region differently."
+    ]
+  },
+  {
+    "id": "m6geo-locating-europe-africa-the-middle-east-001",
+    "loId": "m6geo.locating-europe-africa-and-the-middle-east",
+    "cedCode": "M6GEO-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to this lesson's definition, which of the following statements correctly describes Sub-Saharan Africa's location relative to the Mediterranean Sea?",
+    "choices": [
+      "Sub-Saharan Africa lies south of the Sahara, with the rest of the African continent between it and the Mediterranean coast.",
+      "Sub-Saharan Africa sits directly on the southern shore of the Mediterranean Sea.",
+      "Sub-Saharan Africa is separated from the Mediterranean Sea only by a narrow strip of land, similar to how Europe and Africa are separated.",
+      "Sub-Saharan Africa extends from the Mediterranean coast southward through the Sahara and beyond."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what the Sahara desert does — it stretches across the northern part of Africa.",
+      "Question 1 of the routine asks whether a region touches the Mediterranean. What is the answer for Sub-Saharan Africa?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-europe-africa-the-middle-east-002",
+    "loId": "m6geo.locating-europe-africa-and-the-middle-east",
+    "cedCode": "M6GEO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A traveler stands on the northern shore of the Mediterranean Sea in a country that is part of Europe. Using the two-question routine from the lesson, which direction would the traveler need to go to reach the Middle East?",
+    "choices": [
+      "West, because the Middle East lies at the western end of the Mediterranean.",
+      "East, because the Middle East sits mainly to the east of the Mediterranean Sea.",
+      "South, because the Middle East lies across the Mediterranean on the African continent.",
+      "North, because the Middle East is a region north of Europe."
+    ],
+    "answer": "B",
+    "hints": [
+      "Step 1 tells you which regions touch the Mediterranean and which side they are on. Where does Europe sit on the Mediterranean?",
+      "Step 2 asks which direction you travel from one region to reach another. The Middle East is described as being mainly to which side of the Mediterranean?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-europe-africa-the-middle-east-003",
+    "loId": "m6geo.locating-europe-africa-and-the-middle-east",
+    "cedCode": "M6GEO-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is planning a trip and has already visited a country in Sub-Saharan Africa. Before traveling to the Middle East, the student must first cross the Sahara to reach the northern part of the African continent. What does this travel requirement show about the location of Sub-Saharan Africa?",
+    "choices": [
+      "Sub-Saharan Africa is located closer to Europe than to the Middle East because the Sahara acts as a shorter barrier in that direction.",
+      "Sub-Saharan Africa is located on the Mediterranean coast, just south of where Europe ends and can be reached by traveling straight north.",
+      "Sub-Saharan Africa is separated from the Mediterranean Sea by the Sahara and the northern part of Africa.",
+      "Sub-Saharan Africa touches the Mediterranean Sea at only one point, in the southeast where it borders both Egypt and Libya."
+    ],
+    "answer": "C",
+    "hints": [
+      "The student crosses the Sahara first, then reaches the northern part of Africa. What does that order tell you about what lies between Sub-Saharan Africa and the Mediterranean?",
+      "Use question 1 of the routine: does Sub-Saharan Africa sit right on the Mediterranean shore, or is it separated from the sea by something else?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-europe-africa-the-middle-east-004",
+    "loId": "m6geo.locating-europe-africa-and-the-middle-east",
+    "cedCode": "M6GEO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geography textbook states that Egypt is located on the northeastern part of the African continent, north of the Sahara. According to this lesson's convention, Egypt sits outside Sub-Saharan Africa. However, the lesson also notes that some other sources group Egypt differently. What does this disagreement best explain about how geographers define regions?",
+    "choices": [
+      "Egypt's exact location on the map changes depending on which atlas you use, so the Mediterranean Sea's borders are not fixed.",
+      "A region's borders are choices made by whoever is doing the grouping, not physical lines set by nature, so a country near a region's edge can reasonably belong to more than one region.",
+      "Sub-Saharan Africa is the only correct way to define that region, and sources that place Egypt elsewhere are using outdated maps.",
+      "The Sahara Desert moves over time, which changes whether Egypt is north or south of it, so different sources reflect different time periods."
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson says plainly that 'different sources draw the exact edges differently' and gives Egypt as an example. Why would that happen if the answer were about maps changing or the desert moving?",
+      "Earlier in the lesson, you learned that a region is 'a named group of countries drawn together by a convention someone chose.' How does Egypt being on the edge help prove that point?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-europe-africa-the-middle-east-005",
+    "loId": "m6geo.locating-europe-africa-and-the-middle-east",
+    "cedCode": "M6GEO-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A person stands in Turkey, at a point where a narrow strait separates European land from Asian land. Using only the facts from this lesson, explain why some sources might group Turkey with Europe while other sources group Turkey with the Middle East, and what this shows about how geographers make decisions.",
+    "choices": [
+      "This disagreement shows that the Mediterranean Sea's size changes over time, which changes which regions it separates.",
+      "A region's border is a choice made by whoever is doing the grouping. Turkey sits near the edge between two regions, so different sources reasonably place it in different regions based on their own convention.",
+      "This disagreement proves that geographers have not yet discovered the correct way to define the Middle East, so Turkey's location is still unknown.",
+      "The Sahara Desert extends into Turkey, so different sources disagree about whether Turkey is part of Sub-Saharan Africa or the Middle East."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson uses Turkey as a second edge case, just like Egypt. It says 'neither grouping is the one official answer — both are choices.' What does that tell you?",
+      "When a country sits on the edge between two regions, what does the lesson say about which region it must belong to?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-europe-africa-the-middle-east-006",
+    "loId": "m6geo.locating-europe-africa-and-the-middle-east",
+    "cedCode": "M6GEO-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student reads that a certain country sits at the northeastern corner of the African continent and is joined to the Middle East by a narrow strip of land so that people can travel between the two without crossing open water. Using the two-question routine and the lesson's definitions, what should the student conclude about which region this country belongs to, and what complication does the lesson add?",
+    "choices": [
+      "The country must be in Sub-Saharan Africa because the lesson defines all African countries as belonging to Sub-Saharan Africa unless they are explicitly listed as exceptions in a reference map.",
+      "Based on geography alone, the country could reasonably be grouped with either the Middle East or a different region, depending on the source. The lesson uses a convention that places it outside Sub-Saharan Africa because it sits north of the Sahara, but some sources group it with the Middle East instead.",
+      "The country must be in the Middle East because it is connected to the Middle East by land, and the lesson states that any country physically joined to a region belongs to that region regardless of its continental location.",
+      "The country belongs to North Africa as its own separate region because it sits at a geographic corner where continental and regional boundaries create ambiguity that the two-question routine cannot resolve."
+    ],
+    "answer": "B",
+    "hints": [
+      "The country is at the 'northeastern corner of Africa' and 'joined to the Middle East by land.' Reread the lesson's description of Egypt and of how regions work. What fits?",
+      "The lesson says explicitly: 'Egypt sits in the northeastern part of the African continent, north of the Sahara — so under this lesson's convention, Egypt is outside Sub-Saharan Africa. Some sources instead group Egypt with the Middle East.' Does this match the description in the problem?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-asia-oceania-001",
+    "loId": "m6geo.locating-asia-and-oceania",
+    "cedCode": "M6GEO-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the five regions taught in this lesson has no coastline on the Pacific Ocean or the Indian Ocean? Use the definition of landlocked to help you think through the answer.",
+    "choices": [
+      "South Asia, because it is a peninsula with coastlines on multiple oceans rather than being surrounded by land",
+      "Central Asia, because it lies in the interior with no ocean access",
+      "Southeast Asia, because it lies between other regions and has access to the Indian Ocean",
+      "Oceania, because it is centered on the Pacific Ocean and consists of island nations"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall which region is described as having no coastline on either named ocean.",
+      "The term landlocked means having no coastline at all on any ocean."
+    ]
+  },
+  {
+    "id": "m6geo-locating-asia-oceania-002",
+    "loId": "m6geo.locating-asia-and-oceania",
+    "cedCode": "M6GEO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A map shows a region labeled with a coastline only on the Pacific Ocean and no coastline on the Indian Ocean. The region lies north of another region that touches the Indian Ocean. Which region is being labeled?",
+    "choices": [
+      "Central Asia",
+      "South Asia",
+      "East Asia",
+      "Oceania"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about which region touches only one of the two named oceans.",
+      "Remember that East Asia lies north of Southeast Asia, not south of regions that touch the Indian Ocean."
+    ]
+  },
+  {
+    "id": "m6geo-locating-asia-oceania-003",
+    "loId": "m6geo.locating-asia-and-oceania",
+    "cedCode": "M6GEO-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geography student is told: 'This region touches both the Pacific Ocean and the Indian Ocean, and it lies east of South Asia but south of East Asia.' Which region matches this description?",
+    "choices": [
+      "Central Asia",
+      "East Asia",
+      "South Asia",
+      "Southeast Asia"
+    ],
+    "answer": "D",
+    "hints": [
+      "Only one region in this lesson has a coastline on both named oceans.",
+      "The region described lies between two other regions — think about what 'between' means for location."
+    ]
+  },
+  {
+    "id": "m6geo-locating-asia-oceania-004",
+    "loId": "m6geo.locating-asia-and-oceania",
+    "cedCode": "M6GEO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A clue says: 'This region is landlocked and sits directly north of a peninsula that reaches into the Indian Ocean.' Using the two-question locating routine taught in the lesson, identify the region and explain why the other three mainland regions (not Oceania) cannot fit this description.",
+    "choices": [
+      "Central Asia, because it is the only region that is landlocked, and the peninsula to its south is South Asia",
+      "South Asia, because it is itself a peninsula and sits between Central Asia and Southeast Asia rather than being landlocked",
+      "East Asia, because although it lies north of other regions, it has coastlines on the Pacific and is not landlocked",
+      "Southeast Asia, because although it also touches the Indian Ocean, it is not landlocked and does not sit north of a peninsula"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start with Question One from the locating routine: which ocean does it touch? Only one answer means landlocked.",
+      "Then use Question Two: which region lies next to it, and in which direction? The clue says 'directly north of' — so which region must be to the south?"
+    ]
+  },
+  {
+    "id": "m6geo-locating-asia-oceania-005",
+    "loId": "m6geo.locating-asia-and-oceania",
+    "cedCode": "M6GEO-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims: 'Oceania is part of the continent of Asia because it lies close to Southeast Asia and shares the Pacific Ocean with East Asia.' Is this claim correct? Use the lesson's definition of Oceania and its relationship to Asia to explain your answer.",
+    "choices": [
+      "Yes, because Oceania touches the same oceans as some Asian regions and geographical proximity determines continental membership",
+      "No, because Oceania is a separate Pacific region studied alongside Asia's sub-regions, not part of the Asian continent itself",
+      "Yes, if the source uses the definition that includes Australia as the largest landmass in a wider Asian-Pacific zone",
+      "No, because Oceania has no connection to any Asian region and lies entirely on different tectonic plates"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson specifically states that Oceania is studied alongside Asia's sub-regions for a particular reason — review why.",
+      "Being close to another region or sharing an ocean does not make Oceania part of the Asian continent — think about what makes something part of a continent."
+    ]
+  },
+  {
+    "id": "m6geo-locating-asia-oceania-006",
+    "loId": "m6geo.locating-asia-and-oceania",
+    "cedCode": "M6GEO-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two sources divide Asia into sub-regions differently. Source A names South Asia, East Asia, Southeast Asia, and Central Asia as four separate regions. Source B names South Asia, East Asia, Southeast Asia, Central Asia, and also names Western Asia as a fifth region within the continent of Asia. Using the lesson's explanation of how geographers draw sub-region borders differently, explain why both naming conventions can be correct, and identify which one this course uses.",
+    "choices": [
+      "Both are correct because the lesson teaches that different sources draw Asia's sub-regions differently; this course uses Source B because it names five regions total",
+      "Source A is correct and Source B is wrong because the lesson only teaches four Asian sub-regions",
+      "Both are correct because the lesson teaches that different sources draw Asia's sub-regions differently; this course uses Source A's four-part list as its own convention",
+      "Both are correct only if Oceania is included, making Source B have six regions in total"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall the lesson's statement about how geographers do not all divide continents the same way — the same flexibility applies to Asia's sub-regions.",
+      "The lesson specifically names this course's own four-part list as 'one convention, not the only one' — which four regions does this course name for Asia?"
+    ]
+  }
+]

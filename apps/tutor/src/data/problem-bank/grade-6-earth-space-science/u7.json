@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6sci-earth-s-four-spheres-interacting-001",
+    "loId": "m6sci.earths-four-spheres-interacting",
+    "cedCode": "M6SCI-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best describes what the geosphere is? Earth's geosphere includes all the solid material that makes up our planet.",
+    "choices": [
+      "All of Earth's solid and rocky material, including the crust, mantle, core, mountains, soil, and ocean floor",
+      "The layer of rock and soil located only on Earth's surface above the water, not extending down into deeper layers",
+      "The layer of gases surrounding Earth that consists primarily of nitrogen, oxygen, and other atmospheric compounds",
+      "All the water present in Earth's oceans, lakes, rivers, groundwater, and frozen ice sheets and glaciers"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson says the geosphere includes multiple layers, not just surface features.",
+      "Look for a choice that names the crust, mantle, and core all together as one sphere."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-four-spheres-interacting-002",
+    "loId": "m6sci.earths-four-spheres-interacting",
+    "cedCode": "M6SCI-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A dam holds back water in a reservoir high in the mountains. When engineers open the dam's gates, water rushes downhill and flows into a lower valley, carrying fine sand and gravel along with it. In this event, which two spheres are interacting and what is moving between them?",
+    "choices": [
+      "The atmosphere and hydrosphere are interacting; air is moving into the water.",
+      "The hydrosphere and geosphere are interacting; loose sand and gravel are moving from the land into the water.",
+      "The biosphere and hydrosphere are interacting; plants are being swept into the river.",
+      "The geosphere and atmosphere are interacting; rock particles are entering the air."
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on what the water is picking up and carrying along as it flows downhill.",
+      "Sand and gravel are solid Earth material, so one sphere must be the geosphere."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-four-spheres-interacting-003",
+    "loId": "m6sci.earths-four-spheres-interacting",
+    "cedCode": "M6SCI-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A puddle of water sits on a driveway on a sunny day. By evening, the puddle has completely disappeared, even though it did not rain and no one removed the water. Which two spheres are involved in this interaction, and in which direction did the water move?",
+    "choices": [
+      "The geosphere and hydrosphere; water moved from the driveway into the ground.",
+      "The biosphere and atmosphere; water from the puddle entered the living plants nearby.",
+      "The hydrosphere and atmosphere; water moved from the puddle into the air.",
+      "The geosphere and atmosphere; the driveway material broke apart and entered the sky."
+    ],
+    "answer": "C",
+    "hints": [
+      "The puddle disappeared without rain falling or anyone taking it away—think about what happens to water on a sunny day.",
+      "One sphere must be the air around the puddle, and the other must be the water itself."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-four-spheres-interacting-004",
+    "loId": "m6sci.earths-four-spheres-interacting",
+    "cedCode": "M6SCI-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student observes a limestone cliff that has been weathered over many years. Water repeatedly freezes and thaws in small cracks in the stone, eventually breaking off small pieces. Later, rain washes those broken pieces down the cliff face and into a stream below. Describe which two spheres are interacting and trace what is moving and in which direction. Be specific about what the moving material is.",
+    "choices": [
+      "Only the geosphere is involved because the stone, water, and stream are all parts of Earth's rocky material.",
+      "The atmosphere and biosphere are interacting because the freezing and thawing cycle involves temperature change and affects how living organisms use the cliff.",
+      "The geosphere and hydrosphere are interacting because water-driven weathering breaks stone pieces apart and carries them from the cliff into the stream.",
+      "The hydrosphere and atmosphere are interacting because water freezes when it is cold and then thaws when temperature rises."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that naming all four spheres in a scene is not the same as describing one specific interaction.",
+      "The question asks you to trace what moves—that means naming the specific material and saying which sphere it leaves and which sphere it enters."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-four-spheres-interacting-005",
+    "loId": "m6sci.earths-four-spheres-interacting",
+    "cedCode": "M6SCI-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A coral reef sits on the ocean floor. Fish and other sea animals live among the coral, and the coral itself grows by adding new limestone material to its structure. When a piece of dead coral falls to the sandy ocean floor and breaks into fine sediment, that sediment begins to bury it and compact down over time. Which of the following correctly identifies an interaction between two of Earth's spheres in this scenario and explains what is moving?",
+    "choices": [
+      "The biosphere and geosphere are interacting; dead coral, which was once living material, is becoming solid rock material buried under sediment on the ocean floor.",
+      "The hydrosphere and biosphere are interacting; living fish continue to swim and hide in the water around the dead coral while feeding on algae and smaller organisms.",
+      "The geosphere and hydrosphere are interacting; limestone sediment from the broken coral is being dissolved by chemical reactions in the seawater and redistributed across the ocean floor.",
+      "The atmosphere and geosphere are interacting; gases trapped inside the coral skeleton are released into the water and eventually escape to the air above the ocean."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for an interaction where something actually moves or is transferred from one sphere into another, not just where two spheres happen to be present in the same place.",
+      "Dead coral is geosphere material because it is no longer alive, but it came from the biosphere—trace what happens to it as it falls and gets buried."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-four-spheres-interacting-006",
+    "loId": "m6sci.earths-four-spheres-interacting",
+    "cedCode": "M6SCI-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A field of wildflowers blooms in spring. Over the summer, the plants grow tall and the soil beneath them becomes darker and richer in texture because decomposing plant leaves and roots have mixed into it. In late summer, a wildfire burns through the field. Flames consume the plants, and thick smoke rises high into the air and drifts for miles. After the fire, the blackened soil remains on the ground. Which statement best traces one specific interaction across all these stages and explains why matter moved the direction it did?",
+    "choices": [
+      "In all stages, the biosphere and geosphere exchange matter because living plants take in soil nutrients to grow, dead plants return matter to soil through decay, and burning releases that matter back to the air.",
+      "The biosphere and atmosphere are interacting because burning plants release gases and ash particles from solid plant matter into the surrounding air.",
+      "The geosphere and hydrosphere are interacting because the rich soil holds water that plants need to grow and the fire dries out that water.",
+      "The atmosphere and hydrosphere are interacting because smoke carries moisture from the burning plants into the sky where it will form clouds."
+    ],
+    "answer": "B",
+    "hints": [
+      "Focus on the fire event itself, not the entire growing season—the question asks about the interaction where matter moved.",
+      "When the plants burn, what specific material leaves the ground and enters the sky, and what are the two spheres involved in that movement?"
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-001",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best defines evaporation? Use the meaning of the term as taught in the water cycle.",
+    "choices": [
+      "Water vapor rising high into the sky until it disappears completely.",
+      "Liquid water changing into invisible water vapor when warmed by energy from the sun.",
+      "Water falling from a cloud to Earth's surface as rain or snow.",
+      "Tiny liquid droplets joining together inside a cloud to form larger drops."
+    ],
+    "answer": "B",
+    "hints": [
+      "Evaporation is a change of state, not a movement through space.",
+      "The definition must include what liquid water becomes and what causes the change."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-002",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A wet car window is left sitting in direct sunlight on a warm morning. By noon, the window is completely dry, and no water is dripping off. Which statement correctly explains what happened to the water on the window?",
+    "choices": [
+      "The water absorbed into the glass structure itself, becoming trapped inside the material and leaving no visible moisture on the outer surface.",
+      "The water ran down the window as a liquid stream, traveled along the ground, and then evaporated from the soil after it left the glass surface.",
+      "Energy from the sun warmed the liquid water until it evaporated into invisible water vapor and mixed into the air.",
+      "The water changed into a gaseous form that condensed high above to create a cloud, which then released the water back down as rain or precipitation."
+    ],
+    "answer": "C",
+    "hints": [
+      "The water left no trace—it did not flow anywhere as a liquid, and nothing carried it away.",
+      "Think about what makes a puddle disappear faster on a hot, sunny day than on a cool, cloudy one."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-003",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A weather scientist observes water vapor rising from a warm river on an autumn morning. As the vapor rises higher and higher into the sky, the air around it becomes cooler. What will most likely happen to the water vapor as it continues to rise and cool?",
+    "choices": [
+      "It will freeze solid and fall immediately as snow.",
+      "It will rise back down toward the river surface and evaporate again.",
+      "It will condense into tiny liquid droplets that form a cloud.",
+      "It will spread out and disappear into the upper atmosphere as an invisible gas."
+    ],
+    "answer": "D",
+    "hints": [
+      "Cooling water vapor does the exact opposite of what warming liquid water does.",
+      "Billions of tiny droplets clustered together in the air create something you can see from the ground."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-004",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student notices that a lake in her town is surrounded by tall mountains that block direct sunlight for most of the day. On the same warm summer afternoon, the lake in the mountains receives only a few hours of direct sun, while a nearby lake sitting in an open plain receives strong sunlight all day. Which lake will have more of its water enter the air as water vapor by evening, and why?",
+    "choices": [
+      "The lake in the open plain will have more water vapor in the air above it, because more energy from the sun reached its water surface throughout the day, making evaporation faster and greater in amount.",
+      "The lake in the mountains will have more water vapor in the air above it, because the cooler mountain air reduces the rate at which water vapor recondenses back into liquid droplets and removes the vapor from the air.",
+      "Both lakes will have identical amounts of water vapor rising into the air, because the rate of evaporation depends only on whether liquid water is available to evaporate and does not change based on sunshine or location.",
+      "The lake in the mountains will have more water vapor because the shade prevents the water from becoming warm, which keeps water molecules moving slowly and reduces how easily they condense into visible droplets."
+    ],
+    "answer": "A",
+    "hints": [
+      "More sunlight means more energy reaching the water—think about how puddles disappear at different rates based on the weather.",
+      "Evaporation depends on how much warmth from the sun is available, not on how cool or cloudy the air above the water is."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-005",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An observer watches a dark, thick cloud form above the ocean on a humid afternoon. The next morning, no rain fell, even though the cloud was present all evening. Which explanation best accounts for why precipitation did not occur, using the water cycle chain of processes?",
+    "choices": [
+      "Evaporation stopped during the evening, so there was no more water vapor to condense into the cloud.",
+      "The tiny liquid droplets inside the cloud did not collide and combine enough to grow large and heavy enough to fall as precipitation.",
+      "Condensation reversed during the night, turning all the cloud droplets back into invisible water vapor before they could become rain.",
+      "The cloud moved away from the ocean before the droplets could be carried by wind down to the water's surface."
+    ],
+    "answer": "B",
+    "hints": [
+      "A cloud existing means condensation already happened—the question is what happens next in the chain.",
+      "Droplets must combine and grow heavy enough before the rising air can no longer hold them up."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-006",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Over the course of one week, a region experiences this sequence of weather events: strong sunny days warm a large reservoir of water; by afternoon of the third day, a thick cloud forms above the reservoir; by evening of the fourth day, heavy rain falls into the surrounding countryside; the next two days are cloudy and cool with no direct sunlight. A student claims that once the rain falls into the ground on day four, the water cycle stops because the water is no longer in the atmosphere. Using the lesson content, explain why this claim is incorrect, and identify which process would need to happen for the water cycle to continue from that point.",
+    "choices": [
+      "The claim is incorrect because precipitation is not the final step—water soaked into the ground can flow back to the reservoir, where evaporation would restart the cycle once the sunny days return.",
+      "The claim is incorrect because once water falls as precipitation to Earth's surface, it can be evaporated again into water vapor if energy from the sun warms it, restarting the cycle.",
+      "The claim is incorrect because condensation happens continuously in the atmosphere regardless of where water is located, so the cycle never truly stops at any point.",
+      "The claim is incorrect because rain falling to the surface always freezes into ice, which then melts back into liquid water that must evaporate again."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson says the water cycle is a repeating path with no starting point and no ending point—think about what must happen next when water reaches the surface.",
+      "After precipitation returns water to Earth's surface, the same process that started the cycle in the first place must occur again for the cycle to repeat."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-001",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Rain falls on the ground and soaks down into the soil instead of flowing across the surface. What is the name of this process?",
+    "choices": [
+      "Transpiration, which is when plants release water vapor into the air",
+      "Runoff, which is water flowing downhill across the land",
+      "Infiltration, which is water soaking down into the ground from the surface",
+      "Saturation, which is when all spaces in soil are completely filled with water"
+    ],
+    "answer": "C",
+    "hints": [
+      "This term describes water moving downward into the ground, not across the surface or into the air.",
+      "The lesson uses the word 'soak' to describe what happens when this process occurs."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-002",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A storm drops rain on two surfaces at the same time: a sandy beach and a large sheet of solid rock with no cracks. Which surface will have more runoff, and why?",
+    "choices": [
+      "The sandy beach will have more runoff because sand is packed and blocks water from soaking in",
+      "The solid rock will have more runoff because rock is always impermeable and water cannot pass through it at all",
+      "Both surfaces will have equal runoff because rain falling at the same rate produces the same result everywhere",
+      "The sandy beach will have less runoff because sand is permeable and allows water to infiltrate quickly"
+    ],
+    "answer": "D",
+    "hints": [
+      "One surface lets water soak through easily, while the other blocks it. Which is which?",
+      "Permeable ground means more water can infiltrate instead of flowing on top as runoff."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-003",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A well is drilled to a depth of 35 meters below the surface. Scientists measure and find the water table in that location sits at 30 meters below the surface. Will this well produce water when pumped?",
+    "choices": [
+      "Yes, because the well reaches 5 meters below the water table and is deep enough to enter the saturated zone",
+      "No, because the well does not reach deep enough to pass below the water table, which remains at 30 meters depth",
+      "Yes, but only during rainy seasons when the water table rises above 35 meters and fills the upper layers of soil",
+      "No, because 35 meters is too shallow to ever reach groundwater in any location on Earth's surface"
+    ],
+    "answer": "A",
+    "hints": [
+      "A well finds water only if it goes deeper than the water table's depth.",
+      "Compare the well's depth (35 m) to the water table's depth (30 m) to see which is deeper."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-004",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "After a heavy rainfall, a valley with packed clay soil stays muddy for days, while a nearby hill with loose, sandy soil dries quickly. Explain why these two areas behave so differently after the same storm, and describe what happens to most of the rainwater in each location.",
+    "choices": [
+      "The sandy hill dries quickly because sand is impermeable and forces all the rain to run off downhill, while clay soil is permeable and allows water to soak down slowly into the ground",
+      "The clay valley stays muddy because clay is impermeable and blocks infiltration, so most rain either sits on the surface or becomes runoff, while the sandy hill's permeable soil lets rainwater soak in quickly as infiltration",
+      "The sandy hill dries quickly because all the rain evaporates immediately from the loose soil particles, while the clay valley stays wet because clay's tight structure holds water in the upper layers and prevents any deep infiltration",
+      "Both areas behave differently only because the hill's higher elevation causes greater runoff and faster drying, regardless of soil type, while the valley's lower position causes water to collect and remain on the clay surface"
+    ],
+    "answer": "B",
+    "hints": [
+      "Permeable soil lets water soak in; impermeable soil blocks it. Which type is sand, and which is clay?",
+      "Standing water and mud suggest water cannot infiltrate. Dry soil suggests water soaked in or ran off quickly."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-005",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A town's aquifer is being pumped to supply drinking water faster than rain and melted snow can recharge it. Over time, the water table drops from 15 meters below the surface to 28 meters below the surface. Some wells in the town that were once 25 meters deep are now running dry. Use your understanding of how wells work and the water table to explain why these wells stopped producing water.",
+    "choices": [
+      "The wells ran dry because the aquifer is no longer permeable and rainwater cannot infiltrate to refill it anymore",
+      "The wells stopped producing water because they no longer reach below the water table; at 25 meters deep, they now sit above the new 28-meter water table and are in the zone where air and water mix, not the saturated zone",
+      "The wells ran dry because all the water in the aquifer evaporated due to pumping too much water out of the ground",
+      "The wells stopped producing water because the town should have drilled them deeper than 25 meters to begin with, which shows that well depth does not depend on where the water table sits"
+    ],
+    "answer": "C",
+    "hints": [
+      "A well produces water only when it passes below the water table into the saturated zone.",
+      "The water table depth changed from 15 m to 28 m. Did the 25-meter wells stay below it, or did they end up above it?"
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-006",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A forest sits on gently sloping terrain with loose, permeable soil. Heavy rain falls for several hours. Some of the rainwater becomes runoff flowing downhill toward a stream. Some infiltrates into the soil. In this forest location, explain what happens to infiltrated water that does not reach the saturated zone, what happens to infiltrated water that does reach the saturated zone, and how both of these pathways eventually return water to the atmosphere as part of the water cycle.",
+    "choices": [
+      "Infiltrated water that does not reach the water table sinks deeper each day until it eventually becomes runoff in an underground channel, while water below the water table stays trapped in the aquifer and does not cycle back to the atmosphere for thousands of years",
+      "Infiltrated water near the surface that does not reach the water table is taken up by plant roots, and much of it later returns to the atmosphere as water vapor through transpiration; water that infiltrates past plant roots into the saturated zone stays in the aquifer until wells pump it out, or else it flows slowly to supply springs where it can evaporate and continue the cycle",
+      "Infiltrated water is split equally between runoff and recharge, with some water staying in plant roots as stored energy and the rest flowing underground to the ocean before evaporating",
+      "Water that does not reach the water table remains in the soil and gradually turns into rock through compression, while water in the saturated zone is recycled back to the atmosphere through a separate underground water cycle that does not involve evaporation"
+    ],
+    "answer": "D",
+    "hints": [
+      "Plant uptake is a third pathway for water that infiltrates but does not reach the saturated zone. What does the lesson say happens to this water after plants take it up?",
+      "Water that reaches the saturated zone joins an aquifer. How does water eventually leave an aquifer and cycle back to the atmosphere, according to the lesson?"
+    ]
+  },
+  {
+    "id": "m6sci-weathering-erosion-deposition-by-water-001",
+    "loId": "m6sci.weathering-erosion-and-deposition-by-water",
+    "cedCode": "M6SCI-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A river tumbles rocks along its riverbed, breaking off small chips and grains from a larger boulder. Which term names the process that is breaking the rock into smaller pieces right where it sits?",
+    "choices": [
+      "Erosion, because the river is moving material away from where it formed",
+      "Deposition, because the river is sorting and settling pieces by size as they sink to the bottom",
+      "Abrasion, because the rocks are grinding and rubbing together while tumbling in the water",
+      "Weathering, because the rock is being broken apart without changing what it is made of"
+    ],
+    "answer": "D",
+    "hints": [
+      "The process happens right at the boulder, not downstream.",
+      "The rock pieces are still made of the same material as the boulder—nothing has dissolved or chemically changed."
+    ]
+  },
+  {
+    "id": "m6sci-weathering-erosion-deposition-by-water-002",
+    "loId": "m6sci.weathering-erosion-and-deposition-by-water",
+    "cedCode": "M6SCI-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A limestone cave develops when slightly acidic rainwater seeps into cracks in limestone and slowly dissolves parts of the rock over many years. What type of weathering is widening and hollowing out the limestone cave, and how do you know?",
+    "choices": [
+      "Chemical weathering, because the rainwater is changing what the limestone is made of by dissolving part of it",
+      "Mechanical weathering, because water is physically breaking the limestone into smaller pieces without changing its composition",
+      "Biological weathering, because plant roots and living organisms are splitting the limestone as they grow through cracks",
+      "Thermal weathering, because the rock is expanding and contracting repeatedly with temperature changes over time"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at what is happening to the limestone itself—is it staying the same material in smaller pieces, or becoming something chemically different?",
+      "The key word in the problem is 'dissolves'—when a solid dissolves, its chemical makeup changes."
+    ]
+  },
+  {
+    "id": "m6sci-weathering-erosion-deposition-by-water-003",
+    "loId": "m6sci.weathering-erosion-and-deposition-by-water",
+    "cedCode": "M6SCI-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fast-flowing river carries sand and gravel downstream for many miles. When the river reaches a wide, shallow wetland and slows down dramatically, it drops most of its sand and gravel but continues to carry fine mud farther away. Which rule about water movement and sediment transport explains why the sand and gravel were dropped before the mud?",
+    "choices": [
+      "Slow-moving water can carry pieces of any size as long as the distance is short enough for gravity to act slowly",
+      "Heavy pieces need more moving power to stay suspended, so they are dropped first when water slows down",
+      "Sand and gravel always settle out of water before mud because they are denser and heavier than fine sediment particles",
+      "The wetland's plant roots trap sand and gravel but allow fine mud particles to pass through to downstream areas"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what gives water the ability to carry pieces—what happens when the water loses that power?",
+      "Which pieces require more force to keep floating or rolling along—the heavy ones or the light ones?"
+    ]
+  },
+  {
+    "id": "m6sci-weathering-erosion-deposition-by-water-004",
+    "loId": "m6sci.weathering-erosion-and-deposition-by-water",
+    "cedCode": "M6SCI-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Over thousands of years, a river has cut a narrow canyon by weathering rock from its own riverbed and walls, then continuously eroding and carrying away that loosened rock. Meanwhile, 100 miles downstream, the same river has spread sediment across a wide floodplain every time it overflows its banks during the rainy season. Explain why the river is building land in one place (the floodplain) while carving land down in another place (the canyon), even though it is the same river doing both.",
+    "choices": [
+      "The canyon rock is harder and more resistant to weathering than the floodplain rock, so erosion works much more slowly in the canyon",
+      "Mechanical weathering dominates in the canyon where rocks tumble together, while chemical weathering dominates on the floodplain where water pools",
+      "The river is confined and moving fast through the canyon, so it erodes and carries sediment away, while it spreads out and slows down on the floodplain, so it drops sediment and builds land there",
+      "The canyon was formed by a different river system in the past, and the current river is only depositing sediment to build the floodplain now"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about the condition that causes deposition—where does water drop its sediment?",
+      "Compare the river's speed and confinement in the two places: is it confined and fast, or spread out and slow?"
+    ]
+  },
+  {
+    "id": "m6sci-weathering-erosion-deposition-by-water-005",
+    "loId": "m6sci.weathering-erosion-and-deposition-by-water",
+    "cedCode": "M6SCI-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A new road cuts through rock and exposes fresh surfaces to rainwater. Over the next five years, water seeps into cracks in the rock, and during winter, this water repeatedly freezes and expands. At the same time, the slightly acidic rainwater slowly dissolves certain minerals in the rock. By year five, pieces of rock have broken loose and been carried away by a stream. Identify which weathering processes prepared the rock for erosion, and explain how you know each one occurred.",
+    "choices": [
+      "Only mechanical weathering occurred, because pieces were broken loose and carried away",
+      "Only chemical weathering occurred, because rainwater always dissolves minerals when rocks are exposed",
+      "Both mechanical weathering (ice wedging) and chemical weathering (rainwater dissolving minerals) loosened the rock, because the problem describes both physical breaking and chemical change happening at the same location",
+      "Erosion occurred first, then weathering, because the stream carried pieces away before they were broken loose"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for two different kinds of changes happening to the rock in place: one that breaks it physically, one that changes what it is made of.",
+      "Remember: erosion carries away what weathering has already loosened—it cannot happen until weathering has done its job first."
+    ]
+  },
+  {
+    "id": "m6sci-weathering-erosion-deposition-by-water-006",
+    "loId": "m6sci.weathering-erosion-and-deposition-by-water",
+    "cedCode": "M6SCI-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A river delta forms at a coast where a river carrying sand and silt flows into a calm ocean. However, if that same river were forced by a dam to flow much more slowly before reaching the coast, or if sea level rose and the ocean water at the mouth became much deeper and more turbulent, the delta would shrink or disappear even though the same amount of rock is still being weathered upstream. Using what you know about how water moves sediment, explain why changing the river's speed or the ocean's calmness at the mouth would prevent sediment from being deposited to build the delta.",
+    "choices": [
+      "Slow-moving water can carry smaller pieces of sediment but not larger pieces, so deltas only form when water moves at exactly medium speed",
+      "If the river flows too slowly before the coast, it will drop all its sediment upstream and have nothing left to deposit at the mouth, so no delta forms",
+      "Deeper, turbulent ocean water at the mouth would have more dissolved minerals that chemically alter the sediment, preventing deposition",
+      "If the river keeps moving fast where it enters the ocean, or if the ocean water is turbulent rather than calm, the water at the mouth does not slow down enough to drop its sediment load, so deposition cannot happen"
+    ],
+    "answer": "A",
+    "hints": [
+      "What is the one condition that must happen for deposition to occur—what has to change about the moving water?",
+      "If the river or ocean motion stays fast at the point where they meet, what does the moving water still have the power to do?"
+    ]
+  }
+]

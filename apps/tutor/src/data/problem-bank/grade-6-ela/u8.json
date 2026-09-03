@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6ela-introducing-a-claim-001",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is a claim rather than a fact, a question, or a topic?",
+    "choices": [
+      "Should students be allowed to bring water bottles to class?",
+      "Students should be allowed to bring water bottles to class.",
+      "Water bottles in the classroom.",
+      "Students bring water bottles to class every day."
+    ],
+    "answer": "B",
+    "hints": [
+      "A claim states a position plainly in one sentence that a reader could reasonably disagree with.",
+      "Cross out the option that only asks without answering, and the one that only names a subject without taking a side."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-002",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Your classmate wrote: \"The school cafeteria is crowded at lunch.\" Your teacher says this is not a claim yet—it is a fact. What change would turn it into a claim that someone could reasonably disagree with?",
+    "choices": [
+      "Add the words 'do you think' at the beginning to make it a question.",
+      "Remove the specific details about when and where the crowding happens.",
+      "Argue for what should be done about the problem, such as opening a second lunch line or staggering lunch periods.",
+      "Explain why you believe the cafeteria is crowded rather than just stating it is."
+    ],
+    "answer": "C",
+    "hints": [
+      "A claim picks a side and says what should happen, not just what is true.",
+      "Think about the difference between describing a problem and proposing a solution someone could argue against."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-003",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this opening to an argument: \"The school parking lot is not big enough for all the cars. The basketball team could use the extra space for practice. We should turn part of the parking lot into a basketball court.\" Which problem does this opening have?",
+    "choices": [
+      "The claim appears at the end instead of at the beginning, so the reader does not know what is being argued until after reading other sentences.",
+      "The first sentence is phrased as a question instead of a statement that takes a side.",
+      "The evidence about the parking lot being too small is placed before its own reason instead of right after it.",
+      "Two separate claims have been stitched together, and each one would need its own full argument."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at the last sentence and the first sentence—do they argue the same single position, or are they pushing two different ideas?",
+      "A claim should be one position, not multiple positions tied together."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-004",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote a draft argument with these three sentences: (1) \"Last week, three students said they ran out of time to finish lunch.\" (2) \"The lunch period is only twenty minutes long.\" (3) \"Our school should extend the lunch period to thirty minutes.\" The sentences are jumbled. Rank them in the order that makes the claim clear and keeps the evidence paired with its own reason.",
+    "choices": [
+      "Sentence 3, then sentence 2, then sentence 1.",
+      "Sentence 1, then sentence 2, then sentence 3.",
+      "Sentence 2, then sentence 1, then sentence 3.",
+      "Sentence 3, then sentence 1, then sentence 2."
+    ],
+    "answer": "A",
+    "hints": [
+      "The claim should come first so the reader knows what is being argued right away.",
+      "After the claim, a reason should be followed by the specific evidence that supports it, not by another reason."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-005",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this attempted opening: \"Having a morning announcement broadcast at school would save class time because announcements would reach everyone at once instead of taking up five minutes of each class. Having a morning announcement broadcast at school would save class time because students could focus better if they heard news all together in one place.\" Why does this opening fail to organize a claim and its supporting reasons clearly?",
+    "choices": [
+      "The claim is buried at the end and does not appear until after all the reasons have been listed.",
+      "Both reasons are phrased exactly the same way, so the reader cannot tell whether they are actually two different reasons or a repetition of the same reason.",
+      "The evidence for each reason is placed after both reasons instead of right next to the reason it actually supports.",
+      "Two different claims have been joined together, so the argument is trying to prove more than one position at once."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look carefully at what each reason is actually saying—do they sound like two separate reasons, or do they seem to repeat the same idea?",
+      "When two reasons overlap or sound alike, a reader cannot tell which evidence belongs to which reason."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-006",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is planning an argument that the school should add more bathroom stalls in the girls' bathroom. The student has collected two reasons: (1) hallway traffic backs up because students wait in line, and (2) students are sometimes late to class because they spend too long waiting. The student also has three pieces of evidence: (A) last Tuesday the hallway line reached the water fountain, (B) the teacher in room 204 reported that four students came in late and said they were in the bathroom line, and (C) there are only three stalls for eighty girls at lunch. Before writing the full paragraph, the student must organize which evidence goes with which reason. Which pairing is correct?",
+    "choices": [
+      "Reason 1 with evidence A and C; Reason 2 with evidence B.",
+      "Reason 1 with evidence A; Reason 2 with evidence B and C.",
+      "Reason 1 with evidence C; Reason 2 with evidence A and B.",
+      "Reason 1 with evidence B; Reason 2 with evidence A and C."
+    ],
+    "answer": "C",
+    "hints": [
+      "Match each reason to the specific evidence that actually supports it, not to evidence that supports a different reason.",
+      "Reason 1 is about hallway traffic; Reason 2 is about students being late to class. Which piece of evidence directly shows each problem?"
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-001",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: 'I should join the school choir because I want to be in the choir.' Is this a good reason? What is wrong with it?",
+    "choices": [
+      "It is a good reason and clearly explains why the student should join.",
+      "It is a good reason but needs more specific evidence to support it.",
+      "It only repeats the claim instead of explaining an actual why behind it.",
+      "It is a good reason but uses a source that is not credible enough."
+    ],
+    "answer": "C",
+    "hints": [
+      "Test the reason by saying it right after the claim with 'because' in between. Does it tell you anything the claim did not already say?",
+      "A real reason has to answer the question 'why is this true?' not just restate what the claim already said."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-002",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student makes the claim: 'Our school should have a snack stand in the gym during free time.' The student offers this reason: 'Because students get hungry during the day and need food.' Does this reason actually explain why the school should add a snack stand in the gym specifically, or does it only restate the claim?",
+    "choices": [
+      "It explains why — it gives a concrete problem that the snack stand in the gym would solve.",
+      "It explains why — it shows that many students would use a snack stand.",
+      "It only restates the claim — saying students need food does not explain why a snack stand in the gym is the answer.",
+      "It explains why — it describes what a snack stand is and what it does."
+    ],
+    "answer": "D",
+    "hints": [
+      "Read the reason right after the claim with 'because' in between. Does it say something new that the claim itself did not already say?",
+      "A real reason for a snack stand in the gym would need to explain a specific problem about where students are during free time or why the gym location matters."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-003",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which choice is a piece of evidence that directly backs up this reason: 'The library is overcrowded at lunch, so students who want quiet space cannot find it there'?",
+    "choices": [
+      "On Tuesday and Wednesday last week, the librarian counted seventeen students turned away at the library door during the lunch period because there was no room for more.",
+      "Our school library has three large tables and lots of books about science and history, but the librarian reported that the collection is not the issue affecting student access during busy times.",
+      "Many students at our school like to read books and study during lunch, and surveys show that reading and studying are popular activities among sixth graders.",
+      "The library is located next to the cafeteria, so students can get lunch and then go study, making it a convenient destination for afternoon academic work."
+    ],
+    "answer": "A",
+    "hints": [
+      "Evidence must show that this exact reason — the overcrowding — is actually real, not just that the topic of libraries or studying is important.",
+      "Look for something you could actually check: an observation someone made, something written down, or a statement from someone who was there."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-004",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: Claim: 'The school should provide free water bottles to all students.' Reason: 'Many students forget to bring water to school.' Evidence: 'Water bottles come in different colors and sizes at the store.' What is wrong with this set of claim, reason, and evidence?",
+    "choices": [
+      "The reason is good but the evidence is weak because it only talks about water bottles in general, not about students forgetting to bring them.",
+      "The evidence does not actually back the reason because it talks about store-bought water bottles instead of proving students forget to bring their own.",
+      "The claim is too broad and the reason does not connect to the evidence at all.",
+      "The evidence is strong but the reason needs more details about why students forget water."
+    ],
+    "answer": "B",
+    "hints": [
+      "Run the relevance test: Does the evidence about water bottles in stores show that the reason about students forgetting water is true?",
+      "Good evidence has to be checkable and has to back this exact reason, not just relate to the same topic."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-005",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes: Claim: 'Our class should have a class pet hamster.' Reason: 'Because I have had a hamster at home for two years and know how to take care of one properly.' Which choice shows evidence that truly backs this specific reason?",
+    "choices": [
+      "Hamsters are small animals that live in cages and eat seeds and vegetables.",
+      "My mom said that I have done a great job feeding my hamster every day and cleaning its cage every weekend without being reminded.",
+      "Lots of classrooms have class pets, and many of them are hamsters.",
+      "Hamsters can live for up to three years if they are cared for the right way."
+    ],
+    "answer": "C",
+    "hints": [
+      "The evidence must prove that this student actually knows how to care for a hamster, not just that hamsters exist or that pets are popular.",
+      "Look for something specific and observable that backs the exact claim: proof the student can handle the responsibility."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-006",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student claims: 'Our school should add a basketball hoop in the back parking lot.' She gives this reason: 'Because students do not have a place to play basketball after school on the days the gym is locked for cleaning.' Another student then says: 'That evidence is not credible because it is just an opinion.' What should the first student do to fix this problem and still use the same reason?",
+    "choices": [
+      "She should change her reason to focus on a different problem, like that many students like basketball.",
+      "She should find a documented example or an observation that proves the gym really is locked on certain days and students really cannot access it.",
+      "She should find a source that talks generally about the importance of sports for student health.",
+      "She should ask a friend who plays basketball whether the gym is ever locked, so she has someone else's opinion to share."
+    ],
+    "answer": "D",
+    "hints": [
+      "The problem is that the current evidence is not checkable or credible. What kind of evidence from the lesson would prove this reason without relying on just one person's say-so?",
+      "Think about what counts as good evidence: an observation you can point to, something written down that another person could look at, or a statement from someone actually in a position to know."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-001",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which linking word belongs to the REASON family because it attaches a reason directly to the claim it explains? Read the sentence: \"Students enjoy reading time at school, _____ it gives them a chance to find books they love.\" What word goes in the blank?",
+    "choices": [
+      "therefore",
+      "for example",
+      "as a result",
+      "because"
+    ],
+    "answer": "D",
+    "hints": [
+      "A reason word answers the question 'why?' — does the blank need to answer why students enjoy reading time?",
+      "The reason family puts the claim and reason in the same sentence, joined together."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-002",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this pair of sentences. The first sentence states a reason on its own. The second sentence should state what follows as a result of that reason. Which choice correctly completes the second sentence with a linking word from the RESULT family?\n\nThe school dropped the price of lunch from $4 to $3.50 last week. _____, more students are bringing their lunch trays through the line instead of packing lunch at home.",
+    "choices": [
+      "Consequently,",
+      "For example,",
+      "Because",
+      "For instance,"
+    ],
+    "answer": "A",
+    "hints": [
+      "The first sentence is already complete and standing on its own — it is not joined to the second sentence.",
+      "The second sentence tells you what happens next because of the price drop — that is a result, not an example or reason."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-003",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this paragraph and needs to fill in the blank. The first sentence gives a general reason. The second sentence should give one specific case that proves the general reason actually happens. Which linking word belongs in the blank?\n\nOur school should offer more after-school clubs because students need a place to explore interests they do not get to study in class. _____, the science club that started last month already has eighteen members who all signed up in the first week.",
+    "choices": [
+      "Therefore,",
+      "For example,",
+      "Consequently,",
+      "Because"
+    ],
+    "answer": "B",
+    "hints": [
+      "The science club story is not a brand-new result — it is a specific moment that shows the general pattern true.",
+      "The EXAMPLE family lets a reader see one real case that proves a general reason works."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-004",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this three-sentence argument. Two linking words are already filled in. The third blank needs a linking word, and you have to pick the one that names the RIGHT relationship for that sentence, even if the other word in the sentence sounds very formal or grown-up.\n\nThe school cafeteria only has four tables in the quiet eating area. Therefore, many students who need a calm place to eat lunch end up sitting in loud, crowded spots instead. _____, the school should add two more quiet tables so that students who struggle with noise have somewhere to sit.\n\nWhich choice correctly names the relationship and provides the right linking word?",
+    "choices": [
+      "The third sentence shows a result of the crowding problem, so it needs \"Consequently,\"",
+      "The third sentence gives an example of a student struggling, so it needs \"For instance,\"",
+      "The third sentence explains why the crowding problem is a reason to act, so it needs \"Because\"",
+      "The third sentence shows what should happen next as a solution, so it needs \"Therefore,\""
+    ],
+    "answer": "C",
+    "hints": [
+      "Before you pick a word, name the relationship that is actually there — does the third sentence explain something, give an example, or show a result?",
+      "The third sentence does not join to the one before it in a single sentence — it stands as a new claim that needs support."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-005",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is revising her argument and reads it out loud. It sounds smooth and serious, but she is not sure the linking word is doing the right job. Read her sentences and decide whether the linking word matches the real relationship.\n\n\"Our class should start a compost bin in the garden. However, composting teaches students how to reduce waste and creates rich soil for growing vegetables.\"\n\nWhich statement correctly explains whether the linking word is right or wrong, and what should replace it?",
+    "choices": [
+      "The word is correct because \"however\" sounds formal and serious, which matches an academic argument.",
+      "The word is wrong because \"however\" signals a turn against the claim, but the second sentence actually agrees with it and explains a reason to accept it; it should say \"because\" instead.",
+      "The word is wrong because \"however\" should only be used at the end of a paragraph, not in the middle; it should say \"therefore\" instead.",
+      "The word is correct because \"however\" joins two sentences together in one thought."
+    ],
+    "answer": "D",
+    "hints": [
+      "Do not trust how smooth or serious a word sounds — check what the second sentence DOES to the claim, not the tone of the word.",
+      "The second sentence explains why the claim should be accepted — that is a relationship that belongs to the REASON family, not the turn-against family."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-006",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote four versions of an argument. Each version has two linked sentences. In each version, identify which one correctly uses linking words that match BOTH relationships — the first linking word must match the relationship in the second sentence, AND the second linking word must match the relationship in the third sentence. Read all four versions before you decide.\n\nVersion 1: \"Students should bring a water bottle to school, because staying hydrated helps them focus in class. Consequently, the school should allow water bottles in every classroom instead of just the cafeteria.\"\n\nVersion 2: \"Students should bring a water bottle to school because staying hydrated helps them focus in class. For example, during the hot day last week, several students felt lightheaded by lunchtime before they got to the water fountain.\"\n\nVersion 3: \"Students should bring a water bottle to school. Therefore, staying hydrated helps them focus in class. As a result, the school should allow water bottles in every classroom.\"\n\nVersion 4: \"Some students forget to drink water during the day. However, they become dehydrated and cannot focus. For example, one student missed an important quiz because she was too dizzy to read the questions.\"\n\nWhich version uses both linking words correctly to match the real relationships between sentences?",
+    "choices": [
+      "Version 2",
+      "Version 1",
+      "Version 3",
+      "Version 4"
+    ],
+    "answer": "A",
+    "hints": [
+      "For each version, ask: Does the second sentence explain the first (reason family), show what happens because of the first (result family), or give a specific case of the first (example family)?",
+      "Watch out for linking words that sound formal but name the wrong relationship — a smooth-sounding word used in the wrong spot is still wrong."
+    ]
+  },
+  {
+    "id": "m6ela-writing-a-concluding-statement-001",
+    "loId": "m6ela.writing-a-concluding-statement",
+    "cedCode": "M6ELA-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A concluding statement is the last piece of an argument. What is its main job?",
+    "choices": [
+      "To wrap up the claim and reasons already given, without opening a new topic or leaving the argument stopping cold",
+      "To introduce a new reason that makes the argument stronger than it was before",
+      "To remind the reader of general facts that apply to almost any topic, like caring about the environment",
+      "To repeat the exact claim sentence that opened the argument so the reader remembers it word for word"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for the choice that describes what a concluding statement does with the ideas already on the page, not what it adds.",
+      "Think about what 'follows from' means — it is built only out of ideas the argument already gave."
+    ]
+  },
+  {
+    "id": "m6ela-writing-a-concluding-statement-002",
+    "loId": "m6ela.writing-a-concluding-statement",
+    "cedCode": "M6ELA-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An argument claims that students should bring lunch from home instead of buying the school lunch. The two reasons given are that the school lunch line is always crowded and slows down eating time, and that packed lunches cost less money than buying lunch every day. Which sentence is the best concluding statement for this argument?",
+    "choices": [
+      "It is important to make healthy food choices every single day because your body needs good nutrition to stay strong.",
+      "Packing lunch would let students eat faster without waiting in that long line and would save money that they could use for other things.",
+      "The school should also build a bigger cafeteria so the lunch line does not get crowded in the first place and students can eat quicker.",
+      "Students should pack lunch from home because it takes less time to eat and allows them to spend their allowance on things they actually want."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for a sentence that traces back to both of the reasons that were already argued, not a brand-new idea.",
+      "A good concluding statement restates the claim in new words and ties back to the specific reasons given. Does it do both?"
+    ]
+  },
+  {
+    "id": "m6ela-writing-a-concluding-statement-003",
+    "loId": "m6ela.writing-a-concluding-statement",
+    "cedCode": "M6ELA-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this conclusion for an argument about installing bike racks at school: 'Installing bike racks at school would give students a safe place to leave their bikes during the day instead of locking them to the fence, and it would also make sure that students exercise more.' What is the problem with this conclusion?",
+    "choices": [
+      "It repeats the exact claim sentence instead of restating it in new words.",
+      "It introduces a new reason about exercise that was never argued for earlier in the essay.",
+      "It uses words that are too simple and makes the argument sound less mature.",
+      "It is too short and does not explain enough details about how the bike racks would work."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check each part of the conclusion against the reasons the argument already gave. Does every piece of it trace back to something already on the page?",
+      "Look at the rule about never introducing a new reason at the end. Where in this conclusion does that happen?"
+    ]
+  },
+  {
+    "id": "m6ela-writing-a-concluding-statement-004",
+    "loId": "m6ela.writing-a-concluding-statement",
+    "cedCode": "M6ELA-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An argument states that seventh-graders should get ten extra minutes of lunch time. Reason 1 is that many students only have ten minutes to eat before they have to line up. Reason 2 is that they also spend five minutes walking to and from the cafeteria, so they barely have time to sit down. A student drafted this ending: 'All students deserve a lunch break that gives them time to relax and eat.' Why does this sentence fail to work as a concluding statement, and what would fix it?",
+    "choices": [
+      "It fails because it uses too many words; it should be shorter and more direct. Fix it by removing the word 'deserve.'",
+      "It fails because it could close an argument about almost any grade or topic, not just this specific argument about seventh-graders and ten minutes. Fix it by tying it back to the two specific reasons: the eating time and the walking time that were already argued.",
+      "It fails because it does not restate the claim in new words; it copies the exact opening sentence. Fix it by changing 'lunch break' to 'lunch period.'",
+      "It fails because it introduces a new reason about student stress that was never mentioned before. Fix it by removing the word 'relax.'"
+    ],
+    "answer": "D",
+    "hints": [
+      "Apply the test taught in the lesson: cover the claim and reasons and read only the ending by itself. Would this sentence also close an argument about a different grade's lunch time, or does it only make sense for THIS argument?",
+      "Two of the choices name problems that are real mistakes in concluding statements. Which one is actually wrong with this sentence?"
+    ]
+  },
+  {
+    "id": "m6ela-writing-a-concluding-statement-005",
+    "loId": "m6ela.writing-a-concluding-statement",
+    "cedCode": "M6ELA-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An argument claims that the school should serve breakfast in the morning before first period. Reason 1 is that many students skip breakfast at home because they wake up late, and an empty stomach makes it hard to focus in class. Reason 2 is that the cafeteria workers arrive at the school an hour before the first bus anyway, so they could prepare breakfast without doing extra work. A student is writing the concluding statement. Which of the following best explains what the conclusion needs to do?",
+    "choices": [
+      "Restate the claim about serving breakfast in new words, then tie it back to both the focus problem and the fact that cafeteria workers are already there, showing that both reasons support the claim.",
+      "Introduce a third reason that proves breakfast is the most important meal of the day so the reader understands why good nutrition matters and supports the school making this change.",
+      "Use very formal language and repeat the exact claim sentence word-for-word, because the conclusion is the most important part of an argument and must sound official.",
+      "Explain what would happen if the school did not serve breakfast by describing how hungry students struggle to learn, so the reader sees the danger of not following the claim."
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that a concluding statement must follow from what came before — every piece must trace back to the claim and reasons already given.",
+      "Think about what 'tying back' means. A good conclusion does not introduce new facts; it shows how the reasons already argued lead to the claim."
+    ]
+  },
+  {
+    "id": "m6ela-writing-a-concluding-statement-006",
+    "loId": "m6ela.writing-a-concluding-statement",
+    "cedCode": "M6ELA-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An argument states that the school gym should be open during lunch for students to use. Reason 1 is that many students sit inside during lunch and do not get to move around or exercise. Reason 2 is that the school already pays a gym teacher to be there at lunch, so opening the gym would not cost extra money. A student wrote two possible endings:\n\nEnding X: 'Opening the gym at lunch would give students who sit inside a place to run and play, and it would not make the school spend more money.'\n\nEnding Y: 'Opening the gym at lunch would solve the problem of kids not exercising enough, and all students should take care of their health no matter what.'\n\nWhich ending better follows from the argument, and why?",
+    "choices": [
+      "Ending Y is better because it explains that all students should care about their health, which is an important reminder for the reader to understand the value of exercise.",
+      "Ending X is better because both parts of it trace back to reasons that were already argued, while Ending Y includes a vague general statement that could close almost any argument about health.",
+      "Ending Y is better because it adds an extra reason about health that makes the argument stronger and more convincing to those who doubt the benefits of daily exercise.",
+      "Ending X is better because it uses simpler words and shorter sentences that are easier for a reader to understand without confusion."
+    ],
+    "answer": "B",
+    "hints": [
+      "Apply the test from the lesson: could this sentence close a different argument? Which ending could ONLY close this specific argument about the gym at lunch?",
+      "Look at Ending Y's final clause about 'all students should take care of their health.' Is that statement built from the reasons already given, or does it sound like it could fit many different arguments?"
+    ]
+  }
+]

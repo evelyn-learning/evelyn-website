@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6sci-evidence-for-continental-drift-001",
+    "loId": "m6sci.evidence-for-continental-drift",
+    "cedCode": "M6SCI-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Alfred Wegener proposed that Earth's continents were once joined together in a single landmass. What was the name Wegener gave to this joined supercontinent?",
+    "choices": [
+      "Atlantis",
+      "Pangaea",
+      "Gondwana",
+      "Laurasia"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson specifically names the supercontinent Wegener proposed.",
+      "This term appears in the opening description of Wegener's 1912 proposal."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-continental-drift-002",
+    "loId": "m6sci.evidence-for-continental-drift",
+    "cedCode": "M6SCI-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scientist discovers that the bulge of Brazil's eastern coast has an identical curved shape to a curved bay on Africa's western coast near the Gulf of Guinea. Why does this matching coastline shape provide evidence that South America and Africa were once joined together?",
+    "choices": [
+      "Coastlines are shaped by ocean currents, so matching shapes prove the currents flowed the same way in the past.",
+      "Two coastlines thousands of kilometers apart would not match by accident if they had always been separate continents.",
+      "Matching coastlines show that both continents formed at the same time in Earth's history.",
+      "The shape of a coastline tells scientists exactly how fast a continent has been moving."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about probability: would two unrelated coastlines separated by an ocean naturally fit together like puzzle pieces?",
+      "The lesson asks what would make such a match meaningful rather than coincidental."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-continental-drift-003",
+    "loId": "m6sci.evidence-for-continental-drift",
+    "cedCode": "M6SCI-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Fossils of Glossopteris, a seed fern, are found in rock of the same age across South America, southern Africa, India, Australia, and Antarctica. The seeds of Glossopteris were too heavy to be carried far by wind. What does this fossil distribution pattern tell us about these continents?",
+    "choices": [
+      "Glossopteris seeds were carried across oceans by swimming animals that we have not yet discovered.",
+      "The continents must have been much closer together, or connected, when Glossopteris was alive.",
+      "Ocean currents have changed direction many times, allowing seeds to travel between continents.",
+      "Glossopteris lived during a time when Earth's climate was warm enough to support the same plant everywhere."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: the seeds were too heavy to travel far by wind on their own.",
+      "If an organism cannot easily cross an ocean, what does its presence on separated continents suggest about Earth's past geography?"
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-continental-drift-004",
+    "loId": "m6sci.evidence-for-continental-drift",
+    "cedCode": "M6SCI-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Wegener's evidence from matching coastlines, fossil distributions, and rock-layer sequences was never shown to be wrong, yet most scientists rejected continental drift for decades after 1912. At the same time, Wegener's proposed explanations for what could move continents—such as tidal forces from the sun and moon—were calculated to be far too weak. Explain why the discovery of mirror-image magnetic stripe patterns on the seafloor finally convinced scientists to accept continental drift, when the earlier evidence had not been sufficient.",
+    "choices": [
+      "The magnetic stripe pattern showed that the ocean floor itself is made and moves outward from mid-ocean ridges, providing direct evidence that continents could move because the ground beneath them moves.",
+      "The magnetic stripes proved that Wegener's proposed mechanism of tidal forces was incorrect and revealed an entirely new process of seafloor spreading that could actually move continents.",
+      "The mirror-image pattern demonstrated that the sun and moon's gravitational pull had been underestimated and was now measured to be strong enough to move continents at the rate observed in the stripes.",
+      "It showed that Glossopteris and Mesosaurus fossils could have drifted across oceans by riding on magnetic fields in the oceanic crust."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson explains that the magnetic stripe evidence did not explain HOW continents move, but showed that the OCEAN FLOOR itself moves.",
+      "What was missing from Wegener's case was not better fossil evidence, but a demonstration that movement happens in Earth itself."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-continental-drift-005",
+    "loId": "m6sci.evidence-for-continental-drift",
+    "cedCode": "M6SCI-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geologist finds that a distinctive sequence of rock layers appears in a region of southern Africa and also in a region of South America, separated today by thousands of kilometers of Atlantic Ocean. The rock layers are the same age and occur in the same order in both places. At the same time, fossils of Lystrosaurus, a land animal that could not swim across an ocean, are found in matching-age rock in both regions. Which conclusion is best supported by these two independent lines of evidence together?",
+    "choices": [
+      "The rock layers formed underwater, and Lystrosaurus swam between the continents using currents.",
+      "South America and southern Africa were part of the same landmass when these rocks formed, and have since drifted apart.",
+      "Rock layers form in the same way everywhere on Earth, regardless of whether continents are joined or separate.",
+      "Lystrosaurus fossils are useful for dating rock, but rock layers tell us nothing about continental positions."
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice that both pieces of evidence—the matching rock sequence and the fossil—point toward the same explanation.",
+      "A land animal that cannot swim and identical rock sequences in two now-separated places most logically means what about their past positions?"
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-continental-drift-006",
+    "loId": "m6sci.evidence-for-continental-drift",
+    "cedCode": "M6SCI-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Near the Mid-Atlantic Ridge, scientists measure the magnetic stripe pattern in seafloor rock and find that the pattern on the west side of the ridge is a perfect mirror image of the pattern on the east side. The rock closest to the ridge itself is younger, and rock farther from the ridge is progressively older on both sides. A scientist then claims: \"This proves that the continents of South America and Africa have been separating at a constant rate for millions of years.\" Is this claim fully supported by the magnetic stripe evidence alone, or is additional information needed? Explain your reasoning.",
+    "choices": [
+      "The claim is fully supported, because the mirror-image stripes directly measure how fast the continents separated and the age of each stripe tells you exactly when that separation occurred.",
+      "The claim is fully supported, because scientists can count the number of stripes on each side of the ridge and use that count to calculate the rate at which the continents have been moving apart.",
+      "The claim is not fully supported by the magnetic stripe evidence alone; the stripes show that seafloor spreads, but determining the continents' actual separation rate would require additional data such as the distance continents have moved and the time that has passed.",
+      "The claim is not supported at all, because the magnetic stripes only indicate the age of rocks and tell us nothing about whether continents or ocean floors have actually moved."
+    ],
+    "answer": "C",
+    "hints": [
+      "The magnetic stripes show that seafloor is created and moves outward. Does that automatically tell you the rate at which continents moved apart?",
+      "To calculate a rate of separation, you need to know both distance and time. The stripes show motion, but what else would you need to measure?"
+    ]
+  },
+  {
+    "id": "m6sci-types-of-plate-boundaries-001",
+    "loId": "m6sci.types-of-plate-boundaries",
+    "cedCode": "M6SCI-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A plate boundary is classified by one key piece of information about the two plates that meet there. What is that one piece of information?",
+    "choices": [
+      "What landforms or structures are built at the boundary",
+      "How fast each plate is moving on its own",
+      "Whether the plates carry continents or ocean floor",
+      "Which direction the two plates are moving relative to each other"
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson states that a boundary is named by direction, not by what it builds.",
+      "Think about the one question scientists ask to classify a boundary: which way are the plates moving compared with each other?"
+    ]
+  },
+  {
+    "id": "m6sci-types-of-plate-boundaries-002",
+    "loId": "m6sci.types-of-plate-boundaries",
+    "cedCode": "M6SCI-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Scientists observe a plate boundary where one plate is moving steadily to the north and the other plate is moving steadily to the south. The distance measured straight across the boundary has remained constant for the past 20 years. What type of plate boundary is this?",
+    "choices": [
+      "Transform boundary",
+      "Divergent boundary",
+      "Convergent boundary",
+      "A new type not yet named"
+    ],
+    "answer": "A",
+    "hints": [
+      "Pay attention to the distance across the boundary, not just the directions the plates are moving.",
+      "If the distance across stays the same while both sides slide along the line of the boundary, the plates are sliding past each other."
+    ]
+  },
+  {
+    "id": "m6sci-types-of-plate-boundaries-003",
+    "loId": "m6sci.types-of-plate-boundaries",
+    "cedCode": "M6SCI-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "At the Mid-Atlantic Ridge, instruments show that the plate carrying North and South America is moving westward while the plate carrying Europe and Africa is moving eastward. Year after year, the gap between these two plates grows wider. What type of boundary is the Mid-Atlantic Ridge?",
+    "choices": [
+      "Transform boundary",
+      "Divergent boundary",
+      "Convergent boundary",
+      "A stationary boundary with no motion"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at what is happening to the distance between the two plates over time.",
+      "When two plates move apart and the gap between them keeps growing, that motion pattern has a specific name."
+    ]
+  },
+  {
+    "id": "m6sci-types-of-plate-boundaries-004",
+    "loId": "m6sci.types-of-plate-boundaries",
+    "cedCode": "M6SCI-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that the boundary under the Himalayas must be convergent because it involves two continents (India and Asia) moving toward each other. However, the lesson teaches an important trap to avoid. Why is the student's reasoning incomplete, and what is the correct way to classify this boundary?",
+    "choices": [
+      "The student confused the composition of plates with the direction of their motion; plate boundaries are classified by whether plates move toward, away from, or past each other, not by what material each plate carries.",
+      "The student is correct; two continents always form a convergent boundary when they move together relative to each other.",
+      "A plate boundary is classified by the direction the two plates move relative to each other, not by whether they carry continents; the Himalayas boundary is convergent because the two plates are closing the distance between them, regardless of what each plate carries.",
+      "The student failed to recognize that convergent boundaries require the creation of new rock material on at least one side of the boundary."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson warns that 'a plate is not the same thing as a continent' and that 'a convergent boundary does not require two continents crashing together.'",
+      "Focus on the actual motion of the plates (are they closing the gap?) rather than on what type of crust each plate carries."
+    ]
+  },
+  {
+    "id": "m6sci-types-of-plate-boundaries-005",
+    "loId": "m6sci.types-of-plate-boundaries",
+    "cedCode": "M6SCI-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two markers are placed on the seafloor, one on each side of a plate boundary. Over many years, the west marker moves west and the east marker moves east, and the distance between them shrinks by 10 centimeters per year. A student concludes this must be a divergent boundary. Explain why this conclusion is wrong and identify the correct boundary type using evidence from the motion described.",
+    "choices": [
+      "The conclusion is wrong because the markers are moving in opposite directions; this is actually a transform boundary where the plates slide past each other.",
+      "The conclusion is wrong because the distance between the markers is shrinking, which means the plates are converging, not diverging.",
+      "The conclusion is wrong because seafloor markers cannot move; only continental crust moves.",
+      "The conclusion is correct; opposite directions always mean a divergent boundary."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember the lesson's first trap: different directions is not the same as convergent or divergent—you must check what is happening to the distance across the boundary.",
+      "Divergent means the gap is growing, not shrinking. If the distance between the markers is decreasing every year, what is happening to the plates?"
+    ]
+  },
+  {
+    "id": "m6sci-types-of-plate-boundaries-006",
+    "loId": "m6sci.types-of-plate-boundaries",
+    "cedCode": "M6SCI-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geologist studies a boundary between a plate carrying open ocean floor and a plate carrying both a continent and some ocean floor at its edge. Surveys reveal that the ocean-floor plate is moving toward the continent-bearing plate, and the distance across the boundary has been decreasing for millions of years. Another scientist notes that this boundary is not building a tall mountain range like the Himalayas, and wonders if it might be a different type of boundary. Using only the direction and distance information, what type is it, and what is the flaw in the second scientist's reasoning?",
+    "choices": [
+      "It is a convergent boundary because the two plates are moving toward each other and closing the distance; the flaw is assuming that what a convergent boundary builds (mountain, trench, or other landform) must be the same everywhere, when the lesson teaches that what it builds depends on more than just direction.",
+      "It is a divergent boundary because ocean floor is involved in the collision; the flaw is mistakenly thinking that plates carrying ocean floor cannot converge toward each other.",
+      "It is a transform boundary because the plates are sliding past each other at an angle; the flaw is not recognizing that continuous decrease in distance indicates motion in one direction rather than sideways motion.",
+      "It cannot be classified without additional data about rock types and ages at the boundary; the flaw is overlooking that direction and distance measurements alone are sufficient to determine how plates move relative to each other."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson teaches that what a boundary builds (mountains, ridges, trenches) is the next lesson, not part of how you classify the boundary type itself.",
+      "Classification depends only on the direction of relative motion and whether the distance is growing, shrinking, or staying the same—not on what landforms appear at the surface."
+    ]
+  },
+  {
+    "id": "m6sci-landforms-built-by-plate-motion-001",
+    "loId": "m6sci.landforms-built-by-plate-motion",
+    "cedCode": "M6SCI-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "At a convergent boundary between two plates, oceanic crust is denser than continental crust. Which plate will bend downward and sink beneath the other?",
+    "choices": [
+      "The plate carrying the denser oceanic crust will sink beneath the other plate.",
+      "The plate carrying the continental crust will sink beneath the oceanic crust.",
+      "Both plates will sink at the same time because they are being pushed together.",
+      "Neither plate will sink because the boundary is convergent, not divergent."
+    ],
+    "answer": "A",
+    "hints": [
+      "Density is the key factor that decides which plate sinks at a convergent boundary.",
+      "Denser material naturally sinks when squeezed against less dense material."
+    ]
+  },
+  {
+    "id": "m6sci-landforms-built-by-plate-motion-002",
+    "loId": "m6sci.landforms-built-by-plate-motion",
+    "cedCode": "M6SCI-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geologist observes two continental plates pushing directly into each other. Both plates have continental crust that is very similar in density. What landform will be built at this convergent boundary, and why will it form at the surface rather than underground?",
+    "choices": [
+      "An ocean trench will form because one plate must sink as the continental crust is pushed downward.",
+      "Fold mountains will form because neither plate is dense enough to sink, so the rock buckles and stacks upward instead.",
+      "A rift valley will form because the continental crust will stretch apart as the plates collide.",
+      "A volcanic island arc will form because melting rock from both plates will rise to the surface and build islands."
+    ],
+    "answer": "B",
+    "hints": [
+      "When two materials of nearly equal density collide, neither can sink beneath the other.",
+      "With nowhere to sink, rock must move in the direction it is being pushed—upward."
+    ]
+  },
+  {
+    "id": "m6sci-landforms-built-by-plate-motion-003",
+    "loId": "m6sci.landforms-built-by-plate-motion",
+    "cedCode": "M6SCI-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two oceanic plates are pulling away from each other at a divergent boundary in the middle of an ocean. Magma rises up through the widening gap and hardens into new rock. What underwater landform is created along this boundary, and what is happening to the ocean floor there?",
+    "choices": [
+      "A rift valley forms, and the ocean floor between the plates drops down as the crust stretches.",
+      "A volcanic island arc forms, and volcanoes erupt as one plate sinks beneath the other.",
+      "A mid-ocean ridge forms, and new ocean-floor rock is added along the crack where the plates pull apart.",
+      "An ocean trench forms, and the denser plate bends downward to create the deepest part of the ocean."
+    ],
+    "answer": "C",
+    "hints": [
+      "At a divergent boundary, plates are moving apart, not toward each other, so no sinking occurs.",
+      "When plates pull apart, the gap must be filled by material rising from below the crust."
+    ]
+  },
+  {
+    "id": "m6sci-landforms-built-by-plate-motion-004",
+    "loId": "m6sci.landforms-built-by-plate-motion",
+    "cedCode": "M6SCI-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scientist studying a plate boundary observes a curved chain of volcanic islands rising from the ocean floor next to a very deep ocean trench. She determines that both plates at this boundary are made of oceanic crust. Explain why both the trench and the island arc appear at this same boundary, and identify what type of plate motion is occurring.",
+    "choices": [
+      "The plates are pulling apart at a divergent boundary; magma fills the gap and creates both the trench as a rift feature and the islands as new volcanoes.",
+      "The plates are sliding sideways past each other at a transform boundary, creating friction that melts rock and builds both the trench and the islands.",
+      "The plates are pushing together at a convergent boundary; the denser plate sinks to form the trench, and melted rock from the sinking plate rises through the plate above to build the island arc.",
+      "The plates are pulling apart at a divergent boundary, but the trench is an older feature from a previous time when the boundary was convergent."
+    ],
+    "answer": "D",
+    "hints": [
+      "At a convergent boundary, one plate must sink, creating a distinct bend in the ocean floor.",
+      "Melted rock only rises through an overlying plate when one plate is sinking beneath it, not when plates pull apart."
+    ]
+  },
+  {
+    "id": "m6sci-landforms-built-by-plate-motion-005",
+    "loId": "m6sci.landforms-built-by-plate-motion",
+    "cedCode": "M6SCI-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two continental plates are slowly moving apart from each other along a divergent boundary. Between the two plates, the continental crust has stretched thin and a lowered strip of land has dropped down, creating a valley with raised, cracked edges on both sides. If this boundary continues to pull apart for millions of years, what will happen to this valley, and why?",
+    "choices": [
+      "The valley will eventually fill with magma and harden into new continental rock, widening the continental crust between the plates.",
+      "The valley will grow deeper and wider as the plates continue to pull apart, and eventually the dropped strip may sink below sea level, allowing ocean water to fill it.",
+      "The valley will become shallower because weathering and erosion will wear down the raised edges and fill in the low area with sediment.",
+      "The valley will remain the same depth and width because the continental crust is too strong to stretch any further once a rift valley forms."
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider what happens during the very long timescale described: if the rift keeps widening, what material moves into the growing space?",
+      "The lesson describes the Red Sea as a continental rift that eventually filled with water, implying the rift can grow deeper and wider over time."
+    ]
+  },
+  {
+    "id": "m6sci-landforms-built-by-plate-motion-006",
+    "loId": "m6sci.landforms-built-by-plate-motion",
+    "cedCode": "M6SCI-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geologist maps a region and finds an old mountain range made of very thick, crumpled continental crust. She then moves south and discovers a rift valley where the continental crust is being stretched thin and pulled apart. Both features are in the same region with continental crust on both sides. The geologist concludes that this region experienced two different types of plate motion at different times. Describe the type of plate motion that built each landform, explain why each motion produces its particular landform, and identify which motion occurred first to create the thick continental crust in the mountain range.",
+    "choices": [
+      "First, a divergent boundary created the mountain range by stretching the crust upward because the two plates were moving away from each other and new material was rising between them from below.",
+      "First, a convergent boundary pushed two continental plates together, crumpling and thickening the continental crust into a mountain range because neither plate was dense enough to sink; later, a divergent boundary pulled the continental plates apart, stretching the crust thin and allowing the land between them to drop into a rift valley.",
+      "Both landforms were created at the same convergent boundary—the mountain range was built on top, and the rift valley formed beneath it because the collision forces caused the continental crust to break and settle under its own weight.",
+      "First, a divergent boundary created the rift valley by thinning the crust; later, a convergent boundary reactivated the same boundary line, pushing the thinned crust back together and crumpling it upward to rebuild it into a mountain range."
+    ],
+    "answer": "B",
+    "hints": [
+      "A mountain range made of thick, crumpled crust suggests two plates pushed together; a rift valley suggests plates pulled apart. These are opposite motions, so they must happen at different times.",
+      "At a convergent boundary between continental plates, the crust stacks upward and thickens; at a divergent boundary between continental plates, the crust stretches thin and drops."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-plates-mantle-convection-001",
+    "loId": "m6sci.earths-plates-and-mantle-convection",
+    "cedCode": "M6SCI-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Earth's lithosphere is broken into large pieces that move slowly over time. What is the name of the layer of solid rock directly beneath the lithosphere on which these pieces rest and move?",
+    "choices": [
+      "The inner core",
+      "The outer core",
+      "The asthenosphere",
+      "The crust"
+    ],
+    "answer": "C",
+    "hints": [
+      "This layer is part of the mantle, not Earth's center.",
+      "The name starts with 'asthen-' and describes rock that flows extremely slowly, like stiff putty."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-plates-mantle-convection-002",
+    "loId": "m6sci.earths-plates-and-mantle-convection",
+    "cedCode": "M6SCI-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scientist observes that two tectonic plates are moving apart at 3 centimeters per year. At this rate, how far apart will the two plates be after 5 million years?",
+    "choices": [
+      "About 15 meters",
+      "About 1,500 meters",
+      "About 15 kilometers",
+      "About 150 kilometers"
+    ],
+    "answer": "D",
+    "hints": [
+      "Convert 5 million years to a regular number first, then multiply by the yearly rate in centimeters.",
+      "Remember to convert from centimeters to kilometers at the end; there are 100 centimeters in a meter and 1,000 meters in a kilometer."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-plates-mantle-convection-003",
+    "loId": "m6sci.earths-plates-and-mantle-convection",
+    "cedCode": "M6SCI-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student says that the Pacific Plate ends at the western coast of North America, just like the North American Plate ends at the Atlantic coast. Why is this statement incorrect based on what a tectonic plate actually is?",
+    "choices": [
+      "The Pacific Plate is almost entirely ocean floor with no full continent on it, so it does not end at a coastline the way continental plates do.",
+      "The Pacific Plate is too large to fit next to any continent, so it must be located somewhere else in the mantle.",
+      "The Pacific Plate floats on liquid magma while the North American Plate rests on solid rock, so they meet at different kinds of boundaries.",
+      "The Pacific Plate does end at the west coast, but the North American Plate actually extends far into the Atlantic Ocean, not just to the coastline."
+    ],
+    "answer": "A",
+    "hints": [
+      "A tectonic plate is defined by the lithosphere it is made of, not by whether it carries a continent on top.",
+      "Look at what the lesson says about the Pacific Plate: is it mostly ocean floor, or mostly continent?"
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-plates-mantle-convection-004",
+    "loId": "m6sci.earths-plates-and-mantle-convection",
+    "cedCode": "M6SCI-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The lithosphere is described as Earth's rigid outer layer made of the crust plus the topmost part of the mantle. Below it sits the asthenosphere, which is also made of mantle rock but flows extremely slowly. Why does the fact that the asthenosphere can flow slowly, even though it is solid rock, help explain how tectonic plates are able to move across Earth's surface?",
+    "choices": [
+      "The asthenosphere melts completely into liquid magma beneath the lithosphere, and this molten layer allows plates to slide horizontally across Earth's surface without any friction or resistance to their movement.",
+      "The asthenosphere's slow, flowing motion carries the rigid plates resting on top of it along, similar to the way a slow current beneath a raft can move the raft even though the current never stops being water.",
+      "The asthenosphere is made of lighter, more buoyant material than the lithosphere, so it naturally rises upward and pushes the plates horizontally in both directions as convection currents cycle heat through Earth's interior layers.",
+      "The asthenosphere spins rapidly like a spinning disk, and this rotational motion acts as a mechanical surface underneath the plates that causes them to rotate and move across the planet similar to how a turntable moves objects placed on its surface."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson compares the slowly flowing asthenosphere to a specific example involving motion and force. What is that example?",
+      "Remember: the asthenosphere is solid rock, not liquid, so it cannot work the way water or a spinning surface would."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-plates-mantle-convection-005",
+    "loId": "m6sci.earths-plates-and-mantle-convection",
+    "cedCode": "M6SCI-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geologist measures that two ocean-floor plates are spreading apart at 6 centimeters per year. The same two plates are spreading at twice this rate elsewhere in the world, at 12 centimeters per year. After 2 million years, how much more will the second pair of plates have spread apart than the first pair?",
+    "choices": [
+      "About 60 kilometers",
+      "About 120 kilometers",
+      "About 240 kilometers",
+      "About 480 kilometers"
+    ],
+    "answer": "C",
+    "hints": [
+      "Calculate the total distance each pair travels in 2 million years, then find the difference between them.",
+      "The second pair moves twice as fast, so over the same amount of time, the difference in distance will be twice the distance the slower pair travels."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-plates-mantle-convection-006",
+    "loId": "m6sci.earths-plates-and-mantle-convection",
+    "cedCode": "M6SCI-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student examines a map of Earth's tectonic plates and sees that the Eurasian Plate is extremely large, covering an area that includes the entire European continent, Asia, and a vast region of ocean floor to the east. The student then asks: 'If this single plate carries both the continent and the ocean floor, what does that tell us about how the continent and that ocean floor are moving?' Using the definition of a tectonic plate and what you know about mantle convection, which answer best explains what is actually happening?",
+    "choices": [
+      "The continent and the ocean floor move at different speeds and in different directions, because they are technically two separate plates that just happen to look connected on the map.",
+      "The continent and the ocean floor move together as one unit, in the same direction and at the same speed, because they are both part of the same slab of lithosphere resting on the asthenosphere.",
+      "The continent is stationary while the ocean floor slides underneath it, because the continent is much heavier and cannot be carried by the slow motion of the mantle below.",
+      "The continent and ocean floor move in the same direction but at slightly different speeds, because the asthenosphere flows faster under the continent than it does under the ocean."
+    ],
+    "answer": "D",
+    "hints": [
+      "If the continent and ocean floor are part of the same rigid slab called a plate, and that slab rests on the asthenosphere, what must be true about how they move relative to each other?",
+      "Mantle convection is a single, slow, circulating pattern in the mantle. If it carries one plate, does it carry different parts of that same plate at different speeds, or does it carry the whole plate as a single, connected unit?"
+    ]
+  }
+]

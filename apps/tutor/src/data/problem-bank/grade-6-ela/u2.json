@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6ela-theme-objective-summary-001",
+    "loId": "m6ela.theme-and-objective-summary",
+    "cedCode": "M6ELA-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a theme rather than a topic? A topic is a word or two that names what a story keeps circling. A theme is a complete sentence that says something about that topic.",
+    "choices": [
+      "Honesty",
+      "Bravery",
+      "Keeping promises to yourself can be harder than keeping them to others.",
+      "Friendship"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: a theme must be a complete sentence, not just a single word.",
+      "Look for a choice that makes a claim about what happens in a story, not just a label."
+    ]
+  },
+  {
+    "id": "m6ela-theme-objective-summary-002",
+    "loId": "m6ela.theme-and-objective-summary",
+    "cedCode": "M6ELA-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the story and build a theme statement from the details given. Then choose the theme that fits what the story actually shows.\n\n\"Maya saved her allowance for three months to buy a new skateboard. When she finally had enough money, her friend Teo's skateboard broke. Maya gave Teo her new skateboard instead. Three weeks later, Teo bought Maya a better skateboard than the one she gave him.\" What is the theme this story supports?",
+    "choices": [
+      "Giving to someone else can come back to you in unexpected ways.",
+      "Always save your money for the things you want most.",
+      "Friendship means you should give up everything for your friends.",
+      "Skateboarding is important to both Maya and Teo."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself: what does Maya do, what costs her something, and what changes by the end?",
+      "Look for a sentence that reports what happened, not a command or rule about what should happen."
+    ]
+  },
+  {
+    "id": "m6ela-theme-objective-summary-003",
+    "loId": "m6ela.theme-and-objective-summary",
+    "cedCode": "M6ELA-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this theme for a story: \"You should never ask for help because it makes you look weak.\" What is the problem with this theme statement?",
+    "choices": [
+      "It is too long to be a real theme because themes must always be expressed in fewer than ten words.",
+      "It begins with the word 'never,' which signals it is a command or rule, not a message the story shows.",
+      "It does not mention any characters from the story, so readers cannot tell who the lesson applies to.",
+      "It uses the word 'because' instead of describing events in order, which breaks the rule that themes must show causation through plot."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the test for commands: what words at the front of a sentence warn you that you wrote a rule instead of a theme?",
+      "A theme reports what a story showed happening, not what people should or should not do."
+    ]
+  },
+  {
+    "id": "m6ela-theme-objective-summary-004",
+    "loId": "m6ela.theme-and-objective-summary",
+    "cedCode": "M6ELA-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the story, then read the two theme statements below. Both statements are complete sentences and neither one begins with 'always' or 'never.' Choose the theme statement that is actually supported by two separate particular details in the text.\n\n\"Leon studied his Spanish vocabulary list the night before the test. On test day, he could not remember the word for 'bridge.' He skipped that question and answered all the others correctly. After school he looked up the word in his textbook and wrote it down fifty times.\" Which theme statement fits this story?",
+    "choices": [
+      "Studying hard the night before a test guarantees you will pass.",
+      "Forgetting one answer on a test ruins your whole grade.",
+      "Studying vocabulary by writing words many times is the only way to learn.",
+      "Missing an answer on a test can make a student want to learn that material better."
+    ],
+    "answer": "C",
+    "hints": [
+      "For each choice, ask: can I point to two separate details in the story that prove this sentence?",
+      "Look for a theme where both details show the exact same claim—not different parts of the story."
+    ]
+  },
+  {
+    "id": "m6ela-theme-objective-summary-005",
+    "loId": "m6ela.theme-and-objective-summary",
+    "cedCode": "M6ELA-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this summary of a story: \"This story shows how amazing it is when someone follows their dream. Chen wanted to be a chef since he was little. He practiced cooking after school for a whole year. His family entered him in a cooking competition, which was a really cool thing for them to do. Chen won first place and got a scholarship to culinary school.\" What needs to be fixed in this summary to make it objective?",
+    "choices": [
+      "The summary stops before the ending of the story, leaving out whether Chen actually attended culinary school.",
+      "The summary includes invented details that are not in the text, such as specific cooking techniques Chen used.",
+      "The summary leaves out important events that the ending depends on, such as the judges' reasons for awarding first place.",
+      "The summary contains judgment words like 'amazing' and 'cool' instead of just reporting what happened."
+    ],
+    "answer": "D",
+    "hints": [
+      "Objective means your opinion stays out of the summary. Look for words that grade the story instead of just telling what happened.",
+      "Ask: could a reader who loved this story and a reader who thought it was boring both sign this summary as true?"
+    ]
+  },
+  {
+    "id": "m6ela-theme-objective-summary-006",
+    "loId": "m6ela.theme-and-objective-summary",
+    "cedCode": "M6ELA-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the story and the student's theme statement, then decide whether the theme is actually proven by the text.\n\n\"Iris entered the spelling bee even though she had never won one before. During the finals, she spelled 'rhythm' correctly when everyone else misspelled it. The announcer declared her the champion. At the ceremony, her mom hugged her and cried happy tears.\" The student proposed this theme: \"Competing in contests you have never won before will make your family cry.\" Why is this statement not a valid theme for this story?",
+    "choices": [
+      "The theme focuses on one detail (the tears) but ignores the bigger claim that the whole story supports about trying something difficult.",
+      "The statement uses the word 'will,' which makes it a prediction about a future event rather than a lesson shown by the plot.",
+      "The theme does not explain what Iris spelled correctly in the finals or describe how hard the word was to pronounce.",
+      "The statement is too short to count as a complete sentence theme because it lacks at least one dependent clause."
+    ],
+    "answer": "A",
+    "hints": [
+      "A theme has to fit the whole story, not just one line of it. What is the story really about—the tears, or something bigger that leads to them?",
+      "Ask yourself: what does this story show about people and taking on new challenges, not just about what happens at the ceremony?"
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-001",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best defines point of view in a story? Point of view is the grammatical subject of the sentence and the names that appear most often in the narration.",
+    "choices": [
+      "Who is telling the story and whose thoughts the reader is allowed to know.",
+      "Which character speaks the most dialogue and has the largest role in the plot.",
+      "The tense the author chooses to write in, either past tense or present tense.",
+      "How many paragraphs the narrator uses to describe each scene in the story."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the core test from the lesson: whose head does the narration go inside?",
+      "The correct answer focuses on the narrator's identity and what thoughts are revealed to the reader."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-002",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this excerpt: 'Maya gripped the rope and felt her heart pound. She knew she could make it across the obstacle course if she did not look down. Three feet away, her friend Kai swung easily from bar to bar, barely breathing hard.' Whose thoughts does the narration report in this passage?",
+    "choices": [
+      "Both Maya's and Kai's thoughts, so the reader knows what each of them is feeling.",
+      "Only Maya's thoughts, so the reader knows what she feels and thinks but only sees Kai from outside.",
+      "Only Kai's thoughts, because he is the stronger athlete and the focus of the action.",
+      "Neither character's thoughts, because the narration only describes what they are doing physically."
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the whose-thoughts test: look for phrases that go inside a character's head, not just physical actions.",
+      "Notice that 'knew she could make it' and 'felt her heart pound' are Maya's internal thoughts, but what is said about Kai is only what can be seen from outside."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-003",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A story includes this line: 'I grabbed my backpack and ran down the stairs. Mom called after me, 'You're going to miss the bus!' but I did not turn around.' What point of view is being used here?",
+    "choices": [
+      "Third person omniscient, because the narrator knows exactly what the mother is thinking and feeling in her mind at that moment.",
+      "Third person limited, because the narrator is positioned outside the story and can observe and report only what one character experiences internally.",
+      "First person, because the narrator is a character inside the story who speaks as I and reports only their own thoughts and actions.",
+      "Second person, because the mother speaks directly to the narrator using you as a form of address."
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that the narrator uses 'I' in the narration itself, which signals first person—not just in dialogue.",
+      "In first person, the reader knows only what that one narrator-character thinks and experiences, and the mother's words are heard but not her private thoughts."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-004",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this excerpt: 'Luis thought the new student in class seemed nervous, tapping her pencil and avoiding eye contact. Meanwhile, Zara was actually furious that no one had noticed she already went to this school last year.' How do you know this is third person omniscient, and what is one thing the reader learns that neither character knows about the other?",
+    "choices": [
+      "The reader hears both Luis's assumption and Zara's real feeling, so the narration opens two heads. The reader knows Zara is furious, but Luis wrongly thinks she is nervous.",
+      "The narration uses he and she instead of I, which always signals omniscient point of view no matter whose thoughts are reported.",
+      "The passage describes both characters' physical actions equally, proving the narrator is outside the story and treats everyone the same way.",
+      "The narration reveals what each character is thinking, so there is no narrator at all—only the characters' own voices telling the story."
+    ],
+    "answer": "D",
+    "hints": [
+      "Go back to the core whose-thoughts test: are two separate characters' internal thoughts actually reported in the same passage?",
+      "Focus on what the narration tells you about Luis's thinking ('thought the new student seemed nervous') and Zara's thinking ('was actually furious')—those are two different heads open."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-005",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A story narrated in third person limited includes this line: 'Jordan rolled his eyes when his dad suggested they volunteer at the community center. His dad grinned, obviously pleased with the idea.' Why can the reader know Jordan's reaction but cannot know whether his dad actually felt proud or was just pretending to feel pleased?",
+    "choices": [
+      "Because first person narration always hides what other characters really think, even when dialogue is present.",
+      "Because the narration opens only Jordan's thoughts, so the reader sees his dad's smile and words but not what his dad actually believes or feels.",
+      "Because the narrator is not able to understand adult emotions and can only report what children experience.",
+      "Because the word 'obviously' proves the narrator is unreliable and may be lying about what the dad's expression means."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask: whose head is open to the reader in this passage? What can the reader see from that one character's point of view, and what stays hidden?",
+      "Third person limited means one character's inner thoughts; everything else is shown from outside only, even if the narrator describes it in detail."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-006",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage: 'I have been the lighthouse keeper's lamp for forty years. I hang above the entrance, and every day I watch ships pass in the distance. The keeper thinks I am beautiful, and he polishes my brass without fail.' Which statement correctly identifies the narrator's identity and explains how you know this narrator is not the real author speaking?",
+    "choices": [
+      "The narrator is the lighthouse keeper because he is the only human person mentioned by name in the passage and clearly holds a position of responsibility.",
+      "The narrator is a made-up voice—the lamp itself—because details prove the real author could not be a lamp hanging on a wall, even though the author wrote the story.",
+      "The narrator is the author writing from personal experience because the author uses the pronoun I and describes events that happened over many years with specific memories.",
+      "The narrator is a ship because ships are the subjects being observed in the passage and the passage emphasizes how the narrator watches them every day."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember: the narrator-is-not-the-author trap means you must find a detail that could not possibly be true of a real living person writing a book.",
+      "Look for the false claim about the narrator's identity that the passage itself offers: being a lamp is something no human author actually is, which proves the narrator is an invented voice."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-001",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence contains a simile? Read each choice and pick the one that uses the word like or as to compare two things.",
+    "choices": [
+      "The old car sputtered and died on the highway.",
+      "His voice was as gentle as a whisper in the library.",
+      "The storm clouds looked ominous and threatening.",
+      "Maya organized her notebook with care and skill."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the signal words like or as that mark a comparison.",
+      "A simile tells you what two things are similar by using one of these exact words."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-002",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. Identify the figurative device, then explain what it actually tells you about the situation. \"The crowd was a wall of noise that pushed Tasha backward during the concert.\"",
+    "choices": [
+      "Hyperbole, because the sentence stretches reality to show that the crowd's volume was far beyond normal and the exaggeration emphasizes how intense the sound was for Tasha.",
+      "Personification, because the crowd is given the human ability to move and push, which are actions only a living thing with intention can perform deliberately.",
+      "Metaphor, because the crowd is compared to a wall, and the meaning is that the sound was overwhelming and pressed in on Tasha from all sides.",
+      "Simile, because the sentence uses a comparison word to show that the crowd had qualities similar to something solid and immovable."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check first whether there is a like or as in the sentence to rule out simile.",
+      "Ask what two things are being compared, then ask what the comparison means rather than just naming the device."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-003",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence. What does the personification tell the reader about the old house? \"The house sighed as the wind howled through its empty rooms, and the floorboards groaned under the weight of silence.\"",
+    "choices": [
+      "The house was destroyed by a recent storm and needed to be rebuilt.",
+      "The house was alive and could actually breathe and speak like a person.",
+      "The house was old and seemed tired, sad, and worn down, as if it were weary from time passing.",
+      "The house was empty because its owners had left it on purpose."
+    ],
+    "answer": "D",
+    "hints": [
+      "Personification gives human feelings or choices to something that is not human, not just sounds.",
+      "Ask what human qualities the description is borrowing, then connect that to what it tells you about how the house actually is."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-004",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reads two sentences and labels them both as personification. Check each label and decide which label is correct and which one is wrong. Sentence 1: \"The music danced through the auditorium and made everyone smile.\" Sentence 2: \"The old lamp flickered and cast strange shadows on the wall.\"",
+    "choices": [
+      "Sentence 1 is personification because music cannot actually dance, so a human action is given to something that is not human. Sentence 2 is not personification because flickering is just a mechanical action, not a human quality.",
+      "Both sentences are personification because they both describe things that are not human doing something in an interesting way.",
+      "Neither sentence is personification because neither one uses comparison language such as like or as to connect two different things.",
+      "Sentence 2 is personification because it gives the lamp a feeling or choice that only humans can have, while Sentence 1 is only a metaphor that does not assign human qualities."
+    ],
+    "answer": "A",
+    "hints": [
+      "The test for personification is whether a human feeling, mood, or choice is being given to something that is not human, not just whether an action is described.",
+      "Check whether each sentence gives something nonhuman a quality that only a person with a mind or heart could have."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-005",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence and answer the question. \"I asked my brother to turn down his music, and he pretended not to hear me a million times.\" What does the hyperbole tell the reader, and why is this sentence hyperbole and not a lie or a mistake?",
+    "choices": [
+      "The brother refused to turn down the music, and the speaker is exaggerating to show that the situation happened more times than she can count or that it felt endless and frustrating.",
+      "The brother actually turned down the music a million times, and the speaker counted every instance.",
+      "The speaker is being dishonest and cannot be trusted because she is saying something that is not literally true.",
+      "The brother ignored the speaker one time, and the speaker repeated the request a million times in response."
+    ],
+    "answer": "B",
+    "hints": [
+      "Hyperbole is on purpose, not a mistake or a lie—the huge stretch is meant to show how the speaker felt.",
+      "Ask what the exaggeration is really about: is it measuring actual events, or is it measuring the strength of an emotion or frustration?"
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-006",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read the passage. A classmate labels the underlined sentence as a simile and says its meaning is \"The tree is very tall.\" Decide whether the label is correct, whether the meaning is complete, and explain what should be fixed. \"The old oak tree stood in the center of the town square like a weathered guardian watching over everything. Children had played beneath its branches for a hundred years.\"",
+    "choices": [
+      "The label is correct because the sentence uses the word like to make a direct comparison, but the meaning is incomplete because it should also explain that a guardian suggests the tree is protective and steadfast, keeping watch as a protector would.",
+      "The label is wrong because this is actually a metaphor that does not use comparison words, and the meaning is incomplete because metaphors require a completely different type of explanation.",
+      "The label is correct because the sentence uses like to make a comparison, but the meaning is incomplete because it should say that the tree is described as a guardian, meaning it is protective and steadfast, watching over the town and its people as if it were a protector.",
+      "The label is correct and the meaning is complete because the sentence clearly shows that the tree is tall and strong, and no additional information is needed to understand what the comparison means."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the meaning goes beyond just naming the device or describing one physical detail—does it explain the full idea the comparison creates?",
+      "Ask what the tree is compared to, and what that comparison suggests about the tree's role and importance in the town."
+    ]
+  },
+  {
+    "id": "m6ela-word-choice-tone-001",
+    "loId": "m6ela.word-choice-and-tone",
+    "cedCode": "M6ELA-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Based on the lesson, what is tone? In your own words, explain what makes tone different from simply describing what happened in a story.",
+    "choices": [
+      "Tone is the sequence and order in which a writer arranges all the events that happen throughout a narrative.",
+      "Tone is the speed or pace at which a reader moves through the text and processes information on the page.",
+      "Tone is the attitude that a writer's specific words create toward the subject, like playful, tense, or proud.",
+      "Tone is the main character's direct emotional response and personal feelings about the events they experience in the story."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about the definition taught in the lesson: tone lives in the words on the page, not in general events.",
+      "Tone is about the *feeling* or *attitude* that the writer creates, not about plot order or reading speed."
+    ]
+  },
+  {
+    "id": "m6ela-word-choice-tone-002",
+    "loId": "m6ela.word-choice-and-tone",
+    "cedCode": "M6ELA-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: \"Marcus trudged across the parking lot, dragging his feet toward the school building.\" Use the swap test to figure out what the word \"trudged\" contributes to the tone. If you replaced \"trudged\" with the neutral word \"walked,\" what feeling would disappear from the sentence?",
+    "choices": [
+      "The feeling that Marcus was moving in a hurried manner and demonstrating keen interest in reaching his destination quickly.",
+      "The feeling that Marcus was traveling along a definite direction and following a clear path toward the building entrance.",
+      "The feeling that Marcus was located outside in an outdoor space and positioned in a parking lot environment.",
+      "The feeling that Marcus was moving slowly and reluctantly, as if something was weighing him down."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: the swap test shows what one word alone is doing by removing it and noticing what breaks.",
+      "\"Walked\" is neutral and plain—it could describe movement in any mood. What does \"trudged\" add that \"walked\" cannot?"
+    ]
+  },
+  {
+    "id": "m6ela-word-choice-tone-003",
+    "loId": "m6ela.word-choice-and-tone",
+    "cedCode": "M6ELA-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two versions of the same moment appear below. Which version best shows how word choice changes the tone? VERSION A: \"The dog bounded into the yard, wagging its tail.\" VERSION B: \"The dog wandered into the yard, wagging its tail.\" Explain what changes between these two versions.",
+    "choices": [
+      "Version A creates an eager, energetic tone because \"bounded\" suggests quick, lively movement, while \"wandered\" suggests slow, aimless movement.",
+      "Version B creates a happier tone because the dog's tail wag is more important than how it enters the yard.",
+      "Version A is easier to read because \"bounded\" is a shorter word than \"wandered.\"",
+      "Version B describes the yard more clearly, so it has a better tone overall."
+    ],
+    "answer": "A",
+    "hints": [
+      "Focus on the one word that changes between the versions—that is where the tone work happens.",
+      "What feeling does \"bounded\" carry that \"wandered\" does not? Use what you know from the swap test."
+    ]
+  },
+  {
+    "id": "m6ela-word-choice-tone-004",
+    "loId": "m6ela.word-choice-and-tone",
+    "cedCode": "M6ELA-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: \"The old lamp flickered weakly in the corner, casting shadows that seemed to dance and twist across the walls.\" A student claims, \"The tone is spooky because there are scary things in the room.\" Repair this analysis so that it names a specific word and uses the swap test to prove what that word does.",
+    "choices": [
+      "The word \"shadows\" creates a spooky tone because shadows are dark and darkness is connected to things that are frightening and dangerous.",
+      "The word \"flickered\" creates an uncertain, eerie tone; swapping it for \"shined\" removes the sense of unstable, unreliable light that makes the shadows seem unpredictable and strange.",
+      "The word \"danced\" creates a playful tone because dancers move in a joyful and entertaining way that suggests happiness and lightheartedness.",
+      "The word \"twisted\" creates a dark tone because twisted shapes look wrong and unnatural, which is why readers feel scared when they read it."
+    ],
+    "answer": "B",
+    "hints": [
+      "A correct tone answer must name one specific word and show what a neutral swap removes—not describe general feelings about the scene.",
+      "Which word in the sentence carries the most feeling about unreliability or unease when you compare it to a plain synonym?"
+    ]
+  },
+  {
+    "id": "m6ela-word-choice-tone-005",
+    "loId": "m6ela.word-choice-and-tone",
+    "cedCode": "M6ELA-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this pair of sentences: \"The coach examined the score sheet and then dismissed the team\" and \"The coach scrutinized the score sheet and then dismissed the team.\" Explain how the word choice between these two versions changes the tone of the coach's character, using the swap test method to support your answer.",
+    "choices": [
+      "The first version sounds better because \"examined\" is a simpler word that most readers will recognize and understand more easily than \"scrutinized.\"",
+      "The second version creates a more suspicious, intense tone because \"scrutinized\" suggests close, careful inspection with doubt or concern, while \"examined\" is more neutral and factual.",
+      "The first version creates a more professional tone because a coach who examines things seems more qualified and experienced than one who scrutinizes them.",
+      "Both versions have exactly the same meaning and tone since they both describe a coach looking at a score sheet before letting the team leave."
+    ],
+    "answer": "B",
+    "hints": [
+      "Apply the swap test: what feeling or impression disappears when you replace \"scrutinized\" with the plainer word \"examined\"?",
+      "Think about the *connotation* of each word. Does the coach seem more doubtful or questioning with one word over the other?"
+    ]
+  },
+  {
+    "id": "m6ela-word-choice-tone-006",
+    "loId": "m6ela.word-choice-and-tone",
+    "cedCode": "M6ELA-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A writer has drafted this scene: \"She bolted from the building, her heart pounding as she raced down the sidewalk.\" A classmate suggests changing \"bolted\" to \"left\" and \"raced\" to \"moved\" to make the sentences simpler. Explain whether these changes would be an improvement, using the swap test on at least one word and showing how it affects the overall tone of the passage.",
+    "choices": [
+      "Yes, the changes are an improvement because shorter words are always better for Grade 6 writers.",
+      "No, the changes would hurt the passage because \"bolted\" and \"raced\" work together to create a panicked, urgent tone, while \"left\" and \"moved\" are so neutral that they remove the sense of emergency and fear.",
+      "Yes, the changes are an improvement because \"left\" and \"moved\" describe the same actions, so they carry the same meaning.",
+      "The changes do not matter because the tone comes from the fact that she has a pounding heart, not from which verbs the writer chose."
+    ],
+    "answer": "D",
+    "hints": [
+      "Consider what the swap test would show: when you replace \"bolted\" with \"left,\" what happens to the feeling of urgency?",
+      "Remember: tone lives in the specific words, not in general story details like a character's heart pounding. Which element—the verbs or the heartbeat—is doing the main work of creating tone?"
+    ]
+  }
+]

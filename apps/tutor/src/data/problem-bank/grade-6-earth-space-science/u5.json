@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6sci-relative-dating-rock-layers-001",
+    "loId": "m6sci.relative-dating-and-rock-layers",
+    "cedCode": "M6SCI-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A stack of rock layers has not been tilted, folded, or broken. According to the law of superposition, which layer must be the oldest?",
+    "choices": [
+      "The layer in the middle of the stack",
+      "The layer at the top of the stack",
+      "The layer at the bottom of the stack",
+      "The layer with the most colorful appearance"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that sediment settles on top of what is already there.",
+      "Think about which layer was laid down first if nothing has disturbed the stack."
+    ]
+  },
+  {
+    "id": "m6sci-relative-dating-rock-layers-002",
+    "loId": "m6sci.relative-dating-and-rock-layers",
+    "cedCode": "M6SCI-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cliff shows four flat, undisturbed layers from bottom to top: granite, basalt, shale, and limestone. A narrow crack filled with hardened igneous rock cuts through only the granite and basalt layers but does not reach the shale. Which feature is youngest?",
+    "choices": [
+      "The granite layer",
+      "The basalt layer",
+      "The crack filled with igneous rock",
+      "The limestone layer"
+    ],
+    "answer": "D",
+    "hints": [
+      "Consider what had to exist before the limestone could settle on top of the rock below it.",
+      "A layer lying flat and unbroken across a cutting feature tells you something important about their ages."
+    ]
+  },
+  {
+    "id": "m6sci-relative-dating-rock-layers-003",
+    "loId": "m6sci.relative-dating-and-rock-layers",
+    "cedCode": "M6SCI-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A road cut exposes five flat rock layers. From bottom to top they are conglomerate, sandstone, mudstone, coal seam, and shale. A fault cuts through the conglomerate, sandstone, and mudstone, but the coal seam and shale lie flat and unbroken across the top of the fault. In the order from oldest to youngest, the fault belongs where in relation to the three layers it cuts through?",
+    "choices": [
+      "After all three of the layers it cuts through but before the coal seam",
+      "Before all three of the layers it cuts through, since faults must form before any deposition begins",
+      "Right at the same time as the sandstone, since both are present in the middle of the sequence",
+      "After the shale and coal seam, making the fault the youngest feature in the entire rock sequence"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that a cutting feature is younger than everything it cuts but is not automatically the youngest thing in the picture.",
+      "What does it mean if a layer sits unbroken across the top of the fault?"
+    ]
+  },
+  {
+    "id": "m6sci-relative-dating-rock-layers-004",
+    "loId": "m6sci.relative-dating-and-rock-layers",
+    "cedCode": "M6SCI-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cliff shows three tilted layers all sloping the same direction: a bottom layer of limestone, a middle layer of sandstone, and a top layer of shale. All three layers are tilted at the same steep angle, and no cutting features are visible. Using the law of original horizontality and the law of superposition, which statement correctly describes what happened?",
+    "choices": [
+      "The limestone is the youngest because it is physically highest on the cliff face now.",
+      "The limestone is the oldest because it was deposited first in a flat position, then the layers were tilted together by Earth's crust movement.",
+      "The shale must be the oldest because it is sitting on top now and was never moved by any tilting process.",
+      "The age order cannot be determined without additional information because tilting destroys the ability to apply superposition to rock sequences."
+    ],
+    "answer": "B",
+    "hints": [
+      "Layers start out flat when sediment settles. If they are now tilted, when did that tilting happen?",
+      "Even though layers are tilted, can you still use superposition to find their order?"
+    ]
+  },
+  {
+    "id": "m6sci-relative-dating-rock-layers-005",
+    "loId": "m6sci.relative-dating-and-rock-layers",
+    "cedCode": "M6SCI-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A road cut shows four flat layers: siltstone at the bottom, then shale, then limestone, then sandstone at the top. A crack filled with igneous rock (an intrusion) cuts up through the siltstone, shale, and limestone, but stops before reaching the sandstone. When you list all five features in order from oldest to youngest, how many features will appear between the limestone and the sandstone?",
+    "choices": [
+      "Zero features; limestone and sandstone are adjacent in age",
+      "One feature; the intrusion lies between them",
+      "Two features; the shale and the intrusion both come between them",
+      "Three features; the siltstone, shale, and intrusion all come between them"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check which layers the intrusion cuts through and which it does not reach.",
+      "When you place all features in order, remember that the intrusion is younger than what it cuts but older than what lies unbroken over it."
+    ]
+  },
+  {
+    "id": "m6sci-relative-dating-rock-layers-006",
+    "loId": "m6sci.relative-dating-and-rock-layers",
+    "cedCode": "M6SCI-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A cliff exposes six features in this arrangement: three flat layers (granite, schist, and sandstone from bottom to top), a fault that cuts through all three layers with no layer above it, a tilted layer of limestone that lies on top of the fault and is partly broken by the fault, and an unbroken layer of shale on top of the limestone. Which of the following is the correct order from oldest to youngest?",
+    "choices": [
+      "Granite, schist, sandstone, limestone, fault, shale",
+      "Granite, schist, sandstone, fault, limestone, shale",
+      "Granite, schist, sandstone, limestone, shale, fault",
+      "Fault, granite, schist, sandstone, limestone, shale"
+    ],
+    "answer": "D",
+    "hints": [
+      "Start by identifying which features are undisturbed (Rule 1 applies) and which show signs of disturbance (Rule 1 warns you).",
+      "A feature that cuts across or displaces layers had to come after those layers formed. What does it mean if a layer is partly broken by the fault and tilted?"
+    ]
+  },
+  {
+    "id": "m6sci-absolute-dating-the-geologic-time-scale-001",
+    "loId": "m6sci.absolute-dating-and-the-geologic-time-scale",
+    "cedCode": "M6SCI-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A radioactive parent atom slowly changes into a stable daughter atom over time. What is the term for the fixed amount of time it takes for exactly half of the parent atoms in a sample to become daughter atoms?",
+    "choices": [
+      "Decay rate",
+      "Radioactive period",
+      "Atomic transformation",
+      "Half-life"
+    ],
+    "answer": "D",
+    "hints": [
+      "The term describes a specific time measurement, not just any speed of change.",
+      "This time interval stays the same no matter what the temperature or moisture level of the sample is."
+    ]
+  },
+  {
+    "id": "m6sci-absolute-dating-the-geologic-time-scale-002",
+    "loId": "m6sci.absolute-dating-and-the-geologic-time-scale",
+    "cedCode": "M6SCI-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fossil bone is sent to a lab for dating. The lab technician measures the amount of carbon-14 remaining in the bone and needs to decide which radiometric method to use. Why is carbon-14 dating the correct choice for this bone, and not uranium-lead dating?",
+    "choices": [
+      "Carbon-14 dating works on once-living organic material like bone, while uranium-lead dating is used only for minerals locked inside igneous rock.",
+      "Carbon-14 dating is cheaper than uranium-lead dating because it requires less equipment and produces results faster through measurement of lighter isotopes.",
+      "Uranium-lead dating works only on rock minerals that crystallized when the rock formed, not on bone material that accumulated carbon during an organism's lifetime.",
+      "Carbon-14 atoms are incorporated into bone while an animal is alive, but uranium is not naturally taken up by living organisms in measurable amounts."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what material each method is designed to measure — one method works on living things, and the other on rock.",
+      "The lesson mentions that carbon-14 is useful for 'once-living material' and uranium-lead is locked inside 'minerals in igneous rock.'"
+    ]
+  },
+  {
+    "id": "m6sci-absolute-dating-the-geologic-time-scale-003",
+    "loId": "m6sci.absolute-dating-and-the-geologic-time-scale",
+    "cedCode": "M6SCI-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A lab analyzes a piece of ancient wood and finds that only 1/8 of the original carbon-14 atoms remain; the rest have decayed to nitrogen. The half-life of carbon-14 is about 5,730 years. How many half-lives have passed since the wood was alive?",
+    "choices": [
+      "1 half-life",
+      "3 half-lives",
+      "8 half-lives",
+      "5,730 half-lives"
+    ],
+    "answer": "B",
+    "hints": [
+      "After each half-life, half of what was there before remains. Multiply 1/2 by itself the number of times needed to get 1/8.",
+      "Work it out: after 1 half-life, 1/2 remains; after 2 half-lives, 1/2 × 1/2 = 1/4 remains; after 3 half-lives, what fraction is left?"
+    ]
+  },
+  {
+    "id": "m6sci-absolute-dating-the-geologic-time-scale-004",
+    "loId": "m6sci.absolute-dating-and-the-geologic-time-scale",
+    "cedCode": "M6SCI-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A lab reports that a sample of charcoal gives a carbon-14 age of 22,920 years (that is, 4 half-lives × 5,730 years per half-life). A geologist looks at this result and says it makes sense because the charcoal came from a tree that grew about 23,000 years ago. What two checks could you perform to confirm that this age is reasonable, given what you know about carbon-14 dating?",
+    "choices": [
+      "Check that 4 half-lives multiplied by 5,730 years gives 22,920, and check that 22,920 years is less than 50,000 years.",
+      "Check that the charcoal was once-living material and check that the lab also tested the charcoal with uranium-lead dating.",
+      "Check that the charcoal came from organic material and check that the computed age falls well within carbon-14's reliable range of up to about 50,000 years.",
+      "Check that the age is older than 10,000 years and check that no other radiometric method would produce the same result."
+    ],
+    "answer": "C",
+    "hints": [
+      "One check should confirm that the material (charcoal) is suitable for carbon-14 dating. The other check should confirm that the age stays within the method's usable range.",
+      "The lesson says carbon-14 works on 'once-living material' and gives reliable ages 'up to about 50,000 years.'"
+    ]
+  },
+  {
+    "id": "m6sci-absolute-dating-the-geologic-time-scale-005",
+    "loId": "m6sci.absolute-dating-and-the-geologic-time-scale",
+    "cedCode": "M6SCI-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geologist finds a solid igneous rock and sends a mineral sample from it to a lab for uranium-lead dating. The lab reports an age of about 180 million years. When the geologist tries to place this age on the geologic time scale using the era boundaries (Paleozoic: 541 million to 252 million years ago; Mesozoic: 252 million to 66 million years ago; Cenozoic: 66 million years ago to today), she realizes the rock fits into one of the three Phanerozoic eras. Which era does this rock belong to, and what is one reason this age fits that era but not the others?",
+    "choices": [
+      "Paleozoic Era, because 180 million years ago is older than the Paleozoic's 541-million-year starting boundary.",
+      "Mesozoic Era, because 180 million years falls between the era's boundaries of about 252 million and about 66 million years ago.",
+      "Mesozoic Era, because 180 million years is exactly halfway between the Paleozoic and Cenozoic boundaries.",
+      "Cenozoic Era, because 180 million years is more recent than the Mesozoic Era's ending at about 66 million years ago."
+    ],
+    "answer": "C",
+    "hints": [
+      "Write out the boundaries as full numbers to compare: Mesozoic goes from 252 million to 66 million years ago. Does 180 fall between those two numbers?",
+      "Check: Is 180 million greater than 66 million AND less than 252 million? If yes, the rock sits inside the Mesozoic."
+    ]
+  },
+  {
+    "id": "m6sci-absolute-dating-the-geologic-time-scale-006",
+    "loId": "m6sci.absolute-dating-and-the-geologic-time-scale",
+    "cedCode": "M6SCI-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A researcher collects two rock samples from different locations. Sample A is a piece of once-living shell material that gives a carbon-14 age of 35,000 years. Sample B is a solid igneous rock that gives a uranium-lead age of 350 million years. For Sample A, explain why a carbon-14 result is appropriate and why this particular age is within the reliable range of the method. Then explain why Sample B could not possibly be dated with carbon-14, even though a researcher might wish to double-check the uranium-lead result.",
+    "choices": [
+      "Sample A is organic material so carbon-14 works on it, and 35,000 years is well under carbon-14's limit of about 50,000 years; Sample B cannot be dated with carbon-14 because carbon-14 only measures decay in once-living material, not minerals in rock, and even if the rock somehow contained carbon-14, only about 0.2% or less of it would remain after 350 million years, far too little to measure accurately.",
+      "Sample A is a shell composed of calcium carbonate and carbon-14 is effective on carbonates, and 35,000 years matches the expected age range for Pleistocene shells; Sample B cannot be dated with carbon-14 because igneous rocks formed at temperatures too high for carbon-14 to have been trapped inside their mineral crystals.",
+      "Sample A contains carbon from seawater and atmospheric carbon-14 mixed together, making it ideal for dating, and 35,000 years is within the range of recorded history that can be verified by other means; Sample B cannot be dated with carbon-14 because uranium-lead is more precise and all radioactive methods should not be mixed together.",
+      "Sample A is shell material which naturally absorbs carbon-14 from its environment over time, and 35,000 years is recent enough that decay is not too severe; Sample B cannot be dated with carbon-14 because rocks are inorganic crystalline structures that never incorporated carbon-14 when they formed, and carbon-14 atoms decay too quickly to remain detectable over millions of years."
+    ],
+    "answer": "A",
+    "hints": [
+      "For Sample A, check two things: Is shell once-living material (yes or no)? Is 35,000 years less than the 50,000-year limit (yes or no)? Both must be true. For Sample B, recall that carbon-14 dating applies only to organic material, not to rock minerals, and that carbon-14's half-life is so short that almost none would be left after 350 million years.",
+      "The lesson says carbon-14 'measures the decay of carbon-14 in once-living material' and is reliable 'up to about 50,000 years.' After that, the concentration becomes unmeasurable. Rock does not contain carbon-14 in a form the method can use."
+    ]
+  },
+  {
+    "id": "m6sci-fossils-as-evidence-of-earth-s-history-001",
+    "loId": "m6sci.fossils-as-evidence-of-earths-history",
+    "cedCode": "M6SCI-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What three characteristics must a fossil species have in order to be useful as an index fossil for dating rock layers?",
+    "choices": [
+      "It must have lived during a narrow time period, been spread across a large geographic area, and be distinctive enough not to be confused with other species.",
+      "It must have lived for a very long time across many continents, been found in only one location on Earth, and resembled many other species so it was hard to tell apart.",
+      "It must have been the most abundant organism in its era, disappeared all at once in a single catastrophic event, and left behind only preserved shell and skeleton remains.",
+      "It must have existed on a single continent only, been easily confused with other similar-looking species, and survived for an extremely brief interval of geologic time before vanishing."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what makes a time marker narrow and reliable enough to pin down when a layer formed.",
+      "A good index fossil must be recognizable, not ambiguous—it needs to point to one clear window of time, not multiple windows or a huge span."
+    ]
+  },
+  {
+    "id": "m6sci-fossils-as-evidence-of-earth-s-history-002",
+    "loId": "m6sci.fossils-as-evidence-of-earths-history",
+    "cedCode": "M6SCI-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rock layer contains fossils of an extinct trilobite species. Scientists have already used absolute dating on other rock and determined that this trilobite species lived only between 305 million years ago and 298 million years ago. What time window can geologists assign to the layer that holds this fossil?",
+    "choices": [
+      "Exactly 305 million years ago, because that is when the species first appeared.",
+      "Sometime between 305 and 298 million years ago, because the layer must have formed during that species' known time range.",
+      "Sometime between 310 and 295 million years ago, because the fossil narrows the window to within 10 million years.",
+      "Between 298 million years ago and today, because we cannot know how old the rock is without radiometric dating of the layer itself."
+    ],
+    "answer": "B",
+    "hints": [
+      "The time range of a species is already known from studies done on other rock; that known range is the window you use.",
+      "A fossil does not give you one exact year—it gives you the window during which that species is known to have existed."
+    ]
+  },
+  {
+    "id": "m6sci-fossils-as-evidence-of-earth-s-history-003",
+    "loId": "m6sci.fossils-as-evidence-of-earths-history",
+    "cedCode": "M6SCI-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two rock layers on opposite sides of the world contain fossils of the exact same extinct ammonite species. The ammonite is known from previous absolute-dating studies to have lived only between 95 and 89 million years ago. No physical rock layer connects the two locations. Why can geologists still conclude that the two layers are approximately the same age?",
+    "choices": [
+      "Because layers at the same depth in different locations always formed at the same time, according to the law of superposition.",
+      "Because both layers contain the same index fossil, which means both must have formed sometime during that species' known 95-to-89-million-year window, even without a physical connection.",
+      "Because the index fossil proves the ammonite had the exact same body structure at both locations, which means both layers had identical environments.",
+      "Because absolute dating automatically applies to all rocks that contain the same fossil, so no separate measurements are needed."
+    ],
+    "answer": "C",
+    "hints": [
+      "This use of a fossil to match separated layers is called correlation—it is what an index fossil can do that position alone cannot.",
+      "The shared fossil does not connect the rock physically, but it does connect them in time because the species' known time range is the same everywhere."
+    ]
+  },
+  {
+    "id": "m6sci-fossils-as-evidence-of-earth-s-history-004",
+    "loId": "m6sci.fossils-as-evidence-of-earths-history",
+    "cedCode": "M6SCI-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paleontologist finds a fossil organism in a rock layer and wants to decide whether to use it as an index fossil for dating. The organism existed for over 300 million years continuously throughout most of Earth's fossil record. It did spread across many continents while it was alive, and its shape is very distinctive. Based only on these facts, would this fossil make a good choice for dating rock layers? Explain your reasoning.",
+    "choices": [
+      "Yes, because it is distinctive and widespread, so it can be found in many layers and will not be confused with other species.",
+      "Yes, because any fossil that exists in multiple locations can be used to correlate layers across continents.",
+      "No, because even though it is widespread and distinctive, its enormous time span means finding it narrows down almost nothing—the window is too wide to be useful.",
+      "No, because a fossil that lived for such a long time must have evolved into new species, so scientists cannot trust that all specimens are the same organism."
+    ],
+    "answer": "D",
+    "hints": [
+      "A good index fossil needs all three traits: narrow time range, widespread distribution, and distinctive appearance. Check each one.",
+      "A 300-million-year time span is almost as wide as the entire fossil record—compare that to the worked example, where a 6-million-year window was considered narrow."
+    ]
+  },
+  {
+    "id": "m6sci-fossils-as-evidence-of-earth-s-history-005",
+    "loId": "m6sci.fossils-as-evidence-of-earths-history",
+    "cedCode": "M6SCI-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Layer X at the base of a canyon contains an index fossil known to have lived from 72 to 68 million years ago. Layer Y sits on top of Layer X in the same canyon. Layer Y contains a different index fossil known to have lived from 66 to 62 million years ago. These two time windows do not overlap at all. What does this contradiction tell you about the rock record at this location?",
+    "choices": [
+      "The two layers cannot have formed in the order shown, because an undisturbed stack would require Layer X to be older and Layer Y to be younger, with their time windows overlapping.",
+      "The physical position of the layers means that Layer Y is older than Layer X, even though the fossils suggest otherwise, indicating that tectonic forces must have reversed or inverted the stack after deposition.",
+      "Layer Y must have been deposited when both fossils were still alive and coexisting, so a mixing of fossils from different time periods must have occurred within the same sediment layer.",
+      "The index fossil ranges established by scientists are incorrect for these particular species, and absolute dating methods need to be applied to determine the true ages of both rock layers."
+    ],
+    "answer": "A",
+    "hints": [
+      "In an undisturbed stack, the layer on the bottom formed first (it is older) and the layer on top formed later (it is younger).",
+      "If the lower layer's time range is younger than the upper layer's time range, something is out of order—either the layers have been disturbed, or one of the fossil identifications is wrong."
+    ]
+  },
+  {
+    "id": "m6sci-fossils-as-evidence-of-earth-s-history-006",
+    "loId": "m6sci.fossils-as-evidence-of-earths-history",
+    "cedCode": "M6SCI-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Geologists studying two separated locations find the following: Site A has a layer containing the index fossil Fossil X (known time range: 110 to 104 million years ago) sitting between two other layers. The layer below Fossil X contains Fossil Y (known range: 125 to 115 million years ago). The layer above Fossil X contains Fossil Z (known range: 100 to 95 million years ago). Site B, thousands of kilometers away, has a single layer containing Fossil X with no other fossils to give extra clues. Using only the information given, what is the most precise time window that can be assigned to the layer at Site B, and why does this window hold up even though Site B has fewer fossil clues?",
+    "choices": [
+      "Between 125 and 95 million years ago, because Site B's layer could theoretically be anywhere within the full span of all three fossils' ranges.",
+      "Between 110 and 104 million years ago, because Site B contains Fossil X, and Fossil X's known time range is the window it must fall into, regardless of how many other fossils are present.",
+      "Between 115 and 100 million years ago, because that is the overlapping span of all three fossils' ranges combined.",
+      "Exactly 107 million years ago, because that is the midpoint of Fossil X's known range and is the most likely age for Site B's layer."
+    ],
+    "answer": "B",
+    "hints": [
+      "An index fossil works the same way whether it is alone or surrounded by other fossils—its known time range is always the window it marks.",
+      "Extra fossils at Site A create checks that make scientists confident the window is correct, but the presence or absence of those extra fossils does not change what the index fossil itself tells you."
+    ]
+  },
+  {
+    "id": "m6sci-mass-extinctions-as-time-markers-001",
+    "loId": "m6sci.mass-extinctions-as-time-markers",
+    "cedCode": "M6SCI-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A mass-extinction boundary is a specific layer in rock where the fossil record changes suddenly and worldwide. Which of the following best describes what marks a mass-extinction boundary?",
+    "choices": [
+      "A layer where a few common fossil types become rare but continue to appear in small numbers above it, indicating a gradual transition between communities",
+      "A layer where most fossil types found below it stop appearing above it, and different fossils replace them, all at once",
+      "A layer that shows a slow change in fossil composition over many meters of rock, with old species gradually disappearing while new ones slowly become more common",
+      "A layer that marks the exact moment when a single species of animal stopped living, with that species' fossils never reappearing in younger rocks"
+    ],
+    "answer": "B",
+    "hints": [
+      "A boundary shows a sudden, worldwide change in what fossils appear, not just a gradual decline.",
+      "Think about what 'abrupt' and 'most fossil types' mean in the definition you learned."
+    ]
+  },
+  {
+    "id": "m6sci-mass-extinctions-as-time-markers-002",
+    "loId": "m6sci.mass-extinctions-as-time-markers",
+    "cedCode": "M6SCI-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geologist finds a rock layer where fossils of trilobites and other sea creatures suddenly disappear, and above it, early fish fossils become common for the first time. This boundary sits within the Paleozoic Era and is less severe than the end-Permian boundary. Which of the five major mass-extinction boundaries is this?",
+    "choices": [
+      "End-Permian boundary",
+      "End-Triassic boundary",
+      "End-Devonian boundary",
+      "End-Cretaceous boundary"
+    ],
+    "answer": "C",
+    "hints": [
+      "The boundary must be inside the Paleozoic Era, which narrows it to three of the five.",
+      "It is less severe than end-Permian, and only two boundaries sit below the end-Permian layer."
+    ]
+  },
+  {
+    "id": "m6sci-mass-extinctions-as-time-markers-003",
+    "loId": "m6sci.mass-extinctions-as-time-markers",
+    "cedCode": "M6SCI-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two rock outcrops are located 3,000 kilometers apart. In both outcrops, geologists find the exact same abrupt change in fossils at the same relative position in the rock layers: large coiled shells disappear completely, and different sea creatures appear above that level. Neither outcrop has a layer that can be directly dated in years. What does this matching pattern tell the geologists?",
+    "choices": [
+      "The two outcrops formed in the same location but were moved by natural processes",
+      "One outcrop is much older than the other because different fossils mean different ages",
+      "The two boundaries represent the same moment in geologic time, even without a numerical age",
+      "The coiled shells must have evolved into the new sea creatures over a long period"
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson explains why a sudden, worldwide change in fossils lets geologists do something without needing an age in years.",
+      "Matching patterns at the same position in rock layers thousands of kilometers apart is a powerful time marker."
+    ]
+  },
+  {
+    "id": "m6sci-mass-extinctions-as-time-markers-004",
+    "loId": "m6sci.mass-extinctions-as-time-markers",
+    "cedCode": "M6SCI-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A single, undisturbed rock sequence preserves three mass-extinction boundaries, all of which sit below the end-Permian boundary. Two of these three boundaries are the end-Ordovician and end-Devonian. The third must be older than the end-Ordovician and must also sit within the Paleozoic Era. Based on what you know about the five major boundaries, explain why this third boundary cannot exist in this sequence as described.",
+    "choices": [
+      "Only two mass-extinction boundaries sit below the end-Permian boundary and within the Paleozoic Era, so a third one cannot fit in that position.",
+      "The end-Ordovician boundary is always the oldest boundary in the entire rock record, making it impossible for any other boundary to exist below it in any sequence.",
+      "A sequence containing three boundaries would require the Paleozoic Era to span more than 540 million years, which contradicts the actual duration of that geologic era.",
+      "The end-Permian boundary marks the start of the Paleozoic Era, not its end, which means layers described as below it cannot be Paleozoic in age."
+    ],
+    "answer": "A",
+    "hints": [
+      "Review which of the five boundaries sit inside the Paleozoic Era and come before the end-Permian boundary.",
+      "The five boundaries are fixed in order: end-Ordovician, end-Devonian, end-Permian, end-Triassic, end-Cretaceous. Only two of these come before end-Permian and stay in the Paleozoic."
+    ]
+  },
+  {
+    "id": "m6sci-mass-extinctions-as-time-markers-005",
+    "loId": "m6sci.mass-extinctions-as-time-markers",
+    "cedCode": "M6SCI-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The end-Permian boundary, about 250 million years ago, is both the most severe of the five major mass-extinction boundaries and a divider between two eras. The end-Cretaceous boundary, about 66 million years ago, is less severe than the end-Permian but also divides two eras. What does this tell us about the relationship between how severe a boundary is and what kind of division it marks in geologic time?",
+    "choices": [
+      "The most severe boundaries always mark era boundaries, and less severe ones always mark period boundaries, so severity directly determines the type of division.",
+      "Severity and the size of the division a boundary marks are two separate facts; knowing one does not tell you the other.",
+      "A boundary's severity depends on how many eras it separates, so boundaries that separate more eras will always cause more extinctions than those separating fewer eras.",
+      "Period boundaries are always less severe than era boundaries because they divide smaller amounts of time and therefore cause fewer species to go extinct."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson specifically states that end-Permian being the most severe is a different fact from it being an era boundary.",
+      "Can you name an era boundary that is not the most severe? Can you name a less severe boundary that still marks a major division?"
+    ]
+  },
+  {
+    "id": "m6sci-mass-extinctions-as-time-markers-006",
+    "loId": "m6sci.mass-extinctions-as-time-markers",
+    "cedCode": "M6SCI-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geologist studies an undisturbed rock sequence and identifies the end-Triassic boundary based on a sudden change in sea creature fossils. She then finds that the end-Triassic boundary sits 75 million years younger than another boundary in the same sequence, which she knows is the end-Devonian. She also confirms that the sequence shows no layers above the end-Cretaceous boundary. Given only what the end-Triassic boundary is known to divide, which boundary must sit between the end-Devonian and end-Triassic in this sequence, and why is the geologist's discovery consistent with the ages and positions of all five boundaries?",
+    "choices": [
+      "The end-Ordovician boundary must sit between them, because it is the only boundary older than end-Devonian and younger than end-Triassic.",
+      "The end-Permian boundary must sit between them, because it is the only boundary older than end-Devonian and younger than end-Triassic.",
+      "No boundary can sit between them, because the age gap of 75 million years is too small to fit another boundary.",
+      "The end-Cretaceous boundary must sit between them, because the geologist found no layers above it in this sequence."
+    ],
+    "answer": "C",
+    "hints": [
+      "Review the five boundaries in order and their approximate ages: end-Ordovician (440 Ma), end-Devonian (360 Ma), end-Permian (250 Ma), end-Triassic (200 Ma), end-Cretaceous (66 Ma).",
+      "Calculate the age gaps between consecutive boundaries. Does a 75-million-year gap between end-Devonian (360 Ma) and end-Triassic (200 Ma) match what you would expect if another boundary sat between them?"
+    ]
+  }
+]

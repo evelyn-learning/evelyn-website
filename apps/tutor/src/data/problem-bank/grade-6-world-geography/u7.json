@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6geo-satellite-images-aerial-views-001",
+    "loId": "m6geo.satellite-images-and-aerial-views",
+    "cedCode": "M6GEO-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A satellite image is a picture taken by a camera on a satellite. What is the main difference between a satellite image and a hand-drawn map?",
+    "choices": [
+      "A satellite image shows what is physically present on the ground, while a map is drawn by a person who chooses what features to include.",
+      "A satellite image is drawn by someone looking down from space, while a map is created by a person standing on the ground looking at features around them.",
+      "A satellite image captures only the colors of objects, while a map uses symbols and lines to represent the same features instead.",
+      "A satellite image is taken all at once in a single moment, while a map is made slowly over many months of careful fieldwork."
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember: a picture records whatever is really there at that moment, but a map only shows what the mapmaker chose to draw.",
+      "Think about what the lesson said about pictures versus drawings."
+    ]
+  },
+  {
+    "id": "m6geo-satellite-images-aerial-views-002",
+    "loId": "m6geo.satellite-images-and-aerial-views",
+    "cedCode": "M6GEO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A photographer flying in a helicopter takes an aerial view of a busy parking lot. The photograph shows several cars parked, including one that was just delivered that morning and never recorded on any city file. When a mapmaker drew a map of the same parking lot last year, that delivery car was not shown. Why does the aerial photograph show this car but the map does not?",
+    "choices": [
+      "The photograph was taken lower to the ground than the mapmaker was standing, allowing it to see objects that the mapmaker missed from a distance.",
+      "The photograph records whatever is physically present at the moment it is taken, while the map only shows features the mapmaker chose to include before the car arrived.",
+      "The helicopter was equipped with special cameras that can see objects that were not yet built when the map was made, even though they exist now.",
+      "The photographer used a more recent method of capturing images than existed when the mapmaker created the map, making the photograph more accurate."
+    ],
+    "answer": "B",
+    "hints": [
+      "The car is real and sitting in the lot when the photo is taken, so it appears in the picture.",
+      "The map was made before the car arrived, and maps only show what the mapmaker decided to include."
+    ]
+  },
+  {
+    "id": "m6geo-satellite-images-aerial-views-003",
+    "loId": "m6geo.satellite-images-and-aerial-views",
+    "cedCode": "M6GEO-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student looking at a satellite image of a river sees water flowing through a landscape, but the image shows no word or label telling the student the river's name. The same student then looks at a map of the area. Why would the map likely show the river's name while the photograph does not?",
+    "choices": [
+      "The map was drawn by satellites, which can read letters from space.",
+      "A map labels the features a mapmaker chooses to include, while a picture shows only shapes and colors without words attached to them.",
+      "Satellite images are always taken during the night, when rivers cannot be named.",
+      "Rivers only have names on maps, not in real life, so a photograph cannot capture what does not exist."
+    ],
+    "answer": "C",
+    "hints": [
+      "A picture shows you what something looks like, but it does not tell you what that thing is called.",
+      "A map is drawn by a person who adds words and labels to identify features."
+    ]
+  },
+  {
+    "id": "m6geo-satellite-images-aerial-views-004",
+    "loId": "m6geo.satellite-images-and-aerial-views",
+    "cedCode": "M6GEO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geographer wants to study a border between two countries. The border has no fence, wall, or any other physical structure marking it. The geographer is deciding whether to use a satellite image or a hand-drawn map to show this border. Which tool would work better, and why?",
+    "choices": [
+      "The satellite image would work better because it shows everything that is physically present on the ground with perfect detail.",
+      "Both tools would work equally well because borders are always marked by something physical that appears in pictures.",
+      "Neither tool would work because borders without physical marks cannot be shown by any method.",
+      "The hand-drawn map would work better because a mapmaker can draw and label a line even where the ground itself shows nothing."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: a picture can only show what is physically standing on the ground; it cannot photograph something that is not there.",
+      "A map is drawn by a person, so the mapmaker can add and label information that has no physical shape to capture."
+    ]
+  },
+  {
+    "id": "m6geo-satellite-images-aerial-views-005",
+    "loId": "m6geo.satellite-images-and-aerial-views",
+    "cedCode": "M6GEO-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student makes this claim: 'A satellite image is better than a map because it shows everything, and a map shows almost nothing.' Which statement best explains why this claim is wrong?",
+    "choices": [
+      "A satellite image and a map each show something the other cannot; neither one contains everything the other shows, because maps can label features and show invisible boundaries that pictures cannot capture.",
+      "A satellite image shows too many details for people to use easily, while a map removes confusing information so it is simpler to read and understand.",
+      "A map cannot be created from a satellite image, so the two must show completely different things and cannot be compared fairly.",
+      "A satellite image records physical objects only, while a map displays information about features that are not physical at all."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what a picture can show and what a map can show that a picture cannot.",
+      "Remember the boundary case: a line with no physical mark cannot appear in any picture, but a mapmaker can draw and label it."
+    ]
+  },
+  {
+    "id": "m6geo-satellite-images-aerial-views-006",
+    "loId": "m6geo.satellite-images-and-aerial-views",
+    "cedCode": "M6GEO-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An aerial photograph of a town shows a cluster of buildings, a winding street with parked cars, and a small park with trees. A mapmaker draws a map of the same town showing the same cluster of buildings, the street (labeled 'Main Street'), and the park. The photograph does not label any of these features. If you wanted to know which street the buildings sit on, which tool would help you, and why does the other tool fail to answer that question?",
+    "choices": [
+      "The photograph would help because it captures the exact appearance and layout of buildings and the street, providing complete visual information about their location and arrangement.",
+      "The map would help because it labels the street with a word, while the photograph shows only shapes and colors without names; knowing that buildings sit on a street is not the same as knowing the street's name.",
+      "The photograph would help because pictures taken from above can show words painted on the pavement and signs attached to buildings that spell out the street name.",
+      "The map would help because it is more recent than the photograph, which means the street names shown on the map are current and accurate compared to older labels."
+    ],
+    "answer": "B",
+    "hints": [
+      "One tool shows what things look like; the other tool shows what things are called.",
+      "Looking at a picture tells you a street is there, but it does not tell you the street's name; labels and words are part of what makes a map different from a picture."
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-001",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is a GPS receiver's main job when it picks up a signal from a satellite? Does it send information back up to the satellite, or does it only listen to what the satellite sends down?",
+    "choices": [
+      "It sends a reply signal back up to the satellite so the satellite knows where it is located.",
+      "It listens to the signal the satellite sends and uses that signal to figure out how far away the satellite is.",
+      "It waits for the satellite to calculate its exact location and then receives that location as a download.",
+      "It amplifies the satellite's signal so other receivers nearby can pick it up more easily."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember: a GPS receiver does not transmit anything — it only listens.",
+      "One signal tells the receiver one piece of information about itself. What is that piece of information?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-002",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A GPS receiver on a car picks up a signal from one satellite and calculates that it is exactly 20,000 kilometers away from that satellite. On a map, how many different locations would show a car that is exactly 20,000 kilometers from this one satellite?",
+    "choices": [
+      "Only one exact spot where the car must be.",
+      "Two possible spots, because two satellites are always in the sky at once.",
+      "Many possible spots, forming a circle all around the satellite.",
+      "As many spots as there are countries in the world."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about the practice field with flags. One distance from one flag forms what shape?",
+      "A single distance is not enough to pin down an exact location — it leaves many possibilities."
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-003",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pilot's airplane GPS receiver has just picked up signals from two different satellites and figured out its distance from each one. The receiver draws two circles on its map — one circle around each satellite — and the two circles cross at exactly two different points. Why does the airplane's GPS not yet know which of those two points is the plane's true location?",
+    "choices": [
+      "The two satellites are not close enough together to give a clear signal.",
+      "The plane is moving too fast, and the GPS cannot keep up with its speed.",
+      "Two distances alone still leave two possible spots instead of one, so a third distance is needed.",
+      "The receiver has not waited long enough for the satellites to communicate with each other."
+    ],
+    "answer": "D",
+    "hints": [
+      "What does combining two distances do? Does it narrow the location to one spot, or does it still leave more than one?",
+      "Look back at the practice prompt about the boat and the two circles crossing at two points — what does the receiver need next?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-004",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that a GPS satellite can see exactly where a receiver is and sends the receiver's location down to it automatically. Explain why this claim is wrong by describing both what the satellite actually does and what device actually does the work of finding the location.",
+    "choices": [
+      "The satellite only sends out the same signal to anyone listening; it has no way of knowing where a receiver is. All the location-finding work happens inside the receiver itself, which combines the distances.",
+      "The satellite broadcasts signals with timing information that reach many receivers at once, but it cannot determine which specific receiver is listening or calculate locations since the receiver itself must do all the math to find where it is.",
+      "The satellite sends positioning data continuously to ground stations that store it, and receivers download this stored location data from computers on Earth rather than having satellites track them directly.",
+      "The satellite can detect that a receiver is there and measure its distance, but the receiver must collect signals from multiple satellites and use mathematical triangulation to determine its own precise location rather than receiving it directly."
+    ],
+    "answer": "A",
+    "hints": [
+      "What does a satellite actually do? Does it know anything about the receivers listening to it?",
+      "Where does all of the figuring out happen — in the satellite or in the receiver?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-005",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A GPS receiver picks up a signal from a single satellite and hears that signal is very strong and very clear. Another receiver picks up a signal from the same satellite but hears that signal is weak and faint. In terms of how precisely each receiver can locate itself, why does the strength of the signal not make a difference in how many possible locations each receiver has?",
+    "choices": [
+      "Strong signals travel farther, so they give a much larger circle of possible locations, while weak signals give a smaller circle.",
+      "Both receivers still have only one distance from one satellite, so both still narrow their location to a whole circle of possible spots, no matter how strong or weak the signal is.",
+      "A weak signal means the satellite is farther away, so the receiver's distance from that satellite is automatically greater than what a strong signal would give, resulting in a larger circle of uncertainty for the weaker signal.",
+      "Signal strength tells a receiver which direction the satellite is in, so a strong signal is enough to pinpoint the exact location without any other satellite data or additional distance measurements."
+    ],
+    "answer": "B",
+    "hints": [
+      "Is signal strength the same thing as signal count? Does a clear, strong signal from one satellite give you a second satellite's distance?",
+      "One distance, whether strong or weak, is not enough to pin down an exact location — it is always a circle of possible spots."
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-006",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hiker's GPS receiver uses signals from three satellites to find the hiker's location. The receiver works out that the hiker is exactly 15,000 km from Satellite A, exactly 16,000 km from Satellite B, and exactly 18,000 km from Satellite C. After checking its math, the receiver finds that only one spot on Earth satisfies all three of these distances at the same time. Now explain why this one spot is the hiker's true location, and describe what would happen if the hiker's actual location were slightly different — would the three distances still all match perfectly?",
+    "choices": [
+      "The one spot is the true location because it is the only place where all three circles, drawn around all three satellites with their respective distances, overlap in a single point. If the hiker were standing anywhere else, at least one of the three distances would not match perfectly.",
+      "The three circles all meet at one spot by coincidence, but that does not guarantee it is the true location, because satellites sometimes make errors in their signals.",
+      "One spot matches all three distances because the satellites have communicated with each other and agreed on a single answer for the hiker's location.",
+      "The hiker is at that spot because GPS receivers can only work correctly when the hiker stands still in one place; if the hiker moves, the distances stop matching."
+    ],
+    "answer": "C",
+    "hints": [
+      "If the hiker were standing at a different spot, would all three distances still be true? Or would at least one distance change?",
+      "What does it mean when one spot matches all three distances? Is that spot unique, or can another spot also match all three?"
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-001",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is a key on a thematic map? Which statement correctly defines it?",
+    "choices": [
+      "A reference tool that lists all the countries shown on the map in alphabetical order so readers can locate them.",
+      "A directional guide that displays symbols showing compass directions like north, south, east, and west on the map.",
+      "The printed list on a thematic map stating exactly what each color or symbol used on that map stands for.",
+      "A colored border drawn around the edges of the map to show where the map ends and the surrounding area begins."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what you need to look at first before reading any area on a thematic map.",
+      "The key tells you the meaning of the colors or symbols, not other map features."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-002",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of the country Estonia shows forest coverage using three shades of green. The key states: light green means low forest coverage, medium green means medium forest coverage, and dark green means high forest coverage. On the map, the Northern Region is shaded medium green. According to the key, what level of forest coverage does the Northern Region have?",
+    "choices": [
+      "High forest coverage, because the color green is always used to represent forests and their growth on any map.",
+      "Low forest coverage, because the key indicates that light shades of color always represent smaller or reduced amounts of something.",
+      "It cannot be determined from the key because the key does not explain what medium green means on this specific map.",
+      "Medium forest coverage, because the key lists medium green as medium forest coverage and the Northern Region is shaded medium green."
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the exact shade listed for the Northern Region, then match it to the key.",
+      "Read the key's entry for that specific shade to learn what it means."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-003",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of Lakemont shows each region's main water source using symbols. The key shows: a river symbol means rivers, a well symbol means groundwater wells, and a lake symbol means lakes. On the map, Hillside is marked with a lake symbol, Meadows is marked with a river symbol, and Valley is marked with a well symbol. According to the key, which region's main water source is groundwater wells?",
+    "choices": [
+      "Valley, because the key lists a well symbol as groundwater wells and Valley is marked with a well symbol.",
+      "Meadows, because both rivers and wells are underground or covered water sources that serve similar purposes in the community.",
+      "Hillside, because lakes are the largest and most important water source and the map shows it with the lake symbol.",
+      "The answer cannot be determined because the key does not provide enough detail about how each water source is used."
+    ],
+    "answer": "A",
+    "hints": [
+      "Find which symbol in the key means groundwater wells, then look for that same symbol on the map.",
+      "Match the symbol to the region name exactly as listed in the map description."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-004",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of Wintermark uses four shades of purple to show average winter snowfall: very light purple means low snowfall, light purple means medium-low snowfall, dark purple means medium-high snowfall, and very dark purple means high snowfall. On the map, the Alpine Region is shaded very dark purple, the Coastal Region is shaded very light purple, and the Central Region is shaded light purple. A student claims that the Coastal Region receives the most snowfall because white and light colors stand out clearly on maps. What is wrong with the student's reasoning, and which region or regions actually receive high snowfall according to the key?",
+    "choices": [
+      "The student is correct that light colors always mean more of something on maps, and the Coastal Region receives high snowfall because it is visually prominent.",
+      "The student's reasoning is wrong because a color or symbol means only what that map's own key says, not what it looks like visually. Only the Alpine Region receives high snowfall according to the key, because it is shaded very dark purple and the key lists very dark purple as high snowfall.",
+      "The student is wrong about light colors but correct that the Coastal Region receives more snowfall than the Central Region, making it the highest overall.",
+      "The student should have ignored the key entirely and used visual appearance to judge snowfall instead of relying on color symbols."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember: a color means only what the key says it means, never what it looks like to the eye.",
+      "Read the key entries in order, then match each region's exact shade to find which one the key lists as high snowfall."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-005",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of Greenfield shows each district's main economic activity using symbols. The key shows: a wheat symbol means agriculture, a factory symbol means manufacturing, and a book symbol means education services. On the map, North District is marked with a wheat symbol, South District is marked with a factory symbol, East District is marked with a factory symbol, and West District is marked with a book symbol. How many districts have the same main economic activity, and which one is it?",
+    "choices": [
+      "One district only, because each symbol on a thematic map appears only once and no two regions share identical economic bases.",
+      "Two districts have the same main economic activity: North and South, because they are adjacent to each other and share a border.",
+      "Two districts have the same main economic activity: South and East, because both are marked with a factory symbol and the key lists a factory symbol as manufacturing.",
+      "All four districts have the same main economic activity, because they are all part of the same country and must work together economically."
+    ],
+    "answer": "C",
+    "hints": [
+      "Find regions that are marked with the exact same symbol, then look up what that symbol means in the key.",
+      "To compare two districts, first match each one to the key separately, then check if their meanings are the same."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-006",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of Riverland shows annual precipitation using three shades of blue: light blue means 10–20 inches per year, medium blue means 20–40 inches per year, and dark blue means over 40 inches per year. A different thematic map of the same country Riverland shows land use categories using symbols: green means forest, brown means farmland, and tan means grassland. A student asks, 'According to the maps, which region receives the most precipitation and also uses the most land for farming?' Why cannot the rainfall map alone answer the second part of this question, and which map should be used to answer it?",
+    "choices": [
+      "The rainfall map cannot answer the farming question because farming is shown only on the land-use map, not the rainfall map. The land-use map with the brown symbol for farmland should be used to find regions where farming is practiced.",
+      "The rainfall map cannot answer the farming question because that topic is not what the rainfall map's key was built to show. The land-use map should be used to find which regions have farmland as shown by the brown symbol in its key.",
+      "Both maps together can answer the question by comparing the colors on one map to the symbols on the other map.",
+      "Neither map can answer this question because it asks about two topics at once, and thematic maps can only show one topic at a time."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: a thematic map's key can only answer questions about the single topic that map was built to show.",
+      "The rainfall map answers questions about precipitation; the land-use map answers questions about land use. Can one map answer a question that mixes both topics?"
+    ]
+  },
+  {
+    "id": "m6geo-reading-geographic-graphs-charts-001",
+    "loId": "m6geo.reading-geographic-graphs-and-charts",
+    "cedCode": "M6GEO-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A bar graph shows the number of visitors to four national parks in one year. Yellowstone has the tallest bar, reaching 4 million visitors. What does the height of Yellowstone's bar tell you about its visitor numbers compared to the other parks?",
+    "choices": [
+      "Yellowstone had exactly 4 million more visitors than each other park.",
+      "Yellowstone's bar is the only one that matters when reading the graph.",
+      "The height of a bar shows the actual number for that category, so Yellowstone had more visitors than each of the other parks individually.",
+      "Yellowstone had more visitors than each of the other parks individually, which is why its bar is the tallest."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: a longer or taller bar means a bigger number for that category.",
+      "Think about what the bar's height represents—the actual number of visitors for Yellowstone."
+    ]
+  },
+  {
+    "id": "m6geo-reading-geographic-graphs-charts-002",
+    "loId": "m6geo.reading-geographic-graphs-and-charts",
+    "cedCode": "M6GEO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A table shows monthly rainfall in millimeters for three months in Springfield: March, 45 mm. April, 62 mm. May, 38 mm. How much more rainfall did April receive than May?",
+    "choices": [
+      "24 millimeters more.",
+      "17 millimeters more.",
+      "27 millimeters more.",
+      "7 millimeters more."
+    ],
+    "answer": "A",
+    "hints": [
+      "You need to find two numbers from the table and compare them by subtraction.",
+      "Keep the unit (millimeters) with both numbers as you work through your subtraction."
+    ]
+  },
+  {
+    "id": "m6geo-reading-geographic-graphs-charts-003",
+    "loId": "m6geo.reading-geographic-graphs-and-charts",
+    "cedCode": "M6GEO-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A pie chart shows how a city's total budget is divided among five departments: Police, 20 percent. Fire, 15 percent. Parks, 10 percent. Roads, 35 percent. Administration, 20 percent. How many percentage points larger is the Roads department's share than the Parks department's share?",
+    "choices": [
+      "15 percentage points larger.",
+      "25 percentage points larger.",
+      "5 percentage points larger.",
+      "10 percentage points larger."
+    ],
+    "answer": "B",
+    "hints": [
+      "In a pie chart, you compare shares by subtracting one percent from another.",
+      "Make sure you are comparing the correct two slices—Roads and Parks—and use subtraction to find the difference in percentage points."
+    ]
+  },
+  {
+    "id": "m6geo-reading-geographic-graphs-charts-004",
+    "loId": "m6geo.reading-geographic-graphs-and-charts",
+    "cedCode": "M6GEO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A bar graph shows the number of shipwrecks recorded in four ocean regions over the past century: Atlantic, 287 wrecks. Pacific, 156 wrecks. Indian Ocean, 94 wrecks. Arctic, 63 wrecks. How many more shipwrecks occurred in the Atlantic and Pacific combined than in the Indian Ocean and Arctic combined?",
+    "choices": [
+      "131 more wrecks.",
+      "230 more wrecks.",
+      "193 more wrecks.",
+      "97 more wrecks."
+    ],
+    "answer": "C",
+    "hints": [
+      "This question asks you to compare two pairs of regions, not just two individual numbers.",
+      "Add Atlantic and Pacific together, then add Indian Ocean and Arctic together, then subtract to find the difference between the two pair totals."
+    ]
+  },
+  {
+    "id": "m6geo-reading-geographic-graphs-charts-005",
+    "loId": "m6geo.reading-geographic-graphs-and-charts",
+    "cedCode": "M6GEO-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student looks at two pie charts showing land use in two countries. Country A's pie chart shows Forest at 35 percent, with a total land area of 400,000 square kilometers. Country B's pie chart shows Forest at 50 percent, with a total land area of 200,000 square kilometers. The student says Country A has less forest than Country B because 35 percent is less than 50 percent. Is the student's reasoning correct, and why or why not?",
+    "choices": [
+      "Yes, because a smaller percent always means a smaller amount of land.",
+      "No, because percents measure only a share of that one country's total, and the two countries have different-size totals.",
+      "Yes, because Country B's chart shows a larger forest slice visually.",
+      "No, because Country A's percent is actually larger when calculated correctly."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: comparing percents from two different pie charts is not the same as comparing actual amounts, because the totals can be different.",
+      "Calculate the actual forest area for each country—35 percent of 400,000 and 50 percent of 200,000—and then compare those numbers to check the student's claim."
+    ]
+  },
+  {
+    "id": "m6geo-reading-geographic-graphs-charts-006",
+    "loId": "m6geo.reading-geographic-graphs-and-charts",
+    "cedCode": "M6GEO-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A table shows the number of endangered animal species in five regions: North, 28 species. South, 34 species. East, 41 species. West, 19 species. Central, 12 species. A conservation group wants to prioritize funding for the two regions with the fewest endangered species. However, another group argues that total regional conservation is more important and should focus on whether the two least-endangered regions combined have fewer endangered species than any single other region. Which single region has the most endangered species, and do the two least-endangered regions combined have fewer endangered species than that region?",
+    "choices": [
+      "East has the most with 41 species. The two least-endangered regions (Central with 12 and West with 19) combined have 31 species, which is fewer than East's 41 species.",
+      "South has the most with 34 species, and the two least-endangered regions (Central with 12 and West with 19) combined have 31 species, which is fewer than South's 34 species.",
+      "East has the most with 41 species. The two least-endangered regions (Central with 12 and West with 19) combined have 31 species, which is more than East's 41 species because regional totals always exceed single-region counts.",
+      "North has the most with 28 species. The two least-endangered regions (Central with 12 and West with 19) combined have 31 species, which is fewer than North's 28 species."
+    ],
+    "answer": "A",
+    "hints": [
+      "First, identify which region has the single largest number of endangered species and which two regions have the fewest.",
+      "Then add the two smallest numbers together and compare that sum to the largest single number to answer the second part of the question."
+    ]
+  }
+]

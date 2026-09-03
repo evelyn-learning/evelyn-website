@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6math-dividing-fractions-by-fractions-001",
+    "loId": "m6math.dividing-fractions-by-fractions",
+    "cedCode": "M6MATH-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the reciprocal of the fraction 5/7? Remember that a reciprocal is a fraction flipped over.",
+    "choices": [
+      "5/7",
+      "7/5",
+      "1/5",
+      "5/1"
+    ],
+    "answer": "B",
+    "hints": [
+      "Flip the fraction over—swap the top and bottom numbers.",
+      "The reciprocal of any fraction a/b is b/a."
+    ]
+  },
+  {
+    "id": "m6math-dividing-fractions-by-fractions-002",
+    "loId": "m6math.dividing-fractions-by-fractions",
+    "cedCode": "M6MATH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are working out 4/5 ÷ 2/3 using the keep-change-flip rule. After you keep the first fraction and change the division sign to multiplication, what should the problem look like?",
+    "choices": [
+      "4/5 × 3/2",
+      "4/5 ÷ 3/2",
+      "4/5 × 2/3",
+      "5/4 × 2/3"
+    ],
+    "answer": "C",
+    "hints": [
+      "Keep means the first fraction stays exactly the same.",
+      "Flip only the second fraction, the one after the division sign."
+    ]
+  },
+  {
+    "id": "m6math-dividing-fractions-by-fractions-003",
+    "loId": "m6math.dividing-fractions-by-fractions",
+    "cedCode": "M6MATH-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Work out 5/6 ÷ 5/12 and simplify your answer. After you multiply using keep-change-flip, you should get 60/30 before simplifying.",
+    "choices": [
+      "1/2",
+      "12/5",
+      "10/12",
+      "2"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the greatest common factor of 60 and 30 to simplify.",
+      "Both 60 and 30 are divisible by 30."
+    ]
+  },
+  {
+    "id": "m6math-dividing-fractions-by-fractions-004",
+    "loId": "m6math.dividing-fractions-by-fractions",
+    "cedCode": "M6MATH-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A baker has 3/4 of a pound of chocolate and needs to divide it into portions of 1/8 pound each. How many portions can the baker make? Use keep-change-flip to solve, then check your answer by multiplying back.",
+    "choices": [
+      "6",
+      "3/32",
+      "1/6",
+      "8/3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think of the question this way: how many eighths fit inside three-fourths?",
+      "After you multiply using keep-change-flip, simplify by cancelling any common factors."
+    ]
+  },
+  {
+    "id": "m6math-dividing-fractions-by-fractions-005",
+    "loId": "m6math.dividing-fractions-by-fractions",
+    "cedCode": "M6MATH-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You work out 2/5 ÷ 3/10 and get 4/3. To check if your answer is correct, what multiplication should you perform? What should it equal?",
+    "choices": [
+      "4/3 × 2/5, which should equal 3/10",
+      "4/3 × 3/10, which should equal 2/5",
+      "2/5 × 3/10, which should equal 4/3",
+      "4/3 × 4/3, which should equal 1"
+    ],
+    "answer": "B",
+    "hints": [
+      "Your answer times the divisor should give you back the number you started with.",
+      "The divisor is the fraction you divided by, the one written after the division sign."
+    ]
+  },
+  {
+    "id": "m6math-dividing-fractions-by-fractions-006",
+    "loId": "m6math.dividing-fractions-by-fractions",
+    "cedCode": "M6MATH-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student solves 1/3 ÷ 4/9 and claims the answer is 3/4. The student checked by computing 3/4 × 4/9 = 12/36 = 1/3, which is the number started with, so they say the answer is correct. Is the student correct, and why?",
+    "choices": [
+      "Yes, the check worked and the arithmetic is correct.",
+      "No, because the student flipped the first fraction instead of the second one.",
+      "No, because 1/3 ÷ 4/9 should equal 3/4, not 4/9.",
+      "Yes, but the student should have simplified 12/36 further to 1/3."
+    ],
+    "answer": "C",
+    "hints": [
+      "Do your own keep-change-flip: 1/3 ÷ 4/9 becomes 1/3 × 9/4.",
+      "Compute 1/3 × 9/4 carefully: top times top, bottom times bottom, then simplify."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-001",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "To divide mixed numbers, what is the first step you must always do? For example, before you can divide 2 and 1/4 by anything, what form must 2 and 1/4 be in?",
+    "choices": [
+      "Keep the mixed number as it is and divide straight into it",
+      "Flip the mixed number into a reciprocal before dividing",
+      "Convert the mixed number into an improper fraction",
+      "Add the whole number and fraction parts together first"
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson says 'CONVERT ANY MIXED NUMBER BEFORE DIVIDING — a mixed number cannot go straight into keep-change-flip.'",
+      "Think about what form both numbers need to be in so you can use the keep-change-flip strategy."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-002",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A recipe calls for 1 and 1/2 cups of flour per batch of cookies. You have 4 and 1/2 cups of flour available. How many batches can you make? Set up the division problem that you would solve to find this answer.",
+    "choices": [
+      "4 and 1/2 ÷ 1 and 1/2 = 1 and 1/2 × 1 and 1/2",
+      "9/2 ÷ 3/2 = 9/2 × 2/3",
+      "9/4 ÷ 3/2 = 9/4 × 2/3",
+      "9/2 ÷ 3/2 = 9/2 × 3/2"
+    ],
+    "answer": "D",
+    "hints": [
+      "First convert each mixed number to an improper fraction: 4 and 1/2 = 9/2, and 1 and 1/2 = 3/2.",
+      "Remember to flip the divisor (the second fraction) into its reciprocal when you change division to multiplication."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-003",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following correctly shows the first conversion step for 2 and 3/5 ÷ 3/4? After converting the mixed number, what should the problem look like before you apply keep-change-flip?",
+    "choices": [
+      "13/5 ÷ 3/4",
+      "2 and 3/5 × 3/4",
+      "5/3 ÷ 3/4",
+      "13/3 ÷ 3/4"
+    ],
+    "answer": "A",
+    "hints": [
+      "To convert 2 and 3/5: multiply the whole number by the denominator (2 × 5), then add the numerator (+ 3), and keep the same denominator.",
+      "Only the mixed number needs to convert; the fraction 3/4 is already in proper form."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-004",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Work out 3 and 1/3 ÷ 2 and 1/2. Convert both mixed numbers to improper fractions, apply keep-change-flip, multiply, and simplify your answer. Which is the correct final result?",
+    "choices": [
+      "10/3",
+      "4/3",
+      "1 and 1/3",
+      "1 and 2/3"
+    ],
+    "answer": "B",
+    "hints": [
+      "Convert: 3 and 1/3 = 10/3, and 2 and 1/2 = 5/2. Then keep 10/3, change ÷ to ×, and flip 5/2 to get 2/5.",
+      "After you compute 10/3 × 2/5, simplify the result by finding the greatest common factor of the numerator and denominator."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-005",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student solved 1 and 1/4 ÷ 3/4 and made a mistake. The student flipped 1 and 1/4 directly into 1 and 4/1 before converting, then multiplied. Why is this method wrong, and what is the correct answer?",
+    "choices": [
+      "Flipping the mixed number gives an improper result; the correct answer is 5/3.",
+      "You must convert the mixed number to 5/4 first, then flip the divisor to get 5/4 × 4/3 = 5/3.",
+      "The mixed number form cannot be flipped into a real reciprocal; the correct answer is 1 and 2/3.",
+      "Flipping 1 and 1/4 creates an invalid fraction; the correct answer is 2/3."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson states: 'Flipping 1 and 1/2 into something like 1 and 2/1 is not a real reciprocal and cannot be multiplied correctly.'",
+      "Convert 1 and 1/4 to 5/4 first, then divide: 5/4 ÷ 3/4 = 5/4 × 4/3."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-006",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "You solve 2 and 1/6 ÷ 1 and 1/3 and get 13/8. You want to check your work by multiplying your answer by the divisor. When you compute 13/8 × 1 and 1/3, do you get back the original dividend of 2 and 1/6? Show your reasoning and identify whether 13/8 is the correct answer.",
+    "choices": [
+      "No, 13/8 × 4/3 = 52/24, which simplifies to 13/6, and 13/6 is not equal to 2 and 1/6, so 13/8 is incorrect; the correct answer is 15/8.",
+      "No, 13/8 × 4/3 = 13/6, which equals 2 and 1/6, so 13/8 is correct.",
+      "Yes, when you multiply 13/8 by the converted divisor 4/3, you get 13/6, which is the same as 2 and 1/6, confirming that 13/8 is the correct answer.",
+      "No, when you multiply 13/8 by the converted divisor 4/3, you get 13/6, which is not 2 and 1/6, so 13/8 is incorrect; the correct answer is 15/8."
+    ],
+    "answer": "D",
+    "hints": [
+      "Convert both mixed numbers: 2 and 1/6 = 13/6, and 1 and 1/3 = 4/3. Then divide: 13/6 ÷ 4/3 = 13/6 × 3/4 = 39/24, which simplifies to 13/8.",
+      "To check, multiply your answer by the converted divisor: 13/8 × 4/3 should equal 13/6 (the dividend). Does 13/8 × 4/3 give 13/6 back?"
+    ]
+  },
+  {
+    "id": "m6math-the-meaning-of-fraction-division-001",
+    "loId": "m6math.meaning-of-fraction-division",
+    "cedCode": "M6MATH-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the division problem 7/8 ÷ 1/8, the dividend is the amount you start with. Which number is the dividend?",
+    "choices": [
+      "7/8",
+      "1/8",
+      "The answer to the division",
+      "How many groups there are"
+    ],
+    "answer": "A",
+    "hints": [
+      "The dividend is the amount being divided, not the size of each group.",
+      "Look at what comes first in the division: 7/8 ÷ 1/8."
+    ]
+  },
+  {
+    "id": "m6math-the-meaning-of-fraction-division-002",
+    "loId": "m6math.meaning-of-fraction-division",
+    "cedCode": "M6MATH-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A jar holds 6/8 of a gallon of juice. You pour juice into cups, each holding 1/8 of a gallon. On a number line marked in eighths from 0 to 1, shade the part from 0 up to 6/8. Count how many 1/8-size jumps fit inside the shaded part. How many cups can you fill?",
+    "choices": [
+      "8",
+      "6",
+      "1",
+      "0"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the number of 1/8-size pieces that fit inside 6/8.",
+      "Division means counting how many groups of the divisor fit inside the dividend."
+    ]
+  },
+  {
+    "id": "m6math-the-meaning-of-fraction-division-003",
+    "loId": "m6math.meaning-of-fraction-division",
+    "cedCode": "M6MATH-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You have a bar showing one whole, shaded to represent 3/4. You cut the bar into pieces that are each 1/4 in size. How many 1/4-size pieces fit inside the shaded 3/4 part?",
+    "choices": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "answer": "C",
+    "hints": [
+      "When the dividend and divisor have the same denominator, just count the number of pieces.",
+      "You are counting how many groups of 1/4 fit into 3/4."
+    ]
+  },
+  {
+    "id": "m6math-the-meaning-of-fraction-division-004",
+    "loId": "m6math.meaning-of-fraction-division",
+    "cedCode": "M6MATH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A piece of string is 5/6 of a meter long. You need to cut it into pieces that are each 1/3 of a meter long. First, rewrite 1/3 with a denominator of 6, so both fractions use the same size pieces. Then use an area model to count how many 1/3-meter pieces fit inside 5/6 of a meter. How many pieces can you cut?",
+    "choices": [
+      "2 pieces",
+      "2 and 1/2 pieces",
+      "1 and 1/2 pieces",
+      "3 pieces"
+    ],
+    "answer": "D",
+    "hints": [
+      "Rewrite 1/3 as sixths first, then count groups of that size inside 5/6.",
+      "When you have a leftover piece, compare what is left to the size of one full group."
+    ]
+  },
+  {
+    "id": "m6math-the-meaning-of-fraction-division-005",
+    "loId": "m6math.meaning-of-fraction-division",
+    "cedCode": "M6MATH-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A baker has 7/8 of a pound of chocolate. Each batch of brownies uses 1/4 of a pound. Draw a number line marked in eighths and shade up to 7/8. To count equal-size groups, first rewrite 1/4 as eighths. Then count how many 1/4-pound groups fit inside the 7/8 pound of chocolate. How many batches can the baker make, including any partial batch?",
+    "choices": [
+      "3 and 1/2 batches",
+      "2 and 1/2 batches",
+      "4 batches",
+      "2 batches"
+    ],
+    "answer": "A",
+    "hints": [
+      "Rewrite 1/4 as 2/8 so every piece is the same size—eighths.",
+      "After counting the complete groups, check if any leftover is half the size of one full group."
+    ]
+  },
+  {
+    "id": "m6math-the-meaning-of-fraction-division-006",
+    "loId": "m6math.meaning-of-fraction-division",
+    "cedCode": "M6MATH-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student solved 4/5 ÷ 1/5 and drew a number line marked in fifths, shading from 0 to 4/5. She counted four 1/5-size jumps landing inside the shaded part and wrote 4/5 ÷ 1/5 = 4. To check her work, she multiplied: 4 groups × 1/5 = 4/5. Her multiplication matches the shaded amount exactly. Why is her method correct and her answer reliable?",
+    "choices": [
+      "Because the dividend and divisor already have the same denominator, she could skip the step of converting to a common denominator and proceed directly to counting how many divisor-sized pieces fit into the dividend.",
+      "Because she used the same-size pieces on the number line, she could count the groups directly, and her check by multiplication confirms the quotient.",
+      "Because 1/5 is smaller than 1 whole, the answer must be larger than the dividend, which makes the quotient of 4 the only reasonable result among the possible choices.",
+      "Because she shaded a number line instead of using an area model, division of fractions always produces a larger number than the starting fraction, confirming that her answer is correct."
+    ],
+    "answer": "B",
+    "hints": [
+      "A correct method starts by making sure the dividend and divisor are cut into the same size pieces.",
+      "A reliable answer passes the check: (quotient) × (divisor) should equal (dividend)."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-001",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A baker has 4 pounds of flour and wants to know how many batches of cookies she can make if each batch uses 1/2 pound of flour. Which part of the division problem is the total amount of flour she starts with?",
+    "choices": [
+      "The divisor, because it is the size of one batch",
+      "The quotient, because it is what we are solving for",
+      "The divisor, because flour is measured in pounds",
+      "The dividend, because it is the amount you start with"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: the dividend is the total amount; the divisor is the group size.",
+      "Think about whether 4 pounds is what you start with or what one batch uses."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-002",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A craft project uses 2/5 yard of string per necklace. If you have 3 yards of string, how many necklaces can you make?",
+    "choices": [
+      "7 and 1/2 necklaces",
+      "6 necklaces",
+      "5 necklaces",
+      "3 and 3/5 necklaces"
+    ],
+    "answer": "A",
+    "hints": [
+      "Restate this as 'how many groups of 2/5 yard fit inside 3 yards?'",
+      "Set up the division with the total first and the group size second, then use keep-change-flip."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-003",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A farmer is dividing 6 and 1/4 acres of land into equal plots of 5/8 acre each for planting. Which division expression represents how many plots the farmer can create?",
+    "choices": [
+      "5/8 ÷ 6 and 1/4",
+      "6 and 1/4 ÷ 5/8",
+      "6 and 1/4 × 5/8",
+      "5/8 ÷ 25/4"
+    ],
+    "answer": "B",
+    "hints": [
+      "Identify which number is the total amount (what you start with) and which is the group size (one plot).",
+      "Remember: total comes first, group size comes second in a 'how many groups' division."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-004",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A school cafeteria has 4 and 1/2 gallons of juice to pour into cups that each hold 3/8 gallon. How many full cups can be filled, and how much juice will be left over?",
+    "choices": [
+      "11 cups with 3/8 gallon left over",
+      "12 cups with 1/8 gallon left over",
+      "12 cups with no juice left over",
+      "11 cups with 1/8 gallon left over"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert the mixed number to an improper fraction first, then divide. Check: does the whole number of cups times the cup size equal the total exactly?",
+      "When the quotient is a whole number with no fraction part, there is no leftover juice."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-005",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A tailor needs 7/8 yard of fabric to make one vest. She has 5 and 1/4 yards of fabric available. After making as many whole vests as possible, how much fabric will remain?",
+    "choices": [
+      "5 vests with 7/8 yard left over",
+      "6 vests with 1/2 yard left over",
+      "6 vests with 1/8 yard left over",
+      "6 vests with 3/8 yard left over"
+    ],
+    "answer": "D",
+    "hints": [
+      "First, divide the total fabric by the amount per vest. Then find what fraction of one vest's worth remains.",
+      "Multiply that fraction by 7/8 yard to find the actual leftover fabric, not just the fractional part of the quotient."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-006",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A painter has two different cans of paint. The first can contains 3 and 1/2 liters, and the second can contains 2 and 1/4 liters. She needs 3/4 liter of paint to cover one wall. After she finishes painting as many complete walls as she can using paint from both cans combined, how much paint remains?",
+    "choices": [
+      "1/4 liter",
+      "3/4 liter",
+      "1/2 liter",
+      "3/8 liter"
+    ],
+    "answer": "A",
+    "hints": [
+      "First, combine the two amounts of paint to find the total. Then divide by 3/4 liter per wall.",
+      "The fractional part of your quotient tells you what fraction of one wall's worth is left. Multiply that fraction by 3/4 to find the actual leftover paint."
+    ]
+  }
+]

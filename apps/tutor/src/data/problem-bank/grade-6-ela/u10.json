@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6ela-asking-a-research-question-001",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Your teacher asks you to pick a topic for a research project. You write down the word \"Basketball\" on your paper. What is the first thing you need to do to turn this into a real research question?",
+    "choices": [
+      "Write down everything you already know about basketball so you have background information before you search.",
+      "Decide whether basketball is interesting to you and whether you want to spend time researching it.",
+      "Find three sources that mention basketball to make sure enough information exists about your topic.",
+      "Turn your topic into a sentence that ends with a question mark and asks exactly what you want to find out."
+    ],
+    "answer": "D",
+    "hints": [
+      "A topic is a word or phrase, but a research question is a complete sentence with a specific ending.",
+      "You need to name exactly what you are curious about, not just the general subject."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-002",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Keisha is researching insects for her class project. She starts with the question \"How many different types of insects live in North America?\" She searches online and finds the answer in a single encyclopedia article in five minutes. Why is this question a problem for a research project, and what should Keisha do to fix it?",
+    "choices": [
+      "The question fails test two because it can be answered with a single fact from one source, so she should ask about a cause or a process instead, such as \"How do different types of insects adapt to survive cold winters in North America?\"",
+      "The question is too long and has too many words, so she should shorten it to just \"How many insects are there?\"",
+      "The question is not about insects anymore, so she should pick a completely different topic like plants or animals.",
+      "The question is answerable by opinion rather than evidence, so she should ask \"Which type of insect is the most interesting?\" instead."
+    ],
+    "answer": "A",
+    "hints": [
+      "A real research project needs several sources to work together, not just one fact sitting in one place.",
+      "Think about which of the three tests this question fails when the answer appears in just five minutes."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-003",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marcus is working on a research project about weather. He comes up with this question: \"Is sunny weather better than rainy weather?\" He searches for sources but finds that people give him different answers depending on whom he asks. Why will this question not work for his research project?",
+    "choices": [
+      "The question is too narrow because it only asks about two types of weather.",
+      "The question fails test three because it asks for a preference or judgment that no source can settle with evidence alone.",
+      "The question is too broad because weather happens all over the world.",
+      "The question does not have a question mark, so it is not written correctly."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the difference between what people prefer and what evidence can actually prove.",
+      "A good research question asks what is true or what causes what, not what is better or best."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-004",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Chen writes this research question for a short five-page project: \"How have smartphones changed human communication, learning, health, and entertainment over the past fifteen years?\" Chen searches for sources and finds articles about each of these four topics, but none of the articles focus on all four together. What should Chen do, and why?",
+    "choices": [
+      "Expand the question to include ten more categories so he has more sources to find.",
+      "Keep the question exactly as it is because finding multiple sources means the question is working well.",
+      "Narrow the question by removing some limits and keeping only one effect, such as \"How have smartphones changed how teenagers communicate with their friends?\" because the question is too broad right now.",
+      "Stop researching immediately because the sources do not match his question perfectly."
+    ],
+    "answer": "C",
+    "hints": [
+      "When sources do not focus on your exact question, that tells you something about the size of your question.",
+      "Narrowing means adding more limits, not fewer limits, to make a question smaller and more specific."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-005",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Jamal starts researching the question \"What are the ingredients in peanut butter?\" His first search gives him the full answer in one paragraph. He realizes his question did not pass all three tests. What should Jamal do next to fix his research question?",
+    "choices": [
+      "Keep this question because having one clear answer means his research is finished quickly.",
+      "Change his topic completely to something harder, like the history of space exploration.",
+      "Widen his question by asking about a cause or a process instead of just a fact, such as \"How do the ingredients in peanut butter change the texture and shelf life compared to whole peanuts?\"",
+      "Ask several people what they think about peanut butter and record their opinions."
+    ],
+    "answer": "D",
+    "hints": [
+      "When a single source answers your whole question, you need to refocus by loosening one of your limits.",
+      "A good research question needs pieces from several sources to put together, not one complete answer right away."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-006",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Yuki is writing a two-page research project and has narrowed her question to \"Why do some plants need full sun to grow well while others thrive in shade?\" She finds three peer-reviewed science articles about plant photosynthesis, one article about garden design, and one magazine piece listing shade-tolerant plants by name. As she reads, she notices the three science articles focus deeply on how light affects the plant growth process, but they do not discuss specific plant species. Why might Yuki need to adjust her question again, and what adjustment would help?",
+    "choices": [
+      "She should refocus by asking about a specific process rather than comparing multiple plants, such as \"How does the amount of light a plant receives affect the speed of photosynthesis?\" because her sources focus on the process rather than the species comparison.",
+      "She should expand her question to include ten more plant species so it matches all her sources.",
+      "She should throw away her sources and start searching for different ones that match her question exactly.",
+      "She should keep her question exactly as written because she has found enough sources to answer it."
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice what the sources actually focus on—the process or the comparison of species—and think about how that tells you whether your question fits.",
+      "Refocusing can mean narrowing further by removing one of your limits, not just adding more limits."
+    ]
+  },
+  {
+    "id": "m6ela-evaluating-source-credibility-001",
+    "loId": "m6ela.evaluating-source-credibility",
+    "cedCode": "M6ELA-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Your class is researching whether a new after-school program helps students finish homework faster. You find a post on a school website by Jordan Lee, the program director, that says: 'Students in our program report finishing homework 30 minutes earlier on average.' What does asking 'Who wrote it?' tell you about this source?",
+    "choices": [
+      "The source has an identified author who can be held responsible for the claim, which is a strength when evaluating credibility.",
+      "The source is automatically credible because any author who includes their name and job title has already been verified by fact-checkers.",
+      "The source becomes more trustworthy simply because the author provided a name rather than writing anonymously.",
+      "The author's identity proves the claim is factually correct without needing to look for supporting evidence."
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that asking 'Who wrote it?' helps you identify accountability, not whether the claim is automatically true.",
+      "Think about what 'an identified author' means for credibility—it means someone can be responsible if the information is wrong."
+    ]
+  },
+  {
+    "id": "m6ela-evaluating-source-credibility-002",
+    "loId": "m6ela.evaluating-source-credibility",
+    "cedCode": "M6ELA-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are researching this question: does eating a big breakfast really help students concentrate better in class? Source 1 is a post by username 'StudyTips88' on a homework help forum that says: 'Everyone knows breakfast helps you think better.' Source 2 is an article by Dr. Maria Chen, a school nurse at Westside Middle School, describing how she tracked the test scores of 50 students in her school who ate breakfast versus those who did not. Which source is more credible for answering your research question, and why?",
+    "choices": [
+      "Source 1 is more credible because forum posts reach many students and popular claims are usually supported by scientific research.",
+      "Source 2 is more credible because it has a named author with a job that gives her access to student records and test data.",
+      "Source 1 is more credible because saying 'everyone knows' suggests the claim has been accepted by most people and therefore must be true.",
+      "Source 2 is more credible because the author used the word 'tracked,' which indicates careful measurement based on actual data collection."
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider the difference between 'everyone knows' and actual access to records or test data.",
+      "Ask yourself: which author would have firsthand knowledge of whether students who ate breakfast scored differently?"
+    ]
+  },
+  {
+    "id": "m6ela-evaluating-source-credibility-003",
+    "loId": "m6ela.evaluating-source-credibility",
+    "cedCode": "M6ELA-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Your class is researching whether a new park renovation brought more people to the park. You find two sources with different numbers. Source A is a count by the Parks Department, posted on the city website, based on entry gate turnstiles before and after the renovation. Source B is a social media post by a local business owner who says: 'More people are definitely coming to the park now—it's better for my ice cream shop sales!' Why is Source A stronger for answering your research question?",
+    "choices": [
+      "Source A sounds more certain and confident in its language.",
+      "Source A comes from the organization that actually runs the park and has automatic counters, so it has direct, measurable records.",
+      "Source A is stronger because social media is never a credible source of any kind.",
+      "Source A is on a government website, which is always more beautiful and professional looking than a social media post."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about how a source would know the answer—what gives someone access to the actual information?",
+      "Consider what the business owner might gain if more visitors believe the park is busier."
+    ]
+  },
+  {
+    "id": "m6ela-evaluating-source-credibility-004",
+    "loId": "m6ela.evaluating-source-credibility",
+    "cedCode": "M6ELA-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You are researching whether a new school lunch vendor actually improved food quality. You find three sources. Source 1: a post by 'LunchReviews_Daily,' an account with no identified person, saying 'The new lunches are delicious!' Source 2: an article by Chef Marcus Webb, the owner of the lunch vendor company, describing five dishes he invented for the school. Source 3: a survey report from the school counselor, Ms. Patterson, showing that of 120 students surveyed, 68 said the new lunches tasted better than before. Run the three credibility questions on Sources 2 and 3, then decide which one is more credible for your research question.",
+    "choices": [
+      "Source 2 is more credible because the author is a professional chef who invents the food.",
+      "Source 3 is more credible because Ms. Patterson has no financial reason to want a particular answer, and she gathered actual student opinions rather than relying on the inventor's description.",
+      "Source 2 is more credible because Chef Webb can speak with authority about his own dishes.",
+      "Source 3 is more credible because surveys are always better than personal expertise, no matter who the expert is."
+    ],
+    "answer": "D",
+    "hints": [
+      "For Source 2, ask: what would Chef Webb gain if students believe his food is better? What is his financial motive?",
+      "For Source 3, ask: does Ms. Patterson have a reason to want a particular answer? What kind of record did she gather?"
+    ]
+  },
+  {
+    "id": "m6ela-evaluating-source-credibility-005",
+    "loId": "m6ela.evaluating-source-credibility",
+    "cedCode": "M6ELA-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Your research question is: did the new crosswalk near the park really reduce bicycle accidents? You find two sources that disagree. Source A: a report by the city's Safety Engineer, Tom Alvarez, based on police accident reports filed before and after the crosswalk was installed, showing accidents dropped from 12 a month to 4 a month. Source B: a comment by someone calling themselves 'LocalResident' on a neighborhood app saying the crosswalk hasn't helped at all. The comment offers no numbers or records. What should you conclude about Source A's credibility compared to Source B's, and why?",
+    "choices": [
+      "Source A is more credible because it comes from someone with a named job who has direct access to police records, while Source B is anonymous and offers no explanation for how the author would know.",
+      "Source B is more credible because someone living near the park would have everyday observation of accidents, which counts as direct personal experience.",
+      "Source A and Source B are equally credible because both authors are trying to describe what they know about the same situation.",
+      "Source B is more credible because personal opinions from community members are more trustworthy than official government records."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask 'How would they know?' for each source: who has direct access to the actual records?",
+      "Consider whether 'I live nearby' gives someone access to police accident data the way a Safety Engineer would have."
+    ]
+  },
+  {
+    "id": "m6ela-evaluating-source-credibility-006",
+    "loId": "m6ela.evaluating-source-credibility",
+    "cedCode": "M6ELA-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Your class is researching: did the new library computer lab actually increase how many students use the library? You find three sources. Source 1: a website post by a local tech blogger, TechTownNews, saying 'The new computer lab is absolutely packed every day and is a huge success.' Source 2: a Facebook post by the parent of a student who volunteers at the library, saying 'My son says the computers are never busy.' Source 3: a monthly library report from the Head Librarian, posted on the library website, showing gate-count statistics: about 45 visitors a day before the lab opened, rising to about 62 a day in the first month after opening. When you run the three credibility questions on each source and compare them, which source should you trust most, and what combination of reasons explains why?",
+    "choices": [
+      "Source 1, because technology bloggers write for public websites and have reputations to maintain, which means their claims are backed by professional standards.",
+      "Source 3, because it comes from someone with direct access to actual visitor counts, uses specific numbers from the library's own records, and has a limited reason to exaggerate a modest increase.",
+      "Source 2, because a parent whose child volunteers at the library has closer personal ties to the facility and spends more time there than the librarian does.",
+      "Source 1, because it uses concrete language like 'packed every day' and 'huge success,' which provides clear visual details about how busy the lab is."
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare how each source would know the answer: who has access to actual records of who entered the library?",
+      "Sources 1 and 2 disagree sharply about whether the computers are busy. Which author's job gives them the ability to count and measure actual visitor traffic?"
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-001",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence correctly uses quotation marks to show that the exact words belong to a source and not to you?",
+    "choices": [
+      "The website said that recycling helps the environment.",
+      "The website said, \"Recycling helps the environment.\"",
+      "The website said recycling helps the environment in quotation marks.",
+      "The website's exact words were recycling helps the environment."
+    ],
+    "answer": "B",
+    "hints": [
+      "Quotation marks are the signal that tells your reader the exact words are from the source.",
+      "Look for the choice where the source's exact words are set off with opening and closing quotation marks."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-002",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Your science textbook says: \"Plants need sunlight, water, and nutrients from soil to grow.\" You want to use this idea in your report, but in your own words and your own sentence structure. Which choice is a true paraphrase of this sentence?",
+    "choices": [
+      "Plants require sunlight, water, and soil nutrients in order to grow, using these three resources to develop.",
+      "According to the textbook, plants need sunlight, water, and nutrients from soil, which are essential for their survival.",
+      "To survive, plants depend on three things: light from the sun, water to drink, and minerals in the ground.",
+      "Plants need sunlight, water, and soil nutrients, and these materials help them grow and develop over time."
+    ],
+    "answer": "C",
+    "hints": [
+      "A true paraphrase rebuilds the sentence from scratch, not just trading in similar words for the original ones.",
+      "Check which choice completely changes the sentence order and structure while keeping the same idea."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-003",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are writing a report about ancient Rome, and a history book contains this sentence: \"Roman soldiers carried a short sword called a gladius that was deadly in close combat.\" You want to emphasize how effective the gladius was in battle. Should you quote this sentence exactly or paraphrase it, and why?",
+    "choices": [
+      "Paraphrase it, because any sentence from a source must be paraphrased, not quoted.",
+      "Quote it, because the reader needs the general idea of what the gladius was.",
+      "Quote it, because the book's exact wording about the weapon's deadly power is the point you want to make.",
+      "Paraphrase it, because paraphrasing is always better than quoting."
+    ],
+    "answer": "D",
+    "hints": [
+      "Quote when the exact wording matters for the point you are making.",
+      "Think about whether the book's specific choice of the word 'deadly' is important to your argument about the weapon's effectiveness."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-004",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A wildlife article states: \"Bees communicate by dancing, moving in patterns that tell other bees where flowers are located.\" You have written the following sentence for your report: \"Bees use a dance language to share the location of flowers with members of their hive.\" This sentence needs to be credited to the article. However, before you add the credit, which problem does this sentence have?",
+    "choices": [
+      "It is a word swap — it keeps the source's sentence shape but trades in different words, so it is a copy in a costume, not a true paraphrase.",
+      "It uses the exact same idea order as the source sentence but replaces key terms with synonyms while keeping the same grammatical structure and sentence flow.",
+      "It paraphrases the source idea but substitutes different vocabulary without rearranging the logical sequence or rebuilding the sentence from a fresh perspective.",
+      "It maintains the original sentence's skeleton by keeping the same progression of ideas but disguises this by inserting alternative words instead of genuinely restating the concept."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at the order of ideas: bees → communicate/share → location of flowers. Does the student sentence follow the same path with just different words?",
+      "A true paraphrase rebuilds the sentence from the ground up, not by keeping the same slots and swapping words into them."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-005",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You are writing a report on water pollution, and you came across an important fact in an environmental report: \"Industrial waste dumped into rivers kills fish and makes the water unsafe for human use.\" You did not know this fact before reading the report. Which choice correctly shows both the quote and the credit together in a way that makes clear the idea came from the source?",
+    "choices": [
+      "According to the report, industrial waste makes water unsafe for both fish and people to use, because dumping into rivers kills fish and poisons it.",
+      "The environmental report states that \"Industrial waste dumped into rivers kills fish and makes the water unsafe for human use.\"",
+      "The report said that industrial waste harms fish and people, since factories dump poison in rivers where it kills things.",
+      "\"Industrial waste dumped into rivers kills fish and makes the water unsafe for human use.\" This fact came from the environmental report."
+    ],
+    "answer": "B",
+    "hints": [
+      "The credit (naming the source) must come before or right around the exact quoted words so the reader knows where they come from.",
+      "Check which choice shows both the source named and the exact words from the source set off in quotation marks in the same sentence."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-006",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A museum guide says: \"The pyramids were built as tombs where pharaohs were buried along with treasures and tools they would need in the afterlife.\" You want to use this information in your essay. You decide to paraphrase it using the look-away method: you read the sentence, look away, and then write what you understood in your own words. Your first draft reads: \"Pharaohs were placed inside pyramids with their possessions because Egyptians believed they would need those items in the next world.\" Before you submit this paraphrase, what should you do next, and why?",
+    "choices": [
+      "Add quotation marks around the sentence because you got the idea from the museum guide, not from your own head, so it needs formal attribution to show its origin.",
+      "Rewrite the sentence again because even though you used different words, some of your vocabulary still echoes the guide's wording, including terms like 'pyramids' and words related to 'afterlife.'",
+      "Look back at the source sentence only to check that your paraphrase is accurate — that you got the idea right and did not leave anything important out.",
+      "Add a credit to the museum guide so the reader knows this idea came from the source, not from your own prior knowledge, even though you used your own words."
+    ],
+    "answer": "C",
+    "hints": [
+      "The look-away method has one final step after you write: you look back for a specific reason, not to borrow the sentence shape.",
+      "Think about what the lesson teaches you to check when you look back at the source — is it the wording, or is it the accuracy of the idea?"
+    ]
+  },
+  {
+    "id": "m6ela-giving-basic-source-information-001",
+    "loId": "m6ela.giving-basic-source-information",
+    "cedCode": "M6ELA-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You find a book titled 'The Ocean's Hidden Creatures' written by Dr. Maya Torres and published by Blue Water Press. What is the WHO piece of your source record?",
+    "choices": [
+      "The Ocean's Hidden Creatures",
+      "Blue Water Press",
+      "Dr. Maya Torres",
+      "A book about ocean animals"
+    ],
+    "answer": "C",
+    "hints": [
+      "WHO means the person or group responsible for making the source.",
+      "Look for the name of the writer, not the publisher or the topic."
+    ]
+  },
+  {
+    "id": "m6ela-giving-basic-source-information-002",
+    "loId": "m6ela.giving-basic-source-information",
+    "cedCode": "M6ELA-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student took notes on a website article and wrote: 'WHERE: National Geographic Kids. WHAT: how animals adapt to cold weather. WHO: (blank).' The article has no author byline listed on the page. What should the student do to fix this note?",
+    "choices": [
+      "Write 'National Geographic Kids' in the WHO spot since that is the organization that made the website",
+      "Leave the WHO spot blank and move forward, since no individual author name is printed",
+      "Write down the name of an animal mentioned in the article to fill the WHO spot",
+      "Ask a librarian to find the author's name before recording the other two pieces"
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson says to write the record down the moment a source is used so details do not fade.",
+      "When no individual author name is visible, the group or organization that made the source (like the magazine or website company) counts as the WHO."
+    ]
+  },
+  {
+    "id": "m6ela-giving-basic-source-information-003",
+    "loId": "m6ela.giving-basic-source-information",
+    "cedCode": "M6ELA-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student watches a video titled 'Building a Bird Feeder' on the Home Crafts channel. A guest named Jordan Lee appears on camera and shows how to build the feeder. The student writes: WHO: Jordan Lee. WHAT: 'Building a Bird Feeder.' WHERE: Home Crafts channel. What error does this source record contain?",
+    "choices": [
+      "The WHO should be Home Crafts, not Jordan Lee, because Jordan Lee is quoted or featured in the video, not the person who made it",
+      "The WHAT should describe what the video teaches instead of using the exact title, since source records require summaries rather than titles",
+      "The WHERE should name a website address or URL instead of the channel name, since online sources must include their web location",
+      "The record is missing the WHEN and cannot be considered complete without the date the video was published or posted"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson shows that a guest appearing in a video is quoted or featured, not the maker of the source.",
+      "The person or group who made and posted the source belongs in the WHO spot."
+    ]
+  },
+  {
+    "id": "m6ela-giving-basic-source-information-004",
+    "loId": "m6ela.giving-basic-source-information",
+    "cedCode": "M6ELA-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student finds a magazine article titled 'Why Bees Matter' by Dr. James Chen in the March issue of Science Today magazine. The article quotes a biologist named Dr. Lisa Park discussing why bees are important to crops. The student wants to create a complete source record. Which version correctly identifies all three pieces and avoids mixing up who made the source with who is quoted inside it?",
+    "choices": [
+      "WHO: Dr. Lisa Park and Dr. James Chen. WHAT: 'Why Bees Matter.' WHERE: Science Today magazine.",
+      "WHO: Dr. James Chen. WHAT: 'Why Bees Matter.' WHERE: Science Today magazine.",
+      "WHO: Dr. Lisa Park. WHAT: why bees are important. WHERE: the March issue.",
+      "WHO: Science Today. WHAT: 'Why Bees Matter.' WHERE: Dr. James Chen's office."
+    ],
+    "answer": "B",
+    "hints": [
+      "The person who wrote the article (whose name appears with 'by') is the WHO, not anyone quoted inside it.",
+      "The WHAT must be the exact title printed on the source, not a description of its topic."
+    ]
+  },
+  {
+    "id": "m6ela-giving-basic-source-information-005",
+    "loId": "m6ela.giving-basic-source-information",
+    "cedCode": "M6ELA-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student takes notes on a video called 'How to Train Your Dog' posted by Pet Pals Academy. Her note currently says: 'TOPIC: dog training tips. FOUND: Pet Pals Academy's YouTube channel.' She realizes her note is missing information and has one piece in the wrong spot. How should she fix her note so it has all three pieces of a complete source record in the right places?",
+    "choices": [
+      "Add the author's name and leave the topic as the title, then rewrite it as one sentence instead of three lines",
+      "Replace the topic with the exact title 'How to Train Your Dog' and add the author Pet Pals Academy to the WHO spot",
+      "Move the YouTube channel name to the WHAT spot and write 'dog training' as the WHERE instead",
+      "Keep the topic as written but add two more sources so the record is complete"
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson shows that a topic (what the source is about) is not the same as a title (the exact name printed on the source).",
+      "WHERE names the place holding the source, WHO is the maker, and WHAT is the exact printed title."
+    ]
+  },
+  {
+    "id": "m6ela-giving-basic-source-information-006",
+    "loId": "m6ela.giving-basic-source-information",
+    "cedCode": "M6ELA-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student uses three different sources for a report: a book by author Sarah Mills titled 'City Planning Basics' from the public library, a website article titled 'How Cities Grow' by the Urban Institute (no individual author listed) found at urbaninstitute.org, and a video called 'Designing Streets for People' posted by the City Builders channel on YouTube. The student writes down only the titles as she reads. Later, she tries to reconstruct her source records from memory but can only half-remember the author and location of one source. Based on the lesson's advice about when to record sources, which of these decisions best follows the teaching?",
+    "choices": [
+      "Skip the source she cannot fully remember and create records only for the other two, since waiting too long means details fade fast",
+      "Use what she can remember for each source and fill in the missing pieces later by searching the library catalog and Google again",
+      "Record the three pieces immediately while using each source instead of waiting and trying to remember them later from notes that only list titles",
+      "Keep all three sources listed by title and wait to add the author and location information when she writes her final report"
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson emphasizes that writing the record the moment a source is used prevents forgetting exact titles and author names.",
+      "The lesson warns that trying to remember details later means those details fade fast, so the three labeled pieces should be captured right away."
+    ]
+  }
+]

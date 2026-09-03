@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6math-writing-evaluating-algebraic-expressions-001",
+    "loId": "m6math.writing-and-evaluating-algebraic-expressions",
+    "cedCode": "M6MATH-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is the correct algebraic expression for the phrase 'the sum of a number n and 12'?",
+    "choices": [
+      "n - 12",
+      "n + 12",
+      "12n",
+      "n ÷ 12"
+    ],
+    "answer": "B",
+    "hints": [
+      "The word 'sum' tells you which operation to use.",
+      "Think about what 'sum' means in plain arithmetic."
+    ]
+  },
+  {
+    "id": "m6math-writing-evaluating-algebraic-expressions-002",
+    "loId": "m6math.writing-and-evaluating-algebraic-expressions",
+    "cedCode": "M6MATH-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A number n is multiplied by 3, and then 7 is added to the result. Write an algebraic expression for this situation, then evaluate it when n = 5. What is the value?",
+    "choices": [
+      "22",
+      "28",
+      "29",
+      "36"
+    ],
+    "answer": "C",
+    "hints": [
+      "First, write the expression using the key word 'multiplied' and then 'added'.",
+      "After you write 3n + 7, replace n with 5 and use the order of operations."
+    ]
+  },
+  {
+    "id": "m6math-writing-evaluating-algebraic-expressions-003",
+    "loId": "m6math.writing-and-evaluating-algebraic-expressions",
+    "cedCode": "M6MATH-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The phrase '9 fewer than a number w' should be written as an algebraic expression. Which expression is correct?",
+    "choices": [
+      "9 - w",
+      "w - 9",
+      "9w",
+      "w ÷ 9"
+    ],
+    "answer": "D",
+    "hints": [
+      "The word 'fewer' is the same as 'less than' — be careful about word order.",
+      "Ask yourself: what number are you starting with, and what are you taking away from it?"
+    ]
+  },
+  {
+    "id": "m6math-writing-evaluating-algebraic-expressions-004",
+    "loId": "m6math.writing-and-evaluating-algebraic-expressions",
+    "cedCode": "M6MATH-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student writes the expression 2x + 8 for the phrase 'twice a number, plus 8.' She evaluates it at x = 6 by computing 2(6 + 8) = 2(14) = 28. Explain why this is wrong, and find the correct value.",
+    "choices": [
+      "20",
+      "44",
+      "28",
+      "18"
+    ],
+    "answer": "A",
+    "hints": [
+      "The 8 is not grouped with the x in parentheses, so it does not get multiplied by 2.",
+      "Multiply 2 and 6 first, then add 8 to that result."
+    ]
+  },
+  {
+    "id": "m6math-writing-evaluating-algebraic-expressions-005",
+    "loId": "m6math.writing-and-evaluating-algebraic-expressions",
+    "cedCode": "M6MATH-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A formula for the area of a triangle is A = (b × h) ÷ 2, where b is the base and h is the height. Find the area when b = 10 and h = 6. Then, write a word phrase that describes what '(b × h) ÷ 2' means in the context of triangles.",
+    "choices": [
+      "The area is 30 square units. The formula means half the product of the base and height.",
+      "The area is 80 square units. The formula means the base times the height divided by 2.",
+      "The area is 30 square units. The formula means the base plus the height, then divide by 2.",
+      "The area is 60 square units. The formula means the product of the base and height."
+    ],
+    "answer": "B",
+    "hints": [
+      "Substitute b = 10 and h = 6, then follow the order of operations (parentheses first, then division).",
+      "A word phrase should describe the operations: what is multiplied, and what is divided by 2?"
+    ]
+  },
+  {
+    "id": "m6math-writing-evaluating-algebraic-expressions-006",
+    "loId": "m6math.writing-and-evaluating-algebraic-expressions",
+    "cedCode": "M6MATH-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A teacher says, 'Start with a number n. Multiply it by 4. Then subtract 3. The result is 13.' Write an algebraic expression that equals 13, then work backward to find the value of n that makes your expression true. What is n?",
+    "choices": [
+      "2",
+      "2.5",
+      "4",
+      "10"
+    ],
+    "answer": "C",
+    "hints": [
+      "The expression for the result is 4n - 3. You need to find what value of n makes 4n - 3 equal 13.",
+      "Try each answer choice by substituting it into 4n - 3 and see which one gives you 13."
+    ]
+  },
+  {
+    "id": "m6math-equivalent-expressions-001",
+    "loId": "m6math.equivalent-expressions",
+    "cedCode": "M6MATH-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which two expressions are equivalent? Two expressions are equivalent when they produce the same value for every whole number substituted for the variable.",
+    "choices": [
+      "2x and 2 + x",
+      "3x + 5 and 3x + 3 + 2",
+      "4(x + 1) and 4x + 1",
+      "6x + 9 and 6(x + 1) + 3"
+    ],
+    "answer": "D",
+    "hints": [
+      "Try substituting x = 2 into each pair to see if both expressions in the pair give the same result.",
+      "Remember that a constant term like 9 and a variable term like 6x are not like terms and cannot combine."
+    ]
+  },
+  {
+    "id": "m6math-equivalent-expressions-002",
+    "loId": "m6math.equivalent-expressions",
+    "cedCode": "M6MATH-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A baker is making treat bags. Each bag contains 8 cookies plus 2 brownies. If the baker makes 5 bags, write an expression for the total number of treats (cookies plus brownies combined) using the distributive property, then simplify it completely.",
+    "choices": [
+      "50",
+      "5(8 + 2) = 5(10) = 50",
+      "5 × 8 + 2 = 42",
+      "8 + 2 + 5 = 15"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start by writing a factored expression that shows 5 bags, each holding (8 + 2) treats.",
+      "Apply the distributive property by multiplying 5 by each term inside the parentheses, then add the results."
+    ]
+  },
+  {
+    "id": "m6math-equivalent-expressions-003",
+    "loId": "m6math.equivalent-expressions",
+    "cedCode": "M6MATH-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Maria is rewriting the expression 7m + 28 as a product by pulling out the greatest common factor. What is the greatest common factor of the terms 7m and 28, and what should the factored expression be?",
+    "choices": [
+      "The GCF is 7, and the factored form is 7(m + 4)",
+      "The GCF is 7, and the factored form is 7(m + 28)",
+      "The GCF is 28, and the factored form is 28(m + 1)",
+      "The GCF is 4, and the factored form is 4(7m + 7)"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the biggest whole number that divides evenly into both 7m and 28.",
+      "Once you have the GCF, divide each term by it to see what goes inside the parentheses."
+    ]
+  },
+  {
+    "id": "m6math-equivalent-expressions-004",
+    "loId": "m6math.equivalent-expressions",
+    "cedCode": "M6MATH-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Simplify the expression 2(x + 5) + 3x + 4 by applying the distributive property first, then combining like terms. Which expression is equivalent to the simplified form?",
+    "choices": [
+      "5x + 14",
+      "5x + 9",
+      "5x + 10",
+      "8x + 9"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start by distributing the 2 across both terms inside (x + 5), then gather all terms together.",
+      "After distribution, identify which terms have the same variable and combine their coefficients."
+    ]
+  },
+  {
+    "id": "m6math-equivalent-expressions-005",
+    "loId": "m6math.equivalent-expressions",
+    "cedCode": "M6MATH-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two students simplified the expression 4(y + 2) + 6y differently. Student A got 10y + 8, and Student B got 4y + 8 + 6y. Check both answers by substituting y = 3 and determine which student simplified correctly and why the other made an error.",
+    "choices": [
+      "Student A is correct because 10y + 8 is the fully combined form after distributing and combining like terms.",
+      "Student B is correct because forgetting to combine 4y and 6y into 10y is a common mistake.",
+      "Both students are equivalent because 10y + 8 and 4y + 8 + 6y give the same value when y = 3.",
+      "Neither student is correct; the true simplified form is 10y + 2."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that when you distribute, you multiply the outside number by EVERY term inside the parentheses.",
+      "Check your work by substituting y = 3 into 4(3 + 2) + 6(3) and seeing which simplified form matches."
+    ]
+  },
+  {
+    "id": "m6math-equivalent-expressions-006",
+    "loId": "m6math.equivalent-expressions",
+    "cedCode": "M6MATH-7.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A farmer has two sections of fencing. The first section contains 3 posts spaced along a line of length l meters, plus 5 extra connector posts. The second section is twice as long as the first section's line length but holds no extras. Write a single simplified expression for the total number of posts, then factor that expression back into a product form by pulling out the greatest common factor.",
+    "choices": [
+      "6l + 15 = 3(2l + 5)",
+      "6l + 5 = (6l + 5)",
+      "3l + 5 + 2l = 5l + 5",
+      "3(l + 5) + 2l = 5l + 15"
+    ],
+    "answer": "A",
+    "hints": [
+      "Write the first section as 3(l + 5) and the second section as 2 times the line length of the first. Then distribute and combine like terms.",
+      "Once simplified, find the GCF of both terms and divide each by it to write the factored form."
+    ]
+  },
+  {
+    "id": "m6math-parts-of-an-expression-001",
+    "loId": "m6math.parts-of-an-expression",
+    "cedCode": "M6MATH-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the expression 3x + 5, what is the coefficient of x?",
+    "choices": [
+      "5",
+      "x",
+      "3",
+      "3x"
+    ],
+    "answer": "C",
+    "hints": [
+      "The coefficient is the number that multiplies the variable.",
+      "Look at what number is directly attached to x in the term 3x."
+    ]
+  },
+  {
+    "id": "m6math-parts-of-an-expression-002",
+    "loId": "m6math.parts-of-an-expression",
+    "cedCode": "M6MATH-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The expression 6a + 2b + 8 is written below. How many terms does this expression have, and which one is the constant term?",
+    "choices": [
+      "2 terms; the constant is 2b",
+      "3 terms; the constant is 6a",
+      "3 terms; the constant is 2b",
+      "3 terms; the constant is 8"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count the + and − signs to find the number of terms.",
+      "A constant term is a piece with no variable in it at all."
+    ]
+  },
+  {
+    "id": "m6math-parts-of-an-expression-003",
+    "loId": "m6math.parts-of-an-expression",
+    "cedCode": "M6MATH-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "In the term 5mn, what are all of the factors?",
+    "choices": [
+      "5, m, and n",
+      "5 and mn",
+      "m and n",
+      "just 5"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factors are the pieces that are multiplied together inside one term.",
+      "Look at everything in the term 5mn that is being multiplied."
+    ]
+  },
+  {
+    "id": "m6math-parts-of-an-expression-004",
+    "loId": "m6math.parts-of-an-expression",
+    "cedCode": "M6MATH-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that the expression 2p + 4q + 7 has five terms: 2, p, 4, q, and 7. Explain why this is wrong, and identify the actual number of terms and what they are.",
+    "choices": [
+      "The student forgot to count; there are actually six terms: 2p, 4q, 7, 2, 4, and q.",
+      "The student counted factors as if they were terms; the expression has three terms: 2p, 4q, and 7.",
+      "The student only counted the numbers and variables separately; there are actually four terms: 2p, 4, q, and 7.",
+      "The student is correct; there are five terms, but they are 2p, 4q, 7, and two others."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember: multiplication builds one term, and only + or − signs start a new term.",
+      "Count the + and − signs in the expression to find how many terms there are."
+    ]
+  },
+  {
+    "id": "m6math-parts-of-an-expression-005",
+    "loId": "m6math.parts-of-an-expression",
+    "cedCode": "M6MATH-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In the expression 9rs + 3t + 12, what is the coefficient of the variable s in the first term, and what is the constant term?",
+    "choices": [
+      "The coefficient of s is 9, and the constant is 3t.",
+      "The coefficient of s is 3, and the constant is 12.",
+      "The coefficient of s is 9r, and the constant is 12.",
+      "The coefficient of s is 1, and the constant is 3t."
+    ],
+    "answer": "C",
+    "hints": [
+      "The coefficient is the number multiplying a variable; look at all the factors in the term 9rs.",
+      "A constant has no variables at all — it is just a number by itself."
+    ]
+  },
+  {
+    "id": "m6math-parts-of-an-expression-006",
+    "loId": "m6math.parts-of-an-expression",
+    "cedCode": "M6MATH-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Consider the expression 7xy + 4x + 5. For the term 7xy, list all of its factors, identify the coefficient of y, and explain how you know the expression has exactly three terms, not more.",
+    "choices": [
+      "Factors are 7, x, y; the coefficient of y is 1; there are three terms because each factor of 7xy is considered a separate term in the overall expression.",
+      "Factors are 7x and y; the coefficient of y is x; there are three terms because we count the number of distinct variables that appear in the expression.",
+      "Factors are 7, x, and y; the coefficient of y is 7x; there are three terms because the expression contains three different numbers or variables written down.",
+      "Factors are 7, x, and y; the coefficient of y is 7; there are three terms because there are exactly two + and − signs separating whole pieces."
+    ],
+    "answer": "D",
+    "hints": [
+      "The coefficient of y is the number multiplying y; look at what else is multiplied with y in the term 7xy.",
+      "Terms are separated by + or − signs, and counting these signs tells you how many terms there are."
+    ]
+  },
+  {
+    "id": "m6math-numerical-expressions-with-exponents-001",
+    "loId": "m6math.numerical-expressions-with-exponents",
+    "cedCode": "M6MATH-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the expression 7³, which number is the base and which is the exponent? Choose the correct pairing.",
+    "choices": [
+      "The base is 7 and the exponent is 3.",
+      "The base is 3 and the exponent is 7.",
+      "The base and exponent are both 7.",
+      "The base is 7 and there is no exponent."
+    ],
+    "answer": "A",
+    "hints": [
+      "The base is the number sitting on the line.",
+      "The exponent is the small raised number."
+    ]
+  },
+  {
+    "id": "m6math-numerical-expressions-with-exponents-002",
+    "loId": "m6math.numerical-expressions-with-exponents",
+    "cedCode": "M6MATH-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Write the repeated multiplication 9 × 9 × 9 × 9 as a single expression using an exponent. What do you get?",
+    "choices": [
+      "9⁴ = 36",
+      "9⁴ = 6561",
+      "9 × 4 = 36",
+      "4⁹ = 262144"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count how many times 9 appears as a factor in the multiplication.",
+      "The exponent tells you the count of factors, not the value of the answer yet."
+    ]
+  },
+  {
+    "id": "m6math-numerical-expressions-with-exponents-003",
+    "loId": "m6math.numerical-expressions-with-exponents",
+    "cedCode": "M6MATH-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate the expression 3 + 2⁴. Which is the correct first step and the correct final answer?",
+    "choices": [
+      "Add 3 + 2 first to get 5, then raise to the power 4, getting 625.",
+      "Multiply 2 × 4 first to get 8, then add 3, getting 11.",
+      "Evaluate 2⁴ first to get 16, then add 3, getting 19.",
+      "Subtract the exponent from the base, getting 2, then add 3, getting 5."
+    ],
+    "answer": "C",
+    "hints": [
+      "When a power sits next to addition with no parentheses, which operation do you do first?",
+      "2⁴ means 2 × 2 × 2 × 2, not 2 × 4."
+    ]
+  },
+  {
+    "id": "m6math-numerical-expressions-with-exponents-004",
+    "loId": "m6math.numerical-expressions-with-exponents",
+    "cedCode": "M6MATH-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A baker uses 2 cups of flour, then quadruples the recipe. The quadrupled recipe uses 2 × 4 = 8 cups of flour. Write the amount of flour if the recipe is quadrupled a second time (multiplied by 4 again). What is the final amount of flour?",
+    "choices": [
+      "2 × 4² = 32 cups",
+      "2 × 4 × 4 = 32 cups",
+      "2⁴ × 4 = 64 cups",
+      "4 + 4 × 2 = 12 cups"
+    ],
+    "answer": "D",
+    "hints": [
+      "Multiplying by 4 twice is the same as multiplying by 4².",
+      "The base is 4 because that is what you are multiplying by. The exponent is 2 because you multiply by it twice."
+    ]
+  },
+  {
+    "id": "m6math-numerical-expressions-with-exponents-005",
+    "loId": "m6math.numerical-expressions-with-exponents",
+    "cedCode": "M6MATH-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Evaluate 10 + 3² and then evaluate (10 + 3)². Are the answers the same or different? Explain which answer is which.",
+    "choices": [
+      "Both expressions equal 169 because squaring always gives the same result.",
+      "10 + 3² = 19 and (10 + 3)² = 169 because the exponent only touches the 3 in the first expression, but the parentheses force you to add first in the second.",
+      "10 + 3² = 30 and (10 + 3)² = 60 because addition always comes before exponents.",
+      "Both expressions equal 13 because 10 + 3 is 13 no matter where you place the exponent."
+    ],
+    "answer": "A",
+    "hints": [
+      "In 10 + 3², the exponent belongs only to the 3 because there are no parentheses.",
+      "In (10 + 3)², the parentheses tell you to add first, then square the sum."
+    ]
+  },
+  {
+    "id": "m6math-numerical-expressions-with-exponents-006",
+    "loId": "m6math.numerical-expressions-with-exponents",
+    "cedCode": "M6MATH-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A video game player earns 5 points for each correct answer. In a bonus round, the score is multiplied by itself three times in a row. If the player gets one correct answer, the bonus score is 5 × 5 × 5 = 5³. Write this as a power and evaluate it. Then explain why 5³ is not the same as 5 × 3.",
+    "choices": [
+      "5³ = 15 because you multiply the base 5 by the exponent 3 to get the result, treating the exponent as a multiplier rather than a count of factors.",
+      "5³ = 125 because the exponent 3 means you use 5 as a factor three times, not multiply 5 by 3.",
+      "5³ = 8 because you add the base 5 and the exponent 3 together, since exponents represent repeated addition of the base.",
+      "5³ = 375 because you multiply 5 by 3 and then multiply that product by 5 again, combining the base and exponent through multiplication."
+    ],
+    "answer": "B",
+    "hints": [
+      "An exponent counts how many times the base appears as a factor, not a number to multiply by.",
+      "Compute 5 × 5 × 5 step by step and compare it to 5 × 3 to see how different they are."
+    ]
+  }
+]

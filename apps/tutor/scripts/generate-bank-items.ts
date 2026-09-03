@@ -350,6 +350,15 @@ function validateGenItem(it: GenItem, loId: string): string[] {
   else {
     const idx = ['A', 'B', 'C', 'D', 'E'].indexOf(it.answer);
     if (idx < 0 || idx >= it.choices.length) errs.push(`answer '${it.answer}' out of range`);
+    // Two choices with the same text make an item unanswerable, and the
+    // damage is worse than it looks: when the DUPLICATED option is the
+    // correct one, an independent solver picks whichever copy it likes and
+    // the item can PASS a verify gate while still being impossible for a
+    // student to answer correctly by choosing. So the verifier cannot be
+    // relied on to catch this — it has to be caught here. Measured at 22 of
+    // 960 items on the first Grade 6 run, 17 of them in mathematics.
+    const norm = it.choices.map((c) => c.toLowerCase().replace(/\s+/g, ' ').trim().replace(/\.$/, ''));
+    if (new Set(norm).size !== norm.length) errs.push('duplicate choice text');
   }
   if (/\$(\d)/.test(it.problemText || '')) errs.push(`WARN ${loId} problemText has $<digit> (currency/KaTeX trap)`);
   return errs;

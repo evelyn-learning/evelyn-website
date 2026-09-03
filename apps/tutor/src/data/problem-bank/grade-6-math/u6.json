@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-001",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A point is located at the ordered pair (-4, 3). Which axis or region does this point belong to? The first number tells you the direction along the x-axis, and the second number tells you the direction along the y-axis.",
+    "choices": [
+      "It lies on the x-axis because the x-coordinate is negative, which means it must be somewhere on the horizontal axis rather than in a quadrant.",
+      "It lies on the y-axis because the y-coordinate is positive, which means it must be somewhere on the vertical axis rather than in a quadrant.",
+      "It lies in Quadrant III because both coordinates are negative, placing it in the region where x and y values are both less than zero.",
+      "It lies in Quadrant II because the x-coordinate is negative and the y-coordinate is positive."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that a point belongs to a quadrant only when BOTH coordinates are nonzero.",
+      "Check the sign pattern: negative x and positive y match which quadrant?"
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-002",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Starting from the origin, you move 2 units to the right and then 7 units up. What ordered pair describes your final location? Remember to write the x-coordinate first, then the y-coordinate.",
+    "choices": [
+      "(2, 7)",
+      "(7, 2)",
+      "(2, -7)",
+      "(-2, 7)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Moving right means the x-coordinate is positive; moving up means the y-coordinate is positive.",
+      "The first number in an ordered pair is always the horizontal distance from the origin."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-003",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two students plot points using the coordinates 5 and -2. Maya plots (5, -2) and gets a point in Quadrant IV. Jamal plots (-2, 5) and gets a point in a different quadrant. Which quadrant contains Jamal's point? Recall that the order of the numbers in an ordered pair always matters.",
+    "choices": [
+      "Quadrant I because both numbers are positive when you ignore their signs.",
+      "Quadrant II because the x-coordinate is negative and the y-coordinate is positive.",
+      "Quadrant III because one number is negative.",
+      "Quadrant IV because -2 comes before 5 on the number line."
+    ],
+    "answer": "B",
+    "hints": [
+      "In an ordered pair, the first number is always the x-coordinate and the second is always the y-coordinate.",
+      "Negative x with positive y matches which sign pattern?"
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-004",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a coordinate plane, point R is located at (3, -4). Point S is located 3 units to the left of point R and on the same horizontal line. What is the ordered pair for point S, and which quadrant does it lie in? Start by finding point R, then move left along the same y-coordinate.",
+    "choices": [
+      "(6, -4) in Quadrant III",
+      "(3, -1) in Quadrant IV",
+      "(0, -4) on the negative y-axis",
+      "(-3, -4) in Quadrant III"
+    ],
+    "answer": "C",
+    "hints": [
+      "Moving left means subtracting from the x-coordinate; staying on the same horizontal line means the y-coordinate stays -4.",
+      "When one coordinate is zero, the point sits on an axis, not in a quadrant."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-005",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A treasure map shows a location 4 units to the left of the origin and 6 units up from it. A second location is 4 units to the right of the origin and 6 units down from it. What ordered pairs name these two locations, and what is true about their quadrants? Use the sign patterns for the quadrants to help you identify each.",
+    "choices": [
+      "(-4, 6) in Quadrant II and (4, -6) in Quadrant IV; they have opposite signs in every coordinate.",
+      "(-4, 6) in Quadrant II and (4, -6) in Quadrant IV; they are in the same quadrant.",
+      "(-4, -6) in Quadrant III and (4, 6) in Quadrant I; they have the same signs.",
+      "(4, 6) in Quadrant I and (-4, -6) in Quadrant III; they are symmetric about the origin."
+    ],
+    "answer": "D",
+    "hints": [
+      "For each location, move left or right first (x-coordinate), then up or down (y-coordinate).",
+      "Two points where every coordinate has the opposite sign reflect across the origin."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-006",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Four points are plotted on the same coordinate plane: (-2, 4), (0, -3), (2, 4), and (-2, 0). Which one of these points lies in a quadrant rather than on an axis, and which quadrant is it? Identify points on axes first (where at least one coordinate is zero), then eliminate them to find the point in a quadrant.",
+    "choices": [
+      "(-2, 4) in Quadrant II",
+      "(0, -3) in Quadrant IV",
+      "(2, 4) in Quadrant I",
+      "(-2, 0) on the negative x-axis"
+    ],
+    "answer": "A",
+    "hints": [
+      "A point sits on an axis whenever at least one coordinate equals zero; a quadrant contains only points where BOTH coordinates are nonzero.",
+      "Check each point: identify which ones have at least one zero coordinate and eliminate them first."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-001",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two points sit on the same horizontal line on a coordinate grid. Their first coordinates are different, but their second coordinates are both 5. Which coordinate should you use to find the distance between them?",
+    "choices": [
+      "The second coordinate, 5, because it matches at both points.",
+      "The first coordinate, because it is the one that differs between the two points.",
+      "Both coordinates together, adding them before finding distance.",
+      "Neither coordinate; you need to know the actual locations on a map."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson says to look only at the coordinate that DIFFERS between the two points.",
+      "The matching coordinate tells you which line the points sit on, but does not decide the distance."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-002",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The music store is at (-7, 3) and the bookstore is at (5, 3) on a city grid where each unit is one block. Both stores share the same second coordinate. What is the distance between the music store and the bookstore?",
+    "choices": [
+      "7 blocks",
+      "5 blocks",
+      "12 blocks",
+      "2 blocks"
+    ],
+    "answer": "C",
+    "hints": [
+      "The first coordinate changes from −7 to 5, so focus on those numbers.",
+      "Notice that −7 and 5 are on opposite sides of zero; this affects whether you add or subtract the absolute values."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-003",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mailbox is located at (2, −8) and a fire hydrant is located at (2, 6) on a street grid where each unit is one meter. Both structures share the same first coordinate, so they are on the same vertical line. How far apart are the mailbox and the fire hydrant?",
+    "choices": [
+      "6 meters",
+      "4 meters",
+      "14 meters",
+      "8 meters"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at the second coordinates: −8 and 6. One is negative and one is positive, which means they are on opposite sides of zero.",
+      "When a point is on opposite sides of zero, the distance formula changes to addition instead of subtraction."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-004",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a grid, point A is at (−5, 2), point B is at (−5, −9), and point C is at (4, 2). First, find the distance from A to B along the vertical line. Then, find the distance from A to C along the horizontal line. Which distance is longer, and by how many units?",
+    "choices": [
+      "The distance from A to B is longer by 2 units.",
+      "The distance from A to C is longer by 1 unit.",
+      "Both distances are equal.",
+      "The distance from A to B is longer by 3 units."
+    ],
+    "answer": "A",
+    "hints": [
+      "Start by finding the distance A to B: the second coordinates are 2 and −9, which are on opposite sides of zero.",
+      "Then find the distance A to C: the first coordinates are −5 and 4, which are also on opposite sides of zero. Compare your two results."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-005",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A delivery truck stops at two addresses. The first stop is at (−6, 4) and the second stop is at (8, 4) on the neighborhood grid. Both points share the same second coordinate. The truck driver claims the two addresses are 14 blocks apart. Is the driver correct? Explain why or why not using absolute value and the rule for same-side or opposite-side coordinates.",
+    "choices": [
+      "Yes, because −6 and 8 are 14 units away from each other when counted together.",
+      "No, because the first coordinates −6 and 8 are on opposite sides of zero, so you must add their absolute values: |−6| + |8| = 6 + 8 = 14, which matches the claim.",
+      "No, because the first coordinates −6 and 8 are on opposite sides of zero, so you should add their absolute values, but 6 + 8 = 14 is incorrect.",
+      "Yes, because when coordinates are on opposite sides of zero, the sum is always the true distance."
+    ],
+    "answer": "B",
+    "hints": [
+      "Identify whether −6 and 8 sit on the same side of zero or opposite sides.",
+      "Remember: when coordinates are on opposite sides of zero, add their absolute values to find the distance."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-006",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three warehouses are plotted on a grid: Warehouse P at (−3, 5), Warehouse Q at (−3, −7), and Warehouse R at (6, 5). The distance from P to Q is calculated by adding |5| + |−7| = 5 + 7 = 12 blocks, because 5 and −7 are on opposite sides of zero. A student looks at P and R and says: 'P and R both have first coordinate −3 and 6, so I should add |−3| + |6| = 3 + 6 = 9 blocks.' Identify the error in the student's reasoning.",
+    "choices": [
+      "The student is right; points on opposite sides of zero always require addition.",
+      "The student did not check whether the points actually share a coordinate. P and R share the second coordinate (both are at y = 5), not the first coordinate, so the distance is |6| − |−3| = 6 − 3 = 3 blocks.",
+      "The student did not check whether the points actually share a coordinate. P and R share the second coordinate (both are at y = 5), not the first coordinate, so the distance is |−3| + |6| = 9 blocks.",
+      "The student should have subtracted because −3 is negative and 6 is positive."
+    ],
+    "answer": "C",
+    "hints": [
+      "Before using any distance formula, verify which coordinate the two points actually share.",
+      "P is at (−3, 5) and R is at (6, 5). Which coordinate is the same at both points?"
+    ]
+  },
+  {
+    "id": "m6math-real-world-coordinate-plane-problems-001",
+    "loId": "m6math.solving-real-world-coordinate-plane-problems",
+    "cedCode": "M6MATH-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A location is 6 blocks west of Town Square and 2 blocks north. Which ordered pair represents this location?",
+    "choices": [
+      "(6, 2)",
+      "(2, -6)",
+      "(-6, 2)",
+      "(-2, 6)"
+    ],
+    "answer": "C",
+    "hints": [
+      "West means negative for the x-coordinate; north means positive for the y-coordinate.",
+      "Remember: the x-coordinate (direction east or west) comes first in the ordered pair."
+    ]
+  },
+  {
+    "id": "m6math-real-world-coordinate-plane-problems-002",
+    "loId": "m6math.solving-real-world-coordinate-plane-problems",
+    "cedCode": "M6MATH-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a coordinate plane with the origin at Town Square, three locations are marked: (-4, 7), (-4, 3), and (2, 7). Which two locations share a street and can be reached by walking straight without changing direction?",
+    "choices": [
+      "(-4, 7) and (-4, 3) because they share the same x-coordinate",
+      "(-4, 7) and (2, 7) because they share the same y-coordinate",
+      "(2, 7) and (-4, 3) because they are both in different quadrants",
+      "All three locations share a common street"
+    ],
+    "answer": "D",
+    "hints": [
+      "Two locations share a street if they have either the same x-coordinate or the same y-coordinate.",
+      "Check which pairs have matching x-values or matching y-values."
+    ]
+  },
+  {
+    "id": "m6math-real-world-coordinate-plane-problems-003",
+    "loId": "m6math.solving-real-world-coordinate-plane-problems",
+    "cedCode": "M6MATH-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A point on a coordinate plane is located 3 blocks east of Town Square and 5 blocks south. In which quadrant does this point sit?",
+    "choices": [
+      "Quadrant IV",
+      "Quadrant II",
+      "Quadrant I",
+      "Quadrant III"
+    ],
+    "answer": "A",
+    "hints": [
+      "East gives a positive x-coordinate; south gives a negative y-coordinate.",
+      "The signs of the coordinates alone tell you the quadrant: (positive, negative) is southeast."
+    ]
+  },
+  {
+    "id": "m6math-real-world-coordinate-plane-problems-004",
+    "loId": "m6math.solving-real-world-coordinate-plane-problems",
+    "cedCode": "M6MATH-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two flags are located at (7, -4) and (7, 6) on a map with Town Square at the origin. The flags sit on the same north-south street. How many blocks apart are these two flags when walking straight along their shared street?",
+    "choices": [
+      "3 blocks",
+      "10 blocks",
+      "2 blocks",
+      "6 blocks"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both points share the same x-coordinate, so compare their y-coordinates: -4 and 6.",
+      "The y-coordinates are on opposite sides of zero, so you must add their distances from zero rather than subtract them."
+    ]
+  },
+  {
+    "id": "m6math-real-world-coordinate-plane-problems-005",
+    "loId": "m6math.solving-real-world-coordinate-plane-problems",
+    "cedCode": "M6MATH-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four locations on a map are A at (-8, 5), B at (3, 5), C at (3, -2), and D at (-8, -2). Which pair of locations sits on an east-west street together, and how many blocks apart are they when walking straight?",
+    "choices": [
+      "A and B are 11 blocks apart",
+      "C and D are 11 blocks apart",
+      "A and D are 7 blocks apart",
+      "B and C are 7 blocks apart"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two locations share an east-west street if they have the same y-coordinate.",
+      "After identifying the pair, check whether their other coordinates are on the same side or opposite sides of zero to decide whether to add or subtract."
+    ]
+  },
+  {
+    "id": "m6math-real-world-coordinate-plane-problems-006",
+    "loId": "m6math.solving-real-world-coordinate-plane-problems",
+    "cedCode": "M6MATH-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A treasure hunt has three checkpoints: Checkpoint 1 at (6, -7), Checkpoint 2 at (-6, -7), and Checkpoint 3 at (6, 4). A team walks from Checkpoint 1 straight to Checkpoint 2 along their shared street, then from Checkpoint 2 straight to Checkpoint 3 along their shared street. How many total blocks does the team walk?",
+    "choices": [
+      "17 blocks",
+      "21 blocks",
+      "11 blocks",
+      "23 blocks"
+    ],
+    "answer": "D",
+    "hints": [
+      "First, identify which checkpoints share a street by looking for matching coordinates, then find the distance along that street.",
+      "The team makes two separate walks, each along a different street—add the distances from both walks together."
+    ]
+  },
+  {
+    "id": "m6math-reflecting-points-across-the-axes-001",
+    "loId": "m6math.reflecting-points-across-the-axes",
+    "cedCode": "M6MATH-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When you reflect a point across the x-axis, which coordinate changes sign? The x-coordinate, the y-coordinate, or both?",
+    "choices": [
+      "The y-coordinate",
+      "The x-coordinate",
+      "Both coordinates",
+      "Neither coordinate"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember: the coordinate that changes is the one that moves. The x-axis is horizontal, so points move up or down.",
+      "Think about which direction you travel when you cross the x-axis—does that direction change the x or the y value?"
+    ]
+  },
+  {
+    "id": "m6math-reflecting-points-across-the-axes-002",
+    "loId": "m6math.reflecting-points-across-the-axes",
+    "cedCode": "M6MATH-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A point is located at (7, 3) on a coordinate grid. What are the coordinates of this point after it is reflected across the y-axis?",
+    "choices": [
+      "(7, -3)",
+      "(-7, 3)",
+      "(-7, -3)",
+      "(3, 7)"
+    ],
+    "answer": "B",
+    "hints": [
+      "The y-axis is vertical. When you reflect across it, you move left or right, not up or down.",
+      "Reflecting across the y-axis means the x-coordinate becomes its opposite, while the y-coordinate stays the same."
+    ]
+  },
+  {
+    "id": "m6math-reflecting-points-across-the-axes-003",
+    "loId": "m6math.reflecting-points-across-the-axes",
+    "cedCode": "M6MATH-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Point M sits at (-5, 8) on a grid. After reflecting M across the x-axis, what is the y-coordinate of the reflected point?",
+    "choices": [
+      "-5",
+      "8",
+      "-8",
+      "5"
+    ],
+    "answer": "C",
+    "hints": [
+      "Reflecting across the x-axis means the point flips straight up or down, landing the same distance away but on the opposite side.",
+      "When you reflect across the x-axis, the y-coordinate becomes its opposite. What is the opposite of 8?"
+    ]
+  },
+  {
+    "id": "m6math-reflecting-points-across-the-axes-004",
+    "loId": "m6math.reflecting-points-across-the-axes",
+    "cedCode": "M6MATH-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Start with the point (-2, 6). First, reflect it across the x-axis. Then, reflect the new point across the y-axis. What is the x-coordinate of the final point?",
+    "choices": [
+      "-2",
+      "2",
+      "6",
+      "-6"
+    ],
+    "answer": "D",
+    "hints": [
+      "After reflecting across the x-axis, the y-coordinate flips but the x-coordinate stays -2. Then reflect that result across the y-axis.",
+      "When you reflect across both axes in order, both coordinates end up as their opposites compared to where you started."
+    ]
+  },
+  {
+    "id": "m6math-reflecting-points-across-the-axes-005",
+    "loId": "m6math.reflecting-points-across-the-axes",
+    "cedCode": "M6MATH-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A treasure map shows a marker at (4, -7). The map creator wants to place a decoy by reflecting this marker across the x-axis first, then reflecting that new point across the y-axis. Which ordered pair shows the final location of the decoy?",
+    "choices": [
+      "(-4, 7)",
+      "(4, 7)",
+      "(4, -7)",
+      "(-7, 4)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start by reflecting (4, -7) across the x-axis. What happens to the y-coordinate when you do this?",
+      "After your first reflection, take that result and reflect it across the y-axis. What happens to the x-coordinate of your intermediate point?"
+    ]
+  },
+  {
+    "id": "m6math-reflecting-points-across-the-axes-006",
+    "loId": "m6math.reflecting-points-across-the-axes",
+    "cedCode": "M6MATH-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "On a coordinate plane, point R is 3 units above the x-axis and 5 units to the left of the y-axis. If you reflect point R across the y-axis, then reflect that new point across the x-axis, how many units will the final point be from the x-axis, and on which side?",
+    "choices": [
+      "3 units above the x-axis",
+      "3 units below the x-axis",
+      "5 units above the x-axis",
+      "5 units below the x-axis"
+    ],
+    "answer": "B",
+    "hints": [
+      "First, figure out R's coordinates using the distance information: 3 units above the x-axis means the y-coordinate is 3, and 5 units left of the y-axis means the x-coordinate is -5.",
+      "After reflecting across the y-axis and then the x-axis, both coordinates flip sign. The distance from the x-axis is the absolute value of the y-coordinate; which side is it on after both reflections?"
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6sci-renewable-nonrenewable-resources-001",
+    "loId": "m6sci.renewable-and-nonrenewable-resources",
+    "cedCode": "M6SCI-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A resource is classified as renewable if nature replaces it about as fast as, or faster than, people use it. Based on this definition, which of the following is the key factor that decides whether a resource is renewable or nonrenewable?",
+    "choices": [
+      "Whether the resource comes from underground or the surface of Earth",
+      "Whether the resource is made of minerals or organic material that can be processed",
+      "The comparison between the rate the resource is replaced and the rate it is used",
+      "Whether humans have the technology to capture and use the resource efficiently"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the word 'rate' in the definition you just read.",
+      "Think about what gets compared to make the decision: two different speeds."
+    ]
+  },
+  {
+    "id": "m6sci-renewable-nonrenewable-resources-002",
+    "loId": "m6sci.renewable-and-nonrenewable-resources",
+    "cedCode": "M6SCI-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A mining company extracts aluminum ore from a deposit that formed underground over millions of years as mineral-rich fluids slowly crystallized in rock cracks. Today, the company removes thousands of tons of ore per year from the same deposit. How should this aluminum ore be classified, and why?",
+    "choices": [
+      "Renewable, because aluminum is a mineral that exists all over Earth",
+      "Renewable, because the ore continues to form in other places even though this deposit is being mined",
+      "Nonrenewable, because the ore forms far more slowly than the rate at which it is being removed",
+      "Nonrenewable, because mining damages the surrounding rock and landscape"
+    ],
+    "answer": "D",
+    "hints": [
+      "Focus on comparing two rates: how fast the ore formed over geologic time versus how fast it is being mined per year.",
+      "Remember that what matters is whether the same deposit gets replaced on a timescale that matters to people."
+    ]
+  },
+  {
+    "id": "m6sci-renewable-nonrenewable-resources-003",
+    "loId": "m6sci.renewable-and-nonrenewable-resources",
+    "cedCode": "M6SCI-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A country operates hydroelectric dams that capture falling water to generate electricity. The water that fills the reservoirs behind the dams comes from rain and snowmelt in the mountains upstream. Every year, roughly the same amount of water falls as rain and snow as the amount that flows through the dams and power the turbines. Based on this information, how should the water resource used by these dams be classified?",
+    "choices": [
+      "Renewable, because the replacement rate (rainfall and snowmelt) matches the use rate (water flowing through the dams)",
+      "Nonrenewable, because dams are human-made structures that require constant maintenance and will eventually wear out or fail",
+      "Renewable, because water itself is a mineral that cycles through the environment and can never truly be used up or destroyed",
+      "Nonrenewable, because the water has already fallen as rain and is no longer being actively replaced by natural processes"
+    ],
+    "answer": "A",
+    "hints": [
+      "Which scenario does this setup match: use rate roughly equals replacement rate, or use rate greatly exceeds replacement rate?",
+      "Consider what happens to the water level in the reservoir if rainfall roughly equals the flow through the dams."
+    ]
+  },
+  {
+    "id": "m6sci-renewable-nonrenewable-resources-004",
+    "loId": "m6sci.renewable-and-nonrenewable-resources",
+    "cedCode": "M6SCI-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that 'fossil fuels like coal are nonrenewable resources because they will eventually run out, but solar energy is renewable because we can use as much as we want and it will never run out.' Which part of this claim is incorrect, and why?",
+    "choices": [
+      "Solar energy is not actually renewable; it is just so abundant that it seems unlimited to people.",
+      "Renewable resources can also run low or become unavailable if used faster than they are replaced, so 'renewable' does not mean unlimited or that a resource can never be reduced.",
+      "Coal is actually renewable on very long timescales because new coal is still forming underground even today.",
+      "Both coal and solar energy are nonrenewable because both require technology and equipment to be useful to people."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what the lesson emphasizes: 'renewable' is about rate comparison, not about whether a resource can ever run low.",
+      "Consider the examples of overpumped aquifers and overcut forests that are treated as nonrenewable even though rain falls and trees grow."
+    ]
+  },
+  {
+    "id": "m6sci-renewable-nonrenewable-resources-005",
+    "loId": "m6sci.renewable-and-nonrenewable-resources",
+    "cedCode": "M6SCI-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two fishing communities draw food from the same ocean fish population. Community A catches fish at a rate that allows the population to reproduce and replace the catch each year. Community B catches fish at a rate much faster than the population can reproduce, causing the fish population to shrink year after year. Explain why the fish resource is renewable for Community A but nonrenewable for Community B, using the rate comparison definition.",
+    "choices": [
+      "Community A is renewable because it uses smaller boats; Community B is nonrenewable because it uses industrial fishing methods.",
+      "The fish population has the ability to reproduce and replace itself, so it should be renewable for both communities regardless of how much they catch.",
+      "For Community A, the catch rate equals or is slower than the replacement rate, making it renewable. For Community B, the catch rate exceeds the replacement rate, making the same resource nonrenewable for that community.",
+      "Community A is renewable because it sells only local fish; Community B is nonrenewable because it exports fish to other countries."
+    ],
+    "answer": "C",
+    "hints": [
+      "The key is comparing two rates for each community: the rate fish are caught versus the rate they reproduce.",
+      "Notice that the same resource (the fish population) gets classified differently for the two communities based on how they use it."
+    ]
+  },
+  {
+    "id": "m6sci-renewable-nonrenewable-resources-006",
+    "loId": "m6sci.renewable-and-nonrenewable-resources",
+    "cedCode": "M6SCI-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A forest is logged at a high rate for 10 years, removing trees much faster than new trees can grow. The logging then stops completely, and no trees are cut for the next 20 years. During those 20 years, the forest regrows densely. A student argues: 'Because the forest has regrown, the timber from that forest should now be reclassified from nonrenewable to renewable, just like the forest was renewable before the logging began.' Is this reasoning correct or incorrect? Explain what the student is missing about how resource classification works.",
+    "choices": [
+      "The reasoning is incorrect because once a forest is cut, the timber can never be classified as renewable again, no matter how much it regrows.",
+      "The reasoning is incorrect because the classification of timber depends on the current rate of use relative to the growth rate, not on what happened in the past or on the total amount of forest that exists.",
+      "The reasoning is correct because the forest has physically regrown and returned to its original state, so all the conditions for being renewable are met again.",
+      "The reasoning is incorrect because regrowing forests require sunlight and water, which are renewable resources, so timber can only be renewable if solar energy is also renewable."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what determines whether timber is renewable or nonrenewable: the comparison between cutting rate and growth rate during the period of use.",
+      "Consider what changed between the 10-year logging period (nonrenewable use) and the 20-year recovery period: was anyone cutting trees at all during recovery?"
+    ]
+  },
+  {
+    "id": "m6sci-how-geologic-processes-distribute-resources-unev-001",
+    "loId": "m6sci.how-geologic-processes-distribute-resources-unevenly",
+    "cedCode": "M6SCI-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Coal forms when ancient swamp plant material gets buried under layers of sediment over an enormous span of time, and heat and pressure convert that plant material into coal. Which statement correctly describes why coal is found in some locations and not others?",
+    "choices": [
+      "Coal can form anywhere on Earth if people dig deep enough to reach hot rocks underground.",
+      "Coal forms only in locations where the ground temperature is extremely hot, regardless of what type of material or organisms existed there millions of years ago.",
+      "Coal forms wherever solid rock has been compressed and heated by burial, even if that rock did not originally contain plant material from ancient swamps.",
+      "Coal is found only where ancient swamps existed and their plant material was buried and converted by heat and pressure over an enormous span of time."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what material coal needs to start from — where would that material have come from?",
+      "The lesson says a resource shows up only where the matching process happened. What is the matching process for coal?"
+    ]
+  },
+  {
+    "id": "m6sci-how-geologic-processes-distribute-resources-unev-002",
+    "loId": "m6sci.how-geologic-processes-distribute-resources-unevenly",
+    "cedCode": "M6SCI-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geologist finds layers of sand and gravel buried deep underground in a particular region. Based on the lesson about how aquifers form, why would this discovery suggest that the region might have a productive aquifer?",
+    "choices": [
+      "Sand and gravel are permeable materials that allow water to move through them, so a thick layer of these materials can hold and supply groundwater.",
+      "Sand and gravel are denser than other rock types, so they sink deeper underground and are always surrounded by water that fills the pore spaces between grains.",
+      "Sand and gravel contain minerals that chemically absorb water from the surrounding rock layers, drawing it inward and storing it within the material over time.",
+      "Sand and gravel were deposited in layers that slope downward, which causes water to flow naturally into these layers from higher elevations above the ground."
+    ],
+    "answer": "A",
+    "hints": [
+      "What property do sand and gravel have that makes them useful for holding and transmitting water?",
+      "Recall the Ogallala Aquifer example — what made it productive?"
+    ]
+  },
+  {
+    "id": "m6sci-how-geologic-processes-distribute-resources-unev-003",
+    "loId": "m6sci.how-geologic-processes-distribute-resources-unevenly",
+    "cedCode": "M6SCI-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rock layer deep beneath a region contains plenty of organic material from ancient marine organisms buried under thick sediment, but no oil or natural gas has ever been found there despite drilling. Which fact about the rock structure would best explain why oil and natural gas did not collect in this region?",
+    "choices": [
+      "The region's rock layers lack the mineral content needed to convert organic material into oil and natural gas during burial.",
+      "An impermeable sealing layer never formed above the reservoir rock, allowing any oil and gas that formed to seep upward and escape instead of collecting.",
+      "The ancient sea that covered this region was too warm to allow organic material from marine organisms to accumulate and be buried in the sediment.",
+      "The region experienced tectonic uplift and erosion that brought the buried organic material back toward the surface before it could be converted into oil and gas."
+    ],
+    "answer": "B",
+    "hints": [
+      "Oil and gas can form, but the lesson shows that they also need something else to stay in place — what is it?",
+      "Without a trap, what would happen to the oil and gas that formed from that buried organic material?"
+    ]
+  },
+  {
+    "id": "m6sci-how-geologic-processes-distribute-resources-unev-004",
+    "loId": "m6sci.how-geologic-processes-distribute-resources-unevenly",
+    "cedCode": "M6SCI-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two neighboring regions both have a history of being covered by ancient shallow seas with buried organic-rich sediment. Region X's rock record shows that sediment buried the organic material to great depths, and heat and pressure acted on it for an enormous span of time. Region Y's rock record shows the same burial and heat-pressure conditions, but also shows that the region experienced uplift and erosion that brought old rock layers back to the surface. Based on what the lesson explains about how oil forms and stays in place, which region is more likely to have oil reserves today, and why?",
+    "choices": [
+      "Region Y is more likely to have oil because the erosion and uplift created new pathways for water to bring oil from deep rocks toward the surface where it can be accessed.",
+      "Neither region is likely to have oil because one has coal and one has neither resource, and a region cannot have more than one type of fossil fuel reserve.",
+      "Region X is more likely to have oil because the burial, heat, and pressure converted organic material into oil over an enormous span of time, and that oil would still be sealed in place in the deep rock layers that were never brought back to the surface.",
+      "Both regions are equally likely to have oil because both experienced the same conditions of burial and heat and pressure acting on organic-rich sediment for millions of years."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what happens to oil and gas if they are brought to the surface by erosion over time.",
+      "The lesson stresses that oil needs both formation AND a trap to remain. What would erosion and uplift do to a trap that formed deep underground?"
+    ]
+  },
+  {
+    "id": "m6sci-how-geologic-processes-distribute-resources-unev-005",
+    "loId": "m6sci.how-geologic-processes-distribute-resources-unevenly",
+    "cedCode": "M6SCI-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A region sits in the middle of a stable continental plate, far from any plate boundary. A mining company claims that they will find copper ore deposits if they drill deep enough into the ground. Based on the geologic process that forms copper ore deposits as explained in the lesson, what should a geologist say about this claim?",
+    "choices": [
+      "The claim is correct because copper is a metal that forms in all types of rock given enough time and pressure.",
+      "The claim is correct because drilling deeper always brings you into hotter rock, and heat can form copper ore anywhere underground.",
+      "The claim is incorrect because copper ore of the kind described in the lesson forms from mineral-rich fluids released by magma at subduction zones, and this region has no subducting plate beneath it to produce those fluids, regardless of drilling depth.",
+      "The claim is incorrect because copper ore only forms in very young rocks, and drilling deep usually finds only old, ancient rocks."
+    ],
+    "answer": "D",
+    "hints": [
+      "What specific geologic process creates the mineral-rich fluids that form copper ore deposits?",
+      "Can that process happen in a region far from a plate boundary?"
+    ]
+  },
+  {
+    "id": "m6sci-how-geologic-processes-distribute-resources-unev-006",
+    "loId": "m6sci.how-geologic-processes-distribute-resources-unevenly",
+    "cedCode": "M6SCI-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geologist studying two adjacent regions discovers that Region M was covered by an ancient swamp 300 million years ago, and that Region N was covered by an ancient shallow sea during the same time period. The geologist then finds that Region M has coal deposits today, but Region N has neither coal nor oil reserves, even though both regions have similar rock depths and temperatures. Which combination of facts best explains why Region M has coal but Region N has neither coal nor oil?",
+    "choices": [
+      "Region M's swamp plant material was buried and converted to coal, but Region N's marine sediment never experienced enough heat and pressure to form oil, and it also lacked a sealing layer to trap any oil that might have formed.",
+      "Region N's marine organisms never had enough organic material in their bodies to form oil reserves, while Region M's plants contained much more organic carbon that could be converted into coal through burial.",
+      "Region M experienced slower erosion rates than Region N, which allowed the coal to remain trapped underground, while Region N's potential oil was destroyed by rapid erosion that exposed it to oxygen at the surface.",
+      "Region N was uplifted and exposed to weathering before the oil and gas that formed could accumulate in place, while Region M's coal remained protected in deep rock layers that have never been brought close to the surface."
+    ],
+    "answer": "A",
+    "hints": [
+      "What different source materials and geologic processes does coal need compared to oil?",
+      "For oil to stay in place and form a reserve, what additional rock structure must be present along with the burial and heat-pressure process?"
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-001",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does the term 'elevated risk' mean when geologists describe a location's hazard pattern? Choose the statement that matches the lesson definition.",
+    "choices": [
+      "A higher-than-average chance that a hazard like an earthquake or volcanic eruption will occur in a location, based on what has repeatedly happened there before, without predicting when or whether the next event will happen",
+      "A guarantee that a major earthquake or volcanic eruption will happen at that location within the next few years, making it unsafe to inhabit",
+      "A measurement of how strong and destructive the next earthquake or eruption will be when it eventually strikes that location",
+      "A description of where a single earthquake or eruption has occurred one time in recorded history at that particular site"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson distinguishes between higher-than-average chance based on repeated patterns and a guaranteed prediction.",
+      "Think about whether the definition includes when an event will happen or just whether the location is more likely to have one."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-002",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geologist is studying a mountain region located 400 kilometers inland from the nearest coast. Surveys show that two plates carrying continental crust are colliding head-on, pushing the distance between them smaller each year. Over the last 150 years, the region has recorded many strong earthquakes but no active volcanic eruptions. Based on this boundary type and hazard record, which statement correctly explains what hazards this region carries an elevated risk for?",
+    "choices": [
+      "Earthquakes, volcanic eruptions, and tsunamis, because all convergent boundaries produce all three hazards without exception",
+      "Earthquakes only, because this is a continent-to-continent convergent boundary with no oceanic plate being forced beneath the other one, and because it is too far inland for tsunami risk",
+      "Volcanic eruptions only, because the collision is building high mountains that generate intense heat and melt the rock beneath them into magma",
+      "Earthquakes and volcanic eruptions equally, because continental collision boundaries always produce both hazards in similar amounts throughout their history"
+    ],
+    "answer": "B",
+    "hints": [
+      "Not all convergent boundaries produce the same hazard mix; the lesson contrasts continent-to-continent collision with oceanic-continental subduction.",
+      "Remember that tsunamis require an ocean above the boundary to be displaced, and consider what the 150-year record actually shows."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-003",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "California's San Andreas Fault is a transform boundary where two plates slide past each other horizontally, staying roughly the same distance apart. The historical record shows frequent earthquakes along the fault over the past two centuries, but geologists have found no chain of active volcanoes sitting directly on the fault itself. Why does a transform boundary like this one produce a different hazard pattern from a subduction zone like the one under the Andes Mountains?",
+    "choices": [
+      "Transform boundaries produce earthquakes because friction between the sliding plates releases energy, but they do not pull one plate down into the hot mantle where magma forms, so no volcanic arc can develop",
+      "The two plates at a transform boundary are moving toward each other, so they cannot produce earthquakes at all, only slow folding of rock",
+      "At a transform boundary, the plates slide sideways rather than closing the distance, so one plate is not being forced beneath the other to build a volcanic arc",
+      "Transform boundaries only occur on land where temperatures are cooler, while subduction zones occur beneath the ocean where heat is trapped, so only subduction zones can produce volcanoes"
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson explains that what is converging — oceanic plate forced under continental plate versus plates sliding sideways — determines whether a volcanic arc forms.",
+      "Think about the difference between motion that closes the distance between plates and motion that keeps the distance about the same."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-004",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two coastal regions, both located where an oceanic plate is being forced beneath a continental plate, have recorded very different hazard histories over the past 200 years. Region P has experienced many earthquakes and several volcanic eruptions, and the historical record includes three major tsunamis triggered by undersea earthquakes. Region Q, sitting on a boundary of the same type with the same motion direction, has recorded many earthquakes and several volcanic eruptions, but no tsunamis in the entire 200-year record. When geologists surveyed the seafloor, they found that Region P's subduction zone runs directly beneath the ocean right up to the coast, while Region Q's subduction zone also runs beneath the ocean but ends more than 100 kilometers offshore, with shallow continental shelf seafloor between the subduction zone and the coastline. Using the lesson's explanation of how tsunamis form, explain why these two regions have different tsunami risk, even though they sit on the same type of boundary.",
+    "choices": [
+      "Region Q's plate boundary is not actually convergent, so it cannot produce the large earthquakes needed to trigger a tsunami",
+      "Region P carries a higher tsunami risk because its subduction zone runs directly beneath the shallow ocean right at the coast, so an earthquake there can suddenly shift the seafloor close to the shore and create large waves, while Region Q's subduction zone is so far offshore that the energy of an earthquake is absorbed by the thick continental shelf before it can reach the coast",
+      "Region Q is located on a transform boundary that has been mislabeled as convergent, which is why it has not recorded any tsunamis",
+      "Both regions carry exactly equal tsunami risk because they both sit on oceanic-continental subduction zones, and the lesson says that all subduction zones produce tsunamis"
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson links tsunami formation to both the earthquake and the location of the ocean above the boundary — consider which detail changes between Region P and Region Q.",
+      "Think about how the distance between the subduction zone and the coast affects whether an earthquake can displace the water column above it in a way that threatens the shore."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-005",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geologist is writing a public report about volcanic and earthquake hazards in three regions. She correctly identifies that Region A sits on a coastal convergent boundary with an oceanic plate subducting beneath a continental plate, Region B sits on the Pacific Ring of Fire (a chain of convergent boundaries around the Pacific Ocean's rim), and Region C sits on a convergent boundary in the interior of a continent, far from any coast, where two continental plates are colliding. The geologist's draft report states: 'All three regions carry an elevated risk of volcanic eruptions, because they all sit on convergent boundaries, and the lesson shows that convergent boundaries produce the hazard patterns found around the Pacific Ring of Fire.' Identify what is wrong with this reasoning and explain what the correct hazard pattern should be for each region.",
+    "choices": [
+      "The reasoning is correct; the lesson clearly states that every convergent boundary produces volcanoes and earthquakes everywhere on Earth",
+      "The reasoning is incomplete because it treats all convergent boundaries as the same. Region A carries elevated risk of earthquakes, volcanic eruptions, and tsunamis because it is a coastal oceanic-continental subduction zone. Region B also carries risk of earthquakes and volcanic eruptions because most of the Ring of Fire is oceanic-continental subduction zones. Region C carries elevated risk of earthquakes only, because it is continent-to-continent collision with no oceanic plate subducting and no coast for tsunami risk",
+      "The reasoning is wrong because Region B's volcanic activity is caused by the Ring of Fire's location on the equator, not its boundary type",
+      "The reasoning is backwards; the lesson proves that transform boundaries, not convergent boundaries, are responsible for all Earth's volcanoes"
+    ],
+    "answer": "A",
+    "hints": [
+      "Revisit the Himalayas example in the lesson: it is convergent but has earthquakes and no volcanoes — does every convergent boundary produce the same hazard mix?",
+      "What determines whether an oceanic-continental subduction zone builds a volcanic arc versus a continent-to-continent collision?"
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-006",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Geologists discover an undersea mountain range running north-south in the middle of the Atlantic Ocean. Surveys show that the two plates on either side of this range are moving steadily away from each other, and new seafloor is forming along the ridge between them. This ridge is a divergent boundary. Separately, geologists find that the island of Iceland sits directly on top of the Mid-Atlantic Ridge (part of this same divergent boundary), and Iceland's historical record shows both frequent earthquakes and frequent volcanic eruptions over centuries. However, regions far from Iceland that sit on the same Mid-Atlantic Ridge — mostly beneath deep ocean water with no islands — show frequent earthquakes on their hazard records but virtually no recorded volcanic activity. Using the lesson's explanation of why boundary type alone does not always determine the hazard pattern, explain why Iceland's hazard record looks so different from the rest of the Mid-Atlantic Ridge, even though both sit on the same type of boundary.",
+    "choices": [
+      "Iceland has a different plate boundary type than the rest of the Mid-Atlantic Ridge, which is why it produces volcanoes while the rest produces only earthquakes",
+      "Most of the Mid-Atlantic Ridge is hidden underwater, so its volcanoes exist but are not observed from land; Iceland is the rare place where the divergent boundary rises above the ocean surface, allowing observers to see and record the volcanic eruptions that the boundary produces, which makes Iceland's recorded hazard pattern look unique compared to the underwater parts that produce eruptions out of sight",
+      "Iceland is located on a convergent boundary that has been mislabeled as divergent on maps, which explains why it has volcanic activity while the rest of the Mid-Atlantic Ridge, which is truly divergent, does not produce eruptions",
+      "The volcanic eruptions recorded in Iceland are caused by heat from fossil fuels burning deep underground rather than by the movement of plates at the boundary itself, so they are not a true measure of the divergent boundary's actual hazard pattern"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson describes Iceland as 'the exception worth knowing' and explains that most divergent boundaries sit 'hidden on the ocean floor, out of sight.'",
+      "Consider the difference between a hazard that occurs in a location and a hazard that is recorded or observed by people living there — does invisibility mean it is not happening?"
+    ]
+  },
+  {
+    "id": "m6sci-forecasting-preparing-for-weather-hazards-001",
+    "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
+    "cedCode": "M6SCI-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A tornado warning is issued for your neighborhood. According to the lesson, what should this alert mean to you right now?",
+    "choices": [
+      "Conditions are favorable for a tornado to form, so you should start preparing supplies and planning an evacuation route.",
+      "A tornado is occurring or expected very soon, so you should move to shelter immediately rather than waiting to see what happens.",
+      "A tornado has been spotted on the ground and is moving toward your exact location, so you should leave town as quickly as possible.",
+      "Tornado activity is possible somewhere in your county later today, so you should check the forecast again in a few hours."
+    ],
+    "answer": "B",
+    "hints": [
+      "A warning means 'act now,' not 'get ready' or 'stay alert for later.'",
+      "The difference between a watch and a warning is about timing — one gives you hours to prepare, the other means you have little time left."
+    ]
+  },
+  {
+    "id": "m6sci-forecasting-preparing-for-weather-hazards-002",
+    "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
+    "cedCode": "M6SCI-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hurricane forecast track shows the storm's center passing 50 kilometers south of a coastal city. The shaded cone around the track is 100 kilometers wide. Should residents of the city assume they are safe from wind, rain, and storm surge because they are outside the forecast cone?",
+    "choices": [
+      "Yes, the cone shows exactly where the storm's center will go, so areas outside it will not experience any effects from the hurricane.",
+      "Yes, if the center passes 50 kilometers away, the city will only feel minor rain and no dangerous wind or storm surge because distance from the center eliminates all hazardous conditions.",
+      "No, wind, rain, and storm surge can all reach well beyond the shaded cone, so being outside the cone does not mean the city is automatically safe.",
+      "No, the cone represents only the most likely path of the center, but hurricane-force winds and heavy rain extend far beyond this path into surrounding areas."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson explains what the cone shows and what it does NOT show — what misconception is the distractor trying to get you to believe?",
+      "The cone width reflects accuracy from past forecasts. Think about what can reach beyond the visible cone area."
+    ]
+  },
+  {
+    "id": "m6sci-forecasting-preparing-for-weather-hazards-003",
+    "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
+    "cedCode": "M6SCI-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A town's flood-monitoring records show that in the past, storms that slowed down after making landfall dropped heavy rain for several days over the same inland areas. The current forecast shows a tropical storm expected to linger inland and bring several days of rainfall to those same areas. Which of the following is the best use of this historical data to evaluate a proposed action?",
+    "choices": [
+      "The historical data proves that inland flooding will definitely happen this time, so any preparedness plan will succeed regardless of what specific actions it includes.",
+      "The historical data is not reliable because the forecast is for a weaker storm this year than the ones in the historical records.",
+      "The historical data shows a consistent pattern at a specific location that matches the current forecast track, so it provides evidence that inland flooding is a likely risk that the plan should address.",
+      "The historical data is only useful if this storm is stronger than the past storms, because weaker storms will not produce the same flooding pattern."
+    ],
+    "answer": "D",
+    "hints": [
+      "Historical data is evidence for the specific track and location — re-read the lesson's statement about when historical data is and is not useful.",
+      "The track similarity is what makes the historical pattern relevant, not whether this storm is stronger or weaker."
+    ]
+  },
+  {
+    "id": "m6sci-forecasting-preparing-for-weather-hazards-004",
+    "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
+    "cedCode": "M6SCI-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A city faces a forecast showing moderate wind and heavy rain from an approaching hurricane, with the track expected to weaken as it moves inland. Historical records show that three similar storms also weakened rapidly in wind strength after landfall but each one stalled inland and dropped intense rainfall for two days, causing significant flooding in the town's river valley. The city's current plan is to open an emergency shelter and advise residents to stay indoors during the storm, then reopen businesses the next day after winds die down. Using both the forecast and the historical pattern, identify the key problem with this plan.",
+    "choices": [
+      "The plan does not account for the historical pattern of storms stalling and causing extended flooding — it treats the drop in wind strength as if the storm hazard is over, when extended heavy rain is the actual risk the records point to.",
+      "The plan is too cautious because the forecast shows the storm will weaken rapidly, so the extended shelter stay and indoor confinement are unnecessary precautions when winds will drop quickly.",
+      "The plan fails because it prioritizes rain preparedness over storm surge, which is always the dominant hazard in any hurricane regardless of the weakening wind forecast.",
+      "The plan is incomplete because it does not include pre-storm structural reinforcement and evacuation routes, which are mandatory components of any hurricane response strategy."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson warns about judging risk by wind category alone — what does the historical record show about this storm track, and what does the forecast show the wind doing?",
+      "Combine two pieces of evidence: the forecast shows weakening wind, but the historical data shows what else continues to happen after the wind drops."
+    ]
+  },
+  {
+    "id": "m6sci-forecasting-preparing-for-weather-hazards-005",
+    "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
+    "cedCode": "M6SCI-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A low-lying coastal neighborhood has experienced flooding from storm surge during three separate hurricanes over the past 30 years, all of which approached on nearly identical tracks. A high-ground neighborhood 2 kilometers inland has not flooded during any of those same storms. A new hurricane is forecast on a track matching the previous three, and a watch is currently in effect. A resident of the high-ground neighborhood asks, 'Since my neighborhood didn't flood before, why should we prepare differently than we did last time?' Using the lesson's key ideas, explain why this resident's reasoning does not match the forecast and historical evidence.",
+    "choices": [
+      "The resident is correct — being on high ground guarantees protection from all hurricane hazards, so the neighborhood should maintain the same preparedness level used in past storms.",
+      "The high-ground neighborhood should prepare differently because the watch gives time to prepare, and the forecast track and historical pattern together provide specific evidence that storm-surge flooding is concentrated in the low-lying neighborhood, not the high-ground area.",
+      "The resident is confusing forecast uncertainty with forecast accuracy — the watch does not predict which neighborhoods will flood, so the high-ground area faces the same risk as the low-lying area.",
+      "The high-ground neighborhood should not need special preparation because elevation is absolute protection from flooding, and the historical record showing no past flooding proves this protection will continue."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson says being lucky before is not the same as being protected — what does the historical pattern actually show about where the danger is concentrated?",
+      "The watch means time to prepare, and the combination of the matching forecast track plus the repeated historical pattern is exactly the kind of evidence that tells you where to focus action."
+    ]
+  },
+  {
+    "id": "m6sci-forecasting-preparing-for-weather-hazards-006",
+    "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
+    "cedCode": "M6SCI-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A rural county faces a tornado watch issued in the morning for the entire county, expected to upgrade to a warning by afternoon. Damage records show that tornadoes in this region cause injuries and deaths primarily from flying debris, collapsed interior walls, and flying glass — not from the tornado's direct pressure. One small town in the county has a single large community shelter built in the 1970s with a basement room that is small and interior but has no reinforcement and large exterior windows on the floor above. An alternative shelter is available at a modern school 10 kilometers away with a small interior room on the ground floor, no windows, and walls reinforced to current safety codes. A town leader proposes using the basement room 'because it is closer and our town has never had a direct tornado hit in living memory.' Evaluate this proposal using the forecast, the damage record, and the mitigation and preparedness distinction.",
+    "choices": [
+      "The proposal fits the evidence for preparedness because the watch gives time to prepare, and being close to home is a convenience factor that outweighs distance when the building's location is what matters most.",
+      "The proposal does not fit the evidence because although the basement room meets some safety criteria, the county's damage record and the reinforced school shelter show that wall reinforcement matters for surviving tornado injury, and the modern school provides both the required interior location and reinforced protection, whereas the old basement room does not.",
+      "The proposal does not fit the evidence because using the closer shelter is a preparedness choice that fails to meet the safety criteria the county's own damage record identifies, and the reinforced school 10 kilometers away provides the mitigation-level protection the record actually points to.",
+      "The proposal fits the evidence because a watch-level alert does not require families to travel 10 kilometers when a basement room in town provides shelter from wind, and the damage record shows that location matters more than building materials."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson distinguishes preparedness (get ready before a specific storm) from mitigation (long-term risk reduction) — which does the reinforced building represent, and which one does the county's damage pattern actually call for here?",
+      "The damage record specifically identifies what the hazard is — flying debris and structural failure — not just proximity to home, so match the shelter to the actual danger the data shows."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-001",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the standard division algorithm, what must you do after you subtract in one cycle before you continue dividing?",
+    "choices": [
+      "Divide the remainder by the next digit of the dividend",
+      "Bring down the next digit of the dividend",
+      "Multiply the quotient by the divisor again",
+      "Check your answer by multiplying back"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the four moves that repeat: divide, multiply, subtract, and then ___.",
+      "You need one more piece of information before you can divide again in the next cycle."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-002",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are dividing 648 by 8 using the standard algorithm. After your first divide-multiply-subtract cycle, you have a remainder of 4. What number should you look at when you divide in the second cycle?",
+    "choices": [
+      "4",
+      "8",
+      "44",
+      "648"
+    ],
+    "answer": "C",
+    "hints": [
+      "You bring down the next digit of the dividend after you subtract. The first remainder was 4, and the next digit in 648 is 4.",
+      "Write down 648 and mark which digit you bring down second—that is the number you look at."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-003",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student divides 725 by 5 and writes the quotient as 14 with a remainder of 5. Use the check method taught in the lesson to decide whether this answer is correct.",
+    "choices": [
+      "Yes, because 14 and 5 are both single-digit numbers",
+      "Yes, because 5 + 5 equals 10",
+      "No, because 5 × 14 + 5 = 75, not 725",
+      "No, because the remainder cannot equal the divisor"
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson says a remainder must always be smaller than the divisor. What is the divisor here, and what is the remainder?",
+      "Compare the remainder 5 to the divisor 5. Can they be equal?"
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-004",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Before you solve 824 ÷ 12, you estimate by rounding to friendly numbers. You round 824 to 840 and 12 to 10, then divide mentally to get 84. After you work through the standard algorithm, your exact quotient is 68 with a remainder of 8. Should you trust this answer, and why?",
+    "choices": [
+      "No, because 68 is too far below 84 to match the estimate; a digit likely went in the wrong place",
+      "Yes, because when you multiply 68 by 12 and add the remainder 8, you get back to 824, which proves the answer is correct by the inverse operation",
+      "Yes, because the remainder of 8 is less than the divisor of 12, which means the division was performed correctly and followed the rules for remainders",
+      "No, because your estimate of 84 came from rounding to friendly numbers instead of rounding both numbers to the nearest ten, so the estimate itself cannot be trusted"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson says if your final answer is nowhere near the estimate, something went wrong. Is 68 close to 84?",
+      "When an estimate and an exact answer do not match, which step in the algorithm might have a mistake?"
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-005",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "When you divide 2045 by 13 using long division, you reach a point where 13 does not go into the next group of digits at all. What should you write in the quotient at that position, and what should you do next?",
+    "choices": [
+      "Skip that position and move on to the next digit, because nothing goes into it",
+      "Write 0 in the quotient and bring down the next digit of the dividend",
+      "Write 1 in the quotient because you must always write something",
+      "Stop dividing, because the divisor will not fit"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson emphasizes that a zero digit is still a digit and must be written. What happens if you skip it?",
+      "Think about place value: if you do not write the 0, every digit after it shifts one place too far and the answer becomes too small."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-006",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "You divide 1056 by 22 and get a quotient of 48 with a remainder of 0. You check by computing 22 × 48, which gives 1056. After checking, you realize you might have made an error in one of your divide-multiply-subtract cycles. How can you be sure the check you just did actually caught that error, and what would your check equation have looked like if you had made a single arithmetic mistake?",
+    "choices": [
+      "The check cannot catch an error in the cycles; you would need to redo the entire division. Your check equation would be 22 × 48 + r for some nonzero remainder r.",
+      "The check catches every arithmetic slip because if any cycle had an error, the final product would not equal 1056. If you made one mistake, the check equation 22 × 48 + 0 would not equal 1056.",
+      "The check only works if your final answer is correct. Since 22 × 48 = 1056, you know every cycle was correct; there is nothing more to verify.",
+      "The check can catch the error only if the mistake was in the last cycle. A mistake in an earlier cycle would not change the final result because you correct it when bringing down digits."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson teaches that checking by multiplying back and adding the remainder catches an arithmetic slip in any one of the four cycles. If 22 × 48 + 0 did equal the dividend, what does that guarantee?",
+      "Suppose you had made one small computational error in an earlier cycle. Would the final product 22 × 48 + 0 still equal 1056, or would it give a different number?"
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-001",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When you multiply two decimals using the standard algorithm, what do you do with the decimal points in the factors before you multiply? In other words, what is the first step?",
+    "choices": [
+      "Line up the decimal points vertically.",
+      "Count how many decimal places are in each factor.",
+      "Move both decimal points to the right until they are whole numbers.",
+      "Ignore the decimal points and multiply the digits as if they were whole numbers."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about the 'multiply-like-whole-numbers' rule from the lesson.",
+      "The decimal point placement happens after you multiply, not before."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-002",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A notebook costs $3.25. You buy 2 notebooks for school. What is the total cost? First estimate by rounding $3.25 to a nearby friendly number, then calculate the exact answer.",
+    "choices": [
+      "$6.50",
+      "$65.00",
+      "$0.65",
+      "$3.25"
+    ],
+    "answer": "A",
+    "hints": [
+      "Your estimate should be close to $3 times 2, which is $6.",
+      "After you multiply 325 times 2 to get 650, count the total decimal places in both factors."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-003",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You have 7.2 kilograms of flour to divide equally into 0.9-kilogram portions for baking. How many portions can you make? Before you shift any decimal points, estimate the answer by thinking about what happens when you divide by a number less than 1.",
+    "choices": [
+      "0.8",
+      "8",
+      "80",
+      "0.08"
+    ],
+    "answer": "B",
+    "hints": [
+      "Since 0.9 is less than 1, the quotient should be larger than 7.2, not smaller.",
+      "Shift both decimal points one place to the right to turn 0.9 into 9 and 7.2 into 72."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-004",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A bottle of juice costs $2.50. You buy 3 bottles for a picnic. You estimate that $2.50 rounds to about $2.50, so your estimate is about $7.50. Now calculate the exact answer by multiplying 250 times 3 to get 750, then placing the decimal point. Should your exact answer be close to your estimate?",
+    "choices": [
+      "No, because multiplication always makes numbers bigger.",
+      "Yes, but only if you shift the decimal point to the left.",
+      "Yes, and your exact answer should be $7.50.",
+      "No, because the estimate and exact answer serve different purposes."
+    ],
+    "answer": "C",
+    "hints": [
+      "Count the total decimal places in both 2.50 and 3.",
+      "Your exact answer and your estimate should always land in the same neighborhood, or something went wrong."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-005",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You spend $12.00 on cloth ribbons. Each ribbon costs $0.75. To find how many ribbons you bought, you shift the decimal point in the divisor 0.75 two places to the right, making it 75. What must you do next, and why?",
+    "choices": [
+      "Divide 12.00 by 75 directly, because the dividend is already a whole number.",
+      "Shift the decimal point in 12.00 one place to the right, because you only need to shift the divisor.",
+      "Shift the decimal point in 12.00 two places to the right to get 1200, because both numbers must be shifted by the same amount.",
+      "Add two zeros to 12.00 to make it 1200, then divide, because that is what shifting means."
+    ],
+    "answer": "D",
+    "hints": [
+      "Shifting the divisor to a whole number means multiplying by a power of 10; the dividend must be multiplied by the same power of 10.",
+      "If you only shifted the divisor, your answer would be off by a factor of 10 and would not match your estimate."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-006",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A piece of fabric is 8.4 meters long and costs $2.10 per meter. You want to know the total cost. You multiply 84 times 210 using the standard algorithm and get 17,640. Then you count decimal places: 8.4 has 1 decimal place, and 2.10 has 2 decimal places, so the product needs 3 decimal places total. You place the decimal point to get 17.640. Before you accept this answer, you estimate: 8.4 is close to 8, and 2.10 is close to 2, so 8 times 2 is about 16. Is your placed decimal point correct, and how do you know?",
+    "choices": [
+      "Yes, because 17.640 is close to your estimate of 16, and checking the estimate confirms the decimal point is placed correctly.",
+      "No, because when you count decimal places you should only count the ones that come after the decimal point, not the zero at the end of 2.10.",
+      "No, because your estimate of 16 is too small and the actual answer must be larger, which means the decimal point should be placed differently.",
+      "Yes, because you followed the rule of counting all decimal places in both factors and the standard algorithm always works."
+    ],
+    "answer": "A",
+    "hints": [
+      "The estimate should always land in the same neighborhood as the exact answer; if it does not, you may have misplaced the decimal point.",
+      "Compare 17.640 to your estimate of about 16 to decide if the decimal is in the right place."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-001",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a factor of 20? Remember: a factor divides a number evenly with nothing left over.",
+    "choices": [
+      "5",
+      "7",
+      "10",
+      "25"
+    ],
+    "answer": "A",
+    "hints": [
+      "Try dividing 20 by each number to see which one divides evenly.",
+      "Factors of 20 are always less than or equal to 20 itself."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-002",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Maya has a collection of 16 trading cards and wants to arrange them into equal piles with no cards left over. Which of these could be the number of piles she makes? Think about what divides 16 evenly.",
+    "choices": [
+      "5",
+      "8",
+      "12",
+      "18"
+    ],
+    "answer": "B",
+    "hints": [
+      "The number of piles must be a factor of 16.",
+      "Check by dividing: 16 ÷ ? should give a whole number with no remainder."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-003",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A store receives shipments of orange juice every 6 days and shipments of milk every 9 days. Both arrived today. After how many days will both arrive on the same day again? You are looking for when the schedules line up, so think about multiples.",
+    "choices": [
+      "15 days",
+      "18 days",
+      "24 days",
+      "36 days"
+    ],
+    "answer": "C",
+    "hints": [
+      "List multiples of 6 and multiples of 9, then find the smallest number on both lists.",
+      "This is a least common multiple (LCM) problem because you need a number that both 6 and 9 divide into evenly."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-004",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A teacher wants to split 20 pencils and 30 erasers into identical student kits with nothing left over, using as many kits as possible. After finding the greatest number of kits, the teacher plans to rewrite the sum 20 + 30 using the distributive property to show what goes in each kit. Which expression correctly shows this?",
+    "choices": [
+      "5 × (4 + 6)",
+      "10 × (2 + 3)",
+      "15 × (1 + 2)",
+      "20 × (1 + 1.5)"
+    ],
+    "answer": "D",
+    "hints": [
+      "First find the GCF of 20 and 30 by listing their common factors.",
+      "Once you have the GCF, divide each original number by it and place those quotients inside the parentheses."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-005",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two alarm clocks ring at intervals. Clock A rings every 4 minutes and Clock B rings every 10 minutes. They both just rang together. If you want to find when they will ring together again, should you be looking for the greatest common factor or the least common multiple? Then find your answer. Hint: think about whether you are searching up through multiples or down through factors.",
+    "choices": [
+      "LCM(4, 10) = 20 minutes",
+      "GCF(4, 10) = 2 minutes",
+      "LCM(4, 10) = 14 minutes",
+      "GCF(4, 10) = 8 minutes"
+    ],
+    "answer": "A",
+    "hints": [
+      "When two repeating events line up again, you need to search up through multiples, not down through factors.",
+      "List multiples of 4 and multiples of 10 to find the smallest number that appears on both lists."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-006",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A gardener has 48 tomato seeds and 60 pepper seeds. She wants to plant them in identical flower beds with no seeds left over, placing the same number of each type of seed in every bed. She then plans to express the total sum 48 + 60 using the distributive property to show how many of each seed type goes in one bed. What should appear inside the parentheses in the expression: GCF(48, 60) × (? + ?)?",
+    "choices": [
+      "(4 + 5)",
+      "(8 + 10)",
+      "(12 + 15)",
+      "(16 + 20)"
+    ],
+    "answer": "B",
+    "hints": [
+      "Start by finding the GCF of 48 and 60 by listing all factors of each and identifying which are shared.",
+      "Once you have the GCF, divide each original number by it; those quotients are what goes inside the parentheses."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-001",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the decimal 7.43, which digit is in the hundredths place?",
+    "choices": [
+      "7",
+      "4",
+      "3",
+      "43"
+    ],
+    "answer": "C",
+    "hints": [
+      "The hundredths place is the second digit after the decimal point.",
+      "Count the positions after the decimal point: first is tenths, second is hundredths."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-002",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You need to add 3.2 and 1.45 using the standard algorithm. Before you add, what should you do to make sure both numbers are ready to line up correctly?",
+    "choices": [
+      "Round both numbers to the nearest whole number",
+      "Erase the decimal points and add as whole numbers",
+      "Write 3.2 as 3.20 so both numbers have two decimal places",
+      "Move the decimal point in 1.45 one place to the left"
+    ],
+    "answer": "D",
+    "hints": [
+      "Padding means adding zeros to the right of the shorter decimal without changing its value.",
+      "Both numbers need the same number of digits after the decimal point so no column gets skipped."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-003",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Maya adds 2.6 and 4.3 by lining up the rightmost digits instead of the decimal points. She gets an answer of 6.9. Why is this method wrong, even though her answer looks reasonable?",
+    "choices": [
+      "Lining up the rightmost digits instead of decimal points puts tenths under ones and ones under tens, mixing up place values and giving a wrong answer",
+      "She lined up the digits by their rightmost position, which made her combine 0.6 tenths with 4 ones and 2 ones with 0.3 tenths, resulting in an incorrect total that only matched by coincidence",
+      "The decimal points were not aligned vertically, so the tenths place of 2.6 ended up under the ones place of 4.3, causing the place values to shift and produce an answer that does not represent the true sum",
+      "When adding decimals without decimal point alignment, the ones digits do not stay in the ones column and the tenths digits do not stay in the tenths column, which changes the actual value being computed"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what happens to place value when digits are stacked the wrong way.",
+      "The lesson warns that lining up rightmost digits is the single most common mistake in decimal addition."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-004",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A plank of wood is 8.5 meters long. A carpenter cuts off a piece that is 2.34 meters long. The carpenter estimates the leftover piece should be close to 8 minus 2, which is 6 meters. After subtracting using the standard algorithm and lining up decimal points correctly, the carpenter gets 6.16 meters. How should the carpenter check whether this answer is correct?",
+    "choices": [
+      "Round 6.16 to the nearest whole number and see if it equals 6",
+      "Add 2.34 back to 6.16 and check whether the sum equals 8.5",
+      "Subtract 6.16 from 8.5 again and see if you get 2.34",
+      "Pad both numbers with zeros and subtract a second time"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson teaches two checks: use subtraction to verify addition, and use addition to verify subtraction.",
+      "Since this was a subtraction problem, you can check by adding one of the numbers back."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-005",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Juan needs to find the total of 5.7 liters and 2.05 liters of liquid. He estimates first: 5.7 rounds to 6 and 2.05 rounds to 2, so the total should be close to 8 liters. He then stacks and pads the numbers, adding column by column to get 7.75 liters. Is his exact answer reasonable? Explain why or why not.",
+    "choices": [
+      "No, because 7.75 is too far from the 8-liter estimate, which means Juan probably made an error in lining up the decimal points",
+      "Yes, because 7.75 liters is close to the 8-liter estimate, so the answer is reasonable",
+      "Yes, because Juan padded 5.7 to 5.70 before adding, which means the answer must be correct",
+      "No, because Juan should have added 6 + 2 instead of computing the exact total"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the exact answer to the estimate you made at the start.",
+      "If the exact answer lands far from your estimate, something in your place value probably slipped."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-006",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Petra is tracking three distances: 4.2 kilometers on Monday, 3.85 kilometers on Tuesday, and 5.1 kilometers on Wednesday. She wants to find the total distance for all three days. She uses the standard algorithm: she lines up the decimal points of all three numbers, pads them to three decimal places (4.200, 3.850, 5.100), adds column by column from right to left, and gets 13.15 kilometers. Before accepting this answer, Petra estimates: 4.2 rounds to 4, 3.85 rounds to 4, and 5.1 rounds to 5, so the total should be close to 13 kilometers. When she checks her addition by subtracting 4.2 from her sum, she gets 9.0 kilometers instead of 8.95 kilometers. What should Petra do next?",
+    "choices": [
+      "Accept the answer 13.15 kilometers because it is close enough to the 13-kilometer estimate",
+      "Redo the addition of all three numbers carefully, lining up decimal points and padding to the same number of decimal places, because the check by subtraction failed",
+      "Pad all three numbers to four decimal places instead of three and add again",
+      "Round all three distances again and add the rounded numbers to find the exact total"
+    ],
+    "answer": "D",
+    "hints": [
+      "When the check by subtraction does not work out, it signals an error in the original addition.",
+      "The lesson teaches that checking your work by adding or subtracting back catches slips before a wrong answer becomes final."
+    ]
+  }
+]

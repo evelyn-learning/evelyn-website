@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6sci-layers-composition-of-the-atmosphere-001",
+    "loId": "m6sci.layers-and-composition-of-the-atmosphere",
+    "cedCode": "M6SCI-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is the correct order of the four main layers of Earth's atmosphere from the ground outward?",
+    "choices": [
+      "Stratosphere, troposphere, mesosphere, thermosphere",
+      "Thermosphere, mesosphere, stratosphere, troposphere",
+      "Troposphere, mesosphere, stratosphere, thermosphere",
+      "Troposphere, stratosphere, mesosphere, thermosphere"
+    ],
+    "answer": "D",
+    "hints": [
+      "The troposphere is the lowest layer, closest to the ground where we live.",
+      "Each layer sits directly above the one you just named, in the order you listed them."
+    ]
+  },
+  {
+    "id": "m6sci-layers-composition-of-the-atmosphere-002",
+    "loId": "m6sci.layers-and-composition-of-the-atmosphere",
+    "cedCode": "M6SCI-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A weather balloon rises from sea level and instruments on it record the air temperature at different altitudes. At 8 kilometers up, the temperature is 30°C. At 12 kilometers up, the temperature is 0°C. Which layer is the balloon in during this climb, and how is temperature changing?",
+    "choices": [
+      "The balloon is in the troposphere, and temperature is falling as it rises.",
+      "The balloon is in the stratosphere, and temperature is rising as it rises.",
+      "The balloon is in the mesosphere, and temperature is falling as it rises.",
+      "The balloon is in the thermosphere, and temperature is rising as it rises."
+    ],
+    "answer": "A",
+    "hints": [
+      "The troposphere extends from the ground to about 12 kilometers, so altitudes of 8 and 12 kilometers are within this range.",
+      "The lesson states that in the troposphere, temperature falls steadily the higher you go—the balloon got colder as it climbed."
+    ]
+  },
+  {
+    "id": "m6sci-layers-composition-of-the-atmosphere-003",
+    "loId": "m6sci.layers-and-composition-of-the-atmosphere",
+    "cedCode": "M6SCI-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "By volume, which two gases together make up approximately 99 percent of dry air in Earth's atmosphere?",
+    "choices": [
+      "Oxygen and argon",
+      "Nitrogen and oxygen",
+      "Nitrogen and carbon dioxide",
+      "Oxygen and water vapor"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson states that nitrogen is about 78 percent and oxygen is about 21 percent.",
+      "Adding those two percentages together gives you a total close to 99 percent—all other gases combined make up only about 1 percent."
+    ]
+  },
+  {
+    "id": "m6sci-layers-composition-of-the-atmosphere-004",
+    "loId": "m6sci.layers-and-composition-of-the-atmosphere",
+    "cedCode": "M6SCI-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A research rocket's temperature sensor records temperature rising steadily from an altitude of 12 kilometers up to 50 kilometers. The sensor then detects temperature beginning to fall steadily from 50 kilometers upward. Which layer's upper boundary is the rocket crossing at 50 kilometers, and which layer is it entering next?",
+    "choices": [
+      "The rocket is crossing the mesosphere's upper boundary and entering the thermosphere.",
+      "The rocket is crossing the troposphere's upper boundary and entering the stratosphere.",
+      "The rocket is crossing the stratosphere's upper boundary and entering the mesosphere.",
+      "The rocket is crossing the thermosphere's upper boundary and escaping into space."
+    ],
+    "answer": "C",
+    "hints": [
+      "Match the temperature trend to the layer: temperature rising from 12 to 50 km is the signature of the stratosphere; temperature falling after 50 km is the signature of the mesosphere.",
+      "The altitude range 50 to 85 kilometers defines the mesosphere, so crossing at 50 kilometers means entering that layer."
+    ]
+  },
+  {
+    "id": "m6sci-layers-composition-of-the-atmosphere-005",
+    "loId": "m6sci.layers-and-composition-of-the-atmosphere",
+    "cedCode": "M6SCI-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The International Space Station orbits Earth at approximately 400 kilometers altitude. Based on the layer definitions and altitude ranges taught in the lesson, which layer is the station in, and what is the temperature trend in that layer?",
+    "choices": [
+      "The station is in the mesosphere, where temperature falls with altitude.",
+      "The station is in the stratosphere, where temperature rises with altitude.",
+      "The station is in the troposphere, where temperature falls with altitude.",
+      "The station is in the thermosphere, where temperature rises with altitude."
+    ],
+    "answer": "D",
+    "hints": [
+      "The thermosphere begins at about 85 kilometers and reaches hundreds of kilometers outward—400 kilometers falls well within this range.",
+      "The lesson specifically states that the International Space Station orbits inside the thermosphere layer."
+    ]
+  },
+  {
+    "id": "m6sci-layers-composition-of-the-atmosphere-006",
+    "loId": "m6sci.layers-and-composition-of-the-atmosphere",
+    "cedCode": "M6SCI-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student claims: 'The top of the troposphere is always exactly 12 kilometers above the ground everywhere on Earth, just like the height of the stratosphere is always exactly the same.' Using what you learned about how troposphere thickness varies by location, explain whether this statement is accurate and describe where the top of the troposphere actually sits at the poles and at the equator.",
+    "choices": [
+      "The statement is inaccurate. The troposphere is thinner over the poles at around 8 kilometers and thicker over the equator at around 16 kilometers, even though 12 kilometers is used as a typical value for the whole planet.",
+      "The statement is accurate because the troposphere maintains a constant thickness of 12 kilometers at all latitudes due to uniform atmospheric pressure distribution and gravity acting equally across Earth's surface at every location.",
+      "The statement is inaccurate because the troposphere is actually thicker over the poles, reaching approximately 16 kilometers, and thinner over the equator, reaching only about 8 kilometers, which reverses the student's claim about location and thickness.",
+      "The statement is inaccurate because the troposphere thickness cannot be measured precisely at any location; it gradually fades into the stratosphere with no clear boundary, making any specific altitude measurement impossible to define accurately."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson explains that the troposphere is not exactly 12 kilometers everywhere and gives the specific altitudes for the poles and equator.",
+      "The 12-kilometer value is described as a typical value for the whole planet used for general reference, but the actual boundary varies by location on Earth."
+    ]
+  },
+  {
+    "id": "m6sci-air-masses-fronts-001",
+    "loId": "m6sci.air-masses-and-fronts",
+    "cedCode": "M6SCI-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An air mass is a huge body of air that forms over a source region. What is a source region?",
+    "choices": [
+      "The specific stretch of land or ocean an air mass settles over and takes its temperature and moisture from",
+      "The direction the wind pushes an air mass after it leaves the place where it formed, carrying its properties into new regions",
+      "The boundary line where two air masses of different temperature meet and collide with each other",
+      "The area of sky where storms are most likely to form after a cold front passes through and causes weather changes"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for a choice that describes where an air mass forms, not where it goes.",
+      "The source region is the surface the air mass sits over for several days."
+    ]
+  },
+  {
+    "id": "m6sci-air-masses-fronts-002",
+    "loId": "m6sci.air-masses-and-fronts",
+    "cedCode": "M6SCI-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Air has been sitting for four days over a wide, snowy plain in northern Canada, far from any ocean. What temperature and moisture should this air mass have? Explain your reasoning for each property separately.",
+    "choices": [
+      "Warm and humid, because Canada is a large landmass and large landmasses always produce humid air masses through heating",
+      "Cold and dry, because the high latitude gives it cold temperature and the dry land far from ocean gives it low moisture",
+      "Warm and dry, because the northern location means it is far from tropical storms that bring moisture to air masses",
+      "Cold and humid, because snow-covered regions reflect cold air downward and ice surfaces evaporate moisture into the atmosphere"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that temperature and moisture come from two different things: latitude controls temperature, and surface type controls moisture.",
+      "Far-north locations are cold, and dry land with no nearby ocean is a poor source of moisture."
+    ]
+  },
+  {
+    "id": "m6sci-air-masses-fronts-003",
+    "loId": "m6sci.air-masses-and-fronts",
+    "cedCode": "M6SCI-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cold front is moving into a town where warm, humid air has been sitting. The cold air mass is advancing, and the warm air is being displaced. At the boundary of this cold front, the resident warm air is forced upward very quickly. Based on what happens to the warm air, which type of weather should the town experience as the front passes?",
+    "choices": [
+      "Gradually thickening clouds followed by many hours of light, steady rain",
+      "A narrow band of quick, possibly intense showers or thunderstorms, followed by clearer skies",
+      "A slow, gentle drizzle lasting all day with very little temperature change",
+      "Clear skies and warming temperatures before any rain arrives at the town"
+    ],
+    "answer": "C",
+    "hints": [
+      "Fast, strong upward motion of air tends to produce quick, intense weather, not slow or gentle weather.",
+      "A cold front brings weather right around the boundary, not many hours of steady rain."
+    ]
+  },
+  {
+    "id": "m6sci-air-masses-fronts-004",
+    "loId": "m6sci.air-masses-and-fronts",
+    "cedCode": "M6SCI-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two different air masses are about to arrive at the same city at different times. First, a warm, humid air mass will move in over cooler air that is retreating ahead of it. Then, two days later, a cold, dry air mass will advance and displace the warm, humid air. For each front, describe both the weather pattern (fast and narrow, or slow and wide) and the conditions that will follow once the front passes.",
+    "choices": [
+      "The warm front brings fast, narrow thunderstorms followed by cooler, drier air; the cold front brings slow, wide rain followed by warmer, humid air",
+      "Both fronts bring the same type of weather because they both have warm air involved, just in different order",
+      "The warm front brings slow, wide rain followed by warmer, humid air; the cold front brings fast, narrow showers or storms followed by cooler, drier air",
+      "The warm front brings thunderstorms because warm air is less stable, and the cold front brings drizzle because cold air sinks"
+    ],
+    "answer": "D",
+    "hints": [
+      "Warm fronts have a gradual slope (slow and wide); cold fronts have a steep slope (fast and narrow).",
+      "After each front passes, the advancing air mass's properties replace the retreating one's."
+    ]
+  },
+  {
+    "id": "m6sci-air-masses-fronts-005",
+    "loId": "m6sci.air-masses-and-fronts",
+    "cedCode": "M6SCI-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student observes that an air mass has been sitting over the same location for several days and has not changed its temperature or moisture. The student then concludes that this air mass must have formed over an ocean source region. Is the student's reasoning correct? Explain why or why not, using what you know about how air masses pick up their properties.",
+    "choices": [
+      "No, the student is wrong. An air mass can have stable temperature and moisture over any source region if it sits long enough, but knowing only that the air is stable tells you nothing about whether the surface is ocean or land. You would need to know the actual temperature and moisture values to figure out the source region.",
+      "Yes, the student is correct, because only oceans can keep an air mass's properties from changing once it forms over them",
+      "Yes, the student is correct, because land surfaces change temperature too quickly and lose moisture too fast to allow an air mass to ever become stable",
+      "No, the student is wrong, but only because the air mass must be over a tropical ocean rather than a polar ocean to maintain such stability"
+    ],
+    "answer": "A",
+    "hints": [
+      "An air mass becomes stable once it has settled over its source region for several days. But stable does not mean it came from one type of source region—it just means it has stopped changing.",
+      "To identify a source region, you need to know the actual temperature and moisture of the air mass, not just that it is staying constant."
+    ]
+  },
+  {
+    "id": "m6sci-air-masses-fronts-006",
+    "loId": "m6sci.air-masses-and-fronts",
+    "cedCode": "M6SCI-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two cities, A and B, are located 500 kilometers apart, with city A to the west of city B. A cold, dry air mass that formed over a frozen plain has been advancing eastward for two days. City A experiences a cold front early in the morning, with a brief burst of showers followed by clear, cold, dry air. Six hours later, city B experiences the same cold front. However, by the time the cold front reaches city B, the weather is less intense—only light showers instead of heavy ones, and the air behind the front is not as cold or as dry as it was in city A. Based on what you know about how air masses change as they move, explain why the same cold front produces different weather in city B than it did in city A.",
+    "choices": [
+      "The cold, dry air mass started warming and picking up moisture as it traveled eastward over the land between the two cities, so by the time it reached city B it was less cold and less dry than when it was at city A",
+      "The cold, dry air mass picked up moisture from the atmosphere as it traveled, so even though it stayed cold, it became more humid by the time it reached city B, weakening the intensity of the front",
+      "City B is further away from the source region, so the air mass loses its temperature and moisture properties faster the longer it travels",
+      "The passage of time between the two fronts allowed the air to cool down more, which made the second front weaker than the first"
+    ],
+    "answer": "B",
+    "hints": [
+      "An air mass keeps its properties as it moves, but only as long as it stays over a uniform surface. What changed between city A and city B?",
+      "The cold front became less intense at city B. What property of the air mass would make a cold front less intense—the temperature, or something about the moisture?"
+    ]
+  },
+  {
+    "id": "m6sci-reading-weather-maps-001",
+    "loId": "m6sci.reading-weather-maps",
+    "cedCode": "M6SCI-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A weather station reports that air pressure at that location is falling steadily. According to the lesson, what does a falling pressure trend usually indicate is approaching?",
+    "choices": [
+      "A high-pressure system that will bring clear, dry skies because high pressure always prevents cloud formation and precipitation",
+      "A low-pressure system, which usually means clouds and a chance of precipitation are likely to increase",
+      "A warm front that has already passed the station and is moving away to produce cooler temperatures",
+      "No weather change at all, because pressure changes are unrelated to weather systems and do not affect atmospheric conditions"
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson connects falling pressure to what kind of system moving in.",
+      "Think about what 'pressure trend is a leading clue' suggests about approaching weather."
+    ]
+  },
+  {
+    "id": "m6sci-reading-weather-maps-002",
+    "loId": "m6sci.reading-weather-maps",
+    "cedCode": "M6SCI-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cold front is drawn on a weather map running north to south, positioned 80 kilometers west of Ridgeton, and is moving east directly toward the city. Ridgeton's current station reading shows wind from the south and partly cloudy skies. Based on the lesson, what should Ridgeton's residents expect as the front arrives?",
+    "choices": [
+      "The wind will shift from south to northeast and skies will remain partly cloudy for several days because the front is still far away",
+      "A long period of steady, light rain followed by mild air as the cold air mass gradually replaces the warm air over many days",
+      "A brief period of heavier rain or thunderstorms, then wind shifting toward the northwest and cooler, clearer air",
+      "No significant weather change, because the front is still 80 kilometers away and will not affect the city's conditions at all"
+    ],
+    "answer": "C",
+    "hints": [
+      "Match the front's type (cold) to what the lesson says that type usually produces.",
+      "Remember that the front's direction of travel toward the city matters for the forecast."
+    ]
+  },
+  {
+    "id": "m6sci-reading-weather-maps-003",
+    "loId": "m6sci.reading-weather-maps",
+    "cedCode": "M6SCI-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two cities appear on the same weather map. Westport's station shows pressure rising steadily and clear skies. Eastbrook's station shows pressure falling steadily and increasing clouds. According to the lesson, how should the next day's weather differ between these two cities?",
+    "choices": [
+      "Both cities will experience the same weather because they are on the same map",
+      "Westport's weather will become cloudier and wetter, while Eastbrook's will stay clear and dry",
+      "Westport will likely stay clear or become clearer and drier, while Eastbrook is heading toward more clouds and a chance of rain",
+      "Eastbrook will experience a cold front, while Westport will experience a warm front"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at each city's pressure trend separately—they are pointing in opposite directions.",
+      "What does the lesson say rising pressure usually means, and what does falling pressure usually mean?"
+    ]
+  },
+  {
+    "id": "m6sci-reading-weather-maps-004",
+    "loId": "m6sci.reading-weather-maps",
+    "cedCode": "M6SCI-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A weather map shows a low-pressure center labeled L sitting about 200 kilometers northeast of Laketon. Laketon's own station currently reports pressure falling, wind from the southeast, and mostly cloudy skies. A second station, Hillbrook, sits about 50 kilometers southwest of that same low-pressure center and reports pressure steady, wind from the northwest, and clear skies. What is the most likely explanation for the current difference between these two cities' weather, and what should Laketon expect next?",
+    "choices": [
+      "The low-pressure center is moving away from Laketon toward Hillbrook, so Laketon should expect clearing skies soon and Hillbrook should prepare for rain because weather systems move in that direction",
+      "Laketon is approaching the low-pressure system from a distance and is likely to see increasing clouds and a rising chance of rain over the next day or two, while Hillbrook has already experienced the low's main effects",
+      "Both cities will experience identical weather within the next few hours because they are both on the same weather map and weather patterns affect all locations equally",
+      "The low-pressure center has no effect on either city because it is labeled on the map but no front is drawn nearby to connect it to surface weather"
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the pressure trend at Laketon and the position of the labeled low to infer what is moving toward Laketon.",
+      "Think about Hillbrook as showing what 'after the low passes' looks like—already steady pressure and clear skies."
+    ]
+  },
+  {
+    "id": "m6sci-reading-weather-maps-005",
+    "loId": "m6sci.reading-weather-maps",
+    "cedCode": "M6SCI-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A warm front is drawn on a weather map as a line running east to west, currently positioned about 150 kilometers south of Deepwood and moving north, directly toward the city. Deepwood's current station reading shows pressure falling slowly, wind from the south, and a thin layer of high clouds. Based on the lesson's description of what warm fronts usually produce, which statement best describes Deepwood's likely weather over the next day?",
+    "choices": [
+      "Thunderstorms will arrive briefly, the wind will shift northwest, and cooler air will follow",
+      "A longer period of lighter, steadier rain is likely, followed by milder air as the front passes",
+      "The front will move away from Deepwood before any rain arrives, so conditions will stay mostly dry",
+      "The falling pressure is unrelated to the approaching front and indicates a different weather system is responsible"
+    ],
+    "answer": "B",
+    "hints": [
+      "Match the front's type (warm) to the specific weather pattern the lesson says warm fronts produce.",
+      "The lesson distinguishes warm fronts from cold fronts by the type and duration of rain they bring."
+    ]
+  },
+  {
+    "id": "m6sci-reading-weather-maps-006",
+    "loId": "m6sci.reading-weather-maps",
+    "cedCode": "M6SCI-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A weather map shows two features: a cold front running north to south, currently about 60 kilometers east of Northfield and moving east (away from the city), and a separate low-pressure center, labeled L, about 120 kilometers northwest of Northfield and moving southeast (toward the city). Northfield's station currently reports pressure falling, wind from the south, and increasing clouds. According to the lesson, which statement best explains what is most likely driving Northfield's falling pressure and approaching weather, and why the cold front's current position does NOT explain the forecast?",
+    "choices": [
+      "The falling pressure is caused by the cold front, even though the front is moving away, because fronts affect weather regardless of their direction of travel",
+      "The falling pressure is most likely caused by the approaching low-pressure center moving in from the northwest, while the cold front—though it once affected or will affect other parts of the map—is heading away from Northfield and is not responsible for this city's forecast",
+      "Both the cold front and the low-pressure center are affecting Northfield equally, so the city will experience both a brief period of heavy thunderstorms and a longer period of steady rain",
+      "The low-pressure center is too far away to explain the falling pressure; Northfield must be experiencing a warm front that is not shown on this particular map"
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson emphasizes that direction matters—a system moving away is someone else's forecast, not this city's.",
+      "Match each system (cold front moving away, low-pressure center moving toward) to its effect on Northfield's readings and forecast."
+    ]
+  },
+  {
+    "id": "m6sci-how-air-mass-interactions-produce-severe-weather-001",
+    "loId": "m6sci.how-air-mass-interactions-produce-severe-weather",
+    "cedCode": "M6SCI-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When a cold front moves into a region where the air near the ground is warm and moist, what happens to that warm, moist air and why does it lead to a thunderstorm?",
+    "choices": [
+      "The cold air pushes the warm air sideways, causing it to spread out and cool slowly over several hours because the two air masses resist mixing and separate gradually.",
+      "The warm air sinks below the cold air, trapping moisture near the ground and creating fog instead of storm clouds because cold air naturally rises above warm air in the atmosphere.",
+      "The cold air moves in low and forces the warm, moist air upward quickly, which builds it into towering clouds that produce heavy rain.",
+      "The two air masses blend together evenly, creating moderate winds and steady drizzle across a wide area because the temperature difference between them causes uniform mixing and condensation."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what 'lifting' means — which direction does the air move?",
+      "The lesson says warm, moist air lifted quickly is the setup for a thunderstorm. Does the cold front provide that lifting?"
+    ]
+  },
+  {
+    "id": "m6sci-how-air-mass-interactions-produce-severe-weather-002",
+    "loId": "m6sci.how-air-mass-interactions-produce-severe-weather",
+    "cedCode": "M6SCI-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A weather station records wind data at two different heights above the ground. Near the ground, the wind is blowing gently from the south at 10 miles per hour. At a height of 5 kilometers, the wind is blowing from the northwest at 40 miles per hour. What is this change between the two heights called, and what role can it play in severe weather?",
+    "choices": [
+      "This is called a jet stream, and it always produces a hurricane by pushing warm ocean water.",
+      "This is called atmospheric pressure, and it determines whether a thunderstorm will last for one hour or two hours.",
+      "This is called a temperature gradient, and it causes air to rise and form ordinary fair-weather clouds.",
+      "This is called wind shear, and inside a strong thunderstorm it can spin a horizontal tube of air upright to form a tornado."
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson defines wind shear as a change in wind speed or direction between different heights. Does this description match?",
+      "Once wind shear is identified, what does the lesson say it can do inside a strong, rotating thunderstorm?"
+    ]
+  },
+  {
+    "id": "m6sci-how-air-mass-interactions-produce-severe-weather-003",
+    "loId": "m6sci.how-air-mass-interactions-produce-severe-weather",
+    "cedCode": "M6SCI-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is looking at a weather map and sees a large, organized storm system over the tropical Atlantic Ocean. The system has a calm, mostly cloud-free center surrounded by a ring of very heavy rain and the strongest winds. The storm has been growing for three days and spans several hundred kilometers. Based on these features, what type of severe weather is this, and what is the ring of thunderstorms around the center called?",
+    "choices": [
+      "This is a hurricane, and the ring of thunderstorms is called the eyewall.",
+      "This is a tornado, and the ring of thunderstorms is called the pressure wall.",
+      "This is a supercell, and the ring of thunderstorms is called the updraft collar.",
+      "This is a cold front, and the ring of thunderstorms is called the convection band."
+    ],
+    "answer": "A",
+    "hints": [
+      "Which severe weather type forms over warm tropical ocean water and can be hundreds of kilometers across and last for days?",
+      "The lesson names the calm center and describes the ring around it that holds the strongest winds and heaviest rain. What are these parts called?"
+    ]
+  },
+  {
+    "id": "m6sci-how-air-mass-interactions-produce-severe-weather-004",
+    "loId": "m6sci.how-air-mass-interactions-produce-severe-weather",
+    "cedCode": "M6SCI-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A meteorologist is tracking a strong thunderstorm that is developing along a cold front. The region has been warm and humid for two days, there is a clear difference in wind speed and direction between the ground and higher altitudes, and the cold front is pushing the warm air upward. The meteorologist must determine whether this storm is likely to produce a tornado. What conditions must the meteorologist check, and why is the wind information especially important here?",
+    "choices": [
+      "The meteorologist must check how long the cold front will last, because cold fronts that last more than two hours always produce tornadoes by giving the updraft enough time to rotate the air into a spinning column.",
+      "The meteorologist must verify that wind shear is present, because the difference in wind speed and direction can set up a spinning tube of air that a strong updraft can tilt upright.",
+      "The meteorologist must measure the temperature drop at the front, because only cold fronts colder than 20 degrees Fahrenheit can rotate air into tornadoes by creating enough density difference to force spinning motion.",
+      "The meteorologist must count how many thunderstorms are forming, because three or more thunderstorms in the same area always create enough rotation for a tornado through their combined circulation patterns."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson teaches that wind shear is the specific condition that sets up rotation. How does wind shear differ from just having wind?",
+      "What does wind shear do to a tube of air, and what can a strong updraft do to that spinning tube?"
+    ]
+  },
+  {
+    "id": "m6sci-how-air-mass-interactions-produce-severe-weather-005",
+    "loId": "m6sci.how-air-mass-interactions-produce-severe-weather",
+    "cedCode": "M6SCI-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two different severe weather systems are observed. The first forms where a warm, moist air mass sits over the tropical Atlantic Ocean for several days with low wind shear, developing into an organized, rotating storm hundreds of kilometers wide. The second forms where a cold front collides with a warm, humid air mass on land, producing a strong, short-lived storm that covers a town or two. Why do these two storms form so differently, and what is the key difference in the air-mass conditions behind each one?",
+    "choices": [
+      "Both storms require two contrasting air masses, but the ocean one is stronger because salt water holds more energy than land.",
+      "The first storm (the hurricane) grows within a single warm, moist air mass with no front involved, while the second storm (the thunderstorm) requires two air masses meeting along a front, and the collision forces one upward.",
+      "Both storms are produced by the same lifting mechanism, but the ocean storm lasts longer because it stays over warm water, while the land storm fades because it moves over cooler ground.",
+      "The first storm forms from wind shear alone, while the second requires both wind shear and a cold front to develop its rotation."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson clearly states that hurricanes form inside one warm air mass and do NOT require two air masses meeting along a front. Thunderstorms and tornadoes DO require a front. Which statement reflects this?",
+      "Consider what keeps each storm organized and strong — what does the hurricane lose when it moves over land or cool water?"
+    ]
+  },
+  {
+    "id": "m6sci-how-air-mass-interactions-produce-severe-weather-006",
+    "loId": "m6sci.how-air-mass-interactions-produce-severe-weather",
+    "cedCode": "M6SCI-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A region experiences a cold front moving through on a day when the air ahead of the front is warm and moist, wind shear is weak, and the skies are already cloudy. The cold front produces thunderstorms as expected, but despite the presence of the front and the warm, moist air, no tornadoes develop from any of the thunderstorms. Using what the lesson teaches about the three conditions needed for severe weather, explain why tornadoes did not form even though two of the three key parts of the setup were present.",
+    "choices": [
+      "The clouds were already present before the front arrived, so the thunderstorms could not build tall enough to develop rotation.",
+      "The wind shear was weak, so there was no strong spinning, roughly horizontal tube of air near the ground that the storm's updraft could tilt upright into a tornado.",
+      "The cold front was moving too slowly, which prevented it from lifting the warm air fast enough to create the updraft strength needed for tornado formation.",
+      "The weak wind shear actually prevented the cold front from moving into the region, so the warm, moist air never rose as quickly as it would have if the wind were stronger."
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson teaches that three conditions stack up together for a tornado: a strong lifting mechanism (the front), plenty of warm, moist air, AND wind shear to create rotation. What happens if one is missing?",
+      "The problem states wind shear was weak. According to the lesson, what does wind shear do, and what would happen if it were not present or very weak?"
+    ]
+  }
+]

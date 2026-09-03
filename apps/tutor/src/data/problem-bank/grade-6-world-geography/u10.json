@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6geo-geographic-reasoning-in-everyday-decisions-001",
+    "loId": "m6geo.geographic-reasoning-in-everyday-decisions",
+    "cedCode": "M6GEO-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When a town decides where to build a new community center, what two types of geographic questions must it ask about any candidate location?",
+    "choices": [
+      "How much money will it cost and how long will construction take?",
+      "Will the building be made of brick or wood, and what color should the roof be?",
+      "How many people live in the town and what year was the town founded?",
+      "What is the ground itself like at this spot, and what does this spot connect to nearby?"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about the two geographic terms from the lesson: site describes the ground itself, and situation describes connections to surroundings.",
+      "The question is asking for the geographic reasoning, not construction details or historical facts."
+    ]
+  },
+  {
+    "id": "m6geo-geographic-reasoning-in-everyday-decisions-002",
+    "loId": "m6geo.geographic-reasoning-in-everyday-decisions",
+    "cedCode": "M6GEO-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A town is choosing between two empty lots for a new playground. Lot Pine has muddy, waterlogged ground that stays wet after rain, but it is only three blocks from the neighborhood with the most families. Lot Oak has dry, solid, well-drained ground, but it is forty minutes away by car from any houses. Using site-and-situation reasoning, which lot should the town choose and why?",
+    "choices": [
+      "Lot Pine should be chosen because its situation is good—it is close to many families who would use the playground, even though its site is poor.",
+      "Lot Oak should be chosen because its dry, solid, well-drained ground makes it a better site, since the quality of the physical ground is the most critical factor for any playground construction.",
+      "Lot Pine should be chosen because its proximity to the neighborhood means more children can reach it easily, making accessibility the deciding factor regardless of drainage problems.",
+      "Lot Oak should be chosen because its superior site conditions with well-drained ground will prevent maintenance problems that wet, muddy soil would create over time."
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that a good site alone or a good situation alone is not enough—but a good situation can outweigh a poor site if families cannot reach the other lot.",
+      "Use the move-it test: what travels with the ground itself, and what depends on what is nearby?"
+    ]
+  },
+  {
+    "id": "m6geo-geographic-reasoning-in-everyday-decisions-003",
+    "loId": "m6geo.geographic-reasoning-in-everyday-decisions",
+    "cedCode": "M6GEO-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student says: 'We should build the new library at Hilltop Lot because the ground there is perfectly level and very large.' What is wrong with using only this reason as a justification for the choice?",
+    "choices": [
+      "The fact about the ground is not actually true—no lot is perfectly level and large at the same time, so the reason itself is based on false information.",
+      "The reason names only a site fact and leaves out whether the situation—what the lot connects to—is also good for a library.",
+      "The reason focuses only on the physical features of the lot and ignores other site factors like soil type, flooding risk, and subsurface conditions that also affect construction.",
+      "The reason does not mention whether the neighborhood will support a library, how the lot's situation affects foot traffic and public transportation access, and other location-based needs."
+    ],
+    "answer": "B",
+    "hints": [
+      "A complete justification must name one fact about the ground itself and one fact about what surrounds it.",
+      "Size and levelness are properties of the site—but will people be able to reach a library at that location?"
+    ]
+  },
+  {
+    "id": "m6geo-geographic-reasoning-in-everyday-decisions-004",
+    "loId": "m6geo.geographic-reasoning-in-everyday-decisions",
+    "cedCode": "M6GEO-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two candidate sites are being considered for a new swimming pool. Site River has excellent drainage and hard, level ground perfect for building, but it sits on the far edge of town with no bus route and a long walk from most homes. Site Meadow has softer, wetter ground that would need extensive drainage work, but it is within walking distance of four neighborhoods and sits directly on two bus routes. A town planner argues that Site River should be chosen because 'it has the best ground for construction.' Explain why this argument is incomplete, and identify which site actually should be chosen.",
+    "choices": [
+      "The argument is incomplete because Site River's name suggests water, which is bad for construction; Site Meadow should be chosen for its better name.",
+      "The argument is incomplete because it only mentions ground facts and ignores how people will reach the pool; Site Meadow should be chosen because its situation is much better, and a good site cannot make up for a poor situation.",
+      "The argument is incomplete because Site Meadow is bigger and has more features; Site River should be chosen anyway because ground quality matters more than location.",
+      "The argument is incomplete because the planner forgot to count how many facts each site has; Site River should be chosen because it has only one problem instead of Site Meadow's many."
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that a location with a strong site and a weak situation is not automatically better than a location with a weaker site and a strong situation.",
+      "Think about who uses a swimming pool and whether they can actually reach it—that is a situation question, not answered by how good the ground is."
+    ]
+  },
+  {
+    "id": "m6geo-geographic-reasoning-in-everyday-decisions-005",
+    "loId": "m6geo.geographic-reasoning-in-everyday-decisions",
+    "cedCode": "M6GEO-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A district is choosing between two properties for a new high school. Property Grove has a large, flat parcel with solid ground, directly on the existing school bus route, and within walking distance of the largest student neighborhood. Property Ridge has equally solid, flat ground and even more total acreage, but the bus route does not yet go there and it is a thirty-minute walk from the nearest homes. A real justification for choosing Property Grove must name which combination of facts?",
+    "choices": [
+      "Its flat ground and its large acreage, because these are the most important facts.",
+      "Only its location on the bus route, because the bus route is the only fact that matters for schools.",
+      "Its flat, solid ground and its access by bus and walking distance to neighborhoods, covering both site and situation.",
+      "The fact that Ridge's bus route does not exist yet, compared to Grove's existing bus route, because comparing the two properties is the same as naming a justification."
+    ],
+    "answer": "D",
+    "hints": [
+      "A justification must name facts that support the choice being made, grounded in real site or situation features.",
+      "Look at what each property offers: think about which facts are actually about the ground itself and which facts are about what surrounds each site."
+    ]
+  },
+  {
+    "id": "m6geo-geographic-reasoning-in-everyday-decisions-006",
+    "loId": "m6geo.geographic-reasoning-in-everyday-decisions",
+    "cedCode": "M6GEO-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three lots are being considered for a community center. Lot Birch: the ground is flat and stable, it sits two blocks from the town's main intersection where three bus lines meet, and the lot's fence is painted bright yellow. Lot Spruce: the ground is marshy and soft, the lot is far from bus routes, but it has 'free parking available' written on a sign posted there. Lot Hemlock: the ground is flat and solid, it is a ten-minute walk from downtown where most people work and shop, and it sits on a bike path connecting to six neighborhoods. A student tries to justify choosing Lot Birch by listing 'the yellow fence, the flat ground, and the bus access.' Which statement correctly identifies the flaw in that justification?",
+    "choices": [
+      "The student named a true site fact and a true situation fact, but also named a fact that has nothing to do with either the ground or what surrounds the lot, so not all the reasons are valid geographic justifications.",
+      "The student named the yellow fence as a site fact and the bus access as a situation fact, which makes the justification complete and therefore correct as stated.",
+      "The student picked Lot Birch when Lot Hemlock has more transit connections and a bike path, making Hemlock's situation clearly superior and therefore the student's choice entirely invalid.",
+      "The student failed to mention the ground's stability and the lot's distance from downtown, which are essential facts that should have been included to make the justification stronger."
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the move-it test on each fact the student listed: would it travel with the ground, depend on what is nearby, or depend on something unrelated to geography?",
+      "A true fact can still fail to be a real justification if it has nothing to do with the ground or its surroundings—and listing such a fact alongside good reasons does not make the bad one count."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-001",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A river's course is the path that a river follows as it flows across the land. Based on this definition, which statement correctly describes what can happen to a river's course over a long stretch of time?",
+    "choices": [
+      "A river's course remains fixed in place because the land underneath it is solid rock that cannot be worn away or moved by water over time.",
+      "A river's course can shift gradually, so the path it follows today may be different from the path it followed many years ago.",
+      "A river's course only changes when a single huge flood or storm event happens in a short period of time, carving a brand new channel that the river then follows permanently.",
+      "A river's course changes so rapidly that it moves noticeably from week to week, making the river's path look completely different as time passes."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that the lesson teaches physical geography is 'not fixed'—features of the land can change over time.",
+      "The word 'gradually' means change happens in small amounts over a long stretch of time, too slow to notice moment to moment."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-002",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A surveyor draws a detailed map of a river valley in 1950, marking where the river's channel runs. In 2024, another surveyor draws a map of the very same valley. The 2024 map shows the river's channel sitting about 50 meters to the east of where the 1950 map showed it. No sudden flood or earthquake is recorded in historical records for that valley between 1950 and 2024. What does this difference between the two maps most likely show?",
+    "choices": [
+      "One of the surveyors made a mistake, because a river cannot change its course without a sudden event.",
+      "The river's course most likely shifted gradually over the 74 years between the two maps, with small changes adding up over time.",
+      "The 1950 surveyor deliberately drew the map in the wrong place to trick future geographers.",
+      "The river completely dried up and then refilled in a new location right after 2024."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for what is NOT described: there is no mention of a single sudden event between the two maps.",
+      "Gradual change produces a measurable difference when you compare a description from long ago with a description from today, even though no single dramatic moment explains it."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-003",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two photographs of a rocky coastline are taken at the same spot, one in 1980 and one in 2023. The old photograph shows a tall cliff with large boulders at its base. The new photograph shows the cliff standing about 10 meters farther back from the ocean, with no broken rock or debris visible in either picture. A student suggests that a massive landslide must have torn away the cliff all at once. Is this explanation the best fit for what these two photographs show, and why or why not?",
+    "choices": [
+      "Yes, because a coastline can only move if something dramatic happens all at once.",
+      "Yes, because 10 meters is too large a change to happen any other way.",
+      "No, because neither photograph shows the broken rock or debris that a sudden landslide would leave behind, so gradual wearing-back of the coastline is the better explanation.",
+      "No, because coastlines never change at all, so something must be wrong with one of the photographs."
+    ],
+    "answer": "D",
+    "hints": [
+      "Check what evidence would be present if a sudden event had happened: what would you see in the photograph?",
+      "Gradual change means small amounts over and over across a long stretch of time—no single day looks different from the day before it."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-004",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geography student finds two old journal entries written by explorers visiting the same river valley. The first entry, from 1885, describes the river flowing in a wide loop on the western side of the valley. The second entry, from 1920, describes the river flowing in a wide loop on the eastern side of the valley, about 2 kilometers away from where the 1885 explorer saw it. Neither journal entry mentions any large flood, earthquake, or storm. A classmate argues that one of the explorers must have written down the wrong location. Explain why this argument is weak and describe what most likely happened to the river between 1885 and 1920.",
+    "choices": [
+      "The river's course most likely shifted gradually over the 35 years between the two journal entries, with small amounts of movement adding up over time. Neither explorer wrote down the wrong location; each one accurately described where the river was flowing when that explorer visited. Gradual change is invisible from one day to the next, so no single entry would describe a sudden shift, yet comparing two entries from far apart in time reveals the change that happened.",
+      "The 1920 explorer definitely made a mistake in writing down the location, because rivers cannot move 2 kilometers unless a huge sudden event like a massive flood or earthquake tears a brand new channel through the valley floor.",
+      "Both explorers saw the river in the correct location, but the river actually moves back and forth between two fixed spots in the valley every single year, following a yearly cycle of shifting west in one season and then shifting back east in another season.",
+      "The river must have been diverted by a large earthquake that happened sometime between 1885 and 1920, even though the journal entries do not mention it and the explorers at the time did not feel or hear about such a major event."
+    ],
+    "answer": "A",
+    "hints": [
+      "Notice what is missing from both journal entries: no mention of a single sudden event. That rules out one big cause and points to something else.",
+      "To spot gradual change, compare descriptions from two different times that are far apart. A difference between them, with no sudden event to explain it, is a sign that small changes added up over the years in between."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-005",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A park ranger has photographs of a lake's shoreline taken every 10 years for the past 50 years. Looking at the photos from 1974 and 1984, the shoreline looks nearly identical—no visible difference at all. Looking at photos from 1974 and 2024, however, the shoreline on the north side has moved back about 15 meters from the water. No major drought, flood, or earthquake is recorded for those 50 years. Why would the photos from 1974 and 1984 show almost no change, while the photos from 1974 and 2024 show a measurable difference?",
+    "choices": [
+      "Gradual change is too slow to notice when you compare two photos taken only 10 years apart, but when you compare photos taken 50 years apart, the small changes add up enough to become visible.",
+      "The shoreline was moving backward very quickly between 1974 and 1984, then stopped moving completely after 1984.",
+      "No change at all happened between 1974 and 1984, but the shoreline suddenly jumped back 15 meters between 2014 and 2024.",
+      "Lake shorelines can only be photographed reliably once every 50 years, so the 10-year photos cannot be trusted."
+    ],
+    "answer": "B",
+    "hints": [
+      "What does gradual change look like when you measure it over different lengths of time? Small changes add up over a long stretch.",
+      "The lesson teaches that the best way to notice gradual change is to compare two descriptions from different times. The farther apart in time, the more visible the difference becomes."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-006",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three maps of the same river exist: Map A from 1900, Map B from 1905, and Map C from 1950. Map A and Map B show the river's channel in almost exactly the same location. Map B and Map C show the river's channel in noticeably different locations—about 3 kilometers apart. Between 1900 and 1905, weather was normal with no unusual flooding. Between 1905 and 1950, weather was also normal with no recorded floods or earthquakes. A student argues that the river must have changed suddenly, right around 1905, because the maps from 1900 and 1905 are identical. Explain why this argument does not fit the pattern in the lesson, and describe what the maps and times actually suggest.",
+    "choices": [
+      "The student's argument does not fit because a sudden change would produce a large difference between Map A and Map B, not between Map B and Map C. The maps actually suggest that gradual change was happening all along—it just took 50 years to become measurable, so the 5-year-apart comparison was too short to see it, but the 45-year comparison was long enough.",
+      "The student is correct that a sudden change happened in 1905, because if gradual change were happening, Maps A and B would show a visible difference.",
+      "Maps A and B are identical because the river was frozen in ice during that period, and it only started moving again after 1905.",
+      "The river's course actually changed gradually between 1900 and 1905, but Map B was drawn incorrectly to match Map A by accident, so the real difference is hidden."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about how long it takes for gradual change to become visible when you compare two maps. What time span is needed for small changes to add up to a measurable difference?",
+      "The lesson teaches that gradual change never shows a jump from one day to the next, and that comparing two descriptions from far apart in time is the best way to spot it. How does this idea apply when the two photos are only 5 years apart versus 50 years apart?"
+    ]
+  },
+  {
+    "id": "m6geo-using-geography-to-plan-a-community-001",
+    "loId": "m6geo.using-geography-to-plan-a-community",
+    "cedCode": "M6GEO-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A community planner is gathering facts before deciding where to place a new farm. What are the three main kinds of facts a planner needs to collect about a piece of land?",
+    "choices": [
+      "What people who live nearby prefer, and how much money the land costs to buy",
+      "How close the land is to other towns, and what color the soil is",
+      "The shape of the land, what water is nearby, and what resources the land offers",
+      "What plants are already growing on the land, and what the weather is like each season"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about the three categories of facts the planner must gather before making any decisions.",
+      "These facts describe the land itself—its shape, nearby water, and what it naturally provides."
+    ]
+  },
+  {
+    "id": "m6geo-using-geography-to-plan-a-community-002",
+    "loId": "m6geo.using-geography-to-plan-a-community",
+    "cedCode": "M6GEO-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A planner is choosing between two parcels for new housing. Parcel X is flat and sits on ground that has never flooded, with a road already running nearby. Parcel Y is also flat but sits on a floodplain that overflows every spring. Which parcel should become the housing, and why?",
+    "choices": [
+      "Parcel Y, because it receives water from the floodplain, which housing residents need",
+      "Parcel X, because it is closer to other buildings in town",
+      "Parcel Y, because flat land is the most important fact for housing placement",
+      "Parcel X, because it stays dry and already connects to a road"
+    ],
+    "answer": "D",
+    "hints": [
+      "Housing needs land that is flat and stays dry—not land that floods.",
+      "Check what each parcel offers: which one protects the house from water, and which one already has road access?"
+    ]
+  },
+  {
+    "id": "m6geo-using-geography-to-plan-a-community-003",
+    "loId": "m6geo.using-geography-to-plan-a-community",
+    "cedCode": "M6GEO-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A planner looks at three unused pieces of land and must decide which one is best for a new farm. Parcel P is flat, has rich fertile soil, and has a reliable stream flowing right beside it. Parcel Q is also flat and near the stream but has thin, sandy soil with very few nutrients. Parcel R is steep and rocky, far from any water. Which parcel should become the farm?",
+    "choices": [
+      "Parcel P, because it is flat, has fertile soil, and has water nearby",
+      "Parcel Q, because it is flat like Parcel P and flat is the most important fact for farming",
+      "Parcel R, because it is farther from town and farms should be away from where people live",
+      "Any of the three would work equally well since all have access to water somewhere"
+    ],
+    "answer": "A",
+    "hints": [
+      "A farm needs three things: flat land, fertile soil, and a nearby water source. Check which parcel has all three.",
+      "Parcel Q is flat but lacks fertile soil; Parcel R lacks both flat land and water. Which parcel meets all three needs?"
+    ]
+  },
+  {
+    "id": "m6geo-using-geography-to-plan-a-community-004",
+    "loId": "m6geo.using-geography-to-plan-a-community",
+    "cedCode": "M6GEO-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The town of Riverside has two vacant parcels. Parcel M is steep and rocky with almost no soil, but it overlooks a beautiful lake and sits on high, dry ground. Parcel N is flat, has rich fertile soil good for crops, but sits on a floodplain that floods during spring snowmelt. The town needs one new farm and one new park. Using the facts about land, water, and resources, explain which parcel should become the farm and which should become the park.",
+    "choices": [
+      "Parcel M should become the farm because it is on high, dry ground; Parcel N should become the park because the flooding provides water for recreation.",
+      "Parcel N should become the farm because it has fertile soil and water access; Parcel M should become the park because its steep, rocky ground does not suit farming or housing but still has value as a scenic overlook.",
+      "Parcel M should become the park because steep rocky land with a scenic view serves recreation well, while Parcel N should become the farm because it is flat and has fertile soil suitable for growing crops.",
+      "Parcel N should become the park because flooding creates wetlands that attract wildlife, while Parcel M should become the farm because being on high dry ground prevents crop damage from water."
+    ],
+    "answer": "B",
+    "hints": [
+      "A farm needs flat land and fertile soil; a park can use steep, rocky land that does not suit farming. Which parcel has the fertile soil a farm requires?",
+      "Parcel N floods, which disqualifies it for housing but not for farming. Parcel M is steep and rocky, which disqualifies it for farming but not for a park with a scenic view."
+    ]
+  },
+  {
+    "id": "m6geo-using-geography-to-plan-a-community-005",
+    "loId": "m6geo.using-geography-to-plan-a-community",
+    "cedCode": "M6GEO-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A resident of Grove Hill suggests: 'Put the new park on the flat, fertile field near the old mill, where everyone can gather. That field has been used as a farm for fifty years, and the soil is excellent. The steep, rocky hillside on the edge of town should become the farm instead.' What is wrong with this resident's plan, using the land, water, and resource facts taught in class?",
+    "choices": [
+      "The resident is correct; the location would be convenient for most people, which is the main planning goal.",
+      "The steep, rocky hillside cannot support a farm because it lacks flat land and fertile soil, while the flat fertile field could grow crops well. Putting a park on good farmland wastes a valuable resource.",
+      "The resident did not mention water sources for either parcel, so the plan cannot be evaluated.",
+      "Both parcels should be used for housing because the community likely needs more homes than it needs parks or farms."
+    ],
+    "answer": "C",
+    "hints": [
+      "The resident's reason is based on convenience and habit ('where everyone can gather' and 'used as a farm for fifty years'), not on land facts.",
+      "Which parcel has the flat, fertile soil that a farm actually needs? The planning decision should follow the land facts, not people's preferences or history."
+    ]
+  },
+  {
+    "id": "m6geo-using-geography-to-plan-a-community-006",
+    "loId": "m6geo.using-geography-to-plan-a-community",
+    "cedCode": "M6GEO-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A planner must place three land uses—a farm, a road, and housing—across three parcels. Parcel 1 is flat and fertile with a year-round stream but sits on a floodplain. Parcel 2 is flat, dry, and already has buildings nearby that are connected by a path that could become a road. Parcel 3 is steep and rocky, sits on high ground far from water, and has no value for crops. The planner must explain each choice using only land, water, or resource facts. Which parcel should become which land use, and which land use can be placed on Parcel 3?",
+    "choices": [
+      "Farm on Parcel 1 (fertile soil and stream water support crops), Housing on Parcel 2 (flat and dry conditions prevent flooding damage), and the Road should cross Parcel 3 (it does not need fertile soil or flatness to connect two populated areas).",
+      "Farm on Parcel 3 (high ground prevents flooding damage to crops), Housing on Parcel 1 (year-round stream provides water for residents), and the Road should follow the existing path on Parcel 2 (level terrain makes road construction easier).",
+      "Farm on Parcel 2 (flat terrain makes plowing and harvesting efficient), Housing on Parcel 3 (high ground offers safety from floods during spring snowmelt), and the Road should run along Parcel 1 (water access allows transport by stream).",
+      "Farm on Parcel 1 (fertile and watered), Housing on Parcel 2 (dry with existing access), and the Road should cross Parcel 3 (a road does not need flat or fertile land to exist if it connects two places)."
+    ],
+    "answer": "D",
+    "hints": [
+      "A farm needs fertile soil and water—which parcel has both? Housing must be dry and not flood—which parcel works? A road's main requirement is that it connects two places people travel between, not that the land underneath is flat or fertile.",
+      "Parcel 1 floods, so it cannot hold housing, but it is perfect for the farm. Parcel 3 is steep and rocky, useless for farming or housing, but a road can still run across it if it connects Parcel 2 (where buildings already exist) to another part of town."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-001",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When you are solving a map-based route problem, which map part should you read first before doing anything else?",
+    "choices": [
+      "The legend, so you know what each symbol on the map actually stands for",
+      "The compass rose, so you know which direction is north and can orient yourself to the map correctly before identifying your path",
+      "The scale bar, so you can measure distances correctly and determine how far apart different locations are from each other",
+      "The title, so you understand the region the map shows and know what area or theme the map is meant to represent"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson emphasizes reading this first, every time, before following a route.",
+      "Without knowing what the symbols mean, you could misidentify the path you are supposed to follow."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-002",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Riverside Park Map shows a path running from the entrance three scale-bar segments toward the top of the page to a fountain. Each segment is labeled to stand for one mile. What is the distance from the entrance to the fountain?",
+    "choices": [
+      "One mile",
+      "Three miles",
+      "Two miles",
+      "Four miles"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count the number of segments the path spans, then multiply by the distance each segment stands for.",
+      "Three of these equal segments, each worth one mile, add up to how many miles total?"
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-003",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A map's compass rose shows its arrow labeled N pointing toward the left edge of the page. A trail runs from the starting point toward the right edge of the page. In which direction does this trail actually run on this map?",
+    "choices": [
+      "North",
+      "South",
+      "East",
+      "West"
+    ],
+    "answer": "C",
+    "hints": [
+      "Direction always comes from that one map's own compass rose, never from habit or what seems usual.",
+      "If north points left, then the right edge must be the opposite side."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-004",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Mountain Ridge Trail Map shows a route with two legs: a paved path running five scale-bar segments toward the top of the page, then a dirt path running two scale-bar segments toward the right edge of the page. Each segment stands for 500 feet. The compass rose shows north pointing toward the top of the page. What are the two directions the hiker walks, in order, and what is the total distance?",
+    "choices": [
+      "East, then south; 3500 feet",
+      "North, then east; 2500 feet",
+      "South, then west; 3500 feet",
+      "North, then east; 3500 feet"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the direction and distance of each leg separately using the compass rose and scale, then add the two legs' distances together.",
+      "Five segments plus two segments equals seven segments; seven times 500 feet equals how many feet?"
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-005",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Harbor Path Map shows two possible routes from the dock to the beach. Route A is a paved sidewalk running two scale-bar segments toward the top of the page. Route B is a sand path running one scale-bar segment toward the left edge of the page, then three more scale-bar segments toward the top of the page. Each segment stands for 250 yards. A visitor wants to take the shorter route. Which route should the visitor choose, and what is the difference in distance between the two routes?",
+    "choices": [
+      "Route A, by 250 yards, because Route A is 500 yards while Route B is 750 yards",
+      "Route B, by 750 yards, because Route B is 500 yards while Route A is 1000 yards",
+      "Route A, by 500 yards, because Route A is 500 yards while Route B is 1000 yards",
+      "Route B, by 250 yards, because Route B is 1000 yards while Route A is 1250 yards"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate the total distance for each complete route separately, then compare the two finished totals side by side.",
+      "Route B has two legs, so you must add both legs' distances together before comparing it to Route A."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-006",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Forest Loop Map shows a hiking route with three legs: a gravel path running three scale-bar segments toward the right edge of the page, then a paved trail running two scale-bar segments toward the top of the page, then a dirt path running one scale-bar segment toward the left edge of the page, ending back at the start. Each segment stands for 300 meters. The compass rose shows north pointing toward the top of the page. A hiker claims the route directions are east, north, and west. To check this route by retracing it backward, in which three directions, in order, would the hiker retrace the path, and what should the total backward distance equal?",
+    "choices": [
+      "South, east, west; 1800 meters",
+      "East, south, west; 1800 meters",
+      "West, south, east; 2400 meters",
+      "North, south, east; 1200 meters"
+    ],
+    "answer": "B",
+    "hints": [
+      "Retracing backward means starting from the end and reversing each leg in reverse order, using the opposite direction of each leg.",
+      "The opposite of west is east; the opposite of north is south; the opposite of east is west. The backward total distance should equal the forward total: six segments times 300 meters each."
+    ]
+  }
+]

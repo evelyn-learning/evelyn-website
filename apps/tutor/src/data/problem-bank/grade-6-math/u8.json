@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-001",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does it mean to say that a value is a solution to an equation?",
+    "choices": [
+      "It is a number that appears in the problem statement.",
+      "It is a value that makes the equation true when substituted for the letter.",
+      "It is a number that is larger than all the other candidates.",
+      "It is any number that can replace the letter without causing an error."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what happens when you substitute a value into an equation and compute both sides.",
+      "A solution must produce a result where both sides of the equals sign match."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-002",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Raul is solving the equation t + 5 = 14 and has narrowed his candidates down to 8, 9, and 10. What should Raul do next to find which one is the solution?",
+    "choices": [
+      "Subtract 5 from each candidate to see which one gets closest to 0.",
+      "Add all three candidates together and divide by 3 to find the average solution value.",
+      "Substitute each candidate for t into the equation and check which one makes both sides equal.",
+      "Look at which candidate is closest to 14 and declare that one the solution."
+    ],
+    "answer": "C",
+    "hints": [
+      "Checking a candidate means you replace the letter and compute to see if the statement becomes true.",
+      "You need to test each candidate, not guess based on how close it looks to the answer."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-003",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Chen substitutes x = 6 into the inequality x × 2 > 10 and computes 6 × 2 = 12. He then checks whether 12 > 10 is true. What can Chen conclude?",
+    "choices": [
+      "The value 6 is not a solution because 12 is not equal to 10.",
+      "The value 6 could be a solution, but he needs to test more candidates to be sure.",
+      "The value 6 is a solution because the comparison 12 > 10 is a true statement.",
+      "The value 6 is a solution only if there are no other candidates that also work."
+    ],
+    "answer": "D",
+    "hints": [
+      "For an inequality, a solution is any value that makes the comparison true when you substitute it.",
+      "Remember that an inequality can have many solutions, not just one like an equation typically does."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-004",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The equation m - 3 = 11 has four candidates: 12, 13, 14, and 15. After substituting each candidate and computing, only 14 makes the equation true. Why is testing the candidate 12 still useful even though it fails to be the solution?",
+    "choices": [
+      "Testing 12 rules it out and shows exactly how and why it does not work, which is different from a number simply looking close to right.",
+      "Testing 12 proves that none of the other three candidates could possibly work because they are all larger than 12.",
+      "Testing 12 tells you that you should skip ahead and only test numbers much larger than 12 in future problems.",
+      "Testing 12 helps you narrow down the remaining pool by eliminating one option and confirming you need to look elsewhere for the solution."
+    ],
+    "answer": "A",
+    "hints": [
+      "A candidate that produces a false statement is still giving you information about the problem.",
+      "Think about what you learn when you substitute 12 and find that 12 - 3 = 9, which does not equal 11."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-005",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Jordan has two candidates, p = 5 and p = 8, to test in the inequality p + 6 < 15. After substituting both and computing, she finds that both 5 + 6 = 11 and 8 + 6 = 14 are both less than 15. What should Jordan conclude about the solutions to this inequality?",
+    "choices": [
+      "Exactly one of the candidates is the solution, and she needs to determine which one.",
+      "Both 5 and 8 are solutions to this inequality because both substitutions produce true statements.",
+      "Neither candidate is a solution because an inequality must have only one answer, like an equation does.",
+      "She should add 5 and 8 together to find the one true solution."
+    ],
+    "answer": "B",
+    "hints": [
+      "An inequality can have more than one solution from a given set of candidates because many numbers can satisfy a comparison like 'less than 15.'",
+      "A solution to an inequality is any value that makes the comparison true when substituted in."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-006",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Sofia is testing four candidates in the equation 3 + b = 10: the values 6, 7, 8, and 9. After substituting b = 7, she gets 3 + 7 = 10, which is false because 10 does not equal 10. Later, Sofia claims that testing this candidate was a waste of time because 7 is not close to any of the other candidates. Why is Sofia's reasoning incorrect, and what is the correct way to interpret her result?",
+    "choices": [
+      "Sofia is wrong because she should have tried a different set of candidates that are all much closer to each other in value.",
+      "Sofia is correct that testing 7 was wasted because the actual solution is 8, which is closer to most of the candidates.",
+      "Sofia is incorrect because solving an equation by substitution means you check whether 3 + 7 is exactly equal to 10, not whether the result looks close; since 10 ≠ 10 is false, her result correctly tells her that 7 is not a solution and rules it out.",
+      "Sofia is wrong because she computed 3 + 7 incorrectly and should have gotten a different result that makes her claim more sensible."
+    ],
+    "answer": "C",
+    "hints": [
+      "Substitution is about checking whether the two sides are exactly equal after computing, not about how 'close' a number looks.",
+      "Remember that solving is not the same as simplifying; you are finding the specific value that makes a true statement, and testing wrong answers is how you find it."
+    ]
+  },
+  {
+    "id": "m6math-writing-graphing-inequalities-001",
+    "loId": "m6math.writing-and-graphing-inequalities",
+    "cedCode": "M6MATH-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When a phrase says 'fewer than,' what symbol should you use to write the inequality?",
+    "choices": [
+      "The symbol >",
+      "The symbol = ",
+      "The symbol ≥",
+      "The symbol <"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about the direction: does 'fewer than' mean the numbers go up or down from the boundary?",
+      "Remember that 'fewer than,' 'less than,' and 'under' all describe the same boundary direction."
+    ]
+  },
+  {
+    "id": "m6math-writing-graphing-inequalities-002",
+    "loId": "m6math.writing-and-graphing-inequalities",
+    "cedCode": "M6MATH-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A swimming pool has a rule: swimmers must be younger than 12 years old to use the shallow end. Let a stand for a swimmer's age in years. Which inequality represents this rule?",
+    "choices": [
+      "a < 12",
+      "a > 12",
+      "a = 12",
+      "a ≤ 12"
+    ],
+    "answer": "A",
+    "hints": [
+      "The phrase 'younger than' tells you the direction the solutions go from 12. Does 'younger than 12' include 12 itself or not?",
+      "Does a 12-year-old satisfy the rule 'younger than 12'? Use that to pick the correct symbol."
+    ]
+  },
+  {
+    "id": "m6math-writing-graphing-inequalities-003",
+    "loId": "m6math.writing-and-graphing-inequalities",
+    "cedCode": "M6MATH-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A number line shows an open circle at 7, with shading to the left of 7 and an arrow pointing left. What inequality does this number line represent?",
+    "choices": [
+      "x > 7",
+      "x < 7",
+      "x = 7",
+      "x ≤ 7"
+    ],
+    "answer": "B",
+    "hints": [
+      "The shading goes left from 7, so you are looking at numbers smaller than 7. Which symbol represents 'smaller than'?",
+      "An open circle means the boundary number itself is not included. Which inequality uses that open circle rule?"
+    ]
+  },
+  {
+    "id": "m6math-writing-graphing-inequalities-004",
+    "loId": "m6math.writing-and-graphing-inequalities",
+    "cedCode": "M6MATH-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A video game requires players to have completed more than 15 levels before they can unlock the boss stage. Let L stand for the number of levels completed. Write the inequality that represents who can unlock the boss stage. If a player has completed exactly 16 levels, does this player qualify? Explain your choice.",
+    "choices": [
+      "The inequality is L > 15, and no, the player does not qualify because 16 is not greater than 15.",
+      "The inequality is L ≥ 15, and yes, the player qualifies because 16 is at least 15.",
+      "The inequality is L > 15, and yes, the player qualifies because 16 is more than 15.",
+      "The inequality is L ≥ 16, and yes, the player qualifies because 16 equals 16."
+    ],
+    "answer": "C",
+    "hints": [
+      "The phrase 'more than' translates to which symbol: > or ≥? Does 'more than 15' include 15 itself?",
+      "After you write the inequality, test whether 16 makes it true by substituting: is 16 > 15 a true statement?"
+    ]
+  },
+  {
+    "id": "m6math-writing-graphing-inequalities-005",
+    "loId": "m6math.writing-and-graphing-inequalities",
+    "cedCode": "M6MATH-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A parking lot sign states: 'Maximum occupancy: no more than 200 cars.' Let c stand for the number of cars parked in the lot. Which inequality represents this rule, and which of the following describes the number-line graph correctly?",
+    "choices": [
+      "The inequality is c < 200. The graph has an open circle at 200 and shading to the left.",
+      "The inequality is c > 200. The graph has an open circle at 200 and shading to the right.",
+      "The inequality is c ≤ 200. The graph has an open circle at 200 and shading to the left.",
+      "The inequality is c ≤ 200. The graph has a closed circle at 200 and shading to the left."
+    ],
+    "answer": "D",
+    "hints": [
+      "The phrase 'no more than' means the numbers can equal the boundary or go smaller. Which symbol includes 'or equal to'?",
+      "When an inequality uses ≤ or ≥, do you draw an open circle or a closed circle at the boundary number?"
+    ]
+  },
+  {
+    "id": "m6math-writing-graphing-inequalities-006",
+    "loId": "m6math.writing-and-graphing-inequalities",
+    "cedCode": "M6MATH-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student sees this number line: an open circle at 6, shading to the right, and an arrow. The student must write an inequality and then determine the smallest whole number that satisfies it. The student writes x > 6 and says the smallest whole number is 6. Identify the error and explain what the correct smallest whole number should be.",
+    "choices": [
+      "The student's inequality x > 6 is correct, but the smallest whole number is 7, not 6, because 6 is not greater than 6.",
+      "The student's inequality is wrong; it should be x ≥ 6, and the smallest whole number is 6.",
+      "The student wrote the inequality correctly, but counted the open circle as including 6, which is the only error.",
+      "The student's inequality is wrong; it should be x < 6, and the smallest whole number would be 5."
+    ],
+    "answer": "A",
+    "hints": [
+      "First check: does the inequality x > 6 match the graph with an open circle at 6 and shading to the right? If so, is the inequality correct?",
+      "Then check: if x > 6 is true, can x equal 6? What whole number is just barely bigger than 6?"
+    ]
+  },
+  {
+    "id": "m6math-dependent-independent-variables-001",
+    "loId": "m6math.dependent-and-independent-variables",
+    "cedCode": "M6MATH-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a real-world relationship between two quantities, the independent variable is the one you choose or control, and the dependent variable is the one that responds to your choice. Which statement correctly identifies these roles?",
+    "choices": [
+      "The independent variable is chosen or controlled; the dependent variable depends on it.",
+      "The independent variable depends on the dependent variable.",
+      "Both variables are chosen at the same time and neither depends on the other.",
+      "The dependent variable is the one you choose, and the independent variable changes in response."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself: which quantity do I control first, and which one follows from that choice?",
+      "Think about Mia choosing how many walks to do and then the money following from that."
+    ]
+  },
+  {
+    "id": "m6math-dependent-independent-variables-002",
+    "loId": "m6math.dependent-and-independent-variables",
+    "cedCode": "M6MATH-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A coffee shop charges $2 for each cup of coffee. Let c stand for the number of cups sold, and let p stand for the total price in dollars. Which equation correctly shows p in terms of c?",
+    "choices": [
+      "c = 2p",
+      "p = 2c",
+      "p = c + 2",
+      "c = p + 2"
+    ],
+    "answer": "B",
+    "hints": [
+      "Decide which quantity is independent (what the shop controls) and which is dependent (what follows from sales).",
+      "The total price depends on the number of cups, so write an equation that computes p when you know c."
+    ]
+  },
+  {
+    "id": "m6math-dependent-independent-variables-003",
+    "loId": "m6math.dependent-and-independent-variables",
+    "cedCode": "M6MATH-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gardener plants seeds in rows. Each row requires 12 seeds. Let r stand for the number of rows, and let s stand for the total number of seeds used. What does the equation s = 12r tell you about this situation?",
+    "choices": [
+      "The gardener plants 12 more rows each time the number of seeds increases by 1.",
+      "Each row needs 12 seeds, so multiply the number of rows by 12 to find the total seeds needed.",
+      "The gardener starts with 12 seeds and adds 1 more for each row planted.",
+      "The total number of seeds divided by the number of rows always equals 12 rows."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at the form of the equation: it shows the dependent variable on one side and a multiplication on the other.",
+      "There is no fixed starting amount, so every quantity comes from multiplying the independent variable by a rate."
+    ]
+  },
+  {
+    "id": "m6math-dependent-independent-variables-004",
+    "loId": "m6math.dependent-and-independent-variables",
+    "cedCode": "M6MATH-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A phone plan costs $30 per month as a base fee, and then $0.10 for each text message sent. Let m stand for the number of text messages sent in a month, and let t stand for the total monthly bill in dollars. Write the equation for t in terms of m, then find the total bill when 50 messages are sent.",
+    "choices": [
+      "t = 30m; the total bill is $1,500.",
+      "t = 0.10m; the total bill is $5.",
+      "t = 30 + 0.10m; the total bill is $35.",
+      "t = 30m + 0.10; the total bill is $900.10."
+    ],
+    "answer": "D",
+    "hints": [
+      "Identify the fixed cost that stays the same and the variable cost that depends on the number of messages.",
+      "Substitute m = 50 into your equation to find the total: don't forget the base fee of $30."
+    ]
+  },
+  {
+    "id": "m6math-dependent-independent-variables-005",
+    "loId": "m6math.dependent-and-independent-variables",
+    "cedCode": "M6MATH-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A fruit stand starts each day with 80 apples already on display. Throughout the day, they sell 6 apples per hour. Let h stand for the number of hours the stand has been open, and let a stand for the number of apples still on display. Which equation correctly relates a to h, and what does the table value a = 50 tell you?",
+    "choices": [
+      "a = 80 − 6h; after 5 hours, there are 50 apples left on display.",
+      "a = 80 + 6h; the stand gained 6 apples per hour because it started with 80.",
+      "a = 6h + 80; the stand must have sold negative apples to have only 50 left.",
+      "a = 80h − 6; after 5 hours, there are 50 apples left, but the equation does not model the situation correctly."
+    ],
+    "answer": "A",
+    "hints": [
+      "The stand starts with 80 apples and sells 6 each hour, so apples decrease over time.",
+      "Set a = 50 and solve: which value of h makes 80 − 6h equal to 50?"
+    ]
+  },
+  {
+    "id": "m6math-dependent-independent-variables-006",
+    "loId": "m6math.dependent-and-independent-variables",
+    "cedCode": "M6MATH-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two pizza restaurants use different pricing. Mario's charges $1 per slice with no delivery fee (let s be the number of slices and p be the total cost in dollars). Antonio's charges $2 per slice but also includes a $5 delivery fee (let s be the number of slices and c be the total cost in dollars). For which number of slices do both restaurants cost the same amount, and which equation helps you find this?",
+    "choices": [
+      "Set p = c, which gives p = s and c = 5 + 2s; they cost the same when s = 5 slices.",
+      "Set p = c, which gives p = s and c = 5 + 2s; they cost the same when s = 4 slices.",
+      "Set p = c, which gives p = 1s and c = 5 + 2s; they cost the same when s = 5 slices.",
+      "Set p = c, which gives p = 1s and c = 5 + 2s; they cost the same when s = 3 slices."
+    ],
+    "answer": "B",
+    "hints": [
+      "Write both equations clearly: p = 1s for Mario's and c = 5 + 2s for Antonio's. Then set them equal.",
+      "Solve s = 5 + 2s by working backward: if both sides are equal, what value of s makes that true?"
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-001",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the equation x + 7 = 15, what operation is being performed on x? Identify the operation you need to undo.",
+    "choices": [
+      "Multiplication by 7",
+      "Division by 7",
+      "Addition of 7",
+      "Subtraction of 7"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at what number is attached to x and how it connects to x.",
+      "Ask yourself: is 7 being added to x, multiplied by x, or something else?"
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-002",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jordan bought a book that cost $6.50. This brought his total spending for the day to $18.25. If x represents the amount he spent before buying the book, solve x + 6.50 = 18.25 for x.",
+    "choices": [
+      "$24.75",
+      "$11.50",
+      "$12.00",
+      "$11.75"
+    ],
+    "answer": "D",
+    "hints": [
+      "First, name the operation on x: is 6.50 added to, multiplied by, or subtracted from x?",
+      "Use the inverse operation on both sides of the equation to isolate x."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-003",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A baker divided 24 pounds of dough equally into 6 portions for different recipes. Let x be the weight of dough in each portion. Solve 6x = 24 for x.",
+    "choices": [
+      "4 pounds",
+      "30 pounds",
+      "18 pounds",
+      "6 pounds"
+    ],
+    "answer": "A",
+    "hints": [
+      "The number 6 is multiplying x, so use the inverse operation to undo multiplication.",
+      "Divide both sides of the equation by 6 to isolate x."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-004",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Marcus solved the equation 5x = 35 and got x = 7. He then checked his answer by substituting 7 back into the original equation. What should both sides equal after he performs the substitution check?",
+    "choices": [
+      "5 and 7",
+      "35",
+      "12",
+      "7"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that a check means putting the value of x back into the original equation and calculating both sides.",
+      "If the solution is correct, both sides of the equation must produce the same number."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-005",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student solved x + 8.5 = 20 and arrived at x = 11.5. To verify the answer is correct, the student must substitute 11.5 back into the original equation. Which statement correctly describes what should happen during this check?",
+    "choices": [
+      "The left side should equal 8.5 and the right side should equal 20.",
+      "The left side (11.5 + 8.5) should equal the right side (20).",
+      "Dividing both sides by 8.5 should isolate the variable again.",
+      "The left side should equal 11.5 and the right side should equal 8.5."
+    ],
+    "answer": "C",
+    "hints": [
+      "A check requires substituting the solution back into the original equation and computing.",
+      "For a substitution check, both sides of the equation should equal the same value when you plug in x = 11.5."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-006",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two students solved 8x = 32 using different methods. Student A divided both sides by 8 and got x = 4. Student B subtracted 8 from both sides and got 8x = 24. When Student B substituted their answer back into the original equation 8x = 32, what went wrong?",
+    "choices": [
+      "Student B did not divide by 8 on the right side, so the balance was broken.",
+      "Student B did not use the inverse operation because 8 is multiplying x, not added to x.",
+      "Student B's answer x = 3 is correct, but they forgot to check it by substitution.",
+      "Student B used the wrong inverse operation because subtraction does not undo multiplication."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about which operation was actually being performed on x in the original equation.",
+      "The inverse of multiplication is division, not subtraction—using the wrong inverse leaves x still attached to a number."
+    ]
+  }
+]
