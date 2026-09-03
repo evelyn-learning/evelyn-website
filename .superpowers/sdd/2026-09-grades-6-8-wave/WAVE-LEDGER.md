@@ -10,10 +10,10 @@ Plan: docs/superpowers/plans/2026-09-02-grades-6-8-ms-course-wave.md (main e78c0
 | m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | ✓ 240 (95.0%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (97.9%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 239 (97.1%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
-| m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
-| m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
-| m8sci | ✓ (m8sci-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
-| m8geo | ✓ (m8geo-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
+| m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
+| m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
+| m8sci | ✓ (m8sci-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
+| m8geo | ✓ (m8geo-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
 
 ## Contract sources (Task 0.3)
 
@@ -87,3 +87,16 @@ Cross-course findings resolved by the controller after the drafts landed:
 - The plan's "registries already carry all eight grade-6/8 rows" is TRUE for the engine (taxonomy, lint,
   COURSE_NAMES, COURSE_PREFIX, MS_COURSE_NAMES, MS_SUBJECT_PHRASE) and FALSE for academy
   `seed/mappings.json` (generated; G8 keys appear only after Task 1.6's `buildCourse` + `seed:gen`).
+
+## Grade 8 drop — EXEMPLARS DONE, FAN-OUT IN PROGRESS (2026-09-03, session evelynlearning-1c)
+
+- Contracts: `m8{math,ela,sci,geo}-FANOUT-CONTRACT.md` (cloned from G6 by agents; controller rulings appended:
+  description = positive scope statement + citation only; authoring qualifiers and curriculum cross-references
+  drop out; em dash → ` -- `). Scope notes in `scope-notes/`. Briefs in `lesson-briefs/<course>/` (38 each).
+- Exemplars (8) committed `2c1455b0`, registered with empty chains; `lint-ms-plans: 328 plans OK`; tsc clean.
+  Every exemplar passed `g8-seed-audit.mts` (DF-1 formula, MCQ shape, description hygiene, U+2212, minutes).
+- Fan-out mechanics: `G8-FANOUT-PROMPT.md` + one brief per agent, ≤8 concurrent, per course in curriculum order.
+  After each batch: `ls seeds | grep -c m8<c>-` → `npx tsx g8-seed-audit.mts <course> <PREFIX>` (from apps/tutor)
+  → tsc. Register all 40 per course with `register-course.py` (wires nothing — chains come from the seeds; the
+  exemplars' chains must be hand-wired at that point) → `lint-ms-plans` expected 360/400/440/480.
+- Batch 1 (m8math U1-U2, 8 rows) dispatched 2026-09-03.
