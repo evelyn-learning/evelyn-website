@@ -59,6 +59,38 @@ if (schoolYearLeaks('40 students signed up, and the club should keep the slot ne
 // needs the closing quote and the slash, or an unrelated "we" joins an unrelated "last year".
 if (schoolYearLeaks('PAIR A: "If the floor is wet, we will move." / "was" states something that happened last year.').length) throw new Error('self-test: fused a quoted pair into one sentence');
 
+/**
+ * US spelling. Suggested by the m8sci 1.3 author, who found `travelling`,
+ * `travelled`, `slip road` and six `way round` in a first draft and noted that
+ * nothing in the stack greps for Briticisms -- it would have shipped.
+ *
+ * ⚠️ INSTRUMENT NOTE, because the first draft of this check was a disaster:
+ * a greedy "organis" + word-run pattern matches ORGANISM (360 hits across the
+ * shipped corpus), the same shape on "analys" matches ANALYSIS, and on "realis"
+ * matches REALISTIC. That version indicted 67 of 412 files, essentially all
+ * falsely. The -ise verbs therefore carry EXPLICIT endings, never an open
+ * word-run. (Nor can this comment show that pattern literally: it ends in a
+ * star-slash, which would close the comment -- which is how it first broke.)
+ * Measured after tightening:
+ * 9 hits in 7 files across all 412 m6/m7/m8 seeds, every one genuine.
+ * `aluminium` and `sulphur` are in the list because this is a physical science
+ * course and they are the two that would actually come up.
+ */
+const ISE_STEMS = 'real|organ|recogn|analy|minim|maxim|emphas|summar|categor|apolog|special|standard';
+const BRITICISM = new RegExp(
+  '\\b(?:travell(?:ed|ing|er|ers)|colour(?:s|ed|ing|ful)?|favour(?:s|ed|ing|ite|ites)?|' +
+    'behaviour(?:s|al)?|neighbour(?:s|ing|hood|hoods)?|labour(?:s|ed|ing)?|honour(?:s|ed|able)?|' +
+    'humour|odour(?:s)?|vapour(?:s)?|centre(?:s|d)?|litre(?:s)?|fibre(?:s)?|theatre(?:s)?|' +
+    'metre(?:s)?|kilometre(?:s)?|centimetre(?:s)?|millimetre(?:s)?|(?:' + ISE_STEMS + ')is(?:e|es|ed|ing|ation|ations)|' +
+    'defence|offence|pretence|grey|aluminium|sulphur|practis(?:e|es|ed|ing)|whilst|amongst|' +
+    'programme(?:s)?|kerb(?:s)?|tyre(?:s)?|plough(?:s|ed|ing)?|draught(?:s|y)?|maths)\\b',
+  'i',
+);
+// Self-tests, both directions: a check that has never been shown to fire is not evidence of absence.
+if (!BRITICISM.test('the cart travelled four metres')) throw new Error('BRITICISM self-test: missed a real Briticism');
+if (BRITICISM.test('every organism in the analysis was realistic')) throw new Error('BRITICISM self-test: fired on organism/analysis/realistic');
+if (BRITICISM.test('the meter reads 4 meters and the color is gray')) throw new Error('BRITICISM self-test: fired on US spellings');
+
 const LETTERS = ['a', 'b', 'c', 'd'];
 let total = 0, longest = 0, mcqs = 0;
 const problems: string[] = [];
@@ -142,6 +174,8 @@ for (const f of files) {
   walk(plan.segments, 'segments', (s, p) => {
     if (/\bGrade [678]\b|\bG[678]\b/.test(s)) P(`spoken field names a grade band: ${p}`);
     for (const sent of schoolYearLeaks(s)) P(`ADVISORY -- another school year addressed to the student: ${p}: "${sent.trim().slice(0, 110)}"`);
+    const brit = s.match(BRITICISM);
+    if (brit) P(`British spelling in a student-facing field: ${p}: "${brit[0]}"`);
     if (/\bthis lesson\b|\bin this lesson\b/i.test(s) && /try_yourself|choices|problem/.test(p)) P(`try item references "this lesson": ${p}`);
   });
 }

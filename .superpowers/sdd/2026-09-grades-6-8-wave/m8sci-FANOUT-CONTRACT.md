@@ -1260,3 +1260,19 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
     deliberately NOT TESTED by any item, and the file says so. This is the right move and
     the right disclosure. If a row's format cannot honestly assess part of its standard,
     teach it, exclude it from the items, and record the gap where a reviewer will find it.
+
+## Addendum — CONTROLLER RULING 32, from the first science batch (2026-09-04)
+
+32. **A scope cell's own worked example cannot become one of your items.** Row 2.3's part (i)
+    names both "you push the wall, the wall pushes you" and "a swimmer pushes water back,
+    water pushes the swimmer forward". Part (i) is copied VERBATIM into `los[0].description`,
+    and that field is STUDENT-FACING -- the academy renders it as the lesson objective. So an
+    item built on the swimmer was answerable from the objective rather than from the law. The
+    author caught it and moved to a hammer and nail.
+
+    This is ruling 22's mechanism (a specimen leaking into an assessed item) arriving through
+    a field ruling 22 does not list, because the leak is not something the author wrote -- it
+    is inherited from the curriculum. **So: before writing items, read your own
+    `los[0].description` as if it were a teaching segment, and treat every concrete example
+    it names as burned.** Any row whose scope cell names a concrete example is exposed to
+    this, and several Grade 8 cells do.
