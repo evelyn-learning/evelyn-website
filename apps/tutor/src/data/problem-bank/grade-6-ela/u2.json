@@ -228,120 +228,6 @@
     ]
   },
   {
-    "id": "m6ela-figurative-language-001",
-    "loId": "m6ela.figurative-language",
-    "cedCode": "M6ELA-2.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which sentence contains a simile?\n\nA) The rain fell down hard.\nB) The rain fell like tiny hammers on the roof.\nC) The rain was a flood across the street.\nD) The rain danced across the puddles.",
-    "choices": [
-      "The rain fell down hard.",
-      "The rain fell like tiny hammers on the roof.",
-      "The rain was a flood across the street.",
-      "The rain danced across the puddles."
-    ],
-    "answer": "B",
-    "hints": [
-      "Look for the signal words like or as that mark a simile.",
-      "A simile compares two things using like or as."
-    ]
-  },
-  {
-    "id": "m6ela-figurative-language-002",
-    "loId": "m6ela.figurative-language",
-    "cedCode": "M6ELA-2.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the sentence below. What does the metaphor tell you about the runner's speed?\n\n\"By the final lap, Marcus was a cheetah, streaking past every other competitor.\"",
-    "choices": [
-      "Marcus was pretending to be a wild animal while he ran.",
-      "Marcus was as tired as a cheetah after running so far.",
-      "Marcus was running extremely fast, faster than anyone else in the race.",
-      "Marcus looked exactly like a cheetah because he was moving so smoothly."
-    ],
-    "answer": "C",
-    "hints": [
-      "A cheetah is known for being the fastest land animal.",
-      "Ask yourself: what quality do Marcus and a cheetah share in this comparison?"
-    ]
-  },
-  {
-    "id": "m6ela-figurative-language-003",
-    "loId": "m6ela.figurative-language",
-    "cedCode": "M6ELA-2.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the sentence below. Identify the personification and explain what it tells you about the wind.\n\n\"The wind whispered secrets through the trees all night long.\"",
-    "choices": [
-      "The wind is personified because it is described as moving through the trees at night, which is something wind naturally does in the environment.",
-      "The wind is personified because the sentence includes the word whispered, which is a verb that describes an action or sound occurring.",
-      "The wind is personified because secrets are mentioned in the sentence, and secrets are things that humans typically keep and share with one another.",
-      "The wind is personified because it whispers, which gives it the human ability to speak and share secrets deliberately."
-    ],
-    "answer": "D",
-    "hints": [
-      "Personification gives a nonhuman thing a human quality—a feeling, choice, or mind.",
-      "Think about whether the wind can actually choose what to say and keep secrets."
-    ]
-  },
-  {
-    "id": "m6ela-figurative-language-004",
-    "loId": "m6ela.figurative-language",
-    "cedCode": "M6ELA-2.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read the two sentences below. One contains a hyperbole and one does not. Identify which is which and explain the difference.\n\nSentence 1: \"I told you not to touch my art supplies, and I have asked you about it five times.\"\nSentence 2: \"I have told you a million times not to touch my art supplies.\"",
-    "choices": [
-      "Sentence 1 is not a hyperbole because five times could actually be true; Sentence 2 is a hyperbole because a million times is so large that nobody means it literally, and the size shows how frustrated the speaker is.",
-      "Sentence 1 is not a hyperbole because the speaker could reasonably have mentioned it five times before; Sentence 2 is a hyperbole because a million times is physically impossible and exaggerated to show intense frustration.",
-      "Sentence 1 is a hyperbole because the speaker is exaggerating about how many times they repeated the request; Sentence 2 is not a hyperbole because it uses the real number one million.",
-      "Sentence 1 is a hyperbole because the speaker sounds annoyed and repeated the request; Sentence 2 is not a hyperbole because a million is a specific, measurable quantity that exists."
-    ],
-    "answer": "A",
-    "hints": [
-      "A hyperbole is an exaggeration so large that nobody believes it literally.",
-      "Ask yourself: which number is realistic enough to be true, and which one is impossible?"
-    ]
-  },
-  {
-    "id": "m6ela-figurative-language-005",
-    "loId": "m6ela.figurative-language",
-    "cedCode": "M6ELA-2.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student labeled this sentence as a simile and said the meaning was \"The old piano makes strange sounds.\" Is the student correct? Why or why not?\n\n\"The old piano groaned and complained as Grandma played it.\"",
-    "choices": [
-      "No, the student is wrong because the sentence is a metaphor that directly compares the piano to a person rather than using like or as to show the comparison.",
-      "No, the student is wrong because the sentence has no like or as, so it is personification, not a simile. The meaning is that the piano is old and worn, described as if it were unhappy about being played, which makes it sound suffering and tired.",
-      "Yes, the student is correct because the word as signals a simile that compares how the piano sounds to how something else makes sounds.",
-      "Yes, the student is correct because groaned and complained describe sounds that old pianos can actually make when played."
-    ],
-    "answer": "B",
-    "hints": [
-      "Check the definition: a simile must have the word like or the word as. What signal words are actually in this sentence?",
-      "Personification gives a human feeling or choice to something that is not human. Can an old piano actually complain, or is that a human feeling being borrowed?"
-    ]
-  },
-  {
-    "id": "m6ela-figurative-language-006",
-    "loId": "m6ela.figurative-language",
-    "cedCode": "M6ELA-2.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read the paragraph below. Identify all the figurative language in it, and explain what the author is trying to tell you overall about how Emma feels during the test.\n\n\"Emma stared at the test paper as if it were written in a foreign language. Her hands trembled like leaves in the wind. The clock seemed to mock her, ticking away with every second. She had taken a thousand practice tests, but none of them felt this hard.\"",
-    "choices": [
-      "There is a simile (as if written in a foreign language), personification (clock mocking her), and a hyperbole (a thousand practice tests), which together show only that Emma is confused and has not studied enough for this particular test.",
-      "The paragraph uses personification (clock mocking her) and metaphors (as if written in a foreign language, like leaves in the wind) but these devices indicate that Emma disliked her practice tests and finds this test boring rather than stressful.",
-      "There is a simile (like leaves in the wind), a personification (clock mocking her), and a hyperbole (a thousand practice tests). Together, they show that Emma is extremely anxious and overwhelmed by the test, even though she prepared well. Each device stretches the truth to show how intense her worry is.",
-      "The paragraph contains only similes and hyperboles that describe how Emma's confusion makes it impossible for her to remember anything she studied, suggesting poor test preparation and weak study habits."
-    ],
-    "answer": "C",
-    "hints": [
-      "Look for like and as (similes), human qualities on nonhuman things (personification), impossible exaggerations (hyperbole), and direct is comparisons (metaphors).",
-      "After naming each device, ask what they all add up to: what is the author really telling you about Emma's emotional state?"
-    ]
-  },
-  {
     "id": "m6ela-word-choice-tone-001",
     "loId": "m6ela.word-choice-and-tone",
     "cedCode": "M6ELA-2.4",
@@ -453,6 +339,120 @@
     "hints": [
       "Find two words that are near-opposites in feeling and show what happens when you swap them both for a plain synonym.",
       "The correct answer should explain what feeling each word carries and what disappears when you replace both with neutral words."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-001",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence contains a simile? Pay attention to the signal words like and as.",
+    "choices": [
+      "The student's pencil was a sharpened point ready for the test.",
+      "Her voice rang out like a bell across the gymnasium.",
+      "The old clock ticked away the minutes before dismissal.",
+      "Time flew by during the field trip to the museum."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the word like or the word as in each choice.",
+      "A simile always signals a comparison with one of those two words."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-002",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the line from a story about a soccer game: 'The goalie's hands were iron, catching every shot that came her way.' What does this metaphor tell the reader about the goalie's hands?",
+    "choices": [
+      "The goalie's hands were made of actual metal material that could conduct electricity.",
+      "The goalie's hands were cold and hard to the touch like frozen objects.",
+      "The goalie's hands were strong, hard, and reliable at stopping the ball.",
+      "The goalie's hands moved back and forth in the way that metal swings when pushed."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what iron is like: what quality does iron have that would describe a goalkeeper's skill?",
+      "The meaning is not about the material itself, but about the strength and dependability the comparison suggests."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-003",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student reads this sentence: 'The ancient refrigerator hummed and rattled every time it cycled on.' Is this personification? Explain your choice.",
+    "choices": [
+      "Yes, because the refrigerator makes sounds that indicate it has feelings and emotions like a person would.",
+      "No, because personification can only happen when comparing something to living things like plants or animals.",
+      "Yes, because hummed and rattled are both words that describe how people feel when they are nervous.",
+      "No, because hummed and rattled are literal sounds a refrigerator can actually make, not human qualities."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: personification requires a human quality like a feeling or a choice, not just any action or sound.",
+      "Ask yourself: can a refrigerator actually make those sounds on its own, or do they show a human emotion?"
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-004",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read these two lines from a passage about a storm: (1) 'The wind howled like a pack of wolves attacking the house.' (2) 'The storm devoured the entire town with rain and thunder.' Identify the figurative device in each line, then explain what each one tells the reader about the intensity of the weather.",
+    "choices": [
+      "Line 1 is a simile comparing the wind to wolves and suggesting violent, aggressive force; Line 2 is a metaphor suggesting the storm consumed or overwhelmed everything in its path.",
+      "Line 1 is a metaphor showing the wind is angry because it acts like a living thing; Line 2 is a simile showing the storm is destructive and harmful to buildings and people.",
+      "Line 1 is personification because wind cannot actually howl or attack like animals do; Line 2 is hyperbole because storms do not literally consume or eat towns the way living creatures do.",
+      "Line 1 uses the word 'like' to show two things are similar in how dangerous they are; Line 2 uses the word 'devoured' to show the storm is active and threatening, making the weather seem powerful and overwhelming."
+    ],
+    "answer": "A",
+    "hints": [
+      "Line 1 contains a signal word that marks one device; Line 2 says the storm IS something without using like or as.",
+      "For Line 2, ask what 'devour' means and what it suggests about how completely the storm affected the town."
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-005",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student encounters this sentence: 'The leaves danced across the lawn in the autumn breeze.' The student says this is personification because leaves cannot dance. Is the student correct? Why or why not?",
+    "choices": [
+      "Yes, the student is correct; leaves cannot literally dance, so any mention of dancing is personification.",
+      "Yes, the student is correct; danced gives the leaves a human action and movement, which is a human quality.",
+      "No, the student missed that this is a simile because the leaves are compared to dancers using the word like.",
+      "No, the student did not check whether danced is a sound; sounds are what mark personification."
+    ],
+    "answer": "B",
+    "hints": [
+      "Personification is about giving human qualities to nonhuman things; dancing is something a person chooses to do.",
+      "Look at the definition: does the word danced describe a feeling or a choice that only something human can make?"
+    ]
+  },
+  {
+    "id": "m6ela-figurative-language-006",
+    "loId": "m6ela.figurative-language",
+    "cedCode": "M6ELA-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage: 'I have asked my brother to do his chores a million times. Last week, I reminded him six times on Monday alone. His messy room is a disaster zone.' A classmate labels the first sentence as hyperbole and the third sentence as a metaphor, then adds no meanings. What would a complete answer include, and which label, if any, needs to be changed?",
+    "choices": [
+      "Keep both labels; add that hyperbole shows the brother's refusal to help, and metaphor shows the room is very messy.",
+      "Keep the hyperbole label; change metaphor to personification; explain that the room is alive and causing trouble.",
+      "Keep both labels; add that hyperbole shows how many times the speaker asked, and metaphor shows the room is extremely untidy or chaotic.",
+      "Change hyperbole to personification; keep the metaphor label; explain that asking many times shows frustration, and the room being messy is bad."
+    ],
+    "answer": "C",
+    "hints": [
+      "A complete answer always names the device AND states what it actually means in plain words, not just recognizing the label.",
+      "For the third sentence, check whether 'disaster zone' could be literally true: is a bedroom actually a zone of disasters?"
     ]
   }
 ]

@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-1.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A ratio is 12:3. What is the unit rate?",
+    "problemText": "A ratio is 12:3. What is the unit rate for this ratio? Hint: Remember that the unit rate is found by dividing the first number by the second number.",
     "choices": [
-      "12",
-      "4",
       "3",
+      "4",
+      "12",
       "15"
     ],
     "answer": "B",
     "hints": [
-      "The unit rate is found by dividing the first number by the second number.",
-      "Remember that a unit rate tells you the amount of the first quantity per ONE of the second quantity."
+      "The unit rate is a divided by b for a ratio a:b.",
+      "Divide 12 by 3."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A store sells 8 apples for $2.40. What is the price per apple?",
+    "problemText": "A runner completes 24 laps in 6 hours at a steady pace. What is the unit rate in laps per hour? Hint: The phrase 'per hour' tells you which quantity to divide by.",
     "choices": [
-      "$2.40 per apple",
-      "$0.24 per apple",
-      "$0.30 per apple",
-      "$8.00 per apple"
+      "2 laps per hour",
+      "6 laps per hour",
+      "4 laps per hour",
+      "24 laps per hour"
     ],
     "answer": "C",
     "hints": [
-      "Read the per phrase first: price PER APPLE means dollars divided by apples.",
-      "Divide the total price by the number of apples, then check your work by multiplying back."
+      "Read 'laps per hour' to figure out which quantity is divided by which.",
+      "Divide 24 laps by 6 hours."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A cyclist rides 45 miles in 3 hours at a steady pace. How many miles per hour is the cyclist traveling?",
+    "problemText": "A baker buys 10 pounds of flour for $8.00. What is the price per pound? After you divide, check your answer by multiplying the unit rate by the number of pounds to see if you get the original total price back.",
     "choices": [
-      "42 miles per hour",
-      "48 miles per hour",
-      "3 miles per hour",
-      "15 miles per hour"
+      "$10.00 per pound",
+      "$1.25 per pound",
+      "$8.00 per pound",
+      "$0.80 per pound"
     ],
     "answer": "D",
     "hints": [
-      "The per phrase is miles per hour, which means miles divided by hours.",
-      "Divide the total miles by the total hours to find the rate for ONE hour."
+      "Unit price means total money divided by number of items.",
+      "Divide $8.00 by 10 pounds, then multiply your answer by 10 to check."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Coffee is sold in two sizes: Small is 6 ounces for $2.70, and Large is 10 ounces for $4.50. Which size has the lower unit price per ounce, and what is that unit price?",
+    "problemText": "Store X sells granola bars in two ways. Package A contains 6 bars for $4.80. Package B contains 8 bars for $6.00. A student says Package A is the better deal because $4.80 is less money than $6.00. Explain why this reasoning is wrong, and find which package is actually the better deal by computing the unit price for each.",
     "choices": [
-      "Small, at $0.45 per ounce",
-      "Small, at $0.60 per ounce",
-      "Large, at $0.45 per ounce",
-      "Large, at $0.60 per ounce"
+      "Package B is better; you must find the price per bar for each package to compare them fairly, and Package B costs $0.75 per bar while Package A costs $0.80 per bar.",
+      "Package A is better; divide the total price by the number of bars to get $4.80 ÷ 6 = $0.80 per bar and $6.00 ÷ 8 = $0.75 per bar, so Package A is cheaper per bar.",
+      "Package B is better; the student's reasoning is correct that the package with less total money is always the better deal because it saves more money overall.",
+      "Neither package is better; comparing total prices directly is the correct way to determine which deal is better, and Package A at $4.80 proves this."
     ],
     "answer": "A",
     "hints": [
-      "Find the price per ounce for each size by dividing the total price by the number of ounces.",
-      "After you find both unit prices, compare them to see which one is smaller, because the smaller unit price is the better deal."
+      "When the packages hold different amounts, you cannot compare the totals directly—you must find what ONE bar costs in each.",
+      "Divide $4.80 by 6 and divide $6.00 by 8 to find the price per bar for each package."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A recipe calls for 2 cups of flour for every 5 cups of sugar. Jordan wants to find out how many cups of flour are needed per one cup of sugar. What is the unit rate, and why does checking by multiplying back matter in this problem?",
+    "problemText": "A recipe calls for 3 cups of flour to make 12 cookies. Your friend needs 4 times as many cookies. How much flour will your friend need? Show your thinking by first finding the unit rate (cups per cookie), then scaling up.",
     "choices": [
-      "0.4 cups of flour per cup of sugar; checking confirms that 0.4 times 2 equals 5",
-      "0.4 cups of flour per cup of sugar; checking confirms that 0.4 times 5 equals 2",
-      "2.5 cups of flour per cup of sugar; checking confirms that 2.5 times 5 equals 2",
-      "5 cups of flour per cup of sugar; checking confirms that 5 times 0.4 equals 2"
+      "36 cups of flour",
+      "12 cups of flour",
+      "3 cups of flour",
+      "48 cups of flour"
     ],
     "answer": "B",
     "hints": [
-      "Divide the first quantity by the second quantity to find the unit rate, then multiply your answer by the second quantity to check.",
-      "If your check equals the first quantity, you divided in the correct order."
+      "Start by finding the unit rate: cups of flour divided by number of cookies.",
+      "Once you have the unit rate, multiply it by the new number of cookies your friend needs (48 cookies)."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-1.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Three different brands sell granola: Brand X offers 12 ounces for $3.60, Brand Y offers 9 ounces for $2.70, and Brand Z offers 15 ounces for $4.50. A student claims that Brand Z is the best deal because it has the most ounces. Explain why this reasoning is flawed, and identify which brand actually offers the lowest unit price per ounce.",
+    "problemText": "A car travels 210 miles using 7 gallons of gas. A truck travels 180 miles using 6 gallons of gas. To compare fuel efficiency fairly, calculate the unit rate (miles per gallon) for each vehicle, check each answer by multiplying back to the original distance, and then determine which vehicle travels farther on one gallon of gas.",
     "choices": [
-      "The reasoning is correct because more ounces always means a better deal; Brand Z is best",
-      "The reasoning is flawed because comparing total amounts buys different quantities; Brand Y at $0.30 per ounce is the best deal",
-      "The reasoning is flawed because comparing total amounts buys different quantities; Brand X at $0.30 per ounce is the best deal",
-      "The reasoning is flawed because unit price depends on weight, not total price; Brand Z at $0.30 per ounce is the best deal"
+      "The truck is more efficient at 30 miles per gallon, while the car only gets 29 miles per gallon.",
+      "The car is more efficient at 30 miles per gallon, while the truck only gets 30 miles per gallon, so they are equally efficient.",
+      "The car is more efficient at 30 miles per gallon, while the truck only gets 29 miles per gallon.",
+      "The truck is more efficient at 30 miles per gallon, while the car only gets 28 miles per gallon."
     ],
     "answer": "C",
     "hints": [
-      "To compare offers fairly, convert each one to a unit price by dividing the total price by the number of ounces.",
-      "A larger total quantity does not automatically mean a lower unit price if the total price is also higher."
+      "Divide miles by gallons for each vehicle: 210 ÷ 7 for the car, and 180 ÷ 6 for the truck. Then multiply each unit rate back by the number of gallons to check.",
+      "Compare the two unit rates to see which is larger—that vehicle travels farther on one gallon."
     ]
   }
 ]

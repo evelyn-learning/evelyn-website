@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6ela-summarizing-informational-text-001",
-    "loId": "m6ela.summarizing-informational-text",
-    "cedCode": "M6ELA-3.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What is the main difference between a summary and a retelling of an informational text?",
-    "choices": [
-      "A summary drops facts that don't support the central idea, while a retelling includes every fact the passage gives in the order it appeared.",
-      "A summary includes only details that support the central idea, while a retelling lists all the facts in the order they appeared.",
-      "A summary and a retelling are the same thing, just with different names.",
-      "A summary repeats every sentence from the original passage in fewer words."
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what the lesson said retelling does with every fact the passage gives.",
-      "Remember: a summary drops facts that don't connect to the central idea, but a retelling does not."
-    ]
-  },
-  {
-    "id": "m6ela-summarizing-informational-text-002",
-    "loId": "m6ela.summarizing-informational-text",
-    "cedCode": "M6ELA-3.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this sentence from a student's summary: 'This shows that seeds are incredible at surviving harsh conditions.' Why should this sentence be removed from an objective summary?",
-    "choices": [
-      "It uses judgment language like 'incredible' that tells the reader what to think instead of reporting the facts from the passage.",
-      "It repeats information that already appeared earlier in the summary.",
-      "It announces the summarizer's own conclusion about how impressive something is, using a quiet judgment phrase.",
-      "It includes a fact that is not actually true."
-    ],
-    "answer": "C",
-    "hints": [
-      "Look for the phrase 'this shows that' — the lesson said that is a quiet judgment phrase.",
-      "An objective summary reports facts, not what the summarizer thinks about those facts."
-    ]
-  },
-  {
-    "id": "m6ela-summarizing-informational-text-003",
-    "loId": "m6ela.summarizing-informational-text",
-    "cedCode": "M6ELA-3.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote this summary: 'Jellyfish move by contracting and relaxing their bell-shaped bodies. They are amazing creatures. Most jellyfish live in salt water. They are transparent.' Which sentence should be cut because it does not support the central idea that jellyfish move by contracting and relaxing their bodies?",
-    "choices": [
-      "'Jellyfish move by contracting and relaxing their bell-shaped bodies.'",
-      "'They are amazing creatures.'",
-      "'They are transparent.'",
-      "'Most jellyfish live in salt water.'"
-    ],
-    "answer": "D",
-    "hints": [
-      "The central idea is about how jellyfish move, not where they live.",
-      "A supporting detail must connect back to the main point about movement."
-    ]
-  },
-  {
-    "id": "m6ela-summarizing-informational-text-004",
-    "loId": "m6ela.summarizing-informational-text",
-    "cedCode": "M6ELA-3.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this passage and its central idea. Which version is the best objective summary?\n\nPassage: 'A thermometer has a thin tube filled with a liquid called mercury. When the temperature around the thermometer rises, the mercury expands and moves up the tube, where numbers show how hot it is. When the temperature drops, the mercury shrinks and moves back down. This is why thermometers are such helpful tools for doctors and scientists.'\n\nCentral idea: A thermometer works because mercury expands when temperature rises and shrinks when temperature falls, moving up and down a numbered tube to show the temperature.",
-    "choices": [
-      "A thermometer works because mercury inside a tube expands when temperature rises, moving up the tube to show how hot it is, and shrinks when temperature falls, moving back down.",
-      "A thermometer has mercury in a tube. When temperature rises, mercury expands and moves up. When temperature drops, mercury shrinks and moves down. The numbers on the tube show how hot it is. This is why thermometers are so helpful.",
-      "Mercury is a liquid inside a thermometer. The temperature around the thermometer rises and falls. When it rises, the mercury expands. When it falls, the mercury shrinks.",
-      "Thermometers have mercury in a thin tube. Doctors and scientists use them. The mercury moves up and down. Numbers on the tube show the temperature."
-    ],
-    "answer": "A",
-    "hints": [
-      "The best summary starts with the central idea as one sentence, not as separate facts.",
-      "Look for the version that leaves out the sentence about why thermometers are helpful to doctors and scientists — that is the summarizer's own conclusion, not a fact that explains how thermometers work."
-    ]
-  },
-  {
-    "id": "m6ela-summarizing-informational-text-005",
-    "loId": "m6ela.summarizing-informational-text",
-    "cedCode": "M6ELA-3.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote this summary of a passage about how crystals form: 'When a liquid cools down, its molecules slow down and pack tightly together in a repeating pattern, which forms a crystal. Different liquids make different-shaped crystals. Growing crystals is an amazing process that shows how nature creates perfect geometric shapes.' Which problem does this summary have, and how should it be fixed?",
-    "choices": [
-      "It includes too many retellings because it lists every fact the passage gives; the student should have picked only the most important sentence about crystals.",
-      "It includes both a judgment phrase and a sentence that does not support the central idea; the last sentence should be removed because it announces the summarizer's opinion, not a fact about crystal formation.",
-      "It uses words that are too difficult for readers to understand; it should simplify technical terms like 'molecules' and 'geometric shapes' into simpler language.",
-      "It includes sentences that do not appear in the original passage; it should be rewritten using only words and ideas that came directly from the text."
-    ],
-    "answer": "B",
-    "hints": [
-      "Look at 'amazing process' and 'shows how nature creates' — those sound like the summarizer's own thoughts.",
-      "Check whether every sentence reports a fact that helps explain how crystals form, or whether any sentence tells the reader what to think about the topic."
-    ]
-  },
-  {
-    "id": "m6ela-summarizing-informational-text-006",
-    "loId": "m6ela.summarizing-informational-text",
-    "cedCode": "M6ELA-3.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read this passage. The central idea is: 'Whales migrate thousands of miles because food sources move with the seasons, and whales follow them.' Which of the following best explains why the sentence 'Whale migration is the most incredible journey in the animal kingdom' would make this summary fail the objectivity test, and what principle from the lesson it violates?",
-    "choices": [
-      "It violates the rule that every sentence in a summary must explain why the event happens; calling the journey incredible does not explain the reason whales migrate each year.",
-      "It violates the rule that a summary must list facts in the order the passage gave them; this sentence appears at the end instead of in the middle where migration is first mentioned.",
-      "It violates the rule that every sentence should sound like the passage is being reported, not like the summarizer is reacting to it; two readers who disagree about how incredible migrations are should still be able to sign the exact same summary.",
-      "It violates the rule that a summary must be noticeably shorter than the original passage; adding a sentence about the journey being incredible makes the summary too long."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson said 'test a summary by asking who is talking' — does this sentence sound like the passage reporting, or like the summarizer reacting?",
-      "Think about two different readers with different opinions: could they both sign a summary that includes 'most incredible'?"
-    ]
-  },
-  {
     "id": "m6ela-technical-domain-vocabulary-001",
     "loId": "m6ela.technical-and-domain-vocabulary",
     "cedCode": "M6ELA-3.3",
@@ -453,6 +339,120 @@
     "hints": [
       "What does the diagram show that words in a paragraph would have to describe one layer at a time?",
       "A labeled diagram can display spatial relationships and positions all at once, which the paragraph's sentences cannot."
+    ]
+  },
+  {
+    "id": "m6ela-summarizing-informational-text-001",
+    "loId": "m6ela.summarizing-informational-text",
+    "cedCode": "M6ELA-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the main difference between summarizing an informational text and retelling it? A summary and a retelling both present facts from the passage, but they handle those facts differently.",
+    "choices": [
+      "A summary structures sentences differently than a retelling does, organizing facts by importance rather than by sequence.",
+      "A summary drops facts that don't support the central idea, while a retelling includes all facts in the order they appeared.",
+      "A summary focuses on selected key points, while a retelling treats every fact mentioned in the passage as equally important.",
+      "A summary condenses information strategically, while a retelling repeats the passage's details in their original form."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about which facts belong in a summary — only the ones connected to the central idea, or every fact the passage mentioned?",
+      "The lesson explains that a retelling treats every fact as equally important. What does a summary do instead?"
+    ]
+  },
+  {
+    "id": "m6ela-summarizing-informational-text-002",
+    "loId": "m6ela.summarizing-informational-text",
+    "cedCode": "M6ELA-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage and its central idea. Then identify which sentence should be kept in an objective summary of this passage.\n\nPassage: \"Bees visit flowers to collect nectar and pollen for food. As a bee moves from flower to flower, pollen sticks to its body. When the bee visits the next flower, some of that pollen rubs off and lands on the flower's female part. This transfer of pollen allows flowers to make seeds. Bees are incredible creatures that we should admire for their hard work.\"\n\nCentral idea: Bees pollinate flowers by moving pollen from one flower to another as they collect nectar and pollen.",
+    "choices": [
+      "Bees are incredible creatures that we should admire for their hard work.",
+      "Bees visit flowers because they need to collect nectar and pollen for food, and this is a very important job.",
+      "When a bee moves from flower to flower, pollen sticks to its body and rubs off on the next flower's female part.",
+      "The pollen that bees collect is bright yellow and easy to see with a magnifying glass."
+    ],
+    "answer": "C",
+    "hints": [
+      "Which sentence explains or supports how bees pollinate flowers — the central idea you were given?",
+      "Watch out for judgment words like 'incredible' and 'should admire,' and for sentences that announce conclusions rather than report facts."
+    ]
+  },
+  {
+    "id": "m6ela-summarizing-informational-text-003",
+    "loId": "m6ela.summarizing-informational-text",
+    "cedCode": "M6ELA-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this summary of an informational passage about how termites eat wood. Read the summary and decide which problem it has.\n\nStudent summary: \"Termites have a special pouch in their stomach where tiny organisms live. These organisms break down the wood fibers so the termite can digest them. Without these organisms, termites could not eat wood at all. This proves that nature has designed a perfect system.\"\n\nWhat is wrong with this summary?",
+    "choices": [
+      "It leaves out important details about how the organisms actually function inside the termite's digestive system, making the explanation incomplete.",
+      "It reports each fact from the passage as a separate sentence rather than combining related ideas, and it adds a judgment that the system is 'perfect' which the passage does not support.",
+      "It focuses too much on the organisms and not enough on the termite itself, shifting attention away from what the passage intended to emphasize.",
+      "It retells the passage sentence by sentence instead of stating the central idea first, and it adds a judgment about how 'perfect' nature is."
+    ],
+    "answer": "D",
+    "hints": [
+      "Does the summary start by stating the central idea as one sentence, or does it list separate facts one at a time?",
+      "Look for words or phrases that announce what the summarizer thinks, not what the passage says. What phrase appears at the end?"
+    ]
+  },
+  {
+    "id": "m6ela-summarizing-informational-text-004",
+    "loId": "m6ela.summarizing-informational-text",
+    "cedCode": "M6ELA-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage and its central idea. Then choose the best objective summary.\n\nPassage: \"Butterflies taste with their feet. When a butterfly lands on a leaf, special taste cells on its feet tell it whether the leaf is the right kind of food for its caterpillars. If the taste cells detect the right plant, the butterfly lays eggs on that leaf. If the leaf is not the right plant, the butterfly flies away to find a better one. Some butterflies can taste the difference between plants so well that they refuse to lay eggs on any plant except their favorite one.\"\n\nCentral idea: Butterflies use taste cells in their feet to identify the right plants for laying eggs.",
+    "choices": [
+      "Butterflies have special taste cells in their feet that tell them whether a leaf is the right plant for laying eggs. If the plant is right, the butterfly lays eggs; if not, it flies away.",
+      "Butterflies taste with their feet, and they have special taste cells that tell them if a leaf is the right food. If it is the right plant, they lay eggs. If not, they fly away to find a better one. Some butterflies are very choosy.",
+      "When a butterfly lands on a leaf, taste cells on its feet detect whether the leaf is right. Butterflies sometimes refuse to lay eggs on the wrong plant.",
+      "Butterflies use their feet to taste leaves and identify plants. They can taste the difference between different plants. Some butterflies are better at this than others."
+    ],
+    "answer": "A",
+    "hints": [
+      "A good summary should be noticeably shorter than the passage and should not repeat sentence by sentence. Which choice combines related facts into fewer sentences?",
+      "Look for a choice that states the central idea clearly and adds only the supporting detail about what happens if the plant is right or wrong, without extra sentences."
+    ]
+  },
+  {
+    "id": "m6ela-summarizing-informational-text-005",
+    "loId": "m6ela.summarizing-informational-text",
+    "cedCode": "M6ELA-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student was asked to write an objective summary of a passage about how plants make energy from sunlight. The student wrote this:\n\n\"Plants are amazing because they use photosynthesis to turn sunlight into energy. This process shows that plants are the foundation of all life on Earth. First, chlorophyll in the leaves captures sunlight. Then, that light energy turns water and carbon dioxide into sugar. Finally, the plant uses that sugar for food and growth.\"\n\nWhich two problems make this summary not objective?",
+    "choices": [
+      "It organizes facts in the order they appear in the passage rather than grouping related information together, and it relies on scientific vocabulary that makes it harder to understand.",
+      "It uses the phrase 'This process shows that' to announce a conclusion, and it calls plants 'amazing,' which are both judgments instead of facts from the passage.",
+      "It begins with a judgment statement, and it fails to distinguish between photosynthesis and the respiration process that plants also perform.",
+      "It uses the phrase 'because they use photosynthesis' which assumes readers understand the term, and it states opinions about plants' importance rather than just describing what happens."
+    ],
+    "answer": "B",
+    "hints": [
+      "An objective summary reports what the text says, not what the summarizer thinks about it. Which words or phrases in the student's summary announce an opinion?",
+      "Look for both the obvious judgment word and the quiet kind — the phrase that uses words like 'shows that' or 'proves' to hand over the summarizer's conclusion."
+    ]
+  },
+  {
+    "id": "m6ela-summarizing-informational-text-006",
+    "loId": "m6ela.summarizing-informational-text",
+    "cedCode": "M6ELA-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage. A student has identified the central idea and written a first draft of a summary. Then read the student's work and decide what revision is needed.\n\nPassage: \"Frogs start their lives in water as eggs, then hatch into tadpoles with tails and gills. As tadpoles grow, their bodies change: front legs develop, then back legs. As legs grow in, the tail gets shorter and shorter. Gills disappear and lungs develop so the tadpole can breathe air. Eventually the tadpole leaves the water as a young frog. This transformation takes several weeks or even months, depending on the species and temperature.\"\n\nCentral idea: Frogs change from water-dwelling tadpoles with tails and gills into air-breathing frogs with legs as their bodies develop over weeks or months.\n\nStudent's first draft: \"Frogs undergo an amazing transformation from tadpoles to adult frogs. Eggs hatch into tadpoles with tails and gills. Front legs develop, then back legs grow in. The tail shrinks. Gills disappear and lungs develop. Eventually the tadpole becomes a frog and leaves the water. This transformation is truly remarkable and shows how incredible nature is.\"\n\nWhat revisions does this draft need?",
+    "choices": [
+      "Add quotations from the passage to support the claims made in the summary and demonstrate accurate understanding of the source material.",
+      "Delete the subjective language like 'amazing' and 'remarkable' and combine related sentences to reduce wordiness, making the summary more objective and concise.",
+      "Remove the judgment words 'amazing,' 'remarkable,' and the phrase 'shows how incredible nature is.' Combine some of the short sentences so the summary is shorter and less repetitive.",
+      "Change the order of the sentences so that the information about how long the transformation takes comes first, followed by the physical changes that occur during the process."
+    ],
+    "answer": "C",
+    "hints": [
+      "Scan the student's draft for judgment words — both obvious ones and quiet phrases that announce conclusions instead of reporting facts.",
+      "Notice that the draft lists short sentences one at a time, each as its own idea. A good summary should combine related facts and be noticeably shorter than the original passage. Which revision choice fixes both problems?"
     ]
   }
 ]

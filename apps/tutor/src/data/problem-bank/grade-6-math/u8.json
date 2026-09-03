@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6math-solving-one-step-equations-001",
-    "loId": "m6math.solving-one-step-equations",
-    "cedCode": "M6MATH-8.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which operation is hidden in the equation x + 7 = 15? What is the inverse operation you should use to solve it?",
-    "choices": [
-      "Subtraction is hidden in the equation, so add 7 to both sides.",
-      "Addition is hidden in the equation, so divide both sides by 7.",
-      "Addition is hidden in the equation, so subtract 7 from both sides.",
-      "Multiplication is hidden in the equation, so divide both sides by 7."
-    ],
-    "answer": "C",
-    "hints": [
-      "Look at what is being done to x on the left side of the equation.",
-      "Remember that subtraction undoes addition."
-    ]
-  },
-  {
-    "id": "m6math-solving-one-step-equations-002",
-    "loId": "m6math.solving-one-step-equations",
-    "cedCode": "M6MATH-8.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A book costs $8.50. You have a total of $23.00 after buying the book. Let x be the amount of money you had before buying the book. Write and solve the equation x - 8.50 = 14.50 to find how much money you had.",
-    "choices": [
-      "x = 5.50, so you had $5.50 before buying the book.",
-      "x = 14.50, so you had $14.50 before buying the book.",
-      "x = 23.00, so you had $23.00 before buying the book.",
-      "x = 22.50, so you had $22.50 before buying the book."
-    ],
-    "answer": "D",
-    "hints": [
-      "The equation given has 8.50 subtracted from x, so use the inverse operation.",
-      "Check your answer by substituting it back into the original equation."
-    ]
-  },
-  {
-    "id": "m6math-solving-one-step-equations-003",
-    "loId": "m6math.solving-one-step-equations",
-    "cedCode": "M6MATH-8.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Six identical pens cost $3.00 in total. Let x be the cost of one pen. Solve 6x = 3.00 for x to find the price of each pen.",
-    "choices": [
-      "x = 0.50, so each pen costs $0.50.",
-      "x = 3.00, so each pen costs $3.00.",
-      "x = 2.00, so each pen costs $2.00.",
-      "x = 9.00, so each pen costs $9.00."
-    ],
-    "answer": "A",
-    "hints": [
-      "The number 6 is multiplying x, so use division to undo it.",
-      "Divide both sides by 6 to isolate x."
-    ]
-  },
-  {
-    "id": "m6math-solving-one-step-equations-004",
-    "loId": "m6math.solving-one-step-equations",
-    "cedCode": "M6MATH-8.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Tania solved the equation 5x = 20 and wrote x = 15. Is her answer correct? If not, explain what went wrong and find the correct solution.",
-    "choices": [
-      "Yes, x = 15 is correct because 5 times 15 is 75, which is close to 20.",
-      "No, her answer is wrong. She subtracted 5 from both sides instead of dividing by 5. The correct answer is x = 4.",
-      "No, her answer is wrong. She added 5 to both sides instead of dividing by 5. The correct answer is x = 25.",
-      "Yes, x = 15 is correct because she got a number larger than 20, which makes sense for multiplication."
-    ],
-    "answer": "B",
-    "hints": [
-      "Check whether 5 times 15 equals 20 by substituting back into the original equation.",
-      "When a number is multiplying x, you must divide both sides by that number, not subtract it."
-    ]
-  },
-  {
-    "id": "m6math-solving-one-step-equations-005",
-    "loId": "m6math.solving-one-step-equations",
-    "cedCode": "M6MATH-8.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Carmen has x dollars in her savings account. She deposits $12.50 more, bringing her total to $45.00. Write an equation for this situation and solve it to find how much Carmen had saved originally.",
-    "choices": [
-      "12.50x = 45.00, so Carmen had $3.60 saved originally.",
-      "x - 12.50 = 45.00, so Carmen had $57.50 saved originally.",
-      "x + 12.50 = 45.00, so Carmen had $32.50 saved originally.",
-      "x + 45.00 = 12.50, so Carmen had $32.50 saved originally."
-    ],
-    "answer": "C",
-    "hints": [
-      "The words 'deposits $12.50 more' mean that amount is added to what she already had.",
-      "After you solve for x, check by substituting your answer back into the original equation."
-    ]
-  },
-  {
-    "id": "m6math-solving-one-step-equations-006",
-    "loId": "m6math.solving-one-step-equations",
-    "cedCode": "M6MATH-8.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Two different one-step equations are x + 0.75 = 2.25 and 3x = 2.25. Solve both equations. Which equation has the smaller solution, and by how much?",
-    "choices": [
-      "Both equations have the same solution, x = 0.75, so the difference is 0.",
-      "The equation 3x = 2.25 has the smaller solution. The difference is 0.75.",
-      "The equation x + 0.75 = 2.25 has the smaller solution. The difference is 0.50.",
-      "The equation 3x = 2.25 has the smaller solution. The difference is 1.25."
-    ],
-    "answer": "D",
-    "hints": [
-      "Solve x + 0.75 = 2.25 by subtracting 0.75 from both sides, and solve 3x = 2.25 by dividing both sides by 3.",
-      "After finding both solutions, subtract the smaller one from the larger one to find the difference."
-    ]
-  },
-  {
     "id": "m6math-writing-graphing-inequalities-001",
     "loId": "m6math.writing-and-graphing-inequalities",
     "cedCode": "M6MATH-8.3",
@@ -453,6 +339,120 @@
     "hints": [
       "Write the equation first: what is the fixed one-time cost, and what is the cost per week?",
       "Once you have the equation, substitute w = 4 and compute c. Check your arithmetic carefully."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-001",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which operation is hidden on x in the equation x + 8 = 15?",
+    "choices": [
+      "8 is multiplying x",
+      "8 is subtracted from x",
+      "8 is added to x",
+      "8 is dividing x"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at the symbol right next to x.",
+      "A one-step equation hides one operation on x — identify which one before solving."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-002",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Solve for x: x + 7 = 23. What value of x makes this equation true?",
+    "choices": [
+      "7",
+      "30",
+      "3",
+      "16"
+    ],
+    "answer": "D",
+    "hints": [
+      "The operation on x is addition, so undo it by subtracting 7 from both sides.",
+      "After you find x, check your answer by putting it back into the original equation."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-003",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marcus bought 5 identical notebooks that cost $3.50 each. The total cost was $17.50. Write an equation where x represents the cost of one notebook, then solve for x.",
+    "choices": [
+      "5x = 17.50; x = 3.50",
+      "x + 5 = 17.50; x = 12.50",
+      "5 + x = 17.50; x = 12.50",
+      "x ÷ 5 = 17.50; x = 87.50"
+    ],
+    "answer": "A",
+    "hints": [
+      "When items are identical and you find a total cost, multiplication is the hidden operation.",
+      "Once you write the equation, divide both sides by 5 to isolate x."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-004",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Sofia solved the equation 6x = 24 and got x = 18. She then checked her answer by substituting 18 back into the original equation. Which statement correctly describes what she should find?",
+    "choices": [
+      "Both sides equal 24, so her answer is wrong because 6 times 18 does not equal 24",
+      "The left side equals 108 and the right side equals 24, so her answer is wrong",
+      "Both sides equal 24, so her answer is correct",
+      "The left side equals 18 and the right side equals 6, so her answer is correct"
+    ],
+    "answer": "B",
+    "hints": [
+      "Substitute x = 18 into the original equation 6x = 24 and compute both sides.",
+      "If the two sides do not match, the solution is incorrect, which means an error occurred in the solving steps."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-005",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Tyrell had some money saved. He received a $12.50 birthday gift, which brought his total savings to $40.00. Write an equation for his savings before the gift, solve it, and identify which step is the correct inverse operation.",
+    "choices": [
+      "Equation: 12.50x = 40.00; subtract 12.50 from both sides; x = 27.50",
+      "Equation: x + 12.50 = 40.00; divide both sides by 12.50; x = 3.20",
+      "Equation: x + 12.50 = 40.00; subtract 12.50 from both sides; x = 27.50",
+      "Equation: 12.50x = 40.00; divide both sides by 12.50; x = 3.20"
+    ],
+    "answer": "C",
+    "hints": [
+      "A gift is an amount added to what he had, so the equation involves addition, not multiplication.",
+      "The inverse of addition is subtraction — apply it to both sides to isolate x."
+    ]
+  },
+  {
+    "id": "m6math-solving-one-step-equations-006",
+    "loId": "m6math.solving-one-step-equations",
+    "cedCode": "M6MATH-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student was solving x + 3.75 = 9.25 and wrote the steps shown below. After solving, she substituted x = 5.50 back into the original equation and found that both sides equal 9.25. However, she made an error in her solving steps. Identify the incorrect step and explain why it breaks the two-move method taught in the lesson.",
+    "choices": [
+      "Step 1 is incorrect: she should have named the operation as multiplication instead of addition, which would change how to undo it",
+      "Step 2 is incorrect: she should have subtracted 3.75 from only one side, not both sides, because the equal sign does not require balance",
+      "Step 4 is incorrect: the answer x = 5.50 is correct, but she should have substituted it back into a different equation, not the original one",
+      "Step 3 is incorrect: she should have added 3.75 to both sides instead of subtracting, because addition is the inverse of subtraction"
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall which operation undoes addition and which undoes multiplication — they are the true inverses taught in the lesson.",
+      "A mistake in the solving steps would cause the check substitution to show unequal sides; the fact that her check passed tells you she solved correctly even though the problem says an error was made."
     ]
   }
 ]

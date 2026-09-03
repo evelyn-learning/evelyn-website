@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6math-dividing-multi-digit-whole-numbers-001",
-    "loId": "m6math.dividing-multi-digit-whole-numbers",
-    "cedCode": "M6MATH-4.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "When you divide 845 by 5 using the standard algorithm, what do you call the 5?",
-    "choices": [
-      "The dividend",
-      "The divisor",
-      "The quotient",
-      "The remainder"
-    ],
-    "answer": "B",
-    "hints": [
-      "This is the number you are dividing by.",
-      "Think about the division sentence: 845 ÷ 5."
-    ]
-  },
-  {
-    "id": "m6math-dividing-multi-digit-whole-numbers-002",
-    "loId": "m6math.dividing-multi-digit-whole-numbers",
-    "cedCode": "M6MATH-4.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "You divide 728 by 8 using the four moves: divide, multiply, subtract, bring down. After you complete all four moves for the first cycle, what is the number you will bring down?",
-    "choices": [
-      "8",
-      "7",
-      "2",
-      "91"
-    ],
-    "answer": "C",
-    "hints": [
-      "The dividend is 728. Look at which digit comes next after you work with the first two digits.",
-      "The digits of 728 are 7, 2, and 8. You start with 7, then 2. What is left?"
-    ]
-  },
-  {
-    "id": "m6math-dividing-multi-digit-whole-numbers-003",
-    "loId": "m6math.dividing-multi-digit-whole-numbers",
-    "cedCode": "M6MATH-4.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "When you check that 456 ÷ 12 = 38 is correct, you multiply 12 × 38 and get 456. What does this tell you about the remainder?",
-    "choices": [
-      "The remainder is 38",
-      "The remainder cannot be found",
-      "The remainder is 12",
-      "The remainder is 0"
-    ],
-    "answer": "D",
-    "hints": [
-      "Remember the check formula: (divisor × quotient) + remainder = dividend.",
-      "If the multiplication gave you back the dividend exactly, how much was left over?"
-    ]
-  },
-  {
-    "id": "m6math-dividing-multi-digit-whole-numbers-004",
-    "loId": "m6math.dividing-multi-digit-whole-numbers",
-    "cedCode": "M6MATH-4.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "You are dividing 604 by 6 using the standard algorithm. When you look at the first digit, 6, the divisor 6 goes into it exactly once. You multiply 6 × 1 = 6 and subtract to get 0. Next you bring down 0 to make 0. The divisor 6 does not fit into 0, so the next digit in your quotient must be 0. Why is it important to write this 0 instead of skipping it?",
-    "choices": [
-      "Writing 0 keeps each digit in the correct place value; skipping it would shift all remaining digits one place to the left and make the answer too small",
-      "Writing 0 makes the quotient longer and ensures you have written down all the digits you bring down from the dividend",
-      "Writing 0 tells you that the quotient will have three digits instead of two, which affects how you read the final answer",
-      "Writing 0 prevents confusion about how many times you divided, since each step in the algorithm needs a digit recorded in the quotient"
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about what happens to the place value of the last digit if you do not write the 0.",
-      "If you skip the 0 and jump straight to the 4, where would the 4 end up instead of its correct position?"
-    ]
-  },
-  {
-    "id": "m6math-dividing-multi-digit-whole-numbers-005",
-    "loId": "m6math.dividing-multi-digit-whole-numbers",
-    "cedCode": "M6MATH-4.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "You work out 345 ÷ 12 and get a quotient of 28 with a remainder of 9. You then check by computing 12 × 28 + 9 and get 336 + 9 = 345. What do these two facts together tell you?",
-    "choices": [
-      "Your division was done correctly but you need to check the remainder again",
-      "Your division was done correctly and the remainder 9 is valid because it is smaller than the divisor 12",
-      "Your answer cannot be correct because the remainder is too large",
-      "Your quotient is correct but the remainder should be 12"
-    ],
-    "answer": "B",
-    "hints": [
-      "The check works backward from dividend to dividend. Does 345 match?",
-      "A remainder must always be smaller than the divisor. Is 9 smaller than 12?"
-    ]
-  },
-  {
-    "id": "m6math-dividing-multi-digit-whole-numbers-006",
-    "loId": "m6math.dividing-multi-digit-whole-numbers",
-    "cedCode": "M6MATH-4.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Before you divide 2156 by 23, you estimate by rounding 2156 to 2200 and 23 to 20, and then you divide 2200 by 20 to get 110. After working through the four-move algorithm completely, you get a quotient of 93 with a remainder of 17. When you check by multiplying 23 × 93 + 17, you get 2156. Why should this answer concern you, even though the check works?",
-    "choices": [
-      "The remainder 17 is larger than it should be because 23 is the divisor",
-      "The check passed, so there is no reason to be concerned; the answer must be right",
-      "The quotient 93 is far too small compared to your estimate of 110, which suggests a digit may be in the wrong place value even though the arithmetic is correct",
-      "The estimate of 110 was wrong, so the check cannot be trusted"
-    ],
-    "answer": "C",
-    "hints": [
-      "The check confirms the arithmetic is correct, but what does the estimate tell you about whether the answer is reasonable?",
-      "If 110 is a good estimate and you got 93, what might have happened to a digit during the division?"
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-001",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "In the decimal 14.38, which digit is in the hundredths place?",
-    "choices": [
-      "1",
-      "4",
-      "3",
-      "8"
-    ],
-    "answer": "C",
-    "hints": [
-      "The hundredths place is the second digit after the decimal point.",
-      "Count one place to the right of the decimal for tenths, then one more for hundredths."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-002",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Kenji adds 7.2 and 3.45 using the standard algorithm. Before he starts, what should he do to make sure every column has a digit?",
-    "choices": [
-      "Add the whole-number parts first, then add the decimal parts separately.",
-      "Round 7.2 to 7 and 3.45 to 3 to estimate the answer first.",
-      "Line up the two numbers by their last digits on the right.",
-      "Write 7.2 as 7.20 so both numbers have two decimal places."
-    ],
-    "answer": "D",
-    "hints": [
-      "Padding means adding a zero to make the decimals match in length.",
-      "If one number has one decimal place and the other has two, what do you write to balance them?"
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-003",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Maria stacks 9.35 and 2.4 to subtract them. She lines up the decimal points correctly and pads 2.4 to 2.40. After subtracting, which row describes what she should do next?",
-    "choices": [
-      "Drop the decimal point straight down from the positions above it.",
-      "Round the answer to the nearest whole number.",
-      "Add the answer back to 2.40 to check her work.",
-      "Count the total number of decimal places in both numbers."
-    ],
-    "answer": "A",
-    "hints": [
-      "After you subtract all the columns, the decimal point in the answer does not move or shift.",
-      "Look at where the decimal points are in 9.35 and 2.40—where should the point go in your answer?"
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-004",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A paint can holds 12.5 liters. After a project, 4.75 liters remain. How many liters were used? Estimate first, then calculate.",
-    "choices": [
-      "The estimate is 8 liters, and the exact answer is 8.25 liters.",
-      "The estimate is 8 liters, and the exact answer is 7.75 liters.",
-      "The estimate is 7 liters, and the exact answer is 7.75 liters.",
-      "The estimate is 7 liters, and the exact answer is 8.25 liters."
-    ],
-    "answer": "B",
-    "hints": [
-      "Start by rounding 12.5 and 4.75 to whole numbers, then subtract to estimate.",
-      "When you subtract 4.75 from 12.5, remember to pad both numbers to two decimal places and line up the decimal points before you subtract."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-005",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student adds 6.3 and 5.27 and gets 11.57. To check this answer using the reverse operation, what should she do?",
-    "choices": [
-      "Round 6.3 and 5.27 to estimate whether 11.57 is reasonable.",
-      "Add 6.3 and 5.27 again to make sure the answer is the same.",
-      "Subtract 5.27 from 11.57 and see if she gets 6.3.",
-      "Divide 11.57 by 2 to see if it splits evenly between the two numbers."
-    ],
-    "answer": "C",
-    "hints": [
-      "Checking an addition means using subtraction to verify your answer.",
-      "If you add two numbers to get a sum, and then subtract one of the original numbers from that sum, what should you get?"
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-006",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student solves 8.4 − 3.56 and writes down 4.84. When she estimates first by rounding 8.4 to 8 and 3.56 to 4, she gets 8 − 4 = 4. Because 4.84 is close to her estimate of 4, she thinks her answer is correct. Is she right? Explain why or why not by checking her work.",
-    "choices": [
-      "Yes, because 4.84 is close to the estimate of 4, and when decimals are rounded before subtraction, the result will always be correct as long as it falls within one unit of the estimate.",
-      "No, because when you align decimal points and set up 8.40 − 3.56 correctly, borrowing from the tenths place gives 4.84, but an estimate being close does not prove the arithmetic steps were performed correctly.",
-      "Yes, because the estimate method of rounding each number separately and then subtracting guarantees that the final answer will match or be very close to what you get by computing with the original decimals.",
-      "No, because 8.4 should be padded to 8.40, and the correct answer is 4.84, but she failed to line up the decimal points or borrow correctly."
-    ],
-    "answer": "D",
-    "hints": [
-      "Pad 8.4 to 8.40 and set up the subtraction correctly with decimal points aligned, then work through the borrowing step by step.",
-      "Estimate checks help catch big errors, but if an answer is very close to an estimate, that does not guarantee it is correct—you also need to check by working backwards with the inverse operation."
-    ]
-  },
-  {
     "id": "m6math-multiplying-dividing-decimals-001",
     "loId": "m6math.multiplying-and-dividing-decimals",
     "cedCode": "M6MATH-4.3",
@@ -342,22 +114,250 @@
     ]
   },
   {
+    "id": "m6math-adding-subtracting-decimals-001",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the decimal 7.49, which digit is in the hundredths place?",
+    "choices": [
+      "7",
+      "4",
+      "9",
+      "49"
+    ],
+    "answer": "C",
+    "hints": [
+      "The hundredths place is the second digit after the decimal point.",
+      "Count the positions after the decimal: first is tenths, second is hundredths."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-002",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Maria is adding 3.2 + 5.18 using the standard algorithm. Before she adds, she pads 3.2 to make both numbers have the same number of decimal places. What should 3.2 become?",
+    "choices": [
+      "3.02",
+      "3.18",
+      "32.0",
+      "3.20"
+    ],
+    "answer": "D",
+    "hints": [
+      "Padding means adding zeros to the right after the decimal point without changing the value.",
+      "5.18 has two digits after the decimal point, so 3.2 needs to have two as well."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-003",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are subtracting 6.8 − 2.35. After you line up the decimal points and pad 6.8 to 6.80, which column do you subtract from first using the standard algorithm?",
+    "choices": [
+      "The hundredths column",
+      "The ones column",
+      "The tenths column",
+      "The tens column"
+    ],
+    "answer": "A",
+    "hints": [
+      "In the standard algorithm for subtraction, you always start from the rightmost column.",
+      "The rightmost column is the one with the smallest place value."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-004",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student adds 4.7 + 2.35 by first rounding each number to the nearest whole number to estimate the answer. Then the student performs the exact addition using the standard algorithm. Which two of these numbers should be closest to each other?",
+    "choices": [
+      "The two rounded numbers",
+      "The estimate and the exact answer",
+      "4.7 and 2.35",
+      "The estimate and the first addend"
+    ],
+    "answer": "B",
+    "hints": [
+      "Estimation is taught in the lesson as a check to catch misaligned answers.",
+      "If your exact answer is far from your estimate, something probably went wrong with place value."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-005",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student subtracts 8.6 − 3.24 and gets 5.36 as the answer. To check this result using the method taught in the lesson, what operation should the student perform and what should the result be?",
+    "choices": [
+      "Add 3.24 + 8.6 and should get 11.84",
+      "Subtract 5.36 − 3.24 and should get 2.12",
+      "Add 3.24 + 5.36 and should get 8.60",
+      "Add 8.6 + 5.36 and should get 13.96"
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson teaches checking subtraction by adding a number back.",
+      "Adding the number you subtracted back to the answer should return the original number."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-006",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is solving this problem: A bakery has 12.4 pounds of flour. They use 7.65 pounds for a batch of bread. How much flour is left? The student writes the numbers like this without aligning the decimal points:\n\n  12.4\n−  765\n\nExplain why this setup is wrong, and then determine the correct answer.",
+    "choices": [
+      "The setup is wrong because 765 is not a decimal; the correct answer is 4.75 pounds.",
+      "The setup is wrong because the numbers need to be rounded first; the correct answer is 5 pounds.",
+      "The setup is wrong because 7.65 should be written above 12.4; the correct answer is 4.40 pounds.",
+      "The setup is wrong because the decimal points are not lined up; the correct answer is 4.75 pounds."
+    ],
+    "answer": "D",
+    "hints": [
+      "Review the lesson's key idea about what 'lining up' means when you stack decimals.",
+      "When decimal points are not directly on top of each other, place values get mixed up."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-001",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the division problem 845 ÷ 5, which number is the divisor?",
+    "choices": [
+      "845",
+      "5",
+      "169",
+      "0"
+    ],
+    "answer": "B",
+    "hints": [
+      "The divisor is the number you are dividing by.",
+      "It appears after the division symbol or as the outside number in long division."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-002",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A baker has 348 dinner rolls to pack into boxes of 12 rolls each. Using estimation with friendly numbers, which value is closest to how many boxes the baker will fill? Round 348 to 360 and 12 to 10 to help you estimate.",
+    "choices": [
+      "About 24 boxes",
+      "About 12 boxes",
+      "About 36 boxes",
+      "About 48 boxes"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find what 360 ÷ 10 equals using a friendly division.",
+      "This estimate tells you roughly how big your final answer should be."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-003",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When you divide 506 by 8 using long division, after you bring down the 0 from the tens place, you look at the number 0. The divisor 8 does not fit into 0 even once. What digit should you write in the quotient at that position?",
+    "choices": [
+      "Nothing—skip that position and move on",
+      "8",
+      "1",
+      "0"
+    ],
+    "answer": "D",
+    "hints": [
+      "Every digit of the dividend must produce a quotient digit, even if it means writing 0.",
+      "Skipping a position would shift every digit after it and give a wrong answer."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-004",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student divides 724 by 6 and claims the quotient is 12 with no remainder. The student's work shows: 6 × 12 = 72. When the student checks by multiplying back using the rule (quotient × divisor + remainder = dividend), what does the check reveal?",
+    "choices": [
+      "The check equals 72, which does not match the dividend 724, so the answer is wrong.",
+      "The check equals 724 when computed as 12 × 6 + 0, meaning the student's division answer is fully correct.",
+      "The check shows 72 + 0 = 72, but the student must have made an error because 724 is much larger than 72.",
+      "The check equals 720 when computed as 120 × 6 + 0, proving the quotient should have been 120 instead of 12."
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the check formula: quotient times divisor plus remainder must equal the original dividend.",
+      "Does 12 × 6 + 0 equal 724? If not, the student stopped dividing too early."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-005",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You are dividing 615 by 18 using long division. After working through the division steps, you find that 18 fits into 61 three times (18 × 3 = 54), leaving a remainder of 7 after subtraction. You bring down the 5 to make 75. Now you test: does 18 fit into 75 four times? You calculate 18 × 4 = 72, and 75 − 72 = 3. Is 4 the correct quotient digit for this position? Explain your reasoning using the remainder rule.",
+    "choices": [
+      "No, because the quotient digit should be 3, not 4, to make the remainder smaller.",
+      "Yes, because 18 × 4 = 72 and the remainder 3 is smaller than the divisor 18.",
+      "Yes, because 75 is bigger than 72, so 4 must be correct.",
+      "No, because 18 × 4 = 72 is less than half of 75."
+    ],
+    "answer": "B",
+    "hints": [
+      "A remainder is valid only if it is smaller than the divisor.",
+      "Check whether 3 is less than 18 to know if the digit 4 works."
+    ]
+  },
+  {
+    "id": "m6math-dividing-multi-digit-whole-numbers-006",
+    "loId": "m6math.dividing-multi-digit-whole-numbers",
+    "cedCode": "M6MATH-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A class collects 847 buttons to donate. They want to package them into bags, with each bag holding exactly 32 buttons. After dividing 847 by 32, a student gets a quotient of 26 and a remainder of 15. To verify this answer is completely correct, the student uses the check formula: (quotient × divisor) + remainder = dividend. The student also notes that before doing the full division, an estimate using friendly numbers (840 ÷ 40) predicted about 21. Why should the student trust the check-by-multiplying result more than the estimate in this case?",
+    "choices": [
+      "The check-by-multiplying result is better only if the remainder is larger than 10.",
+      "The estimate can never be trusted because it uses friendly numbers instead of the real numbers.",
+      "The check-by-multiplying result is exact and catches arithmetic errors, while the estimate is only approximate and rounded the numbers differently.",
+      "Estimates are always wrong, so the exact division is the only thing that matters."
+    ],
+    "answer": "C",
+    "hints": [
+      "An estimate uses rounded numbers to predict roughly the right size; it is not exact.",
+      "The check-by-multiplying formula uses the actual quotient, divisor, and remainder to return exactly to the original dividend."
+    ]
+  },
+  {
     "id": "m6math-gcf-lcm-the-distributive-property-001",
     "loId": "m6math.gcf-lcm-and-the-distributive-property",
     "cedCode": "M6MATH-4.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of the following is a factor of 20?",
+    "problemText": "Which number is a factor of 20?",
     "choices": [
       "5",
       "7",
-      "10 and 5 are both factors, but 7 is not",
+      "10",
       "40"
     ],
     "answer": "A",
     "hints": [
-      "A factor divides a number evenly with nothing left over.",
-      "Try dividing 20 by each choice to see which one goes in evenly."
+      "A factor divides the number evenly with nothing left over.",
+      "Try dividing 20 by each choice and see which one goes in evenly."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "The factors of 15 are 1, 3, 5, and 15. The factors of 25 are 1, 5, and 25. What is the greatest common factor of 15 and 25?",
+    "problemText": "A teacher has 15 red pencils and 20 blue pencils. She wants to put all the pencils into identical bundles with no pencils left over, with the greatest number of bundles possible. How many bundles can she make?",
     "choices": [
-      "1",
+      "3",
       "5",
       "15",
-      "25"
+      "20"
     ],
     "answer": "B",
     "hints": [
-      "A common factor appears on both lists. Look for numbers that show up in both.",
-      "Among the numbers that appear on both lists, find the biggest one."
+      "The number of bundles must be a common factor of both 15 and 20.",
+      "Find the greatest number that divides evenly into both 15 and 20."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A restaurant needs to divide 18 forks and 24 spoons equally among tables with nothing left over. What is the greatest number of identical table settings the restaurant can make?",
+    "problemText": "The multiples of 6 are 6, 12, 18, 24, 30, and so on. Which of the following is a multiple of 9?",
     "choices": [
-      "12",
-      "8",
-      "6",
-      "18"
+      "18",
+      "32",
+      "27",
+      "36"
     ],
     "answer": "C",
     "hints": [
-      "This is a real-world GCF problem. You need the biggest number that divides evenly into both 18 and 24.",
-      "Find the GCF of 18 and 24 by listing their factors and picking the greatest one they share."
+      "A multiple of 9 is the result of multiplying 9 by a whole number.",
+      "Check which choice can be divided evenly by 9 with no remainder."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two songs play on repeat at a fitness studio. Song A plays every 6 minutes and Song B plays every 9 minutes. Both songs just started at the same time. In how many minutes will both songs start at the same time again? Explain why you need a least common multiple instead of a greatest common factor.",
+    "problemText": "Omar is rewriting the sum 32 + 48 using the distributive property. He pulls out the greatest common factor and writes 32 + 48 = ___ × (4 + 6). What number should replace the blank?",
     "choices": [
-      "3 minutes, because 3 is the GCF of 6 and 9 and tells us the largest number that divides both evenly",
-      "54 minutes, because 6 times 9 equals 54 and that product gives us when they start together",
-      "6 minutes, because Song A plays every 6 minutes so they must start together at that time",
-      "18 minutes, because 18 is the LCM of 6 and 9 and shows when the repeating patterns line up again"
+      "16",
+      "10",
+      "12",
+      "8"
     ],
     "answer": "D",
     "hints": [
-      "When do repeating events line up again? That is a shared multiple question, so look up the multiples, not down the factors.",
-      "List multiples of 6 and multiples of 9, then find the smallest number on both lists."
+      "The number in the blank is the GCF of 32 and 48.",
+      "When you pull out the GCF and divide each original number by it, you should get 4 and 6."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Use the distributive property to rewrite 32 + 48 as a common factor times a sum of two smaller whole numbers. Use the greatest common factor to make sure the numbers inside the parentheses are as small as possible.",
+    "problemText": "A coffee shop runs a special every 6 days and holds a raffle every 9 days. Today both events are happening. How many days from now will both the special and the raffle happen on the same day again?",
     "choices": [
-      "16 × (2 + 3)",
-      "8 × (4 + 6)",
-      "4 × (8 + 12)",
-      "2 × (16 + 24)"
+      "18",
+      "15",
+      "3",
+      "54"
     ],
     "answer": "A",
     "hints": [
-      "First find the GCF of 32 and 48 by listing and comparing their factors.",
-      "The GCF should be pulled out in front. Divide both 32 and 48 by that factor to get the numbers inside the parentheses."
+      "This question asks when two repeating events line up again, so you need the smallest common multiple, not the greatest common factor.",
+      "List the multiples of 6 and the multiples of 9, then find the smallest number on both lists."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-4.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student claims that 30 + 45 = 15 × (2 + 3) and checks the work by multiplying back. Another student uses the distributive property with a different common factor and writes 30 + 45 = 5 × (6 + 9). Both statements are correct, but the first one is preferred when expressing a sum with a common factor. Why is the first statement the better choice?",
+    "problemText": "Two numbers have a GCF of 7 and an LCM of 84. One of the numbers is 28. Using what you know about factors and multiples, which of the following could be the other number?",
     "choices": [
-      "The number 15 is larger than 5, so using a larger factor makes the factored expression more useful and efficient.",
-      "The numbers inside the parentheses in the first statement (2 and 3) are smaller, which is what pulling out the greatest common factor achieves.",
-      "The first statement uses 15 because pulling out larger common factors reduces the complexity of the remaining terms more completely.",
-      "The second statement is problematic because 5 divides 30 but does not divide 45 as a common factor."
+      "14",
+      "42",
+      "21",
+      "56"
     ],
     "answer": "B",
     "hints": [
-      "Think about what GCF means: the GREATEST common factor. What does pulling out the GCF do to the numbers left inside the parentheses?",
-      "Compare the numbers inside the parentheses in both expressions: (2 + 3) versus (6 + 9). Which pair is smaller?"
+      "The other number must be a factor of the LCM (84) and a multiple of the GCF (7).",
+      "Check that the GCF of your choice and 28 is really 7, and that the LCM of your choice and 28 is really 84."
     ]
   }
 ]

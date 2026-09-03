@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6ela-organizing-an-informative-text-001",
-    "loId": "m6ela.organizing-an-informative-text",
-    "cedCode": "M6ELA-9.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A writer is organizing an informative piece about what a 'growth mindset' means. Which organizing strategy should the writer choose?",
-    "choices": [
-      "Comparison/contrast strategy, because growth mindset needs to be weighed against a fixed mindset",
-      "Classification strategy, because growth mindset can be sorted into different types",
-      "Definition strategy, because the topic asks what something is and describes its key features",
-      "Cause/effect strategy, because growth mindset causes students to improve"
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about what the topic is really asking: what IS a growth mindset?",
-      "The lesson says definition strategy 'fits a topic the reader has probably never heard explained before.' Does this fit that pattern?"
-    ]
-  },
-  {
-    "id": "m6ela-organizing-an-informative-text-002",
-    "loId": "m6ela.organizing-an-informative-text",
-    "cedCode": "M6ELA-9.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student's notes for an informative paragraph include: soccer requires teamwork; basketball requires teamwork; soccer uses a ball and field; basketball uses a ball and court. The student picks comparison/contrast as the organizing strategy. Why is this a good fit for these notes?",
-    "choices": [
-      "Because the notes describe what teamwork is and how it functions as a concept across multiple sports activities",
-      "Because the notes explain the reasons why soccer and basketball have become popular choices at the school",
-      "Because the notes organize sports into separate categories based on the type of equipment and playing area each one needs",
-      "Because the notes mention two different sports that can be weighed side by side across the same categories"
-    ],
-    "answer": "D",
-    "hints": [
-      "Look at the notes again. How many named things are being described? Are they being sorted into groups, or being set side by side?",
-      "The lesson says comparison/contrast 'fits a topic that is really about two named things.' Do the notes fit that pattern?"
-    ]
-  },
-  {
-    "id": "m6ela-organizing-an-informative-text-003",
-    "loId": "m6ela.organizing-an-informative-text",
-    "cedCode": "M6ELA-9.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A writer gathers these notes for an informative piece: a tornado forms when warm and cold air masses collide; the spinning air pulls up from the ground; the spinning gets faster and faster; a strong tornado can move at 60 miles per hour or faster. Which organizing strategy fits these notes best?",
-    "choices": [
-      "Cause/effect strategy, because the notes explain how a tornado forms and what happens as the spinning motion increases",
-      "Definition strategy, because the notes list and describe the key characteristics and features that define a tornado",
-      "Classification strategy, because the notes sort different types of tornadoes into groups based on their speeds and wind strengths",
-      "Comparison/contrast strategy, because the notes describe how tornadoes are similar to and different from other severe weather phenomena"
-    ],
-    "answer": "A",
-    "hints": [
-      "Ask yourself: are these notes explaining WHY something happens and WHAT happens next, or are they listing groups or features?",
-      "The lesson says cause/effect strategy 'fits a topic that is really an explanation of why something is true.' Do the notes start with a cause and show effects?"
-    ]
-  },
-  {
-    "id": "m6ela-organizing-an-informative-text-004",
-    "loId": "m6ela.organizing-an-informative-text",
-    "cedCode": "M6ELA-9.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read the draft paragraph. Which sentence breaks the one-strategy rule, and what should replace it to keep the piece organized with a single strategy?\n\n(1) The school library has three zones for students to use. (2) The quiet zone has desks and computers for reading and research. (3) The quiet zone is less fun than the collaboration zone because students cannot talk. (4) The collaboration zone has tables and whiteboards for group projects.",
-    "choices": [
-      "Sentence 1 breaks the rule because it names zones instead of comparing them. Replace it with a sentence that explains how the quiet zone and collaboration zone serve different purposes.",
-      "Sentence 3 breaks the rule because it compares two zones using cause/effect language instead of just naming what is in each zone. Replace it with a sentence that describes what the quiet zone offers.",
-      "Sentence 2 breaks the rule because it uses sorting language instead of explaining what causes students to prefer the quiet zone. Replace it with a sentence about why the quiet zone is important.",
-      "Sentence 4 breaks the rule because it focuses on features instead of contrasting the collaboration zone with the quiet zone. Replace it with a sentence that compares how the two zones differ."
-    ],
-    "answer": "B",
-    "hints": [
-      "Name the strategy the paragraph opens with. Sentences 1, 2, and 4 all sort zones and name what is in each one. What strategy is that?",
-      "Sentence 3 compares two zones and explains why one is 'less fun.' Is that the same job the other sentences are doing, or is it a different job?"
-    ]
-  },
-  {
-    "id": "m6ela-organizing-an-informative-text-005",
-    "loId": "m6ela.organizing-an-informative-text",
-    "cedCode": "M6ELA-9.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A writer has these notes and is choosing an organizing strategy: Butterflies have thin wings and are active during the day; moths have thick wings and are active at night; both insects have six legs; butterflies land with wings closed; moths land with wings open. The writer decides to use classification strategy. Why would comparison/contrast be a better choice?",
-    "choices": [
-      "Because the notes focus on sorting insects into groups by their physical traits, and classification fits that job better than comparison/contrast does",
-      "Because the notes explain why butterflies and moths behave differently, which requires cause/effect reasoning instead of classification",
-      "Because the notes describe two named things (butterflies and moths) across the same categories, which fits comparison/contrast better than sorting into groups",
-      "Because the notes cover too many different features and comparison/contrast can organize multiple features while classification can only handle one trait at a time"
-    ],
-    "answer": "C",
-    "hints": [
-      "Count how many named things are in the notes. Are they two things being weighed against each other, or groups being sorted?",
-      "The lesson says comparison/contrast 'fits a topic that is really about two named things.' Do these notes fit that description?"
-    ]
-  },
-  {
-    "id": "m6ela-organizing-an-informative-text-006",
-    "loId": "m6ela.organizing-an-informative-text",
-    "cedCode": "M6ELA-9.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student drafts an opening sentence for a piece about why students get nervous before performing in the school talent show: 'There are three reasons why students get nervous before performing: fear of forgetting their part, worry about audience judgment, and lack of practice time.' Is this opening sentence a good fit for the cause/effect strategy? Explain why or why not, using what you know about how one organizing strategy should carry a whole piece.",
-    "choices": [
-      "Yes, because the opening mentions reasons, which is the job of cause/effect strategy, and the writer can develop each reason in the paragraphs that follow",
-      "Yes, because the opening identifies multiple causes that lead to the same effect, which is exactly what cause/effect strategy does when explaining why something happens",
-      "No, because cause/effect strategy should explain what happens after students get nervous, not what causes them to be nervous in the first place",
-      "No, because the opening names three different reasons, which signals classification strategy, but cause/effect strategy requires connecting one cause to one effect in a chain, not listing separate reasons"
-    ],
-    "answer": "D",
-    "hints": [
-      "Look at the opening sentence again. Does it connect one cause to one effect in a chain, or does it list multiple separate reasons? Which pattern matches cause/effect?",
-      "The worked example about the Music Club shows a sentence that compares two instruments breaks a classification piece. What strategy does an opening sentence like this one actually signal?"
-    ]
-  },
-  {
-    "id": "m6ela-developing-a-topic-with-facts-details-001",
-    "loId": "m6ela.developing-a-topic-with-facts-and-details",
-    "cedCode": "M6ELA-9.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following is a concrete detail rather than a vague generality?",
-    "choices": [
-      "The science classroom contains a variety of useful items and materials that help students learn many different concepts about science.",
-      "The science classroom has many things in it that are interesting and neat to use for different learning activities.",
-      "The science classroom is really cool and has stuff that seems useful for studying science in general.",
-      "The science classroom has three microscopes with 400x magnification and a dissection kit containing forceps, scissors, and pins."
-    ],
-    "answer": "D",
-    "hints": [
-      "A concrete detail includes specific names, numbers, or exact descriptions that a reader could check.",
-      "Look for the choice that tells you exact what things are there, not just that there are 'a lot' or 'many.'"
-    ]
-  },
-  {
-    "id": "m6ela-developing-a-topic-with-facts-details-002",
-    "loId": "m6ela.developing-a-topic-with-facts-and-details",
-    "cedCode": "M6ELA-9.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote this topic sentence: 'Medieval castles were built to protect people from attack.' Which sentence actually develops this topic by adding new information instead of just restating it?",
-    "choices": [
-      "Thick stone walls and narrow windows made it difficult for invaders to break in or shoot arrows at people inside.",
-      "Medieval builders had to think carefully about ways to keep people safe from danger and threats.",
-      "Castles were structures that offered protection and safety to people living in them during dangerous times.",
-      "Medieval castles were designed with defensive features to serve a protective purpose for their residents."
-    ],
-    "answer": "A",
-    "hints": [
-      "Test each sentence by asking: does this tell me something new about how castles protected people, or does it just say 'protection' again in different words?",
-      "The correct answer shows a specific way the castle design actually worked to stop attackers."
-    ]
-  },
-  {
-    "id": "m6ela-developing-a-topic-with-facts-details-003",
-    "loId": "m6ela.developing-a-topic-with-facts-and-details",
-    "cedCode": "M6ELA-9.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student is developing the topic sentence 'Monarch butterflies make an incredible journey.' Which detail actually supports this specific topic instead of being only a general fact about monarch butterflies?",
-    "choices": [
-      "Monarch butterflies have special physical features and adaptations that allow them to survive successfully in many different environments and weather conditions.",
-      "Monarch butterflies fly thousands of miles from Canada to Mexico each autumn, crossing mountains and oceans despite weighing less than a paper clip.",
-      "Monarch butterflies are found living in various locations across North America and also appear in other regions around the world.",
-      "Monarch butterflies have distinctive wings that display bright orange and black coloring with specific patterns used to identify them as a particular species."
-    ],
-    "answer": "B",
-    "hints": [
-      "The topic sentence is about their journey specifically, not just about what monarchs are or where they live.",
-      "Look for the choice that shows how far they go and the specific obstacles they face during that journey."
-    ]
-  },
-  {
-    "id": "m6ela-developing-a-topic-with-facts-details-004",
-    "loId": "m6ela.developing-a-topic-with-facts-and-details",
-    "cedCode": "M6ELA-9.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote about the topic 'Ants work together as a team to survive.' The student then added this sentence: 'Ants are small insects that live in colonies.' Why is this sentence a problem, and how should it be fixed?",
-    "choices": [
-      "It uses vague language instead of specific numbers; the sentence should state 'Ants are insects that live in colonies composed of approximately 50,000 to 500,000 individual members depending on the species.'",
-      "It does not explain anything about size; it should be changed to say 'Ants are very small insects that weigh less than a grain of sand and live together in organized colonies.'",
-      "It is a vague generality; it should be replaced with a fact about how ants actually coordinate their work, such as 'Ants share information about food sources by touching antennae and leaving scent trails that other ants can follow.'",
-      "It is incomplete because it mentions only one trait; it should describe multiple features by saying 'Ants are small insects with six legs that live in colonies and have different jobs.'"
-    ],
-    "answer": "C",
-    "hints": [
-      "The sentence only restates what 'team' and 'survive' already told the reader—it does not show a specific way ants actually work together.",
-      "The fix needs to name an actual, observable behavior that demonstrates their teamwork."
-    ]
-  },
-  {
-    "id": "m6ela-developing-a-topic-with-facts-details-005",
-    "loId": "m6ela.developing-a-topic-with-facts-and-details",
-    "cedCode": "M6ELA-9.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student developed the topic 'Cormorants are excellent hunters underwater.' She added this sentence: 'A cormorant can dive to depths of 100 feet and stay underwater for up to seven minutes while chasing fish.' Then she added: 'The ocean is home to many different kinds of hunters.' Why is the second sentence a problem for this paragraph?",
-    "choices": [
-      "It uses exact numbers without a qualifier, which violates the no-invented-numbers rule.",
-      "It introduces a new topic about the ocean when the paragraph should stay focused only on one sentence at a time.",
-      "It restates the first sentence in a different way instead of adding new information.",
-      "It is true but does not develop the specific topic; it is a general fact about the ocean, not about how cormorants hunt."
-    ],
-    "answer": "D",
-    "hints": [
-      "Test the sentence against the specific topic sentence: does it explain something new about cormorant hunting, or is it just a general statement about ocean life?",
-      "Even true facts about a related subject can fail to develop the exact topic sitting above them."
-    ]
-  },
-  {
-    "id": "m6ela-developing-a-topic-with-facts-details-006",
-    "loId": "m6ela.developing-a-topic-with-facts-and-details",
-    "cedCode": "M6ELA-9.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is writing about 'Termites cause billions of dollars in damage to buildings each year.' She wants to add three supporting sentences: Sentence 1 is 'Termites eat wood.' Sentence 2 is 'In Australia, termites destroyed a wooden house in just three months by tunneling through the walls and eating the support beams inside.' Sentence 3 is 'Many insects damage property.' Read all three sentences against the topic and identify which ones actually develop the topic, which only restate it, and which are off-topic.",
-    "choices": [
-      "Sentence 1 only restates the topic in simpler words; Sentence 2 develops the topic by showing a concrete example of how fast and thorough the damage can be; Sentence 3 is off-topic because it talks about damage in general instead of termite damage specifically.",
-      "Sentence 1 describes one reason why termite damage happens without giving specific examples; Sentence 2 is off-topic because it focuses on a location rather than the mechanism of damage; Sentence 3 restates the topic by discussing costly property damage caused by living creatures.",
-      "Sentence 1 restates the topic by naming what termites do but without showing the extent of damage; Sentence 2 develops the topic through a detailed example showing the speed and severity of termite destruction; Sentence 3 shifts away from the specific topic by discussing insects in general rather than termites.",
-      "Sentence 1 develops the topic because it explains what termites do; Sentence 2 is off-topic because it names a specific country and building rather than addressing the scale of termite damage globally; Sentence 3 restates the topic by talking about the financial impact of insect damage on buildings."
-    ],
-    "answer": "A",
-    "hints": [
-      "Ask of each sentence: Does it tell me something new about termite damage, or does it just repeat what the topic sentence already said? Does it explain the specific topic, or jump to a different subject that is only loosely connected?",
-      "A concrete example that shows how severe and fast the damage is will develop the topic better than a general statement about what termites eat."
-    ]
-  },
-  {
     "id": "m6ela-transitions-in-informative-writing-001",
     "loId": "m6ela.transitions-in-informative-writing",
     "cedCode": "M6ELA-9.3",
@@ -342,22 +114,250 @@
     ]
   },
   {
+    "id": "m6ela-developing-a-topic-with-facts-details-001",
+    "loId": "m6ela.developing-a-topic-with-facts-and-details",
+    "cedCode": "M6ELA-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A concrete detail is one of the ways to develop a topic sentence. Which choice is the best example of a concrete detail that develops a topic?",
+    "choices": [
+      "The cafeteria serves vegetables because the school believes that including healthy food options supports student nutrition and overall wellness.",
+      "The cafeteria includes vegetables at lunch because they provide important nutritional benefits and promote good health in students who eat them regularly.",
+      "The cafeteria is a pleasant space where students can gather to eat lunch together with their friends and enjoy their meals in a comfortable setting.",
+      "The school cafeteria serves many different kinds of vegetables, including carrots, broccoli, green beans, and cauliflower on Monday through Thursday."
+    ],
+    "answer": "D",
+    "hints": [
+      "A concrete detail names specific, exact things—like numbers, names, or particular actions—not just general feelings.",
+      "Which choice lets a reader actually picture what vegetables are served and when?"
+    ]
+  },
+  {
+    "id": "m6ela-developing-a-topic-with-facts-details-002",
+    "loId": "m6ela.developing-a-topic-with-facts-and-details",
+    "cedCode": "M6ELA-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this topic sentence: \"Dogs use their sense of smell to understand the world around them.\" Which sentence actually develops this topic by adding new information instead of just restating it?",
+    "choices": [
+      "A dog's nose has millions of scent receptors, and when a dog sniffs the ground, it can tell how old a scent is, what direction an animal traveled, and whether the animal was injured or afraid.",
+      "Dogs are able to use their sense of smell effectively in many different daily situations because it helps them gather information that is useful for survival and understanding their surroundings.",
+      "Dogs are known for being intelligent animals with many special abilities that make them valuable helpers for humans in a variety of jobs and situations.",
+      "The sense of smell is important for dogs because it is one of several ways they gather information and learn about what is happening in the world around them each day."
+    ],
+    "answer": "A",
+    "hints": [
+      "Test each sentence against the topic sentence: Does it tell the reader something new, or does it just repeat the same idea in different words?",
+      "The correct answer explains specific, checkable things that happen when a dog sniffs—not just that the sense of smell is good."
+    ]
+  },
+  {
+    "id": "m6ela-developing-a-topic-with-facts-details-003",
+    "loId": "m6ela.developing-a-topic-with-facts-and-details",
+    "cedCode": "M6ELA-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this topic sentence: \"Rainforests are disappearing quickly.\" Then the student added this sentence: \"Rainforests are important ecosystems with many plants and animals.\" Why does this sentence NOT develop the topic?",
+    "choices": [
+      "It introduces new information about rainforests but does not connect that information to the topic of how quickly they are disappearing.",
+      "It is about rainforests in general, but it does not explain the specific topic—how fast they are disappearing or why.",
+      "It includes the word 'ecosystems,' which is a technical term that most readers may not understand without further explanation.",
+      "It fails to mention specific rainforests like the Amazon or the Congo, which would make the sentence more concrete and convincing."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember the relevance test: A fact can be true about the general subject but still fail to develop the specific topic sentence.",
+      "The topic sentence is about disappearing quickly. Does the sentence added explain anything about speed or loss?"
+    ]
+  },
+  {
+    "id": "m6ela-developing-a-topic-with-facts-details-004",
+    "loId": "m6ela.developing-a-topic-with-facts-and-details",
+    "cedCode": "M6ELA-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this topic sentence: \"Monarch butterflies make an amazing journey that takes several generations.\" A student wants to develop this topic by adding facts and details. Which pair of sentences best develops the topic by avoiding restatement and staying specific to this exact topic?",
+    "choices": [
+      "These sentences use general language about butterfly behavior that could apply to many different butterfly species, but they do not show exactly how the monarch's journey requires several generations or explain what each generation contributes to the overall migration.",
+      "These sentences describe migration as a common behavior found in many insect species and animals, but they do not specify how the monarch's specific journey requires multiple generations to complete or explain why each generation lives a different amount of time.",
+      "A single monarch butterfly cannot live long enough to complete the entire round-trip journey between Canada and Mexico. Instead, the fall generation that hatches in late summer lives several months and flies south, then spring generations born during the return journey each live only a few weeks before passing the journey to the next generation.",
+      "These sentences describe the monarch migration as an impressive or wonderful natural event, but they do not provide concrete facts about how the generations are involved or explain in detail how the multi-generational cycle actually functions during the journey."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for sentences that explain a specific, checkable fact about the monarch's journey itself—not just general praise for how 'amazing' it is.",
+      "Which choice shows how the journey takes multiple generations by describing what actually happens in each generation?"
+    ]
+  },
+  {
+    "id": "m6ela-developing-a-topic-with-facts-details-005",
+    "loId": "m6ela.developing-a-topic-with-facts-and-details",
+    "cedCode": "M6ELA-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer wrote this topic sentence: \"The Great Wall of China was built over many centuries to protect against invasions.\" Then the writer added: \"Thousands of workers built the wall, and it required a huge amount of stone.\" Identify what is wrong with the added sentence and explain why it fails to properly develop the topic.",
+    "choices": [
+      "The sentence uses approximate language like 'thousands' when it should state a precise count of workers from historical records.",
+      "The sentence brings up multiple separate facts about workers and stone, but neither one explains how the centuries of construction occurred or describes the defensive strategy against invasions.",
+      "The sentence introduces new topics about workers and building materials that shift focus away from the main idea about China as a nation.",
+      "The sentence restates that the wall was built but does not explain how the centuries-long construction or the defense strategy actually worked."
+    ],
+    "answer": "D",
+    "hints": [
+      "Run the relevance test: Does this sentence explain something new about the centuries-long building process or how the wall protected against invasions, or does it just repeat that it was built?",
+      "The topic sentence mentions two specific ideas: built over centuries and protected against invasions. Does the added sentence develop either of those ideas?"
+    ]
+  },
+  {
+    "id": "m6ela-developing-a-topic-with-facts-details-006",
+    "loId": "m6ela.developing-a-topic-with-facts-and-details",
+    "cedCode": "M6ELA-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: \"Mountain lions are dangerous predators.\" Then added three sentences: (1) \"Mountain lions are scary animals that can hurt people.\" (2) \"A mountain lion hunted a family's pet dog near the edge of their neighborhood on the outskirts of Denver, Colorado in 2019, dragging it away into the forest.\" (3) \"These big cats live in many different areas and eat meat for survival.\" Identify which sentence properly develops the topic and explain why the others do not, based on the rules for facts, details, and relevance.",
+    "choices": [
+      "Sentence 2 develops the topic because it gives a concrete, specific example of the danger with a real place, time, and action that readers can picture and verify, whereas Sentence 1 only restates the topic and Sentence 3 states a general fact about mountain lions that does not explain the specific topic of danger.",
+      "Sentence 1 develops the topic because it uses vivid and emotionally descriptive words such as 'scary' to emphasize how dangerous and threatening mountain lions truly are to people.",
+      "Sentence 3 develops the topic because it provides an explanation of why mountain lions hunt other animals, demonstrating that they are predators who need meat to survive and therefore pose a danger.",
+      "Sentence 2 develops the topic because it focuses on the attack against a pet dog rather than a human victim, making it a more detailed and interesting example of the mountain lion's predatory behavior."
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply three tests: Does it restate the topic without adding new information? Does it state a general truth about the subject but not about this specific topic? Does it give a concrete, checkable example or detail?",
+      "Which sentence shows an actual instance of danger happening, with specific details about where, when, and what the mountain lion did?"
+    ]
+  },
+  {
+    "id": "m6ela-organizing-an-informative-text-001",
+    "loId": "m6ela.organizing-an-informative-text",
+    "cedCode": "M6ELA-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A writer is planning an informative paragraph about what a fire extinguisher is and how its parts work. Which organizing strategy is the best fit for this topic?",
+    "choices": [
+      "Comparison/contrast strategy, because the writer could compare it to a similar safety tool",
+      "Classification strategy, because fire extinguishers come in several different types",
+      "Definition strategy, because the writer is explaining what something is and naming its key features",
+      "Cause/effect strategy, because fire extinguishers cause fires to stop"
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson says definition strategy fits a topic the reader has probably never heard explained before. Does this writer need to name what a fire extinguisher is and describe its key features?",
+      "Rule out strategies that would fit if the writer wanted to sort types, weigh two things against each other, or explain why something happens."
+    ]
+  },
+  {
+    "id": "m6ela-organizing-an-informative-text-002",
+    "loId": "m6ela.organizing-an-informative-text",
+    "cedCode": "M6ELA-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student gathered these notes for an informative piece: the cafeteria added a salad bar last month; students can pick from five different vegetables; the salad bar is open during lunch periods; most sixth graders choose lettuce and tomato. The student wants to organize using the definition strategy. What should the opening sentence do to set up this strategy correctly?",
+    "choices": [
+      "Explain why the school decided to add a salad bar and what caused it to be popular",
+      "Weigh the salad bar against the old lunch line to show how they are different",
+      "Sort the salad bar into different parts, such as the dressing station and the vegetable section",
+      "Name what a salad bar is and signal that its key features will be described one at a time"
+    ],
+    "answer": "D",
+    "hints": [
+      "The definition strategy explains what something is by naming its key features. What does the opening sentence need to do to signal that this is the plan?",
+      "Read the lesson example about the Homework Pass. How does that opening sentence set up the definition strategy?"
+    ]
+  },
+  {
+    "id": "m6ela-organizing-an-informative-text-003",
+    "loId": "m6ela.organizing-an-informative-text",
+    "cedCode": "M6ELA-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A writer is drafting a paragraph about three types of school clubs: sports clubs, arts clubs, and academic clubs. The first supporting sentence reads: \"Sports clubs include soccer, basketball, and volleyball, and they meet after school.\" Which supporting sentence best continues the classification strategy?",
+    "choices": [
+      "Arts clubs include drama, visual art, and music, and they meet after school too",
+      "Sports clubs are more fun than academic clubs because students like to play games",
+      "Academic clubs help students improve their grades, which is why some students prefer them",
+      "All three types of clubs require students to sign up in the first week of school"
+    ],
+    "answer": "A",
+    "hints": [
+      "The classification strategy names one group and stops there, describing what is in that group. It does not compare groups or explain why one is better.",
+      "The first sentence described sports clubs in a certain way. Which choice follows the same pattern by describing a different group?"
+    ]
+  },
+  {
+    "id": "m6ela-organizing-an-informative-text-004",
+    "loId": "m6ela.organizing-an-informative-text",
+    "cedCode": "M6ELA-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is organizing a paragraph about why recycling is important. The draft reads: (1) Recycling keeps plastic and paper out of landfills. (2) When less trash goes to landfills, the ground and water stay cleaner. (3) The recycling center downtown has more machines than the one across the river. (4) Because landfills pollute, recycling protects the environment. Which sentence breaks the one-strategy rule, and what strategy should replace it to keep the piece on track?",
+    "choices": [
+      "Sentence 1 breaks the rule; it should be replaced with a sentence that compares recycling to throwing trash away",
+      "Sentence 3 breaks the rule; it should be replaced with a sentence that continues the cause/effect chain",
+      "Sentence 2 breaks the rule; it should be replaced with a sentence that sorts recycling into different types",
+      "Sentence 4 breaks the rule; it should be replaced with a sentence that defines what pollution is"
+    ],
+    "answer": "B",
+    "hints": [
+      "The opening sentences explain why recycling happens and what results from it. What organizing strategy is that?",
+      "Sentence 3 does something different from sentences 1, 2, and 4. Does it explain a cause or effect, or does it do something else entirely?"
+    ]
+  },
+  {
+    "id": "m6ela-organizing-an-informative-text-005",
+    "loId": "m6ela.organizing-an-informative-text",
+    "cedCode": "M6ELA-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer has gathered notes about two smartphones: the Model A has a 5-inch screen, costs $300, and lasts two days on one charge; the Model B has a 6-inch screen, costs $450, and lasts three days on one charge. The writer decides to use comparison/contrast strategy. Which opening sentence best sets up this strategy and commits to it?",
+    "choices": [
+      "Model A is cheaper because it has a smaller screen and less battery capacity than Model B",
+      "The Model A costs less money, which makes it popular with students, while Model B appeals to workers",
+      "Both Model A and Model B are smartphones, but they differ in screen size, price, and battery life",
+      "Model A and Model B are two phones that have screens and batteries, and they are both useful devices"
+    ],
+    "answer": "C",
+    "hints": [
+      "The comparison/contrast strategy sets two specific things side by side and shows how they are alike and different. Does the opening sentence signal that two named things will be weighed across the same categories?",
+      "Rule out sentences that explain why one phone is better, or that just name both phones without signaling a side-by-side comparison."
+    ]
+  },
+  {
+    "id": "m6ela-organizing-an-informative-text-006",
+    "loId": "m6ela.organizing-an-informative-text",
+    "cedCode": "M6ELA-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing an informative paragraph about the school library's borrowing rules. These notes have been gathered: students can borrow up to eight books at a time; books must be returned within three weeks; an overdue book costs five cents per day; a student who loses a book must pay the replacement cost; students can renew a book twice online. The student's opening sentence is: \"The school library sorts its borrowing rules into three categories: how many books you can take, how long you can keep them, and what happens if you break the rules.\" The student has now written two supporting sentences using classification strategy correctly. Before writing the fourth sentence, the student realizes the opening sentence idea will not work well for all the gathered notes. Which statement best explains the problem and suggests a fix?",
+    "choices": [
+      "The opening sorts the rules into three groups, but one group will contain two rules while another contains only one rule, making the organization unbalanced and confusing for readers who expect equal weight across categories",
+      "The opening sentence uses classification correctly, but the student needs to gather more notes about borrowing rules so that exactly three rules fit into each of the three categories the opening sentence promises",
+      "The opening sentence commits to classification as the organizing strategy, but the renewal rule does not fit neatly into any of the three promised groups without forcing it or creating gaps, so the student should try definition strategy to explain what borrowing rules cover",
+      "The opening sentence has committed to classification, but classification cannot fit all five rules into three clear groups without making some groups too small or strange, so the student should reconsider and choose definition strategy instead"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at the rule that one organizing strategy must carry the whole piece. The five notes do not split neatly into the three groups the opening promised. Can classification still work?",
+      "If the five rules do not fit the three-group plan, what other strategy might work better for a set of rules that describe what something is and how it works?"
+    ]
+  },
+  {
     "id": "m6ela-orienting-the-reader-in-a-narrative-001",
     "loId": "m6ela.orienting-the-reader-in-a-narrative",
     "cedCode": "M6ELA-9.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "When a writer orients a reader at the start of a narrative, what three things must the opening answer before the first event finishes?",
+    "problemText": "Which three pieces of information must be present before the first event of a narrative finishes in order to orient a reader? Consider what the lesson calls the three-job checklist for an oriented opening.",
     "choices": [
-      "what the main character looks like, why the story matters, and how the story will end",
-      "where and when the action is happening, who is in the scene, and what the first event is",
-      "how long the story will take to read, what the setting sounds like, and who is telling the tale",
-      "where the character came from, what the character wants most, and what happens next"
+      "The character's full history, the reason the story matters, and what happens at the very end",
+      "The place and time, the name and action of a character, and the first event that starts the story moving",
+      "A description of the weather, a list of all characters who will appear, and a summary of the main problem",
+      "The character's feelings about what is about to happen, the location described in great detail, and several events leading up to the real beginning"
     ],
     "answer": "B",
     "hints": [
-      "Look for the three questions that help a reader avoid confusion at the very start.",
-      "Think about what a reader needs to picture a scene: the place, the moment, and the people in it."
+      "Remember the three jobs: context (where and when), character (who and doing what), and first event (what starts the story moving).",
+      "The lesson says skip one of these three and a reader starts confused."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A writer begins a story this way: 'Devon had always been interested in science, and his family had lived in the city for three years, and he got good grades in math, and then one Tuesday morning he found a strange crystal in his backyard.' Why does this opening fail to orient the reader well?",
+    "problemText": "A writer is drafting an opening: 'The gymnasium was filled with rows of folded chairs, and Jamal sat in the front row holding a small card with his name on it.' What does this opening successfully establish to orient the reader?",
     "choices": [
-      "It includes too many details about Devon's background, when orienting only needs one or two concrete details of place and time.",
-      "It does not name the city where Devon lives, so readers cannot picture the setting.",
-      "It gives a list of facts about the character before showing what he is doing right then, and it waits too long to reach the first event.",
-      "It tells readers the ending before the story has a chance to unfold naturally."
+      "A series of events and their outcomes that will occur throughout the remainder of the day",
+      "Specific details about the character's personal history, family background, and the reasons he chose to attend this particular event",
+      "The place and time where the scene happens, and the name and action of the character in that moment",
+      "The central conflict of the narrative and the sequence of steps that will resolve it before the story ends"
     ],
     "answer": "C",
     "hints": [
-      "An opening should introduce a character by name and by what that person is doing right then, not by a list of facts.",
-      "How much of Devon's history and personality does a reader need to know before the story's first event happens?"
+      "Look for the concrete details that tell a reader where to picture the action and when, and for the character's name plus what that person is doing right then.",
+      "Orienting means answering three questions before the first event finishes—this opening shows the first two. Check what information is actually present in the sentence."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Which of the following is an example of stalling rather than orienting?",
+    "problemText": "A writer submits this draft: 'For three years, Chen had wanted to learn skateboarding, and he had watched videos online and talked to his friends about it, and he read reviews of different boards, and finally today he went to the skate park for the first time.' Why does this opening fail to orient the reader properly, even though it introduces Chen and mentions a location?",
     "choices": [
-      "A sentence that gives the day of the week, the season, and shows a character already in motion doing something.",
-      "A sentence that tells readers the place is a diner, the time is early morning, and names the waitress who is pouring coffee.",
-      "A sentence that puts a reader inside a gymnasium five minutes before the first game of the season.",
-      "A paragraph that explains the neighborhood's history and how it was built before naming a single character or describing what happens."
+      "It presents too many characters at once and fails to give them all distinct names and roles that readers can keep track of",
+      "It does not reveal what the outcome of the skateboarding attempt will be, leaving readers uncertain about whether Chen will succeed or fail",
+      "It does not specify the exact street location or official name of the skate park, making it impossible for readers to know the geographic setting",
+      "It stalls by piling up background facts about Chen instead of showing him doing something in the moment, and it does not establish a specific time or place for the reader to picture"
     ],
     "answer": "D",
     "hints": [
-      "Stalling gives readers a history lesson with nothing to picture yet; orienting gives them a place and moment to stand in.",
-      "Does the choice give readers a concrete picture they can stand in right now, or does it explain something that happened before the story begins?"
+      "The lesson says introducing a character means giving a name and what that person is doing right then, not a list of facts about them. Does this opening do that, or does it stall with history?",
+      "Orienting takes one or two concrete details for context—a place, a season, a time of day—not a paragraph of background before anything happens."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer starts with this draft: 'The soccer tournament was held every summer in Oak Park, and last year Santiago's team didn't make it far, but this year he was determined to play better, and during the first game he kicked the ball out of bounds in the third minute.' What are two problems with this draft as an opening that orients a reader?",
+    "problemText": "Read this attempted opening: 'The volleyball tournament lasted three hours, and players from six schools showed up, and the final match was super close, and Yuki's team won by two points and everyone celebrated.' Now read this revision: 'It was Saturday morning at Lincoln High's gymnasium, and Yuki stood at the net with her teammates gathered behind her, waiting for the first match to begin.' Compare the two versions. Which statement correctly explains why the revision better orients the reader by establishing a natural sequence?",
     "choices": [
-      "It does not name the place and time clearly enough, and it introduces Santiago by listing his thoughts instead of showing what he is doing right then.",
-      "It gives away the ending by mentioning last year's tournament, and it fails to name the character's full name and hometown.",
-      "It starts the sequence too late in the action by summarizing Santiago's past, and it uses connecting words like 'but' and 'and' to string together too many separate events.",
-      "It does not explain why the tournament happens every summer, and it does not say what Santiago's parents think about his performance."
+      "The revision stops at the first event instead of racing through the whole tournament, and it gives concrete details of place and moment that help a reader picture where the action is happening",
+      "The revision introduces multiple teammates by name and describes each person's role on the volleyball team before any action takes place",
+      "The revision provides the exact time of day and reveals the winner of the match before the story actually begins unfolding",
+      "The revision tells the reader what emotions Yuki and her teammates will feel throughout the entire three-hour tournament"
     ],
     "answer": "A",
     "hints": [
-      "A natural sequence begins with the first event that gets the story moving, not with explaining what the character thinks or wanted before that moment.",
-      "Good context takes one or two concrete details; look at how much time and history this draft includes before anything actually happens."
+      "Remember: a natural sequence begins where the story actually begins—the first event that gets the story moving. The original draft reports the middle and ending. Does the revision stop earlier?",
+      "Orienting is not the same job as summarizing a whole story. The revision sets up a beginning; it does not report the middle or ending in advance. Look at what each version tells the reader about what happens."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Which revision best fixes this opening so it orients the reader and stops at the first event instead of summarizing the whole story? Original: 'It was raining when Zoe got to the skate park, and she fell on her first trick, and she kept trying, and by the end of the afternoon she had landed it, and everyone cheered, and she felt proud.'",
+    "problemText": "A writer is planning a narrative about a student discovering that her science project has gone missing from the classroom before the fair. The writer has drafted two possible openings. Opening 1: 'Ms. Reeves had asked students to leave their projects on the back table overnight, and they all did, and some were good and some were not very good, and then in the morning they were supposed to come early to set up for the fair.' Opening 2: 'When Dex arrived at Ms. Reeves's classroom on Saturday morning and walked to the back table where she had left her biodome project the night before, her stomach dropped. The table was empty.' Which opening better orients the reader, and why?",
     "choices": [
-      "It was raining when Zoe got to the skate park, and she was the kind of person who never gave up because she had been practicing for weeks and was determined to land her first trick.",
-      "It was raining hard when Zoe got to the skate park on Saturday afternoon, and she was gripping her skateboard at the edge of the deep bowl when her feet froze and she wondered if she should try the trick everyone had been talking about.",
-      "Zoe went to the skate park one day when it was raining, and she was standing at the edge of the bowl with her board in her hands, nervous about attempting the difficult flip trick that she had been thinking about all week.",
-      "It was Saturday afternoon at the skate park, and it was raining, and Zoe was gripping her skateboard tightly while standing at the top of the concrete bowl, hesitating before she committed to trying the challenging maneuver she had watched other skaters do."
+      "Opening 1 better orients the reader because it fully explains the teacher's instructions and evaluates the quality of every single project before the fair begins",
+      "Opening 2 better orients the reader because it establishes a specific time and place, introduces a named character and her action in the moment, and stops at the first event instead of reporting background facts and later setup",
+      "Opening 1 is better because it provides all the necessary background information about how the projects ended up on the table overnight and what students were supposed to do the next morning",
+      "Opening 2 is worse because it begins with a dramatic discovery rather than first explaining everything that happened to the project during the previous night and early morning"
     ],
     "answer": "B",
     "hints": [
-      "A good opening stops at the first event that starts the story moving, not at the happy ending or at the character's feelings about the whole journey.",
-      "Look for the choice that gives place and time, shows what Zoe is doing right then, and ends before we know how the attempt turns out."
+      "Orienting means answering three questions before the first event finishes: where and when, who is telling or in the scene, and what is the first event that gets the story moving. Which opening actually stops at the first event?",
+      "The lesson warns that stalling means giving a paragraph of background before anything happens. Opening 1 piles up explanation; Opening 2 names the character, place, and moment, then shows her discovery. Which one moves into the story?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A writer has outlined a narrative idea: 'A student's phone dies during an important video interview, and the student has to reschedule it, and the second interview goes better because the student is more prepared.' The writer produces this opening: 'My phone was always running out of battery because I never remembered to charge it, so it died during my interview with Dr. Patel, and I had to ask to reschedule, and the next time we talked, I was ready, and she loved what I had to say, and I felt relieved.' What are two specific problems with this opening, and what does the writer need to fix?",
+    "problemText": "A writer has started a narrative this way: 'One afternoon in the parking lot behind the grocery store, Leo heard shouting coming from the loading dock.' The writer wants to add one more sentence that will finish the job of orienting the reader. Which sentence best completes the opening by introducing a character doing something concrete in the moment, without jumping ahead to later events in the story?",
     "choices": [
-      "The opening does not provide enough information about when and where the interview was scheduled to take place, and it does not explain the purpose of the interview or why it mattered to the narrator's goals. The writer should specify the interview location, the time it was supposed to happen, and what the interview was for.",
-      "The opening does not make clear who Dr. Patel is or how the narrator knew her before this interview, and it does not say what kind of job or opportunity this interview was supposed to lead to. The writer should add background information about Dr. Patel and explain why this particular interview was so important.",
-      "The opening summarizes the whole story from beginning to end instead of stopping at the first event; it also introduces the narrator by listing a habit instead of showing what the narrator is doing in that specific moment. The writer should cut everything after the phone dies and show the narrator during the interview, not explain the character's phone habits.",
-      "The opening tells readers about the narrator's phone habits and past behavior instead of describing what the narrator looks like or what the narrator was wearing during the interview. The writer should replace the character background with physical details about the narrator and describe the narrator's appearance in the moment the phone dies."
+      "Leo would later find out that the store owner and a delivery driver had been arguing about a shipment",
+      "The argument went on for several minutes before the managers showed up and broke it up",
+      "Leo ran toward the noise because he recognized his older brother's voice yelling at someone",
+      "This was the moment that would change everything for Leo over the next few weeks"
     ],
     "answer": "C",
     "hints": [
-      "Remember that orienting is not the same as summarizing—an opening sets up a beginning, not the whole story from middle to end.",
-      "Think about how to introduce a narrator: by what they are doing right then, or by listing their habits from before?"
+      "Remember that introducing a character means giving a name and what that person is doing right then. The first sentence already has the place and time. Which choice introduces or adds to a character's action in this moment?",
+      "Avoid choices that jump ahead to 'later,' 'would,' or 'this would change'—those are summaries and endings, not first events. Which option keeps the action happening now?"
     ]
   }
 ]

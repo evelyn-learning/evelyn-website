@@ -1,363 +1,21 @@
 [
   {
-    "id": "m6ela-sentence-fragments-run-ons-001",
-    "loId": "m6ela.sentence-fragments-and-run-ons",
-    "cedCode": "M6ELA-6.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which group of words is a sentence fragment? A fragment is missing a subject, a verb, or a finished thought.",
-    "choices": [
-      "It was dark after the storm hit.",
-      "The storm knocked out the power.",
-      "The power went out during the storm.",
-      "Because the storm knocked out the power."
-    ],
-    "answer": "D",
-    "hints": [
-      "Does this group have both a subject and a verb? Look for the starter word.",
-      "A word like because leaves you waiting for what happens next."
-    ]
-  },
-  {
-    "id": "m6ela-sentence-fragments-run-ons-002",
-    "loId": "m6ela.sentence-fragments-and-run-ons",
-    "cedCode": "M6ELA-6.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this sentence: \"We wanted to go outside, it was raining too hard.\" What is the name of this error?",
-    "choices": [
-      "Comma splice — two complete sentences joined with only a comma.",
-      "Run-on — two complete sentences connected with no punctuation mark between them at all.",
-      "Fragment — a sentence that is missing either a subject or a verb, making it incomplete.",
-      "Fragment — an incomplete sentence that lacks a finished thought or independent clause."
-    ],
-    "answer": "A",
-    "hints": [
-      "Test each side of the comma separately. Does each side have a subject, a verb, and a finished thought?",
-      "This error happens when a comma is not strong enough to hold apart two complete sentences."
-    ]
-  },
-  {
-    "id": "m6ela-sentence-fragments-run-ons-003",
-    "loId": "m6ela.sentence-fragments-and-run-ons",
-    "cedCode": "M6ELA-6.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Which sentence is written correctly?",
-    "choices": [
-      "After the bell rang loudly everyone jumped from their seats.",
-      "After the bell rang loudly, everyone jumped from their seats.",
-      "After the bell rang loudly. Everyone jumped from their seats.",
-      "After the bell rang loudly, the noise was very startling."
-    ],
-    "answer": "B",
-    "hints": [
-      "When a starter word group comes first, it must attach to the complete sentence after it with a comma.",
-      "Check whether the words after the starter word can stand alone as a complete sentence."
-    ]
-  },
-  {
-    "id": "m6ela-sentence-fragments-run-ons-004",
-    "loId": "m6ela.sentence-fragments-and-run-ons",
-    "cedCode": "M6ELA-6.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this pair of sentences. \"The cafeteria ran out of chocolate milk. Some students grabbed orange juice instead.\" Which revision uses a joining word to show the connection between these two complete sentences?",
-    "choices": [
-      "The cafeteria ran out of chocolate milk; some students grabbed orange juice instead.",
-      "The cafeteria ran out of chocolate milk, some students grabbed orange juice instead.",
-      "The cafeteria ran out of chocolate milk, so some students grabbed orange juice instead.",
-      "Although the cafeteria ran out of chocolate milk, some students grabbed orange juice instead."
-    ],
-    "answer": "C",
-    "hints": [
-      "A joining word like for, and, nor, but, or, yet, or so connects two complete sentences with a comma.",
-      "Which choice shows WHY the students grabbed orange juice instead?"
-    ]
-  },
-  {
-    "id": "m6ela-sentence-fragments-run-ons-005",
-    "loId": "m6ela.sentence-fragments-and-run-ons",
-    "cedCode": "M6ELA-6.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Which sentence contains a fragment that needs to be fixed?",
-    "choices": [
-      "The game was cancelled. Everyone went home disappointed.",
-      "Since the game was cancelled, everyone went home disappointed.",
-      "The game was cancelled, so everyone went home disappointed.",
-      "Since the game was cancelled everyone went home disappointed."
-    ],
-    "answer": "D",
-    "hints": [
-      "Look for a starter word like since, because, although, or when that opens the sentence.",
-      "If a starter-word group comes first, does it have a comma after it before the complete sentence begins?"
-    ]
-  },
-  {
-    "id": "m6ela-sentence-fragments-run-ons-006",
-    "loId": "m6ela.sentence-fragments-and-run-ons",
-    "cedCode": "M6ELA-6.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote: \"We finished the project on time although we started late, everyone praised our work.\" Identify the error and choose the best correction.",
-    "choices": [
-      "This is a comma splice. Fix it by adding a semicolon after the first complete thought: \"We finished the project on time, although we started late; everyone praised our work.\"",
-      "This is a fragment. Fix it by removing the comma and adding a period: \"We finished the project on time although we started late. Everyone praised our work.\"",
-      "This is a run-on error. Fix it by replacing the comma with a period: \"We finished the project on time although we started late. Everyone praised our work.\"",
-      "This is a run-on with a misplaced dependent clause. Fix it by moving the starter word: \"Although we started late, we finished the project on time, everyone praised our work.\""
-    ],
-    "answer": "A",
-    "hints": [
-      "Test both parts after the comma in the original. Each side of a comma in the middle of a sentence must be part of one complete thought, not two separate ones.",
-      "A starter word like although belongs with the sentence idea it opens, not between two complete sentences."
-    ]
-  },
-  {
-    "id": "m6ela-varying-sentence-patterns-for-style-001",
-    "loId": "m6ela.varying-sentence-patterns-for-style",
-    "cedCode": "M6ELA-6.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What does it mean when a paragraph has sentence variety? A) The sentences are all the same length and use the same opener. B) The sentences mix different lengths and different opening words instead of repeating the same pattern. C) Some sentences are correct and some are fragments. D) The sentences use fancy or complicated words.",
-    "choices": [
-      "The sentences mix different lengths and different opening words instead of repeating the same pattern.",
-      "The sentences are all the same length and use the same opener or subject at the beginning of each one.",
-      "Some sentences are correct and some contain fragments or incomplete thoughts.",
-      "The sentences use fancy or complicated vocabulary words to make the writing sound more advanced."
-    ],
-    "answer": "A",
-    "hints": [
-      "Look for the definition taught in the lesson: what is sentence variety, and what does it NOT change?",
-      "Sentence variety changes the shape of sentences, not the facts. What pattern does it avoid?"
-    ]
-  },
-  {
-    "id": "m6ela-varying-sentence-patterns-for-style-002",
-    "loId": "m6ela.varying-sentence-patterns-for-style",
-    "cedCode": "M6ELA-6.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read these sentences: \"The storm started. The lights flickered. The wind howled.\" What repeated pattern makes this paragraph sound choppy?",
-    "choices": [
-      "Every sentence begins with the same subject or uses a repeated opening word pattern throughout the paragraph.",
-      "The first word of each sentence is exactly the same or a repeated subject.",
-      "All three sentences describe actions that happen at approximately the same moment in time.",
-      "Each sentence contains a strong action verb that shows something moving or changing."
-    ],
-    "answer": "B",
-    "hints": [
-      "The lesson says the most noticeable repeated pattern is what? Look at the first word or subject of each sentence.",
-      "Compare the opening words: 'The storm,' 'The lights,' 'The wind.' What repeats?"
-    ]
-  },
-  {
-    "id": "m6ela-varying-sentence-patterns-for-style-003",
-    "loId": "m6ela.varying-sentence-patterns-for-style",
-    "cedCode": "M6ELA-6.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Which revision of these two sentences adds a connector that states their relationship without changing what happened? Original: \"The coach blew the whistle. The team sprinted toward the field.\" A) The coach blew the whistle and the team sprinted toward the field. B) The coach loudly blew the whistle, and the team sprinted toward the field. C) When the coach blew the whistle, the team sprinted toward the field. D) The coach blew the whistle. The team sprinted fast toward the field.",
-    "choices": [
-      "The coach loudly blew the whistle, and the team sprinted toward the field.",
-      "The coach blew the whistle and the team sprinted toward the field.",
-      "When the coach blew the whistle, the team sprinted toward the field.",
-      "The coach blew the whistle. The team sprinted fast toward the field."
-    ],
-    "answer": "C",
-    "hints": [
-      "A connector is a word such as when, after, because, or so. Which choice adds one of these words to state how the two events are related?",
-      "The whistle-blowing caused the team to sprint. Which word makes that timing relationship clear?"
-    ]
-  },
-  {
-    "id": "m6ela-varying-sentence-patterns-for-style-004",
-    "loId": "m6ela.varying-sentence-patterns-for-style",
-    "cedCode": "M6ELA-6.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this paragraph: \"Maya found her phone. Maya saw a text from her friend. Maya called her friend back. Maya talked for twenty minutes.\" To fix the choppy rhythm by removing the repeated opener and combining related sentences, which revision works best? A) Maya found her phone and saw a text from her friend, then called her back and talked for twenty minutes. B) Maya's phone, which had a text, led her to call and talk. C) Maya found her phone, Maya saw a text, and Maya called her friend back after she talked to her. D) Maya found her phone while seeing a text from her friend and calling her back to talk.",
-    "choices": [
-      "Maya found her phone while seeing a text from her friend and calling her back to talk.",
-      "Maya's phone, which had a text, led her to call and talk.",
-      "Maya found her phone, Maya saw a text, and Maya called her friend back after she talked to her.",
-      "Maya found her phone and saw a text from her friend, then called her back and talked for twenty minutes."
-    ],
-    "answer": "D",
-    "hints": [
-      "Count the repeated 'Maya' openers in the original. Which choice removes that repetition and keeps all four facts?",
-      "The lesson says a real fix removes a repeated opening word or adds a connector. Does this choice do at least one?"
-    ]
-  },
-  {
-    "id": "m6ela-varying-sentence-patterns-for-style-005",
-    "loId": "m6ela.varying-sentence-patterns-for-style",
-    "cedCode": "M6ELA-6.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student writes: \"The final bell rang. Everyone packed their bags. The hallways filled with students.\" The student wants to fix the choppy rhythm. Which statement correctly describes what this revision does? Revision: \"When the final bell rang, everyone packed their bags and the hallways filled with students.\" A) It adds a connector that states the timing relationship and combines related sentences to remove repetition. B) It makes the sentences longer by adding more descriptive words. C) It changes when the bell rang from first to last in time order. D) It removes the repeated opener and changes what happened to make it more interesting.",
-    "choices": [
-      "It adds a connector that states the timing relationship and combines related sentences to remove repetition.",
-      "It joins multiple short sentences into fewer longer sentences by adding extra adjectives and detailed descriptions.",
-      "It rearranges the order of events so the bell rings last instead of at the beginning of the sequence.",
-      "It keeps the repeated subject but eliminates the choppy feeling by introducing additional characters and plot details."
-    ],
-    "answer": "A",
-    "hints": [
-      "What two testable things fix a choppy rhythm? Does this revision do both, or just one?",
-      "Look at the word 'When' and at how many separate sentences the revision makes from the original three."
-    ]
-  },
-  {
-    "id": "m6ela-varying-sentence-patterns-for-style-006",
-    "loId": "m6ela.varying-sentence-patterns-for-style",
-    "cedCode": "M6ELA-6.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A writer submits this passage for the school yearbook: \"The auditorium doors opened. The audience filled every seat. The lights dimmed. The curtain rose slowly. The orchestra began to play.\" The writer asks a peer, \"How should I fix the choppy feel?\" The peer suggests, \"Make the sentences much longer and use bigger words.\" Is the peer's advice a real fix for sentence variety? Why or why not?",
-    "choices": [
-      "Yes, because when you replace common words with more sophisticated vocabulary and expand each sentence to include additional descriptive details, the passage automatically sounds smoother and more polished.",
-      "No, because making sentences longer or using fancier words does not remove a repeated opening word or add a connector that states a relationship.",
-      "Yes, because combining all the short sentences into fewer, longer sentences by adding conjunctions like \"and\" between independent clauses will create the sense of flow and variety the writer wants.",
-      "No, because the choppiness comes from repeatedly starting sentences with \"the,\" and the peer's suggestion of using longer sentences and bigger words does not address that specific pattern or add transitions showing how ideas connect."
-    ],
-    "answer": "B",
-    "hints": [
-      "The lesson says a real fix does one of two specific things you can point at in the words. What are those two things?",
-      "Swapping words or adding length is not the same as removing repetition or stating a relationship. What would actually need to change in these five sentences to fix the choppy rhythm?"
-    ]
-  },
-  {
-    "id": "m6ela-commas-for-extra-information-001",
-    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
-    "cedCode": "M6ELA-6.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What does the removal test help you decide about a part of a sentence?",
-    "choices": [
-      "Whether covering the words with your thumb shows that the part is essential to identify what the sentence is about or whether it adds extra description that could be removed",
-      "Whether the information is nonrestrictive and needs to be set off with matching marks, or restrictive and does not need commas",
-      "Whether a word is spelled correctly in the context of formal writing standards and usage conventions",
-      "Whether the sentence is written as a question, a statement, or an exclamatory form"
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what it means to cover a part of the sentence with your thumb and read what is left.",
-      "The test helps you figure out if the extra part changes what the sentence is talking about."
-    ]
-  },
-  {
-    "id": "m6ela-commas-for-extra-information-002",
-    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
-    "cedCode": "M6ELA-6.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Jordan has three best friends. Which sentence correctly uses commas to show that \"Alex\" is extra information identifying one of those friends?",
-    "choices": [
-      "Jordan's, best friend, Alex loves to skateboard on weekends.",
-      "Jordan's best friend, Alex, loves to skateboard on weekends.",
-      "Jordan's best friend Alex loves to skateboard on weekends.",
-      "Jordan's best friend, Alex loves to skateboard on weekends."
-    ],
-    "answer": "C",
-    "hints": [
-      "When there are three friends, naming one of them tells you which friend is meant, so the name is necessary information.",
-      "Necessary information does not need commas—the sentence needs the name to identify the correct friend."
-    ]
-  },
-  {
-    "id": "m6ela-commas-for-extra-information-003",
-    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
-    "cedCode": "M6ELA-6.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Mr. Park runs exactly one robotics club at the school. Use the removal test: if you cover the words \"the robotics club,\" does the sentence \"Mr. Park, the robotics club, meets on Thursdays\" still point to the same thing? What does this tell you?",
-    "choices": [
-      "No, it changes the meaning significantly, so the words are nonrestrictive and must have a comma placed before and after them to mark the information as removable",
-      "No, it changes the meaning because those words are the only way to identify what the sentence refers to, so they are restrictive and should not have any commas around them",
-      "Yes, it still points to Mr. Park correctly, so the words function as restrictive information that is essential to the sentence and should remain in place without any punctuation marks added",
-      "Yes, it still points to Mr. Park, so the words are nonrestrictive and should be set off with a matching pair of marks."
-    ],
-    "answer": "D",
-    "hints": [
-      "Cover the words and ask: does the sentence still identify the exact same thing without them?",
-      "Since Mr. Park runs only one robotics club, the sentence can point to it just by saying 'Mr. Park' — so the club name is extra."
-    ]
-  },
-  {
-    "id": "m6ela-commas-for-extra-information-004",
-    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
-    "cedCode": "M6ELA-6.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this sentence: \"The book that won the award sits on the top shelf.\" The reader does not know which book is meant without the words \"that won the award.\" After you run the removal test, what should you do to fix the punctuation, and why?",
-    "choices": [
-      "Leave the sentence exactly as it is because this is restrictive information the sentence needs to identify the book.",
-      "Add a comma before \"that\" and after \"award\" because this is nonrestrictive information that needs to be set off.",
-      "Add a comma only after \"award\" because nonrestrictive information at the end needs one mark to set it off.",
-      "Add commas around the word \"book\" to make the sentence clearer for the reader."
-    ],
-    "answer": "A",
-    "hints": [
-      "Cover the words 'that won the award' with your thumb. Can you still tell which book the sentence means without them?",
-      "If covering the words leaves the reader unsure which book is being talked about, the words are restrictive and the sentence needs them."
-    ]
-  },
-  {
-    "id": "m6ela-commas-for-extra-information-005",
-    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
-    "cedCode": "M6ELA-6.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote: \"My neighbor Mrs. Chen waters her garden every morning.\" The student has only one neighbor. The student wants to set off \"Mrs. Chen\" with a pair of dashes instead of commas but made a punctuation error. Which version fixes the mistake?",
-    "choices": [
-      "My neighbor—Mrs. Chen waters her garden every morning.",
-      "My neighbor — Mrs. Chen — waters her garden every morning.",
-      "My neighbor, Mrs. Chen — waters her garden every morning.",
-      "My neighbor — Mrs. Chen, waters her garden every morning."
-    ],
-    "answer": "B",
-    "hints": [
-      "When extra information sits in the middle of a sentence, you need a matching pair of the same mark—one before and one after.",
-      "Dashes are the same mark on both sides; never mix a dash with a comma to open and close the same extra information."
-    ]
-  },
-  {
-    "id": "m6ela-commas-for-extra-information-006",
-    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
-    "cedCode": "M6ELA-6.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A writer has two sentences to punctuate. In the first, Emma has two sisters, and one of them is named Ava. In the second, the writer has exactly one pet, and its name is Whiskers. The writer says, \"Sister Ava helped me study,\" and \"My pet Whiskers ate all the treats.\" Without running the removal test on both, explain why only one of these sentences should have commas around the name, and rewrite the sentence that needs them.",
-    "choices": [
-      "The first sentence needs commas: \"Sister, Ava, helped me study.\" Both names are extra because the writer is talking to Emma and to the pet at the same time.",
-      "The second sentence needs commas: \"My pet, Whiskers, ate all the treats.\" The name Whiskers is necessary to identify which pet, but the name Ava is extra because Emma has two sisters.",
-      "The first sentence needs commas: \"Sister, Ava, helped me study.\" The name Ava is necessary to say which sister, but the name Whiskers is extra because the writer has only one pet.",
-      "Both sentences need commas because all names added to a sentence must be set off to show respect for the people and animals named."
-    ],
-    "answer": "C",
-    "hints": [
-      "Run the removal test on each name separately. Ask: does the sentence still identify the exact same person or animal without the name?",
-      "When there are multiple sisters, naming one tells you which; when there is only one pet, the name just adds extra information."
-    ]
-  },
-  {
     "id": "m6ela-maintaining-consistent-style-tone-001",
     "loId": "m6ela.maintaining-consistent-style-and-tone",
     "cedCode": "M6ELA-6.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of the following best describes what register means in writing? You are deciding what to write for a thank-you note to a teacher versus a text message to a friend.",
+    "problemText": "What does register mean in writing? Choose the definition that matches what you learned in class.",
     "choices": [
-      "The set of rules governing punctuation marks, capitalization, and agreement between subjects and verbs in a written piece",
-      "The structural organization of a piece of writing, including how many paragraphs are needed and how sentences are arranged within them",
+      "The specific pitch and volume a speaker produces when delivering words out loud to an audience",
+      "The official record or log that documents the names and contact details of attendees at a particular gathering or event",
       "How formal or informal a piece of writing needs to be for its audience and purpose",
-      "The central message or idea that a writer chooses to develop and support throughout an entire composition"
+      "The method by which a writer structures and arranges the sequence of paragraphs to guide readers from start to finish"
     ],
     "answer": "C",
     "hints": [
-      "Think about what changes when you write to a teacher versus a friend—is it the topic, or something about how you phrase things?",
-      "Register is about the level of formality a writer chooses for one whole piece."
+      "Think about the difference between writing a school report and texting a friend.",
+      "Register is about the level of formality you choose at the start and keep throughout."
     ]
   },
   {
@@ -366,17 +24,17 @@
     "cedCode": "M6ELA-6.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this student's email to the principal about a school event. Which sentence breaks the email's formal register? The email reads: \"The Environmental Club would like to host an eco-friendly fair in the gym on Earth Day. We have already secured local vendors and organized our display stations. Honestly, the whole project is gonna be absolutely lit, and everyone should totally come. We are requesting permission to use the gym space from 9:00 a.m. to 2:00 p.m.\"",
+    "problemText": "Read this sentence from a thank-you letter to your grandmother: 'The gift was absolutely fire, no cap.' The rest of the letter uses warm, everyday words like 'so happy' and 'loved spending time with you.' Why is this sentence a problem in the letter?",
     "choices": [
-      "The Environmental Club would like to host an eco-friendly fair in the gym on Earth Day.",
-      "We are requesting permission to use the gym space from 9:00 a.m. to 2:00 p.m.",
-      "We have already secured local vendors and organized our display stations.",
-      "Honestly, the whole project is gonna be absolutely lit, and everyone should totally come."
+      "It is a sentence fragment and needs to be fixed with standard grammar",
+      "It does not tell the reader what gift you received from your grandmother",
+      "It is too short compared to the other sentences in the letter",
+      "It uses slang and casual filler words that do not match the warm but respectful register of the rest of the letter"
     ],
     "answer": "D",
     "hints": [
-      "Compare sentences to each other—which one uses casual words and slang that do not match the others?",
-      "Look for contractions, casual filler words, and exaggerated language that stand out from the rest of the piece."
+      "The lesson says a lapse can be a perfectly correct sentence — the problem is not grammar but register.",
+      "Look at what signals a casual register: slang, casual filler words, and exaggeration."
     ]
   },
   {
@@ -385,17 +43,17 @@
     "cedCode": "M6ELA-6.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this excerpt from a friend's letter about a weekend adventure. Which sentence breaks the letter's warm, casual tone? The letter reads: \"We hiked up the mountain trail super early on Saturday morning, and honestly it was so worth it. The sunrise from the top was absolutely beautiful, and we got some amazing photos. The atmospheric conditions facilitated optimal visibility and photographic opportunities. Afterward, we stopped at our favorite diner for pancakes and didn't stop talking until we got home.\"",
+    "problemText": "A student is writing a formal announcement about a field trip for the school website. Most sentences use careful, precise wording like 'Students will depart from the main entrance at 8:30 a.m.' and 'All participants must bring a packed lunch.' Which sentence would break the formal register of this announcement?",
     "choices": [
-      "The atmospheric conditions facilitated optimal visibility and photographic opportunities.",
-      "The sunrise from the top was absolutely beautiful, and we got some amazing photos.",
-      "We hiked up the mountain trail super early on Saturday morning, and honestly it was so worth it.",
-      "Afterward, we stopped at our favorite diner for pancakes and didn't stop talking until we got home."
+      "Honestly, the aquarium is literally the coolest place ever, and you should totally go if you can.",
+      "Chaperones will monitor and assist students during the entire scheduled visit to the aquarium facility.",
+      "All permission slips must be completed, signed by a parent or guardian, and delivered by the deadline of Wednesday.",
+      "The transportation bus will arrive back at school by 3:00 p.m., ensuring students meet the afternoon dismissal schedule."
     ],
     "answer": "A",
     "hints": [
-      "Which sentence sounds stiff and formal compared to the friendly, everyday tone of the other sentences?",
-      "Look for words like 'facilitated,' 'atmospheric conditions,' and 'optimal' that sound like they belong in a textbook, not a letter to a friend."
+      "Formal register uses precise vocabulary and no slang — look for casual filler words in the choices.",
+      "Which sentence uses words like 'honestly,' 'literally,' and 'totally' that do not fit a school announcement?"
     ]
   },
   {
@@ -404,17 +62,17 @@
     "cedCode": "M6ELA-6.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this paragraph for a history assignment on colonial transportation: \"Colonial merchants relied heavily on river routes to transport goods between settlements. Boats were the primary means of shipping everything from grain to textiles. Basically, rivers were like the highways of back then, which was pretty convenient for everyone. Roads were often muddy and impassable during winter months, making water transport essential for survival.\" The student needs to fix one sentence to match the paragraph's formal, informative register. Which revision best replaces the sentence that breaks the tone?",
+    "problemText": "Read this short book review for a school assignment: 'The novel follows a young hero on a dangerous quest to save her village. The author builds tension throughout the story with sharp, suspenseful dialogue. We were literally so hyped while reading the last chapter because the ending was insane. The book teaches important lessons about courage and loyalty.' Identify the sentence that breaks the formal, informative tone and explain why it is the lapse.",
     "choices": [
-      "Basically, rivers served as major trade routes, similar to modern highways in their importance to commerce.",
-      "Rivers functioned as crucial trade arteries, providing the most reliable transportation network in the colonial economy.",
-      "For real, rivers were super important back then because they were basically the only way to move stuff easily.",
-      "Anyway, everyone used rivers because roads were really bad and you could get stuck in the mud all the time."
+      "The first sentence is the lapse because it uses the word 'hero,' which is too casual for a formal review.",
+      "The third sentence is the lapse because it uses slang and casual filler words that do not match the careful, precise wording of the other sentences.",
+      "The second sentence is the lapse because it uses the word 'author,' which does not belong in a book review.",
+      "The fourth sentence is the lapse because it mentions lessons, which is not appropriate for a school assignment."
     ],
     "answer": "B",
     "hints": [
-      "The fix must keep the same information about rivers' importance while matching the formal, informative tone of the rest of the paragraph.",
-      "Which choice uses precise vocabulary and formal transitions instead of casual filler words like 'basically' or 'pretty convenient'?"
+      "First, read the other three sentences and decide what register most of the review is using.",
+      "Look for casual filler words and slang signals, then compare the sentence with the register that the rest of the piece established."
     ]
   },
   {
@@ -423,17 +81,17 @@
     "cedCode": "M6ELA-6.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is revising a personal narrative about learning to ride a bike. The draft reads: \"I was terrified when my dad first took off my training wheels. My heart was pounding so hard I thought it might explode out of my chest. The aforementioned psychological state of anxiety precipitated a moment of hesitation. But then I felt my dad's hand steadying the bike, and I just went for it.\" To fix this paragraph's consistency, the student must rewrite one sentence in the casual, warm register established by the others. Which sentence is the lapse, and what is one clear reason it breaks the tone?",
+    "problemText": "A student wrote this informal text to a friend about a weekend project: 'I finally finished painting my bedroom this weekend and it looks so awesome. We went to the store twice because we did not have enough paint for the first coat. Upon reflection, the acquisition of appropriate materials in advance would have facilitated the completion of said endeavor. I cannot wait to show you the finished room when you visit next month.' Which sentence is the lapse, and what should the student do to fix it?",
     "choices": [
-      "The lapse is 'I was terrified when my dad first took off my training wheels' because it tells the reader directly what the writer felt instead of showing the emotion through descriptive details and actions.",
-      "The lapse is 'My heart was pounding so hard I thought it might explode out of my chest' because it relies on figurative language and comparison, which creates distance from the genuine personal experience being shared.",
-      "The lapse is 'The aforementioned psychological state of anxiety precipitated a moment of hesitation' because it uses stiff, formal vocabulary and jargon that does not match the warm personal tone.",
-      "The lapse is 'But then I felt my dad's hand steadying the bike, and I just went for it' because it uses a series of actions rather than explaining the reasons behind the narrator's decision to proceed."
+      "The first sentence is the lapse; rewrite it to use casual, everyday wording like the rest of the text.",
+      "The second sentence is the lapse; rewrite it to use slang and exaggeration to match the informal tone.",
+      "The third sentence is the lapse; rewrite it in casual, friendly wording that keeps the same information.",
+      "The fourth sentence is the lapse; rewrite it to match the formal vocabulary of the other sentences."
     ],
     "answer": "C",
     "hints": [
-      "Apply the procedure: read all sentences first to establish which register the majority use, then check each sentence against that majority.",
-      "The words 'aforementioned,' 'precipitated,' and 'psychological state of anxiety' are precise, formal language that stands out sharply from the rest."
+      "Identify which register most of the text uses by reading the first, second, and fourth sentences together.",
+      "The lapse will have formal, stiff vocabulary that does not match the warm, casual wording the rest of the piece already established."
     ]
   },
   {
@@ -442,17 +100,359 @@
     "cedCode": "M6ELA-6.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this restaurant review for a local blog: \"The new taco place on Main Street has quickly become my favorite spot for lunch. The al pastor tacos are absolutely delicious, with perfectly seasoned pork and fresh pineapple. This culinary establishment demonstrates exceptional expertise in the application of traditional Mexican preparation techniques. The owner is friendly, the prices are reasonable, and I have already recommended it to all my friends.\" The student wants to maintain a warm, personal tone throughout. Identify which sentence breaks the consistency, explain why it breaks the tone, and describe what would make an effective revision.",
+    "problemText": "A student is revising a formal email to a museum director requesting a group visit. The student has identified this sentence as breaking the register: 'The field trip would be educational for our students and help them learn about art history, which would be sick.' Which of the following revisions best fixes the lapse by keeping the same information in the established formal register?",
     "choices": [
-      "The sentence 'The new taco place on Main Street has quickly become my favorite spot for lunch' breaks the tone because it uses a location reference that sounds too much like a news report instead of a personal recommendation, and it should be rewritten to focus more on the writer's emotional connection to the place.",
-      "The sentence 'The al pastor tacos are absolutely delicious, with perfectly seasoned pork and fresh pineapple' breaks the tone because it shifts away from describing personal feelings and instead provides too many technical ingredient details that distance the reader from the genuine enthusiasm of the earlier sentences.",
-      "The sentence 'The owner is friendly, the prices are reasonable, and I have already recommended it to all my friends' breaks the tone because it suddenly becomes more structured and list-like rather than flowing naturally, making it feel disconnected from the warm, enthusiastic style established throughout most of the review.",
-      "The sentence 'This culinary establishment demonstrates exceptional expertise in the application of traditional Mexican preparation techniques' breaks the tone because it uses stiff, formal vocabulary and jargon instead of the conversational, personal language the rest of the review uses. A revision should describe the tacos in warm, everyday words while keeping the same message about their quality."
+      "The field trip would be educational for our students and help them learn about art history, and that sounds pretty good.",
+      "The field trip would help our sixth-grade students gain knowledge about art history because it is literally the best way to learn.",
+      "The field trip would teach our students about art history, and honestly, it would be really awesome for everyone.",
+      "The field trip would be an excellent educational opportunity that allows our students to deepen their understanding of art history."
     ],
     "answer": "D",
     "hints": [
-      "Compare the vocabulary in each sentence to the vocabulary in the others—which sentence uses words that are noticeably more formal or technical than the rest?",
-      "A successful revision keeps the message (that the tacos are made with skill and care) but rewrites it in the casual, friendly tone established by the opening and closing sentences."
+      "A proper fix replaces the slang word 'sick' with formal, precise vocabulary while preserving the core information about the field trip's educational value.",
+      "Check each choice: Does it remove the casual register completely and use careful word choice that matches a formal email to an official?"
+    ]
+  },
+  {
+    "id": "m6ela-commas-for-extra-information-001",
+    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
+    "cedCode": "M6ELA-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A nonrestrictive element is information that a sentence does not need in order to identify what it is talking about. Which sentence contains a nonrestrictive element that is correctly set off with commas?",
+    "choices": [
+      "My best friend Marcus invited me to his birthday party.",
+      "My best friend, Marcus, invited me to his birthday party.",
+      "The student who finished first got a prize.",
+      "The cake which was chocolate tasted delicious."
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the removal test: cover 'Marcus' and read what is left. Does the sentence still point to the same person?",
+      "Remember that a nonrestrictive element sitting in the middle of a sentence needs a matching pair of marks on both sides."
+    ]
+  },
+  {
+    "id": "m6ela-commas-for-extra-information-002",
+    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
+    "cedCode": "M6ELA-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jordan has three younger brothers. One of them is named Tyler. Jordan wants to write a sentence about something Tyler did. Which sentence correctly punctuates the name to show that Tyler is one of several brothers?",
+    "choices": [
+      "Jordan's brother, Tyler, scored the winning goal in the soccer game.",
+      "Jordan's brother — Tyler — scored the winning goal in the soccer game.",
+      "Jordan's brother Tyler scored the winning goal in the soccer game.",
+      "Jordan's brother, Tyler scored the winning goal in the soccer game."
+    ],
+    "answer": "C",
+    "hints": [
+      "Apply the removal test: cover 'Tyler' and ask whether the sentence still tells you which brother did this.",
+      "Since Jordan has three brothers, the name Tyler is doing necessary identifying work. What punctuation does restrictive information need?"
+    ]
+  },
+  {
+    "id": "m6ela-commas-for-extra-information-003",
+    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
+    "cedCode": "M6ELA-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The school has only one cafeteria. A writer wants to add extra information about when it opens. Which sentence correctly sets off the nonrestrictive information with a matching pair of commas?",
+    "choices": [
+      "The cafeteria opens at 7:00 a.m., which serves breakfast before school.",
+      "The cafeteria which opens at 7:00 a.m. serves breakfast before school.",
+      "The cafeteria which, opens at 7:00 a.m., serves breakfast before school.",
+      "The cafeteria, which opens at 7:00 a.m., serves breakfast before school."
+    ],
+    "answer": "D",
+    "hints": [
+      "Cover the clause 'which opens at 7:00 a.m.' with your thumb. Does the remaining sentence still point to the same cafeteria?",
+      "When extra information sits in the middle of a sentence, it needs a comma before it and a comma after it."
+    ]
+  },
+  {
+    "id": "m6ela-commas-for-extra-information-004",
+    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
+    "cedCode": "M6ELA-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer has written three sentences about a city park. Sentence 1: 'The park which has a new playground is a mile from my house.' Sentence 2: 'My favorite playground, the slide tower, is the tallest one in the city.' Sentence 3: 'The basketball court that has the best rim gets very crowded after school.' The writer learns that Sentence 2 is about the only playground the writer has ever called a favorite. Which of the following correctly describes which sentence is punctuated correctly for the facts given?",
+    "choices": [
+      "Sentence 2 is correct because it uses a matching pair of commas to set off extra information; Sentence 1 needs commas around 'which has a new playground.'",
+      "Sentence 1 is correct because the playground is restrictive; Sentence 2 is wrong because 'the slide tower' is nonrestrictive but has only one comma.",
+      "Sentence 3 is correct because 'that has the best rim' is restrictive information; Sentence 2 needs dashes instead of commas.",
+      "Sentence 1 is correct as written; Sentence 3 needs parentheses because the court is the only one."
+    ],
+    "answer": "A",
+    "hints": [
+      "For each sentence, use the removal test on the part in question. Does the sentence still identify the exact same thing without it?",
+      "Remember: a nonrestrictive element in the middle always needs a matching pair of marks, and opening with one comma but not closing with another leaves the element unpunctuated."
+    ]
+  },
+  {
+    "id": "m6ela-commas-for-extra-information-005",
+    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
+    "cedCode": "M6ELA-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A writer is revising a sentence and wants to change the punctuation from commas to dashes to make the extra information stand out more forcefully. The current sentence is: 'The artist, who painted the mural downtown, is my neighbor.' Which revised sentence correctly uses a matching pair of dashes instead of commas?",
+    "choices": [
+      "The artist — who painted the mural downtown is my neighbor.",
+      "The artist — who painted the mural downtown — is my neighbor.",
+      "The artist — who painted the mural downtown, is my neighbor.",
+      "The artist who painted the mural downtown — is my neighbor."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember the pairing rule: use the SAME mark on both sides of the extra information, never open with one kind and close with another.",
+      "If commas worked on both sides of 'who painted the mural downtown,' then dashes should work the same way — one mark before the clause and one mark after it."
+    ]
+  },
+  {
+    "id": "m6ela-commas-for-extra-information-006",
+    "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
+    "cedCode": "M6ELA-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student has written four sentences. The student knows that Sentence A has two sisters, Sentence B has only one cousin, Sentence C has one school, and Sentence D has multiple trophies won by the same person. Read each sentence and decide which one contains a punctuation error where extra information is concerned. Sentence A: 'My sister Elena loves to draw.' Sentence B: 'My cousin, who moved here last year, sits next to me in math class.' Sentence C: 'The school that offers the most sports programs is fifteen miles away.' Sentence D: 'The swimmer, Jorge, won three gold medals at the meet.'",
+    "choices": [
+      "Sentence A — it should have commas around 'Elena' because the name identifies which sister",
+      "Sentence B — the clause 'who moved here last year' is restrictive and should have no commas",
+      "Sentence D — it needs a second comma after 'Jorge' to close off the appositive in the middle",
+      "Sentence C — the clause 'that offers the most sports programs' is nonrestrictive and should have commas"
+    ],
+    "answer": "C",
+    "hints": [
+      "Apply the removal test to each sentence. For Sentence A, cover 'Elena' — does the writer have two sisters, so the name must identify which one?",
+      "For Sentence D, check whether the name sits in the middle of the sentence. If it does, a mid-sentence nonrestrictive element needs a matching pair of marks, not just one."
+    ]
+  },
+  {
+    "id": "m6ela-sentence-fragments-run-ons-001",
+    "loId": "m6ela.sentence-fragments-and-run-ons",
+    "cedCode": "M6ELA-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A complete sentence must have three parts. Which group of words is missing one of those three parts and is therefore a fragment?\n\nRead each option and decide which one cannot stand on its own.",
+    "choices": [
+      "It went off early in the morning.",
+      "The alarm went off early.",
+      "The alarm went off.",
+      "Because the alarm went off early."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for a starter word like because, although, when, or since that leaves you waiting for more.",
+      "A fragment has a subject and verb but the starter word keeps the thought unfinished."
+    ]
+  },
+  {
+    "id": "m6ela-sentence-fragments-run-ons-002",
+    "loId": "m6ela.sentence-fragments-and-run-ons",
+    "cedCode": "M6ELA-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence and decide which problem it has.\n\n\"The skateboard ramp was closed, the park locked all the gates.\"",
+    "choices": [
+      "It is a comma splice with two complete sentences joined by only a comma.",
+      "It is a fragment missing a subject.",
+      "It is a run-on with no punctuation between two complete sentences.",
+      "It is correct as written."
+    ],
+    "answer": "A",
+    "hints": [
+      "Test each part before and after the comma to see if it has a subject, verb, and finished thought.",
+      "A comma by itself is not strong enough to hold two complete sentences apart."
+    ]
+  },
+  {
+    "id": "m6ela-sentence-fragments-run-ons-003",
+    "loId": "m6ela.sentence-fragments-and-run-ons",
+    "cedCode": "M6ELA-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence is written correctly and needs no fix?\n\nConsider whether each one has a subject, verb, and finished thought, or if it has two complete sentences joined incorrectly.",
+    "choices": [
+      "After the movie ended we went for ice cream.",
+      "We went for ice cream because the movie ended.",
+      "The movie ended, we went for ice cream.",
+      "The movie ended we went for ice cream."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check for starter words that need a comma only when they come first.",
+      "Look for a comma between two complete sentences — that is a splice unless there is a joining word too."
+    ]
+  },
+  {
+    "id": "m6ela-sentence-fragments-run-ons-004",
+    "loId": "m6ela.sentence-fragments-and-run-ons",
+    "cedCode": "M6ELA-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this pair of sentences. One has an error and one does not.\n\nSentence 1: \"Since the buses were delayed, the morning announcements started late.\"\nSentence 2: \"Since the buses were delayed. The morning announcements started late.\"\n\nWhich sentence is correct, and what is wrong with the other one?",
+    "choices": [
+      "Sentence 2 is correct because it uses a period to separate two independent thoughts about the buses and the announcements.",
+      "Sentence 2 is correct; Sentence 1 is a run-on because it has a comma between two complete sentences.",
+      "Sentence 1 is correct; Sentence 2 is a fragment because a period cannot follow a starter word without a complete sentence attached.",
+      "Sentence 1 is correct; Sentence 2 is incorrect because the dependent clause \"Since the buses were delayed\" is left hanging without a complete thought to complete its meaning."
+    ],
+    "answer": "C",
+    "hints": [
+      "A starter word like since must be attached to a complete sentence; a period separates them instead.",
+      "Test the first part of Sentence 2 — does it have a finished thought, or is it waiting for more?"
+    ]
+  },
+  {
+    "id": "m6ela-sentence-fragments-run-ons-005",
+    "loId": "m6ela.sentence-fragments-and-run-ons",
+    "cedCode": "M6ELA-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Fix this sentence three different ways. \"The computer crashed my project was gone.\"\n\nWhich answer shows all three legal fixes for this error?",
+    "choices": [
+      "Delete some words, or use a dash, or add a noun to the first part.",
+      "Add a period, or use a semicolon, or use a comma and a starter word like because.",
+      "Use a comma, or flip the order, or add a joining word.",
+      "Add a period, or use a semicolon, or use a comma and a joining word like so."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember the three legal fixes: period, semicolon, or comma plus a joining word (for, and, nor, but, or, yet, so).",
+      "A joining word connects two complete sentences; a starter word begins an unfinished thought that needs to attach to a complete sentence."
+    ]
+  },
+  {
+    "id": "m6ela-sentence-fragments-run-ons-006",
+    "loId": "m6ela.sentence-fragments-and-run-ons",
+    "cedCode": "M6ELA-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read these four attempts to fix the fragment. \"Although the concert tickets sold out in minutes.\"\n\nEach writer tried a different strategy. Only one actually fixes the error. Which one is correct and works as a legal repair?",
+    "choices": [
+      "Although the concert tickets sold out in minutes, fans are already planning for next year's show.",
+      "Although the concert tickets sold out in minutes; fans are already planning for next year's show.",
+      "Although the concert tickets sold out in minutes. Fans are already planning for next year's show.",
+      "Although the concert tickets sold out in minutes, but fans are already planning for next year's show."
+    ],
+    "answer": "A",
+    "hints": [
+      "A starter word must be attached to a complete sentence with a comma when it comes first; not separated by a period or semicolon.",
+      "Do not use both a starter word and a joining word in the same fix — that creates a different error."
+    ]
+  },
+  {
+    "id": "m6ela-varying-sentence-patterns-for-style-001",
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "cedCode": "M6ELA-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What does it mean when a paragraph has sentence variety? Which statement describes what sentence variety changes and what it does not change?",
+    "choices": [
+      "It changes the shape of sentences by mixing their length and openers, but keeps all the facts and meaning exactly the same.",
+      "It changes the meaning of the sentences and adds new facts to make writing more interesting.",
+      "It removes short sentences entirely and replaces them with longer, fancier words throughout the entire paragraph.",
+      "It changes which facts appear in the paragraph and reorganizes events so the reader stays more focused."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for the choice that mentions shape rather than meaning or facts.",
+      "The lesson emphasized that sentence variety changes how sentences sound and look, not what they say."
+    ]
+  },
+  {
+    "id": "m6ela-varying-sentence-patterns-for-style-002",
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "cedCode": "M6ELA-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this paragraph from a student's journal:\n\n\"I woke up early. I grabbed my soccer gear. I met my friends at the field.\"\n\nWhat is the repeated pattern a reader would notice first before understanding the content of these sentences?",
+    "choices": [
+      "The word 'early' is mentioned in the first sentence.",
+      "All three sentences have the exact same opening word, 'I'.",
+      "Each sentence is about a different time of day.",
+      "The sentences are in alphabetical order by their second word."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson taught that the most noticeable repeated pattern is what word or phrase appears at the start of each sentence.",
+      "Look only at the first word of each sentence in the paragraph."
+    ]
+  },
+  {
+    "id": "m6ela-varying-sentence-patterns-for-style-003",
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "cedCode": "M6ELA-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is revising two sentences for the class newsletter:\n\n\"The gym door was locked. The students waited outside.\"\n\nThe student wants to state the relationship between what happened first and what happened second. Which revision uses a connector to show that relationship without adding or changing any facts?",
+    "choices": [
+      "The gym door was very locked, and the students definitely waited outside.",
+      "The gym door was locked. The students were waiting outside in the cold.",
+      "Since the gym door was locked, the students waited outside.",
+      "The locked gym door made the students wait outside for a long time."
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the choice that adds a connector word like 'when,' 'after,' 'because,' or 'so' to state the connection.",
+      "The connector should explain why the students waited, not just make the sentences longer or change the wording."
+    ]
+  },
+  {
+    "id": "m6ela-varying-sentence-patterns-for-style-004",
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "cedCode": "M6ELA-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A paragraph for the school blog reads:\n\n\"The rain started during lunch. The rain flooded the playground. The principal moved everyone indoors. The principal sent an email home to families.\"\n\nWhat are the two specific fixes a revision must make to truly improve this paragraph's sentence variety? Choose the answer that names both fixes needed.",
+    "choices": [
+      "Replace the repeated 'The rain' opener by combining those two sentences, and replace the repeated 'The principal' opener by giving at least one of those sentences a different starting word.",
+      "Move the word 'the' to a different position in the first sentence and change 'moved' to 'shifted' in the third sentence.",
+      "Delete every other sentence so the paragraph is shorter and easier to read.",
+      "Combine the two sentences that start with 'The rain' and give at least one other sentence a different opener instead of starting with 'The principal'."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember the two testable fixes: removing a repeated opener (three or more times in a row) and adding a connector that states a relationship.",
+      "Look for which choice identifies both a repeated opening word and a way to address it, plus gives a different opener to another sentence."
+    ]
+  },
+  {
+    "id": "m6ela-varying-sentence-patterns-for-style-005",
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "cedCode": "M6ELA-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this paragraph for a story:\n\n\"The storm arrived suddenly. The storm knocked down tree branches. It scattered leaves everywhere.\"\n\nThe student's teacher says the paragraph is 'correct but still choppy.' What revision would fix the choppiness while keeping every single fact from the original sentences?",
+    "choices": [
+      "The sudden storm knocked down tree branches and scattered leaves everywhere.",
+      "The storm arrived suddenly and knocked down very many tree branches, scattering leaves in every direction.",
+      "When the storm arrived suddenly, it knocked down tree branches and scattered leaves everywhere.",
+      "A heavy and powerful storm arrived, knocked down branches, and sent leaves all over."
+    ],
+    "answer": "A",
+    "hints": [
+      "The repeated opener 'The storm' appears in the first two sentences; combine them to remove that repetition.",
+      "Check that your choice keeps all four original facts (the storm, suddenly arriving, knocking down branches, and scattering leaves) without adding new details."
+    ]
+  },
+  {
+    "id": "m6ela-varying-sentence-patterns-for-style-006",
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "cedCode": "M6ELA-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student rewrote a paragraph this way:\n\nOriginal: \"We found a turtle by the pond. We called the wildlife center. They sent a specialist.\"\n\nRevision: \"When we found a turtle by the pond, we called the wildlife center, and they sent a specialist.\"\n\nThe student claims this revision fixes the choppiness. Using what the lesson taught about testable fixes, explain whether this student's claim is correct. Which statement accurately describes what the revision does?",
+    "choices": [
+      "The revision fails to address choppiness because it keeps the subject 'we' at the start of multiple clauses and does not combine the sentences properly into one.",
+      "The revision fixes the choppiness by combining sentences and adding the connector 'when' that states the timing relationship, even though no single opener was repeated three times in a row.",
+      "The revision creates a serious sentence error because it combines three independent sentences with only commas and loses the original meaning of the events.",
+      "The revision improves only slightly because it adds 'when' but then introduces another connector 'and' that makes the sentence confusing instead of clearer."
+    ],
+    "answer": "B",
+    "hints": [
+      "A testable fix does one of two things: it removes a repeated opener (three or more in a row), or it adds a connector that states a relationship between ideas.",
+      "Even though 'we' is not repeated four times in a row, the revision still uses 'when' to state when the events happened—this is one of the two valid reasons to revise."
     ]
   }
 ]

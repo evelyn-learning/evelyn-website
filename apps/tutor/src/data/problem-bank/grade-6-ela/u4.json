@@ -228,136 +228,22 @@
     ]
   },
   {
-    "id": "m6ela-tracing-an-argument-001",
-    "loId": "m6ela.tracing-an-argument",
-    "cedCode": "M6ELA-4.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What is the difference between a reason and evidence in an argument? Use the definitions from the lesson to explain.",
-    "choices": [
-      "A reason is something everybody already knows, and evidence is information from outside the text.",
-      "A reason is a claim that the writer wants the reader to accept, and evidence is a sentence that sounds confident about it.",
-      "A reason is what comes at the end of a paragraph, and evidence is what comes at the beginning.",
-      "A reason explains why a claim should be believed, and evidence is the specific fact, count, or example that backs the reason up."
-    ],
-    "answer": "D",
-    "hints": [
-      "Look for the definitions taught in the lesson content.",
-      "Remember that evidence must be something actually printed in the text, not outside knowledge."
-    ]
-  },
-  {
-    "id": "m6ela-tracing-an-argument-002",
-    "loId": "m6ela.tracing-an-argument",
-    "cedCode": "M6ELA-4.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this claim from an argument: \"Walking to school is healthier than riding the bus.\" The next sentence says: \"When you walk, your body moves and your heart pumps blood, which strengthens your cardiovascular system over time.\" Is this claim supported or not supported?",
-    "choices": [
-      "Supported, because a reason and evidence are attached right after the claim.",
-      "Not supported, because the reason given is about the bus instead of about walking.",
-      "Not supported, because confident-sounding words like \"healthier\" are used.",
-      "Supported, but only if students actually believe walking is better than the bus."
-    ],
-    "answer": "A",
-    "hints": [
-      "Check the sentence right after the claim for a reason and evidence.",
-      "The reason explains how walking strengthens the body—does it back up the claim about health?"
-    ]
-  },
-  {
-    "id": "m6ela-tracing-an-argument-003",
-    "loId": "m6ela.tracing-an-argument",
-    "cedCode": "M6ELA-4.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following sentences from an argument is a specific claim that is NOT supported? \"The school cafeteria should add salad to the lunch menu. Adding salad would give students a healthy vegetable option. Studies show that students who eat vegetables at lunch have better concentration in afternoon classes. Salad is obviously the most delicious thing anyone could ever eat.\"",
-    "choices": [
-      "Adding salad would give students a healthy vegetable option.",
-      "Salad is obviously the most delicious thing anyone could ever eat.",
-      "The school cafeteria should add salad to the lunch menu.",
-      "Studies show that students who eat vegetables at lunch have better concentration in afternoon classes."
-    ],
-    "answer": "B",
-    "hints": [
-      "Look for a claim that the text states and then moves on from, with no reason or fact backing it up.",
-      "Do not let confident-sounding words like \"obviously\" fool you into thinking a claim has evidence."
-    ]
-  },
-  {
-    "id": "m6ela-tracing-an-argument-004",
-    "loId": "m6ela.tracing-an-argument",
-    "cedCode": "M6ELA-4.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this argument: \"The community center should extend its library hours until 8 p.m. on weeknights. Working parents cannot pick up their children before the current 5 p.m. closing time, so they miss out on library programs. Opening until 8 p.m. would give working families time to visit after work. Extended hours are definitely something every library should do.\" Identify which specific claim is supported by a reason and evidence, and explain why the other is not supported.",
-    "choices": [
-      "Both claims are supported because the argument uses strong language like \"definitely\" to show the author believes in both the idea about extended hours and the impact on working parents, making them equally convincing and important.",
-      "The claim about extended hours is supported by mentioning the time 8 p.m., while the claim about working parents missing programs is not supported because it fails to describe what specific library programs are most popular with families.",
-      "The claim about working parents missing programs is supported because it gives a reason (they cannot pick up before 5 p.m.) and an example (library programs). The claim about what every library should do is not supported because it is only a confident opinion with no reason or fact attached.",
-      "The claim about what every library should do is supported because it uses the word \"definitely,\" while the claim about working parents missing programs is not supported because it does not provide a specific number of affected families."
-    ],
-    "answer": "C",
-    "hints": [
-      "Follow the two steps: find each specific claim, then look at the sentences right around it for a reason and evidence.",
-      "Remember that confident wording like \"definitely\" or \"every library\" is tone, not a reason or fact."
-    ]
-  },
-  {
-    "id": "m6ela-tracing-an-argument-005",
-    "loId": "m6ela.tracing-an-argument",
-    "cedCode": "M6ELA-4.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "An argument states: \"The school should switch to a later start time.\" The next two sentences are: \"Students would get more sleep because they would have an extra hour in the morning. Research shows that teenagers need eight to ten hours of sleep per night and that most teenagers do not get that much sleep currently.\" Is the claim supported? Which sentence or sentences provide the evidence needed to support it?",
-    "choices": [
-      "No, the claim is not supported because the text does not explain the specific reasons why the school administration chose the current start time or what challenges they might face changing it.",
-      "No, the claim is not supported because there is no guarantee that students with an extra hour in the morning would actually use that time to sleep instead of other activities.",
-      "Yes, the claim is supported, but only because the word \"research\" appears in the text, which automatically means that credible sources are backing up the entire argument being made in the passage.",
-      "Yes, the claim is supported. The reason is that students would get more sleep with an extra hour, and the evidence is the research about how much sleep teenagers need and how much they currently get."
-    ],
-    "answer": "D",
-    "hints": [
-      "The reason explains why students would benefit; the evidence is the printed fact about teenage sleep needs.",
-      "Do not evaluate whether the reasoning is truly sound—only sort whether a reason and evidence are actually there in the text."
-    ]
-  },
-  {
-    "id": "m6ela-tracing-an-argument-006",
-    "loId": "m6ela.tracing-an-argument",
-    "cedCode": "M6ELA-4.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read this longer argument: \"The town should build a public swimming pool in the park. A pool would give children a safe place to cool off during hot summer months. Right now, many families cannot afford memberships at private pools, so their children miss out on a way to stay healthy and have fun. Building a public pool would cost money, but it would serve hundreds of families every summer. Kids at other towns with public pools love them and think they're amazing.\" Trace all the specific claims in this argument and identify which ones are supported and which are not supported by reasons and evidence printed in the text.",
-    "choices": [
-      "Three claims are supported: the pool would give kids a safe place, many families cannot afford private pools (proven by the fact that families miss out), and a public pool would serve hundreds. One claim is not supported: kids love pools because they think they are amazing.",
-      "Two claims are supported because they mention specific places and groups: the claim about kids loving pools at other towns and the claim about a safe place to cool off in summer months. Two claims are not supported because they discuss costs and affordability issues without citing actual budget figures.",
-      "All claims are supported equally because the text provides reasoning and background information for every statement made in the argument.",
-      "Only one claim is supported by facts rather than opinions: the claim about the cost of building. The other three claims depend on personal feelings and beliefs rather than concrete evidence or statistics."
-    ],
-    "answer": "A",
-    "hints": [
-      "Separate the main claim (what the town should do) from the specific claims meant to convince the reader it should be done.",
-      "For each specific claim, look at the surrounding sentences for a printed reason and fact—not outside knowledge, and not confident tone."
-    ]
-  },
-  {
     "id": "m6ela-comparing-two-authors-accounts-001",
     "loId": "m6ela.comparing-two-authors-accounts",
     "cedCode": "M6ELA-4.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Two students write accounts of the same school assembly that happened on Tuesday. Before you compare what each student included, what must you check first?",
+    "problemText": "Two accounts describe the same field trip to a museum. Before you can compare what each account includes and leaves out, what must you check first?",
     "choices": [
-      "That both accounts describe the same event—the same day, place, and happening",
-      "That one account is longer than the other one and therefore more detailed and accurate",
-      "That both students used the same words and phrases to describe what they observed happening",
-      "That both accounts include the writers' personal feelings and emotions about what occurred"
+      "You must confirm that both accounts describe the same event—the same day, the same place, the same trip.",
+      "You must count how many sentences each account has to see which one is longer.",
+      "You must decide which account sounds more like a personal letter and which sounds more like an official report.",
+      "You must identify which account includes numbers and which one includes feelings."
     ],
     "answer": "A",
     "hints": [
-      "The lesson says to confirm the event matches before comparing anything else.",
-      "Think about what 'same event' means—what details have to line up?"
+      "The lesson teaches a step-by-step method for comparing accounts. What comes first?",
+      "Look back at the worked examples—what do they do before making any lists of what each account adds?"
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read these two accounts of a field trip to the science museum:\n\nSource A (a student's journal): \"We went to the science museum on Friday and spent the most time in the space exhibit. The planetarium show made me feel so small looking at all those stars.\"\n\nSource B (the teacher's field trip report): \"The class visited the science museum on Friday. Students explored four exhibits and attended a planetarium show.\"\n\nWhich fact appears in BOTH accounts?",
+    "problemText": "Read both accounts of the same soccer game.\n\nSource A (a player's text to a friend): \"Our team won 3–2 against Lincoln Middle School on Wednesday afternoon, and I scored two of our goals. I was so nervous before the game that I almost threw up in the locker room.\"\n\nSource B (the school's sports newsletter): \"The girls' soccer team defeated Lincoln Middle School 3–2 on Wednesday afternoon in a competitive match that came down to the final minutes.\"\n\nWhich fact appears in BOTH accounts?",
     "choices": [
-      "The class spent more time in the space exhibit than in any other exhibit at the museum",
-      "The class visited the science museum on Friday and saw a planetarium show",
-      "The planetarium show made students feel small and insignificant when they looked up at the stars",
-      "Students explored exactly four different exhibits and spent equal time in each one"
+      "The player's nervousness before the game in the locker room.",
+      "The team won 3–2 against Lincoln Middle School on Wednesday afternoon.",
+      "The match came down to the final minutes.",
+      "The player scored two of the team's three goals."
     ],
     "answer": "B",
     "hints": [
-      "Look for the sentence or words that appear in both Source A and Source B with the same meaning.",
-      "Shared facts are the parts that both writers mention, no matter how they phrase it."
+      "Shared facts appear in both sources using the same or very similar language. Look for the sentence that repeats across both accounts.",
+      "A detail that only one account mentions—like feelings or nervousness—is not a shared fact."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read these two accounts of a sports tournament:\n\nSource A (a coach's email): \"Our soccer team played in the tournament on Saturday and won two games. The team stayed focused and communicated well on the field.\"\n\nSource B (the sports league's standings): \"Our soccer team played in the tournament on Saturday and won two games. The team scored eight goals total and allowed only two goals against.\"\n\nWhich detail appears in Source A but NOT in Source B?",
+    "problemText": "Read both accounts of the same science project fair.\n\nSource A (a student's journal entry): \"Today was our school's science fair, and I set up my water filtration project on table seven. I spent three hours there answering questions about my experiment, and my little sister came to watch and brought me a juice box when I was thirsty.\"\n\nSource B (the science teacher's report): \"Our school held its annual science fair today. Forty-two students displayed projects covering topics from robotics to plant biology. The fair ran from 1 p.m. to 4 p.m. in the gymnasium.\"\n\nWhat detail appears in Source A but NOT in Source B?",
     "choices": [
-      "The team won two games",
-      "The team scored eight goals total",
-      "The team stayed focused and communicated well on the field",
-      "The tournament took place on Saturday"
+      "The fair ran from 1 p.m. to 4 p.m.",
+      "The projects covered robotics and plant biology topics.",
+      "The student's sister brought juice during the fair.",
+      "The science fair took place at the school today."
     ],
     "answer": "C",
     "hints": [
       "Look at what Source A includes that Source B does not mention at all.",
-      "One account talks about how the team played mentally; the other gives numbers instead."
+      "A personal account like a journal entry often includes details about feelings and people close to the writer. An official report often leaves those details out."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read these two accounts of a school talent show:\n\nSource A (a student's text to a friend): \"The talent show was amazing last night! My best friend performed a dance routine and was so nervous beforehand, but the audience loved it and she got a huge standing ovation.\"\n\nSource B (the school's announcement): \"Last night's talent show featured twenty student performers. Performers included dancers, singers, and musicians. The event raised $300 for the school's arts program.\"\n\nBoth accounts describe the same talent show. What is the shared fact that both accounts state?",
+    "problemText": "Read both accounts of a community garden volunteer day.\n\nSource A (a volunteer's blog post): \"Twenty-five neighbors worked together on Saturday morning to plant spring vegetables in our community garden beds. Everyone was smiling and chatting as we dug in the soil, and by lunchtime we had already planted tomatoes, peppers, squash, and lettuce. It felt like we were doing something that really mattered to our neighborhood.\"\n\nSource B (the parks department's monthly report): \"On Saturday morning, twenty-five volunteers planted spring vegetables in the community garden on Maple Street. The team completed planting in all six raised beds and worked for three hours, starting at 9 a.m. The parks department provided all tools and seed stock.\"\n\nBoth accounts describe the same volunteer day. Which statement BEST explains how they differ in what they include?",
     "choices": [
-      "The audience gave a standing ovation to the performers",
-      "The best friend performed a dance routine",
-      "The event raised money for the school's arts program",
-      "The talent show happened last night and included student performers"
+      "Source A emphasizes the emotional experience and sense of community purpose, while Source B emphasizes the location, the number of beds planted, the duration of work, and the source of equipment.",
+      "Source A names the specific vegetables that were planted but Source B does not mention them at all, suggesting Source B was written by someone who did not attend the event.",
+      "Source A reports only positive observations about the volunteers' mood and accomplishment, while Source B includes only factual measurements of time and resources that make the day sound less meaningful.",
+      "Source A focuses on how the volunteers felt and what they accomplished together, while Source B focuses on details like the number of beds, the time worked, and who provided the supplies."
     ],
     "answer": "D",
     "hints": [
-      "Find what both sources mention, even if they say it in different ways or with different amounts of detail.",
-      "The shared fact is the core event itself—what date, what kind of event, and who was involved."
+      "Both accounts report the same event. Neither contradicts the other. The difference is in selection and emphasis—what each writer chose to spend words describing.",
+      "What does Source A emphasize through repeated words and sentences? What does Source B emphasize through numbers and logistics?"
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read these two accounts of a community garden project:\n\nSource A (a volunteer's blog post): \"Working in the community garden on Sunday morning felt peaceful. We planted tomatoes, beans, and lettuce, and by lunchtime my hands were dirty but my heart was full.\"\n\nSource B (the park district's project log): \"Community garden volunteers worked on Sunday morning. They planted tomatoes, beans, and lettuce in twelve new garden beds. The work was completed by noon.\"\n\nHow do these two accounts differ in what they choose to include?",
+    "problemText": "Two accounts describe the same book club meeting.\n\nSource A (a member's email to a friend): \"The Riverside Book Club met on Tuesday evening to discuss our latest read. Everyone had finished the book except Marcus, and the group spent two hours talking about how much they loved the main character's journey. We laughed so hard at one scene that someone spilled coffee on the carpet.\"\n\nSource B (the club's official meeting notes): \"Tuesday evening book club meeting. Attendance: 8 members. Book discussed: The Wanderer's Path. Meeting ran 7 p.m. to 9 p.m. The club voted to read The Mountain House next month.\"\n\nWhich of the following correctly identifies a shared fact and explains why it is shared?",
     "choices": [
-      "Source A emphasizes personal feelings about the work, while Source B emphasizes numbers and completion time",
-      "Source A describes volunteer emotions and inner thoughts, while Source B reports facts like quantity of beds and duration",
-      "Source B includes measurements and specific counts of items, while Source A focuses on sensory details and subjective mood",
-      "Source A discusses the volunteer's personal experience and peace, while Source B documents the task with concrete data"
+      "The group spent two hours talking is shared because Source B shows the meeting was 7 p.m. to 9 p.m.",
+      "The Riverside Book Club met on Tuesday evening to discuss their latest read is shared because both accounts use these same words.",
+      "Everyone had finished the book except Marcus is shared because both accounts mention Marcus.",
+      "Someone spilled coffee is shared because both accounts describe events that happened during the meeting."
     ],
     "answer": "A",
     "hints": [
-      "Look at what each account spends its words describing—one focuses on feelings, the other on facts and numbers.",
-      "Think about emphasis: what does each writer care most about reporting?"
+      "A shared fact must be a detail that both accounts state or clearly confirm. Look for what both sources agree on, even if they use different words to say it.",
+      "Source B gives the meeting time as 7 p.m. to 9 p.m., which is two hours. Does Source A's claim about two hours match that information?"
     ]
   },
   {
@@ -442,17 +328,112 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read these two accounts of a book club meeting:\n\nSource A (a member's personal note): \"Our book club met Tuesday evening to discuss the mystery novel everyone loved. Sarah said it was her favorite book this year because the plot twists surprised her, and we all stayed talking until the library closed.\"\n\nSource B (the library's program summary): \"A book club met Tuesday evening in the library's meeting room to discuss a mystery novel. Eight members attended. The group met from 6 to 8 PM and discussed plot, characters, and themes.\"\n\nBoth accounts describe the same book club meeting. Which statement correctly identifies a shared fact AND explains how the two accounts differ?",
+    "problemText": "Read these two accounts of a school assembly.\n\nSource A (student council president's speech, printed in the school newspaper): \"Last Friday's assembly brought our entire school together for our annual awards ceremony. I felt proud watching sixth graders, seventh graders, and eighth graders stand on stage to receive certificates for art, music, sports, and academic achievement. The auditorium was packed, and you could hear the crowd cheering every time someone's name was called.\"\n\nSource B (a substitute teacher's note in the classroom log): \"Attended mandatory assembly on Friday. Approximately 500 students and staff present. Program lasted 45 minutes. Awards were presented in four categories. Two students had technical difficulties with their microphones during the program.\"\n\nBased on both accounts, which statement is true?",
     "choices": [
-      "Both accounts describe the same Tuesday evening meeting, but Source A says the library closed while Source B says the meeting ended at 8 PM",
-      "Both accounts mention a mystery novel, but Source A focuses on one member's opinion while Source B includes the meeting time and number of attendees",
-      "Both accounts happened at the book club, but Source A reports only Sarah's thoughts while Source B reports all eight members' thoughts",
-      "Both accounts describe characters and themes, but Source A emphasizes Sarah's favorite book while Source B emphasizes the novel's plot twists"
+      "The accounts disagree about whether awards were given in multiple categories, so they cannot be describing the same assembly because Source A names specific categories while Source B does not.",
+      "Both accounts describe the same assembly with the same awards ceremony, but Source A emphasizes the feeling of pride and unity while Source B emphasizes the size of the crowd and the length and technical details of the program.",
+      "Source B reports a technical problem during the assembly, while Source A reports only positive feelings about the awards, which means Source A deliberately left out negative information to make the assembly sound better than it was.",
+      "Source A is more accurate because it focuses on students' emotional experiences and accomplishments, whereas Source B only records factual data like attendance numbers and duration without capturing the meaningful purpose of the event."
     ],
     "answer": "B",
     "hints": [
-      "First identify the shared fact—what both accounts definitely state about the same event. Then look at what each one adds that the other leaves out.",
-      "Remember: different choices about what to include are not contradictions. A personal note and a program summary naturally focus on different things."
+      "Remember: different details and different emphasis are not the same as disagreement. Check whether both accounts state the core event the same way.",
+      "Notice what each writer chose to include: one focuses on emotion and pride, the other on numbers and logistics. What does the lesson call this difference?"
+    ]
+  },
+  {
+    "id": "m6ela-tracing-an-argument-001",
+    "loId": "m6ela.tracing-an-argument",
+    "cedCode": "M6ELA-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to the lesson, what two things must be attached to a specific claim in order for it to count as supported?",
+    "choices": [
+      "A fact and the writer's opinion",
+      "A reason and confident wording",
+      "Evidence and a main claim",
+      "A reason and evidence"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what the lesson calls the two building blocks that back up a claim.",
+      "Evidence is the specific fact or example, and a reason explains why the claim should be believed."
+    ]
+  },
+  {
+    "id": "m6ela-tracing-an-argument-002",
+    "loId": "m6ela.tracing-an-argument",
+    "cedCode": "M6ELA-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this short argument: 'Our school should start a lunch exchange program. Students who bring lunch from home could trade items they do not want with other students. This would reduce food waste because students are more likely to eat food they actually chose instead of throwing it away.' Which specific claim in this argument is supported by a reason and evidence?",
+    "choices": [
+      "This would reduce food waste because students are more likely to eat food they actually chose instead of throwing it away",
+      "Our school should start a lunch exchange program because it would be simple to organize and manage during lunch periods",
+      "Students who bring lunch from home could trade items they do not want with other students since many students pack extra snacks",
+      "A lunch exchange program would improve student happiness because students get to interact with their classmates during the lunch period"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for a sentence that has both a reason (why) and evidence (a fact or explanation) right next to it.",
+      "The word 'because' in the sentence signals that a reason is being given."
+    ]
+  },
+  {
+    "id": "m6ela-tracing-an-argument-003",
+    "loId": "m6ela.tracing-an-argument",
+    "cedCode": "M6ELA-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage: 'The school should require all students to bring reusable water bottles instead of buying plastic ones. Plastic bottles take hundreds of years to break down in the environment. Students who use the same bottle every day create far less trash than students who buy a new bottle each week. Reusable bottles are also obviously the coolest thing anyone could carry.' A student claims that the specific claim about plastic bottles breaking down slowly is supported, while the specific claim about reusable bottles being 'the coolest thing' is not. Explain which one is correct and why, based on the definition of a supported claim.",
+    "choices": [
+      "The student is wrong about both claims; neither one has evidence attached to it",
+      "The student is correct; both claims are actually supported, so the student made an error",
+      "The student is correct; the plastic breakdown claim has a reason and fact, but the 'coolest' claim does not",
+      "The student is wrong about the first claim; confident words like 'obviously' always mean a claim is supported"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether each claim has a real reason and fact next to it, or whether it just stands alone.",
+      "Remember that confident words like 'obviously' or 'coolest' are tone, not evidence."
+    ]
+  },
+  {
+    "id": "m6ela-tracing-an-argument-004",
+    "loId": "m6ela.tracing-an-argument",
+    "cedCode": "M6ELA-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is tracing this argument: 'The school cafeteria should add a salad bar with fresh vegetables. Fresh vegetables are healthier for students than the fried foods the cafeteria serves most days. Students who eat more vegetables have better energy and focus in their afternoon classes, and research shows that diets high in vegetables lower the risk of heart disease later in life. Adding a salad bar would definitely be popular with everyone.' The student identifies three specific claims and must sort each as supported or not supported. What is the correct sort for all three?",
+    "choices": [
+      "All three claims are supported because they all sound important",
+      "The first and third claims are supported; the second claim is not supported",
+      "Only the second claim is supported because it mentions research",
+      "The first and second claims are supported; the third claim is not supported"
+    ],
+    "answer": "D",
+    "hints": [
+      "Go through each claim one by one and check whether reason and evidence actually appear in the text right around it.",
+      "The last claim has words like 'definitely' and 'popular,' but do those same words come with a real fact or reason?"
+    ]
+  },
+  {
+    "id": "m6ela-tracing-an-argument-005",
+    "loId": "m6ela.tracing-an-argument",
+    "cedCode": "M6ELA-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this argument: 'The school should invest in solar panels on the roof of the main building. Solar panels would lower the school's electricity costs because they convert sunlight into power and reduce how much energy the school has to buy from the power company. Installing solar panels is also a way to teach students about renewable energy. Solar energy is the future of electricity generation, and solar panels would definitely inspire every single student in the building to care about science.' A student must trace this argument and sort each claim. The student notices that one claim uses confident language like 'definitely' and 'every single student,' and wonders if that confident wording means the claim is supported. Using the lesson's definition, explain whether confident wording makes a claim supported or not supported, and identify which claim in this passage demonstrates that principle.",
+    "choices": [
+      "Confident wording is not evidence; the solar-panels-inspire-students claim is not supported because no reason or fact backs it up",
+      "Confident wording makes a claim supported because words like 'definitely' are a form of evidence; the solar-panels-inspire-students claim is supported",
+      "Confident wording makes a claim supported only if the claim is also about money, like the electricity-cost claim",
+      "Confident wording makes a claim not supported; the electricity-cost claim is therefore not supported even though it has real evidence"
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson warns against mistaking confident words like 'obviously' or 'definitely' for actual reasons and evidence.",
+      "Look at what comes right before and after the claim about inspiring students—is there a real reason and fact, or only strong-sounding words?"
     ]
   }
 ]

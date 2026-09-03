@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6geo-map-based-problem-solving-001",
-    "loId": "m6geo.map-based-problem-solving",
-    "cedCode": "M6GEO-10.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "On a map, a leg is best defined as what?",
-    "choices": [
-      "One straight stretch of a route between two points, with its own direction and distance",
-      "The entire path from a starting point to an ending point, no matter how many turns it makes",
-      "A segment of the scale bar that stands for a real-world distance",
-      "Any symbol on the map's legend that marks a location"
-    ],
-    "answer": "A",
-    "hints": [
-      "A leg is a single part of a route, not the whole route.",
-      "Each leg has its own direction from the compass rose and its own distance from the scale."
-    ]
-  },
-  {
-    "id": "m6geo-map-based-problem-solving-002",
-    "loId": "m6geo.map-based-problem-solving",
-    "cedCode": "M6GEO-10.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "The Pine Ridge Trail Map shows a path from a trailhead to a waterfall. The path runs four scale-bar segments toward the top of the page. Each segment on the scale bar is labeled to stand for three miles. What is the distance from the trailhead to the waterfall?",
-    "choices": [
-      "Three miles",
-      "Twelve miles",
-      "Seven miles",
-      "Four miles"
-    ],
-    "answer": "B",
-    "hints": [
-      "Count how many segments the path spans, then multiply by what one segment stands for.",
-      "Four segments times three miles per segment equals how many miles?"
-    ]
-  },
-  {
-    "id": "m6geo-map-based-problem-solving-003",
-    "loId": "m6geo.map-based-problem-solving",
-    "cedCode": "M6GEO-10.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student is solving a route problem on the Ridgecrest Map and finds that the first leg runs north for two miles. When the student moves to the second leg, which starts at a new point, the student writes down 'north, two miles' again without checking the compass rose or scale. What mistake did the student make?",
-    "choices": [
-      "The student forgot to read the legend first, which explains what symbols on the map represent and is required before interpreting any route.",
-      "The student assumed that because the compass rose showed north, all directions on the route must also be north, without rechecking the compass rose for each new leg.",
-      "The student carried the first leg's direction and distance to the second leg without checking them again.",
-      "The student did not retrace the route backward to verify each leg's direction and distance in reverse order to confirm accuracy."
-    ],
-    "answer": "C",
-    "hints": [
-      "Each leg has its own direction and its own distance—they are not automatically the same as the leg before.",
-      "The compass rose and scale must be checked again for every new leg in a route."
-    ]
-  },
-  {
-    "id": "m6geo-map-based-problem-solving-004",
-    "loId": "m6geo.map-based-problem-solving",
-    "cedCode": "M6GEO-10.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "The Meadow View Park Map shows a walking path from the park entrance to the pond. The path runs three scale-bar segments toward the left edge of the page to a bridge, then two more scale-bar segments toward the top of the page to the pond. The map's compass rose shows its arrow labeled N pointing toward the right edge of the page. Each segment stands for 200 yards. What are the two directions of the route in order, and what is the total distance?",
-    "choices": [
-      "South, then east; 800 yards total",
-      "West, then north; 800 yards total",
-      "South, then east; 1000 yards total",
-      "West, then north; 1000 yards total"
-    ],
-    "answer": "D",
-    "hints": [
-      "Use the compass rose on this particular map to find the real directions, not the page positions.",
-      "Find both the leg distances and add them together to get the total."
-    ]
-  },
-  {
-    "id": "m6geo-map-based-problem-solving-005",
-    "loId": "m6geo.map-based-problem-solving",
-    "cedCode": "M6GEO-10.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "The Riverside Museum Map shows two routes from the museum entrance to the gallery. Route A is a sidewalk running four scale-bar segments toward the bottom of the page. Route B is a hallway running two scale-bar segments toward the top of the page to a lobby, then three more scale-bar segments toward the right edge of the page to the gallery. Each segment stands for 50 meters. Which route is shorter, and by how many meters?",
-    "choices": [
-      "Route A is shorter by 100 meters.",
-      "Route A is shorter by 50 meters.",
-      "Route B is shorter by 50 meters.",
-      "Route B is shorter by 100 meters."
-    ],
-    "answer": "A",
-    "hints": [
-      "Calculate the total distance for each route completely before comparing them.",
-      "Add all the legs of Route B together, then subtract Route A's distance from it."
-    ]
-  },
-  {
-    "id": "m6geo-map-based-problem-solving-006",
-    "loId": "m6geo.map-based-problem-solving",
-    "cedCode": "M6GEO-10.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student solved a multi-leg route on the Forest Trail Map and found a total distance of eight miles by walking north for three miles, then east for five miles. To check the answer, the student retraces the route backward starting from the end. If the retraced backward route gives a different total distance, what does that tell the student?",
-    "choices": [
-      "The map's legend was read incorrectly and must be checked again.",
-      "One of the legs was misread for direction or distance and the forward answer is wrong.",
-      "The scale bar was labeled incorrectly and the total distance cannot be trusted.",
-      "The compass rose is pointing in an unusual direction and the route should be re-solved."
-    ],
-    "answer": "B",
-    "hints": [
-      "When you retrace a route backward, the opposite directions and same distances should add up to match the forward total if everything was correct.",
-      "A mismatch between forward and backward totals signals an error in reading one of the legs, not in the map's other features."
-    ]
-  },
-  {
     "id": "m6geo-how-physical-geography-changes-over-time-001",
     "loId": "m6geo.how-physical-geography-changes-over-time",
     "cedCode": "M6GEO-10.3",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6geo-map-based-problem-solving-001",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "On a map, a leg is one straight stretch of a route between two points. A route with two turns is made of how many legs?",
+    "choices": [
+      "Three legs, because each turn creates a new segment",
+      "Two legs, because the route has two turns",
+      "One leg, because a route is a single path from start to finish",
+      "Four legs, one for each turn plus two more"
+    ],
+    "answer": "A",
+    "hints": [
+      "Count the straight stretches, not the turns themselves.",
+      "Each turn happens at the point where one leg ends and the next begins."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-002",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A map's scale bar is divided into four equal segments. Each segment is labeled to stand for 50 meters in the real world. A hiking path on the map spans exactly three of those segments. How far is the actual hiking path in meters?",
+    "choices": [
+      "50 meters",
+      "150 meters",
+      "100 meters",
+      "200 meters"
+    ],
+    "answer": "B",
+    "hints": [
+      "Multiply the number of segments the path spans by the distance each segment represents.",
+      "Do not add the number of segments to the distance per segment."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-003",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The Riverside Park Map shows a playground marked with a star and a pond marked with a circle. A path runs from the playground toward the bottom of the page to the pond. The map's compass rose shows its arrow labeled N pointing toward the top of the page. In which direction does the path from the playground to the pond run?",
+    "choices": [
+      "North",
+      "East",
+      "South",
+      "West"
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at where the compass rose shows north is pointing on this map.",
+      "If north is at the top, what direction is toward the bottom?"
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-004",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Pinewood Trail Map shows a parking lot marked with a P and a waterfall marked with a W. Its legend shows a solid line for paved trail and a dashed line for dirt trail. A paved trail runs from the parking lot two scale-bar segments toward the right edge of the page to a junction. From the junction, a dirt trail continues one scale-bar segment toward the top of the page, ending at the waterfall. Each scale-bar segment stands for three miles. The map's compass rose shows its arrow labeled N pointing toward the top of the page. What are the two directions traveled, in order, and the total distance from the parking lot to the waterfall?",
+    "choices": [
+      "Right, then up; total distance is five miles",
+      "East, then north; total distance is five miles",
+      "North, then east; total distance is nine miles",
+      "East, then north; total distance is nine miles"
+    ],
+    "answer": "D",
+    "hints": [
+      "Use the compass rose to find direction for each leg separately, not the page directions alone.",
+      "Multiply the number of segments in each leg by three miles, then add the two legs together."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-005",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "The Twin Lakes Community Map shows a community center marked with a square and two possible locations for a new park, marked as Site A and Site B. A path to Site A runs two scale-bar segments toward the top of the page from the center. A path to Site B runs three scale-bar segments toward the bottom of the page from the center, then two more segments toward the left edge. Each segment stands for 200 yards. The legend confirms both are paved paths. Which site is closer to the community center, and by how many yards?",
+    "choices": [
+      "Site A is closer by 400 yards",
+      "Site A is closer by 200 yards",
+      "Site B is closer by 200 yards",
+      "Site B is closer by 400 yards"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate the total distance to each site separately before comparing.",
+      "Site B's distance requires adding two legs together first."
+    ]
+  },
+  {
+    "id": "m6geo-map-based-problem-solving-006",
+    "loId": "m6geo.map-based-problem-solving",
+    "cedCode": "M6GEO-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "The Hillside Recreation Area Map shows a ranger station marked with an R, and two destinations: Overlook 1 marked with a triangle and Overlook 2 marked with a diamond. Its legend shows a solid line for main trail and a dashed line for side trail. From the ranger station, a main trail runs three scale-bar segments toward the bottom of the page to Overlook 1. From the ranger station, a side trail runs two scale-bar segments toward the top of the page to a rest shelter, then two scale-bar segments toward the right edge of the page to Overlook 2. Each segment is labeled to stand for 500 feet. A visitor uses the scale bar to check both routes but makes an error: she reads the compass rose as showing north toward the right edge of the page instead of toward the top of the page. How would this error change her conclusion about which overlook is closer, if at all?",
+    "choices": [
+      "The error would make her think Overlook 1 is closer, even though Overlook 2 is actually closer by rotating her mental map and counting the segments in the new orientation",
+      "The error would not change her conclusion because segment distances do not depend on compass-rose orientation",
+      "The error would make her think Overlook 2 is closer by reversing the position of north, which would swap which route appears shorter when she counts segments again",
+      "The error would make both overlooks appear to be the same distance away because reorienting the compass rose would cause the two routes to seem equivalent in total length"
+    ],
+    "answer": "B",
+    "hints": [
+      "Decide whether changing the compass-rose reading affects how many segments each path spans.",
+      "Distances are determined by counting segments and multiplying by each segment's labeled value."
+    ]
+  },
+  {
     "id": "m6geo-using-geography-to-plan-a-community-001",
     "loId": "m6geo.using-geography-to-plan-a-community",
     "cedCode": "M6GEO-10.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A community planner is gathering facts before deciding where to place a new road. Which of these is one of the three kinds of facts a planner must collect about a piece of land?",
+    "problemText": "A community planner is gathering information about a piece of land before deciding what to build on it. Which of the following is one of the three kinds of facts a planner must learn about the land?",
     "choices": [
-      "Whether the land was used for the same purpose fifty years ago",
-      "How many people in the community would prefer to use that land",
-      "Whether the land is flat or steep, and what water is nearby",
-      "How much money it would cost to buy the land"
+      "What the residents think about the land and which land use they prefer",
+      "How much money the project will cost and when it can be finished",
+      "The shape of the land, the water nearby, and what resources the land offers",
+      "The names of the roads that border the land and how old they are"
     ],
     "answer": "C",
     "hints": [
-      "The three kinds of facts are about land shape, water, and resources.",
-      "A planner does not base decisions on personal preferences or money alone."
+      "The lesson names three facts a planner gathers before making any decision.",
+      "These three facts describe the physical or natural qualities of the land itself, not people's opinions or costs."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A parcel of land is flat, sits next to a river that flows all year, and has soil that has never grown good crops. A community planner is deciding between making it a farm or a housing area. Based on the land, water, and resource facts, which use is better for this parcel, and why?",
+    "problemText": "A planner is looking at a flat piece of land with very fertile soil next to a stream that flows all year long. No one has built on this land yet. What land use would match this land's qualities best?",
     "choices": [
-      "A farm, because farms require fertile soil to grow crops successfully, and this land's poor soil means it cannot support agricultural production reliably",
-      "Housing, because the land is flat and next to water, which are all the facts that housing requires",
-      "A farm, because the flat land and year-round water supply are the essential conditions for farming, and soil quality matters less than location near a reliable water source",
-      "Housing, because the soil being poor means it cannot grow crops, but flat, dry land near water works for houses"
+      "A park, because flat land provides good space and is often used for recreation in communities",
+      "A road, because roads need solid ground and must connect different areas to allow travel",
+      "Housing, because flat land allows builders to construct stable foundations for buildings",
+      "A farm, because the land is flat, has fertile soil, and has a reliable water source"
     ],
     "answer": "D",
     "hints": [
-      "A farm needs fertile soil, not just any soil.",
-      "Housing needs flat land that stays dry; this land is near water but the lesson did not say it floods."
+      "Think about what each land use actually needs. A farm's three main needs are listed in the lesson.",
+      "The land has all three things a farm requires. Check whether the other uses fit as well."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two parcels of land are available in a growing town. Parcel 1 is steep and rocky with almost no soil. Parcel 2 is flat, has fertile soil, and is surrounded by the town's busiest streets. The town needs both a new park and a new farm. Which parcel should become the park, and what is the main reason?",
+    "problemText": "A community has a steep, rocky hillside with almost no soil but a beautiful view over a river. The hillside is too uneven to build a house foundation on, and the ground cannot grow crops. What would be the most sensible land use for this hillside?",
     "choices": [
-      "Parcel 1 should be the park, because steep, rocky land does not suit farming or housing but can still be used for a park",
-      "Parcel 2 should be the park, because it has fertile soil that grows vegetation and the town's busiest streets bring many visitors",
-      "Parcel 1 should be the park, because rocky land is safer for children to play on than soft, fertile soil is",
-      "Parcel 2 should be the park, because fertile soil attracts more plants and people to enjoy outdoor recreational space"
+      "A park, since the land does not suit farming or building but can still be used and enjoyed",
+      "Housing, since steep rocky ground can be leveled and residents value the scenic view",
+      "A farm, since the river provides water and farms can be built on uneven ground",
+      "A road, since roads need flat surfaces and can transport goods from the hillside"
     ],
     "answer": "A",
     "hints": [
-      "A park can use land that does not suit farming or building.",
-      "Remember that farms need fertile soil and flat land; housing needs flat, dry land."
+      "A park does not need flat, fertile, or dry ground the way other uses do. What does a park actually need?",
+      "The steep, rocky ground rules out farming and housing. Does that land have to sit unused?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A town planner must choose between two parcels for a new farm. Parcel X is flat and sits next to a stream, but the stream has flooded the parcel three times in the past decade. Parcel Y is also flat and next to a stream that flows year-round, but its soil is thin and sandy, unlike the rich soil in nearby farms. Explain which parcel suits the farm better and why, using the facts about land, water, and resources.",
+    "problemText": "A town planner is reviewing two parcels of land. Parcel X is flat with good soil, but it sits right on the edge of a river that floods every spring. Parcel Y is flat with thin, sandy soil that rarely grows crops, but it sits on high ground that has never flooded and already has a road running beside it. The town needs one new farm and one new home. Which parcel should become the home, and which should become the farm? Explain your reasoning using land, water, or resource facts.",
     "choices": [
-      "Parcel X is better because flooding happens only during heavy rains, not every season, so crops can still grow most of the time",
-      "Parcel Y is better because it has access to year-round water and flat land; the sandy soil can be improved, but flooding destroys crops repeatedly",
-      "Parcel X is better because it sits next to a stream, which provides the water farms need, and stream access matters more than soil type",
-      "Parcel Y is better because flat land is the most important fact for a farm, and both parcels are flat, making soil quality the deciding factor"
+      "Parcel X should be the home because living next to water provides natural resources, and Parcel Y should be the farm because it has a road connection for selling crops and transporting goods",
+      "Parcel Y should be the home because it sits on high ground that does not flood and already has a road, but Parcel X cannot be the farm because its flooding makes it unsuitable for crops.",
+      "Parcel X should be the farm because the river water is always available for irrigation, and Parcel Y should be the home because roads make it easier for people to access services and travel",
+      "Parcel Y should be the farm because sandy soil drains well and prevents water from sitting, and Parcel X should be the home because it has good soil for a stable foundation and strong base"
     ],
     "answer": "B",
     "hints": [
-      "A farm needs three things: flat land, fertile soil, and reliable water. Which parcel fails less?",
-      "Soil quality and water reliability are both resources a farm depends on; flooding destroys crops even on fertile land."
+      "Housing must stay dry and not sit on a floodplain. Which parcel meets this need?",
+      "A farm needs fertile soil. The sandy soil on Parcel Y is the opposite of fertile, so what does that mean for making it a farm?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A community planner needs to place both housing and a road in a town. Two locations are open: Location A is steep, rocky, and uneven, with no flooding history. Location B is flat and dry, sits on high ground away from water, and already has another road running past it on two sides. Which location should become housing and which should be crossed by the new road, and what land facts support this choice?",
+    "problemText": "A resident suggests that the town should place a new park on a flat, dry piece of land with very fertile soil, because the park would have plenty of space and people would enjoy it. A planner disagrees and wants to save that same land for a farm instead. Using the land, water, and resource facts from the lesson, explain which person is thinking about the land use correctly and why.",
     "choices": [
-      "Housing at A and the road at B, because A's rocky ground is naturally stable for building foundations and B's smooth surface requires protection from additional traffic wear",
-      "Housing at B and the road at A, because housing needs flat, dry ground and the road can cross steep land if it connects two places people travel between",
-      "Housing at A and the road at B, because steep terrain actually provides better drainage for housing and connecting roads through existing road networks is most efficient",
-      "Housing at B and the road at A, because B's high ground location prevents flooding and roads must always be built in valleys to collect rainwater safely"
+      "The resident is correct because parks improve quality of life and communities value recreation and open space for enjoyment",
+      "Both are equally correct because parks and farms serve different purposes and both provide value to a community in their own ways",
+      "The planner is correct because fertile soil is a resource the land offers, and a farm needs that resource, while a park does not need fertile soil to work well.",
+      "The planner is correct because fertile soil can only be used for farming and will be wasted if used for any other purpose"
     ],
-    "answer": "B",
+    "answer": "C",
     "hints": [
-      "Housing must be flat and dry; a road's main requirement is that it connects two places people need to travel between.",
-      "Steep, uneven land is difficult for building a house foundation, but a road can cross rough ground if its route makes sense."
+      "A good planning reason must name a land, water, or resource fact, not just what people would enjoy.",
+      "What does a park actually need from the land, and what does a farm need? Is fertile soil one of those needs?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A town has three unclaimed parcels and needs to place a farm, housing, and a park. Parcel 1 is flat, fertile, flooded once five years ago, and sits beside a year-round stream. Parcel 2 is steep, rocky, sits on a ridge with a view, has almost no soil, and is far from any water source. Parcel 3 is flat, dry, has thin sandy soil, and already has a road on one edge connecting to the town center. Using the land, water, and resource facts, assign each parcel to its best use and explain why housing should not go on Parcel 1 despite some facts favoring it.",
+    "problemText": "A planner is deciding how to use four parcels of land. Parcel 1 is flat and sits on a floodplain. Parcel 2 is flat, has fertile soil, and sits next to a stream that flows year-round, but it is located far from any existing road. Parcel 3 is steep and rocky with no soil, but it overlooks a scenic pond. Parcel 4 is flat, stays dry, and is already connected to the main road through town. The town needs a new farm, a new park, and housing for one new family. Parcel 1 will not be used. Which of the remaining three parcels should become the farm, and which should become the housing? What should happen to the remaining parcel?",
     "choices": [
-      "Farm on 2, Housing on 1, Park on 3. Housing can go on 1 because it is flat and has water; the old flood is not relevant to future planning decisions about permanent structures.",
-      "Farm on 3, Housing on 2, Park on 1. Housing cannot go on 1 because the stream is too cold and houses need warm water sources, not year-round ones that may carry disease.",
-      "Farm on 1, Housing on 3, Park on 2. Housing cannot go on 1 because its location next to a river creates a floodplain; a single flood in the past five years proves the ground remains wet and unsafe for building homes.",
-      "Farm on 1, Housing on 3, Park on 2. Housing cannot go on 1 because it flooded in the past five years, so it is not dry enough. Even though 1 has water and flat land, flooding once makes it unsuitable for housing regardless of other facts."
+      "Parcel 3 should be the farm because it has a scenic view for farmers to enjoy, Parcel 4 should be the housing because it is flat, and Parcel 2 should become the park for recreation",
+      "Parcel 2 should be the farm because it is in a remote location away from town, Parcel 3 should be the housing because it overlooks water, and Parcel 4 should become the park for community use",
+      "Parcel 4 should be the farm because it is already connected to roads for transporting crops, Parcel 2 should be the housing because it has a stream for water, and Parcel 3 should become the park",
+      "Parcel 2 should be the farm because it has fertile soil and water, Parcel 4 should be the housing because it is flat and dry, and Parcel 3 should become the park because it is steep and rocky."
     ],
     "answer": "D",
     "hints": [
-      "Housing needs flat, dry land that does not flood. A single flood in recent history tells you the land is a floodplain.",
-      "Parcel 1 is ideal for a farm because it has all three needs: flat, fertile, and reliable water. But those facts make it wrong for housing."
+      "Check what each land use needs, then match each parcel's facts to those needs. A farm needs fertile soil and water; housing needs flat, dry ground; a park can use land that does not suit the other two.",
+      "Parcel 2 has fertile soil and a stream, which is what a farm needs. Parcel 4 is flat and dry, which is what housing needs. That leaves Parcel 3 for the park."
     ]
   }
 ]

@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6ela-supporting-a-claim-with-reasons-evidence-001",
-    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
-    "cedCode": "M6ELA-8.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A reason is a statement that answers the question why—it explains why a claim is true. Which sentence is a reason rather than just a restatement of the claim?",
-    "choices": [
-      "Students should be allowed to choose their lunch table partners because students really want to choose their lunch table partners.",
-      "Students should be allowed to choose their lunch table partners because sitting with friends they did not pick themselves often makes them feel uncomfortable during meals.",
-      "Students should be allowed to choose their lunch table partners because many students feel nervous eating with friends they did not pick themselves.",
-      "Students should be allowed to choose their lunch table partners because this would be a good policy that gives students more freedom at lunch."
-    ],
-    "answer": "C",
-    "hints": [
-      "Test each reason by reading it right after the claim with 'because' in between. Does it tell you something new, or does it just say the claim again with different words?",
-      "Look for a reason that names an actual why—a problem the claim solves or a real situation that makes the claim necessary."
-    ]
-  },
-  {
-    "id": "m6ela-supporting-a-claim-with-reasons-evidence-002",
-    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
-    "cedCode": "M6ELA-8.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote the claim 'The school cafeteria should serve breakfast at 7:00 a.m. instead of 7:15 a.m.' and the reason 'Because buses from the neighborhoods on the east side do not arrive until 7:05, and those students have only ten minutes to eat before class starts.' Which piece of information would count as evidence that actually backs this specific reason?",
-    "choices": [
-      "Many students skip breakfast when they do not have enough time to eat.",
-      "Eating a healthy breakfast helps students pay attention better in class.",
-      "Other schools in the district serve breakfast at different times.",
-      "During a survey last week, nine of the twelve students from the east-side bus said they never buy cafeteria breakfast because they get to school too late."
-    ],
-    "answer": "D",
-    "hints": [
-      "Run the relevance test: Does this piece of evidence make the specific reason about east-side buses running late more believable, or does it only relate to breakfast in general?",
-      "Look for evidence that is checkable and documented—something a reader could actually verify, like a survey or a count."
-    ]
-  },
-  {
-    "id": "m6ela-supporting-a-claim-with-reasons-evidence-003",
-    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
-    "cedCode": "M6ELA-8.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student wants to support this claim: 'The school library should stay open one hour later on Thursdays.' The student offers this reason: 'Because the library is already crowded on Thursdays.' What is the problem with this reason?",
-    "choices": [
-      "It only repeats the claim in slightly different words and does not explain why staying open later would help.",
-      "It describes a condition that already exists rather than explaining how the proposed change would address a specific problem that students face.",
-      "It fails to identify which day of the week the library is most crowded and therefore cannot be tested through observation.",
-      "It makes an assumption about the library without providing any data or measurements to support the statement about crowding."
-    ],
-    "answer": "A",
-    "hints": [
-      "Read the reason right after the claim: 'The school library should stay open one hour later on Thursdays, because the library is already crowded on Thursdays.' Does the reason tell you anything the claim did not already say?",
-      "A real reason answers the question: why would staying open later actually solve a problem or help students?"
-    ]
-  },
-  {
-    "id": "m6ela-supporting-a-claim-with-reasons-evidence-004",
-    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
-    "cedCode": "M6ELA-8.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student made this claim: 'Students should be able to eat lunch outside when the weather is nice.' She wrote two potential reasons. Reason A: 'Because eating outside would help students enjoy their lunch more.' Reason B: 'Because right now, the cafeteria is so loud that many students cannot hear their friends talking, and eating outside would give them a quieter space.' Which reason is stronger, and why?",
-    "choices": [
-      "Reason A is stronger because it explains that eating outside would improve students' moods and make lunch a more pleasant experience for everyone.",
-      "Reason B is stronger because it names a specific problem in the cafeteria that eating outside would actually solve, instead of just restating that outdoor eating would be better.",
-      "Reason A is stronger because enjoying lunch more is a benefit that would apply to all students every day they eat outside, making it a reason that reaches a wider group.",
-      "Reason B is stronger because it gives two connected facts—that the cafeteria is loud and that students cannot hear each other—rather than making only a general statement about eating."
-    ],
-    "answer": "B",
-    "hints": [
-      "Test both reasons by asking whether they add a new idea to the claim or just say it again with different wording.",
-      "A real reason should name an actual problem or situation that makes the claim necessary—not just a nice benefit that restates why the claim is good."
-    ]
-  },
-  {
-    "id": "m6ela-supporting-a-claim-with-reasons-evidence-005",
-    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
-    "cedCode": "M6ELA-8.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote: Claim: 'The school gym should get new basketballs.' Reason: 'Because the basketballs are deflating too fast, so students cannot practice properly.' Evidence: 'New equipment is expensive and has to be ordered from a supply company.' What is the problem with the evidence in relation to the reason?",
-    "choices": [
-      "The evidence describes a problem about costs and ordering, but the reason is about basketballs deflating too fast, so the evidence does not actually back up the specific reason given.",
-      "The evidence discusses equipment expenses in general, but it does not include any information about whether the current basketballs are actually losing air faster than they should.",
-      "The evidence is only about the general topic of equipment costs, not about whether the basketballs are actually deflating too fast as the reason claims.",
-      "The evidence talks about ordering procedures instead of talking about how quickly the basketballs lose air, which is the real cause mentioned in the reason."
-    ],
-    "answer": "C",
-    "hints": [
-      "Run the relevance test: Say the reason aloud, then say the evidence aloud. Does the evidence make the reason about deflating basketballs more believable?",
-      "Evidence must back the specific reason sitting above it, not just relate to the same general topic."
-    ]
-  },
-  {
-    "id": "m6ela-supporting-a-claim-with-reasons-evidence-006",
-    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
-    "cedCode": "M6ELA-8.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is building support for the claim: 'The school should add a water fountain on the second floor.' She drafted this reason: 'Because kids on the second floor get thirsty during the day.' A teacher asked her to revise the reason into something stronger. Which revision actually fixes the problem and creates a real reason that could be backed up with evidence?",
-    "choices": [
-      "Because drinking water is very important for staying healthy and hydrated during the school day.",
-      "Because students need water fountains in order to drink water and stay alive.",
-      "Because a water fountain on the second floor would make it easier for kids on the second floor to get water.",
-      "Because the only water fountain in our school is in the basement next to the cafeteria, and most students on the second floor forget to walk down there, so they go thirsty instead of drinking."
-    ],
-    "answer": "D",
-    "hints": [
-      "Remember the restated-claim test: Read the original reason right after the claim. Why is it just the claim again? Now look for the choice that names a specific problem the claim solves.",
-      "A strong reason should name something checkable—a real situation, problem, or pattern that evidence could back up, not just a general truth about thirst or water."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-001",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A linking word names the relationship between a claim and a reason. Which linking word belongs to the REASON family — the family that explains why a claim should be accepted?",
-    "choices": [
-      "for instance",
-      "therefore",
-      "consequently",
-      "because"
-    ],
-    "answer": "D",
-    "hints": [
-      "The reason family joins a claim and its explanation into one sentence.",
-      "Think about which word answers the question 'why?' when you read it aloud with the claim."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-002",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the claim and reason below. Which sentence correctly links them?\n\nClaim: The school lunch line moves too slowly.\nReason: It takes most students at least ten minutes just to get their food.",
-    "choices": [
-      "The school lunch line moves too slowly, because it takes most students at least ten minutes just to get their food.",
-      "The school lunch line moves too slowly. Therefore, it takes most students at least ten minutes just to get their food.",
-      "The school lunch line moves too slowly. For example, it takes most students at least ten minutes just to get their food.",
-      "The school lunch line moves too slowly. Consequently, it takes most students at least ten minutes just to get their food."
-    ],
-    "answer": "A",
-    "hints": [
-      "Ask yourself: does the reason explain why the claim is true, or does it follow as a result of something already said?",
-      "The reason family joins two ideas into one sentence when the second idea explains the first."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-003",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A reason has been stated. Which sentence correctly uses a linking word to show what follows because of that reason?\n\nReason: The playground equipment is over twenty years old and breaks down often.\n\nWhat comes next?",
-    "choices": [
-      "The playground equipment is over twenty years old and breaks down often. Because the swings were repaired last week, the playground will stay open.",
-      "The playground equipment is over twenty years old and breaks down often. Therefore, the school needs to budget money for a new climbing structure.",
-      "The playground equipment is over twenty years old and breaks down often. For example, the swings were fixed last week and the slide was repainted.",
-      "The playground equipment is over twenty years old and breaks down often, so the principal decided to inspect all the equipment and plan replacements."
-    ],
-    "answer": "B",
-    "hints": [
-      "The result family uses words like therefore or consequently to introduce what happens next.",
-      "The sentence that comes after the reason should tell what problem or consequence results from it."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-004",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this student's draft: \"The school should offer after-school homework help, however many students struggle with math and science. A tutor could make the difference for them.\" The student used a linking word, but is it the right one? Explain why or why not by naming what the relationship actually is.",
-    "choices": [
-      "Yes, it is correct. 'However' is a formal, mature-sounding word that works well in persuasive writing about school policy.",
-      "No, it is wrong. 'However' signals what follows as a result, but the second sentence gives one specific example instead, so it needs a for-example word.",
-      "No, it is wrong. 'However' signals a turn against what was said, but the second sentence explains why the claim is true, so it needs a reason word like 'because.'",
-      "Yes, it is correct. 'However' introduces additional information that supports the main claim, and that is what happens in this paragraph."
-    ],
-    "answer": "C",
-    "hints": [
-      "Do not trust how smooth or formal a sentence sounds — check what the second sentence actually does to the claim.",
-      "Ask: does the second sentence turn against the claim, or does it explain why the claim should be accepted?"
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-005",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student is writing about why her school should recycle more. She has written: \"Most recyclable materials end up in landfills instead of being reused. This wastes resources and takes up valuable space. Paper, plastic, and metal could be sorted right in every classroom.\" She now needs to add one more sentence that gives one specific example proving that recycling actually works. Which sentence should come next?",
-    "choices": [
-      "For example, many countries in Europe have successful recycling programs that have operated for decades with strong participation rates.",
-      "Because classroom sorting reduces contamination in the waste stream, our school should implement a new sorting system in every classroom and create separate stations for different material types.",
-      "Therefore, schools across the region have started collecting cardboard and aluminum cans from their cafeterias and hallways to reduce their environmental impact.",
-      "For instance, last year the Riverside School District diverted five thousand tons of material from landfills through their classroom recycling program."
-    ],
-    "answer": "D",
-    "hints": [
-      "An example sentence should show one specific moment or case, not a general pattern or new claim.",
-      "Look for the choice that names a particular school or event with numbers or details, not a whole group or idea."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-006",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read this paragraph a student drafted for a persuasive essay: \"Students should be allowed to bring water bottles to every class, not just lunch and recess. Dehydration makes it hard to concentrate during lessons. For instance, staying hydrated helps kids focus better in school. Therefore, the school should allow water bottles everywhere. The average sixth grader needs to drink water at least six times during the school day.\" Which sentence is using the wrong linking word for the relationship it is trying to show? Identify the sentence and explain what relationship is actually there and which linking word would be correct.",
-    "choices": [
-      "\"For instance, staying hydrated helps kids focus better in school\" is wrong. It restates the general reason instead of giving a specific example, so it should begin with 'because' or be removed.",
-      "\"Therefore, the school should allow water bottles everywhere\" is wrong. It does not introduce a result that follows from the reason, but rather restates the main claim, so it should use 'since' or 'for example' instead.",
-      "\"The average sixth grader needs to drink water at least six times during the school day\" is wrong. It is a new reason, not an example or result, so it needs to be joined with 'because' or start a new paragraph.",
-      "\"Dehydration makes it hard to concentrate during lessons\" is wrong. It should use 'for instance' because it is meant to illustrate why water bottles matter, not explain the main claim."
-    ],
-    "answer": "A",
-    "hints": [
-      "Look for a sentence that uses 'for example' or 'for instance' but does not actually give one specific case — instead, it restates something already said in general terms.",
-      "An example should include a detail or moment that proves the pattern is real, not just repeat the pattern itself in different words."
-    ]
-  },
-  {
     "id": "m6ela-writing-a-concluding-statement-001",
     "loId": "m6ela.writing-a-concluding-statement",
     "cedCode": "M6ELA-8.4",
@@ -453,6 +225,234 @@
     "hints": [
       "Each reason must be supported by evidence that actually explains why that reason is true, not evidence that supports a different reason.",
       "Look for the pairing where the specific facts and details clearly back up the reason they are supposed to support."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-001",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A linking word names the relationship between a claim and a reason. Which of the following is the main job of a linking word from the 'because' family?",
+    "choices": [
+      "To signal that the next sentence will disagree with the claim",
+      "To show that something follows as a result of a reason already given",
+      "To introduce one specific case that proves a general reason",
+      "To attach a reason directly to the claim it explains in one sentence"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about how 'because' works in a sentence: does it join two ideas in one sentence or start a new sentence?",
+      "Remember the lesson: 'because and since attach a reason directly to the claim it explains, in one sentence.'"
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-002",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the two sentences below. The first is a complete reason. The second should introduce a claim that follows from that reason. Which sentence correctly completes the pair with the right linking word?\n\nOur school cafeteria throws away about forty pounds of food every lunch period, even though a composting program could turn it into soil for the garden.",
+    "choices": [
+      "Therefore, the school should start a composting program in the cafeteria.",
+      "Because the school should start a composting program in the cafeteria.",
+      "For example, the school should start a composting program in the cafeteria.",
+      "Since the school should start a composting program in the cafeteria."
+    ],
+    "answer": "A",
+    "hints": [
+      "The first sentence stands on its own as a complete reason. The second sentence should state what comes next because of that reason — that is a result relationship.",
+      "Result words like 'therefore' and 'consequently' start a new sentence and introduce the claim that follows."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-003",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the general reason below. Which sentence correctly adds one specific case that proves the pattern actually happens?\n\nOur school should extend lunch to forty minutes instead of thirty, because many students do not have time to eat a full meal before the bell rings.",
+    "choices": [
+      "In fact, the general rule is that students need at least thirty-five minutes to finish eating a meal without rushing through it.",
+      "For instance, yesterday Maria finished only half her sandwich before she had to go to her next class.",
+      "This shows that the amount of time available during lunch needs to increase so that all students can complete their meals.",
+      "A specific student named James reported that he never has enough time to eat vegetables during the current lunch period."
+    ],
+    "answer": "B",
+    "hints": [
+      "An example gives one specific moment that shows a general pattern is real. What does that specific moment do — does it prove the pattern or does it start a new point?",
+      "The general reason talks about 'many students' and a pattern. An example needs to show one particular student or one particular moment."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-004",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote the following argument and read it aloud. It sounds serious and careful, but is the linking word doing the right job? Read it and decide.\n\nClaim: Our school should buy new sports equipment for the gym.\nSentence with linking word: However, broken equipment gets replaced less often because the school uses its budget to fix other buildings first.\n\nDoes 'however' name the correct relationship?",
+    "choices": [
+      "No, because the second sentence introduces a result that follows from the first sentence, not a turn against it.",
+      "Yes, because 'however' is a formal word that sounds careful and serious, which matches the tone of the argument.",
+      "No, because 'however' signals a turn against the claim, but the second sentence actually explains a reason why the claim should be accepted.",
+      "Yes, because the second sentence offers an objection that directly contradicts the idea that the school should purchase new sports equipment for the gym."
+    ],
+    "answer": "C",
+    "hints": [
+      "Do not trust how smooth or serious a word sounds. Ask instead: what relationship does 'however' announce, and what relationship is actually there?",
+      "The lesson warns that a linking word can be spelled correctly and still be wrong if it names a relationship that is not actually there."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-005",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the following pair of sentences. The first gives a general reason. The second tries to add a specific example. Look at both the relationship and the linking word choice. Which statement correctly identifies what is wrong?\n\nGeneral reason: Students who walk to school get more daily exercise than students who ride the bus or get driven, for example, students become healthier and have more energy in class.\n\nProblem: The linking word 'for example' is incorrectly placed and does not name the right relationship.",
+    "choices": [
+      "'For example' should introduce a specific case that supports the general reason, but instead it introduces a new claim about what happens as a result of the general reason.",
+      "The specific example is not detailed enough to prove the general reason is real.",
+      "The word 'for example' is spelled correctly, so it belongs in an argument even if the relationship is not quite right.",
+      "The general reason was not yet stated before 'for example' was used, and 'for example' should introduce one specific case, not a result that follows from the reason."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at what comes after 'for example.' Is that a specific moment or case, or is it a new claim about what happens?",
+      "Remember: a general reason comes first and describes a pattern. An example is one specific case that proves the pattern, not a result that follows from it."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-006",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is revising an argument about starting a morning homework club. She has written the claim, the reason, and a specific example. Now she needs to insert two linking words into a draft paragraph to show all three relationships. Read the paragraph with blanks, and decide which pair of linking words creates the correct relationships.\n\nClaim: Our school should start a morning homework club that meets from 7:45 to 8:15 on Tuesdays and Thursdays.\nParagraph: Our school should start a morning homework club that meets from 7:45 to 8:15 on Tuesdays and Thursdays, __(1)__ many students arrive at school early but currently have nowhere quiet to work on unfinished assignments. __(2)__, on Thursday last week, four students sat in the hallway trying to finish a math worksheet before homeroom began. That showed there is real demand for such a space.",
+    "choices": [
+      "because; For example",
+      "therefore; For instance",
+      "as a result; Because",
+      "consequently; However"
+    ],
+    "answer": "A",
+    "hints": [
+      "Work through each blank one at a time. Ask: does this sentence explain the claim, does it follow as a result, or does it give one specific case?",
+      "Blank (1) must join the claim and reason in one sentence. Blank (2) must introduce one specific moment from Thursday that proves the general reason is real."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-001",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A reason is supposed to explain why a claim is true. Which sentence is a reason instead of just restating the claim? The claim is: 'Students should be allowed to eat lunch outside on nice days.'",
+    "choices": [
+      "Because students should be allowed to eat lunch outside on nice days.",
+      "Because it would be something students have wanted for a long time and would make them happier during the school day.",
+      "Because eating outside in fresh air helps students feel calmer and focus better in afternoon classes.",
+      "Because being outside is a nice thing to do and would give students a good experience during their lunch period."
+    ],
+    "answer": "C",
+    "hints": [
+      "Read each choice right after the claim with the word because in between. Does it tell you something NEW about why the claim is true, or does it just say the same idea again?",
+      "A real reason has to answer the question: why would this actually help or solve something?"
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-002",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: 'Claim: Our school should have a bus monitor on the afternoon routes. Reason: Because the bus drivers cannot watch all the students at the same time while also driving safely.' Now the student needs to pick evidence to back this reason. Which piece of evidence actually shows that the reason is real?",
+    "choices": [
+      "Many schools in other towns have bus monitors on their routes, and those schools report fewer problems happening on buses overall.",
+      "Bus drivers are very busy people who work hard at their jobs every single day and deserve support from other adults.",
+      "Some students misbehave on buses every day, which means discipline is needed on routes to fix behavior problems.",
+      "Last week, two students got into a shoving match in the back of Bus 7 while the driver was turning onto Maple Street and did not see it happen."
+    ],
+    "answer": "D",
+    "hints": [
+      "Run the relevance test: Does the evidence show that a driver cannot watch all students while driving safely? Or does it only relate to buses in general?",
+      "Look for something specific and checkable that happened—something another person could have observed or recorded."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-003",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this reason: 'Because the school library needs more books on graphic novels.' Is this a real reason that explains why a claim is true, or does it only restate the claim? Read it together with the claim: 'Our school library should buy more graphic novels.'",
+    "choices": [
+      "It only restates the claim, because it says the same idea in different words without explaining why.",
+      "It is a real reason, because graphic novels are popular with students and many of them enjoy reading them.",
+      "It is a real reason, because it gives a specific cause that supports the claim.",
+      "It only restates the claim, because it mentions books and libraries, which relate to what the claim already said."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself: Does this reason tell me anything the claim did not already say?",
+      "The claim already says the school should buy more graphic novels. What does the reason add to that?"
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-004",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote a claim and reason below. Read them and decide whether the reason is strong or weak. Then decide which fix would work best.\n\nClaim: 'Our classroom should have a class pet hamster.'\nReason: 'Because a hamster would be good for the class.'\n\nWhich revision turns this into a real reason that explains why a hamster would actually help?",
+    "choices": [
+      "Because lots of classrooms have hamsters in them and students find them to be fun to watch and hold.",
+      "Because taking care of a hamster would teach us responsibility by making us feed it, change its water, and clean its cage every single day on a written schedule.",
+      "Because hamsters are small animals that live in cages and do not need a lot of space or resources that the classroom does not already have.",
+      "Because having a hamster in the classroom would make the learning environment better and more enjoyable for everyone in the room."
+    ],
+    "answer": "B",
+    "hints": [
+      "A real reason has to answer the question: WHY would this actually work or help? What specific problem or goal does it solve?",
+      "Look for a choice that names something real the hamster would do—not just a general statement about hamsters."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-005",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is building support for the claim: 'Our school should have a snack cart in the hallway.' She wrote this reason: 'Because some students get hungry between lunch and the end of the school day and cannot concentrate on their work.' Now she is choosing evidence. Which choice actually backs up THIS specific reason instead of just talking about the general topic of hungry students?",
+    "choices": [
+      "A lot of students pack snacks in their backpacks and bring them to school every day for meals between classes.",
+      "Many schools have snack carts in hallways, and the carts are very popular with students who buy items from them regularly.",
+      "Three students told the school nurse last month that they felt too hungry to focus during their afternoon classes.",
+      "Hungry students are a problem that affects learning in many different schools across the country and needs to be solved."
+    ],
+    "answer": "C",
+    "hints": [
+      "Does the evidence show that students actually get hungry and have trouble concentrating? Or does it only relate to snacks and hunger in general?",
+      "Look for evidence from a credible source—someone who would actually know—that proves students cannot concentrate because they are hungry."
+    ]
+  },
+  {
+    "id": "m6ela-supporting-a-claim-with-reasons-evidence-006",
+    "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
+    "cedCode": "M6ELA-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this claim, reason, and evidence set:\n\nClaim: 'The school should extend morning arrival time by fifteen minutes.'\nReason: 'Because right now, students who take the bus often miss the start of first period when traffic is heavy.'\nEvidence: 'Three students said that they felt rushed in the morning.'\n\nWhat is wrong with the evidence, and what type of better evidence would fix it?",
+    "choices": [
+      "The evidence uses the word felt, which is an opinion. We should instead find a number that sounds official, even if we are not sure exactly where it came from.",
+      "The evidence is too short and needs to be longer to be believable.",
+      "The evidence is weak because only three students talked about the problem, but if twenty students said it, the evidence would be strong.",
+      "The evidence does not mention traffic at all, so it does not show that heavy traffic is the actual reason students miss first period. A documented example—like a list of which students were tardy on a specific morning and why—would show the traffic problem is real."
+    ],
+    "answer": "D",
+    "hints": [
+      "Run the relevance test: The reason is about students missing first period because of traffic. Does the evidence show that traffic is causing tardiness? Or does it only mention a general feeling about mornings?",
+      "What specific, checkable detail would prove that heavy traffic is keeping students from getting to first period on time?"
     ]
   }
 ]

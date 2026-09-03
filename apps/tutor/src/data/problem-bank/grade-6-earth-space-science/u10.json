@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-001",
-    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
-    "cedCode": "M6SCI-10.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A volcano erupts and releases carbon dioxide gas that had been trapped deep underground in rock. What is the name of the process that moved carbon from the geosphere into the atmosphere?",
-    "choices": [
-      "Carbonate rock formation",
-      "Chemical weathering",
-      "Direct gas exchange",
-      "Volcanic outgassing"
-    ],
-    "answer": "D",
-    "hints": [
-      "The process happens when a volcano brings deep underground gas to the surface.",
-      "The word 'outgassing' is a clue about gas moving out from somewhere."
-    ]
-  },
-  {
-    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-002",
-    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
-    "cedCode": "M6SCI-10.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Rainwater falling through the air picks up a small amount of carbon dioxide gas and becomes slightly acidic. This rainwater then slowly reacts with rock on land. Which direction is the carbon moving, and which two reservoirs are being connected by this pathway?",
-    "choices": [
-      "From the atmosphere to the ocean; the two reservoirs are the atmosphere and the ocean",
-      "From the geosphere to the atmosphere; the two reservoirs are the geosphere and the atmosphere",
-      "From the ocean to the atmosphere; the two reservoirs are the ocean and the atmosphere",
-      "From the atmosphere to the geosphere; the two reservoirs are the atmosphere and the geosphere"
-    ],
-    "answer": "A",
-    "hints": [
-      "The carbon starts in the air as gas. Where does the rainwater carry it after it reacts with rock on land?",
-      "Rivers carry the dissolved carbon away from land — but where do rivers flow?"
-    ]
-  },
-  {
-    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-003",
-    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
-    "cedCode": "M6SCI-10.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Deep ocean water contains dissolved carbon that came from the atmosphere. This dissolved carbon can react with dissolved calcium in the water to form solid calcium carbonate. Over long stretches of time, thick layers of this solid material build up on the ocean floor and harden into rock. What reservoir is the carbon now stored in, and what is this type of rock called?",
-    "choices": [
-      "The atmosphere; the rock is called lava because molten material hardens into solid form",
-      "The geosphere; the rock is called carbonate rock such as limestone",
-      "The ocean; the rock is called sediment because it settles on the ocean floor and forms layers",
-      "The geosphere; the rock is called volcanic rock because it forms from magma cooling underground"
-    ],
-    "answer": "B",
-    "hints": [
-      "Once the carbon is locked inside solid rock on the ocean floor, which reservoir does that belong to?",
-      "The problem describes calcium carbonate building up and hardening — that is a specific type of rock with a name taught in the lesson."
-    ]
-  },
-  {
-    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-004",
-    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
-    "cedCode": "M6SCI-10.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A thick layer of limestone sits exposed high on a mountainside, far from any ocean today. Scientists know that this limestone formed hundreds of millions of years ago from carbon dissolved in seawater. Trace the pathway carbon took from the atmosphere to become locked in this rock, naming each step and the two reservoirs involved at each step.",
-    "choices": [
-      "Atmosphere to geosphere by volcanic outgassing, then geosphere to ocean by carbonate rock formation",
-      "Ocean to atmosphere by direct gas exchange, then atmosphere to geosphere by volcanic outgassing",
-      "Atmosphere to ocean by chemical weathering and rivers, then ocean to geosphere by carbonate rock formation",
-      "Geosphere to atmosphere by volcanic outgassing, then atmosphere to ocean by direct gas exchange"
-    ],
-    "answer": "C",
-    "hints": [
-      "The carbon starts as a gas in the atmosphere. Rainwater is the first clue about how it leaves the air.",
-      "Once dissolved carbon reaches the ocean, what solid form does it take? That solid form is how carbon enters the geosphere."
-    ]
-  },
-  {
-    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-005",
-    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
-    "cedCode": "M6SCI-10.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "At the surface of the ocean, carbon dioxide gas from the air can dissolve directly into the water. This same exchange can also run in reverse, with dissolved carbon leaving the water and entering the air. A student claims this exchange is a one-way pathway where carbon always moves in only one direction. Explain why the student's claim is wrong, and describe what actually happens.",
-    "choices": [
-      "The student is wrong because carbon can move from the atmosphere into the ocean when conditions favor dissolving, and also move from the ocean into the atmosphere when conditions change, making it a two-way exchange rather than one direction",
-      "The student is wrong because the direction of carbon movement at the ocean surface depends on temperature and other water conditions, which means sometimes carbon dissolves into water and sometimes it escapes into the air",
-      "The student is wrong because the lesson describes carbon leaving the ocean and entering the air as part of the same process that brings carbon from the air into the water, so both directions must be possible",
-      "The student is wrong because the exchange between atmosphere and ocean is two-way; carbon moves in both directions depending on conditions, not just one direction forever"
-    ],
-    "answer": "D",
-    "hints": [
-      "Think about the word 'exchange' — what does that tell you about the direction of movement?",
-      "The lesson says carbon can both dissolve into the ocean AND leave the ocean and enter the air. What determines which direction happens?"
-    ]
-  },
-  {
-    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-006",
-    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
-    "cedCode": "M6SCI-10.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A geologist finds carbonate rock deep underground that formed on an ancient seafloor. She knows plate motion has carried this rock kilometers below the surface into a hot region where heat and pressure are acting on it. Predict what could happen to the carbon locked in this rock over a very long time, trace the full pathway it might take back to the atmosphere, and explain why this rock is not a permanent trap for carbon even though it has stored carbon for hundreds of millions of years.",
-    "choices": [
-      "The rock will be broken down by heat and pressure, freeing the carbon dioxide; this gas can then rise and reach the atmosphere through a later volcanic eruption, showing that no reservoir permanently traps carbon no matter how long it holds it",
-      "The rock will be heated and squeezed by the extreme conditions deep below the surface, which causes the carbon to be released as a gas that eventually finds its way upward through volcanic activity to escape into the atmosphere",
-      "The rock will undergo chemical changes due to heat and pressure in the mantle region, releasing carbon dioxide that becomes incorporated into magma and reaches the surface during volcanic events where it returns to the atmosphere",
-      "The rock will stay locked in place and never release its carbon because plate motion only carries rock downward into the mantle and does not bring material back up to the surface through any process"
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson teaches that heat and pressure deep underground can do something specific to carbonate rock. What gets freed when that happens?",
-      "Once carbon is freed from the rock, there is already a named process that can carry it from deep underground to the atmosphere. What is that process?"
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-001",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What is the key difference between a single warm year and a genuine warming trend?",
-    "choices": [
-      "A single warm year is one reading taken at one point in time, while a trend is a sustained direction seen across many decades of readings with no reversal.",
-      "A single warm year occurs during just one year of measurements, whereas a trend shows the overall direction of change across multiple decades and cannot include reversals that break the pattern.",
-      "A single warm year refers to one year being warmer than average, while a trend must show consistent upward or downward movement across many consecutive decades without any drops.",
-      "A single warm year represents an isolated event with no predictive power, while a trend demonstrates a sustained pattern of change over decades that continues in one direction."
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about what 'sustained' and 'many decades' mean in the context of trend versus one year.",
-      "The lesson says one unusually warm year is not evidence of warming by itself — why not?"
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-002",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A temperature record for five decades reads: 100, 99, 103, 101, 105. Does this record show a genuine multi-decade warming trend?",
-    "choices": [
-      "Yes, because the temperature value in decade five is higher than the temperature value in decade one, showing an overall upward path.",
-      "No, because the temperature goes down between the second and third decade, so the direction is not sustained across all decades.",
-      "No, because there is a reversal between decades two and three where the value drops from 99 to 103, breaking the sustained upward trend required for a genuine warming pattern.",
-      "No, because the rate of change is not constant from decade to decade, so the data do not follow a linear or predictable warming pattern throughout."
-    ],
-    "answer": "B",
-    "hints": [
-      "A trend must show direction across all the decades — does this record go up every single step?",
-      "Look for a reversal: a point where the temperature goes down instead of up."
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-003",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "The greenhouse effect works by allowing sunlight to pass through the atmosphere and warm Earth's surface, and then trapping some of the heat that Earth radiates back outward. According to the lesson, what happens when atmospheric carbon dioxide increases?",
-    "choices": [
-      "Earth's surface radiates less heat outward, so there is less to trap.",
-      "Sunlight bounces back into space before it can reach Earth's surface.",
-      "More heat is trapped near Earth's surface, strengthening the warming effect.",
-      "The atmosphere becomes thinner and lets more of Earth's heat escape."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson says carbon dioxide absorbs outgoing heat — what is the effect of having more of it?",
-      "Think about what 'strengthening' the heat-trapping effect means for surface temperature."
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-004",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A temperature index and a CO2 index are reported for six decades, oldest to most recent. Temperature index: 100, 101, 101, 105, 112, 121. CO2 index: 100, 100, 100, 103, 110, 122. Looking only at these two records, what part of the evidence for a strong association between rising CO2 and rising temperature is present here, and what part is missing?",
-    "choices": [
-      "Both records show increases over time, and the CO2 index rises from 100 to 122 while temperature rises from 100 to 121, which demonstrates that the two variables are connected and moving together.",
-      "The records both reach their highest values in the most recent decade, and both values climbed higher in the later decades compared to the earlier decades, showing their peaks align in time.",
-      "The CO2 index stays flat for the first three decades while temperature keeps rising from 100 to 101, so the two variables move independently during this period and cannot share a connection.",
-      "Both records show a sustained trend with no reversal, and both accelerate sharply in the same later decades — this is the trend and timing match. The mechanism (carbon dioxide's heat-trapping property) is taught separately but not shown by the numbers themselves."
-    ],
-    "answer": "D",
-    "hints": [
-      "Check whether both records show sustained rises and whether their accelerations happen in the same decades.",
-      "The mechanism is a physical reason why the two would rise together — can that be read directly from numbers on a graph?"
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-005",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student observes that over the past century, both the number of cars on Earth and the global average temperature have risen. The student concludes this proves that cars cause global warming. What is missing from this student's reasoning to build a strong evidence case?",
-    "choices": [
-      "The student has shown two things rose over the same time period, but has not shown a known physical mechanism explaining why cars would warm Earth's climate, and has not confirmed that the timing of the biggest increases in car numbers matches the timing of the biggest temperature increases.",
-      "The student needs to demonstrate that the rise in car numbers happened during the same decades when temperature rose fastest, and must explain the physical reason why burning fossil fuels in cars would trap heat in Earth's atmosphere.",
-      "The student failed to compare the rate of car production in different countries to see which regions contributed most to the temperature increase, making a global connection impossible to establish from this data alone.",
-      "The student should have measured the exhaust emissions from individual cars in different climates to show that the gas released causes warming in those specific locations rather than globally."
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson says three things together make a strong case — trend, matching timing, and mechanism. Which of these is the student missing?",
-      "A mere coincidence in time is not enough — what else has to be true about when the increases happen, and why they happen?"
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-006",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Two researchers each present data sets for atmospheric CO2 and global temperature over the same 100-year span. Researcher A shows that both records rose steadily and evenly across all decades, with the same amount of increase every decade. Researcher B shows records where both CO2 and temperature stayed flat for the first 50 years, then rose steeply over the last 50 years, with the steepest increases in the same final decades. Which researcher's data better support the association between rising CO2 and human fossil-fuel combustion, and why?",
-    "choices": [
-      "Researcher A's data fit better because a steady, even rise across all decades shows a consistent pattern of change that is easier to model mathematically than sharp acceleration.",
-      "Researcher B's data fit better because the timing of the fastest rise in both records matches the historical period when large-scale fossil-fuel use expanded sharply worldwide, while Researcher A's steady rise does not clearly link to the actual timing of industrialization.",
-      "Both researchers' data support the association equally well because they both show CO2 and temperature rising together over the full century, and the pattern of increase matters less than the direction of change.",
-      "Researcher A's data are more reliable because they show a uniform increase rate that rules out natural variability, whereas Researcher B's acceleration pattern could result from natural climate cycles unrelated to human activity."
-    ],
-    "answer": "B",
-    "hints": [
-      "The lesson emphasizes that the timing of acceleration matters — the fastest rise should happen when fossil-fuel use itself expanded most sharply, roughly from the middle of the 1900s onward.",
-      "A matching timing between when CO2 accelerates, when temperature accelerates, and when industrial fossil-fuel combustion scaled up is a key part of the three-clue test for a strong association."
-    ]
-  },
-  {
     "id": "m6sci-monitoring-reducing-human-impact-on-earth-s-syst-001",
     "loId": "m6sci.monitoring-and-reducing-human-impact-on-earth-systems",
     "cedCode": "M6SCI-10.3",
@@ -453,6 +225,234 @@
     "hints": [
       "Calculate the new total demand using 10,000 people times 60 liters per person per day, then compare it to the 500,000-liter recharge rate.",
       "If total demand rises above the rate nature replaces water, what changes about whether the use is renewable—the aquifer itself, or the relationship between demand and recharge rate?"
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-001",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "What is the difference between a single warm year and a temperature trend? Explain why one is evidence of climate change and the other is not.",
+    "choices": [
+      "A single warm year is just one reading, while a trend is a sustained direction across many decades with no reversal; only the trend shows genuine warming, not a single year.",
+      "A single warm year happens because of weather patterns, while a trend happens because of climate patterns; both provide equally strong evidence of warming because they both involve temperature change.",
+      "A single warm year tells you about that year's weather conditions, while a trend tells you about that year's climate conditions; both are types of climate change because both involve years.",
+      "A single warm year must be caused by human activity, while a trend might be natural; only human causes count as real climate change because natural variation does not matter."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the lesson's emphasis on 'one reading versus many readings across time.'",
+      "A genuine trend requires the direction to hold steady across multiple decades, not flip or stay flat."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-002",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A simplified temperature index for five consecutive decades reads: 100, 101, 103, 108, 115. Does this data show a genuine warming trend, and if so, is the warming happening at a steady pace or speeding up?",
+    "choices": [
+      "Yes, it shows a genuine trend, but the pace is steady because the total rise from 100 to 115 is the same size as it would be in any other five-decade span, so the rate never changes.",
+      "Yes, it shows a genuine trend because the index rises in every decade with no reversal; the pace is speeding up because the decade-to-decade increases grow from 1 to 1 to 2 to 5 to 7.",
+      "No, it does not show a genuine trend because the numbers do not repeat exactly from decade to decade, which means the pattern is not reliable enough to count as a real trend.",
+      "Yes, it shows a genuine trend because the final number is much larger than the starting number, and the pace is slowing because recent decades matter less than older ones when you look at the total change."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether the direction ever reverses; if it does not, it is a genuine multi-decade trend.",
+      "To find the pace, subtract each decade's reading from the next and look at whether those differences grow, shrink, or stay the same."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-003",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two scientists examine a century of data showing that both atmospheric CO2 and global temperature have risen. Scientist A says, 'The two records both go up, so rising CO2 must be the only cause of rising temperature.' Scientist B says, 'The two records both go up, but that alone does not prove one causes the other.' Which scientist's reasoning is more careful, and why?",
+    "choices": [
+      "Scientist B is more careful; two records rising together always indicates pure coincidence, so the CO2 and temperature trends should be rejected as evidence unless they are completely unrelated.",
+      "Scientist A is more careful; if two things rise together for long enough, one must be the direct cause of the other, no debate needed, because correlation always means causation.",
+      "Scientist B is more careful; two records rising at the same time can be a coincidence unless you also check whether the timing of their fastest rises matches and whether there is a known mechanism connecting them.",
+      "Scientist A is more careful; any association that shows up in data must mean one variable is the sole cause of the other because data never lies about causation."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson says that two records rising together is NOT enough by itself; what else does strong evidence need?",
+      "Think about the three-part check for a strong association: sustained trend, matching timing, and mechanism."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-004",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A CO2 index and a temperature index are reported for six decades (oldest to most recent): CO2 index: 100, 100, 102, 105, 112, 125; Temperature index: 100, 100, 101, 103, 109, 118. In which decades do both indexes show their largest single-decade jumps, and what does that pattern suggest about the relationship between the two records?",
+    "choices": [
+      "The temperature index shows its largest jump in the fourth decade while CO2 shows its largest jump in the sixth decade; this mismatch proves that rising CO2 has nothing to do with rising temperature because the timing does not match.",
+      "The CO2 index shows its largest jump in the sixth decade, while temperature shows its largest jump in the fifth decade; since the timing does not match perfectly, the records cannot be associated with each other in any way.",
+      "Both show steady, uniform growth across all six decades; the jumps are the same size in every period, so there is no timing pattern to examine or compare between the two indexes.",
+      "Both show their largest jumps in the fifth and sixth decades, the same later decades; this timing match, combined with the known heat-trapping property of CO2, supports linking the two trends rather than treating them as separate coincidences."
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the decade-to-decade increases for each index and look for when the biggest single jump occurs in each record.",
+      "The lesson says that matching timing — when both records accelerate in the same decades — is one of the three parts of strong evidence."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-005",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Suppose a new data set showed that atmospheric CO2 rose sharply over the past century while global temperature remained perfectly flat — neither warming nor cooling. According to the lesson's framework for evaluating associations, would this observation weaken the case that rising CO2 is associated with the rising temperature trend? Explain your reasoning.",
+    "choices": [
+      "Yes, it would severely weaken the case because the timing match between the two trends would be gone; without matching timing, you cannot link the trends even though the mechanism is still valid.",
+      "No, it would not weaken the case at all because a single rising trend in CO2 is proof of causation on its own, regardless of what happens to temperature in the same period.",
+      "Yes, but only slightly, because matching timing is less important than the length of the time period and whether both variables were actually measured with modern instruments.",
+      "No, because the existence of a known mechanism connecting CO2 to warming is sufficient to establish association without needing both records to show matching changes in the same direction."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson identifies three separate parts needed for strong evidence of an association; if one part is missing, does the whole case stay equally strong?",
+      "What would happen if the timing of the fastest changes in the two records no longer matched?"
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-006",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student encounters three statements about Earth's temperature and CO2 records: (1) 'The temperature rose from 1950 to 1980, so 1950 to 1980 proves warming is real.' (2) 'Both CO2 and temperature rose during 1950 to 1980, so CO2 caused that warming.' (3) 'Both CO2 and temperature show multi-decade trends that accelerated in the same recent decades, fossil-fuel use scaled up in those same decades, and CO2 traps heat — so the evidence supports an association.' Rank these statements from weakest to strongest evidence according to the lesson's framework, and explain what makes statement (3) stronger than statement (2).",
+    "choices": [
+      "Weakest to strongest: (2), (1), (3). Statement (1) is weak because it describes warming without explaining what causes it; (2) is stronger because it names both CO2 and temperature as variables; (3) is strongest because it includes the most recent data points.",
+      "Weakest to strongest: (1), (2), (3). Statement (1) uses a single period that is too short; (2) shows two trends rising together but lacks both matching timing and the timing history of fossil fuels; (3) has all three parts—sustained multi-decade trends, timing match with fossil-fuel scale-up, and the known heat-trapping mechanism.",
+      "Weakest to strongest: (1), (3), (2). Statement (1) is the weakest because it describes only one variable; (3) is stronger than (2) because it includes more historical information going back further in time; (2) is strongest because it directly claims causation between two variables.",
+      "Weakest to strongest: (3), (2), (1). Statement (3) would be strongest if fossil fuels were removed and only CO2 were mentioned; (2) is second because naming both variables in the same sentence proves their connection; (1) is weakest because it covers fewer decades than the other statements."
+    ],
+    "answer": "B",
+    "hints": [
+      "Review the lesson's three-part test for strong evidence: Does each need a multi-decade sustained trend? Do the fastest changes need to line up in time? Is there a known physical mechanism?",
+      "Statement (2) shows two records rising together; what is missing that (3) adds to make the case much stronger?"
+    ]
+  },
+  {
+    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-001",
+    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
+    "cedCode": "M6SCI-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Carbon is stored in three major reservoirs on Earth. Which of the following correctly names all three reservoirs where carbon is found?",
+    "choices": [
+      "The atmosphere, rivers, and mountains",
+      "The atmosphere, the ocean, and the crust",
+      "The mantle, the ocean, and the atmosphere",
+      "The atmosphere, the ocean, and the geosphere"
+    ],
+    "answer": "D",
+    "hints": [
+      "A reservoir is a place where something is stored for a while.",
+      "Think about where carbon exists as gas, as dissolved material in water, and locked in solid rock."
+    ]
+  },
+  {
+    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-002",
+    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
+    "cedCode": "M6SCI-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scientist measures the air above an ocean on a calm day and finds that carbon dioxide gas is slowly leaving the water and entering the air. Which pathway in the carbon cycle explains what is happening?",
+    "choices": [
+      "Direct gas exchange between the ocean and atmosphere",
+      "Chemical weathering by rainwater pulling carbon from the land",
+      "Volcanic outgassing releasing carbon from deep rock",
+      "Plate motion carrying carbonate rock underground"
+    ],
+    "answer": "A",
+    "hints": [
+      "The scientist is watching gas move directly between the ocean's surface water and the air—no rain, no volcanoes, no rocks involved.",
+      "This pathway works in both directions at the ocean's surface, similar to how fizz escapes from a soda bottle."
+    ]
+  },
+  {
+    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-003",
+    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
+    "cedCode": "M6SCI-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Rain falls on a mountainside and mixes with carbon dioxide from the atmosphere. The slightly acidic rainwater slowly reacts with rock on the slope. Days later, a river fed by runoff from that slope carries the dissolved carbon toward the sea. What is the name of this carbon-moving pathway?",
+    "choices": [
+      "Volcanic outgassing, which releases carbon dioxide that was trapped in magma deep below the surface and sends it directly into the atmosphere.",
+      "Chemical weathering and river transport",
+      "Carbonate rock formation, which occurs when calcium and dissolved carbon combine in the ocean to build shells and sediment that settle on the seafloor.",
+      "Plate-motion cycling, which moves carbon through the mantle and crust as tectonic plates collide and separate over millions of years."
+    ],
+    "answer": "B",
+    "hints": [
+      "The pathway begins when rain picks up carbon dioxide and becomes slightly acidic.",
+      "The dissolved carbon that results travels away from the land by water—not through the air and not sinking directly into rock."
+    ]
+  },
+  {
+    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-004",
+    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
+    "cedCode": "M6SCI-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A thick layer of limestone formed on an ancient ocean floor hundreds of millions of years ago. Over time, plate motion has carried this rock downward into hotter, deeper regions of Earth. Explain the complete journey of carbon from the moment it was dissolved in the ancient ocean until it returns to the atmosphere. Which two processes—one that happened on the ocean floor long ago and one happening now in the deep Earth—are required to complete the cycle?",
+    "choices": [
+      "First, chemical weathering formed the limestone on the ocean floor; now, volcanic outgassing from magma rising deep below will return it to the air.",
+      "First, carbon dioxide dissolved directly into ocean water from the air; now, heat and pressure are breaking the rock down so the carbon can escape through a later eruption.",
+      "First, dissolved carbon and calcium combined to form carbonate rock; now, heat and pressure are breaking the rock down so the carbon can eventually escape through volcanic outgassing.",
+      "First, rainwater carried dissolved carbon to the ocean and formed limestone; now, plate motion alone will push the rock back to the surface where it will release its carbon."
+    ],
+    "answer": "C",
+    "hints": [
+      "Carbonate rock forms when dissolved carbon in ocean water combines with dissolved calcium and hardens over long time.",
+      "Once rock is pushed deep underground, heat and pressure must free the carbon; that freed carbon can then reach the surface through the same pathway that brought carbon from deep rock to the air in the first place."
+    ]
+  },
+  {
+    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-005",
+    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
+    "cedCode": "M6SCI-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two volcanoes are erupting at the same time. Volcano A sits on a coastline with the ocean just a few kilometers away. Volcano B sits in the middle of a large continent, far from any ocean. Both release carbon dioxide gas trapped deep in rock. Explain why the carbon dioxide from Volcano A is more likely to enter the ocean by direct gas exchange than the carbon dioxide from Volcano B.",
+    "choices": [
+      "The ocean's surface water at Volcano A's coastline can absorb carbon dioxide directly through the atmosphere, while carbon dioxide from Volcano B must first dissolve in rainwater and travel through soil and groundwater to eventually reach distant ocean basins.",
+      "Volcano A releases carbon dioxide that dissolves more readily in salt water than in freshwater, whereas Volcano B's carbon dioxide would need to pass through freshwater systems first, slowing its entry into the ocean.",
+      "The atmospheric pressure near Volcano A's coastal location forces carbon dioxide molecules downward into the ocean, but the atmospheric pressure in the continental interior prevents Volcano B's carbon dioxide from reaching the ocean surface.",
+      "The gas from Volcano A is closer to the ocean's surface water, where direct gas exchange happens; the gas from Volcano B must travel a long distance through the atmosphere before reaching the ocean, so river transport becomes more likely."
+    ],
+    "answer": "D",
+    "hints": [
+      "Direct gas exchange between the atmosphere and ocean happens at the ocean's surface.",
+      "Think about how far the gas must travel and what reservoirs it would pass through on that journey."
+    ]
+  },
+  {
+    "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-006",
+    "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
+    "cedCode": "M6SCI-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geologist studies a sequence of rock layers. The deepest layer contains carbonate rock (limestone) that formed on an ocean floor 400 million years ago. Above it, she finds layers of other rock types that were added over the next 300 million years as the seafloor moved. At the top, she finds a thin layer of volcanic ash—evidence that a volcano erupted in this location about 100 million years ago. The geologist hypothesizes that the carbon locked in that ancient limestone is still underground today, never having reached the atmosphere. Based on the carbon cycle and the rock record described, explain why this hypothesis is almost certainly wrong, identifying which specific process would have freed the carbon and when it most likely occurred.",
+    "choices": [
+      "The hypothesis is wrong because plate motion must have carried the limestone downward at some point before 100 million years ago, and heat and pressure in the deep Earth would have freed the carbon, allowing it to escape through a volcanic eruption such as the one that left the ash layer.",
+      "The hypothesis is wrong because the limestone layer would have been exposed to surface weathering processes during the 300-million-year period when new rock layers were being deposited above it, allowing rainwater to gradually dissolve and transport dissolved carbonate away from the site.",
+      "The hypothesis is wrong because carbonate rock always reacts chemically with the surrounding rock layers over time, producing carbon dioxide gas that rises through cracks in the overlying rocks and eventually reaches the surface.",
+      "The hypothesis is wrong because the volcanic eruption 100 million years ago would have generated enough heat to decompose nearby carbonate rock, releasing carbon dioxide that mixed with the volcanic gases and entered the atmosphere."
+    ],
+    "answer": "A",
+    "hints": [
+      "The limestone formed on an ocean floor and is now buried under 300 million years of additional rock layers—it must have gone underground; think about what happens to rock at depth.",
+      "The volcanic ash layer appeared about 100 million years ago; if carbon were freed from the deep rock, through which pathway would it reach the air?"
     ]
   }
 ]

@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6geo-weather-vs-climate-001",
-    "loId": "m6geo.weather-vs-climate",
-    "cedCode": "M6GEO-5.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A weather forecast on television predicts rain and cooler temperatures for the next three days in your city. What is the forecast describing — the weather or the climate?",
-    "choices": [
-      "The climate, because forecasts predict the permanent atmospheric conditions that define a location over many years",
-      "The climate, because it tells you what temperatures and rainfall to expect in that location",
-      "The weather, because it describes what the atmosphere will be doing over a few days, not the long-term pattern the city usually has",
-      "The weather, because short-term predictions of rain and temperature changes represent conditions in the next few days, which is weather not climate"
-    ],
-    "answer": "C",
-    "hints": [
-      "Remember: does this describe right now or a few days, or does it describe the pattern a place is usually like?",
-      "A forecast is a prediction for the near future — is that a short stretch of time or a long-term pattern?"
-    ]
-  },
-  {
-    "id": "m6geo-weather-vs-climate-002",
-    "loId": "m6geo.weather-vs-climate",
-    "cedCode": "M6GEO-5.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Mount Iris has a cool, dry climate. On one winter day there, it snows heavily for 12 hours and the temperature stays below freezing. Does this snowy day prove that Mount Iris's climate description is wrong?",
-    "choices": [
-      "Yes, because a single heavy snowfall proves the entire climate classification of dry must be incorrect for that location",
-      "No, but only if the snow happened more than one year ago",
-      "Yes, because snow indicates wet conditions, which directly contradicts a dry climate classification no matter when it occurs",
-      "No, because one snowy day is that day's weather, and it does not change the overall pattern Mount Iris usually has"
-    ],
-    "answer": "D",
-    "hints": [
-      "Can a place with one kind of climate still have a day that does not match it?",
-      "Does one day of snow, however heavy, change what the place's climate pattern is year after year?"
-    ]
-  },
-  {
-    "id": "m6geo-weather-vs-climate-003",
-    "loId": "m6geo.weather-vs-climate",
-    "cedCode": "M6GEO-5.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student reads that Grayhaven's climate is warm and humid year-round. The next day, the student sees a news story saying that yesterday was unusually cold and dry in Grayhaven, with frost on the ground. Which statement correctly explains what the student has read?",
-    "choices": [
-      "The climate description and the news story are both correct — they answer two different questions about the same place",
-      "The news story is wrong, because Grayhaven's climate is warm and humid, so no day there can be cold and dry",
-      "The climate description used to be true, but yesterday's weather proves it has changed",
-      "The news story is describing Grayhaven's weather, but the climate description is about a different place with a similar name"
-    ],
-    "answer": "A",
-    "hints": [
-      "Can the same place be truthfully described both ways at once — one way about its climate and one way about its weather?",
-      "A climate description answers the question 'What is the pattern?', and weather reporting answers the question 'What is happening right now?'"
-    ]
-  },
-  {
-    "id": "m6geo-weather-vs-climate-004",
-    "loId": "m6geo.weather-vs-climate",
-    "cedCode": "M6GEO-5.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A gardener in Northfield reads that Northfield has a moderate, temperate climate. Before planting seeds, the gardener checks a weather report that says 'Frost expected tonight and tomorrow night.' Should the gardener plant the seeds based on the climate description, or should the gardener wait until after checking the weather forecast? Explain why.",
-    "choices": [
-      "The gardener should plant now, because a climate description tells what will happen every single day of the year and frost cannot occur in any location with a moderate, temperate classification",
-      "The gardener should wait, because the weather forecast describes what will happen in the next few days, and the climate description does not predict any single day",
-      "The gardener should plant now, because a climate description is more accurate than a weather forecast for planning activities on any specific day in the near future",
-      "The gardener should wait, but the decision depends on what the climate description says will happen during the exact same dates when frost is forecast"
-    ],
-    "answer": "B",
-    "hints": [
-      "Does knowing a place's climate tell you what the weather will be on any particular day?",
-      "The gardener needs a prediction for the next few days — should that come from a climate description or from a weather forecast?"
-    ]
-  },
-  {
-    "id": "m6geo-weather-vs-climate-005",
-    "loId": "m6geo.weather-vs-climate",
-    "cedCode": "M6GEO-5.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two statements are made about City X: (1) 'City X had a rainy week last month,' and (2) 'City X has a dry climate.' A student says these two statements contradict each other and cannot both be true. Explain what mistake the student is making.",
-    "choices": [
-      "The student is right — a place cannot have both a dry climate and rain in any week of the year, so one statement must be false",
-      "The student is wrong because the climate classification must change immediately to 'wet' whenever rain falls during any week, making statement 2 outdated",
-      "The student is wrong because statement 1 is about weather (a short time) and statement 2 is about climate (the long-term pattern), and both can be true of the same place at once",
-      "The student is wrong because weather patterns always match climate classifications exactly, so if one week was rainy, the entire month must have been rainy and the climate cannot be dry"
-    ],
-    "answer": "C",
-    "hints": [
-      "One statement is about one week (a short stretch of time) and the other is about the pattern the place is usually like — which one is weather and which is climate?",
-      "Can a place have one kind of climate and still have some days or weeks that do not match that pattern?"
-    ]
-  },
-  {
-    "id": "m6geo-weather-vs-climate-006",
-    "loId": "m6geo.weather-vs-climate",
-    "cedCode": "M6GEO-5.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A scientist studying Blackstone Valley collects data on the atmosphere there for 20 years. She finds that the average summer temperature is 23 degrees Celsius, snow falls in winter about 60 percent of the years, and rain falls about evenly across all seasons. A local resident says, 'Last summer we had one month where the temperature never went above 15 degrees Celsius — that month proves the scientist's temperature numbers are wrong.' Is the resident's claim correct? Why or why not?",
-    "choices": [
-      "Yes, one cold month is enough to show that a 20-year average of 23 degrees cannot be right",
-      "Yes, but only if that cold month happened in a different year than most of the other data the scientist collected over those 20 years",
-      "No, because any month that is colder than the average means the scientist's calculation method was wrong and the true average must be lower",
-      "No, because one unusual month is weather for that time period, while the 20-year average describes the climate pattern, and one day or month that differs from the climate pattern does not change what that pattern is"
-    ],
-    "answer": "D",
-    "hints": [
-      "Is one month, no matter how unusual, enough time to describe a place's climate pattern, or is it a short stretch of time called weather?",
-      "If a place's climate average is 23 degrees over 20 years, can there still be individual months or days that are much colder or warmer than that?"
-    ]
-  },
-  {
     "id": "m6geo-the-water-cycle-001",
     "loId": "m6geo.the-water-cycle",
     "cedCode": "M6GEO-5.2",
@@ -228,136 +114,22 @@
     ]
   },
   {
-    "id": "m6geo-what-is-a-biome-001",
-    "loId": "m6geo.what-is-a-biome",
-    "cedCode": "M6GEO-5.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A biome is defined by three key characteristics. Which set of three characteristics does a geographer use to identify and name a biome?",
-    "choices": [
-      "Temperature, precipitation, and plant life",
-      "Elevation, rainfall, and animal species",
-      "Latitude, seasons, and forest density",
-      "Soil type, wind patterns, and tree height"
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson teaches that naming a biome requires reading all three clues together.",
-      "Think about what makes one biome different from another — the weather it has and what grows there."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-a-biome-002",
-    "loId": "m6geo.what-is-a-biome",
-    "cedCode": "M6GEO-5.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A biome receives very little rain in every single month of the year. Most of the ground between plants is bare. Which biome does this description match?",
-    "choices": [
-      "Rainforest",
-      "Desert",
-      "Tundra",
-      "Grassland"
-    ],
-    "answer": "B",
-    "hints": [
-      "The defining clue for one biome is very little precipitation all year — use that to narrow your choices.",
-      "Between desert and tundra, both are dry, so look at what covers the ground: is it bare or covered by mosses and shrubs?"
-    ]
-  },
-  {
-    "id": "m6geo-what-is-a-biome-003",
-    "loId": "m6geo.what-is-a-biome",
-    "cedCode": "M6GEO-5.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A biome stays hot every single month of the year, with almost no change in temperature from season to season. Rain falls on most days, throughout the entire year. Which biome is this?",
-    "choices": [
-      "Forest",
-      "Grassland",
-      "Rainforest",
-      "Desert"
-    ],
-    "answer": "C",
-    "hints": [
-      "The combination of constant heat and rain falling most days all year points to one biome.",
-      "Two biomes get enough rain to support many trees, but only one stays hot every single month with no cold season."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-a-biome-004",
-    "loId": "m6geo.what-is-a-biome",
-    "cedCode": "M6GEO-5.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student reads this description: 'Tall trees grow close together in layers. Only a few scattered trees stand far apart from each other.' The student says both describe the same biome because they both mention trees. Explain why the student is wrong, using at least one other clue besides plant life.",
-    "choices": [
-      "The first describes a grassland with tall grasses and moderate rainfall; the second describes a rainforest with short plants on the forest floor and very high rainfall.",
-      "The first describes a forest with trees losing their leaves in winter and cooler temperatures; the second describes a grassland with evergreen trees that stay green year-round in a warmer climate.",
-      "The first describes a tundra where trees grow in layers and temperatures are very warm; the second describes a desert where trees are spaced far apart and temperatures are cold throughout the year.",
-      "The first describes a rainforest with dense, layered trees; the second describes a grassland with scattered trees because grasslands do not get enough rain to support many trees close together."
-    ],
-    "answer": "D",
-    "hints": [
-      "Remember that forest and rainforest both grow many trees, and grassland also has scattered trees — so plant life alone cannot tell them apart.",
-      "Think about what separates grassland from rainforest: one does not get enough rain to support many trees close together, and one is not hot every single month."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-a-biome-005",
-    "loId": "m6geo.what-is-a-biome",
-    "cedCode": "M6GEO-5.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two places both have very little precipitation all year long. One has a ground covered in low mosses and small shrubs with no trees at all. The other has bare ground with only a few scattered plants widely spaced apart. Are these the same biome? Explain your answer using all three clues.",
-    "choices": [
-      "No, they are different biomes: the first is a tundra with low mosses and shrubs covering the ground in a very cold place, and the second is a desert with bare ground between scattered plants in a hot place.",
-      "Yes, they are the same biome because both receive very little precipitation throughout the year, and lack of rain is the defining feature that overrides differences in temperature and plant density between regions.",
-      "No, they are different biomes: the first is a rainforest with dense plant cover that prevents bare ground from showing through, and the second is a grassland with scattered shrubs and exposed soil visible between patches of vegetation.",
-      "Yes, they are the same biome because both have very limited plant life with minimal coverage and low precipitation levels, which means both experience conditions too harsh to support tree growth of any kind in any season."
-    ],
-    "answer": "A",
-    "hints": [
-      "Very low precipitation alone fits two different biomes in this lesson — you need to check temperature and plant life too.",
-      "A tundra is defined as cold, dry, and treeless, with mosses and shrubs covering the ground; a desert is defined as very dry with scattered plants and bare ground between them."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-a-biome-006",
-    "loId": "m6geo.what-is-a-biome",
-    "cedCode": "M6GEO-5.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A biome has a warm part of the year and a genuinely cold part of the year, with enough precipitation spread throughout most of the year. Many trees grow close together there. Once the student identifies this as a forest using all three clues, the student then asks: 'If the temperature stayed the same but the precipitation changed to rain falling on most days all year with no dry season, would this still be a forest?' Using the three-clue method from the lesson, explain why or why not.",
-    "choices": [
-      "No, because the addition of year-round rain with no dry season is the defining clue of a rainforest, and a rainforest stays hot every month with no cold season, so the plant life and precipitation clues would no longer match the forest's need for a cold season.",
-      "No, because very high precipitation with no dry season, combined with a hot temperature every month (since rainforests are hot), would switch the biome to rainforest, even though the temperature clue in the original forest description stays the same.",
-      "Yes, because both forest and rainforest have many trees growing close together, so adding more rain would not change the biome name.",
-      "Yes, because precipitation alone does not determine a biome — all three clues must change together for the biome name to change."
-    ],
-    "answer": "B",
-    "hints": [
-      "Check what happens to the temperature clue if precipitation changes to year-round rain with no dry season: does a rainforest stay hot or cold every month?",
-      "The lesson shows that forest and rainforest are neighbors — forest needs a genuinely cold season, and rainforest needs to be hot every month, so changing one clue can flip which biome fits."
-    ]
-  },
-  {
     "id": "m6geo-ecosystems-habitats-001",
     "loId": "m6geo.ecosystems-and-habitats",
     "cedCode": "M6GEO-5.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which statement correctly defines what an ecosystem is?",
+    "problemText": "Which of the following is a complete definition of an ecosystem? Use the lesson definition to pick the correct answer.",
     "choices": [
-      "Only the plants and animals that live in a particular location",
+      "Only the plants and animals that live in one location, excluding all nonliving components like soil and water",
       "Every living and nonliving thing sharing one place, considered together",
-      "The smallest space where one specific animal makes its home",
-      "A group of living things that need the same type of food to survive"
+      "The largest animals that live in a particular area along with the vegetation they depend on for food",
+      "Only the water, soil, and rocks in one spot, separated from any organisms that might inhabit them"
     ],
     "answer": "B",
     "hints": [
-      "Remember that an ecosystem includes both living AND nonliving parts.",
-      "Think about whether water, sunlight, and rocks are part of an ecosystem or not."
+      "Remember: an ecosystem includes BOTH living things AND nonliving things, not just one kind.",
+      "Think about whether the definition should mention everything in the place or just some parts."
     ]
   },
   {
@@ -366,17 +138,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is looking at a backyard garden. She names these parts: soil, tomato plants, earthworms, rainwater, and a garden hose. Which of these is an abiotic (nonliving) part of the garden ecosystem?",
+    "problemText": "A student observes a small pond and lists these parts: lily pads, algae, fish, water, mud, sunlight, and insects. Which of the following correctly separates the biotic parts from the abiotic parts?",
     "choices": [
-      "The tomato plants, because they stay rooted in one place",
-      "The earthworms, because they live in the soil",
-      "The rainwater, because it does not grow or reproduce",
-      "The garden hose, because it brings water from outside the garden"
+      "Biotic: water, mud, sunlight. Abiotic: lily pads, algae, fish, insects",
+      "Biotic: fish and insects. Abiotic: lily pads, algae, water, mud, sunlight",
+      "Biotic: lily pads, algae, fish, insects. Abiotic: water, mud, sunlight",
+      "Biotic: lily pads and algae. Abiotic: fish, insects, water, mud, sunlight"
     ],
     "answer": "C",
     "hints": [
-      "Ask yourself: does this thing grow, need energy to survive, and make more of its own kind?",
-      "Look for something in the list that cannot do all three of those things."
+      "Use the three-part test: does it grow, need energy to survive, and make more of its own kind?",
+      "Remember that plants pass all three tests, so they are biotic even though they do not move."
     ]
   },
   {
@@ -385,17 +157,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A meadow ecosystem is described as: tall grass swaying in the wind, a rabbit hopping through the grass, morning sunlight warming the ground, insects flying low, and rich soil. Which choice correctly separates the biotic parts from the abiotic parts?",
+    "problemText": "A student watches a beetle moving quickly across a log and says: 'The beetle must be living because it moves on its own.' Based on the lesson test for living things, what is the problem with this reasoning?",
     "choices": [
-      "Biotic: grass, rabbit, insects; Abiotic: wind, soil",
-      "Biotic: rabbit, insects, wind; Abiotic: grass, sunlight, soil",
-      "Biotic: grass, wind, insects; Abiotic: rabbit, sunlight, soil",
-      "Biotic: grass, rabbit, insects; Abiotic: sunlight, soil, wind"
+      "The student only named one test instead of checking all three at once",
+      "Beetles do not actually move, so the student made a false observation",
+      "Something that moves is automatically nonliving, not living",
+      "Movement is not one of the three tests for determining if something is living"
     ],
     "answer": "D",
     "hints": [
-      "Remember that wind is abiotic; it is not alive even though it moves things.",
-      "Use the three-part test: does it grow, need energy, and reproduce?"
+      "The three tests are: does it grow, does it need energy to survive, and can it make more of its own kind.",
+      "Think about a plant—it can be living without moving at all."
     ]
   },
   {
@@ -404,17 +176,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student describes a forest this way: 'The whole forest is an ecosystem, but the fallen log covered with moss is a habitat.' Explain what the student got right and what the student got wrong about the forest.",
+    "problemText": "An apple tree in an orchard grows in soil, receives sunlight, and produces apples that birds eat. A student says: 'The orchard is the apple tree's habitat because that is where it lives.' Explain what is wrong with this statement and identify what the orchard actually is.",
     "choices": [
-      "The student is right that the forest is the ecosystem and the log is a habitat inside it, but missed that many other habitats exist in the forest as well.",
-      "The student is right that the forest is an ecosystem, but wrong because the log is also a habitat and the forest itself is another habitat too, meaning multiple habitats can exist within one ecosystem.",
-      "The student is completely right; the forest is the ecosystem and the log is the only habitat inside it since habitats cannot overlap or share the same space.",
-      "The student is wrong about both parts; the fallen log is the ecosystem and the forest is one habitat within it, so habitats must contain ecosystems rather than the other way around."
+      "The statement is wrong because the habitat is a small, specific spot where one organism lives, not the entire place. The orchard is the ecosystem.",
+      "The statement is wrong because a habitat must be nonliving, and the orchard contains living things like birds. The orchard is the ecosystem.",
+      "The statement is wrong because an ecosystem cannot contain a habitat inside it. The apple tree itself is the habitat.",
+      "The statement is wrong because a habitat is larger than an ecosystem. The orchard is the habitat and the soil is the ecosystem."
     ],
     "answer": "A",
     "hints": [
-      "Think about whether one ecosystem can hold more than one habitat at the same time.",
-      "Ask: can different animals live in different spots inside the forest, each in their own habitat?"
+      "A habitat is always smaller than the ecosystem—it is one spot inside it where one particular organism lives.",
+      "The entire orchard with all its living and nonliving parts together is the ecosystem."
     ]
   },
   {
@@ -423,17 +195,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student says: 'A beach is not an ecosystem because it is mostly made of sand, which is nonliving.' What is the error in this reasoning, and why is the student wrong?",
+    "problemText": "A student examines a forest ecosystem and identifies the following: oak trees, deer, soil, rain water, moss on tree trunks, air, insects living under bark, and fallen leaves. The student then claims: 'Since some living things are plants and some are animals, this forest must actually be two ecosystems, not one.' Why is this reasoning incorrect, and what term describes the smaller spots where individual organisms live?",
     "choices": [
-      "The student is wrong because an ecosystem must include only living things and exclude all nonliving materials, so the presence of sand actually means the beach cannot qualify as a true ecosystem.",
-      "The student is wrong because an ecosystem needs BOTH living and nonliving parts together; the sand is abiotic, but if crabs, seaweed, and shells are also there, the beach is still a full ecosystem.",
-      "The student is wrong because ecosystems are defined as containing only the living parts of a place, not the nonliving parts, which means sand and water should be counted separately from the organisms.",
-      "The student is wrong because ecosystems require exactly equal amounts of living and nonliving things to be present, and beaches fail to meet this balance requirement since sand dominates."
+      "The reasoning is wrong because an ecosystem must contain both living and nonliving things in balance, and different types of organisms do not create separate ecosystems. The spots where individual organisms live are called biomes.",
+      "The reasoning is wrong because an ecosystem includes all living and nonliving things in one place, even when there are many different kinds of organisms. The specific spots where individual organisms live are called habitats.",
+      "The reasoning is wrong because ecosystems are defined by their location and all the organisms and nonliving features within that location, regardless of how many different types of plants and animals are present. The spots where organisms live are called zones.",
+      "The reasoning is wrong because the diversity of living things in one area actually strengthens the ecosystem rather than dividing it into separate parts. The spots where organisms live are called niches."
     ],
     "answer": "B",
     "hints": [
-      "Remember the definition of ecosystem: BOTH living AND nonliving parts sharing one place.",
-      "Think about whether a beach would have any living things on or in it."
+      "An ecosystem is ONE place with BOTH living and nonliving parts together—even if there are many different types of living things.",
+      "The term for a small, specific spot inside an ecosystem where one particular organism lives comes directly from the vocabulary in the lesson."
     ]
   },
   {
@@ -442,17 +214,226 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Two students visit a tide pool during low tide. One student says: 'This tide pool is a habitat, not an ecosystem, because it is too small.' The other student says: 'The tide pool is an ecosystem because it has starfish, seaweed, rocks, seawater, and sunlight all in one place.' Who is correct, and why? What mistake did the first student make in understanding the difference between ecosystem and habitat?",
+    "problemText": "A coastal tide pool contains sea stars, crabs, seaweed, salt water, smooth pebbles, and air above the water. A student creates a closed glass jar containing only seaweed, a small amount of water, and one pebble—a miniature copy of the tide pool. The student then claims: 'My jar is an ecosystem because it has some of the same living and nonliving parts as the tide pool.' Using the lesson definition of ecosystem and habitat, evaluate whether the jar meets the criteria to be called an ecosystem, and explain what would be missing.",
     "choices": [
-      "The first student is correct; any place smaller than a mile across is only a habitat and cannot be called an ecosystem. The second student confused the depth of water with the number of different species present.",
-      "The first student is correct; a tide pool has too many living things to be a habitat and too few organisms to be an ecosystem. The second student forgot that ecosystems require both rocks and water to be counted.",
-      "The second student is correct; the tide pool is an ecosystem with all living and nonliving parts together. The first student mistakenly thought that habitat and ecosystem mean the same thing, or that size alone decides which is which.",
-      "The second student is correct; the tide pool is an ecosystem because it has living things and nonliving parts working together in one location. The first student confused the size of a space with whether it could contain a complete ecosystem."
+      "The jar is not a complete ecosystem because it lacks the variety of living organisms and the complex interactions between multiple types of plants, animals, and nonliving parts that define a real ecosystem like the tide pool.",
+      "The jar is not a complete ecosystem because the seaweed cannot obtain enough sunlight inside a glass container to produce food through photosynthesis, which would prevent it from functioning as a true ecosystem.",
+      "The jar is not a complete ecosystem because a single organism living alone in a space does not represent the living and nonliving parts sharing one place the way a real ecosystem does. A true ecosystem needs multiple types of living things interacting with the nonliving environment together.",
+      "The jar is not a complete ecosystem because the small amount of water and limited pebbles cannot provide enough nonliving resources to support the living organisms for an extended period of time."
     ],
     "answer": "C",
     "hints": [
-      "Recall: an ecosystem is EVERY living and nonliving thing in one place; a habitat is the specific spot where ONE particular living thing lives.",
-      "Size does not determine whether something is an ecosystem or habitat. What matters is whether you are describing the whole system or just one small spot inside it."
+      "Think about what 'sharing one place' means in the ecosystem definition—does a jar with only one type of plant living in it match that description?",
+      "Compare the jar to the worked example of the pond: the pond had different kinds of organisms (plants, insects, frogs) all living together with the nonliving parts. Does the jar have that same kind of variety?"
+    ]
+  },
+  {
+    "id": "m6geo-weather-vs-climate-001",
+    "loId": "m6geo.weather-vs-climate",
+    "cedCode": "M6GEO-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A meteorologist reports that it is raining and 22 degrees Celsius in the city of Greenfield right now. Is this statement about Greenfield's weather or its climate?",
+    "choices": [
+      "Climate, because it describes the long-term average conditions that meteorologists record over many years.",
+      "Climate, because it tells you the temperature and precipitation for that location.",
+      "Weather, because it describes what the atmosphere is doing at one place right now.",
+      "Weather, because it reports conditions observed in the present moment rather than a pattern over time."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask yourself: does this statement describe right now, or does it describe the pattern Greenfield usually has?",
+      "The key word in the statement is 'right now' — that tells you whether you are looking at a moment or a pattern."
+    ]
+  },
+  {
+    "id": "m6geo-weather-vs-climate-002",
+    "loId": "m6geo.weather-vs-climate",
+    "cedCode": "M6GEO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Coastal City is known for having a warm, dry climate. Yesterday, Coastal City had one day of heavy rain and cooler temperatures. Does this one rainy day mean that Coastal City's climate is actually warm and wet, not warm and dry?",
+    "choices": [
+      "No, because climate only includes the days that match the usual pattern.",
+      "Yes, because the actual conditions changed from warm and dry to cool and wet.",
+      "Yes, because climate must match every single day of weather that occurs there.",
+      "No, because one day of rain is weather, not a description of the climate pattern."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: a place can have one kind of climate and still have a day that does not match it.",
+      "Ask yourself whether one day, no matter how unusual, is enough to change how a place's climate is described."
+    ]
+  },
+  {
+    "id": "m6geo-weather-vs-climate-003",
+    "loId": "m6geo.weather-vs-climate",
+    "cedCode": "M6GEO-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote two statements about a place called Millbrook. Statement 1: 'It snowed in Millbrook last Tuesday.' Statement 2: 'Millbrook has a cold, snowy climate.' Can both statements be true at the same time? Explain why or why not.",
+    "choices": [
+      "Yes, because the snow last Tuesday is weather, and the cold, snowy climate is the long-term pattern Millbrook usually has.",
+      "No, because one snow event means the place cannot be classified as having any consistent climate at all.",
+      "Yes, but only if temperatures in Millbrook drop below freezing on most days throughout the year.",
+      "No, because a single weather event that happened in the past cannot coexist with a climate description of the same place."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the difference between a single event and a repeated pattern.",
+      "Weather and climate answer two different questions about the very same place — neither one cancels the other out."
+    ]
+  },
+  {
+    "id": "m6geo-weather-vs-climate-004",
+    "loId": "m6geo.weather-vs-climate",
+    "cedCode": "M6GEO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A weather forecaster says: 'Tomorrow in Plainville, it will be cold and icy, which is unusual for this time of year. Plainville's climate is usually warm and mild.' The forecaster is making two claims. Identify which claim is about weather and which is about climate, and explain why each one is classified that way.",
+    "choices": [
+      "Cold and icy tomorrow is climate because unusual events define the overall pattern; warm and mild is weather because the word 'usually' indicates a short time frame.",
+      "Cold and icy tomorrow is weather because it names a short stretch of time; warm and mild climate is climate because it describes the pattern Plainville usually has year after year.",
+      "Both are climate because the forecaster is describing what Plainville's conditions will be like in the future.",
+      "Cold and icy tomorrow is weather because the forecaster noted it as unusual; warm and mild is climate because it represents the stable, predictable conditions."
+    ],
+    "answer": "B",
+    "hints": [
+      "The key question to ask is: does each statement describe right now or a few days ahead, or does it describe the pattern a place is usually like?",
+      "One statement talks about tomorrow; the other talks about what is usual across time — that difference is what separates weather from climate."
+    ]
+  },
+  {
+    "id": "m6geo-weather-vs-climate-005",
+    "loId": "m6geo.weather-vs-climate",
+    "cedCode": "M6GEO-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A place called Drybrook had a very rainy month last year. The local newspaper wrote: 'Drybrook's climate may be changing to wet and rainy.' Is this conclusion correct? Why or why not, based on what climate means?",
+    "choices": [
+      "No, because climate describes only temperature measurements, and rainfall data cannot be used to define climate.",
+      "Yes, because Drybrook actually received significant rain, which shows the climate pattern has shifted permanently.",
+      "No, because one rainy month is weather, not enough evidence of a climate pattern that repeats year after year.",
+      "Yes, because the newspaper observed real rainfall data from Drybrook, proving the climate definition has been met."
+    ],
+    "answer": "C",
+    "hints": [
+      "To describe a climate, you need to know what kind of weather a place has over many years, not just what happened during one month.",
+      "A climate is a pattern that repeats year after year — can one rainy month show that kind of long-term pattern?"
+    ]
+  },
+  {
+    "id": "m6geo-weather-vs-climate-006",
+    "loId": "m6geo.weather-vs-climate",
+    "cedCode": "M6GEO-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is studying three places: Alpine Town in mountains where it snows most winters; Desert City in the lowlands where it almost never rains; and Bayshore Village on the coast where ocean winds are common. A spring weather report shows: Alpine Town had no snow for two weeks, Desert City had a brief rainstorm yesterday, and Bayshore Village had completely calm air for three days. For each place, the student needs to decide whether this spring report is evidence that the place's climate has changed. What should the student conclude, and why?",
+    "choices": [
+      "Only Desert City shows climate change, because deserts are defined by permanent dryness while mountains and coasts are places where weather can shift unpredictably from day to day.",
+      "All three reports show climate change, because each place's actual weather in spring differs from what the student has learned about its typical conditions and expected seasonal patterns.",
+      "Alpine Town and Desert City show climate change, but Bayshore Village does not, because atmospheric wind patterns are more stable than precipitation patterns and can recover quickly from disturbances.",
+      "None of these weather reports are evidence of climate change, because each describes a few days or one recent event, not a pattern repeated year after year, which is what climate is."
+    ],
+    "answer": "D",
+    "hints": [
+      "To know whether climate has changed, you would need to know whether the pattern of weather has shifted over many years, not whether one recent weather event is unusual.",
+      "Remember: a place with a snowy climate can have a week without snow, a dry climate can have one rainstorm, and a windy climate can have one calm day — and none of that changes the climate."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-a-biome-001",
+    "loId": "m6geo.what-is-a-biome",
+    "cedCode": "M6GEO-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A biome is defined by three main characteristics. Which set of three characteristics do geographers use to identify and name a biome?",
+    "choices": [
+      "Temperature, precipitation, and plant life",
+      "Elevation, wind speed, and animal species",
+      "Soil type, latitude, and hours of daylight",
+      "Humidity, rainfall patterns, and tree height"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what the lesson said makes each biome unique and recognizable.",
+      "Two of the three characteristics are measurable quantities that describe water and heat."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-a-biome-002",
+    "loId": "m6geo.what-is-a-biome",
+    "cedCode": "M6GEO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geography class reads this short description: 'Very little water falls here in any month of the year, and the ground between widely spaced plants is mostly bare.' Which biome does this describe, and why is plant life an important clue here?",
+    "choices": [
+      "Tundra, because plant life shows that low temperatures prevent trees from growing in this dry place",
+      "Desert, because plant life shows that very little water supports only scattered, spaced-out plants with bare ground between them",
+      "Grassland, because plant life shows that moderate rainfall allows grasses to grow across the ground, though they remain spread far apart with visible bare soil between them",
+      "Rainforest, because plant life shows that dense trees and shrubs cover nearly all the ground with very little bare space, indicating heavy year-round precipitation"
+    ],
+    "answer": "B",
+    "hints": [
+      "Very low precipitation matches two biomes in the lesson; which plant-life pattern—bare ground or moss-and-shrub coverage—matches this description?",
+      "Notice the description says plants are 'spaced far apart' and the ground is 'mostly bare,' not covered by mosses or shrubs."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-a-biome-003",
+    "loId": "m6geo.what-is-a-biome",
+    "cedCode": "M6GEO-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student reads a description of a place where rain falls on most days all year long, with no dry season at all, and the temperature stays hot every month without much change. The student guesses 'forest' as the biome. What is wrong with this guess, and what should the student check before deciding?",
+    "choices": [
+      "The guess ignores the precipitation clue; forests do not receive rain every day all year long, only rainforests do, and daily year-round rain is the signature pattern of a rainforest",
+      "The guess ignores the temperature clue; forests can be hot and wet, but a rainforest is always colder than a forest",
+      "The guess ignores the plant-life clue; a forest must have a cold season, but this place is hot all year with heavy year-round rain, which points to rainforest instead",
+      "The guess ignores the plant-life clue; forests have scattered trees, but this place must have grassland because there is so much rain"
+    ],
+    "answer": "C",
+    "hints": [
+      "A forest needs what temperature pattern that this place does NOT have?",
+      "Both forest and rainforest grow many trees; the temperature pattern is what sets them apart."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-a-biome-004",
+    "loId": "m6geo.what-is-a-biome",
+    "cedCode": "M6GEO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A nature preserve in central Africa has a warm season and a cooler season each year. Rainfall is heavy enough to support many trees growing close together throughout the year. Some of the trees lose their leaves during the cool season. A visiting student claims this must be a rainforest. Is the student correct? Explain using all three clues why or why not.",
+    "choices": [
+      "No, the student is wrong. A rainforest is hot all year with no real cool season, but this place has a genuine cool season. A forest, not a rainforest, has both warm and cold seasons and enough rain for many trees, with some trees that lose leaves when cold arrives.",
+      "Yes, the student is correct. The presence of heavy rainfall and many trees growing close together are sufficient to classify any location as a rainforest, since these two characteristics define the rainforest biome and override other seasonal variations in temperature.",
+      "No, the student is wrong. This place experiences a cool season, and because it also has some trees losing their leaves, it cannot be a rainforest since rainforests maintain constant warm temperatures and trees that retain their leaves year-round.",
+      "Yes, the student is correct. While rainforests typically experience warm conditions, the combination of heavy rainfall throughout the year and dense tree growth in this location are the defining features that make it a rainforest despite the presence of a cooler season."
+    ],
+    "answer": "A",
+    "hints": [
+      "What is the key temperature difference between rainforest (which stays ___ all year) and forest (which has both ___ and ___ seasons)?",
+      "Rainforest and forest both have enough rain for many trees; the temperature pattern is what separates them."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-a-biome-005",
+    "loId": "m6geo.what-is-a-biome",
+    "cedCode": "M6GEO-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is given four short descriptions and asked to match each to the correct biome by checking all three clues. The student correctly matches three of them but makes one error. Description 1: 'Stays cold nearly all year with very little rain and a ground covered by mosses'—student says tundra (correct). Description 2: 'Hot all year, rains on most days, dense trees in layers'—student says rainforest (correct). Description 3: 'Warm part of year, cold part of year, enough rain for many trees, some trees lose leaves in cold'—student says rainforest (WRONG). Description 4: 'Warm season, cooler season, grasses cover most ground, only scattered trees'—student says grassland (correct). For Description 3, which single clue should the student have examined more carefully, and what is the correct biome?",
+    "choices": [
+      "The precipitation clue: rainforest gets year-round heavy rain, but this place gets rain only part of the year, so it is grassland, not rainforest",
+      "The temperature clue: rainforest stays hot all year with no cold season, but this place has a genuine cold season, so it is forest, not rainforest",
+      "The plant-life clue: rainforest has dense layered trees, but this place has trees that lose leaves, so it must be tundra, not rainforest",
+      "The temperature clue: rainforest is warm during one part of the year and cold during another, but this place stays warm all year, so it must be grassland, not rainforest"
+    ],
+    "answer": "B",
+    "hints": [
+      "Rainforest and forest both have enough rain for many trees and both can have trees that lose leaves; what is the one temperature pattern that rainforest requires all year that this description does NOT have?",
+      "Re-read what the lesson says rainforest must be like for the whole year, and what forest needs to have happen during the year."
     ]
   }
 ]

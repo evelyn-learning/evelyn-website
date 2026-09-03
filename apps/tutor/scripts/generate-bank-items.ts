@@ -331,7 +331,9 @@ ${grounding || '(no additional lesson content retrieved — ground items in the 
 Write EXACTLY ${itemsPerLo} original multiple-choice items for this LO, one per line below, at the difficulty specified for that position:
 ${spec}
 
-Each item needs exactly 4 choices (A-D), one clearly correct answer, and ${hintsInstruction} that nudge without giving away the answer. Choices must not have letter prefixes in the text itself. No item's problemText may be shorter than 2 sentences (or, for a terse computational item, at least one full sentence that fully states what is being asked).
+Each item needs exactly 4 choices (A-D), one clearly correct answer, and ${hintsInstruction} that nudge without giving away the answer. Choices must not have letter prefixes in the text itself.
+
+The problemText must NOT list, quote, or restate the choices. Put any shared material the item needs — a passage, an original sentence, a data set — in problemText, and put every option ONLY in the choices array. An item that writes out "A) ... B) ... C) ..." inside its problemText will be discarded, because the student would see the options twice and the letters would not match the buttons. No item's problemText may be shorter than 2 sentences (or, for a terse computational item, at least one full sentence that fully states what is being asked).
 
 ${scopeSection}Return ONLY a JSON array of ${itemsPerLo} objects, this exact shape, no markdown fences, no commentary, in the same order as the difficulty list above:
 [{"difficulty":1,"problemText":"...","choices":["...","...","...","..."],"answer":"A","hints":["..."]}, ...]`;
@@ -358,6 +360,18 @@ function validateGenItem(it: GenItem, loId: string, msConventions = false): stri
     // rate from 25% to 33% and cannot take a rotated position, so it is a
     // defect here even though the generic validator allows 3-5.
     if (msConventions && it.choices.length !== 4) errs.push(`needs exactly 4 choices, got ${it.choices.length}`);
+    // A stem that reprints its own choices ("... A) foo B) bar") shows them to
+    // the student twice, and once positions are rotated after generation the
+    // letters in the stem CONTRADICT the letters on the buttons. Rotation is
+    // what makes this fatal rather than merely untidy, so it is rejected here
+    // instead of being skipped by the rotator: an item that has to opt out of
+    // position rotation to stay correct is not one worth keeping.
+    const flatStem = (it.problemText || '').toLowerCase().replace(/\s+/g, ' ');
+    const embedded = it.choices.filter((c) => {
+      const f = c.toLowerCase().replace(/\s+/g, ' ').trim().replace(/[.]$/, '');
+      return f.length > 15 && flatStem.includes(f);
+    }).length;
+    if (embedded >= 2) errs.push(`problemText reprints ${embedded} of its own choices`);
   }
   if (/\$(\d)/.test(it.problemText || '')) errs.push(`WARN ${loId} problemText has $<digit> (currency/KaTeX trap)`);
   return errs;

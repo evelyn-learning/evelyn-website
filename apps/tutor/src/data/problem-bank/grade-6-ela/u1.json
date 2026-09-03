@@ -114,250 +114,22 @@
     ]
   },
   {
-    "id": "m6ela-how-a-story-s-plot-unfolds-001",
-    "loId": "m6ela.how-a-storys-plot-unfolds",
-    "cedCode": "M6ELA-1.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A story's plot moves through four stages in a specific order. Which stage comes immediately after the rising action?",
-    "choices": [
-      "A new rising action",
-      "The exposition",
-      "The resolution",
-      "The climax"
-    ],
-    "answer": "D",
-    "hints": [
-      "Remember the order: exposition, rising action, climax, resolution.",
-      "The climax is the turning point where the outcome becomes decided."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-story-s-plot-unfolds-002",
-    "loId": "m6ela.how-a-storys-plot-unfolds",
-    "cedCode": "M6ELA-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'Maya had never tried out for the soccer team before, but this year she decided to give it a shot.' What plot stage does this sentence belong to, and why?\n",
-    "choices": [
-      "Exposition, because it introduces the character and the ordinary situation before conflict appears",
-      "Rising action, because Maya is making an important decision that will lead to obstacles and complications in the plot",
-      "Climax, because trying out for the team represents the moment of greatest tension when Maya faces her biggest challenge",
-      "Resolution, because the decision has already been made and shows how Maya's conflict with herself has been settled"
-    ],
-    "answer": "A",
-    "hints": [
-      "Ask yourself: has any trouble or conflict shown up yet in this sentence?",
-      "Exposition sets up characters and situations before any problem appears."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-story-s-plot-unfolds-003",
-    "loId": "m6ela.how-a-storys-plot-unfolds",
-    "cedCode": "M6ELA-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student is sorting a story and found this sentence: 'The skater fell during the final jump, but he managed to land on his feet and kept going.' At what plot stage is this sentence most likely to belong?",
-    "choices": [
-      "Exposition, introducing the skater as a character",
-      "Rising action, showing a complication that builds tension",
-      "Climax, because falling is the most stressful moment",
-      "Resolution, showing how things turned out after the conflict"
-    ],
-    "answer": "B",
-    "hints": [
-      "The sentence shows something going wrong—a problem happening.",
-      "Does the outcome of the whole story turn at this moment, or is uncertainty still building?"
-    ]
-  },
-  {
-    "id": "m6ela-how-a-story-s-plot-unfolds-004",
-    "loId": "m6ela.how-a-storys-plot-unfolds",
-    "cedCode": "M6ELA-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read these four sentences from a story about two friends trying to build a treehouse.\n\n1. 'Leo and Jamie had been planning their treehouse all summer long.'\n2. 'They bought wood and nails, but the wood was warped, and when they hammered the first wall, it cracked straight down the middle.'\n3. 'Leo suggested they reinforce it with extra supports, and Jamie test-drove the repair by climbing up halfway—and the wall held strong.'\n4. 'By the end of the weekend, they had a solid treehouse and couldn't wait to invite other kids over.'\n\nWhich sentence is the climax?",
-    "choices": [
-      "Sentence 1",
-      "Sentence 2",
-      "Sentence 3",
-      "Sentence 4"
-    ],
-    "answer": "C",
-    "hints": [
-      "The climax is where a decisive action or moment turns the outcome—the tension peaks and the question gets answered.",
-      "Look for the sentence where something actually HAPPENS to solve the problem, not just where the problem gets worse."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-story-s-plot-unfolds-005",
-    "loId": "m6ela.how-a-storys-plot-unfolds",
-    "cedCode": "M6ELA-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student labeled a story's plot stages this way: the exposition introduces two friends who play chess every lunch period; the rising action happens when one friend forgets the chess set on the bus; the climax is when students gather around and ask if they can watch; and the resolution is when the friends find the chess set in the lost and found the next day. Which label is in the wrong stage?",
-    "choices": [
-      "The exposition label is wrong",
-      "The rising action label is wrong",
-      "The resolution label is wrong",
-      "The climax label is wrong"
-    ],
-    "answer": "D",
-    "hints": [
-      "The climax is where the turning point happens—where something decisive occurs and the outcome becomes decided.",
-      "Ask yourself: does students gathering and asking to watch solve the problem of the lost chess set, or does it just show the problem getting worse?"
-    ]
-  },
-  {
-    "id": "m6ela-how-a-story-s-plot-unfolds-006",
-    "loId": "m6ela.how-a-storys-plot-unfolds",
-    "cedCode": "M6ELA-1.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read this partial story: 'Carmen had always wanted to write a comic book, so she spent three months drawing and writing pages in a sketchbook. She showed her work to her art teacher, who said it was good but needed better speech bubbles. Carmen redesigned every speech bubble to match comic book style, and her teacher entered it in a district art show. The comic book won third place in the show, and Carmen finally felt like a real artist.'\n\nWhich sentence marks the climax, and what makes it different from the sentence about the teacher's comment?",
-    "choices": [
-      "The sentence about redesigning speech bubbles is the climax because that is where a decisive action solves the problem.",
-      "The teacher's comment is the climax because it is the first professional feedback Carmen receives.",
-      "The sentence about the teacher entering the work in the show is the climax because that event leads directly to the resolution.",
-      "The sentence about winning third place is the climax because that is the moment Carmen's goal is fully achieved."
-    ],
-    "answer": "A",
-    "hints": [
-      "The climax is a turning point where the outcome actually turns—look for a decisive action or choice, not just an event that happens to the character.",
-      "The teacher's comment creates a new problem; the redesigned speech bubbles actually solve it and change the direction of the story."
-    ]
-  },
-  {
-    "id": "m6ela-how-characters-respond-change-001",
-    "loId": "m6ela.how-characters-respond-and-change",
-    "cedCode": "M6ELA-1.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Read this sentence from a story: 'When Jake heard the door slam, he froze and looked at his broken vase on the floor.' What is Jake's response to hearing the door slam?",
-    "choices": [
-      "He freezes and looks at his broken vase",
-      "He is startled by loud noises",
-      "He feels guilty about breaking the vase",
-      "He is a careless person"
-    ],
-    "answer": "A",
-    "hints": [
-      "A response is what a character does, says, or thinks right after an event—look for actions or words in the text, not feelings you have to guess.",
-      "The event is the door slamming. What does Jake do or say immediately after? Use only the exact words the text provides."
-    ]
-  },
-  {
-    "id": "m6ela-how-characters-respond-change-002",
-    "loId": "m6ela.how-characters-respond-and-change",
-    "cedCode": "M6ELA-1.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the passage: 'During lunch, Amara's friend accidentally knocked her sandwich off the table. Amara bent down, picked it up, brushed off the crumbs, and took a bite without saying anything to her friend.' Which statement correctly describes how Amara responds to her friend knocking over her sandwich?",
-    "choices": [
-      "Amara forgives her friend because she does not stay angry",
-      "Amara cleans up the sandwich and continues eating without complaint",
-      "Amara is annoyed but hides it well",
-      "Amara is a patient and forgiving person"
-    ],
-    "answer": "B",
-    "hints": [
-      "Focus on what Amara actually does—pick up the sandwich, brush it off, take a bite—not on what you think she might feel.",
-      "Avoid choosing a trait or feeling word that the text never uses. The response is shown through her actions, not told."
-    ]
-  },
-  {
-    "id": "m6ela-how-characters-respond-change-003",
-    "loId": "m6ela.how-characters-respond-and-change",
-    "cedCode": "M6ELA-1.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "In a story, Chen's bicycle gets a flat tire on the way to practice. Which of the following best shows a response rather than just a claimed trait?",
-    "choices": [
-      "Chen is the kind of person who never gives up and shows determination in all situations",
-      "Chen is determined and resourceful in the way he handles difficulties and obstacles",
-      "Chen pulls out his repair kit, finds the puncture, and patches it carefully",
-      "Chen demonstrates the trait of solving problems through his resourceful and persistent character"
-    ],
-    "answer": "C",
-    "hints": [
-      "A response is shown through actions or words you can find in the text, not through a sentence that assigns a label.",
-      "Look for what the character actually does, says, or thinks after the event, not a general description of who the character is."
-    ]
-  },
-  {
-    "id": "m6ela-how-characters-respond-change-004",
-    "loId": "m6ela.how-characters-respond-and-change",
-    "cedCode": "M6ELA-1.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this story: 'At the start of soccer season, Kenji stayed on the bench during scrimmages and told his coach he was not ready to play. Midway through the season, after the team's best striker got injured, Kenji had to play in a real game and scored two goals. Near the end of the season, Kenji volunteered to take penalty kicks and was the first player to sprint onto the field at the start of every match.' Which sentence best describes how Kenji changes from the beginning to the end?",
-    "choices": [
-      "Kenji overcomes his initial hesitation about playing and gains confidence through practice and competition",
-      "Kenji learns from his experience on the bench during scrimmages and decides to work harder",
-      "Kenji becomes confident after his success in the injured striker's game",
-      "Kenji changes from staying off the field to eagerly taking on leadership roles like penalty kicks"
-    ],
-    "answer": "D",
-    "hints": [
-      "A change requires comparing how the character acts near the start with how the character acts near the end—not just describing one moment in the middle.",
-      "Look for evidence from both the beginning and the ending of the story. The starting point is avoiding play; the ending point is volunteering and sprinting onto the field."
-    ]
-  },
-  {
-    "id": "m6ela-how-characters-respond-change-005",
-    "loId": "m6ela.how-characters-respond-and-change",
-    "cedCode": "M6ELA-1.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A story includes this event: 'When Rae's group project partner did not show up to the presentation, Rae panicked and turned red, but she took a deep breath and presented the project alone.' Later in the same story, Rae misses one slide during a class discussion, laughs at herself, and keeps talking. Does this show that Rae has changed, or is it just two separate responses?",
-    "choices": [
-      "It shows two separate responses because each event causes a reaction, but Rae is not shown doing things differently overall",
-      "It shows Rae has changed because she responded with different emotions in each situation, showing she learned from her first experience",
-      "It shows Rae has changed because she handles two separate challenges through her own efforts and remains composed through both events",
-      "It shows just responses, not a change, because the two moments involve different types of situations and different people reacting to them"
-    ],
-    "answer": "A",
-    "hints": [
-      "A change means the character is different at the end than at the start. Check whether the difference shows up later in the story, not just in the one sentence after the event.",
-      "To prove a change, find one detail from near the beginning and one from near the end that show the same kind of thing done in two different ways. Do both moments show Rae acting in a lasting new way?"
-    ]
-  },
-  {
-    "id": "m6ela-how-characters-respond-change-006",
-    "loId": "m6ela.how-characters-respond-and-change",
-    "cedCode": "M6ELA-1.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A story states: 'Isaac is dependable and hardworking.' Later, the text shows: 'When his experiment failed and shattered glass covered the lab table, Isaac stared at it for thirty seconds, then left the room. For the rest of the week, he avoided the lab and did not turn in his next three assignments.' How does what the text actually shows about Isaac's behavior differ from the claim made at the start?",
-    "choices": [
-      "The text shows Isaac is actually dependable because he takes time to think before acting",
-      "The claim says Isaac is hardworking, but his actions show him avoiding work and stopping his assignments",
-      "The text proves Isaac is dependable by showing he walks away calmly instead of breaking more things",
-      "There is no difference because staring and leaving are signs of someone who is hardworking"
-    ],
-    "answer": "B",
-    "hints": [
-      "A claimed trait is a sentence that assigns a quality in words, rather than one the character's actions show. Trust what the character does over what anyone says about them.",
-      "What does the claim say Isaac is? What do his actual actions—avoiding the lab and not turning in assignments—show instead? Are they the same or different?"
-    ]
-  },
-  {
     "id": "m6ela-how-a-scene-fits-the-whole-story-001",
     "loId": "m6ela.how-a-scene-fits-the-whole-story",
     "cedCode": "M6ELA-1.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "In the lesson, you learned the difference between naming where a part sits in a story and naming what job that part does. Which of these is a description of a part's job in the overall structure?",
+    "problemText": "A story has four sentences. Sentence 1 tells us that a girl named Rosa always wears a red scarf. Sentence 2 describes what Rosa has for lunch. Sentence 3 explains that Rosa's red scarf gets caught in a door. Sentence 4 shows how Rosa uses her quick thinking to free the scarf before it tears. Which sentence is a setup for Sentence 4?",
     "choices": [
-      "This sentence introduces a character's wish that will either be granted or denied by the end of the story.",
-      "This sentence sets up the broken bicycle lock that the ending depends on.",
-      "This sentence appears somewhere in the middle section of the text, between the opening and closing.",
-      "This sentence belongs to the second paragraph and describes what happens on a Tuesday afternoon."
+      "Sentence 2, because it describes what Rosa ate and happens right after Sentence 1 in the story",
+      "Sentence 1, because it introduces the red scarf earlier in the story",
+      "Sentence 3, because it directly comes before Sentence 4 and shows the scarf getting caught",
+      "Sentence 4, because it is where the problem gets solved and the payoff happens"
     ],
     "answer": "B",
     "hints": [
-      "A job names what a part does for the rest of the story, not where it sits or what it says.",
-      "Look for an answer that points to a later moment in the story that needs this part."
+      "A setup is a detail placed early that a later moment depends on.",
+      "Ask yourself: what detail from an earlier sentence does Sentence 4 need to make sense?"
     ]
   },
   {
@@ -366,17 +138,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this story and answer the question below.\n\nSentence 1: Maya's parents told her that if she stayed calm during the thunderstorm, she could help her younger brother stay calm too.\nSentence 2: When lightning lit up Maya's room at midnight, she took slow, deep breaths and kept her voice quiet and steady.\nSentence 3: Her brother came to her door, trembling, but after ten minutes of sitting with Maya, he stopped shaking and fell asleep.\n\nHow does Sentence 2 fit into the overall structure of this story?",
+    "problemText": "Read this short story: Sentence 1: 'Marco had never been inside a library before, and the first thing he noticed was how quiet it was.' Sentence 2: 'He whispered his question to the librarian instead of speaking out loud.' Sentence 3: 'The librarian smiled and helped him find a book about building model airplanes.' Sentence 4: 'Marco left carrying the book, already planning to come back.' What does Sentence 1 do for the rest of the story? A student says, 'Sentence 1 is at the beginning of the story.' Explain why that answer does not describe Sentence 1's job, and then tell what its actual job is.",
     "choices": [
-      "It describes the specific moment when lightning strikes and shows what Maya physically does in response, establishing the behavior that leads to her brother's calming in Sentence 3.",
-      "It explains that the thunderstorm occurs at midnight and describes the darkness of Maya's room during the weather event.",
-      "It shows what Maya does when the lightning happens, so that her brother's calm reaction in Sentence 3 makes sense as a result of her behavior.",
-      "It tells us about Maya's personal characteristics, such as her ability to control her breathing and keep her voice steady when she is afraid."
+      "It comes before all the other sentences and establishes the beginning part of the narrative",
+      "It tells us that Marco is in a new place at the start of the story",
+      "It establishes that the library is quiet, which is why Marco whispers instead of speaking out loud in Sentence 2",
+      "It summarizes Marco's first impression of the library without connecting to later events"
     ],
     "answer": "C",
     "hints": [
-      "Ask what Sentence 3 needs from Sentence 2 to make sense.",
-      "The job is not just what happens in Sentence 2, but what later moment depends on it."
+      "Naming where a sentence sits in the story is a location, not a job.",
+      "Look for a detail from Sentence 1 that explains why Marco acts a certain way in Sentence 2."
     ]
   },
   {
@@ -385,17 +157,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this story and answer the question below.\n\nSentence 1: The old mailbox at the end of Kai's driveway had a rusty hinge that squeaked whenever anyone opened it.\nSentence 2: Kai's grandpa visited in July and oiled the hinge without being asked.\nSentence 3: In August, Kai's little cousin visited and was startled by an unfamiliar noise when the mailbox creaked open.\nSentence 4: Kai realized he had never heard that sound before and understood what his grandpa had done.\n\nWhich sentence is NOT describing a job that later parts of the story depend on?",
+    "problemText": "A student reads this story and is asked how Sentence 2 fits into the overall structure: Sentence 1: 'Chen's little brother had accidentally knocked over a pitcher of juice on the kitchen table last week.' Sentence 2: 'Chen decided to keep a roll of paper towels on a shelf at the corner of the table, within easy reach.' Sentence 3: 'The next afternoon, Chen's brother spilled his cup of apple juice again.' Sentence 4: 'This time, Chen grabbed the roll from the shelf and cleaned it up before any juice dripped onto the floor.' The student answers: 'Sentence 2 is a setup for Sentence 4.' Is this answer correct? Why or why not?",
     "choices": [
-      "Sentence 1, because if it were cut out, Sentence 4 would make no sense.",
-      "Sentence 2, because without it, Sentence 3 would have no reason for the mailbox to be quiet.",
-      "Sentence 4, because it is the end of the story and nothing comes after it.",
-      "Sentence 3, because it only restates what happens without setting up anything later."
+      "Yes, because Sentence 2 comes after the first spill and before the second spill happens",
+      "No, because Sentence 2 only describes where Chen put the paper towels, not why he put them there",
+      "No, because Sentence 3 is the real setup for Sentence 4 since it describes the second spill",
+      "Yes, because Sentence 2 places the paper towels where Chen needs them, and Sentence 4 shows Chen using them"
     ],
     "answer": "D",
     "hints": [
-      "Remember: a summary restates what happens in a part. A job points to a later moment that needs it.",
-      "Ask whether anything that happens after Sentence 3 would stop making sense if Sentence 3 were cut out."
+      "A setup is correct when you can point to a later moment where that detail actually pays off.",
+      "Ask: in Sentence 4, what detail from Sentence 2 does Chen's quick cleanup depend on?"
     ]
   },
   {
@@ -404,17 +176,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this story and answer the question below.\n\nSentence 1: The community garden plot that Taj's family adopted had crumbly, gray soil that wouldn't hold water.\nSentence 2: Over three months, Taj added mulch and compost every week, turning the soil rich and dark.\nSentence 3: When the tomato plants started growing, they grew twice as fast as the tomatoes in the plot next door.\nSentence 4: The neighboring gardener asked Taj what she had done differently, and Taj explained about the soil.\nSentence 5: By fall, three other families were working on their own soil the same way.\n\nExplain the connection between Sentence 2 and Sentence 5. What is Sentence 2's job in the overall structure of this story?",
+    "problemText": "Read this story: Sentence 1: 'Every time it rained, puddles formed at the bottom of the school playground slide because the ground was not level.' Sentence 2: 'Nobody complained about the puddles or asked the principal to fix them.' Sentence 3: 'One rainy Tuesday, a kindergartner slipped at the bottom of the slide and scraped her knee badly.' Sentence 4: 'The next week, the principal had the ground graded and the puddles stopped forming.' A student must explain what Sentence 1 does and what Sentence 2 does, and how they work together. The student says: 'Sentence 1 is the setup and Sentence 2 is more setup that makes the problem worse.' Is this correct? Why or why not? If it is not correct, explain what each sentence actually does.",
     "choices": [
-      "Sentence 2 sets up the rich soil that makes the tomatoes grow fast in Sentence 3, which leads the neighbor to ask Taj about her method in Sentence 4, and that exchange spreads the practice to three other families by Sentence 5.",
-      "Sentence 2 covers the three-month time period during which Taj performs weekly additions of mulch and compost to transform the soil into a darker and richer texture.",
-      "Sentence 2 demonstrates that compost and mulch improve soil quality, but Sentence 5 shows that other families learned this technique through their own experimentation rather than from Taj's example.",
-      "Sentence 2 proves that Taj is willing to work hard consistently over many weeks to improve her garden plot, which establishes her character as someone who perseveres."
+      "No. Sentence 1 sets up the puddle problem, but Sentence 2 sets up the reason the problem stays unfixed long enough for Sentence 3's accident to happen",
+      "No. Sentence 1 describes a dangerous condition and Sentence 2 explains why no one prevented the accident, so they work together to make Sentence 3 inevitable",
+      "Yes, they are both descriptions of the situation at the playground that come before Sentence 3 and therefore qualify as setup sentences",
+      "Yes, both sentences are setup because they both describe the problem and its causes before the accident in Sentence 3"
     ],
     "answer": "A",
     "hints": [
-      "Trace the chain: which sentence needs the work from Sentence 2? Then, which sentence needs what happens in that one?",
-      "A complete job answer points to a payoff, but that payoff might not be the very next sentence."
+      "A setup does work for the ending only if you can point to a later moment where it pays off.",
+      "Ask: what does Sentence 3's accident need from Sentence 1? What does it need from Sentence 2?"
     ]
   },
   {
@@ -423,17 +195,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student was asked how Sentence 1 fits into this story's overall structure, and answered: \"Sentence 1 is at the beginning of the story.\" Explain what is wrong with that answer, and describe Sentence 1's actual job.\n\nSentence 1: Leo noticed that every time he tried to play his guitar in the living room, his dog Biscuit howled.\nSentence 2: The next day, Leo moved his guitar practice to the garage, where Biscuit couldn't hear him.\nSentence 3: A week later, Biscuit stopped howling whenever anyone turned on loud music anywhere in the house.\nSentence 4: Leo realized that by moving his practice away, he had accidentally broken his dog's habit of reacting to the sound.\n\nWhich statement best corrects the student's error and names Sentence 1's real job?",
+    "problemText": "A story is building toward a theme about how small acts of honesty can spread: Sentence 1: 'Kenji found a wallet with fifty dollars in the grass near the park bench.' Sentence 2: 'He spent an hour looking for the person's phone number and called to return it.' Sentence 3: 'The owner, Mrs. Lin, was so grateful that she told the story to her book club.' Sentence 4: 'At the next book club meeting, three of Mrs. Lin's friends announced they would return lost items they had been holding onto for years.' Which sentence sets up the information that Sentence 4 depends on, and why does that detail matter to the story's overall point about honesty spreading?",
     "choices": [
-      "The student was wrong because simply stating that a sentence appears first does not reveal what work that sentence does for the rest of the story; location and function are different things. The real job is that Sentence 1 introduces the howling behavior that Sentence 4 later explains was accidentally broken by Leo's decision to practice elsewhere.",
-      "Saying Sentence 1 is at the beginning only tells you where it sits, not what it does. The real job: Sentence 1 sets up the howling behavior that Sentence 4 explains as accidentally broken by Leo's absence.",
-      "Sentence 1 must be described by its sequence position rather than by what it accomplishes, because all sentences at the start of a story share the same structural purpose.",
-      "The student's answer was incomplete because it failed to identify the specific details about Leo's dog breed and the living room location that Sentence 1 provides as essential background."
+      "Sentence 1, because it introduces the wallet Kenji finds",
+      "Sentence 2, because it shows Kenji's honest choice, which Mrs. Lin later tells others about in Sentence 3",
+      "Sentence 3, because it explains how Kenji's honesty reaches Mrs. Lin's friends through the book club",
+      "Sentence 4, because it shows the final result of the chain of honesty"
     ],
     "answer": "B",
     "hints": [
-      "Location labels and structural jobs are two different things.",
-      "Ask what Sentence 4 needs from Sentence 1 to make sense."
+      "The theme is about honesty spreading, so ask what honest action has to happen for the rest to follow.",
+      "For Sentence 3 to make sense, Mrs. Lin needs to have a story to tell. Where does that story come from?"
     ]
   },
   {
@@ -442,17 +214,245 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this story carefully, then answer the question below.\n\nSentence 1: In the spring, Mrs. Chen planted apple seeds in tiny pots on her kitchen windowsill, one for each student in the class.\nSentence 2: Over two months, the seedlings grew, and each student got a pot to take home and plant in their yard.\nSentence 3: By mid-June, some students sent photos of tall saplings with new leaves, while others' plants had turned brown and died.\nSentence 4: In the fall, Mrs. Chen asked the class to bring their plants back for a check-in day.\nSentence 5: Only half the saplings returned, and many had grown large and strong, while others were still struggling.\nSentence 6: Mrs. Chen told the class that caring for a living thing takes time and attention, and that different people learn this lesson at different speeds.\n\nSentence 1 serves a job for multiple later moments in this story. Which choice correctly identifies both of those jobs by pointing to the specific payoffs?",
+    "problemText": "A student reads this story and claims that Sentence 2 has no job in the overall structure: Sentence 1: 'In her new apartment, Jen noticed that the kitchen light flickered whenever anyone used the coffee maker.' Sentence 2: 'She called the landlord twice about the flickering light, but he said there was nothing wrong with it.' Sentence 3: 'One morning before a big presentation, Jen brewed coffee and the light went out completely, leaving her apartment dark.' Sentence 4: 'She grabbed her laptop and walked to a coffee shop two blocks away where the power was working.' The student argues: 'Sentence 2 is just a summary of what Jen did. It does not set up anything for the ending because Sentence 1 already told us the light flickered.' Evaluate this claim. Is the student correct? If not, explain what job Sentence 2 actually does and prove it by pointing to a later sentence where that job pays off.",
     "choices": [
-      "Sentence 1 starts the story by introducing Mrs. Chen as a teacher and describes her action of planting seeds, which explains why there are plants available in Sentence 4.",
-      "Sentence 1 shows that Mrs. Chen is creative because she thought of an activity involving plants, but this does not connect to either the varying outcomes in Sentence 3 or the lesson in Sentence 6.",
-      "Sentence 1 sets up the planted seeds, which lead to the saplings in Sentence 3 that some students neglected and others nurtured. This contrast is what allows Sentence 6 to make its point about different people learning care at different speeds.",
-      "Sentence 1 establishes that there will be one plant per student, which makes Sentence 2's distribution possible and also ensures that Sentence 4's return day works as a measurement of how many plants survived."
+      "The student is correct; Sentence 2 is only a summary of Jen's action and does not affect what happens later",
+      "The student is incorrect because Sentence 2 is about calling the landlord, not about the light itself, so it must serve a different function than Sentence 1",
+      "The student is incorrect. Sentence 2 sets up the fact that the problem was never fixed by the landlord, which is why the light fails completely in Sentence 3, making Sentence 4's alternative solution necessary",
+      "The student is correct because Sentence 3 mentions the light going out, not the landlord's response, so Sentence 2's information does not lead to the payoff"
     ],
     "answer": "C",
     "hints": [
-      "Trace what would stop making sense if Sentence 1 were cut. Would Sentence 3's contrast between healthy and dead plants still matter? Would Sentence 6's lesson?",
-      "A single sentence can set up material that pays off in more than one place, as long as you can point to each payoff."
+      "A summary restates what happened. A setup plants a detail that a later moment depends on to make sense.",
+      "Ask: if you removed Sentence 2, would Sentence 3's complete failure still read as inevitable, or would it feel like bad luck?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-story-s-plot-unfolds-001",
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "cedCode": "M6ELA-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following best describes what the exposition stage of a plot does?",
+    "choices": [
+      "Settles the conflict and shows what things look like after the turning point",
+      "Shows the moment when the outcome of the story finally becomes decided",
+      "Describes a series of complications that build tension after a conflict starts",
+      "Introduces the characters, setting, and situation before any conflict appears"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for the stage that comes first in the plot's order.",
+      "Think about what 'ordinary situation' means — what happens before trouble starts?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-story-s-plot-unfolds-002",
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "cedCode": "M6ELA-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence from a story: 'When the storm finally hit the ship, the crew held tight to the railings as waves crashed over the deck, and nobody knew if they would make it to shore.' Which plot stage does this sentence belong in, and why?",
+    "choices": [
+      "Rising action, because the outcome is still uncertain and tension is building",
+      "Exposition, because it introduces the main characters and the setting where the story takes place",
+      "Climax, because the storm has arrived and the crew must now face the worst part of their struggle",
+      "Resolution, because it concludes the story by showing the crew's final destination and what they learned"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself: has the trouble started, and is the outcome still unknown?",
+      "The crew's fate is still uncertain — they don't know if they will make it. What stage describes this uncertainty?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-story-s-plot-unfolds-003",
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "cedCode": "M6ELA-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is reading a story and encounters this sentence: 'The old dog limped across the yard and lay down under the oak tree, exactly as she had done every afternoon for ten years.' Is this sentence most likely part of the exposition, rising action, climax, or resolution? Explain your reasoning.",
+    "choices": [
+      "Rising action, because the dog's limp indicates an injury that will cause conflict later in the story",
+      "Exposition, because it describes an ordinary, repeated routine before any trouble appears",
+      "Climax, because the dog's daily action under the tree marks the moment of greatest tension in the narrative",
+      "Resolution, because the sentence shows how the dog spends her final years and what becomes of her afterward"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice that nothing has gone wrong yet — this is a peaceful, daily habit.",
+      "Which stage sets up the normal situation before trouble starts?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-story-s-plot-unfolds-004",
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "cedCode": "M6ELA-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this three-sentence passage: 'Marcus had been practicing skateboard tricks in the park for two months, hoping to impress his friends at the competition. During his first run, his board flew out from under him and crashed into the judge's table. Marcus picked up his cracked board and walked off the course while his friends groaned.' Sort these sentences into their plot stages and explain how you know where the rising action ends and the climax begins.",
+    "choices": [
+      "Rising action: first sentence only. Climax: second sentence. Rising action continues through the third sentence as a result.",
+      "Exposition: first sentence. Rising action: second sentence. Climax: third sentence because that is when Marcus leaves.",
+      "Exposition: first sentence. Rising action: second sentence. Resolution: third sentence because the outcome is now decided.",
+      "Exposition: first and second sentences together. Climax: third sentence because that is the most stressful moment."
+    ],
+    "answer": "C",
+    "hints": [
+      "Which sentence introduces the ordinary situation before trouble? Which one contains the turning point where the outcome becomes clear?",
+      "The crash decides the outcome — Marcus will not win. The third sentence shows what happens after that decision."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-story-s-plot-unfolds-005",
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "cedCode": "M6ELA-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student labeled this sentence as the climax: 'The principal walked into the classroom and the entire class held its breath, waiting to hear who had won the student council election.' Another student said that sentence was still rising action, not the climax yet. Using the definition of climax from the lesson, explain which student is correct and why.",
+    "choices": [
+      "The first student is correct because the principal's entrance is a major moment and tension is highest here.",
+      "The second student is correct because the climax must come after the principal announces who won.",
+      "The first student is correct because everyone is holding their breath, which shows maximum stress in the story.",
+      "The second student is correct because the outcome is still unknown — nothing decisive has happened yet."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: the climax is not the sentence that feels most tense, but the sentence where something decisive actually happens.",
+      "Ask: has the outcome been decided in this sentence, or are the characters still waiting to find out?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-story-s-plot-unfolds-006",
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "cedCode": "M6ELA-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this four-sentence story: 'Every morning, Diego fed his goldfish and watched it circle the tank. One day, he noticed the water looked cloudy and the fish was not swimming normally. Diego cleaned the entire tank, changed the water, and added medicine from the pet store. Two weeks later, his goldfish was healthy again, and Diego never missed a cleaning day after that.' A student sorted these sentences like this: Exposition (sentence 1), Rising Action (sentence 2), Climax (sentence 3), Resolution (sentence 4). Another student insisted that both sentences 2 and 3 should be labeled as rising action and climax together, not separately. Using the lesson's definition of plot stages, explain which student's sorting is correct and why, paying careful attention to where the outcome actually becomes decided.",
+    "choices": [
+      "The second student is correct because sentence 2 continues building tension and the outcome is not decided until Diego's action in sentence 3.",
+      "The first student is correct because each of the four sentences represents exactly one distinct stage and together they cover the entire plot structure in order.",
+      "The first student is correct because the climax must always occur after rising action ends and sentence 3 shows the turning point moment.",
+      "The second student is correct because sentences 2 and 3 both describe the problem and its solution, which means they belong to the same stage of conflict."
+    ],
+    "answer": "A",
+    "hints": [
+      "When does the outcome actually turn — when Diego notices the problem, or when he takes action to fix it?",
+      "Rising action keeps building tension while the outcome is still uncertain. Look at what sentence 2 does and what sentence 3 does."
+    ]
+  },
+  {
+    "id": "m6ela-how-characters-respond-change-001",
+    "loId": "m6ela.how-characters-respond-and-change",
+    "cedCode": "M6ELA-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A character's response is what happens right after an event in a story. Which of the following is an example of a response that is SHOWN rather than told?\n\nConsider this sentence: 'When Raj heard he didn't make the soccer team, he stared at the ground for five minutes without moving, then walked home alone instead of riding the bus with friends.'",
+    "choices": [
+      "Raj stared at the ground for five minutes without moving and walked home alone",
+      "Raj felt disappointed because the rejection made him sad and let down by the outcome",
+      "Raj is sad and unhappy, which shows he is dealing with the pain of rejection",
+      "Raj was upset and discouraged, experiencing negative emotions about not making the team"
+    ],
+    "answer": "A",
+    "hints": [
+      "A shown response uses actions and behaviors you can see, not feeling words.",
+      "Look for what the character actually did or said, not a label someone gives him."
+    ]
+  },
+  {
+    "id": "m6ela-how-characters-respond-change-002",
+    "loId": "m6ela.how-characters-respond-and-change",
+    "cedCode": "M6ELA-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the passage, then identify what event causes the character's response.\n\n'When Devon opened the garage door, she found her entire bicycle project scattered across the floor—the frame, wheels, and gears in separate piles. She took a deep breath, grabbed a notebook, and started writing down each part's location and what she'd need to do next.'",
+    "choices": [
+      "Devon takes a deep breath to calm herself down",
+      "The bicycle project is scattered across the floor",
+      "Devon writes down each part's location and makes a plan",
+      "Devon's bicycle needs to be rebuilt and put back together"
+    ],
+    "answer": "B",
+    "hints": [
+      "The event is the thing that happens first, before Devon does anything in response.",
+      "Look for what provokes or causes Devon to take action."
+    ]
+  },
+  {
+    "id": "m6ela-how-characters-respond-change-003",
+    "loId": "m6ela.how-characters-respond-and-change",
+    "cedCode": "M6ELA-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A story includes this sentence: 'After the substitute teacher cancelled recess, Maya is resilient and determined.' Then the text shows Maya sitting quietly at her desk, working through extra math problems without complaining.\n\nWhich statement correctly compares what the text claims about Maya to what it actually shows?",
+    "choices": [
+      "The text tells us Maya is resilient with a label but shows her sitting and working without complaining, which demonstrates actual resilience",
+      "The text only claims Maya is resilient in words, but does not show her doing anything brave or determined",
+      "The text claims Maya is resilient and determined, and shows her working through problems without complaining, which is actual evidence of that trait",
+      "The text proves Maya feels upset about losing recess by describing her working hard"
+    ],
+    "answer": "C",
+    "hints": [
+      "A claimed trait is a label someone gives a character. Evidence is what the character actually does.",
+      "Look for whether the character's actions match what the text says about them."
+    ]
+  },
+  {
+    "id": "m6ela-how-characters-respond-change-004",
+    "loId": "m6ela.how-characters-respond-and-change",
+    "cedCode": "M6ELA-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this story passage:\n\n'At the start of volleyball camp, Zara volunteered to be scorer and stayed on the sidelines the whole first week, asking the coaches questions about rules. When another player got injured in the second week, Zara jumped in to fill the position and made three successful serves before the end of practice. For the final tournament, Zara joined the starting lineup and played every set without hesitation.'\n\nWhich choice correctly describes both a response to a single event AND a lasting change that goes beyond that single event?",
+    "choices": [
+      "Zara stops asking questions about rules and becomes a better player",
+      "Zara is confident and brave throughout the entire camp",
+      "Zara responds by making three successful serves when the other player gets injured",
+      "Zara responds to the injured player by jumping in to play, and she changes from staying on the sidelines to playing in the tournament"
+    ],
+    "answer": "D",
+    "hints": [
+      "A response happens right after one event. A change requires comparing what she does at the start to what she does at the end.",
+      "Make sure your answer points to something that happens near the beginning and something different that still happens near the end."
+    ]
+  },
+  {
+    "id": "m6ela-how-characters-respond-change-005",
+    "loId": "m6ela.how-characters-respond-and-change",
+    "cedCode": "M6ELA-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two students described the same character. Student 1 wrote: 'When Owen's robot broke during the competition, he threw the pieces across the gym.' Student 2 wrote: 'Owen responds to his robot breaking by throwing the pieces instead of asking for help to fix it.'\n\nWhich statement best explains why Student 2's description is more complete for the purpose of identifying a response?",
+    "choices": [
+      "Student 2 names the event that provoked the response, while Student 1 only describes what Owen did",
+      "Student 2 explains Owen's response as a choice between two options, while Student 1 just reports an action without context",
+      "Student 2 shows what caused Owen to act, while Student 1 leaves out why the action matters",
+      "Student 1 forgot to mention that it was a competition"
+    ],
+    "answer": "A",
+    "hints": [
+      "Every response needs three parts: the event, what the character does, and how those two connect.",
+      "Student 1's sentence tells you the action but not why it matters or what caused it."
+    ]
+  },
+  {
+    "id": "m6ela-how-characters-respond-change-006",
+    "loId": "m6ela.how-characters-respond-and-change",
+    "cedCode": "M6ELA-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this multi-part story:\n\n'In chapter 2, after Diego's presentation was rejected by the panel, he packed his poster tube slowly, said 'Thanks for listening,' and left the room before anyone could speak. In chapter 5, when the same panel asked Diego to try again with a new idea, he started talking before they finished their invitation, showed them his sketches on his phone, and asked them three questions about their feedback.\n\nDiego's teacher wrote: 'Diego is confident and takes criticism well.' A classmate wrote: 'Diego responds to rejection by leaving quickly, but changes to speaking up eagerly when given a second chance.'\n\nWhich analysis avoids claiming a trait without evidence and instead describes what actually changes from the first moment to the second?",
+    "choices": [
+      "The teacher's analysis, because it identifies positive traits that Diego gains from the experience of rejection",
+      "The classmate's analysis, because it names the actual event in each moment and points to different behaviors at two different times",
+      "Both analyses are equally good because they both describe Diego's personality and how he grows from the two different events",
+      "Neither analysis works because Diego's actions in chapter 5 prove he was never actually rejected by the panel"
+    ],
+    "answer": "B",
+    "hints": [
+      "A trait like 'confident' is a claim. An actual change compares what a character does at one point to what they do at another point.",
+      "Look for which analysis points to specific moments in the text and shows how the character is acting differently by the end."
     ]
   }
 ]

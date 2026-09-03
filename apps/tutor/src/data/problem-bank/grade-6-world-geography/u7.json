@@ -228,120 +228,6 @@
     ]
   },
   {
-    "id": "m6geo-reading-a-thematic-map-001",
-    "loId": "m6geo.reading-a-thematic-map",
-    "cedCode": "M6GEO-7.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "When you are about to read a thematic map to answer a question, what should you do first before looking at any single area on the map?",
-    "choices": [
-      "Look at the map's title to understand what the map is supposed to show.",
-      "Find the area that the question asks about and note its color or symbol right away.",
-      "Read every entry in the key from top to bottom so you know what each color or symbol means.",
-      "Count how many different colors or symbols appear on the map in total."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson emphasizes a specific routine that starts before you touch the map itself.",
-      "This first step ensures you already know the meaning of a color or symbol the moment you find it on the map."
-    ]
-  },
-  {
-    "id": "m6geo-reading-a-thematic-map-002",
-    "loId": "m6geo.reading-a-thematic-map",
-    "cedCode": "M6GEO-7.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Silverpeak shows forest coverage using three shades of green. The key states: light green means low forest coverage, medium green means medium forest coverage, and dark green means high forest coverage. On the map, Northwood is shaded dark green and Eastmoor is shaded light green. According to the key, which region has low forest coverage?",
-    "choices": [
-      "Northwood, because dark green is the darkest shade on the map.",
-      "Northwood, because it appears first when you read the map from left to right.",
-      "Both regions have the same forest coverage because they are both shaded green.",
-      "Eastmoor, because the key lists light green as low forest coverage."
-    ],
-    "answer": "D",
-    "hints": [
-      "Find the exact shade the question asks about by checking the key first.",
-      "Then match that shade to whichever region on the map is shaded that same way."
-    ]
-  },
-  {
-    "id": "m6geo-reading-a-thematic-map-003",
-    "loId": "m6geo.reading-a-thematic-map",
-    "cedCode": "M6GEO-7.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Greenmark shows each region's primary industry using symbols. The key shows: a star symbol means mining, a leaf symbol means agriculture, and a gear symbol means manufacturing. On the map, Coalton is marked with a star symbol, Plainview is marked with a leaf symbol, and Steelville is marked with a gear symbol. A student claims that Steelville must have the biggest and most important industry because the gear symbol looks the most complex. Why is this student's reasoning wrong?",
-    "choices": [
-      "A symbol key shows separate categories, not a ranking, so no symbol is naturally more important than another just because it looks bigger or more complex.",
-      "The student confused visual complexity with importance, when symbol keys assign each symbol to one industry without ranking them by significance or size.",
-      "The student focused only on appearance rather than consulting the key to learn what each symbol actually represents in the legend.",
-      "The student compared symbols from different maps instead of using only the key provided for this single thematic map."
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about what a symbol key is designed to show—does it rank categories from least to most, or does it list separate, equal categories?",
-      "The size or boldness of a symbol on the map should not influence how you interpret what it means."
-    ]
-  },
-  {
-    "id": "m6geo-reading-a-thematic-map-004",
-    "loId": "m6geo.reading-a-thematic-map",
-    "cedCode": "M6GEO-7.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Waterland shows average annual rainfall using three shades of blue. The key states: light blue means low rainfall, medium blue means medium rainfall, and dark blue means high rainfall. On the map, Lakeside is shaded dark blue, Riverside is shaded medium blue, Drybrook is shaded light blue, and Marshland is shaded dark blue. How many regions have medium or high rainfall according to the key?",
-    "choices": [
-      "One region (Riverside only).",
-      "Three regions (Riverside, Lakeside, and Marshland).",
-      "Two regions (Lakeside and Marshland only).",
-      "All four regions shown on the map."
-    ],
-    "answer": "B",
-    "hints": [
-      "First, match each region's shade to the key entry that describes it.",
-      "Then count only the regions whose key entry says 'medium' or 'high'—do not count the one that says 'low'."
-    ]
-  },
-  {
-    "id": "m6geo-reading-a-thematic-map-005",
-    "loId": "m6geo.reading-a-thematic-map",
-    "cedCode": "M6GEO-7.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two different thematic maps are displayed side by side. Map A shows temperature using three shades of red: light red means cold, medium red means warm, and dark red means hot. Map B shows ice coverage using three shades of blue: light blue means lots of ice, medium blue means some ice, and dark blue means no ice. On Map A, the Northern Zone is shaded dark red. On Map B, the Northern Zone is shaded light blue. A student asks, 'Does the dark red on Map A and the light blue on Map B mean the Northern Zone has opposite conditions?' How should you answer this question using the keys?",
-    "choices": [
-      "Yes, because dark red and light blue are opposite colors on a color wheel, which always indicates opposite conditions on any map.",
-      "No, because each map uses its own separate key to define what its colors mean, so colors cannot be compared between different maps with different purposes.",
-      "Yes, because Map A's key says dark red means hot, and Map B's key says light blue means lots of ice, which are opposites.",
-      "No, because the color matching between the two maps must be the same, and you cannot check each key individually to determine meaning."
-    ],
-    "answer": "C",
-    "hints": [
-      "Remember that each map has its own key, and you must check each key separately to find out what each color really means.",
-      "Only after you have looked up both meanings in their own keys can you decide whether the conditions are actually opposite."
-    ]
-  },
-  {
-    "id": "m6geo-reading-a-thematic-map-006",
-    "loId": "m6geo.reading-a-thematic-map",
-    "cedCode": "M6GEO-7.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Midvale shows soil type using four symbols: a plus sign means clay soil, a circle means sandy soil, a square means rocky soil, and a triangle means loamy soil. The map also displays four regions: North Field is marked with a circle, South Field is marked with a plus sign, East Field is marked with a triangle, and West Field is marked with a square. Another map of the same country shows rainfall using three shades of green: light green means low rainfall, medium green means medium rainfall, and dark green means high rainfall. According to the keys, which two regions would you predict have conditions that might both support similar kinds of plants, and why?",
-    "choices": [
-      "North Field and East Field, because sandy soil and loamy soil are both found in the northern part of the country on the thematic map.",
-      "South Field and West Field, because the plus sign and square symbols appear adjacent to each other on the map's layout.",
-      "All four regions, because every region must receive identical rainfall according to how thematic maps are always structured and organized.",
-      "East Field and North Field, because East Field has loamy soil and North Field has sandy soil, and both soil types can retain some moisture."
-    ],
-    "answer": "D",
-    "hints": [
-      "First, use the soil key to find out exactly what soil type each region has, then think about what those soil types might have in common.",
-      "The key for soil type is separate from the key for rainfall—you must use whichever key actually addresses the question being asked."
-    ]
-  },
-  {
     "id": "m6geo-reading-geographic-graphs-charts-001",
     "loId": "m6geo.reading-geographic-graphs-and-charts",
     "cedCode": "M6GEO-7.4",
@@ -453,6 +339,120 @@
     "hints": [
       "A comparison question always needs two numbers read correctly and then compared. Find both numbers from the table.",
       "Never stop at reading a single bar or region—you must add the regions you are comparing together before you can say whether the claim is true or false."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-001",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map uses a key to show what each color or symbol means. Before you answer any question about a thematic map, what must you do first?",
+    "choices": [
+      "Identify which color or symbol looks the brightest or most obvious",
+      "Look at the map and find the area the question asks about",
+      "Read every entry in the key from top to bottom before looking at any area on the map",
+      "Decide whether the key uses shades or symbols and then skip the entries you do not need"
+    ],
+    "answer": "C",
+    "hints": [
+      "The lesson emphasizes reading the ENTIRE key first, before matching any single area.",
+      "This habit ensures every color or symbol has a known meaning before you look for it on the map."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-002",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of the country Lakeside shows vegetation type using a symbol key. The key states: a tree symbol means forest, a grass symbol means meadow, and a water drop symbol means wetland. On the map, the North Plain is marked with a grass symbol and the South Plain is marked with a water drop symbol. According to the key, what is the vegetation type in the South Plain?",
+    "choices": [
+      "Forest",
+      "Meadow",
+      "Grassland with some trees",
+      "Wetland"
+    ],
+    "answer": "D",
+    "hints": [
+      "Find South Plain's symbol in the map description, then match it to the key.",
+      "The key defines exactly what each symbol means—nothing else."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-003",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of the country Hilltop shows land elevation using three shades of brown. The key states: light brown means low elevation, medium brown means medium elevation, and dark brown means high elevation. On the map, the Western Ridge is shaded dark brown, the Central Valley is shaded light brown, and the Eastern Slope is shaded medium brown. Which area has the lowest elevation according to the key?",
+    "choices": [
+      "Central Valley",
+      "Western Ridge",
+      "Eastern Slope",
+      "Western Ridge and Eastern Slope together"
+    ],
+    "answer": "A",
+    "hints": [
+      "Read the shaded key entry for 'low elevation' and find which area matches that shade.",
+      "Light brown is the shade that means low elevation in this map's key."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-004",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of the country Openfield shows land use with four separate symbols: a barn symbol means pasture, a factory symbol means industrial, a house symbol means residential, and a tree symbol means protected forest. On the map, Region A is marked with a barn symbol, Region B is marked with a house symbol, Region C is marked with a barn symbol, and Region D is marked with a factory symbol. A student wants to find all regions that have the same land use as Region A. Which step is correct according to the read-the-key-first routine?",
+    "choices": [
+      "Look at Region A first, then scan the map for other regions that look similar in appearance to Region A",
+      "Read the key to find what the barn symbol means, then find every region marked with that same barn symbol",
+      "Compare Region A to Regions B, C, and D one by one, and decide which looks most like a place where people work",
+      "Identify which symbol appears most often on the map, because the most common symbol shows the most important land use"
+    ],
+    "answer": "B",
+    "hints": [
+      "The routine has three steps: read the key, find the area's symbol, then match it back to the key.",
+      "In a symbol key, the same symbol always means the same thing everywhere it appears."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-005",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map shows ocean temperature using three shades of blue: light blue means cold, medium blue means temperate, and dark blue means warm. On this map, the North Sea is shaded light blue, the Mid Sea is shaded medium blue, and the South Sea is shaded dark blue. A different thematic map shows ocean salinity using three shades of green: light green means low salinity, medium green means medium salinity, and dark green means high salinity. If someone asks you to use the first map to answer the question 'Which sea has the highest salinity?', what is the problem?",
+    "choices": [
+      "The North Sea is in the wrong location for you to determine its salinity from temperature",
+      "The salinity map uses green, so the temperature map's blue shades are not accurate enough",
+      "The temperature map does not show salinity data, so its key cannot answer a question about salinity",
+      "You need to read both keys at the same time to answer any question about either topic"
+    ],
+    "answer": "C",
+    "hints": [
+      "Each thematic map is built around ONE topic, and its key answers questions ONLY about that topic.",
+      "The temperature key tells you about temperature, not salinity—different topics, different keys."
+    ]
+  },
+  {
+    "id": "m6geo-reading-a-thematic-map-006",
+    "loId": "m6geo.reading-a-thematic-map",
+    "cedCode": "M6GEO-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A thematic map of the country Northmark shows forest cover using three shades of green. The key states: light green means 0–30% forest, medium green means 31–60% forest, and dark green means 61–100% forest. On the map, the Pine District is shaded dark green, the Birch District is shaded medium green, the Oak District is shaded light green, and the Spruce District is shaded dark green. A student claims, 'The Spruce District must have less forest than the Pine District, because the Spruce District is smaller on the map.' Identify what is wrong with this reasoning and state what the key actually shows about these two districts.",
+    "choices": [
+      "The student is correct—a smaller district on a map always means less forest, so the Spruce District definitely has less forest than the Pine District",
+      "The student mistakenly compared the physical sizes of the districts rather than checking their colors against the key, which shows both Pine and Spruce are dark green and thus both fall in the 61–100% forest-cover range",
+      "The student should have read the key to see that smaller districts have higher forest cover in Northmark",
+      "The student confused map size with data—both Pine District and Spruce District are shaded dark green, so the key shows both have the same forest-cover range of 61–100%, regardless of how large each district appears on the map"
+    ],
+    "answer": "D",
+    "hints": [
+      "The size or appearance of a district on the map says nothing about its data value—only the key and the color/symbol do.",
+      "Find both districts' shades, look up each shade in the key, and compare what the key says—not the map's visual sizes."
     ]
   }
 ]

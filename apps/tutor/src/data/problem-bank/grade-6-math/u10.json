@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6math-statistical-questions-001",
-    "loId": "m6math.statistical-questions",
-    "cedCode": "M6MATH-10.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following is a statistical question? Remember: a statistical question is one where you expect the answers to differ from person to person or object to object.",
-    "choices": [
-      "How many languages does the principal of our school speak?",
-      "What is the current temperature in our city at this exact moment?",
-      "How many grains of sand are on this specific beach right now?",
-      "What is the favorite color of each student in our class?"
-    ],
-    "answer": "D",
-    "hints": [
-      "A statistical question asks something of many different people or objects, where separate answers are expected.",
-      "Three of these questions have only one correct answer. Which one expects many different answers?"
-    ]
-  },
-  {
-    "id": "m6math-statistical-questions-002",
-    "loId": "m6math.statistical-questions",
-    "cedCode": "M6MATH-10.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Maya's teacher asks her to collect data about snack preferences. Maya writes: 'What is the favorite snack of our school?' Is this a statistical question? Explain why or why not.",
-    "choices": [
-      "No, because even though many students are in the school, the question only produces one answer total for the whole school.",
-      "Yes, because the question mentions a large group (the whole school) and large groups always lead to multiple different answers.",
-      "Yes, because each student in the school will answer the question separately, giving many different responses that vary from person to person.",
-      "No, because the question asks 'what is the favorite snack' meaning it seeks one single favorite rather than collecting separate answers from each student."
-    ],
-    "answer": "A",
-    "hints": [
-      "Use the variability test: would each member of the school give a separate, different answer, or does the question ask for just one number for the whole group?",
-      "Mentioning a group is not enough by itself. Count how many final answers the question would produce."
-    ]
-  },
-  {
-    "id": "m6math-statistical-questions-003",
-    "loId": "m6math.statistical-questions",
-    "cedCode": "M6MATH-10.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A coach observes his track team during practice. He wants to turn this question into a statistical question: 'How fast did the runner complete the 100-meter race?' Which rewrite would make it statistical?",
-    "choices": [
-      "How fast did the fastest runner on the team complete the 100-meter race?",
-      "How fast did each member of the team complete the 100-meter race?",
-      "How fast should runners on the team try to complete the 100-meter race?",
-      "How did the team's average speed compare to other schools' speeds?"
-    ],
-    "answer": "B",
-    "hints": [
-      "To make a question statistical, change it so that each member of a group can give a separate, possibly different answer.",
-      "The original question names one runner. What change would let every team member answer separately?"
-    ]
-  },
-  {
-    "id": "m6math-statistical-questions-004",
-    "loId": "m6math.statistical-questions",
-    "cedCode": "M6MATH-10.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student reads these two questions and claims they are both statistical questions: (1) 'How many siblings does each student in our grade have?' and (2) 'How many siblings do all the students in our grade have combined?' Apply the variability test to both questions. Which statement is correct?",
-    "choices": [
-      "Both are statistical because they both ask about students in our grade and require data collection from the group.",
-      "Only Question 2 is statistical because combining information from many students automatically makes a question statistical.",
-      "Only Question 1 is statistical because each student can give a different answer, while Question 2 has only one combined total.",
-      "Neither is statistical because the answer depends on family information rather than classroom characteristics."
-    ],
-    "answer": "C",
-    "hints": [
-      "For each question, ask: would the answers differ from student to student, or would there be only one final number?",
-      "A statistical question needs each member of the group to give a separate, possibly different answer. Which question structure allows that?"
-    ]
-  },
-  {
-    "id": "m6math-statistical-questions-005",
-    "loId": "m6math.statistical-questions",
-    "cedCode": "M6MATH-10.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Jordan wants to research how students in his school spend their free time after school. He starts with this question: 'What do students do after school?' Explain what is wrong with this question, and then rewrite it so that it becomes a statistical question.",
-    "choices": [
-      "The question is too vague. Rewrite it as: 'What is the most common thing that students do after school?'",
-      "The question is incomplete because it does not specify which school. Rewrite it as: 'What do students in middle schools do after school?'",
-      "The question is wrong because free time is too personal. Rewrite it as: 'Do students prefer indoor or outdoor activities after school?'",
-      "The question is too vague and does not clearly show that each student should give a separate answer. Rewrite it as: 'How many hours does each student in our school spend on free time activities after school?'"
-    ],
-    "answer": "D",
-    "hints": [
-      "A statistical question must be specific enough that different students can give separate, measurable answers. What makes the original question unclear about this?",
-      "When you rewrite, think about the lesson tip: change who or what the question asks about so every member of a group can answer separately."
-    ]
-  },
-  {
-    "id": "m6math-statistical-questions-006",
-    "loId": "m6math.statistical-questions",
-    "cedCode": "M6MATH-10.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student analyzing four questions decides that exactly two of them are statistical: (A) 'How old is our class pet?' (B) 'How much does each student in our class weigh?' (C) 'What is the total cost of all the books in our school library?' (D) 'How many hours of video games do the students in our class play each week?' Apply the variability test to all four questions. Which pair did the student correctly identify as statistical?",
-    "choices": [
-      "A and B",
-      "B and D",
-      "C and D",
-      "A and C"
-    ],
-    "answer": "B",
-    "hints": [
-      "For each question, test whether you expect one single answer or many different answers. Do not just count how many people or things the question mentions.",
-      "Remember: even if a question talks about a group, it is not statistical if it only produces one final number for that whole group. Check questions C and D carefully."
-    ]
-  },
-  {
     "id": "m6math-dot-plots-histograms-001",
     "loId": "m6math.dot-plots-and-histograms",
     "cedCode": "M6MATH-10.2",
@@ -233,17 +119,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Four students scored 78, 82, 85, and 89 on a quiz. What is the mean score?",
+    "problemText": "A data set contains these values: 10, 12, 15, 18, 20. What is the mean of this data set?",
     "choices": [
-      "85.5",
-      "84",
-      "83.5",
-      "86"
+      "13",
+      "15",
+      "17",
+      "14"
     ],
     "answer": "B",
     "hints": [
-      "Add all four scores together first.",
-      "Then divide your total by how many students took the quiz."
+      "Add all five values together.",
+      "Then divide your sum by how many values there are."
     ]
   },
   {
@@ -252,17 +138,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student ordered the heights of five classmates from shortest to tallest: 52 inches, 54 inches, 56 inches, 59 inches, 61 inches. What is the median height?",
+    "problemText": "Four students recorded the number of books they read last month: 3, 5, 7, 9. What is the median number of books read?",
     "choices": [
-      "54 inches",
-      "57.6 inches",
-      "56 inches",
-      "59 inches"
+      "7",
+      "5",
+      "6",
+      "8"
     ],
     "answer": "C",
     "hints": [
-      "The median is the middle value when the data is already in order.",
-      "With five values, count to find which one sits exactly in the middle."
+      "The values are already in order, so you do not need to rearrange them.",
+      "With an even number of values, the median is the mean of the two middle values."
     ]
   },
   {
@@ -271,17 +157,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Six students recorded the number of books they read last month: 2, 3, 3, 4, 5, 6. Since there is an even number of values, which two numbers should you use to find the median?",
+    "problemText": "Five friends compared how many video games they own: 8, 10, 12, 14, 16. Which statement is true about the mean and median of this data set?",
     "choices": [
-      "2 and 6",
-      "3 and 4",
-      "3 and 5",
-      "4 and 5"
+      "The mean is 12 but the median is 10.",
+      "The mean is higher than the median.",
+      "The median is higher than the mean.",
+      "The mean and median are both 12."
     ],
     "answer": "D",
     "hints": [
-      "With six values, the two middle ones are in positions 3 and 4 when counted from left to right.",
-      "Find the two values that sit in the exact middle of your ordered list."
+      "Find the mean by adding all five values and dividing by 5.",
+      "Find the median by identifying the middle value when the data is in order."
     ]
   },
   {
@@ -290,17 +176,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A teacher measured the times, in seconds, that eight students held their breath: 18, 20, 21, 22, 23, 25, 27, 58. One student held their breath much longer than everyone else. Calculate both the mean and the median, then explain why one measure better describes a typical hold time for this group.",
+    "problemText": "A runner recorded her mile times for seven practice runs, in minutes: 6.5, 6.8, 6.9, 7.0, 7.1, 7.2, 12.5. The last time was interrupted by a stop sign, making it much higher than her other runs. Which statement best explains why the median is a better measure of her typical mile time than the mean?",
     "choices": [
-      "Mean is 26.75 seconds; median is 22.5 seconds. The median is better because the 58-second outlier pulls the mean up away from where most students clustered.",
-      "Mean is 28.5 seconds; median is 22.5 seconds. The mean is better because it includes information from the student who held their breath longest.",
-      "Mean is 26.75 seconds; median is 23.5 seconds. The mean is better because using the average of all values gives a more complete picture than picking the middle.",
-      "Mean is 26.75 seconds; median is 22.5 seconds. Both measures are equally good because they both use data from the same eight students."
+      "The 12.5 minute run is an outlier that pulls the mean higher, but the median is only affected by the order of values, not by how extreme they are.",
+      "The median is computed by finding the middle position in an ordered list, so extreme values like 12.5 do not influence which number sits in the center the way they push the sum higher in the mean calculation.",
+      "The mean depends on adding all values together and dividing, so a single very large number like 12.5 affects the mean much more than it affects the median, which depends only on position.",
+      "The median always ignores the largest and smallest values in a dataset to focus on the middle range, whereas the mean treats every value equally regardless of how far it sits from the others."
     ],
     "answer": "A",
     "hints": [
-      "Add all eight times and divide by 8 for the mean. Then find the average of the 4th and 5th values for the median.",
-      "Think about where the 58-second value pulls the mean, and where most of the actual data sits."
+      "Think about what happens to the mean when one very large value is added to the sum.",
+      "Think about what the median cares about — is it the actual size of each value, or something else?"
     ]
   },
   {
@@ -309,17 +195,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A soccer team recorded how many goals each of nine players scored in the season: 2, 3, 3, 4, 5, 5, 5, 6, 7. Two students need to report the center of this data set. Jordan says the mean is about 4.4 goals, and Casey says the median is 5 goals. Which student's measure is correct, and why is it still an appropriate choice for describing a typical player's goals?",
+    "problemText": "A teacher records attendance across eight class periods: 28, 29, 29, 30, 30, 31, 31, 32 students present. Calculate both the mean and the median attendance. Then decide which one better describes a typical class size, and explain why.",
     "choices": [
-      "Only Jordan is correct; the mean always works best when the data is spread evenly across a range.",
-      "Both are correct; since there is no outlier pulling the data to one side, both the mean and median land close together and describe the data well.",
-      "Only Casey is correct; the median only works when there are no outliers at all in the data.",
-      "Both are correct; the median is always more reliable than the mean no matter what the data looks like."
+      "Mean is 30, median is 30; the mean is always better at describing typical values.",
+      "Mean is 30, median is 30; either measure works well because there is no outlier pulling the data apart.",
+      "Mean is 30.25, median is 30; the median is better because it ignores the highest and lowest values.",
+      "Mean is 30.25, median is 30.5; the mean is more useful because it is larger."
     ],
     "answer": "B",
     "hints": [
-      "Check whether there is a value far above or far below the rest of the data set.",
-      "When no outlier exists, how close together do the mean and median usually sit?"
+      "Add all eight values and divide by 8 to find the mean.",
+      "The two middle values (4th and 5th) average to find the median; then check whether the data is spread evenly or pulled by an outlier."
     ]
   },
   {
@@ -328,17 +214,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A store tracks the number of items seven customers bought: 1, 2, 2, 3, 3, 4, 15. The customer who bought 15 items was stocking up for a charity event. If the manager uses the mean to predict how many items a typical customer will buy next week, what error would she make, and how would using the median instead give a more honest prediction?",
+    "problemText": "Six friends compared their test scores: 72, 75, 78, 81, 84, 91. The student who scored 91 studied harder than the others. Another student is worried that this high score will make the class average (mean) too high and not represent where most students actually performed. Is this student's concern correct? Justify your answer by calculating both the mean and the median and comparing them to the rest of the data.",
     "choices": [
-      "The mean would be about 3.7 items, which accurately reflects that seven customers bought a total of 30 items. The median would be 3 items, but medians cannot be used to predict future purchases.",
-      "The mean would be about 3.7 items, which is too low because most customers buy more than that. The median would be 3 items, which is also too low, so neither measure works.",
-      "The mean would be about 3.7 items, which is too high because the 15-item purchase is an outlier. The median would be 3 items, which sits where most customers actually cluster, so it better predicts a typical purchase.",
-      "The mean would be about 5.2 items, which correctly accounts for the one large purchase. The median would be 3 items, which ignores the customer's needs and is therefore unfair."
+      "Yes, the concern is correct; the 91 pulls the mean up to 80.2 while the median stays at 79.5, so the mean no longer describes the typical student.",
+      "Yes, the concern is correct; whenever one score is noticeably higher than all the others, it must be an outlier that forces the mean to be unrepresentative of most students' actual performance.",
+      "No, the concern is incorrect; the mean is 80.2 and the median is 79.5, which are both close to most of the scores because 91 is not extreme enough to be an outlier here.",
+      "No, the concern is incorrect; the median is 81, which is higher than the mean of 80.2, so the high score pulls the median up more than the mean and actually makes the mean more reliable."
     ],
     "answer": "C",
     "hints": [
-      "First, add up all seven values and divide by 7 to find the mean. Then find the middle value when the data is ordered.",
-      "Think about what most customers actually bought, and how the 15-item outlier moves the mean away from that typical amount."
+      "Calculate the mean by adding all six scores and dividing by 6; calculate the median by finding the mean of the 3rd and 4th values when ordered.",
+      "An outlier must be far enough from the rest of the data to pull the mean noticeably away — look at whether 91 sits far from the other five scores or reasonably close."
     ]
   },
   {
@@ -349,15 +235,15 @@
     "responseFormat": "mcq",
     "problemText": "A data set has a minimum value of 8 and a maximum value of 35. What is the range?",
     "choices": [
-      "8",
+      "21.5",
       "43",
       "27",
-      "35"
+      "8"
     ],
     "answer": "C",
     "hints": [
-      "Range means the spread from smallest to largest.",
-      "Subtract the minimum from the maximum."
+      "Range is found by subtracting the smallest value from the largest value.",
+      "You need to subtract, not add or divide the two numbers."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Four students timed how long they could hold a plank: 25 seconds, 18 seconds, 32 seconds, and 20 seconds. Order the data and identify the median of this data set.",
+    "problemText": "A teacher recorded the number of books read by students in one month: 3, 7, 5, 9, 6. After ordering this data from least to greatest, what is the median?",
     "choices": [
-      "18 seconds",
-      "32 seconds",
-      "25 seconds",
-      "22.5 seconds"
+      "5",
+      "30",
+      "7",
+      "6"
     ],
     "answer": "D",
     "hints": [
-      "Arrange all four times in order from least to greatest first.",
-      "With an even number of values, the median is the average of the two middle values."
+      "The median is the middle value when the data is ordered from least to greatest.",
+      "With 5 values, count to find which one is in the very center position."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "The five-number summary for minutes spent on chores is: minimum 10, Q1 = 15, median = 20, Q3 = 28, maximum = 40. Calculate the interquartile range (IQR).",
+    "problemText": "Five friends timed how long they could hold a plank in seconds: 25, 18, 42, 30, 35. The five-number summary for this data is: minimum 18, Q1 = 23.5, median = 30, Q3 = 38.5, maximum = 42. What is the interquartile range (IQR)?",
     "choices": [
-      "13 minutes",
-      "10 minutes",
-      "20 minutes",
-      "30 minutes"
+      "15 seconds",
+      "24 seconds",
+      "8.5 seconds",
+      "19.5 seconds"
     ],
     "answer": "A",
     "hints": [
-      "The IQR is the spread of the middle half of the data.",
-      "Subtract Q1 from Q3."
+      "The IQR equals Q3 minus Q1.",
+      "Subtract the first quartile value from the third quartile value."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A teacher recorded test scores for eight students: 62, 71, 78, 81, 85, 88, 92, 96. After ordering the data, what is the value of Q3 (the third quartile)?",
+    "problemText": "A coach recorded sprint times in seconds for eight runners: 12, 14, 15, 16, 18, 19, 21, 25. Order the data, find Q1 and Q3 (remember to leave out the median when splitting an even-count data set), then calculate the range and IQR. Which statement is true?",
     "choices": [
-      "88",
-      "89",
-      "90",
-      "92"
+      "The range is 13 seconds and the IQR is 4.5 seconds.",
+      "The range is 13 seconds and the IQR is 6 seconds.",
+      "The range is 10 seconds and the IQR is 6 seconds.",
+      "The range is 13 seconds and the IQR is 8.5 seconds."
     ],
     "answer": "B",
     "hints": [
-      "Q3 is the median of the upper half of the data.",
-      "With 8 values (even count), split at the center without including the middle values themselves in either half."
+      "With 8 values (even), after ordering, the median falls between the two middle values. Split the lower half (first 4 values) and upper half (last 4 values) to find Q1 and Q3.",
+      "Range = max − min. IQR = Q3 − Q1. Double-check your Q1 and Q3 by finding the median of each half."
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two classes tracked pages read over a month. Class A has a five-number summary of: 5, 20, 50, 80, 120 (pages). Class B has: 5, 40, 50, 60, 120 (pages). Both classes have the same median of 50 pages, yet their data look different. Compute the IQR for each class and explain what the difference tells you.",
+    "problemText": "Two classes took a spelling test. Class A's five-number summary is: min 60, Q1 = 70, median = 80, Q3 = 85, max = 95. Class B's five-number summary is: min 70, Q1 = 75, median = 80, Q3 = 82, max = 90. Both classes have the same median, but which statement correctly uses spread to compare them?",
     "choices": [
-      "Class A has an IQR of 115 and Class B has an IQR of 115; both classes are identical.",
-      "Class A has an IQR of 60 and Class B has an IQR of 20; Class A's middle half is more tightly bunched.",
-      "Class A has an IQR of 60 and Class B has an IQR of 20; Class B's middle half is more tightly bunched.",
-      "Class A has an IQR of 60 and Class B has an IQR of 20; the classes have the same spread."
+      "Class A and Class B have identical spread because they share the same median of 80.",
+      "Class B has a tighter middle half because the IQRs are both the same value.",
+      "Class A has greater spread because its range of 35 is larger than Class B's range of 20.",
+      "Class A must have performed better on the test because its maximum score is higher."
     ],
     "answer": "C",
     "hints": [
-      "Remember that the center alone can hide the story — the median is the same, but spread matters.",
-      "Calculate IQR = Q3 − Q1 for each class, then think about what a smaller IQR means."
+      "A center number alone can hide the story. Compare the ranges and IQRs of both classes, not just their medians.",
+      "Calculate: Class A's range and IQR; Class B's range and IQR. Which class shows wider spread in these measures?"
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A scientist measured the height (in centimeters) of nine seedlings: 12, 8, 15, 14, 10, 11, 13, 16, 9. One seedling grew unusually tall at 16 cm. Compute the five-number summary, the range, and the IQR. Then explain why the IQR is a better measure of spread than the range for describing the typical spread of these seedlings.",
+    "problemText": "An outdoor club recorded the distance (in meters) each member could throw a ball: 15, 18, 22, 24, 26, 28, 31, 35, 38, 45. After finding the five-number summary and calculating the IQR, one member threw a ball 62 meters on a second attempt—far farther than anyone else. If this 62-meter throw is added to the original data set, which values in the five-number summary would change, and by how much would the IQR change?",
     "choices": [
-      "Range is 8 cm, IQR is 3.5 cm; the range is better because it uses all the data values from minimum to maximum and therefore gives the most complete picture of variability.",
-      "Range is 8 cm, IQR is 4 cm; the range is always the larger number, and a larger measure of spread is more reliable than a smaller one for describing how the seedlings vary in height.",
-      "Range is 8 cm, IQR is 3.5 cm; the range is better because the unusually tall seedling at 16 cm is part of the data and should be counted fully in any measure of how spread out the heights are.",
-      "Range is 8 cm, IQR is 3.5 cm; the IQR ignores the one unusually tall seedling and better describes the spread of most of the data."
+      "Only the maximum would change; the IQR would change by about 7 meters.",
+      "The maximum, Q3, median, and IQR would all change significantly.",
+      "The median and maximum would both change; the IQR would change by about 2 meters.",
+      "Only the maximum would change; the IQR would not change."
     ],
     "answer": "D",
     "hints": [
-      "Order the nine values first: 8, 9, 10, 11, 12, 13, 14, 15, 16. The median is the 5th value. For an odd count, exclude it when finding Q1 and Q3.",
-      "Think about which measure is affected more by the one very tall seedling at 16 cm."
+      "The IQR measures only the middle half of the data (from Q1 to Q3). A value far outside that range affects the whiskers but not the box itself.",
+      "When you add one new extreme value to a data set, think about which parts of the five-number summary it can actually touch."
+    ]
+  },
+  {
+    "id": "m6math-statistical-questions-001",
+    "loId": "m6math.statistical-questions",
+    "cedCode": "M6MATH-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A statistical question is one that anticipates variability in the answers. Which of the following best describes what variability means in this context?",
+    "choices": [
+      "The question asks about information that stays the same when collected from different sources, such as a fact that would be the same in every reference book or online database.",
+      "The question requires surveying a large group of people and counting them up to produce one final total number for comparison.",
+      "The question uses certain action words like 'how many' or 'how much' rather than request words like 'what' or 'which' in its phrasing.",
+      "The answers to the question are expected to differ from one person to another, object to object, or time to time."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what happens when you collect answers from different members of a group. Do the answers stay the same or do they differ?",
+      "Variability is about expecting different answers before you ever collect the data."
+    ]
+  },
+  {
+    "id": "m6math-statistical-questions-002",
+    "loId": "m6math.statistical-questions",
+    "cedCode": "M6MATH-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is deciding between two questions. Question 1: 'How many minutes did it take the school bus to arrive at school this morning?' Question 2: 'How many minutes did it take the school bus to arrive at school on each of the last ten school days?' Use the variability test to identify which one is a statistical question.",
+    "choices": [
+      "Question 2 is a statistical question because different days may have different travel times.",
+      "Question 1 is a statistical question because it is asking about the school bus.",
+      "Neither question is a statistical question because they both are about the same bus.",
+      "Both questions are statistical questions because they both ask about time measurements."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself: for Question 1, how many different answers would you expect to collect? For Question 2, how many different answers would you expect?",
+      "One bus ride on one morning gives one time, but ten different days could have ten different times due to traffic, weather, or other changes."
+    ]
+  },
+  {
+    "id": "m6math-statistical-questions-003",
+    "loId": "m6math.statistical-questions",
+    "cedCode": "M6MATH-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A teacher wants to know about the reading habits of the fifth graders in the school. The teacher is trying to decide which question to ask. Read the two options carefully and decide which one is a statistical question.",
+    "choices": [
+      "How many pages did the fifth-grade class read in total last week?",
+      "How many pages did each student in the fifth grade read last week?",
+      "How many fifth graders attend this school?",
+      "What was the title of the book that the fifth-grade class read together last month?"
+    ],
+    "answer": "B",
+    "hints": [
+      "A statistical question reaches each member of a group separately so that each person can give a different answer.",
+      "Even though option A mentions the whole fifth-grade class, it asks for only one total number. That is not the same as asking each student separately."
+    ]
+  },
+  {
+    "id": "m6math-statistical-questions-004",
+    "loId": "m6math.statistical-questions",
+    "cedCode": "M6MATH-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Marcus wrote a question: 'How much did the class lunch cost?' He wants to turn this into a statistical question by changing who the question is about. Using the lesson strategy, rewrite Marcus's question so it becomes statistical. Which of the following rewrites correctly applies the variability test?",
+    "choices": [
+      "How much did lunches cost in the school cafeteria over the last year?",
+      "What kind of food did the class eat for lunch?",
+      "How much did each student in the class spend on lunch today?",
+      "How much money does the school spend on food for all student lunches?"
+    ],
+    "answer": "C",
+    "hints": [
+      "To fix Marcus's question, keep the topic (lunch cost) the same and change WHO is being asked—from one event to every member of a group.",
+      "Each student is likely to have spent a different amount on lunch, so their answers would vary. The question should ask each student separately."
+    ]
+  },
+  {
+    "id": "m6math-statistical-questions-005",
+    "loId": "m6math.statistical-questions",
+    "cedCode": "M6MATH-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that 'How many students attend Lincoln Middle School?' is a statistical question because it mentions many students. Evaluate this claim using the variability test taught in the lesson.",
+    "choices": [
+      "The claim is correct because asking about a large group of students automatically qualifies as a statistical question by definition, since mentioning multiple people makes any question statistical in nature.",
+      "The claim is correct because any question that refers to multiple people or objects in a school setting is considered a statistical question, regardless of what answer the question produces.",
+      "The claim is incorrect because the definition of a statistical question requires that different people can give different answers, but asking about total enrollment yields only one fixed number with no variability.",
+      "The claim is incorrect because even though the question mentions many students, it produces only one answer: the total enrollment number, and no variability is expected."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: mentioning a group is not enough by itself to make a question statistical. What matters is whether each member of the group can give a separate, different answer.",
+      "The school's total enrollment is one fixed number. There is only one correct answer to this question, so no variability is expected."
+    ]
+  },
+  {
+    "id": "m6math-statistical-questions-006",
+    "loId": "m6math.statistical-questions",
+    "cedCode": "M6MATH-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A coach wrote three questions to learn about her soccer team: (1) 'What is the height of our team captain?' (2) 'How tall is each player on our team?' (3) 'What was the total combined height of our team members?' For each question, the coach should apply the variability test. How many of these three questions are statistical questions that would produce variability in the answers collected?",
+    "choices": [
+      "Only Question 2 is statistical because different players have different heights and can give separate answers.",
+      "All three questions are statistical because they all mention the soccer team and involve measurement.",
+      "Questions 1 and 2 are statistical, but Question 3 is not, because Question 3 asks for a single combined total rather than separate responses.",
+      "Only Questions 2 and 3 are statistical because they both reference multiple team members rather than singling out one individual."
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply the variability test to each one: does it ask one specific person or object (one answer), or does it ask each member of a group separately (many possibly different answers)?",
+      "Question 1 names one specific person so it has one answer. Question 3 asks for one total number for the whole group. Only Question 2 asks each player separately."
     ]
   }
 ]

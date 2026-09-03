@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6math-negative-numbers-in-context-001",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "On a number line, positive numbers are placed to the right of zero and negative numbers are placed to the left of zero. What does the minus sign in front of a number tell you?",
-    "choices": [
-      "How many steps to take on the number line",
-      "That you should subtract that number from something",
-      "Which side of zero the number sits on",
-      "That the number is smaller than all positive numbers"
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about what the sign labels, not what operation it means.",
-      "The lesson says the minus sign is a label, not a subtraction operation."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-002",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A bank account starts empty. Marcus withdraws $25 from the account. Which signed number represents this withdrawal?",
-    "choices": [
-      "+25 dollars",
-      "-25 empty account",
-      "25 dollars",
-      "-25 dollars"
-    ],
-    "answer": "D",
-    "hints": [
-      "First, name what zero means for a bank account.",
-      "Withdrawing money is the opposite direction from depositing money."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-003",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two scuba divers are at different depths. Diver A is 8 meters below sea level. Diver B is 8 meters above sea level. How are their signed numbers related to each other?",
-    "choices": [
-      "They are opposites because they sit the same distance from zero but on opposite sides",
-      "They are the same number because they are both 8 meters away from something",
-      "They are different because one is underwater and one is in the air",
-      "They are opposites because one number is bigger than the other"
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson defines opposites as two numbers the same distance from zero but on opposite sides.",
-      "Look at which direction each diver is from sea level, which is zero."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-004",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "On a cave map, the entrance is marked as 0 feet. A tour group descends 55 feet below the entrance to reach an underground lake. Later they climb back up 20 feet and stop at a resting platform. Write the signed number for the resting platform's position on this map, and explain what zero means in this situation.",
-    "choices": [
-      "The platform is at -75 feet; zero means sea level",
-      "The platform is at -35 feet; zero means the cave entrance",
-      "The platform is at +20 feet; zero means the cave entrance",
-      "The platform is at -55 feet; zero means the lowest point of the cave"
-    ],
-    "answer": "B",
-    "hints": [
-      "Start by naming what zero represents on this particular map.",
-      "The platform is below the entrance but not as far down as the lake; it is between the entrance and the lake."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-005",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A thermometer shows the current temperature as -7 degrees Celsius. A student writes the answer to a question as negative 7 degrees below zero. Why is this phrasing a mistake, and what is the correct way to say it?",
-    "choices": [
-      "The phrasing is wrong because -7 is not a valid temperature and we must instead use the phrase 7 degrees below zero, which is the only accepted format for expressing cold temperatures",
-      "The phrasing is wrong because the minus sign and the phrase below zero both describe the same direction, making it repetitive to use them together; you should say either -7 degrees Celsius or 7 degrees below zero, but not combine both descriptions in one statement",
-      "The phrasing is wrong because the minus sign already means below, so saying below twice is redundant; say either -7 degrees Celsius or 7 degrees below zero, not both together",
-      "The phrasing is wrong because below zero is a measurement that only applies to Fahrenheit scales, so you must convert the temperature before describing its position relative to zero on the Celsius scale"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson warns against using the sign and the direction word at the same time.",
-      "The minus sign is a label that already tells you the direction; you should not repeat the direction in words."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-006",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A map uses sea level as zero elevation. Mountain A has an elevation of +1500 feet. A valley on the same map has an elevation of -300 feet. A second mountain, B, has an elevation that is the opposite of mountain A's elevation. A student claims that all three locations are different. Is the student correct, and why or why not?",
-    "choices": [
-      "Yes, the student is correct because +1500, -300, and the opposite of +1500 are three different signed numbers",
-      "Yes, the student is correct because the three elevations have different digits, so they must be at different heights",
-      "No, the student is incorrect because mountain B and mountain A are opposites and will have the same absolute distance from sea level",
-      "No, the student is incorrect because mountain B is at the same elevation as the valley, so they are not all different locations"
-    ],
-    "answer": "D",
-    "hints": [
-      "First, figure out what signed number represents mountain B's elevation using the definition of opposites.",
-      "Then compare all three elevations and see if any two of them are at the same height."
-    ]
-  },
-  {
     "id": "m6math-rational-numbers-on-the-number-line-001",
     "loId": "m6math.rational-numbers-on-the-number-line",
     "cedCode": "M6MATH-5.2",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6math-negative-numbers-in-context-001",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A scuba diver is 50 meters below sea level. Which signed number represents this position?",
+    "choices": [
+      "50 meters below",
+      "+50 meters",
+      "-50 meters",
+      "-50 below meters"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember: the minus sign is a label that tells you which side of zero the diver is on. It means below, not subtract.",
+      "Sea level is zero. Below sea level is the negative direction."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-002",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a number line, the number -7 is marked. What do the minus sign and the digit 7 each tell you about where -7 sits?",
+    "choices": [
+      "Both the minus sign and the 7 together tell you only the direction, not the distance.",
+      "The 7 tells you the direction from zero, and the minus sign tells you how far from zero.",
+      "The minus sign tells you to subtract 7 from zero.",
+      "The minus sign tells you the direction from zero, and the 7 tells you how far from zero."
+    ],
+    "answer": "D",
+    "hints": [
+      "Review the lesson: 'The digits tell you how far. The sign tells you which side.'",
+      "The minus sign is a label for direction, not an instruction to subtract."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-003",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bank account starts empty (zero dollars). A customer withdraws $25. Then the customer deposits $25. What are the signed numbers for these two transactions, and why are they opposites?",
+    "choices": [
+      "Withdraw $25 is -25 dollars; deposit $25 is +25 dollars. They are opposites because they go in opposite directions from zero.",
+      "Withdraw $25 is -25 dollars; deposit $25 is -25 dollars. They are opposites because both represent removing money from the account balance, making them equal in magnitude and direction.",
+      "Withdraw $25 is +25 dollars; deposit $25 is -25 dollars. They are opposites because withdrawing adds funds while depositing removes funds from the account.",
+      "Withdraw $25 is -25 dollars; deposit $25 is +25 dollars. They are opposites because one is a subtraction problem and the other is an addition problem, making their operations different."
+    ],
+    "answer": "A",
+    "hints": [
+      "Opposites sit the same distance from zero but on opposite sides. What are the two directions for money in an account?",
+      "One transaction removes money (negative direction); the other adds money (positive direction)."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-004",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A temperature reading is -15 degrees Celsius. Another temperature is the opposite of this reading. What is the second temperature, and what does zero mean in this situation?",
+    "choices": [
+      "+15 degrees Celsius; zero means the temperature at which water boils.",
+      "+15 degrees Celsius; zero means the temperature at which water freezes.",
+      "-15 degrees Celsius; zero means the temperature at which water freezes.",
+      "+30 degrees Celsius; zero means the temperature at which water freezes."
+    ],
+    "answer": "B",
+    "hints": [
+      "Opposites are the same distance from zero but on opposite sides. If one is -15, what is the other?",
+      "In Celsius, zero has a specific meaning related to water. Review the worked examples in the lesson."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-005",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cave map marks the entrance at 0 feet. A guide descends 80 feet into the cave to reach a chamber. Write this position as a signed number. Then explain why writing '-80 feet below the entrance' would be incorrect.",
+    "choices": [
+      "-80 feet; because 80 is negative when measured from the entrance.",
+      "+80 feet; because the guide went down, which is the positive direction underground.",
+      "-80 feet; because the minus sign already means below, so saying below twice is redundant.",
+      "80 feet; because underground measurements never use negative signs."
+    ],
+    "answer": "C",
+    "hints": [
+      "Review the lesson rule: 'Use the sign or use the word, never both at once.'",
+      "The minus sign is a label for the direction. Choose to use either the sign (-80 feet) or the word (80 feet below), but not both."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-006",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two hikers are on different elevation maps. Hiker A uses a map where sea level is 0 feet and is at an elevation of -250 feet. Hiker B uses a different map where the base camp is 0 feet and is at an elevation of -250 feet. Both negative numbers have the same digits and sign. Explain why zero means something different in each situation, and why this affects what their signed numbers represent.",
+    "choices": [
+      "On Hiker A's map, zero is base camp, so -250 means below base camp. On Hiker B's map, zero is sea level, so -250 means below sea level. The two hikers are definitely at different real locations because they used different maps.",
+      "Both hikers are at the same location because -250 means 250 feet down on every map no matter what. Zero always refers to sea level in all elevation situations, so the context and reference point do not change what the signed number represents in reality.",
+      "On Hiker A's map, zero represents sea level and -250 means 250 feet below sea level. On Hiker B's map, zero represents base camp and -250 means 250 feet below base camp. Since both negative numbers have the same digits, they must represent the same distance and direction from their respective zero points, making the hikers at equivalent locations.",
+      "On Hiker A's map, zero is sea level (the ocean surface), so -250 means 250 feet below the ocean. On Hiker B's map, zero is base camp (a location on land), so -250 means 250 feet below base camp. Zero is the agreed line chosen for each map, so the same signed number describes different real locations."
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson states: 'Zero means something different every time' and 'whoever writes the numbers chooses it.' What zero means depends on the specific context.",
+      "Think about the worked examples: on a Celsius thermometer, zero is freezing point; for sea level, zero is the ocean surface; for a bank account, zero is an empty account. The same signed number can mean different things in different situations."
+    ]
+  },
+  {
     "id": "m6math-ordering-rational-numbers-001",
     "loId": "m6math.ordering-rational-numbers",
     "cedCode": "M6MATH-5.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which symbol should be used to compare these two rational numbers: -8 and 3? Choose the correct inequality statement.",
+    "problemText": "Two students recorded their account balances as -15 dollars and 8 dollars. Which inequality statement correctly compares these two numbers?",
     "choices": [
-      "-8 > 3",
-      "-8 < 3",
-      "3 < -8",
-      "3 = -8"
+      "-15 > 8",
+      "-15 < 8",
+      "8 < -15",
+      "8 = -15"
     ],
     "answer": "B",
     "hints": [
-      "Remember: the open side of the symbol points toward the smaller number.",
-      "On a number line, -8 sits to the left of 3, so -8 is the lesser number."
+      "Think about which number sits farther to the right on a number line.",
+      "The open side of the < symbol points toward the smaller number."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A scuba diver records two depths below sea level during a research mission. The first measurement is -45 meters. The second measurement is -28 meters. Write an inequality comparing these two depths, then explain what it means in context.",
+    "problemText": "A bank statement shows three account balances: -22 dollars, 0 dollars, and -5 dollars. Write an inequality statement comparing -22 and -5. Which statement is correct?",
     "choices": [
-      "-28 < -45; the second depth is shallower than the first depth.",
-      "-45 > -28; the first depth is deeper than the second depth.",
-      "-45 < -28; the first depth is deeper than the second depth.",
-      "-45 < -28; the first depth is shallower than the second depth."
+      "-5 > -22",
+      "-22 > -5",
+      "-22 < -5",
+      "-22 = -5"
     ],
     "answer": "C",
     "hints": [
-      "A more negative number sits farther left on the number line, making it the lesser number.",
-      "The inequality symbol's open side must face the greater number; then check your explanation matches the real situation."
+      "Remember that a more negative number is still the lesser number; the digit size does not decide.",
+      "Which number sits farther left on the number line?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Four bank account balances are listed below. One balance is positive, two are negative, and one is zero. Which list orders these balances from least to greatest?",
+    "problemText": "A weather report compares two cities. Morning temperature in City A is -8.5 degrees Celsius. Morning temperature in City B is -2.75 degrees Celsius. Which statement correctly explains what the inequality -8.5 < -2.75 means?",
     "choices": [
-      "-15, 0, -2.5, 8",
-      "-2.5, -15, 0, 8",
-      "0, -2.5, -15, 8",
-      "-15, -2.5, 0, 8"
+      "City A and City B have the same temperature.",
+      "City A's temperature is warmer than City B's temperature.",
+      "City B's temperature is colder than City A's temperature.",
+      "City A's temperature is colder than City B's temperature."
     ],
     "answer": "D",
     "hints": [
-      "Start by finding which number sits farthest to the left on the number line—that is the least.",
-      "Remember that between two negative numbers, the one with the larger digit size is not necessarily the greater one; check which sits farther right."
+      "Turn the inequality back into a real-world sentence about the temperatures, not just the numbers.",
+      "On the number line, -8.5 sits to the left of -2.75, so -8.5 is the lesser (colder) temperature."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A weather station compares temperatures from three cities: City A is at -12°C, City B is at -5°C, and City C is at 0°C. Write an inequality that shows which two cities have temperatures that are closest to each other, then explain what the inequality means.",
+    "problemText": "A diving log shows four depth measurements relative to sea level, in meters: -12, -3.5, 0, and -8. The diver wants to list all four depths from least to greatest to see the full range of the dive. What is the correct order, and which depth represents the deepest point?",
     "choices": [
-      "-5 < 0; City B is colder than City C.",
-      "-12 < -5; City A is colder than City B.",
-      "-12 < 0; City A is colder than City C.",
-      "-5 < -12; City B is colder than City A."
+      "-12, -8, -3.5, 0; the deepest point is -12 meters",
+      "-3.5, -8, -12, 0; the deepest point is 0 meters",
+      "0, -3.5, -8, -12; the deepest point is -3.5 meters",
+      "-12, -8, -3.5, 0; the deepest point is 0 meters"
     ],
     "answer": "A",
     "hints": [
-      "First identify which pair of cities differ by the smallest amount when you think about the number line.",
-      "Write the inequality for that pair, then turn it back into a sentence about the actual temperatures in the cities."
+      "Place each number on a number line from left to right, then read them off in that order.",
+      "The deepest (most negative) depth is the one farthest to the left on the number line."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Five elevations are recorded at different points on a mountain trail: 0, -42, 15, -8, and -50 feet relative to the base camp. Order these elevations from least to greatest, then explain what the greatest elevation tells you about that location compared to the other four locations.",
+    "problemText": "During a science experiment, a student records temperatures from four different locations: -0.5 degrees, 3.2 degrees, -2 degrees, and 1.5 degrees. The student writes the inequality -2 < -0.5 to compare two of these temperatures. Which real-world statement correctly explains what this inequality means?",
     "choices": [
-      "-50, -42, -8, 0, 15; the point at 15 feet is the highest location on the trail because positive numbers always represent the top of any mountain.",
-      "-50, -42, -8, 0, 15; the point at 15 feet is the highest location, which means it sits farthest to the right on the number line and is the greatest elevation.",
-      "-50, -42, -8, 15, 0; the point at 0 feet is the greatest elevation because it represents the base camp and is therefore the reference point for all other measurements.",
-      "0, 15, -8, -42, -50; the point at 15 feet is the greatest because it has the largest absolute value among all the elevations recorded."
+      "The location with -0.5 degrees is colder than the location with -2 degrees.",
+      "The location with -2 degrees is colder than the location with -0.5 degrees.",
+      "The location with -2 degrees is warmer than the location with -0.5 degrees.",
+      "The two locations have temperatures that differ by exactly 2 degrees."
     ],
     "answer": "B",
     "hints": [
-      "Place all five numbers on a mental number line from left to right, remembering that more negative means farther left.",
-      "After ordering from least to greatest, connect the greatest number back to what 'greatest' means in the real world—it is the farthest right on the number line."
+      "Think about what the symbol < means: the number on the left is less than (smaller than) the number on the right.",
+      "Colder means a lower (more negative) temperature value."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student is given five rational numbers and asked to order them from least to greatest, then write two separate inequality statements about different pairs from the ordered list. The five numbers are: -3, 1.5, -7.2, 0, and -3.1. The student orders them correctly as -7.2, -3.1, -3, 0, 1.5. Which pair of inequality statements correctly shows two different comparisons that can be made from this ordered list, and explains both in context?",
+    "problemText": "Four bank accounts show these balances in dollars: 2.5, -1.25, -3, and 0.75. A student orders them as -3, -1.25, 0.75, 2.5 and explains: 'This is least to greatest because the most negative number is smallest, and we move right on the number line to larger numbers.' Then the student writes two inequality statements from this order. Which pair of inequality statements correctly follows from the student's ordering?",
     "choices": [
-      "-3.1 < -3 (the elevation -3.1 meters is lower than -3 meters) and 0 < 1.5 (a zero balance is less than a balance of 1.5 dollars).",
-      "-7.2 < -3.1 (the temperature -7.2°C is colder than -7.1°C) and 1.5 > 0 (a positive number is always greater than zero).",
-      "-3 > -7.2 (the debt of 3 dollars is greater than the debt of 7.2 dollars) and 1.5 > 0 (a gain of 1.5 is worth more than nothing).",
-      "-3.1 > -3 (the number -3.1 is greater than -3) and 0 > -7.2 (zero is greater than a negative number)."
+      "-1.25 < -3 and 2.5 > 0.75",
+      "-3 < 2.5 and -1.25 > 0.75",
+      "-3 < -1.25 and 0.75 < 2.5",
+      "0.75 > -3 and -1.25 < -3"
     ],
     "answer": "C",
     "hints": [
-      "From an ordered list, any pair of numbers maintains its order when written as an inequality; check that your inequality symbol is written correctly by seeing which number sits farther right.",
-      "Your explanation must connect the numbers back to a real situation; it is not complete if it only states the inequality without saying what it means about the actual quantities."
+      "For each consecutive pair in the ordered list, the one on the left should be less than the one on the right.",
+      "Read the order from left to right and write < between consecutive numbers to show that relationship."
     ]
   }
 ]
