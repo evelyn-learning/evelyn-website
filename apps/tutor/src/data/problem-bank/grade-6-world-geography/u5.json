@@ -5,17 +5,17 @@
     "cedCode": "M6GEO-5.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A weather forecaster reports that tomorrow in your city the high temperature will be 22 degrees Celsius with a 40% chance of rain. What aspect of the atmosphere is the forecaster describing?",
+    "problemText": "A weather forecast on television predicts rain and cooler temperatures for the next three days in your city. What is the forecast describing — the weather or the climate?",
     "choices": [
-      "The climate pattern that your city is known for overall",
-      "The average temperature your city experiences every month",
-      "The weather expected for the next day or two",
-      "How the seasons change throughout the year in your city"
+      "The climate, because forecasts predict the permanent atmospheric conditions that define a location over many years",
+      "The climate, because it tells you what temperatures and rainfall to expect in that location",
+      "The weather, because it describes what the atmosphere will be doing over a few days, not the long-term pattern the city usually has",
+      "The weather, because short-term predictions of rain and temperature changes represent conditions in the next few days, which is weather not climate"
     ],
     "answer": "C",
     "hints": [
-      "A forecast predicts what will happen soon, not what usually happens over many years.",
-      "Look for the key word that tells you this is about a short time — 'tomorrow' — not a long-term pattern."
+      "Remember: does this describe right now or a few days, or does it describe the pattern a place is usually like?",
+      "A forecast is a prediction for the near future — is that a short stretch of time or a long-term pattern?"
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6GEO-5.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A place called Mesa Verde is described as having a dry climate with very little rainfall most years. One winter, a major snowstorm dumps two feet of snow on Mesa Verde in a single day. Does this snowstorm prove that Mesa Verde's climate description is wrong?",
+    "problemText": "Mount Iris has a cool, dry climate. On one winter day there, it snows heavily for 12 hours and the temperature stays below freezing. Does this snowy day prove that Mount Iris's climate description is wrong?",
     "choices": [
-      "Yes, because if it snows that much, the climate must not actually be dry.",
-      "Yes, because one event should change how we describe a place's overall pattern.",
-      "No, because a single day of weather is not the same as the long-term climate pattern.",
-      "No, because the climate will change again if another snowstorm does not happen next year."
+      "Yes, because a single heavy snowfall proves the entire climate classification of dry must be incorrect for that location",
+      "No, but only if the snow happened more than one year ago",
+      "Yes, because snow indicates wet conditions, which directly contradicts a dry climate classification no matter when it occurs",
+      "No, because one snowy day is that day's weather, and it does not change the overall pattern Mount Iris usually has"
     ],
     "answer": "D",
     "hints": [
-      "Remember that climate is the pattern that repeats year after year, not what happens on one day.",
-      "One snowy day is weather; a climate pattern is built from what happens repeatedly over many years."
+      "Can a place with one kind of climate still have a day that does not match it?",
+      "Does one day of snow, however heavy, change what the place's climate pattern is year after year?"
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6GEO-5.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Jordan looks outside and sees dark clouds, rain, and hail. He says, 'It's terrible weather out there right now.' Is Jordan using the word 'weather' correctly according to its definition?",
+    "problemText": "A student reads that Grayhaven's climate is warm and humid year-round. The next day, the student sees a news story saying that yesterday was unusually cold and dry in Grayhaven, with frost on the ground. Which statement correctly explains what the student has read?",
     "choices": [
-      "Yes, because he is describing the condition of the atmosphere at this moment.",
-      "No, because hail is not part of weather — it is only part of climate.",
-      "No, because describing one day's conditions is not the same as describing climate.",
-      "Yes, but only if the rain and hail continue for more than a week."
+      "The climate description and the news story are both correct — they answer two different questions about the same place",
+      "The news story is wrong, because Grayhaven's climate is warm and humid, so no day there can be cold and dry",
+      "The climate description used to be true, but yesterday's weather proves it has changed",
+      "The news story is describing Grayhaven's weather, but the climate description is about a different place with a similar name"
     ],
     "answer": "A",
     "hints": [
-      "Think about what 'weather' means — is it what the air and sky are doing right now, or is it a long-term pattern?",
-      "Jordan is looking outside and describing what he sees happening at this very moment."
+      "Can the same place be truthfully described both ways at once — one way about its climate and one way about its weather?",
+      "A climate description answers the question 'What is the pattern?', and weather reporting answers the question 'What is happening right now?'"
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6GEO-5.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two students make statements about a place called Millbrook. Student A says, 'Millbrook's climate is warm and humid, so tomorrow must be warm and humid.' Student B says, 'I just heard that yesterday in Millbrook was cold and snowy, so Millbrook's climate must be cold and snowy.' Which student makes a mistake by confusing weather with climate, and why?",
+    "problemText": "A gardener in Northfield reads that Northfield has a moderate, temperate climate. Before planting seeds, the gardener checks a weather report that says 'Frost expected tonight and tomorrow night.' Should the gardener plant the seeds based on the climate description, or should the gardener wait until after checking the weather forecast? Explain why.",
     "choices": [
-      "Only Student A, because knowing a place's long-term climate pattern cannot predict what the actual weather will be on any single day.",
-      "Both students, because each one treats knowledge about one side of the question as if it settles the other side.",
-      "Only Student B, because climate is defined as the average weather conditions over many years, not what happens on a single day.",
-      "Neither student, because they are both using weather and climate correctly."
+      "The gardener should plant now, because a climate description tells what will happen every single day of the year and frost cannot occur in any location with a moderate, temperate classification",
+      "The gardener should wait, because the weather forecast describes what will happen in the next few days, and the climate description does not predict any single day",
+      "The gardener should plant now, because a climate description is more accurate than a weather forecast for planning activities on any specific day in the near future",
+      "The gardener should wait, but the decision depends on what the climate description says will happen during the exact same dates when frost is forecast"
     ],
     "answer": "B",
     "hints": [
-      "Knowing a place's climate (the long-term pattern) does not tell you what will happen tomorrow; knowing what happened one day does not tell you the climate.",
-      "Look for which student assumes that climate determines today's weather, and which assumes that one day determines climate."
+      "Does knowing a place's climate tell you what the weather will be on any particular day?",
+      "The gardener needs a prediction for the next few days — should that come from a climate description or from a weather forecast?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6GEO-5.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Oakdale is known for a mild, comfortable climate with moderate rainfall throughout the year. On a single Tuesday in spring, the wind speeds reach 60 miles per hour and the temperature plummets to near freezing. A news report calls this event 'extreme weather for the area.' If that extreme day happens only once every 10 years or so, what does that tell us about Oakdale's climate?",
+    "problemText": "Two statements are made about City X: (1) 'City X had a rainy week last month,' and (2) 'City X has a dry climate.' A student says these two statements contradict each other and cannot both be true. Explain what mistake the student is making.",
     "choices": [
-      "The climate is actually extreme, not mild, and the previous description was incorrect.",
-      "The climate remains mild and moderate, because extreme days that happen rarely are part of normal weather variation, not a shift in the climate pattern.",
-      "The climate is changing rapidly because one extreme day now proves the pattern is no longer the same.",
-      "The climate cannot be described until scientists collect 20 or 30 more extreme days like this one."
+      "The student is right — a place cannot have both a dry climate and rain in any week of the year, so one statement must be false",
+      "The student is wrong because the climate classification must change immediately to 'wet' whenever rain falls during any week, making statement 2 outdated",
+      "The student is wrong because statement 1 is about weather (a short time) and statement 2 is about climate (the long-term pattern), and both can be true of the same place at once",
+      "The student is wrong because weather patterns always match climate classifications exactly, so if one week was rainy, the entire month must have been rainy and the climate cannot be dry"
     ],
     "answer": "C",
     "hints": [
-      "Climate is the pattern that repeats year after year — what usually happens, not what happens one rare day.",
-      "An extreme day that occurs only once every 10 years is still part of the variation within a mild climate pattern."
+      "One statement is about one week (a short stretch of time) and the other is about the pattern the place is usually like — which one is weather and which is climate?",
+      "Can a place have one kind of climate and still have some days or weeks that do not match that pattern?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6GEO-5.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student reads that the Atacama Desert in South America has an arid climate with almost no rain most years. The student then finds a weather report from last month showing that rain fell there for three consecutive days. The student concludes, 'This weather report proves the climate description is incomplete because it did not mention that rain happens.' Is the student's reasoning correct, and why or why not?",
+    "problemText": "A scientist studying Blackstone Valley collects data on the atmosphere there for 20 years. She finds that the average summer temperature is 23 degrees Celsius, snow falls in winter about 60 percent of the years, and rain falls about evenly across all seasons. A local resident says, 'Last summer we had one month where the temperature never went above 15 degrees Celsius — that month proves the scientist's temperature numbers are wrong.' Is the resident's claim correct? Why or why not?",
     "choices": [
-      "Yes, the student is correct because a climate description should mention every type of weather that ever occurs in a place.",
-      "Yes, the student is correct because three days of rain is enough to change how we describe a climate.",
-      "No, the student is mistaken because a climate describes the pattern that repeats year after year, not every possible weather event that could happen.",
-      "No, the student is mistaken because one weather report about rain cannot be trusted as evidence about a place's actual patterns."
+      "Yes, one cold month is enough to show that a 20-year average of 23 degrees cannot be right",
+      "Yes, but only if that cold month happened in a different year than most of the other data the scientist collected over those 20 years",
+      "No, because any month that is colder than the average means the scientist's calculation method was wrong and the true average must be lower",
+      "No, because one unusual month is weather for that time period, while the 20-year average describes the climate pattern, and one day or month that differs from the climate pattern does not change what that pattern is"
     ],
     "answer": "D",
     "hints": [
-      "A climate description does not need to list every single type of weather that might ever occur — it describes what is *usual* or *typical*.",
-      "Three days of rain is weather; to know if rain is part of Atacama's climate pattern, you would need to know how often that rain repeats year after year."
+      "Is one month, no matter how unusual, enough time to describe a place's climate pattern, or is it a short stretch of time called weather?",
+      "If a place's climate average is 23 degrees over 20 years, can there still be individual months or days that are much colder or warmer than that?"
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6GEO-5.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Water sits in an ocean and the sun's energy warms it. The warmed water changes into an invisible gas that rises into the air. What is the name of this stage of the water cycle?",
+    "problemText": "Water sitting in an ocean is warmed by energy from the sun and changes into an invisible gas that rises into the air. What is the name of this stage of the water cycle?",
     "choices": [
-      "Condensation, because water vapor is cooling and changing back into liquid form",
-      "Precipitation, because water is falling downward from clouds to Earth's surface",
-      "Collection, because water is gathering and staying in one location like an ocean",
-      "Evaporation, because liquid water is changing into water vapor"
+      "Collection",
+      "Condensation",
+      "Precipitation",
+      "Evaporation"
     ],
     "answer": "D",
     "hints": [
-      "The stage name matches the process described: liquid becoming gas.",
-      "This is the first stage, and it always happens when the sun warms water."
+      "This stage happens first, when the sun's energy warms liquid water.",
+      "The word contains 'vapor,' and that gas is what forms during this stage."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6GEO-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student observes a puddle on the sidewalk after it rains. By the next morning, after a sunny night with no more rain, the puddle is completely gone, even though nobody cleaned it up. The water did not flow away into a drain. What process in the water cycle best explains where the puddle's water went?",
+    "problemText": "A puddle on the playground disappears on a hot, dry afternoon without any person removing the water or the puddle draining away. Which stage of the water cycle is responsible for the puddle vanishing?",
     "choices": [
-      "Evaporation occurred, and the sun's warmth changed the liquid water in the puddle into invisible water vapor that rose into the air",
-      "Precipitation fell again during the night and the rain mixed with the puddle to make it heavier",
-      "Condensation caused the water droplets to combine and freeze into ice that sublimated away",
-      "Collection moved the water underground through soil and rock into a storage area beneath the sidewalk"
+      "Evaporation, because the sun's warmth changed the water into rising invisible vapor",
+      "Condensation, because cooling water vapor forms liquid droplets that cluster together in the air",
+      "Precipitation, because water is falling from clouds and landing on the ground as rain or snow",
+      "Collection, because liquid water is gathering and storing in oceans, lakes, and underground reserves"
     ],
     "answer": "A",
     "hints": [
-      "The puddle is gone but there was no rain, no drain, and no one removed it—the water must have become invisible.",
-      "Sunny conditions and warmth from the sun are the energy source that starts the water cycle."
+      "Look for which stage involves the sun warming liquid water and turning it into a gas.",
+      "The puddle is disappearing into the air, not falling from the sky or gathering into a lake."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6GEO-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "High in the atmosphere, water vapor that rose from the ocean continues to move upward. As the water vapor goes higher, the air around it becomes colder. The cooled water vapor changes back into millions of tiny liquid droplets that stick together and float in the air. What stage of the water cycle is happening in this description?",
+    "problemText": "High in the sky, water vapor that has risen from the ocean cools as it reaches a higher altitude. The cooled water vapor changes back into countless tiny liquid droplets that cluster together and float in the air. Which stage of the water cycle is being described?",
     "choices": [
-      "Evaporation, because water is rising higher into the sky and moving away from the ocean surface",
-      "Condensation, because water vapor is cooling and changing back into tiny liquid droplets",
-      "Precipitation, because the liquid droplets are heavy enough to fall downward as rain or snow",
-      "Collection, because the water droplets are merging together and forming a visible cloud mass"
+      "Evaporation, because water is changing from a liquid into an invisible gas that rises into the atmosphere",
+      "Condensation, because water vapor is cooling and becoming liquid water droplets",
+      "Precipitation, because the liquid droplets have accumulated and are now heavy enough to fall as rain",
+      "Collection, because water droplets are merging together and flowing toward rivers and oceans"
     ],
     "answer": "B",
     "hints": [
-      "The key detail is that water vapor is cooling and becoming liquid again—that transformation has a specific name.",
-      "When tiny droplets cluster together in the air where they float, they form the visible feature you see in the sky."
+      "This stage happens when something cools down and changes from a gas back into a liquid.",
+      "The tiny droplets floating together in the air form a cloud, which is the definition of this stage."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6GEO-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A farmer's rain gauge shows that 2 inches of rain fell on the farm during a thunderstorm last Tuesday. The rain ran downhill through streams and gathered in the river that borders the farm. That same water will remain in the river for several weeks before the sun's warmth causes it to rise back into the air as invisible vapor. Identify the two consecutive stages of the water cycle that are described in this sequence, in the order they occur.",
+    "problemText": "A student observes a lake early in the morning and notices the water level is slightly lower than it was the previous afternoon. Later that same day, a cloud forms above the lake, and by evening, rain falls and raises the lake's level back up. Place the correct stage name on each event: the water level dropping in the morning, the cloud forming during the afternoon, and the rain falling in the evening. Which choice lists all three stages in the correct order?",
     "choices": [
-      "Evaporation first, then condensation",
-      "Condensation first, then evaporation",
-      "Precipitation first, then collection",
-      "Collection first, then precipitation"
+      "Evaporation, precipitation, condensation",
+      "Condensation, evaporation, precipitation",
+      "Evaporation, condensation, precipitation",
+      "Precipitation, condensation, evaporation"
     ],
     "answer": "C",
     "hints": [
-      "The rain falls during the storm and then gathers in the river—one stage brings water down, and the next stage shows it gathering in a body of water.",
-      "The sequence moves from water reaching Earth's surface to water being stored there, not from water being stored to water rising."
+      "The water level dropped because warmth from the sun turned liquid water into rising vapor; that's where the cycle begins.",
+      "After vapor rises and the cloud forms, the droplets inside grow heavy and fall—which is the third stage, not the second."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6GEO-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student correctly identifies four stages of the water cycle in order: evaporation, condensation, precipitation, and collection. The student then asks, 'Once water reaches collection in a lake, does the water cycle stop there, or does it continue?' Based on the lesson about how the water cycle works, which answer best explains what actually happens?",
+    "problemText": "A student claims: 'Once rain falls from a cloud onto the ground, that is the final stage and the water cycle is complete.' Is this claim correct or incorrect? Why or why not, in terms of the water cycle's four stages?",
     "choices": [
-      "The cycle stops because the water has reached its final destination and no longer moves",
-      "The cycle stops unless a human removes the water from the lake for some other purpose",
-      "The cycle continues because collection always leads directly back into evaporation when the sun warms the water in the lake again",
-      "The cycle continues only if a new supply of water from outside enters the lake to push the old water back through the stages"
+      "The claim is correct because precipitation is the last stage, and once water reaches the ground the cycle stops.",
+      "The claim is incorrect because after precipitation, the water immediately evaporates back into the atmosphere, skipping any intermediate step between rainfall and the formation of new clouds.",
+      "The claim is incorrect because after precipitation, the water must undergo condensation again in order to form clouds and cycle back through the atmosphere rather than remaining on the ground.",
+      "The claim is incorrect because collection happens after precipitation, and collection returns water to lakes and oceans where evaporation can start the cycle again."
     ],
     "answer": "D",
     "hints": [
-      "Think about the phrase 'water cycle'—a cycle means something happens again and again in a loop.",
-      "The same water that collects in a lake can be warmed by the sun again, repeating the four stages from the beginning."
+      "Remember that the water cycle is a loop with no ending point—the fourth stage leads back to the first.",
+      "After rain falls (precipitation), water gathers into oceans, lakes, and rivers; that gathering is the stage that comes next."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6GEO-5.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A river flows from mountains down to the sea. At the river mouth where it reaches the ocean, some of the river water mixes with ocean water and sits for a while before a warm wind blows across the surface. Over the next few hours, the surface water gradually disappears into the air as invisible vapor. This vapor rises, cools high in the sky, and forms a thick cloud. Later, that cloud's droplets collide and merge into larger drops, which fall as rain back onto the mountains where the river begins. A student claims: 'This water went through three stages—evaporation, condensation, and precipitation—but it skipped collection because it never gathered in a lake or an ocean after the initial river water reached the mouth.' Evaluate this claim using what you know about the order of the water cycle stages.",
+    "problemText": "A river flows into the ocean on the coast. A fish scientist tracks a single water droplet in that river as it enters the ocean and sits there for several weeks. Without external human interference, describe which four stages that droplet will move through next, in order, and explain why it returns to a location where the river cycle can begin again.",
     "choices": [
-      "The student's claim is wrong; the water did experience collection when it sat in the ocean before evaporation began, and collection must occur before the cycle can repeat",
-      "The student's claim is correct; collection does not count as a stage if it happens in an ocean rather than in a freshwater lake or river",
-      "The student's claim is incomplete; collection occurred when the rain gathered on the mountains, but this water will need collection to happen again before evaporation can restart the cycle",
-      "The student's claim is based on a misunderstanding; collection is a stage that only precedes evaporation, so it cannot happen after precipitation in the same water cycle loop"
+      "Evaporation, condensation, precipitation, collection—the water evaporates from the ocean, condenses into a cloud, falls as rain, and collects in a river or lake where it can flow back to the ocean.",
+      "Collection, precipitation, condensation, evaporation—the water collects in the ocean, falls as rain, condenses into a cloud, and evaporates back into the ocean without ever returning to the river.",
+      "Condensation, precipitation, evaporation, collection—the water condenses as it sits in the ocean, falls as rain above the land, evaporates into the sky, and collects in rivers.",
+      "Evaporation, condensation, precipitation, evaporation—the water evaporates from the ocean, condenses twice into clouds, and falls as rain, then immediately evaporates again with no collection step."
     ],
     "answer": "A",
     "hints": [
-      "Collection means water gathering in oceans, lakes, rivers, and other bodies of water—does the ocean count as a body of water where water can collect?",
-      "The water cycle is a loop with no starting point and no ending point; every complete cycle must include all four stages in order, and the same water goes through them again and again."
+      "The four stages must happen in the same order every time: evaporation, condensation, precipitation, collection.",
+      "For the droplet to return to the river or a location where it can flow back to the ocean, it must be collected in a lake or river on land after it falls as precipitation."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A biome is defined by three key characteristics. Which set of characteristics best describes what a biome is?",
+    "problemText": "A biome is defined by three key characteristics. Which set of three characteristics does a geographer use to identify and name a biome?",
     "choices": [
-      "A large natural region with its own typical temperature, precipitation, and plant life",
-      "A very large area that covers an entire continent and has only one kind of animal",
-      "Any place where rain falls and trees are able to grow year-round",
-      "A region that stays the same temperature throughout the entire year"
+      "Temperature, precipitation, and plant life",
+      "Elevation, rainfall, and animal species",
+      "Latitude, seasons, and forest density",
+      "Soil type, wind patterns, and tree height"
     ],
     "answer": "A",
     "hints": [
-      "Think about the three clues used to identify biomes in the lesson.",
-      "A biome is defined by weather patterns and the kinds of plants that grow there, not just one single feature."
+      "The lesson teaches that naming a biome requires reading all three clues together.",
+      "Think about what makes one biome different from another — the weather it has and what grows there."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geographer observes that a region receives very little rain in every single month of the year. The ground has many bare patches between scattered plants that are specially adapted to store water. What is the most likely biome?",
+    "problemText": "A biome receives very little rain in every single month of the year. Most of the ground between plants is bare. Which biome does this description match?",
     "choices": [
-      "Rainforest, because the plants have adapted to survive with minimal water throughout the year",
-      "Desert, because very low precipitation is the defining clue for this biome",
-      "Grassland, because grasses are the dominant vegetation type and can survive with low precipitation",
-      "Tundra, because extremely cold temperatures create dry conditions that prevent most plants from growing"
+      "Rainforest",
+      "Desert",
+      "Tundra",
+      "Grassland"
     ],
     "answer": "B",
     "hints": [
-      "Very little precipitation in every month is a key clue; look for which biome is defined by this.",
-      "Notice the bare patches between plants — that plant-life pattern matches one biome's description."
+      "The defining clue for one biome is very little precipitation all year — use that to narrow your choices.",
+      "Between desert and tundra, both are dry, so look at what covers the ground: is it bare or covered by mosses and shrubs?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is reading about a place and sees this description: 'It is hot every month with almost no temperature change across the year. Heavy rain falls on most days, all year long, with no real dry season.' The student thinks this might be a forest. Explain why the student's answer is incomplete using the three clues.",
+    "problemText": "A biome stays hot every single month of the year, with almost no change in temperature from season to season. Rain falls on most days, throughout the entire year. Which biome is this?",
     "choices": [
-      "The student only checked the plant-life clue and ignored that forests have constant heavy rainfall throughout the year",
-      "The student only checked the precipitation clue and missed that rainforests also have no temperature change, whereas forests have a distinct cold season",
-      "The student only checked the precipitation clue; the hot, unchanging temperature rules out forest and points to rainforest instead",
-      "The student only checked the vegetation clue and forgot that rainforests receive much more precipitation than regular forests do"
+      "Forest",
+      "Grassland",
+      "Rainforest",
+      "Desert"
     ],
     "answer": "C",
     "hints": [
-      "Remember that forest requires both a warm season AND a genuinely cold season.",
-      "A rainforest stays hot every month, while a forest has a real cold season — the temperature clue is the difference here."
+      "The combination of constant heat and rain falling most days all year points to one biome.",
+      "Two biomes get enough rain to support many trees, but only one stays hot every single month with no cold season."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two biomes both have low-growing plants covering most of the ground, with very few or no tall trees. A student must tell them apart using all three clues. Which pair of clues would best separate these two biomes from each other?",
+    "problemText": "A student reads this description: 'Tall trees grow close together in layers. Only a few scattered trees stand far apart from each other.' The student says both describe the same biome because they both mention trees. Explain why the student is wrong, using at least one other clue besides plant life.",
     "choices": [
-      "Precipitation alone, because one biome is dry and one is wet, and this difference in water availability explains the plant types",
-      "Plant life and temperature, because one biome has grass and the other has moss or lichen, which require different temperatures",
-      "Temperature alone, because the cold biome has no trees and the warm one does",
-      "Precipitation and temperature, because one receives very little water and stays extremely cold all year, while the other gets enough rain to grow grass and has only cool winters"
+      "The first describes a grassland with tall grasses and moderate rainfall; the second describes a rainforest with short plants on the forest floor and very high rainfall.",
+      "The first describes a forest with trees losing their leaves in winter and cooler temperatures; the second describes a grassland with evergreen trees that stay green year-round in a warmer climate.",
+      "The first describes a tundra where trees grow in layers and temperatures are very warm; the second describes a desert where trees are spaced far apart and temperatures are cold throughout the year.",
+      "The first describes a rainforest with dense, layered trees; the second describes a grassland with scattered trees because grasslands do not get enough rain to support many trees close together."
     ],
     "answer": "D",
     "hints": [
-      "Which two biomes both have low ground-covering plants instead of many trees? (Hint: tundra and grassland.)",
-      "What is the key difference in how much water each of these biomes receives throughout the year?"
+      "Remember that forest and rainforest both grow many trees, and grassland also has scattered trees — so plant life alone cannot tell them apart.",
+      "Think about what separates grassland from rainforest: one does not get enough rain to support many trees close together, and one is not hot every single month."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A field team describes a location this way: 'A warm season and a cold season both occur each year. Precipitation falls steadily enough throughout the year to support many trees growing close together. Some of these trees lose their leaves when winter arrives.' What is this biome, and why would checking only one clue lead to the wrong answer?",
+    "problemText": "Two places both have very little precipitation all year long. One has a ground covered in low mosses and small shrubs with no trees at all. The other has bare ground with only a few scattered plants widely spaced apart. Are these the same biome? Explain your answer using all three clues.",
     "choices": [
-      "Forest, because both a warm season and cold season are essential to distinguish it from rainforest, which stays hot all year",
-      "Rainforest, because the presence of many trees growing close together indicates a tropical region with year-round rainfall",
-      "Grassland, because steady precipitation throughout the year supports dense plant growth in the form of grasses",
-      "Tundra, because the presence of a cold season tells us the location must be at a high latitude with sparse vegetation"
+      "No, they are different biomes: the first is a tundra with low mosses and shrubs covering the ground in a very cold place, and the second is a desert with bare ground between scattered plants in a hot place.",
+      "Yes, they are the same biome because both receive very little precipitation throughout the year, and lack of rain is the defining feature that overrides differences in temperature and plant density between regions.",
+      "No, they are different biomes: the first is a rainforest with dense plant cover that prevents bare ground from showing through, and the second is a grassland with scattered shrubs and exposed soil visible between patches of vegetation.",
+      "Yes, they are the same biome because both have very limited plant life with minimal coverage and low precipitation levels, which means both experience conditions too harsh to support tree growth of any kind in any season."
     ],
     "answer": "A",
     "hints": [
-      "Rainforest also has many close-together trees, so tree density alone does not decide between forest and rainforest.",
-      "What temperature pattern is mentioned that rainforest does NOT have?"
+      "Very low precipitation alone fits two different biomes in this lesson — you need to check temperature and plant life too.",
+      "A tundra is defined as cold, dry, and treeless, with mosses and shrubs covering the ground; a desert is defined as very dry with scattered plants and bare ground between them."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student creates a chart that lists three location descriptions, each with one clue missing. For each, the student has already guessed the biome, and two of the three guesses are wrong. Location 1: 'Very little rain, scattered plants leaving bare ground.' Guess: Desert. Location 2: 'Enough rain for grasses across the ground, moderate temperature with mild winters.' Guess: Tundra. Location 3: 'Hot all year, dense trees in layers, no dry season.' Guess: Forest. How many guesses are correct, and which biome names belong in the two incorrect rows?",
+    "problemText": "A biome has a warm part of the year and a genuinely cold part of the year, with enough precipitation spread throughout most of the year. Many trees grow close together there. Once the student identifies this as a forest using all three clues, the student then asks: 'If the temperature stayed the same but the precipitation changed to rain falling on most days all year with no dry season, would this still be a forest?' Using the three-clue method from the lesson, explain why or why not.",
     "choices": [
-      "One guess is correct (Tundra). Location 1 is rainforest and Location 3 is grassland.",
-      "One guess is correct (Desert). Location 2 is grassland and Location 3 is rainforest.",
-      "Two guesses are correct (Desert and Tundra). Only Location 3 should be rainforest.",
-      "Two guesses are correct (Desert and Forest). Only Location 2 should be grassland."
+      "No, because the addition of year-round rain with no dry season is the defining clue of a rainforest, and a rainforest stays hot every month with no cold season, so the plant life and precipitation clues would no longer match the forest's need for a cold season.",
+      "No, because very high precipitation with no dry season, combined with a hot temperature every month (since rainforests are hot), would switch the biome to rainforest, even though the temperature clue in the original forest description stays the same.",
+      "Yes, because both forest and rainforest have many trees growing close together, so adding more rain would not change the biome name.",
+      "Yes, because precipitation alone does not determine a biome — all three clues must change together for the biome name to change."
     ],
     "answer": "B",
     "hints": [
-      "Start by checking which guess matches all three clues (temperature, precipitation, and plant life) for that location.",
-      "For the wrong guesses, ask: what clue is tundra missing? What does tundra need that this location does not have?"
+      "Check what happens to the temperature clue if precipitation changes to year-round rain with no dry season: does a rainforest stay hot or cold every month?",
+      "The lesson shows that forest and rainforest are neighbors — forest needs a genuinely cold season, and rainforest needs to be hot every month, so changing one clue can flip which biome fits."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which statement correctly defines an ecosystem? An ecosystem is the combination of all living and nonliving things sharing one place considered together.",
+    "problemText": "Which statement correctly defines what an ecosystem is?",
     "choices": [
-      "only the plants and animals living in a certain area, because ecosystems focus on organisms rather than their physical surroundings",
-      "every living and nonliving thing sharing one place, considered together",
-      "a single plant or animal and the food it eats, making it the basic unit of nature",
-      "the smallest space where one kind of animal can hide, providing shelter and protection"
+      "Only the plants and animals that live in a particular location",
+      "Every living and nonliving thing sharing one place, considered together",
+      "The smallest space where one specific animal makes its home",
+      "A group of living things that need the same type of food to survive"
     ],
     "answer": "B",
     "hints": [
-      "Recall: the definition from the lesson includes both living AND nonliving parts.",
-      "The correct answer mentions that all parts are considered together as one system."
+      "Remember that an ecosystem includes both living AND nonliving parts.",
+      "Think about whether water, sunlight, and rocks are part of an ecosystem or not."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student observes a small backyard ecosystem that contains grass, a rabbit, soil, rainwater, and sunlight. Which of the following is a biotic part of this ecosystem? Consider that a biotic part must grow, need energy to survive, and make more of its own kind.",
+    "problemText": "A student is looking at a backyard garden. She names these parts: soil, tomato plants, earthworms, rainwater, and a garden hose. Which of these is an abiotic (nonliving) part of the garden ecosystem?",
     "choices": [
-      "the rainwater collecting on the grass",
-      "the sunlight warming the backyard",
-      "the grass growing in the soil",
-      "the soil itself holding the grass roots"
+      "The tomato plants, because they stay rooted in one place",
+      "The earthworms, because they live in the soil",
+      "The rainwater, because it does not grow or reproduce",
+      "The garden hose, because it brings water from outside the garden"
     ],
     "answer": "C",
     "hints": [
-      "Apply the three-part test: does it grow, need energy, and reproduce?",
-      "Water, sunlight, and soil are nonliving even though they support life."
+      "Ask yourself: does this thing grow, need energy to survive, and make more of its own kind?",
+      "Look for something in the list that cannot do all three of those things."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A stream ecosystem is described as follows: cold flowing water, smooth pebbles on the streambed, moss clinging to rocks, trout swimming in deep pools, and shade from overhanging trees. How many nonliving (abiotic) parts are named in this description? Count each part that does not grow, need energy to survive, or make more of its own kind.",
+    "problemText": "A meadow ecosystem is described as: tall grass swaying in the wind, a rabbit hopping through the grass, morning sunlight warming the ground, insects flying low, and rich soil. Which choice correctly separates the biotic parts from the abiotic parts?",
     "choices": [
-      "one part only",
-      "two parts only",
-      "three parts only",
-      "four parts only"
+      "Biotic: grass, rabbit, insects; Abiotic: wind, soil",
+      "Biotic: rabbit, insects, wind; Abiotic: grass, sunlight, soil",
+      "Biotic: grass, wind, insects; Abiotic: rabbit, sunlight, soil",
+      "Biotic: grass, rabbit, insects; Abiotic: sunlight, soil, wind"
     ],
     "answer": "D",
     "hints": [
-      "First list every part named, then test each one against the three requirements for living things.",
-      "Water, pebbles, shade, and trees' roles here include nonliving elements; sort carefully."
+      "Remember that wind is abiotic; it is not alive even though it moves things.",
+      "Use the three-part test: does it grow, need energy, and reproduce?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student observes a rotting log on the forest floor. The log contains bark, beetles living inside it, fungi growing on its surface, and decaying wood material. The student says, 'The entire log is the habitat for the beetles.' Explain why this statement is incorrect and name what the whole forest setting should be called instead.",
+    "problemText": "A student describes a forest this way: 'The whole forest is an ecosystem, but the fallen log covered with moss is a habitat.' Explain what the student got right and what the student got wrong about the forest.",
     "choices": [
-      "The whole forest setting is the ecosystem, and the space inside the log where the beetles live is their habitat within it.",
-      "The log is too large to be called a habitat because habitats must be smaller than any single object, so only the beetles themselves count as a habitat for smaller creatures.",
-      "The log is the habitat for all forest organisms, not just the beetles, so the statement should say 'habitat for the forest' instead of 'habitat for the beetles.'",
-      "Habitats and ecosystems are the same thing, so calling the log a habitat is correct, and the forest is simply a larger habitat containing smaller habitats inside it."
+      "The student is right that the forest is the ecosystem and the log is a habitat inside it, but missed that many other habitats exist in the forest as well.",
+      "The student is right that the forest is an ecosystem, but wrong because the log is also a habitat and the forest itself is another habitat too, meaning multiple habitats can exist within one ecosystem.",
+      "The student is completely right; the forest is the ecosystem and the log is the only habitat inside it since habitats cannot overlap or share the same space.",
+      "The student is wrong about both parts; the fallen log is the ecosystem and the forest is one habitat within it, so habitats must contain ecosystems rather than the other way around."
     ],
     "answer": "A",
     "hints": [
-      "A habitat is the specific spot where one living thing lives; an ecosystem is much larger and includes all living and nonliving things together.",
-      "Remember: a habitat sits inside an ecosystem, not the other way around."
+      "Think about whether one ecosystem can hold more than one habitat at the same time.",
+      "Ask: can different animals live in different spots inside the forest, each in their own habitat?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A wetland contains cattails, marsh water, dragonflies, mud, fish, air, and decaying plant matter on the bottom. Which statement correctly sorts these parts and identifies both the ecosystem and a habitat within it?",
+    "problemText": "A student says: 'A beach is not an ecosystem because it is mostly made of sand, which is nonliving.' What is the error in this reasoning, and why is the student wrong?",
     "choices": [
-      "Biotic parts are the fish and dragonflies; abiotic parts are the water, mud, and air; the cattails are neither; the whole wetland is the ecosystem and the mud layer is the habitat for bottom-dwelling fish.",
-      "Biotic parts are the cattails, dragonflies, and fish; abiotic parts are the water, mud, and air; the whole wetland is the ecosystem and the mud is the specific habitat for certain fish.",
-      "Biotic parts are only the animals; abiotic parts are only the water and mud; plants are neither living nor nonliving; the ecosystem is only the water.",
-      "Biotic parts are everything that moves; abiotic parts are everything that does not move; the wetland is a habitat, not an ecosystem."
+      "The student is wrong because an ecosystem must include only living things and exclude all nonliving materials, so the presence of sand actually means the beach cannot qualify as a true ecosystem.",
+      "The student is wrong because an ecosystem needs BOTH living and nonliving parts together; the sand is abiotic, but if crabs, seaweed, and shells are also there, the beach is still a full ecosystem.",
+      "The student is wrong because ecosystems are defined as containing only the living parts of a place, not the nonliving parts, which means sand and water should be counted separately from the organisms.",
+      "The student is wrong because ecosystems require exactly equal amounts of living and nonliving things to be present, and beaches fail to meet this balance requirement since sand dominates."
     ],
     "answer": "B",
     "hints": [
-      "Test each part: does it grow, need energy, and reproduce? Plants pass this test even though they do not move.",
-      "Recall that one ecosystem can hold many habitats at once."
+      "Remember the definition of ecosystem: BOTH living AND nonliving parts sharing one place.",
+      "Think about whether a beach would have any living things on or in it."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-5.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A tide pool ecosystem contains sea stars, hermit crabs, seaweed, saltwater, rocks, sand, and sunlight. A student claims that the shallow depression in the rock where a sea star clings is the tide pool ecosystem because it is the smallest distinct area in the description. Another student claims that only the living things—the sea stars, hermit crabs, and seaweed—make up the tide pool ecosystem because nonliving parts like sand and rocks do not count. Identify which student is wrong and explain why using the complete definition of ecosystem and the relationship between habitat and ecosystem.",
+    "problemText": "Two students visit a tide pool during low tide. One student says: 'This tide pool is a habitat, not an ecosystem, because it is too small.' The other student says: 'The tide pool is an ecosystem because it has starfish, seaweed, rocks, seawater, and sunlight all in one place.' Who is correct, and why? What mistake did the first student make in understanding the difference between ecosystem and habitat?",
     "choices": [
-      "Only the first student is wrong; the ecosystem includes all living and nonliving things together, and the rock depression is the sea star's habitat within the larger ecosystem.",
-      "Only the second student is wrong; rocks, sand, water, and sunlight are abiotic parts that must be included for a complete ecosystem.",
-      "Both students are wrong; the entire tide pool—all living parts and all nonliving parts together—is the ecosystem, and the rock depression is the sea star's habitat within it.",
-      "Neither student is wrong; both the rock depression and the living things alone could each correctly be called an ecosystem depending on how you look at it."
+      "The first student is correct; any place smaller than a mile across is only a habitat and cannot be called an ecosystem. The second student confused the depth of water with the number of different species present.",
+      "The first student is correct; a tide pool has too many living things to be a habitat and too few organisms to be an ecosystem. The second student forgot that ecosystems require both rocks and water to be counted.",
+      "The second student is correct; the tide pool is an ecosystem with all living and nonliving parts together. The first student mistakenly thought that habitat and ecosystem mean the same thing, or that size alone decides which is which.",
+      "The second student is correct; the tide pool is an ecosystem because it has living things and nonliving parts working together in one location. The first student confused the size of a space with whether it could contain a complete ecosystem."
     ],
     "answer": "C",
     "hints": [
-      "An ecosystem is not one small piece of it and is not just the living things; it is both kinds of parts together in one place.",
-      "A habitat is always a specific spot inside an ecosystem where one organism lives; confusing these two definitions is behind both students' errors."
+      "Recall: an ecosystem is EVERY living and nonliving thing in one place; a habitat is the specific spot where ONE particular living thing lives.",
+      "Size does not determine whether something is an ecosystem or habitat. What matters is whether you are describing the whole system or just one small spot inside it."
     ]
   }
 ]

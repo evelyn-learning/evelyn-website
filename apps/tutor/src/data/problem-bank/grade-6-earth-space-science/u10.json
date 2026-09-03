@@ -5,17 +5,17 @@
     "cedCode": "M6SCI-10.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Carbon is stored in three main reservoirs on Earth. Which of the following is NOT one of these three reservoirs?",
+    "problemText": "A volcano erupts and releases carbon dioxide gas that had been trapped deep underground in rock. What is the name of the process that moved carbon from the geosphere into the atmosphere?",
     "choices": [
-      "The atmosphere, where carbon exists mostly as carbon dioxide gas",
-      "The ocean, where a large amount of carbon is dissolved directly in the water",
-      "The geosphere, where carbon is locked inside solid rock, mostly as carbonate rock",
-      "The soil, where carbon sits permanently and never moves to other reservoirs"
+      "Carbonate rock formation",
+      "Chemical weathering",
+      "Direct gas exchange",
+      "Volcanic outgassing"
     ],
     "answer": "D",
     "hints": [
-      "The lesson names exactly three reservoirs at the start. Recall which ones were listed first.",
-      "Remember that no reservoir permanently traps carbon—it is always moving along one pathway or another."
+      "The process happens when a volcano brings deep underground gas to the surface.",
+      "The word 'outgassing' is a clue about gas moving out from somewhere."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6SCI-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A volcanic eruption in the middle of the ocean releases carbon dioxide gas that had been trapped deep underground. Which pathway does this carbon take, and which two reservoirs does it connect?",
+    "problemText": "Rainwater falling through the air picks up a small amount of carbon dioxide gas and becomes slightly acidic. This rainwater then slowly reacts with rock on land. Which direction is the carbon moving, and which two reservoirs are being connected by this pathway?",
     "choices": [
-      "From the geosphere into the atmosphere through volcanic outgassing",
-      "From the atmosphere into the ocean through direct gas exchange",
-      "From the ocean into the geosphere as carbonate rock forms",
-      "From the ocean into the atmosphere through chemical weathering"
+      "From the atmosphere to the ocean; the two reservoirs are the atmosphere and the ocean",
+      "From the geosphere to the atmosphere; the two reservoirs are the geosphere and the atmosphere",
+      "From the ocean to the atmosphere; the two reservoirs are the ocean and the atmosphere",
+      "From the atmosphere to the geosphere; the two reservoirs are the atmosphere and the geosphere"
     ],
     "answer": "A",
     "hints": [
-      "The problem says the carbon dioxide was trapped deep underground before the eruption. Which reservoir holds carbon deep underground?",
-      "When a volcano releases gas from deep inside Earth straight into the sky, what is that process called?"
+      "The carbon starts in the air as gas. Where does the rainwater carry it after it reacts with rock on land?",
+      "Rivers carry the dissolved carbon away from land — but where do rivers flow?"
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6SCI-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Rainwater falling over a forest picks up a small amount of carbon dioxide from the air and becomes slightly acidic. This acidic rainwater slowly reacts with rock on the forest floor, and a nearby river eventually carries the dissolved carbon away toward the coast. Which two reservoirs is this pathway connecting, and in what direction?",
+    "problemText": "Deep ocean water contains dissolved carbon that came from the atmosphere. This dissolved carbon can react with dissolved calcium in the water to form solid calcium carbonate. Over long stretches of time, thick layers of this solid material build up on the ocean floor and harden into rock. What reservoir is the carbon now stored in, and what is this type of rock called?",
     "choices": [
-      "From the geosphere into the atmosphere, because the rock material is broken down and enters the air as a gas",
-      "From the atmosphere into the ocean, because dissolved carbon from the air ends up in the sea",
-      "From the ocean into the geosphere, because the river carries ocean water backward onto the land where rock is located",
-      "From the geosphere into the ocean, because carbon is leaving the rock on land"
+      "The atmosphere; the rock is called lava because molten material hardens into solid form",
+      "The geosphere; the rock is called carbonate rock such as limestone",
+      "The ocean; the rock is called sediment because it settles on the ocean floor and forms layers",
+      "The geosphere; the rock is called volcanic rock because it forms from magma cooling underground"
     ],
     "answer": "B",
     "hints": [
-      "The carbon starts in the atmosphere when the rainwater picks it up from the air. Where does it end up after the river carries it onward?",
-      "This is the pathway described as 'atmosphere to ocean by way of land.' What does that name tell you about where the carbon begins and where it ends?"
+      "Once the carbon is locked inside solid rock on the ocean floor, which reservoir does that belong to?",
+      "The problem describes calcium carbonate building up and hardening — that is a specific type of rock with a name taught in the lesson."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6SCI-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A geologist finds a thick layer of limestone on a mountainside, far from any ocean today. The limestone contains dissolved carbon that came from the atmosphere hundreds of millions of years ago. Trace the two pathways that carbon must have followed to move from the atmosphere into this solid rock, in order.",
+    "problemText": "A thick layer of limestone sits exposed high on a mountainside, far from any ocean today. Scientists know that this limestone formed hundreds of millions of years ago from carbon dissolved in seawater. Trace the pathway carbon took from the atmosphere to become locked in this rock, naming each step and the two reservoirs involved at each step.",
     "choices": [
-      "First, volcanic outgassing carried it from the geosphere into the atmosphere; second, it dissolved into the ocean and became carbonate rock",
-      "First, it dissolved directly into the ocean from the atmosphere; second, plate motion carried it underground into the geosphere",
-      "First, chemical weathering and rivers carried it from the atmosphere into the ocean; second, it became part of solid carbonate rock on the ocean floor",
-      "First, it was released by plate motion and volcanic outgassing into the atmosphere; second, chemical weathering locked it into limestone on land"
+      "Atmosphere to geosphere by volcanic outgassing, then geosphere to ocean by carbonate rock formation",
+      "Ocean to atmosphere by direct gas exchange, then atmosphere to geosphere by volcanic outgassing",
+      "Atmosphere to ocean by chemical weathering and rivers, then ocean to geosphere by carbonate rock formation",
+      "Geosphere to atmosphere by volcanic outgassing, then atmosphere to ocean by direct gas exchange"
     ],
     "answer": "C",
     "hints": [
-      "The problem says the carbon 'came from the atmosphere.' Which pathway starts in the atmosphere and brings dissolved carbon to the ocean?",
-      "Once the carbon is in the ocean with dissolved calcium, how does it become part of solid rock like limestone?"
+      "The carbon starts as a gas in the atmosphere. Rainwater is the first clue about how it leaves the air.",
+      "Once dissolved carbon reaches the ocean, what solid form does it take? That solid form is how carbon enters the geosphere."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6SCI-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "At the surface of the ocean, carbon dioxide gas from the air can dissolve into the water, and dissolved carbon from the water can also leave and enter the air. This exchange runs in both directions, not just one way. Later, if carbonate rock on the ocean floor is carried down into deeper, hotter parts of Earth by plate motion, the rock can be broken down and the carbon freed. Explain why the carbon locked in that rock is not permanently trapped, even though it may stay underground for hundreds of millions of years.",
+    "problemText": "At the surface of the ocean, carbon dioxide gas from the air can dissolve directly into the water. This same exchange can also run in reverse, with dissolved carbon leaving the water and entering the air. A student claims this exchange is a one-way pathway where carbon always moves in only one direction. Explain why the student's claim is wrong, and describe what actually happens.",
     "choices": [
-      "Because the carbon can dissolve back into the ocean water if the rock is exposed at the surface again",
-      "Because chemical weathering from rainwater can break the rock down and carry the carbon back to the ocean",
-      "Because even though the carbon stays locked in rock for a very long time, heat and pressure deep underground can eventually free it, and volcanic eruptions can return it to the atmosphere",
-      "Because the carbon can slowly diffuse out of the rock and enter the ocean on its own, without any other process breaking the rock"
+      "The student is wrong because carbon can move from the atmosphere into the ocean when conditions favor dissolving, and also move from the ocean into the atmosphere when conditions change, making it a two-way exchange rather than one direction",
+      "The student is wrong because the direction of carbon movement at the ocean surface depends on temperature and other water conditions, which means sometimes carbon dissolves into water and sometimes it escapes into the air",
+      "The student is wrong because the lesson describes carbon leaving the ocean and entering the air as part of the same process that brings carbon from the air into the water, so both directions must be possible",
+      "The student is wrong because the exchange between atmosphere and ocean is two-way; carbon moves in both directions depending on conditions, not just one direction forever"
     ],
     "answer": "D",
     "hints": [
-      "The lesson says 'no reservoir is a permanent trap,' even though carbon can stay in rock far longer than in air or ocean. What process moves carbon out of the geosphere and back to other reservoirs?",
-      "Think about what happens when plate motion carries rock down into hotter, deeper parts of Earth. What forces can break the rock and free the carbon?"
+      "Think about the word 'exchange' — what does that tell you about the direction of movement?",
+      "The lesson says carbon can both dissolve into the ocean AND leave the ocean and enter the air. What determines which direction happens?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6SCI-10.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A scientist observes that in one region of the ocean, carbon dioxide is constantly dissolving from the air into the water, adding dissolved carbon to the ocean. In a different region just a few hundred kilometers away, dissolved carbon from the ocean is constantly leaving the water and entering the air. Both processes involve the atmosphere-ocean gas exchange pathway, yet they are running in opposite directions at the same time. Based on what the lesson teaches about how carbon moves between reservoirs, why is it possible for this to happen?",
+    "problemText": "A geologist finds carbonate rock deep underground that formed on an ancient seafloor. She knows plate motion has carried this rock kilometers below the surface into a hot region where heat and pressure are acting on it. Predict what could happen to the carbon locked in this rock over a very long time, trace the full pathway it might take back to the atmosphere, and explain why this rock is not a permanent trap for carbon even though it has stored carbon for hundreds of millions of years.",
     "choices": [
-      "The atmosphere-ocean exchange is a two-way pathway that can run in either direction depending on local conditions, so different regions can have carbon moving in opposite directions at the same moment",
-      "The region where carbon is entering the ocean must be above a volcanic vent that is supplying extra carbon dioxide to that part of the ocean, while the other region has no volcanic heat source driving the reaction",
-      "One of these regions is experiencing chemical weathering that is adding dissolved carbon from land, while the other region is far from land and so has no carbon input from that weathering process",
-      "The region losing carbon to the air is over older rock that has already released most of its carbon through weathering, while the other region sits above younger rock still holding carbon in its minerals"
+      "The rock will be broken down by heat and pressure, freeing the carbon dioxide; this gas can then rise and reach the atmosphere through a later volcanic eruption, showing that no reservoir permanently traps carbon no matter how long it holds it",
+      "The rock will be heated and squeezed by the extreme conditions deep below the surface, which causes the carbon to be released as a gas that eventually finds its way upward through volcanic activity to escape into the atmosphere",
+      "The rock will undergo chemical changes due to heat and pressure in the mantle region, releasing carbon dioxide that becomes incorporated into magma and reaches the surface during volcanic events where it returns to the atmosphere",
+      "The rock will stay locked in place and never release its carbon because plate motion only carries rock downward into the mantle and does not bring material back up to the surface through any process"
     ],
     "answer": "A",
     "hints": [
-      "The lesson says the exchange between atmosphere and ocean 'runs the other way: dissolved carbon already in the ocean can leave the water and enter the air. Which direction wins at a given place and time depends on conditions there.' What does this tell you about whether both directions can happen at once in different places?",
-      "If different regions have different local conditions, could one region pull carbon in from the air while another pushes carbon out into the air, all at the same time?"
+      "The lesson teaches that heat and pressure deep underground can do something specific to carbonate rock. What gets freed when that happens?",
+      "Once carbon is freed from the rock, there is already a named process that can carry it from deep underground to the atmosphere. What is that process?"
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6SCI-10.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A trend is different from a single reading. Which statement correctly explains what a trend is?",
+    "problemText": "What is the key difference between a single warm year and a genuine warming trend?",
     "choices": [
-      "A sustained direction in data taken across many time periods, showing a direction that does not reverse over the whole span",
-      "Any year that is warmer or cooler than the year immediately before it, indicating a shift in conditions from one period to the next",
-      "The exact temperature or CO2 number measured in a particular year or season",
-      "The difference between the highest and lowest values recorded across multiple years or decades"
+      "A single warm year is one reading taken at one point in time, while a trend is a sustained direction seen across many decades of readings with no reversal.",
+      "A single warm year occurs during just one year of measurements, whereas a trend shows the overall direction of change across multiple decades and cannot include reversals that break the pattern.",
+      "A single warm year refers to one year being warmer than average, while a trend must show consistent upward or downward movement across many consecutive decades without any drops.",
+      "A single warm year represents an isolated event with no predictive power, while a trend demonstrates a sustained pattern of change over decades that continues in one direction."
     ],
     "answer": "A",
     "hints": [
-      "The lesson emphasized that a trend must hold across MANY decades, not just one year.",
-      "Think about whether a single warm year, by itself, proves Earth is warming."
+      "Think about what 'sustained' and 'many decades' mean in the context of trend versus one year.",
+      "The lesson says one unusually warm year is not evidence of warming by itself — why not?"
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6SCI-10.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A temperature record for five decades shows these readings: 100, 99, 103, 105, 108. Does this record show a genuine multi-decade warming trend, and why or why not?",
+    "problemText": "A temperature record for five decades reads: 100, 99, 103, 101, 105. Does this record show a genuine multi-decade warming trend?",
     "choices": [
-      "Yes, because the most recent reading (108) is higher than the oldest reading (100), showing an overall increase",
-      "No, because the second reading (99) is lower than the first reading (100), so the direction reverses",
-      "Yes, because every reading after the second one increases without any reversal in that portion of the data",
-      "No, because the magnitude of temperature change varies between consecutive decades rather than staying consistent"
+      "Yes, because the temperature value in decade five is higher than the temperature value in decade one, showing an overall upward path.",
+      "No, because the temperature goes down between the second and third decade, so the direction is not sustained across all decades.",
+      "No, because there is a reversal between decades two and three where the value drops from 99 to 103, breaking the sustained upward trend required for a genuine warming pattern.",
+      "No, because the rate of change is not constant from decade to decade, so the data do not follow a linear or predictable warming pattern throughout."
     ],
     "answer": "B",
     "hints": [
-      "A genuine trend means the direction must not reverse anywhere across all the decades shown.",
-      "Look carefully at whether temperature goes up, down, or stays the same as you move from one decade to the next."
+      "A trend must show direction across all the decades — does this record go up every single step?",
+      "Look for a reversal: a point where the temperature goes down instead of up."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6SCI-10.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A CO2 index measured over four decades shows values of 100, 100, 100, 105. A temperature index over the same four decades shows values of 100, 100, 100, 105. Which statement correctly interprets what these matching patterns mean?",
+    "problemText": "The greenhouse effect works by allowing sunlight to pass through the atmosphere and warm Earth's surface, and then trapping some of the heat that Earth radiates back outward. According to the lesson, what happens when atmospheric carbon dioxide increases?",
     "choices": [
-      "The temperature and CO2 both stayed flat for three decades and then jumped in the fourth decade, which is the only information these numbers provide",
-      "The temperature and CO2 both show the same acceleration pattern in the same time period, which is a timing match that supports linking the two trends",
-      "The temperature must be the result of CO2 alone because the numbers line up exactly",
-      "Since both increased at all, one must be the complete explanation for the other"
+      "Earth's surface radiates less heat outward, so there is less to trap.",
+      "Sunlight bounces back into space before it can reach Earth's surface.",
+      "More heat is trapped near Earth's surface, strengthening the warming effect.",
+      "The atmosphere becomes thinner and lets more of Earth's heat escape."
     ],
     "answer": "C",
     "hints": [
-      "The lesson taught that when two trends show their biggest changes in the SAME decades, that is a timing match.",
-      "Notice that both indexes jump only in the fourth decade — is that a coincidence, or does it tell us something about when the acceleration happened in each?"
+      "The lesson says carbon dioxide absorbs outgoing heat — what is the effect of having more of it?",
+      "Think about what 'strengthening' the heat-trapping effect means for surface temperature."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6SCI-10.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Temperature and CO2 indexes for six decades show that both rise across the entire span, both accelerate fastest in the most recent two decades, and the fastest acceleration in each record occurs in the same decades. However, the lesson teaches that trend and matching timing alone are NOT enough for strong evidence of an association. What additional piece of information is needed to complete the case?",
+    "problemText": "A temperature index and a CO2 index are reported for six decades, oldest to most recent. Temperature index: 100, 101, 101, 105, 112, 121. CO2 index: 100, 100, 100, 103, 110, 122. Looking only at these two records, what part of the evidence for a strong association between rising CO2 and rising temperature is present here, and what part is missing?",
     "choices": [
-      "A record of what the temperature was in each individual year, not just by decade",
-      "A known physical mechanism that explains WHY rising CO2 would cause more warming",
-      "Proof that fossil fuels are the only possible source of atmospheric CO2",
-      "A prediction of what the temperature will be in the year 2050"
+      "Both records show increases over time, and the CO2 index rises from 100 to 122 while temperature rises from 100 to 121, which demonstrates that the two variables are connected and moving together.",
+      "The records both reach their highest values in the most recent decade, and both values climbed higher in the later decades compared to the earlier decades, showing their peaks align in time.",
+      "The CO2 index stays flat for the first three decades while temperature keeps rising from 100 to 101, so the two variables move independently during this period and cannot share a connection.",
+      "Both records show a sustained trend with no reversal, and both accelerate sharply in the same later decades — this is the trend and timing match. The mechanism (carbon dioxide's heat-trapping property) is taught separately but not shown by the numbers themselves."
     ],
     "answer": "D",
     "hints": [
-      "The lesson named three things needed for strong evidence: a sustained trend, matching timing, and something else.",
-      "The greenhouse effect explanation in the lesson shows that CO2 absorbs outgoing heat — what is the name for this physical cause-and-effect relationship?"
+      "Check whether both records show sustained rises and whether their accelerations happen in the same decades.",
+      "The mechanism is a physical reason why the two would rise together — can that be read directly from numbers on a graph?"
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6SCI-10.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two students are evaluating graphs of temperature and CO2 over the past century. Student A says: 'The temperature and CO2 both went up, so they must be connected.' Student B says: 'The temperature and CO2 both went up in the same decades, large-scale fossil-fuel burning also ramped up in those same decades, and CO2 traps heat — those three things together make a strong case for an association, but just the fact that both lines went up would not be enough by itself.' Which student's reasoning better matches what the lesson taught about evidence for an association?",
+    "problemText": "A student observes that over the past century, both the number of cars on Earth and the global average temperature have risen. The student concludes this proves that cars cause global warming. What is missing from this student's reasoning to build a strong evidence case?",
     "choices": [
-      "Student B, because she cites the sustained trends, the matching timing with fossil-fuel use, and the known heat-trapping mechanism",
-      "Student A, because he correctly identifies that both quantities increased over time without needing additional supporting factors",
-      "Student A, because observing two variables rising together is the most direct way to establish any kind of relationship",
-      "Neither student, because comparing one century of data is insufficient to evaluate the relationship between CO2 and temperature"
+      "The student has shown two things rose over the same time period, but has not shown a known physical mechanism explaining why cars would warm Earth's climate, and has not confirmed that the timing of the biggest increases in car numbers matches the timing of the biggest temperature increases.",
+      "The student needs to demonstrate that the rise in car numbers happened during the same decades when temperature rose fastest, and must explain the physical reason why burning fossil fuels in cars would trap heat in Earth's atmosphere.",
+      "The student failed to compare the rate of car production in different countries to see which regions contributed most to the temperature increase, making a global connection impossible to establish from this data alone.",
+      "The student should have measured the exhaust emissions from individual cars in different climates to show that the gas released causes warming in those specific locations rather than globally."
     ],
     "answer": "A",
     "hints": [
-      "The lesson said that two things rising together is not enough; what three things together are needed?",
-      "Look for the student who mentions the timing match between the records, the history of fossil-fuel use, and the physical mechanism."
+      "The lesson says three things together make a strong case — trend, matching timing, and mechanism. Which of these is the student missing?",
+      "A mere coincidence in time is not enough — what else has to be true about when the increases happen, and why they happen?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6SCI-10.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A paleontologist discovers a record of atmospheric CO2 reconstructed from air bubbles trapped in ancient ice, spanning eight decades from 1900 to the 1980s. The CO2 values show: 100, 100, 100, 100, 102, 108, 118, 130 (oldest to most recent). When the paleontologist compares this to the temperature record over the same span, temperature shows: 100, 100, 101, 101, 102, 107, 116, 128. The largest expansion of fossil-fuel combustion worldwide occurred starting around 1950. Evaluate whether these records support an association between rising atmospheric CO2 and rising temperature, and identify any part of the three-part evidence that is weak or missing.",
+    "problemText": "Two researchers each present data sets for atmospheric CO2 and global temperature over the same 100-year span. Researcher A shows that both records rose steadily and evenly across all decades, with the same amount of increase every decade. Researcher B shows records where both CO2 and temperature stayed flat for the first 50 years, then rose steeply over the last 50 years, with the steepest increases in the same final decades. Which researcher's data better support the association between rising CO2 and human fossil-fuel combustion, and why?",
     "choices": [
-      "The records show strong evidence for an association because both are rising, and that is all that is needed to conclude they are connected",
-      "The records show reasonably strong evidence because both show sustained trends with no reversal, both accelerate sharply in the same later decades (aligned with the 1950s fossil-fuel expansion), and CO2 is known to trap heat",
-      "The records show weak evidence because the numbers do not increase by exactly the same amount in each decade throughout the entire span",
-      "The records show no evidence of an association because CO2 and temperature remained nearly unchanged during the first four decades before either variable began to increase"
+      "Researcher A's data fit better because a steady, even rise across all decades shows a consistent pattern of change that is easier to model mathematically than sharp acceleration.",
+      "Researcher B's data fit better because the timing of the fastest rise in both records matches the historical period when large-scale fossil-fuel use expanded sharply worldwide, while Researcher A's steady rise does not clearly link to the actual timing of industrialization.",
+      "Both researchers' data support the association equally well because they both show CO2 and temperature rising together over the full century, and the pattern of increase matters less than the direction of change.",
+      "Researcher A's data are more reliable because they show a uniform increase rate that rules out natural variability, whereas Researcher B's acceleration pattern could result from natural climate cycles unrelated to human activity."
     ],
     "answer": "B",
     "hints": [
-      "Check whether both records show sustained trends, then check whether both start accelerating sharply around the same point in time.",
-      "Compare when the fossil-fuel expansion happened (1950s) to when both records show their biggest increases — do they line up?"
+      "The lesson emphasizes that the timing of acceleration matters — the fastest rise should happen when fossil-fuel use itself expanded most sharply, roughly from the middle of the 1900s onward.",
+      "A matching timing between when CO2 accelerates, when temperature accelerates, and when industrial fossil-fuel combustion scaled up is a key part of the three-clue test for a strong association."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6SCI-10.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A company wants to reduce the amount of dust particles that escape from its warehouse roof into the air during windy days. A manager proposes installing an air filter that catches particles before they leave the building. Which statement correctly defines what this filter is meant to do?",
+    "problemText": "A water treatment plant measures the amount of dissolved chemicals in its outlet stream every week to track whether pollution levels are staying the same, getting worse, or improving over time. What is the name of the process the plant is using to understand the water quality?",
     "choices": [
-      "The filter will measure how much dust is in the air outside the warehouse each day.",
-      "The filter will reduce the impact by changing the process so fewer dust particles escape into the air.",
-      "The filter will monitor the warehouse to see if the roof stays clean over time.",
-      "The filter will move the dust particles to a different location where they will not be noticed."
+      "Mitigation",
+      "Monitoring",
+      "Displacement",
+      "Baseline"
     ],
     "answer": "B",
     "hints": [
-      "Think about the difference between monitoring (measuring) and reducing (changing the process).",
-      "A reducing step changes what happens at the source, not where the impact ends up."
+      "This process involves taking the same measurement repeatedly over time.",
+      "Think about what word means 'keeping track of' or 'watching' a condition as it changes."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6SCI-10.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A neighborhood has a problem with stormwater runoff carrying oil and debris from parking lots into a nearby pond, making the water cloudy and harmful to wildlife. An engineer proposes installing a long gravel-filled trench alongside the parking lot that catches runoff before it enters the pond, allowing water to soak into the ground while trapping oil and debris in the gravel. To evaluate whether this design works as intended, what specific measurement should be compared before and after the trench is installed?",
+    "problemText": "A coal power plant burns fuel and releases exhaust gases containing sulfur dioxide into the air, which falls back to Earth as acid rain. To address this, the plant installs a chemical scrubber that removes sulfur dioxide from the exhaust before it exits the smokestack. Does this design directly target the mechanism causing the impact, and why or why not?",
     "choices": [
-      "The number of vehicles parking in the lot each week and the weekly parking rate before and after installation.",
-      "The depth of rainfall measured in inches during comparable storm events before the trench was built versus after.",
-      "The cloudiness of the pond water and the amount of oil and debris present at a fixed point downstream.",
-      "The drainage rate of water passing through the gravel trench measured in gallons per minute during controlled testing."
+      "No, because the scrubber removes the gas but does not stop the plant from burning fuel and producing other harmful emissions that still escape the stack.",
+      "No, because the impact is acid rain on the ground, not gas in the air, so a device inside the stack cannot address it at the location where damage actually occurs to ecosystems.",
+      "Yes, because removing sulfur dioxide before it exits the stack prevents the gas from being released into the air in the first place, which is the exact mechanism of the impact.",
+      "No, because the scrubber only traps sulfur dioxide temporarily and the chemical must eventually be disposed of somewhere, meaning the pollution is just moved rather than truly eliminated from the environment."
     ],
     "answer": "C",
     "hints": [
-      "The impact is defined by what the water looks like and what is floating in it, so match your measurement to that.",
-      "Before-and-after evidence means measuring the same thing, at the same place, under similar storm conditions."
+      "The impact happens because a specific substance travels through a specific path—identify that path first.",
+      "Ask whether the design intervenes at the exact point where that substance would start its journey."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6SCI-10.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A coastal town wants to reduce plastic pollution washing into the ocean from storm drains. Town leaders propose two actions: first, they will install nets in storm drains to catch plastic trash before it reaches the ocean; second, they will place cameras at the drains to film what trash is caught. Which action is meant to reduce the impact, and which is meant to monitor it?",
+    "problemText": "A city installs rain barrels at homes to capture runoff from roof gutters, reducing the volume of water that flows into storm drains during heavy rain. The city also mounts a flow meter on a drain pipe at the edge of town to measure how much water leaves the system after each storm. Which of these two actions is a reducing step, and which is a monitoring step?",
     "choices": [
-      "Both the nets and the cameras reduce the impact because together they stop plastic from reaching the ocean.",
-      "The nets reduce the impact by stopping plastic before it enters the ocean; the cameras monitor what trash is caught.",
-      "The cameras reduce the impact by recording the trash; the nets only monitor where the trash is coming from.",
-      "Neither one reduces the impact, but both monitor how much plastic is in the storm water."
+      "Both the rain barrels and the flow meter are monitoring steps because neither removes water from the watershed entirely.",
+      "The rain barrels monitor household water use; the flow meter reduces the overall flow leaving the town.",
+      "Both the rain barrels and the flow meter reduce runoff because together they address stormwater.",
+      "The rain barrels reduce runoff; the flow meter monitors how much water is leaving the system."
     ],
     "answer": "D",
     "hints": [
-      "Reducing means the design changes the process itself; monitoring means taking repeated measurements to track what is happening.",
-      "Ask yourself: Does this action change what actually happens to the plastic, or does it just measure or record it?"
+      "Reducing changes the process itself; monitoring measures whether a condition is changing.",
+      "Ask which action changes what happens to the water and which action just takes measurements."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6SCI-10.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A farming region is losing topsoil to erosion during heavy rains. Soil scientists propose that farmers plow their fields in strips running horizontally across slopes, instead of up and down. They explain that horizontal plowing creates ridges that slow downhill water flow, giving soil time to settle out before reaching the creek below. To fully evaluate whether this policy addresses the erosion problem, a researcher must check both the mechanism and the evidence. Which statement best describes what both parts of this evaluation require?",
+    "problemText": "A factory that produces chemicals dumps its wastewater into a lagoon for two weeks to let solid particles settle to the bottom, then releases the cleaner water into a river downstream. Engineers measure the cloudiness of the river water at one location before the lagoon is built, and then measure the same location six months after the lagoon starts operating. They find the river is much clearer. However, during that same six months, a tributary stream that feeds into the river upstream of the measurement point has been nearly dry due to drought. What does this comparison fail to do, and why?",
     "choices": [
-      "The mechanism (horizontal plowing slows water and traps soil) must match the erosion cause, and the evidence must measure soil reaching the creek at matched storm sizes both before and after the policy starts.",
-      "The mechanism must demonstrate that farmers are following the rule correctly, and the evidence must show that the oldest fields have the least erosion across the entire region.",
-      "The mechanism must rely on equipment technology that is more advanced than traditional methods, and the evidence must confirm that no erosion happens in any field after the first application.",
-      "The mechanism must be tested by university scientists before farmers adopt it, and the evidence must track whether each individual farmer's profit increases within one growing season."
+      "It fails to match the conditions between the before and after measurements, so the change in cloudiness might come from the drought reducing water flow instead of from the lagoon working.",
+      "It fails to measure the lagoon itself to confirm particles are settling there, which means the comparison cannot show whether the lagoon design is actually removing particles from the water.",
+      "It fails to reduce the impact, because monitoring cloudiness does not prevent new particles from entering the water system from the factory's operations.",
+      "It fails to prevent displacement, because the settled particles in the lagoon might later wash into the river during a heavy rain event, moving the problem rather than solving it."
     ],
     "answer": "A",
     "hints": [
-      "A true match means the fix intervenes on the exact step that causes the impact—in this case, moving water carrying soil.",
-      "Valid evidence uses the same measurement under matching conditions (similar storm size), not just one observation or an assumption about good intentions."
+      "For evidence to show a design works, what needs to be the same between the before and after measurements?",
+      "Think about what else besides the lagoon changed between those two time periods that could also affect cloudiness."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6SCI-10.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A steel mill releases hot wastewater into a river, raising the water temperature and harming fish eggs. The mill installs a large cooling pond where hot wastewater sits for two hours, losing heat to the air before flowing into the river. Engineers also install a thermometer that continuously records the river temperature downstream of the plant. Six months after the cooling pond opens, river temperatures downstream are noticeably lower on days the mill operates. However, the mill's waste-disposal records show that the sludge removed from the cooling pond—which used to be trucked to a landfill far away—is now being stored in drums stacked on the mill's property near the river. Which statement best evaluates this situation?",
+    "problemText": "A town spreads mulch and plants shrubs on a bare eroded slope beside a road, intending to reduce the amount of soil washing into a nearby wetland during storms. The town council states that 'the project installed erosion control, so the slope is now protected.' One year later, measurements of the wetland show no change in the amount of eroded soil entering it. Which statement best evaluates whether the project has actually solved the problem it claimed to?",
     "choices": [
-      "The cooling pond is malfunctioning because the sludge buildup is blocking heat transfer, which is why the river temperature decreased more slowly than predicted by engineering models.",
-      "The cooling pond successfully reduced the water temperature, but the plan may have displaced the problem by creating a new risk near the river, so the whole plan needs more evaluation.",
-      "The cooling pond worked perfectly and proves the mill has eliminated all pollution since the river temperatures dropped measurably below their previous levels.",
-      "The plan failed because the thermometer recorded temperature data instead of physically preventing the hot wastewater from entering the river in the first place."
+      "The project must have failed because the wetland still receives the same amount of soil, which indicates that mulch and shrubs cannot reduce erosion on steep slopes or they did not establish well enough to be effective.",
+      "The project's intent to protect the slope does not tell whether it actually worked; only a measured comparison of soil entering the wetland before and after planting shows whether the design's mechanism produced the claimed reduction.",
+      "The project succeeded because the town installed native vegetation and mulch, which are responsible environmental practices known to help protect slopes even if this particular slope did not show measurable improvement in soil retention.",
+      "The project cannot be evaluated without knowing the exact species of shrubs planted, the depth of mulch applied, and the rainfall amounts during each measurement period, since all these factors affect how well erosion control works."
     ],
     "answer": "B",
     "hints": [
-      "Look for evidence that one impact was reduced but a different impact may have been created or moved elsewhere.",
-      "A mechanism can work well on one part (cooling) while a second part (sludge handling) creates new risk, requiring a full before-and-after check of what happens to the captured material."
+      "Good intentions and responsible choices are separate from whether a mechanism actually changed the measured impact.",
+      "What kind of evidence—measurement data compared under matching conditions—is needed to know whether a design worked?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6SCI-10.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A manufacturing plant releases nitrogen-rich wastewater into a stream, causing algae overgrowth that blocks sunlight and harms stream ecology. The plant proposes installing a biological treatment basin: wastewater flows into a large shallow tank where certain aquatic plants absorb the excess nitrogen before the cleaned water flows downstream. To evaluate this design, a researcher collects data over two years. In Year 1 (before the basin is built), downstream nitrogen levels average 45 mg/L after factory operating days and 8 mg/L on factory-closed days. In Year 2 (after the basin is built), downstream levels average 22 mg/L after factory operating days and 9 mg/L on factory-closed days. The researcher also notices that the stream one mile downstream now floods more often after heavy rains, even though rainfall has not increased. Which two conclusions follow from all this evidence?",
+    "problemText": "A quarry extracts stone, leaving a large excavated pit with steep bare walls. After mining stops, the company installs a pump to keep groundwater from flooding the pit, so water levels stay low. To reduce dust blowing from the bare walls, the company sprays water on the exposed rock faces daily during the dry season. The company claims this addresses the impact of dust reaching the nearby town. A government inspector measures the dust in the air at five locations downwind of the quarry—three during the spraying season (when water is applied) and two during the rainy season (when natural rainfall is heavy and spraying stops). The inspector finds much less dust in the air during the rainy season. The quarry manager says this proves the spraying program works. Which statement best evaluates this reasoning?",
     "choices": [
-      "The basin successfully reduced nitrogen in the released water, but displacement may have occurred because the slowed water from the basin could be causing extra flooding downstream, requiring investigation of the basin's effect on water flow rate.",
-      "The basin failed because the downstream nitrogen level is still above zero, so the treatment cannot be working at all.",
-      "The basin worked perfectly because nitrogen went down by more than half, and the flooding is unrelated since it happens after rain, not after factory operations.",
-      "The basin should be removed because it caused the flooding, so it must also be preventing the nitrogen removal from working properly."
+      "The reasoning is flawed because spraying water on rock does not stop dust from forming; only sealing or removing the exposed rock surface would truly eliminate the dust at its source.",
+      "The reasoning is correct because the inspector measured five different locations, which is a sufficient number of data points to establish that the spraying program reduces dust effectively.",
+      "The reasoning commits a failure to match conditions: the rainy season has both the company's spraying and heavy natural rainfall, so the lower dust could come from rain instead of from spraying; the inspector would need to compare dust levels during the dry season with and without spraying, or compare the same season over multiple years.",
+      "The reasoning is incomplete because the company also pumps groundwater out of the pit, and nobody knows whether that activity creates dust that replaces what the spraying prevents or whether the water pumping changes how much dust escapes."
     ],
     "answer": "C",
     "hints": [
-      "Compare the numbers: on factory-operating days, nitrogen dropped from 45 to 22. On factory-closed days it stayed low (8 to 9). What does that pattern tell you about whether the basin is working on the target impact?",
-      "The flooding observation is important—think about whether the basin's mechanism (holding back water to let plants absorb nitrogen) could change how water moves downstream, creating a displacement concern separate from the nitrogen question."
+      "What conditions changed between the spraying season and the rainy season besides the company's spraying program?",
+      "For a before-and-after comparison to isolate what a specific design does, what must be kept the same in both measurements?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6SCI-10.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A town has 5,000 people, and each person uses about 50 liters of water per day. What is the town's total daily water use?",
+    "problemText": "Total demand for a resource is found by multiplying two numbers together. What are those two numbers?",
     "choices": [
-      "50 liters per day",
-      "5,050 liters per day",
-      "250,000 liters per day",
-      "5,000 liters per day"
+      "Per-person use and waste produced",
+      "Population and recharge rate",
+      "Population and per-person use",
+      "Recharge rate and human footprint"
     ],
     "answer": "C",
     "hints": [
-      "Total demand means the full amount the whole population uses, not just one person.",
-      "You need to multiply the number of people by how much each person uses."
+      "Think about the water example: 2,000 people times 100 liters per person.",
+      "One number counts how many people; the other counts how much each person uses."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6SCI-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Over ten years, a town's population stays at exactly 8,000 people. However, new conservation efforts help each person reduce their daily trash output from 2 kilograms per day to 1.5 kilograms per day. How does the town's total daily trash going to the landfill change?",
+    "problemText": "A city has 5,000 people, and each person throws away 2 kilograms of trash per day. What is the city's total daily trash demand?",
     "choices": [
-      "It stays the same because the population did not change.",
-      "It increases because trash production always increases over time.",
-      "It increases by 500 kilograms per day.",
-      "It decreases by 4,000 kilograms per day."
+      "7,000 kilograms per day",
+      "5,000 kilograms per day",
+      "2,500 kilograms per day",
+      "10,000 kilograms per day"
     ],
     "answer": "D",
     "hints": [
-      "Calculate the total trash before: 8,000 people times 2 kilograms per person. Then calculate it after: 8,000 people times 1.5 kilograms per person.",
-      "Total demand depends on both population and per-person use multiplied together; even when one factor changes and the other stays the same, the total changes."
+      "Use the rule: total demand equals population multiplied by per-person use.",
+      "Multiply 5,000 people by 2 kilograms per person."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6SCI-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A city's population grows from 50,000 to 60,000 people over five years. Each person continues to use exactly 200 liters of water per day for drinking, washing, and cooking, the same as before. Which statement correctly describes what happens to the city's total daily water use?",
+    "problemText": "A town currently has 8,000 people, and each person uses 50 liters of gasoline per month for driving. If the population stays at 8,000 people next year but each person reduces their monthly gasoline use to 45 liters through carpooling, what happens to the town's total monthly gasoline demand?",
     "choices": [
-      "Total daily water use increases from 10,000,000 liters to 12,000,000 liters because more people are using the same per-person rate.",
-      "Total daily water use stays the same at 10,000,000 liters because each person's individual usage habits and the per-person rate of 200 liters did not change from start to finish.",
-      "Total daily water use decreases because adding more people to the city means the available water supply is divided among a larger number of individuals, so each person receives less water.",
-      "Total daily water use depends only on the population size and not on how much each person uses daily, so it changes independently of per-person consumption rates."
+      "It decreases because per-person use fell",
+      "It increases because there are more people",
+      "It stays the same because population did not change",
+      "It increases because gasoline use always rises"
     ],
     "answer": "A",
     "hints": [
-      "Multiply population by per-person use to find total demand in both time periods.",
-      "Population growth alone increases total demand even when no person changes their habit, because you are multiplying a fixed rate by a larger number."
+      "Population did not change, but one of the two numbers in the multiplication did.",
+      "When you multiply a number by a smaller number instead of a larger one, what happens to the product?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6SCI-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A region's water supply comes from a mountain snowpack that melts and recharges the aquifer at a steady rate of 500,000 liters per day, year after year. Five years ago, the region's population was 10,000 people using 60 liters of water per person per day. Today, the population has grown to 12,000 people, but new water-saving technology has reduced per-person use to 50 liters per day. Is the aquifer still being used renewably, and why?",
+    "problemText": "Over ten years, a town's population grows from 10,000 people to 12,000 people. At the same time, water conservation efforts cut per-person water use from 120 liters per day down to 110 liters per day. The town's old total daily water demand was 10,000 times 120 liters. Calculate the new total daily water demand and explain whether it is higher or lower than before.",
     "choices": [
-      "Yes, because the per-person use is lower than it was five years ago.",
-      "Yes, because total water use today equals 600,000 liters per day, which exceeds the recharge rate of 500,000 liters per day, making it renewable enough.",
-      "No, because total water use today equals 600,000 liters per day, which exceeds the recharge rate of 500,000 liters per day, so the use is now nonrenewable.",
-      "Cannot be determined without knowing how much snow falls each year."
+      "1,320,000 liters per day, lower than before because conservation saved more water than population growth added",
+      "1,320,000 liters per day, higher than before because population grew even though per-person use fell",
+      "1,200,000 liters per day, higher than before because the per-person rate is still over 100 liters",
+      "1,200,000 liters per day, lower than before because 110 is less than 120"
     ],
     "answer": "B",
     "hints": [
-      "Calculate the total water use five years ago (population times per-person use) and today using the same method, then compare each total to the recharge rate.",
-      "For an aquifer to be used renewably, the amount of water pumped out must not exceed the amount being replaced by recharge; total demand is found by multiplying population by per-person use."
+      "Calculate 12,000 times 110 to find the new total, then compare it to the old total of 1,200,000 liters.",
+      "The 20 percent population increase is larger than the 8 percent decrease in per-person use."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6SCI-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A landfill accepts waste from two towns. Town A has 3,000 people each producing 1.2 kilograms of trash per day. Town B has 4,000 people each producing 1.0 kilogram of trash per day. After five years, Town A's population drops to 2,500 people (same 1.2 kilograms per person per day), while Town B's population grows to 5,000 people (same 1.0 kilogram per person per day). How much does the total daily waste sent to the landfill from both towns change?",
+    "problemText": "A region's landfill receives waste at a rate that depends on both population and per-person trash production. Describe what would happen to the total waste sent to the landfill if the population grew while per-person trash production stayed constant, and then explain why this outcome is certain, using the multiplication rule.",
     "choices": [
-      "It decreases by 600 kilograms per day.",
-      "It increases by 400 kilograms per day.",
-      "It stays exactly the same.",
-      "It decreases by 1,000 kilograms per day."
+      "Total waste would decrease because more people generate less garbage overall and the landfill capacity would expand to handle fewer total inputs",
+      "Total waste would stay the same because per-person trash production did not change, so the total amount remains constant regardless of population size",
+      "Total waste would increase because a larger population multiplied by a constant per-person rate produces a larger product",
+      "Total waste would increase only if recycling programs fail to divert materials and the landfill stops accepting sorted waste streams"
     ],
     "answer": "C",
     "hints": [
-      "Calculate the combined total waste from both towns before and after using the multiplication rule for each town, then add them together.",
-      "Town A's total changes one way and Town B's changes another way; you must find whether these changes cancel each other out or add up."
+      "Think about the rule: total demand equals population times per-person use. If population goes up and the other number stays fixed, does the product go up or down?",
+      "Multiplying a constant positive number by a bigger population always produces a bigger product."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6SCI-10.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A farming region relies on groundwater pumped from an aquifer for irrigation. The aquifer recharges at 200,000 liters per day from rainfall. Currently, 1,000 farmers each pump 150 liters per day, for a total of 150,000 liters per day, so the aquifer is being used renewably. Planners predict the farm population will grow to 1,500 farmers, and they want total daily pumping to stay below the recharge rate so the aquifer remains renewable. If each farmer's per-person use cannot go below 80 liters per day for crops to survive, what is the maximum per-person use that keeps the aquifer renewable after the population growth?",
+    "problemText": "A town's groundwater comes from an aquifer that recharges at a fixed rate of 500,000 liters per day from rain and snowmelt. Currently, the town has 8,000 people using 60 liters of water per person per day, for a total daily demand of 480,000 liters. Over the next fifteen years, the town's population is projected to grow to 10,000 people. If per-person water use remains at 60 liters per day, will the town eventually need to pump water from the aquifer faster than it recharges, and what does that mean for how the aquifer is being used?",
     "choices": [
-      "Approximately 133 liters per day per farmer.",
-      "Approximately 134 liters per day per farmer.",
-      "Approximately 150 liters per day per farmer.",
-      "Approximately 123 liters per day per farmer."
+      "No, because the new total demand of 600,000 liters is still more than the recharge rate, so the aquifer will continue to be used sustainably without depletion over time",
+      "Yes, because any population growth always leads to nonrenewable water use regardless of the actual relationship between demand and recharge capacity",
+      "No, because the population increase is only 2,000 people, which is small enough that total demand will remain below the recharge rate and keep water use renewable",
+      "Yes, because the new total demand of 600,000 liters exceeds the 500,000-liter recharge rate, which means pumping will shift from renewable to nonrenewable"
     ],
     "answer": "D",
     "hints": [
-      "Total demand = population times per-person use. For the aquifer to be renewable, total demand must not exceed 200,000 liters per day, the recharge rate.",
-      "Set up: 1,500 farmers times X liters per farmer must equal or stay below 200,000 liters per day; solve for X by dividing the recharge limit by the new population."
+      "Calculate the new total demand using 10,000 people times 60 liters per person per day, then compare it to the 500,000-liter recharge rate.",
+      "If total demand rises above the rate nature replaces water, what changes about whether the use is renewable—the aquifer itself, or the relationship between demand and recharge rate?"
     ]
   }
 ]

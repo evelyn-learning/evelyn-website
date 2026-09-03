@@ -5,17 +5,17 @@
     "cedCode": "M6SCI-3.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Starting at Earth's surface and moving straight down toward the center, list the four layers of Earth in the correct order from outermost to innermost.",
+    "problemText": "Starting at Earth's surface and moving straight down toward the center, what is the correct order of the four layers of Earth?",
     "choices": [
       "Crust, mantle, outer core, inner core",
       "Mantle, crust, inner core, outer core",
-      "Outer core, inner core, mantle, crust",
+      "Crust, outer core, mantle, inner core",
       "Inner core, outer core, mantle, crust"
     ],
     "answer": "A",
     "hints": [
-      "The crust is where you are standing right now, on Earth's surface.",
-      "Each layer sits farther from the surface and closer to Earth's center than the one above it."
+      "The crust is the outermost layer that humans can actually reach by drilling.",
+      "Each layer is farther from the surface and closer to Earth's center than the one before it."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6SCI-3.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A scientist measures the thickness of the crust at two locations. Under an ocean, the crust is about 7 kilometers thick. Under a tall mountain range, the crust is about 50 kilometers thick. Why is the crust thicker under mountains than under oceans?",
+    "problemText": "A scientist measures a rock sample collected from a depth of about 1,500 kilometers below Earth's surface. Based on the lesson, which layer is this sample from, and what physical state should the sample be in?",
     "choices": [
-      "The mantle is closer to the surface under the ocean, so it pushes the crust down and makes it thinner.",
-      "Continental crust under mountains is naturally thicker than oceanic crust under oceans.",
-      "The outer core is hotter under mountains, which causes the crust above it to expand and grow thicker.",
-      "Mountains are made of liquid magma that solidifies into a thicker crust layer over time."
+      "Outer core; it should be liquid",
+      "Mantle; it should be solid",
+      "Inner core; it should be solid",
+      "Crust; it should be liquid"
     ],
     "answer": "B",
     "hints": [
-      "The lesson teaches specific thickness ranges for oceanic crust and continental crust — look for those ranges.",
-      "This difference is about two different types of crust material, not about what happens below the crust."
+      "The mantle reaches down to about 2,900 kilometers, so 1,500 kilometers is still within the mantle's depth range.",
+      "Even though the mantle is very hot, it is solid rock, not liquid, except for small scattered pockets of melted magma."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6SCI-3.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geologist studying rock samples finds that a sample collected from 3,000 kilometers below Earth's surface is liquid metal. Which layer did this sample come from, and what does its physical state tell you about that layer?",
+    "problemText": "Two drilling projects are happening at different locations on Earth's surface. One project under the ocean drills through about 6 kilometers of rock before reaching a new layer, while another project on a continent drills through about 50 kilometers of rock before reaching the same new layer. Both projects are drilling through the same layer. Which layer is it, and why is the thickness so different between the two locations?",
     "choices": [
-      "The mantle; the mantle is liquid everywhere, not just in scattered pockets.",
-      "The outer core; the outer core is the only layer that is entirely liquid.",
-      "The inner core; the inner core is liquid because it is so hot at Earth's center.",
-      "The crust; crustal rocks melt into liquid metal under extreme pressure at great depths."
+      "Mantle; the mantle is thicker under continents because continents are heavier",
+      "Outer core; the outer core gets thinner as you move away from Earth's center",
+      "Crust; oceanic crust is much thinner than continental crust",
+      "Inner core; the inner core is only accessible under the ocean floor"
     ],
     "answer": "C",
     "hints": [
-      "A depth of 3,000 kilometers is deeper than the mantle reaches (about 2,900 kilometers), so it must be in one of the core layers.",
-      "Only one of Earth's four layers is entirely liquid — check which one, and which depth range it occupies."
+      "Both depths are measured in just tens of kilometers, which is way too small to reach the mantle or deeper layers.",
+      "Oceanic crust ranges from about 5 to 10 kilometers thick, while continental crust ranges from about 25 to 70 kilometers thick."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6SCI-3.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two drilling projects both reach the boundary between Earth's crust and mantle. One project drilled 8 kilometers straight down from the ocean floor, and another drilled 35 kilometers straight down from continental land. If both projects hit the same boundary at different depths, what does this tell you about the relationship between crust thickness and location on Earth?",
+    "problemText": "A student claims that the inner core must be liquid because it is the hottest layer of Earth. Explain why this student's reasoning is incorrect, and describe what actually determines whether the inner core is solid or liquid.",
     "choices": [
-      "The mantle is thinner under oceans, so drills reach it faster no matter where they start.",
-      "The crust is always exactly the same thickness, but the mantle pushes up closer to the surface in some places.",
-      "Oceanic crust is thinner than continental crust, which is why the ocean drill reached the mantle boundary much sooner.",
-      "The outer core is closer to the surface under the ocean, creating a thinner overall distance to the mantle below."
+      "The student is wrong because heat flows outward from the inner core, cooling it enough to remain solid",
+      "The student is wrong because the outer core is actually hotter than the inner core, which means the inner core can stay solid even though it is very hot",
+      "The student is wrong because the inner core is made of different material than the outer core, and that material has a melting point that is lower than the temperature at Earth's center",
+      "The student is wrong because temperature alone does not decide the physical state; extreme pressure at Earth's center keeps the inner core solid despite the heat"
     ],
     "answer": "D",
     "hints": [
-      "Remember that different locations have different crust thicknesses — from about 5 to 70 kilometers depending on whether the crust is oceanic or continental.",
-      "If both projects hit the same layer boundary (the crust-mantle boundary) but at different depths, what must be different between those two locations?"
+      "Think about what is different between the inner core and the outer core—both are made of iron and nickel, but one is solid and one is liquid.",
+      "The lesson explains that pressure, not just temperature, decides whether metal at the center of the planet is solid or liquid."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6SCI-3.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student claims: 'The inner core must be liquid because it is the hottest layer of Earth.' Using information about how Earth's layers compare in physical state, explain why this claim is incorrect.",
+    "problemText": "A geologist reports drilling a core sample from a depth of about 3,200 kilometers and finds molten iron-nickel material. Another geologist, working at a different location, claims this is impossible because the mantle at that depth should be solid rock. Using the layer boundaries from the lesson, explain which geologist is correct and why.",
     "choices": [
-      "The inner core is actually the coldest layer, not the hottest, so heat alone does not determine whether it is solid or liquid.",
-      "The inner core stays solid despite being the hottest layer because the extreme pressure at Earth's center is great enough to keep the metal from melting.",
-      "The inner core is not actually made of metal; it is made of solid rock that does not melt even at extremely high temperatures.",
-      "Heat determines physical state only in the outer core; the inner core obeys different rules because it is deeper inside Earth."
+      "The first geologist is correct; 3,200 kilometers falls within the outer core, which is the only layer that is entirely liquid",
+      "The second geologist is correct; 3,200 kilometers is still within the mantle, which is solid rock almost everywhere",
+      "Neither is fully correct; at 3,200 kilometers the sample should be partially melted, halfway between solid and liquid",
+      "The first geologist is correct; 3,200 kilometers is past the inner core and molten material is found there"
     ],
     "answer": "A",
     "hints": [
-      "Think about what makes the outer core liquid and what makes the inner core solid — temperature alone is not the full answer.",
-      "The lesson teaches that pressure, not just temperature, decides whether the metal at Earth's center stays solid or melts into liquid."
+      "Check the depth against the layer boundaries: the mantle ends at about 2,900 kilometers, and the outer core runs from about 2,900 to about 5,150 kilometers.",
+      "The outer core is described as the one layer that is entirely liquid, made of molten iron and nickel."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6SCI-3.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A research team reports finding three rock samples: Sample X is solid iron-nickel from 6,200 kilometers deep, Sample Y is liquid iron-nickel from 4,500 kilometers deep, and Sample Z is solid rock from 1,500 kilometers deep. Two of these samples are consistent with what the lesson teaches about Earth's layers. Which sample is inconsistent with the lesson, and why?",
+    "problemText": "A student is studying Earth's layers and adds up the thicknesses as follows: crust and mantle together = about 2,900 kilometers, outer core = about 2,250 kilometers, and inner core = about 1,221 kilometers. The student calculates a total of about 6,371 kilometers. Then the student claims this total is wrong because it should equal Earth's diameter, not Earth's radius. Identify the error in the student's reasoning and explain what the 6,371 kilometers actually represents.",
     "choices": [
-      "Sample Z is inconsistent because solid rock at 1,500 kilometers deep should be liquid magma, not solid.",
-      "Sample X is inconsistent because a depth of 6,200 kilometers falls within the inner core, which should be solid, not liquid, and this sample is solid, matching expectations.",
-      "Sample Y is inconsistent because a depth of 4,500 kilometers falls within the outer core, which should be entirely liquid, and the sample is liquid, matching expectations.",
-      "Sample X is inconsistent because 6,200 kilometers falls in the inner core and iron-nickel there should be molten, not solid."
+      "The student is correct that the total represents Earth's diameter, which means the lesson's layer measurements must be inaccurate and need to be recalculated",
+      "The student confused radius with diameter; 6,371 kilometers is Earth's radius (the distance from the surface to the center), not the diameter",
+      "The student forgot that the inner core is not actually part of Earth's true center, so the total adds up to more than the actual distance to Earth's center",
+      "The student is correct about the diameter, but the lesson incorrectly labels the outer core's thickness as being about 2,250 kilometers when it should be a different value"
     ],
     "answer": "B",
     "hints": [
-      "Check each sample's depth against the layer boundaries: crust and mantle to 2,900 km, outer core to 5,150 km, inner core to 6,371 km.",
-      "For each layer, match the expected physical state (solid or liquid) to what the sample actually is. Look for a mismatch."
+      "Remember that the radius of a circle or sphere is the distance from the center to the outer edge, while the diameter is twice that distance.",
+      "The lesson explains that when you add the layer thicknesses from the surface down to Earth's center, you are measuring from one side to the very middle, which is the definition of radius."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6SCI-3.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A mineral is defined as a single natural substance with the same set of properties from sample to sample. A rock is a mixture of two or more minerals fused or stuck together. Which of the following best describes the main difference between a mineral and a rock?",
+    "problemText": "Which of the following is a mineral rather than a rock?",
     "choices": [
-      "A mineral is always harder than a rock.",
-      "A mineral is one substance with uniform properties throughout, while a rock contains two or more different minerals mixed together.",
-      "A mineral has a shiny surface, while a rock has a dull surface.",
-      "A mineral is found in mountains, while a rock is found on beaches."
+      "Granite, which contains visible grains of quartz, feldspar, and mica fused together",
+      "A single, uniform sample of quartz with no other minerals mixed in",
+      "A piece of sandstone made up of cemented sand grains from multiple mineral sources",
+      "A sample that contains two different minerals stuck together"
     ],
     "answer": "B",
     "hints": [
-      "Think about what the word 'mixture' means — does it refer to one thing or more than one thing?",
-      "The lesson emphasizes that a mineral stays the same from sample to sample, but a rock shows different properties in different grains."
+      "A mineral is one natural substance with one set of properties throughout, while a rock is a mixture.",
+      "Look for the sample that shows only one type of grain or one set of properties all the way through."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6SCI-3.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geologist tests a mineral sample by scratching it with a fingernail and finds no scratch mark. Then she scratches it with a steel file and makes a visible scratch. Using the practical hardness comparisons (fingernail ≈ 2.5, steel file ≈ 6.5 on the Mohs scale), what can she conclude about the sample's hardness?",
+    "problemText": "A student tests an unknown mineral sample and finds that a fingernail can scratch it easily, but a piece of window glass cannot scratch it at all. Using the practical hardness scale from the lesson, between which two values on the Mohs scale does this mineral's hardness fall?",
     "choices": [
-      "The hardness is below 2.5 on the Mohs scale.",
-      "The hardness is above 6.5 on the Mohs scale.",
-      "The hardness is somewhere between 2.5 and 6.5 on the Mohs scale.",
-      "The hardness cannot be determined without testing with glass."
+      "Between 1 and 2.5",
+      "Between 5.5 and 6.5",
+      "Between 2.5 and 5.5",
+      "Between 6.5 and 10"
     ],
     "answer": "C",
     "hints": [
-      "The fingernail did NOT scratch it, so the mineral is harder than the fingernail. The steel file DID scratch it, so the mineral is softer than the steel file.",
-      "You are comparing the sample to two known points on the hardness scale — think about what lies between those two points."
+      "If a fingernail (about 2.5) can scratch the sample, the sample is softer than 2.5 or around it.",
+      "If glass (about 5.5) cannot scratch the sample, then the sample must be harder than or close to glass's hardness."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6SCI-3.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student finds a mineral that looks dull gray on the outside, but when she rubs it across an unglazed streak plate, it leaves a bright red powder behind. Why might the streak color be more reliable than the outward color for identifying this mineral?",
+    "problemText": "Two samples of the same mineral type look different on the outside: one appears reddish-brown and dull, while the other appears shiny black. When rubbed across a streak plate, both samples leave the same reddish-brown streak. Why is the streak test more useful than color for identifying which mineral these samples are?",
     "choices": [
-      "The streak plate is newer and cleaner than the mineral surface.",
-      "Red is a more common color than gray in minerals.",
-      "The outward color can be changed by weathering or thin coatings, but the streak color stays consistent from sample to sample.",
-      "Streak plates only work with dull minerals, not shiny ones."
+      "Streak tells you the exact hardness of the mineral on the Mohs scale by comparing how deep the mark is on the plate",
+      "Color only works for minerals that are metallic in luster, so streak is needed to test non-metallic minerals instead",
+      "Streak is easier and faster to test than checking the color of the entire surface in different lighting conditions",
+      "Color can be affected by weathering or coatings, but streak stays the same from sample to sample of the same mineral"
     ],
-    "answer": "C",
+    "answer": "D",
     "hints": [
-      "The lesson gives hematite as an example of a mineral with changing outward colors but a consistent streak.",
-      "Think about what could affect the outside of a mineral (dirt, oxidation, weathering) versus what the streak test reveals from the inside."
+      "Think about why the lesson says streak is more trustworthy than color.",
+      "The lesson mentions that a mineral's outward color can change, but its streak color remains consistent."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6SCI-3.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student examines two samples side by side. Sample X has small visible grains of different colors and textures fused together — some grains are shiny and pink, others are black and peel into flat sheets, and still others are gray and dull. Sample Y is uniform throughout with the same glassy luster and light color in every part, and it breaks with curved, shell-shaped surfaces wherever it fractures. The student concludes that Sample X is a rock and Sample Y is a mineral. Which two properties of the samples best support this conclusion?",
+    "problemText": "A student finds a sample that is uniform throughout with a metallic luster and a hardness between 6 and 6.5 on the Mohs scale. When the student rubs it on a streak plate, it leaves a greenish-black streak instead of a golden-yellow one. The student also checks how the sample breaks and finds it fractures with curved, shell-shaped surfaces instead of breaking into flat planes. Based on hardness, streak, and cleavage/fracture properties, could this be real gold, or is it likely pyrite?",
     "choices": [
-      "The uniform composition of Sample Y and the mixture of different grain types in Sample X.",
-      "The size of Sample X and the weight of Sample Y, since rocks are always larger and heavier than minerals.",
-      "The pink color of some grains in Sample X and the light color of Sample Y, which are the most visible properties of each sample.",
-      "The shiny luster of Sample X's grains and the curved fracture of Sample Y, which are specific to rock and mineral formation."
+      "It must be pyrite because its hardness is too high for gold, and its streak is greenish-black, not golden-yellow",
+      "It must be real gold because it has a metallic luster and metallic minerals are always the precious metals like gold and silver",
+      "It could be either one because the curved fracture pattern is the same in both gold and pyrite so that property cannot distinguish them",
+      "It must be gold because it shows fracture rather than cleavage, which is a property unique to real gold and not seen in pyrite"
     ],
     "answer": "A",
     "hints": [
-      "A mineral has the same properties all the way through, while a rock shows different properties in different grains.",
-      "Look for the evidence that directly supports the definition: is it one substance or is it a mixture?"
+      "Real gold is much softer than this sample and would leave a golden-yellow streak; check the hardness and streak against what you know about gold.",
+      "Use all three properties together—luster alone cannot tell gold from pyrite, but hardness and streak together can."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6SCI-3.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A hiker finds a brassy-colored sample with a metallic luster. The sample scratches a copper penny (about 3.5 on Mohs scale) but does NOT scratch window glass (about 5.5 on Mohs scale). When rubbed on a streak plate, it leaves a golden-yellow streak. Based on hardness and streak, is this sample real gold (hardness about 2.5–3, streak golden-yellow) or pyrite (hardness about 6–6.5, streak greenish-black)?",
+    "problemText": "A geologist is handed two rock samples. Sample X is a solid piece with visible pink grains that have a glassy luster, black flaky grains that peel apart into thin sheets, and gray grains with a dull surface, all fused together as one piece. Sample Y is uniform throughout with the same glassy luster and light pink color everywhere, and it breaks with curved, shell-shaped surfaces with no flat repeating pattern. Which sample is a mineral, which is a rock, and what property or properties allow you to tell the difference?",
     "choices": [
-      "It must be pyrite, because it scratched the penny.",
-      "It must be real gold, because both the hardness test and the streak test match gold's known properties.",
-      "It must be pyrite, because pyrite is more common than gold.",
-      "It is impossible to tell without testing the sample's density."
+      "Sample X is a mineral because it is one solid piece that has been bonded together by heat and pressure into a single unit",
+      "Sample X is a rock because it shows three different kinds of grains with different properties; Sample Y is a mineral because it is uniform throughout with one set of properties",
+      "Both are minerals because they are both solid pieces of stone made up of natural crystalline material",
+      "Sample Y is a rock because its color is lighter and lighter-colored rocks are always rocks rather than minerals; Sample X is a mineral because it contains multiple grain types"
     ],
     "answer": "B",
     "hints": [
-      "Hardness tells you how resistant the sample is to scratching — which known hardness range does this behavior match?",
-      "Streak is especially useful because pyrite's streak does NOT match its brassy appearance, but gold's streak does match its golden color."
+      "A mineral is one substance with the same properties all the way through, while a rock is a mixture of two or more minerals.",
+      "Look at whether the grains are different from each other or the same throughout—that tells you whether you have a mixture or a single substance."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6SCI-3.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geology student collects a rock sample from a riverbed and examines it carefully. She sees one grain that peels into thin, flat, shiny sheets along a smooth plane; another grain that breaks into small cubes along smooth, flat surfaces; and a third grain that shatters unevenly into jagged, curved pieces with no flat pattern. The student notes that color and luster vary from grain to grain, and she correctly identifies this as a rock, not a mineral. Later, she extracts one of the cube-shaped grains and tests it separately. That single grain always breaks the same way (into cubes along flat planes) and has consistent properties. Why does the single grain now qualify as a mineral even though the original sample did not?",
+    "problemText": "A student collects a shiny sample that looks brassy-gold and has a metallic luster. To identify whether it is pyrite or real gold, the student decides to run three tests: hardness (comparing it to a copper penny), streak (using a streak plate), and cleavage/fracture (observing how it breaks). The student finds that the sample scratches the penny, leaves a greenish-black streak, and breaks with no flat repeating surfaces. Based on these three separate kinds of evidence, explain why this combination of results rules out real gold and identifies the sample as pyrite, rather than stopping after just one test.",
     "choices": [
-      "Because the single grain is smaller and therefore simpler.",
-      "Because when tested alone, the single grain shows one consistent set of properties with no mixture inside it, meeting the definition of a mineral.",
-      "Because all minerals must have the shape of a cube.",
-      "Because the grain no longer has color, so it cannot be called a rock."
+      "Because the sample is shiny and brassy-gold in color, which exactly matches the appearance of pyrite, so the visual identification is certain without further testing",
+      "Because streak is the most important test of all three and always overrides what the hardness test and fracture test show, so only the greenish-black streak result matters for identification",
+      "Because all three tests—the hardness being too high for gold, the streak being greenish-black instead of golden-yellow, and the fracture pattern all pointing to pyrite—provide independent evidence from different properties that agree with each other",
+      "Because the sample has a metallic luster and shows curved fracture surfaces, and this combination of features is found only in pyrite and never appears in real gold samples"
     ],
     "answer": "C",
     "hints": [
-      "A rock is a mixture; when you remove one kind of grain from the mixture, what are you left with?",
-      "The definition of a mineral requires one substance with the same properties throughout — does an isolated, unmixed grain fit that definition?"
+      "The lesson teaches that hardness, streak, and cleavage/fracture are three different kinds of clues, not three copies of the same clue.",
+      "Think about why using multiple different properties together is stronger evidence than relying on just one property, and what would happen if one test disagreed with the others."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6SCI-3.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A rock forms when melted rock called magma cools and hardens deep underground. What type of rock is this?",
+    "problemText": "A geologist finds a rock that formed when melted rock cooled and hardened deep underground over thousands of years. What type of rock is this?",
     "choices": [
-      "Sedimentary rock, because particles of sand and shells settle in layers and are compacted and cemented together",
-      "Metamorphic rock, because heat and pressure deep underground change an existing solid rock without fully melting it",
-      "Igneous rock, because it formed from melted rock that cooled and hardened",
-      "A new type of rock that does not fit into any of the three main families based on how it forms"
+      "Metamorphic rock",
+      "Sedimentary rock",
+      "Igneous rock",
+      "A rock that cannot be classified into the three families"
     ],
     "answer": "C",
     "hints": [
-      "The key word in the description is 'melted rock' — which process defines igneous rock?",
-      "Igneous rock forms when magma or lava cools and hardens. Does this description match that process?"
+      "The key phrase is 'melted rock' that 'cooled and hardened' — which family forms from melted rock?",
+      "Remember, the process that made the rock (not how old it is or where it sits) decides which family it belongs to."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6SCI-3.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A rock sample shows tiny crystals that are too small to see or pick out individually without a microscope. A description says the sample formed when lava cooled and hardened at Earth's surface in just a few minutes. Why are the crystals so small instead of large?",
+    "problemText": "A rock sample contains large crystals that you can see and pick out individually with your eyes. The description says the rock formed when magma cooled very slowly, trapped deep underground. Based on the crystal size and the cooling rate, which rock type is this most likely to be?",
     "choices": [
-      "The rock is not really igneous, so the crystals never grew at all",
-      "The lava cooled so fast that there was not enough time for the crystals to grow large",
-      "Crystals that form at the surface are always tiny, no matter how fast the cooling happens",
-      "The lava contained less dissolved minerals, so fewer large crystals could form"
+      "Sedimentary rock, because large crystals form when sediment is pressed tightly together",
+      "Igneous rock, because all rocks with large crystals are igneous no matter how they formed",
+      "Metamorphic rock, because large crystals are squeezed together by heat and pressure",
+      "Igneous rock, because slow cooling underground gives minerals time to grow into large crystals"
     ],
     "answer": "D",
     "hints": [
-      "Think about what happens when melted rock cools quickly versus slowly. Fast cooling means time is limited — time for what?",
-      "Compare this to magma deep underground that cools over thousands of years. How would that change the crystal size?"
+      "Slow cooling allows crystals to grow larger — which rock family forms from melted rock that cools?",
+      "Crystal size is a clue that helps confirm the process, but the process itself (melted and cooled) is what decides the family."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6SCI-3.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A rock is described as being made of sand grains cemented together in flat layers stacked one on top of another. No mention is made of any melted rock, heat, or pressure. What type of rock is this, and what does the visible layering tell you about how it formed?",
+    "problemText": "A rock is made of sand grains and broken shell fragments stuck tightly together in flat layers stacked one above another. No new crystals grew while this rock formed. What type of rock is this, and which process formed it?",
     "choices": [
-      "Sedimentary rock; the layers show that sediment settled and was compacted and cemented together over time",
-      "Igneous rock; the layers are bands of crystals that cooled at different rates as magma solidified",
-      "Metamorphic rock; the layers are foliation patterns created when an existing rock was squeezed by heat and pressure",
-      "Sedimentary rock; the layers indicate the rock has been buried deeply enough to experience significant temperature and pressure"
+      "Sedimentary rock formed when sediment was compacted and cemented together",
+      "Igneous rock formed when melted rock cooled and hardened",
+      "Metamorphic rock formed when an existing rock was squeezed and reorganized by heat and pressure",
+      "Sedimentary rock formed when minerals realigned into bands without the rock ever melting"
     ],
     "answer": "A",
     "hints": [
-      "Sand grains cemented together in flat stacked layers — does that match sediment being pressed together, or melted rock cooling, or an existing rock being squeezed?",
-      "Sedimentary rock forms from loose material like sand that settles in layers. What process does the description match?"
+      "Look for the clues: visible grains, shell fragments, and flat layers stacked on top of each other — which process builds rocks this way?",
+      "The fact that no new crystals grew tells you melting did not happen, so this is not igneous or formed from a full melt."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6SCI-3.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two rocks are examined. Rock A has large crystals that can be seen and told apart by eye, formed when magma cooled deep underground over many thousands of years. Rock B has visible layers of compacted sand grains with shell fragments, formed when sediment settled and was cemented together. Which rock has experienced heat and pressure that changed an existing solid rock without fully melting it, and why?",
+    "problemText": "A rock is described as having thin, wavy bands of shiny minerals alternating between light and dark colors, lined up and squeezed tightly together. There are no visible sand grains, pebbles, or shell fragments anywhere in the sample. The description also states that an existing rock was changed by intense heat and pressure deep underground, but it never fully melted. What type of rock is this now, and how do you know it is not sedimentary?",
     "choices": [
-      "Rock A, because it cooled slowly underground and developed large crystals that formed as magma solidified",
-      "Neither rock has experienced that process; neither description mentions an existing rock being changed by heat and pressure without melting",
-      "Rock B, because it contains shell fragments and is layered in the way sediment settles and compacts",
-      "Both rocks have experienced that process, because both are buried underground and exposed to heat and pressure"
+      "It is sedimentary rock because layers form when sand and shell pieces are deposited and compacted over time; the bands in this sample show that process happened here.",
+      "It is metamorphic rock because the mineral bands formed from heat and pressure acting on an existing solid rock; sedimentary rock shows deposited layers of grains or fossils, not squeezed mineral bands.",
+      "It is igneous rock because the shiny minerals represent crystals that cooled slowly from molten material deep underground; the alternating colors come from minerals crystallizing at different rates.",
+      "It is metamorphic rock because it is hard and tightly packed; any rock that is very hard must have been changed by heat and pressure, not just compacted."
     ],
     "answer": "B",
     "hints": [
-      "Metamorphic rock is defined by one specific process: an existing solid rock changed by heat and pressure without fully melting. Which rock's description includes that process?",
-      "Rock A came from melted rock that cooled — that is the igneous process. Rock B came from sediment pressed together — that is the sedimentary process. Does either description say heat and pressure changed a rock that was already solid?"
+      "The key is telling the difference between flat, deposited layers of sediment and wavy, squeezed mineral bands — which one does this description show?",
+      "The process stated in the description (heat and pressure on an existing rock, no melting) directly decides the family — use the stated process, not just the appearance of bands."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6SCI-3.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A rock sample has bands of alternating light and dark colored minerals lined up in wavy stripes. The sample is very hard and tightly packed. No sand grains, mud particles, or fossils are visible anywhere in the rock. A geologist notes that this rock was once shale, a sedimentary rock, but intense heat and pressure deep underground reorganized it without fully melting it. Why can this rock not be sedimentary even though it has bands or stripes running through it?",
+    "problemText": "Two geologists are arguing about a rock sample. The rock has visible bands running through it. Geologist A says it must be sedimentary because all banded rocks form from layers of sediment stacked on top of each other. Geologist B says the rock is metamorphic because the bands are made of aligned minerals squeezed together, with no visible grains or fossils. Which geologist is correct, and what mistake is Geologist A making?",
     "choices": [
-      "Sedimentary rocks cannot be as hard and tightly packed as this sample is",
-      "The bands in this rock are made of squeezed, aligned minerals, not stacked layers of deposited sediment, and the description says heat and pressure changed an existing solid rock",
-      "Any rock that came from sedimentary rock and was buried deep underground automatically becomes metamorphic",
-      "The rock has no visible sand grains, so it cannot be sedimentary anymore"
+      "Geologist A is correct; any rock showing distinct bands must be sedimentary because layering only occurs when different sediments are stacked and cemented together over time.",
+      "Geologist A is making the mistake of assuming that all visible bands come from the deposition process, but metamorphic rocks also show bands when minerals are aligned by heat and pressure without leaving fossil evidence.",
+      "Geologist B is correct; the trap is that bands or stripes can come from two completely different processes — deposited layers or squeezed minerals — and you must look at what is actually doing the striping.",
+      "Geologist A is incorrect because banded rocks that form from metamorphism lack the grain and fossil features found in sedimentary layers, meaning the absence of these features points to metamorphic origin rather than sedimentary formation."
     ],
     "answer": "C",
     "hints": [
-      "The lesson warns that stripes or bands can come from two different processes. What is the difference between sedimentary layering and metamorphic foliation?",
-      "Sedimentary bands are stacked layers of deposited material. Metamorphic bands are squeezed minerals lined up. This rock has mineral bands from heat and pressure acting on an existing solid — which family does that process define?"
+      "The lesson warns specifically about this trap — what are the two different kinds of stripes that can appear in rocks, and how do you tell them apart?",
+      "Look at what is actually creating the pattern: are these deposited layers of different materials, or mineral bands squeezed and realigned by heat and pressure?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6SCI-3.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geologist finds a rock deep underground and notes the following: it has visible layers of different colored materials, some of which contain fragments of fossil shells; the layers are slightly bent and no longer perfectly flat; and the minerals between the layers show alignment into shiny streaks. When the geologist asks where this rock came from, they are told that an existing sedimentary rock was subjected to heat and pressure, and those forces bent the layers and reorganized the minerals without fully melting the rock. Based on the description of how it formed and what it looks like now, explain why this rock is metamorphic and not sedimentary, even though it still contains visible shell fragments and layering.",
+    "problemText": "A rock sample started its life as limestone, a sedimentary rock made from compacted and cemented shells and coral. Then, deep underground, it was subjected to intense heat and pressure for millions of years, and it transformed into marble without ever fully melting. Marble now has a tightly interlocked texture of large, squeezed crystals and no visible shells or layers. A student looks at the marble and says, 'This rock must be sedimentary because it came from limestone, which is sedimentary, so the original process defines the family forever.' Explain why the student's reasoning is wrong, and identify what type of rock marble actually is based on what happened to it.",
     "choices": [
-      "The rock is metamorphic because it contains shell fragments, which only form in rocks that have been changed by heat and pressure",
-      "The rock is metamorphic because the description explicitly states that an existing solid rock was changed by heat and pressure without fully melting it, and this process defines the metamorphic family regardless of the rock's current appearance",
-      "The rock is sedimentary because the shell fragments prove it came from ocean sediment that was compacted and cemented",
-      "The rock is both metamorphic and sedimentary because it has features of both families, and it cannot be classified as only one type"
+      "The student is wrong because sedimentary rock never changes after it forms; once limestone, always limestone. Marble is still sedimentary because it formed from shells, which is a sedimentary process.",
+      "The student is wrong because the rock is too hard to be sedimentary; metamorphic rock is always harder than sedimentary rock, so if limestone turns into marble, it must be igneous.",
+      "The student is wrong because marble has large crystals, which only igneous rocks can have; the process that matters is cooling from melted rock, not the limestone that came before it.",
+      "The student is wrong because it is the current process acting on the rock that decides its family, not its history; marble is metamorphic rock because heat and pressure changed an existing rock without melting it."
     ],
     "answer": "D",
     "hints": [
-      "The lesson teaches that geologists classify rocks based on how they formed, not on what they look like. What process does the description say acted on this rock?",
-      "Even though the rock still shows shells and layering from its sedimentary past, what happened to it after that? Does that additional change move it to a different rock family?"
+      "A rock's family is decided by how it formed, not by what it used to be — what process actually changed the limestone into marble?",
+      "Think about the three families: the defining process for metamorphic rock is heat and pressure acting on an existing solid rock without melting it — does that fit what happened to the limestone?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6SCI-3.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A rock is broken apart into loose sediment by rain, ice, and wind while sitting in place on a mountainside. No pieces are moved anywhere. What is the name of this process?",
+    "problemText": "Which of the following processes breaks a rock apart into loose pieces where it sits, using rain, ice, wind, and temperature changes?",
     "choices": [
-      "Erosion, because water and wind are the forces breaking apart and moving the rock pieces away from their original location.",
-      "Deposition, because the rock pieces are being laid down and settling into a new location over time.",
-      "Cooling, because temperature changes from freezing and thawing cycles are involved in mechanical breaking of the rock.",
-      "Weathering, because the rock is being broken apart in place by rain, ice, wind, and temperature changes."
+      "Compaction",
+      "Erosion",
+      "Deposition",
+      "Weathering"
     ],
     "answer": "D",
     "hints": [
-      "Remember that weathering breaks rock apart where it sits, while erosion carries pieces away.",
-      "The key detail is that the pieces are NOT being moved anywhere — they stay in place."
+      "This process does NOT move the rock pieces anywhere—it only breaks them apart.",
+      "The name of this process sounds like it describes what happens to rocks at Earth's surface over time."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6SCI-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A piece of basalt, an igneous rock, is buried deep underground and squeezed and heated for millions of years, but it never completely melts. What rock type does it become, and why does melting NOT happen even though the rock is very hot?",
+    "problemText": "A granite boulder at the top of a mountain is cracked apart by freezing water over several winters, turning it into loose pebbles and sand grains that remain on the mountainside. Which rock type is this loose material, and what process just happened to the granite?",
     "choices": [
-      "It becomes metamorphic rock, because heat and pressure without melting change an existing rock into metamorphic rock.",
-      "It becomes sedimentary rock, because pressure from burial always turns rocks into sedimentary rock.",
-      "It becomes igneous rock, because hot rocks are always igneous.",
-      "It becomes magma, because any rock heated for millions of years must eventually melt."
+      "It is sediment; weathering changed it.",
+      "It is still igneous rock; cooling changed it.",
+      "It is sedimentary rock; erosion changed it.",
+      "It is metamorphic rock; heat and pressure changed it."
     ],
     "answer": "A",
     "hints": [
-      "The key word in the problem is 'never melts' — what process changes rocks through heat and pressure without melting?",
-      "Remember: a rock can be squeezed and heated for a very long time and still never reach its melting point."
+      "The pebbles and sand are no longer solid rock—they are broken-apart pieces. What do we call broken-apart rock pieces?",
+      "The process that breaks rock apart where it sits uses freezing water, which is mentioned in the lesson as one of the causes."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6SCI-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A metamorphic rock is exposed at Earth's surface, where rain and frost crack it into loose sediment. The wind and a stream then carry this sediment away and deposit it in layers at the bottom of a river valley. What rock type would this sediment become if it were then buried and cemented together?",
+    "problemText": "A geologist finds metamorphic rock at Earth's surface that was formed deep underground by heat and pressure without melting. She asks: could this metamorphic rock ever become sedimentary rock? Which answer correctly applies the rock-cycle rule?",
     "choices": [
-      "It would become metamorphic rock, because it originated from metamorphic rock material before it was weathered into sediment.",
-      "It would become sedimentary rock, because deposition, compaction, and cementation turn loose sediment into sedimentary rock.",
-      "It would become igneous rock, because the sediment settles in layers at the bottom similar to how magma cools into layered igneous formations.",
-      "It would stay as loose sediment, because sediment that comes from weathering cannot be turned into solid rock through burial and cementation."
+      "No, because metamorphic rock is so dense and tightly bound by heat that it cannot be broken apart by weathering into pieces small enough for erosion to move it away.",
+      "Yes, if weathering breaks it into sediment, erosion carries that sediment away, and deposition followed by compaction and cementation turns it into sedimentary rock.",
+      "No, because the only way any rock can change types in the rock cycle is by first melting completely into magma, and metamorphic rock cannot melt under normal Earth conditions.",
+      "Yes, but only if the metamorphic rock is buried again, heated to extremely high temperatures until it melts into magma, then cools to form new igneous rock that can later become sedimentary."
     ],
     "answer": "B",
     "hints": [
-      "Trace the processes step by step: what does compaction and cementation do to loose sediment?",
-      "The type of rock the sediment came from does not decide what type it becomes — the processes acting on it do."
+      "Remember: any rock type can become any other rock type. What decides the outcome is the process that acts on the rock, not what type it started as.",
+      "Weathering and erosion do not care what type of rock they are breaking apart or carrying away. Does a metamorphic rock have to do something special before weathering can affect it?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6SCI-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student observes a limestone, a sedimentary rock, on a cliff face. She reads that this limestone was formed 300 million years ago when sea sediment was compacted and cemented. She then learns that this same limestone was later buried even deeper underground and heated and squeezed for millions of years but never melted. Today she holds a hard, banded metamorphic rock in her hands that came from that limestone. Which of the following correctly describes what happened and why the final rock is metamorphic and not igneous?",
+    "problemText": "A piece of limestone, a sedimentary rock, is buried deep underground where it is squeezed and heated until it becomes marble, a metamorphic rock. Later, marble at Earth's surface is weathered into grains, those grains are eroded and deposited in layers, and then the layers are buried and cemented together. Describe the chain of processes that turned limestone into marble, and then name the final rock type after the second chain of events.",
     "choices": [
-      "The limestone melted into magma deep underground, and when the magma cooled it became metamorphic rock instead of igneous rock.",
-      "The limestone was heated and squeezed without melting, which is the process that changes an existing rock into metamorphic rock without melting it.",
-      "The limestone was weathered and eroded into new sediment, which was then heated until it became metamorphic rock.",
-      "The limestone was buried so deep that the pressure alone, without any heat, turned it into a metamorphic rock."
+      "Heat and pressure turned limestone to marble; weathering and erosion turned marble to igneous rock.",
+      "Melting turned limestone to magma which cooled into marble; weathering, erosion, deposition, compaction, and cementation turned marble to metamorphic rock.",
+      "Heat and pressure turned limestone to marble; weathering, erosion, deposition, compaction, and cementation turned marble to sedimentary rock.",
+      "Heat and pressure turned limestone to marble; the marble remained as metamorphic rock because weathering cannot change metamorphic rock into another type."
     ],
     "answer": "C",
     "hints": [
-      "The rock is metamorphic, not igneous — what is the key difference between what makes metamorphic rock and what makes igneous rock?",
-      "Heat and pressure that stop SHORT of melting produce metamorphic rock. Heat strong enough to melt produces magma, which becomes igneous when cooled."
+      "The first chain is heat and pressure without melting. For the second chain, track each process step by step: what happens when weathering acts, then when erosion acts, then when deposition acts, then when compaction and cementation act?",
+      "The final step in the second chain is compaction and cementation. What rock type does compaction and cementation always produce?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6SCI-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "An igneous rock is weathered and eroded into sediment, which is then deposited and compacted and cemented into a sedimentary rock. Later, that sedimentary rock is uplifted back to Earth's surface without any melting happening. Which of the following could be true about what happens next?",
+    "problemText": "A student claims: 'If a rock is heated for a very long time, it will always melt into magma.' Use the rock cycle to explain why this claim is wrong, and give an example of a process that can heat a rock for millions of years without melting it.",
     "choices": [
-      "The sedimentary rock must cool down and turn into igneous rock, because all rocks go through the cycle in order.",
-      "The sedimentary rock cannot change anymore, because it has already completed the rock cycle.",
-      "The sedimentary rock could be weathered again into sediment, or it could be buried deeper and changed into metamorphic rock by heat and pressure.",
-      "The sedimentary rock will immediately melt into magma because being uplifted brings it into hotter parts of the Earth."
+      "The claim is wrong because compaction and cementation in sedimentary rock create bonds so strong that heat cannot overcome them, making melting impossible and metamorphic rock the only outcome of any heating process.",
+      "The claim is wrong because only rocks buried in the mantle can melt into magma; rocks in the crust are insulated by soil and sediment layers that prevent them from ever reaching temperatures hot enough to melt.",
+      "The claim is wrong because weathering and erosion constantly remove rocks from underground before they can be heated long enough, so rocks at the surface never experience the sustained heat needed for any transformation to occur.",
+      "The claim is wrong because melting depends on how hot a rock actually gets, not just on how long it is heated. Heat and pressure can squeeze and heat a rock for millions of years without melting it, producing metamorphic rock instead."
     ],
     "answer": "D",
     "hints": [
-      "Remember: there is no fixed order to the rock cycle. Any rock type can become any other type depending on which process acts next.",
-      "Being uplifted and exposed at the surface opens up multiple possible paths — what processes could then act on the rock?"
+      "The lesson emphasizes this exact mistake students make. What is the key question to ask: was the rock heated, or did it actually melt?",
+      "Deep underground, a rock can be both squeezed and heated for a very long time. What process does this combination produce if the rock never actually melts?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6SCI-3.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geologist finds a marble, a metamorphic rock, exposed on a mountainside. She knows the marble formed when limestone (sedimentary rock) was buried and heated and squeezed without melting. She also knows that today, weathering is breaking the marble into loose grains. The geologist hypothesizes that if she returns 100 million years from now, she might find a new sedimentary rock in that location made from the same material. For her hypothesis to be correct, which chain of processes would have to occur between now and then, and which single process from the rock cycle would be MISSING from that chain?",
+    "problemText": "A geologist traces the history of a piece of rock: it started as an igneous rock that cooled from magma, then was weathered and eroded into sediment, then deposited and cemented into sedimentary rock. Later, that sedimentary rock was buried and heated without melting, becoming metamorphic rock. At Earth's surface, the metamorphic rock is weathered again, and the resulting sediment is deposited in a lake. If one more process happens to that lake sediment, it could become solid rock again. Which process would that be, and which rock type would result?",
     "choices": [
-      "Weathering, erosion, deposition, and compaction and cementation would have to occur, with cooling being the missing process, because new sedimentary rock does not need cooling to form.",
-      "Weathering, erosion, deposition, and compaction and cementation would have to occur, with melting being the missing process, because sedimentary rock forms from sediment, not from magma.",
-      "Melting, cooling, deposition, and compaction and cementation would have to occur, with weathering being the missing process.",
-      "Weathering, erosion, compaction, and cementation would have to occur, with deposition being the missing process, because sediment can become rock without settling in a new location first."
+      "Compaction and cementation would occur, and the rock would become sedimentary rock because compaction and cementation turn loose sediment into sedimentary rock.",
+      "Heat and pressure would act on the sediment as it is buried deep underground, and the result would be metamorphic rock formed by the combination of heat and pressure without melting.",
+      "Melting would occur if the sediment is pushed very deep into Earth where temperature is high enough, and magma would cool into igneous rock.",
+      "Erosion would remove the lake sediment and carry it to the ocean, where it would stay as loose sediment forever because no process in the ocean turns sediment into rock."
     ],
     "answer": "A",
     "hints": [
-      "Trace the pathway: the marble is already breaking into loose sediment through weathering. What processes must follow to turn that sediment into solid sedimentary rock?",
-      "Think about what processes ARE needed to make sedimentary rock, and which process from the rock cycle would NOT be part of making sedimentary rock from sediment."
+      "You have loose sediment in a lake. What is the step that finally turns loose sediment into solid sedimentary rock?",
+      "Compaction and cementation are the two processes that work together to glue sediment grains into one solid rock. This always produces sedimentary rock, not any other type."
     ]
   }
 ]

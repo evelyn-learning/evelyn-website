@@ -5,17 +5,17 @@
     "cedCode": "M6ELA-7.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A context clue is a detail in the words and sentences around an unfamiliar word that points to its meaning. Which of the following is a context clue?\nA. Information in nearby sentences that helps you understand what an unknown word means\nB. A definition found in a dictionary\nC. A word that appears at the beginning of a sentence\nD. A synonym written in all capital letters",
+    "problemText": "The old barn was dilapidated, or crumbling and barely standing, so the family decided it was too dangerous to store anything inside anymore.",
     "choices": [
-      "Information in nearby sentences that helps you understand what an unknown word means",
-      "A resource that provides exact definitions for words but comes from outside the text you are reading",
-      "Any word that starts a sentence, regardless of whether it helps clarify the meaning of an unknown word",
-      "A word with similar meaning to an unknown word, especially when it is written or printed in uppercase letters"
+      "Falling apart and in poor condition",
+      "Very tall and made of wood",
+      "Empty and unused for many years",
+      "Newly built but painted a dark color"
     ],
     "answer": "A",
     "hints": [
-      "The lesson defines context clue as detail in the words and sentences *around* an unfamiliar word.",
-      "A context clue must come from inside the passage itself, not from an outside source."
+      "Look right after the word for a signal word like 'or'.",
+      "The phrase after the comma tells you the meaning directly."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6ELA-7.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"The hikers were fatigued after climbing the mountain all day, exhausted and struggling to put one foot in front of the other.\"\nWhich type of context clue helps you understand what fatigued means?",
+    "problemText": "The speaker's voice grew louder and more forceful as she made her final argument. By the end, everyone in the room sat up straighter, eyes wide, hanging on every word. What does the underlined word most likely mean in this passage?",
     "choices": [
-      "A contrast clue showing the opposite of fatigued",
-      "A restatement clue saying the same idea in easier words",
-      "A definition clue with the signal word 'or'",
-      "An example clue introduced by 'such as'"
+      "Spoken in a quiet whisper",
+      "Powerful and demanding attention",
+      "Angry and meant to hurt someone's feelings",
+      "Nervous and full of doubt"
     ],
     "answer": "B",
     "hints": [
-      "Look for what comes *after* the word fatigued in the same sentence.",
-      "The clue does not use a signal word like 'or,' 'but,' or 'such as'—it just restates the idea plainly."
+      "Notice what the word describes: how the speaker's voice grew.",
+      "The second sentence shows people paying close attention—what kind of voice would make them react that way?"
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6ELA-7.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"The museum's new exhibit was ephemeral, lasting only three weeks before the artwork was moved to another gallery. Next month, the walls would be empty again.\"\nWhich clue type helps you figure out what ephemeral means in this passage?",
+    "problemText": "The recipe called for a vigorous stir, mixing the batter as hard and fast as possible until no lumps remained. Maya used a spoon to gently swirl the ingredients instead.",
     "choices": [
-      "A definition clue showing the word's exact dictionary meaning",
-      "An example clue listing several short-lived things",
-      "A contrast clue that shows what is not ephemeral",
-      "A restatement clue explaining the temporary nature of the exhibit"
+      "Done quickly without thinking",
+      "Repeated many times over and over",
+      "Strong, energetic, and done with force",
+      "Careful and slow to avoid spilling"
     ],
     "answer": "C",
     "hints": [
-      "Notice that the passage tells you the exhibit lasts only three weeks, then mentions the walls will be empty again next month.",
-      "Think about what opposite idea would help you understand a word that describes something temporary or short-lived."
+      "Look at what comes right after the word—it explains what vigorous means.",
+      "The contrast with Maya's gentle swirling tells you the opposite of what vigorous means."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6ELA-7.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"The explorer's route through the jungle was circuitous, winding and twisting through dense brush instead of taking the straight path to the river. Each detour added hours to the journey.\"\nWhich statement correctly identifies both the word's job in the sentence and the context clue that reveals its meaning?",
+    "problemText": "The hikers were dismayed when the trail became obscured by fallen branches and overgrown weeds. They had walked only two miles and already could not see the path ahead. Marcus suggested they turn back, but the group pressed forward, determined to reach the summit despite the difficulty.",
     "choices": [
-      "Circuitous describes an action, and a contrast clue with 'instead of' shows it means the opposite of straight",
-      "Circuitous names a person, and a definition clue with 'or' explains it means someone who travels",
-      "Circuitous describes a route, and a restatement clue explains it means winding and twisting through dense brush",
-      "Circuitous describes a route, and a contrast clue with 'instead of' shows it is not a straight path"
+      "Excited and eager to explore a challenging new route",
+      "Tired from walking and needing a break",
+      "Confused about which direction to go next",
+      "Discouraged and upset about an unexpected problem"
     ],
     "answer": "D",
     "hints": [
-      "First, find the word's job: what is circuitous describing or naming in the sentence?",
-      "Notice that 'instead of taking the straight path' is a signal for a contrast clue—you have to flip the meaning."
+      "Read past the word to see what happened: what made them feel this way?",
+      "One person wanted to give up—what feeling would cause that suggestion?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6ELA-7.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student read this passage and made a guess about an unknown word without reading past it or checking the guess:\n\"The old photograph was obliterated by water damage, but the museum carefully restored it to its original condition, and now every detail is sharp and clear.\"\nThe student guessed that obliterated means 'damaged.' Why is this guess incomplete, and what does the passage actually tell you?",
+    "problemText": "The athlete's training regimen was rigorous, including two-hour runs every morning, weight lifting in the afternoon, and practice games three nights a week. His friend asked how he managed such an intense schedule, and the athlete replied that his coach demanded nothing less than total dedication to the sport.",
     "choices": [
-      "The guess is incomplete because it ignores the contrast clue with 'but,' which shows that obliterated means the opposite of carefully restored and clear",
-      "The guess is incomplete because it misses the definition clue introduced by a comma, which explains that obliterated refers specifically to water damage and nothing else",
-      "The guess is incomplete because it overlooks the comparison clue showing how obliterated relates to the museum's actions and their professional expertise",
-      "The guess is incomplete because it fails to notice that obliterated and damaged are different words and must therefore mean completely different things in the passage"
+      "Very strict, demanding, and thorough",
+      "Relaxed and not requiring much effort or time",
+      "Boring and repetitive after many weeks",
+      "Expensive and requiring special equipment"
     ],
     "answer": "A",
     "hints": [
-      "Notice the word 'but' in the middle of the passage—that is a contrast signal.",
-      "After 'but,' the passage describes something being restored to sharp and clear, which is the *opposite* of what obliterated does."
+      "Look at the specific examples given—what do they tell you about how strict or tough the schedule is?",
+      "The phrase 'intense schedule' in the next sentence restates the word's meaning in simpler terms."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6ELA-7.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"The team's morale was buoyant throughout the tournament, rising higher with each victory. Even when they lost a game in the finals, their spirits remained elevated and optimistic, convinced they could win the next one.\"\nA student substituted 'heavy and sad' for buoyant and read the sentence again: \"The team's morale was heavy and sad throughout the tournament.\" The student then said the guess was wrong. Which step in the context-clue process did the student follow correctly, and why does the guess fail?",
+    "problemText": "The museum's new exhibit about ancient Rome was ephemeral, lasting only three weeks before the items were packed and shipped to the next city. Unlike the permanent collection downstairs, which had occupied the same gallery for twenty years, this display would never be seen again in this building. Visitors rushed to see it before it disappeared forever.",
     "choices": [
-      "The student used position and function to narrow the meaning, because buoyant describes morale; the guess fails because morale that is heavy and sad contradicts the examples of rising and optimistic",
-      "The student used the substitute-back check correctly; the guess fails because 'or' does not appear after buoyant to signal a definition clue",
-      "The student used the substitute-back check correctly; the guess fails because heavy and sad does not fit the restatement clue showing elevated and optimistic morale",
-      "The student read past the word and found the signal word 'but'; the guess fails because the word should mean something opposite to defeated"
+      "Damaged by time and no longer in good condition",
+      "Temporary and lasting for only a short period",
+      "Unpopular and attracting very few visitors",
+      "Protected by glass cases and not allowed to be touched"
     ],
     "answer": "B",
     "hints": [
-      "The student tested the guess by putting it back into the sentence and checking if it still made sense—which step is that?",
-      "Even though the guess does not work, you should notice which clue type is actually in the passage: the repeated ideas of rising, elevated, and optimistic all point toward the same meaning."
+      "Use the contrast clue: the exhibit is different from the permanent collection downstairs—what does that opposite tell you?",
+      "The fact that visitors rushed before it 'disappeared forever' and would never be seen again shows what the word must mean."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6ELA-7.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "You know that the root port- means \"carry\" because you have seen it in the words transport, export, and portable. Which of the following words most likely also contains the root port- and shares that same core meaning about carrying?",
+    "problemText": "Which word family below all share the root port-, meaning 'carry'?",
     "choices": [
-      "Portion",
-      "Import",
-      "Support",
-      "Report"
+      "transport, support, important",
+      "transport, export, portable",
+      "portable, partition, porter",
+      "export, expert, expose"
     ],
     "answer": "B",
     "hints": [
-      "Think of a word that means to bring goods into a country, similar to how export means to carry goods out.",
-      "Which choice pairs with export to show the opposite direction of movement?"
+      "Look for three words where the root port- appears and all connect to carrying something.",
+      "Remember: support has port- but means something different; important does not have the root port- at all."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6ELA-7.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: The hikers had to inscribe their names on the summit stone to prove they had reached the top. You know the root scrib- means \"write\" from words like describe and subscription. Using that root as a clue and checking the sentence, what does inscribe most likely mean?",
+    "problemText": "Read the sentence below. Which meaning of the word audition is supported by both the root aud- and the sentence itself?\n\nDuring the audition, the singer performed three songs while the judges listened carefully and took notes.",
     "choices": [
-      "To climb to the top of a mountain",
-      "To carve or write words onto a surface",
-      "To photograph something as proof",
-      "To list names in a special order"
+      "The range of sound frequencies that a person's ear can detect and process at different volumes",
+      "A gathering of people assembled in a location to hear and enjoy a musical or theatrical performance",
+      "A formal hearing or listening session where a performer demonstrates their skill",
+      "A mechanical or electronic device designed to record and preserve voice and musical sounds"
     ],
     "answer": "C",
     "hints": [
-      "The root scrib- points to something written or marked, and the sentence mentions the stone itself as the place where this happens.",
-      "Think about how the hikers use the stone as a record—what action would permanently mark a name onto stone?"
+      "The root aud- means 'hear.' What does the sentence tell you the judges do?",
+      "An audience listens, but this sentence is about judging a performer—what is the performer doing for the judges?"
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6ELA-7.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Your classmate is trying to figure out the word contradict using the root dict-. She knows dict- means \"say\" from the word dictionary. She guesses that contradict means \"to say against.\" Does the sentence support this meaning? Explain why or why not: Two neighbors contradicted each other in court, each one insisting their version of the accident was the true story.",
+    "problemText": "Read the sentence below. Which meaning of the word dictation is supported by both the root dict- and the sentence itself?\n\nThe teacher spoke slowly during dictation so the students had time to write down every word she said.",
     "choices": [
-      "No, because dictionary is a book, not a person speaking, so the root cannot help here.",
-      "No, because the sentence is about a court, which has nothing to do with saying words.",
-      "Yes, because the root dict- means \"say,\" and neighbors stating opposite versions do say things against each other.",
-      "Yes, because both neighbors made statements and tried to prove the other person wrong."
+      "A message that is spoken into a recording device and played back to a listener at a different time",
+      "A reference book containing words arranged in order with explanations of what each word means",
+      "An order or command issued by someone in authority that must be followed without any discussion or delay",
+      "The act of a speaker saying words aloud for someone else to write down"
     ],
     "answer": "D",
     "hints": [
-      "Look at what the two neighbors actually do in the sentence: they each insist their story is true while the other is not.",
-      "The root meaning 'say' is a starting point, but the sentence shows you what 'saying against' really means in this real situation."
+      "The root dict- means 'say.' What is the teacher doing while the students write?",
+      "Notice that the sentence emphasizes the teacher speaking and students writing—which choice matches that action?"
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6ELA-7.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: The doctor prescribed a new medication after reviewing my medical history. You can see the root scrib- in prescribed, and you know scrib- means \"write\" from words like describe and inscription. However, a doctor does not literally write a medication. Using the four-step test from the lesson, explain how the root scrib- helps you understand prescribed even though the meaning is not exactly \"to write.\"",
+    "problemText": "Read the sentence below. The word prescription appears in it. You know that the root scrib- appears in describe and subscribe, both of which relate to writing. However, a doctor's prescription is not typically handwritten instructions anymore. Using the four-step test, what is the most accurate meaning of prescription that both the root scrib- and the sentence support?\n\nThe doctor wrote a prescription for antibiotics and handed it to the pharmacist, who prepared the exact dosage and quantity the doctor specified.",
     "choices": [
-      "The root scrib- means \"write,\" so prescribed means the doctor officially wrote down the medication order, creating a written record the patient must follow.",
-      "The root scrib- means \"write,\" and although the doctor does not physically write the medication itself, the act of prescribing creates an official written order that patients must obtain and follow from a pharmacy.",
-      "The root scrib- means \"write,\" but in this context prescribed actually means the doctor selected a medication based on medical judgment without any written documentation being involved in the process.",
-      "The root scrib- means \"write,\" so prescribed means the doctor wrote instructions directly on the medication bottle to tell the patient how to take it safely and when to take each dose."
+      "A written or recorded order from a doctor stating what medicine a patient should take, including the amount and how often",
+      "Any document or form that a medical professional creates and signs in the course of their daily medical practice",
+      "A handwritten note that must be copied exactly by hand at the pharmacy before the patient can receive their medicine",
+      "A set of instructions given by a healthcare provider that tells a patient which steps to follow to prevent illness or cure a disease"
     ],
     "answer": "A",
     "hints": [
-      "Remember the lesson said a root gives you a starting point, not a finished definition—you have to build a bridge from 'write' to what actually happens.",
-      "When a doctor prescribes medicine, they do something that creates an official written record. How does that bridge connect the root meaning to the real action?"
+      "The root scrib- means 'write,' but remember the lesson: a root gives you a starting point, not a finished definition. What does the sentence say the doctor is specifying?",
+      "Build the bridge: the prescription is written or recorded information that tells the pharmacist what to do—it 'says' what medicine and how much, just as the sentence describes."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6ELA-7.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Your friend sees the word audition and thinks it means \"to listen\" because it contains aud-, which means \"hear.\" But then she reads: The actor waited nervously in the hall before her audition for the school play. Based on the lesson's caution about when a root and sentence disagree, what is the best advice you could give your friend about what audition actually means?",
+    "problemText": "Read the sentence below. You notice the word subscriber contains the root scrib- (meaning 'write') that also appears in manuscript and inscription. However, when you check the sentence, it does not mention writing at all. What does this tell you about finding the meaning of subscriber?\n\nWhen my grandmother became a subscriber to the magazine, she received a copy in her mailbox every month for a year.",
     "choices": [
-      "Ignore the root aud- completely because the sentence is about a play, not about hearing.",
-      "Trust the sentence: an audition is a test or performance where a person shows their skills, and the judges listen and evaluate them.",
-      "Keep the root meaning only: audition means to listen, which is why the actor is waiting—she is listening for instructions.",
-      "Use both: audition means the actor listens to music because that is what happens in theater auditions."
+      "The root scrib- is the only clue you need, and you should ignore the sentence when you already know what the root means in other words",
+      "The root scrib- does not fit the sentence, so you must trust what the sentence tells you about the meaning instead of stopping at the root alone.",
+      "The root scrib- must mean something entirely different in subscriber than it does in manuscript and inscription because the words are used in different contexts",
+      "The sentence proves that certain words ending in -er cannot be analyzed using roots, so roots should never be used for words with that suffix"
     ],
     "answer": "B",
     "hints": [
-      "The lesson teaches that when the root and the sentence point in different directions, the sentence decides the real meaning.",
-      "What is the actor actually doing in the sentence, and how does hearing or listening fit into that action from her point of view?"
+      "The lesson teaches: when the root and the sentence disagree, which one do you trust?",
+      "Think about the bridge: someone who subscribes to a magazine is signing up or 'writing' their name on a list to receive it. The root gives the starting point, but the sentence completes the meaning."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6ELA-7.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: The teleprompter displayed the speech so the announcer could read it while appearing to speak naturally on the television broadcast. You can spot tele- in teleprompter, and you know tele- means \"far away\" from words like telephone, telescope, and television. You can also spot script in teleprompter, and you know script means related to \"write\" or \"text\" from words like describe and subscription. However, one of your classmates argues that teleprompter cannot mean \"a device that sends writing far away\" because the writing stays in the same room as the announcer. Using the lesson's cautions, explain why your classmate is wrong and what teleprompter really means.",
+    "problemText": "Read the two sentences below. In sentence one, the word audible appears. In sentence two, the word audacious appears. Both words start with the letters 'aud.' You also know that aud- means 'hear' in audience, audible, and audio. Should you use that root to figure out the meaning of audacious? Explain your reasoning using the cautions from the lesson.\n\nSentence 1: The siren was so audible that everyone in the building covered their ears.\nSentence 2: It was audacious of the young skater to attempt a triple jump that even professional athletes avoid.",
     "choices": [
-      "The classmate is wrong because tele- always means the same thing in every word, so teleprompter must send information far away.",
-      "The classmate is wrong because the roots tele- and script- are a starting point for meaning, not a finished definition, and the sentence shows that the device displays written text the announcer reads in the studio.",
-      "The classmate is right because tele- requires something to travel far away, and if nothing leaves the room, tele- cannot be part of the word.",
-      "The classmate is confused about which root to use; script- is the only root that matters here because it shows the word is about writing."
+      "Yes, because audacious starts with the exact letters 'aud,' and words that share those letters at the beginning must come from the same root and have related meanings",
+      "Yes, because when two words begin with the same three letters and one is from Latin, the other must be from Latin too, so they share the same root",
+      "No, because the root aud- ('hear') does not make sense in the sentence about the skater, and the lesson warns that matching letters is not proof of a shared root.",
+      "No, because audible is used to describe sound while audacious describes behavior, so they are completely different and words that describe different subjects cannot be related"
     ],
     "answer": "C",
     "hints": [
-      "The lesson warns that roots are starting points and bridges must be built. How do tele- and script- combine to describe something that helps the announcer, even if information does not travel far?",
-      "Think about what 'far away' might mean in this context—it is not about sending the text away, but about allowing the announcer to see something from a certain distance while performing."
+      "The lesson specifically teaches about audacious as an example of a word that looks like it belongs to the aud- family but does not. What caution does the lesson give about matching letters?",
+      "Check the sentence around audacious: does it make sense to say the skater is 'hear-ing' something? What does the sentence actually suggest the word means?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-7.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of the following best describes the difference between denotation and connotation? Denotation is the exact dictionary meaning of a word, while connotation is the feeling or emotion attached to that word. For example, both 'slender' and 'scrawny' can denote thinness, but they carry different feelings.",
+    "problemText": "What is the difference between denotation and connotation? Which one is the dictionary meaning with no feeling attached?",
     "choices": [
-      "Denotation is how a word sounds when spoken aloud, focusing on pronunciation patterns, while connotation is how it is spelled and written on the page, focusing on letter sequences.",
-      "Denotation is a word's opposite meaning found through antonyms, while connotation is its primary true meaning found in standard dictionaries.",
-      "Denotation is the dictionary meaning with no feeling attached, and connotation is the positive, neutral, or negative feeling a word adds on top of that meaning.",
-      "Denotation is the literal object or thing a word refers to in the real world, while connotation is the category or part of speech the word belongs to in grammar."
+      "Denotation and connotation both refer to the exact same concept — the dictionary definition of a word with no additional feelings or shades of meaning attached to it.",
+      "Connotation is the dictionary meaning with no feeling attached; denotation is the positive, neutral, or negative feeling a word carries.",
+      "Denotation is the dictionary meaning with no feeling attached; connotation is the positive, neutral, or negative feeling a word carries on top of that meaning.",
+      "Denotation is how a word sounds when you say it aloud, while connotation is what the word means when it appears in a sentence or text."
     ],
     "answer": "C",
     "hints": [
-      "Think about what you learned: denotation = the exact definition, connotation = the feeling.",
-      "Remember the worked example with 'thrifty' and 'stingy'—they mean the same thing (denotation) but feel different (connotation)."
+      "Remember: denotation is the plain, unjudging fact — the dictionary part.",
+      "Connotation is the feeling layer — the positive, neutral, or negative shade that sits on top of the core meaning."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-7.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Marcus found an old coin in his grandmother's attic. It is worn, dented, and tarnished, but it is still in one piece and was made over a hundred years ago. His grandmother told him the dent came from when a great-uncle dropped it on a factory floor during the coin's first year of use. Marcus decides to keep it instead of spending it.\nMarcus considers the coin to be ____.",
+    "problemText": "Four words can describe the same thing: a small space. Read each word's meaning, then identify which word does NOT share the denotation of the other three: cozy, cramped, confined, spacious.",
     "choices": [
-      "worthless",
-      "broken",
-      "ordinary",
-      "treasured"
+      "Cozy, because it has a positive feeling and a negative feeling at the same time, which makes it different from cramped and confined.",
+      "Cramped, because it is a noun rather than an adjective, so it cannot be used to describe a small space the same way the other three can.",
+      "Confined, because it was first used to describe people in prison, not physical spaces, which means its denotation is different from the others.",
+      "Spacious, because it describes a large space, not a small space — the denotation does not match the other three."
     ],
     "answer": "D",
     "hints": [
-      "All four words could describe an old coin, but which one fits a coin Marcus chooses to keep because it has a personal story?",
-      "Look for the detail that shows Marcus values this coin on purpose—it is not just old, it has meaning to him."
+      "Check the core dictionary meaning of each word first — does it actually name the same thing?",
+      "One of these words points to the opposite size. That is a denotation problem, not a feeling problem."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-7.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "The article describes three different ways the neighborhood garden gets watered. The first method uses a sprinkler that shoots water across the entire plot. The second method involves dripping water slowly through tubes right at the roots of each plant. The third method collects rainwater in barrels and spreads it by hand. The second method is the most ______ way to water because it wastes almost no water.",
+    "problemText": "Marcus has worked at the same job for fifteen years. He knows every task by heart and never has to think before he acts. Which word best fits this sentence: experienced, seasoned, or burnt-out?",
     "choices": [
-      "efficient",
-      "complicated",
-      "expensive",
-      "unpopular"
+      "Seasoned, because Marcus has spent many years doing the same work and the detail shows he still performs well without hesitation.",
+      "Burnt-out, because it specifically means tired and exhausted from long work, which does not match Marcus's ability to work without thinking since he performs the tasks well.",
+      "Experienced, because while it shares the denotation of 'someone who has done something many times,' it does not convey the particular sense of skill and reliability that the passage details about Marcus.",
+      "None of these words fit, because they all require the person to feel tired or unhappy about their job."
     ],
     "answer": "A",
     "hints": [
-      "The sentence tells you the reason: which word means using something well without waste?",
-      "The detail 'wastes almost no water' rules out words about cost or popularity—it points to how well the method works."
+      "All three words share the denotation — someone who has done something many times. But one word describes someone tired and worn down. Does that match Marcus?",
+      "The detail 'never has to think before he acts' shows Marcus is still performing well, not exhausted. Which word is built for that positive shade?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-7.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Chen's parents run a small restaurant where they cook the same recipes that Chen's great-grandmother brought from China seventy years ago. The recipes use only the ingredients their great-grandmother used, and the restaurant's walls are decorated with photographs from that era. When food critics review the restaurant, they praise it for keeping alive a piece of the past.\nThe critics describe the restaurant's approach as ____.",
+    "problemText": "Read the sentence, then explain which word the details force into the blank and why the other words do not fit: The chef spent hours selecting the finest ingredients and arranging each plate so the colors would flow from gold to deep red. Her dishes are ______ creations. The choices are: economical, meticulous, hasty, or negligent.",
     "choices": [
-      "stubborn",
-      "traditional",
-      "ordinary",
-      "behind the times"
+      "Economical, because the passage shows that the chef buys expensive ingredients, and 'economical' denotes using resources in a careful, money-saving way that contradicts the costly selection described.",
+      "Meticulous, because the details about spending hours selecting and arranging show careful, precise work, and 'meticulous' is the only word whose denotation matches 'very careful work done with great attention to detail.'",
+      "Hasty, because 'hasty' denotes work completed in a rush without careful thought, which directly contradicts the passage's description of spending hours on thoughtful selection and deliberate arrangement.",
+      "Negligent, because 'negligent' denotes careless and inattentive work, which directly contradicts the passage's description of thoughtful selection and arrangement."
     ],
     "answer": "B",
     "hints": [
-      "First, rule out any word that does not match the core meaning—something that comes from the past and is kept that way on purpose.",
-      "The critics praise this choice, and the details about the recipes and photographs show respect, not criticism—which shade of meaning fits that positive feeling?"
+      "First, eliminate any word whose denotation does not match. Which words actually describe 'very careful, precise work' instead of something else?",
+      "The details 'spent hours' and 'arranging each plate so the colors would flow' point to work done with extreme attention. Which word is built for that kind of care?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-7.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Yuki entered a drawing contest and submitted a picture of a sunset over the ocean. When the judges announced the winners, Yuki's drawing was not chosen, and she overheard one judge say, 'We saw so many sunsets over oceans—it is hard to make that theme feel fresh.' Yuki felt disappointed, but she understood the feedback.\nThe judges rejected Yuki's drawing because the theme felt ____.",
+    "problemText": "The city announced that it was closing the neighborhood library to save money. Hundreds of people signed a petition to keep it open, and the local news ran three stories about the decision. Which sentence best shows why the library was NOT simply a 'building' but a 'landmark'? Which word choice — building or landmark — lets you know the community saw it as important?",
     "choices": [
-      "poorly drawn",
-      "overused",
-      "inappropriate",
-      "too colorful"
+      "Building, because it denotes any structure with walls and a roof, which is the literal and technical definition of what a library's physical form must be.",
+      "Building, because the city could only announce a closure if the library was officially registered as a building rather than as a landmark.",
+      "Landmark, because both words denote a location on a map, but 'landmark' carries the connotation that the place holds special meaning and significance to a community.",
+      "Landmark, because it is a longer word and therefore sounds more official and important than the simpler word building."
     ],
     "answer": "C",
     "hints": [
-      "The judge's comment tells you the reason—look at the exact words: 'We saw so many sunsets over oceans.'",
-      "The problem is not how well Yuki drew it or what it looks like—it is that this particular subject appears in many entries."
+      "Both words denote a physical location, so denotation will not pick between them. What detail in the passage shows the community cared about this place beyond just its structure?",
+      "The petition and news stories show people valued this library as more than just a building. Which word carries the connotation of 'a place that holds special meaning'?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-7.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "The local news reported that a city official took money from a community fund meant to fix the playground, and used it to build a new office building instead. The official was not yet proven guilty in court, but the community was so angry that people demanded his removal. The news headlines used the word 'embezzled' instead of 'redirected' to describe what the official did.\nWhich statement best explains why the news writer chose 'embezzled' over 'redirected'?",
+    "problemText": "A student must fill two blanks in a paragraph about a museum exhibit of ancient tools. Blank 1: 'The museum ______ a collection of stone hand-axes that date back five thousand years.' Blank 2: 'Visitors were amazed by the ______ collection, which showed how early humans adapted to their environment.' For Blank 1, the choices are: hoards, displays, or stockpiles. For Blank 2, the choices are: meager, remarkable, or rare. Explain which word pair is correct and why the other pairs do not work as well.",
     "choices": [
-      "'Redirected' is the correct term used by the law courts, so newspapers must use that word to be accurate.",
-      "'Embezzled' shares the same core meaning—taking money illegally—but its negative shade matches both the people's anger and the seriousness of what the official did.",
-      "'Embezzled' is a longer word, so it makes the headline seem more important than 'redirected' would.",
-      "'Redirected' is a neutral word that sounds too nice for any situation, no matter what the context is."
+      "Hoards and meager, because 'hoards' denotes the act of gathering objects for safekeeping, and 'meager' means small in quantity, which would fit with a museum protecting valuable ancient artifacts.",
+      "Hoards and rare, because 'hoards' means to keep things in secret, which is what museums do to protect valuable objects, and 'rare' describes things that are hard to find in the world.",
+      "Stockpiles and rare, because 'stockpiles' means to accumulate large quantities of objects, which museums must do to fill exhibits, and 'rare' is a formal scholarly word that fits museum descriptions.",
+      "Displays and remarkable, because 'displays' denotes what a museum does with objects (shows them to the public), and 'remarkable' matches the detail that visitors were 'amazed,' which shows a positive reaction to something worthy of notice."
     ],
     "answer": "D",
     "hints": [
-      "Remember: the method requires checking denotation first, then letting the context pick the shade—not just choosing whichever word sounds worse.",
-      "Think about what the details tell you: the official took money illegally, the community is angry, and the act was wrong. Which word's shade (not just its definition) fits that context?"
+      "Check denotation first for Blank 1: which word actually names what a museum does with objects? Then check Blank 2: the detail 'visitors were amazed' points to a word with what kind of connotation?",
+      "The word in Blank 1 must fit the verb pattern — a museum _____ a collection. Which word denotes the act of showing objects to the public? The word in Blank 2 must match the positive feeling in 'amazed.'"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-7.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of the following is the best definition of a word relationship? Choose the statement that matches what you learned in the lesson.",
+    "problemText": "Which of the following best describes what a cause/effect relationship is? Choose the definition that matches what you learned.",
     "choices": [
-      "A connection between two words based on how they sound or the rhyming pattern they create when spoken aloud together.",
-      "Two words that share the same position in a sentence structure or appear side by side in written text most of the time.",
-      "A connection between two words that have the same grammatical role, meaning they belong to the same part of speech category.",
-      "A connection between two words that can be named and proven, such as one word causing the other or one being part of the other."
+      "Both words name the same kind of thing at different strengths on one scale.",
+      "One word names a piece of the other, never a separate whole version of it.",
+      "One word names a group, and the other names one full member of that group.",
+      "One word makes the other happen, and the connection only runs one direction."
     ],
     "answer": "D",
     "hints": [
-      "A word relationship is not just about how words sound or what part of speech they are.",
-      "Think about what makes a relationship something you can name and test, not just guess."
+      "Think about the word 'direction' — does the connection work both ways?",
+      "Remember the example: a drought causes a plant to wilt, but wilt doesn't cause drought."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-7.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'The heavy snowstorm knocked down the old oak tree in our yard, and now we have to hire someone to remove it.' What relationship connects snowstorm and knocked down the tree? Use what you know about how one word makes the other happen to answer.",
+    "problemText": "Read this sentence: 'The cold snap froze the lake's surface so hard that ice skaters could finally use it for their winter sport.' Which pair of words from the sentence shows a cause/effect relationship, and which word is the cause?",
     "choices": [
-      "Cause/effect — the snowstorm is the cause, and the tree being knocked down is the effect that resulted from it.",
-      "Part/whole — the snowstorm is a part of the tree-removal process.",
-      "Item/category — the tree is one kind of snowstorm.",
-      "Degree — a snowstorm is a stronger version of a fallen tree."
+      "Cold snap and froze; cold snap is the cause.",
+      "Cold snap and lake; lake is the cause.",
+      "Ice skaters and winter sport; ice skaters is the cause.",
+      "Froze and surface; surface is the cause."
     ],
     "answer": "A",
     "hints": [
-      "Ask yourself: did the snowstorm happen first and then cause something else to happen?",
-      "Test whether the connection runs only one direction — can a knocked-down tree cause a snowstorm?"
+      "Ask which event had to happen first in order for the other to happen.",
+      "The cause makes something happen; what made the freezing occur?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-7.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'The astronaut checked the oxygen tank before putting on the space suit, making sure the tank was full and secure.' Which relationship connects oxygen tank and space suit? Think about whether one word names a piece of the other or one word names a whole group.",
+    "problemText": "A student is asked to name the relationship between wheel and bicycle. The student says, 'Wheel and bicycle are a part/whole pair because a wheel is one piece of a bicycle.' Is the student correct? Why or why not?",
     "choices": [
-      "Item/category — a space suit is one kind of oxygen tank.",
-      "Part/whole — an oxygen tank is one part that the space suit needs in order to work.",
-      "Cause/effect — the oxygen tank causes someone to wear a space suit.",
-      "Degree — an oxygen tank is a stronger version of a space suit."
+      "No. A wheel is a separate kind of bicycle, like a road bike or a mountain bike, so they are an item/category pair instead.",
+      "Yes. A wheel cannot stand alone as a complete, whole bicycle by itself, which makes it a part of the bicycle.",
+      "No. A bicycle is just a bigger version of a wheel, so they are a degree pair, not a part/whole pair.",
+      "Yes. A wheel is one physical piece that belongs inside the bicycle, and the bicycle needs at least two wheels to work properly."
     ],
     "answer": "B",
     "hints": [
-      "Ask: Is the oxygen tank a piece or component of the space suit, or is it a whole item by itself?",
-      "A space suit by itself is complete, but it needs the oxygen tank to function — what does that tell you?"
+      "Test the core part/whole rule: can the smaller word ever stand alone as a complete example of the bigger word?",
+      "A bicycle has wheels, but a wheel is never a bicycle — not even a whole one sitting by itself."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-7.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student read this sentence: 'The violinist's bow was damaged during shipping, so she ordered a replacement immediately because the bow is essential to playing the violin.' The student said that bow and violin are an item/category pair. Is the student correct? Explain why or why not, and name the actual relationship.",
+    "problemText": "Read this passage: 'The gardener planted sunflowers in the back corner, and their tall stems and bright yellow petals made the whole patch glow. By midsummer, each sunflower's petals had wilted slightly, but the plant was not suffering — instead, those aging petals were simply making room for seeds to grow inside.' Use what you know about part/whole and degree relationships to explain what the passage tells you about the word petals. Which statement best captures this?",
     "choices": [
-      "Yes, the student is correct because both the bow and the violin are instruments that produce musical notes and are made from similar natural materials.",
-      "No, the student is wrong. Bow and violin are a degree pair because a bow is a lighter or smaller version of a violin in terms of size and weight.",
-      "No, the student is wrong. Bow and violin are a part/whole pair because a bow is a piece that the violin needs, not a separate, whole kind of violin.",
-      "Yes, the student is correct because a violin is a category and a bow is one complete kind of violin that can stand alone."
+      "Petals are a separate kind of sunflower, and the passage shows they turn from bright yellow to wilted as the plant ages over time, which represents a degree relationship because brightness changes.",
+      "Petals and seeds are opposite things on a growth scale, which makes them a degree pair because they describe different stages of how a sunflower develops its reproductive parts.",
+      "Petals are a physical part of the sunflower plant, and the passage shows that a sunflower's aging involves changes to its petals while the plant itself keeps living.",
+      "Petals are part of a category of yellow things, and the passage proves this by describing them as bright yellow at first and wilted later, showing they belong in the color category."
     ],
     "answer": "C",
     "hints": [
-      "Test whether a bow by itself is a complete violin or just one piece of what makes a violin work.",
-      "Remember: an item in a category is a whole thing that can stand alone; a part cannot stand alone as the whole thing."
+      "The passage describes petals wilting while the plant stays alive — are petals a separate thing, or part of the bigger whole?",
+      "Part/whole means one is a piece of the other; use this to sharpen what petals are inside the sunflower."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-7.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'The coach gave a stern warning to the team, but when the player ignored it and made the same mistake again, the coach was absolutely furious.' What relationship connects stern and furious, and what does naming that relationship tell you about the word furious?",
+    "problemText": "A student reads: 'The library's children's section contains board books for toddlers, picture books for early readers, and chapter books for older kids.' The student claims that board book and picture book are an item/category pair because both types are books you can find in the children's section. Is the student's reasoning correct? Explain why or why not, using what you know about item/category relationships.",
     "choices": [
-      "They are part/whole pairs because stern is a piece of how the coach feels.",
-      "They are item/category pairs because stern and furious are both kinds of warnings.",
-      "They are cause/effect pairs because the stern warning caused the coach to become furious.",
-      "They are degree pairs because both describe anger, but furious names a much stronger amount of it than stern does."
+      "Yes, the student is correct because board books and picture books both belong to the same section of the library, which makes them categories that share a common location and purpose.",
+      "No. The passage proves they are a part/whole pair because picture books contain pictures as their primary feature, and board books contain sturdy board pages as their defining material.",
+      "No. Board book and picture book are a degree pair because they both describe types of books arranged on a scale from youngest readers to oldest readers based on reading difficulty level.",
+      "No. Board book and picture book are both items that belong to the category 'books in the children's section,' not categories themselves. Category names the whole group; item/category names one complete member."
     ],
     "answer": "D",
     "hints": [
-      "Do both words describe the same kind of feeling, just at different strengths on a scale?",
-      "The sentence shows the coach's anger growing stronger — which word captures that bigger, more intense anger?"
+      "In an item/category pair, which word names the group, and which names one complete member of it?",
+      "A board book is one specific, whole kind of book you could point to. Does that make it a category or an item?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-7.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'The chef removed the cinnamon from the shelf and unscrewed the lid, then sneezed as the powder scattered into the air.' A student claims that cinnamon and powder are a part/whole pair. Use what you know about part/whole relationships to decide whether the student is correct. If not, name the actual relationship and explain why the student's answer was a mistake.",
+    "problemText": "Read this scenario: 'After the accident, the driver felt concerned about the damaged car, but her children, who might have been hurt, left her absolutely terrified. When the police officer said everyone was safe, the driver felt relieved, though still slightly worried about the insurance claim.' Name all the word relationships you can find in this passage (cause/effect, part/whole, item/category, or degree), explain each one, and use at least two of those relationships to sharpen what the passage tells you about the driver's emotional state.",
     "choices": [
-      "No, the student is wrong. Cinnamon and powder are an item/category pair because cinnamon is one specific member of the larger group of powders, while powder is the whole category. The student confused part/whole with item/category by not asking whether cinnamon could be a complete, standalone thing in its category.",
-      "Yes, the student is correct because the lid is a part of the jar, so the cinnamon must be a part too.",
-      "No, the student is wrong. Cinnamon and powder are a degree pair because both describe how fine something is.",
-      "Yes, the student is correct because the cinnamon is kept inside the jar, which makes it a part of the container."
+      "Accident and terrified show cause/effect (accident caused terror); concerned and terrified show degree (both are emotions, at different strengths); this sharpens the driver's state by showing that fear of danger to her children was far stronger than worry about the car.",
+      "Accident and concerned show part/whole because the accident is part of what made her concerned; terrified and relieved show item/category because they are both feelings; this sharpens the driver by showing she felt many different emotions at once.",
+      "Concerned and terrified show cause/effect because feeling concerned caused her to feel terrified; damaged car and insurance claim show degree because both relate to money; this sharpens the driver by showing that financial worry matters more to her than her children's safety.",
+      "Police officer and safe show item/category because the officer is one type of safe person; relieved and worried show part/whole because relief is part of worry; this sharpens the driver by showing that she only believed the officer partly."
     ],
     "answer": "A",
     "hints": [
-      "Ask yourself: Is a whole jar of cinnamon a complete, standalone thing in the world? Could it exist by itself? Or is it missing something essential to be a whole?",
-      "Part/whole asks whether the smaller word is a piece of a bigger structure; item/category asks whether the smaller word is one complete member of a larger group."
+      "Look for two emotions described at different strengths, and one event that created a strong reaction — which relationship type fits each?",
+      "Use the degree relationship to compare concerned and terrified: both name feelings, but which one describes a much stronger amount of fear? What does this tell you about what mattered most to the driver?"
     ]
   }
 ]

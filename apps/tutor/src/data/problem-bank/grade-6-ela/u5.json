@@ -5,17 +5,17 @@
     "cedCode": "M6ELA-5.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which pronoun is in the subject case? Read the sentence: 'She and Malik carried the heavy box to the car.' Which pronoun does the action, making it the subject?",
+    "problemText": "Which pronoun is in subject case? Think about the pronoun that does the action in a sentence.",
     "choices": [
-      "her",
-      "me",
+      "them",
+      "his",
       "she",
-      "them"
+      "me"
     ],
     "answer": "C",
     "hints": [
-      "Subject case pronouns do the verb—they perform the action.",
-      "Look at the list of subject case pronouns taught: I, we, he, she, they, who."
+      "Subject case pronouns do the verb.",
+      "Look for the pronoun that matches 'I, we, he, she, they, who.'"
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6ELA-5.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'Coach gave the medals to the winners and ___.' Which pronoun should fill the blank, and why? Try the drop test by covering 'the winners and' to hear what sounds right.",
+    "problemText": "Read the sentence: 'The coach gave the trophy to Marcus and ___.' Which pronoun belongs in the blank? Use the preposition rule to help you decide.",
     "choices": [
       "I",
-      "we",
-      "us",
-      "them"
+      "mine",
+      "my",
+      "me"
     ],
     "answer": "D",
     "hints": [
-      "Cover 'the winners and' with your thumb and read: 'Coach gave the medals to ___.'",
-      "Remember: object case always follows a preposition, and 'to' is a preposition."
+      "What preposition comes right before the blank?",
+      "Object case always follows a preposition."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6ELA-5.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two friends are arguing about a sentence. One says, 'The teacher split the supplies between Maria and me.' The other says it should be 'between Maria and I.' Who is correct, and which rule proves it?",
+    "problemText": "Which sentence uses the possessive pronoun correctly? Remember the rule about apostrophes in possessive pronouns.",
     "choices": [
-      "The first friend is correct because object case always follows the preposition 'between.'",
-      "The second friend is correct because 'and I' sounds more polite.",
-      "The first friend is correct because 'I' is always used in pairs.",
-      "The second friend is correct because 'between' is a special preposition that takes subject case."
+      "That skateboard is theirs, and this one is mine.",
+      "The pencil case is her's, not his.",
+      "The backpack is their's because it has their initials.",
+      "We found the dog but not it's collar."
     ],
     "answer": "A",
     "hints": [
-      "Apply the preposition rule: what comes right after between?",
-      "The rule says nothing about politeness—the job the pronoun does decides its case."
+      "Possessive pronouns never take an apostrophe.",
+      "Check each choice for an apostrophe on a possessive pronoun like theirs, hers, or its."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6ELA-5.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence with two blanks: 'Tyler and ___ plan to meet ___ at the park after school.' The first blank needs a subject pronoun, and the second blank follows a preposition. Which pair of pronouns fills both blanks correctly?",
+    "problemText": "Read the sentence: 'Between you and ___, I think we should help them set up the chairs.' Use the drop test to find the right pronoun. First identify the preposition, then test the pronoun alone in the sentence to see what works.",
     "choices": [
-      "me, I",
-      "I, me",
-      "I, I",
-      "me, me"
+      "I",
+      "me",
+      "my",
+      "myself"
     ],
     "answer": "B",
     "hints": [
-      "Use the drop test on each blank separately—the same pair does two different jobs here.",
-      "For the second blank, identify the preposition 'at' and remember the rule about what comes after prepositions."
+      "Drop 'you and' and read just 'Between ___.' What sounds right?",
+      "Remember that object case always comes after a preposition."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6ELA-5.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student wrote: 'Dev and I thanked the coach, and she gave Dev and I a certificate.' This sentence has an error. Identify which blank needs a different pronoun and fix it. What rule solves this problem?",
+    "problemText": "Two blanks need pronouns: 'Lexi and ___ finished the project, and the teacher praised Lexi and ___ for it.' The same pair 'Lexi and ___' needs different pronouns in each blank because the jobs are different. What are the two correct pronouns?",
     "choices": [
-      "The second blank should be 'me' because pronouns in pairs always need the drop test.",
-      "The second blank should be 'me' because it receives the action of the verb 'gave,' making it an object.",
-      "The first blank should be 'me' because 'I' is always paired with 'and.'",
-      "Both blanks should stay as 'I' because politeness requires subject case in formal sentences."
+      "I, I",
+      "me, me",
+      "I, me",
+      "me, I"
     ],
     "answer": "C",
     "hints": [
-      "Cover 'Dev and' in the second blank and ask what is being given: 'she gave ___ a certificate.'",
-      "Objects receive the action—they do not do it."
+      "Use the drop test on each blank separately. First blank: '___ finished the project.' Second blank: 'the teacher praised ___.'",
+      "In the first blank, the pronoun does the verb finished. In the second blank, the pronoun receives the action of praised."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6ELA-5.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student's journal entry contains three pronoun errors to find: '(1) Its important that Kai and me finish the project on time. (2) Between you and I, I think theirs is better than ours. (3) He and him worked together.' Which error is caused by breaking the apostrophe rule for possessive pronouns?",
+    "problemText": "Read these three sentences from a text message exchange: (1) 'At the game, Aisha sat with Marcus and ___.' (2) 'Our team played against theirs, and ___ won by three points.' (3) 'The other team's goalie was better than ___.' Identify which blank needs object case, which needs subject case, and which needs possessive case. What are the three correct pronouns in order?",
     "choices": [
-      "Error 1, because 'Its' should be 'It's' to show the journal belongs to the student.",
-      "Error 2, because 'theirs' should be 'their's' when showing ownership.",
-      "Error 1, because 'Its' is a possessive pronoun and should not have an apostrophe—it should be 'It's' here, but only because 'It is important,' not because of ownership.",
-      "Error 3, because 'him' cannot be used with 'He' in a compound subject."
+      "me, they, ours",
+      "me, they, me",
+      "I, them, their",
+      "me, they, him"
     ],
     "answer": "D",
     "hints": [
-      "The apostrophe rule applies to possessive pronouns: its, hers, ours, yours, theirs, whose—none take an apostrophe.",
-      "Read error 1 aloud: 'It is important that...' Does the sentence need possession or a contraction of 'it is'?"
+      "For blank 1, find the preposition. For blank 2, ask who is doing the verb won. For blank 3, use comparison with the goalie noun to decide if ownership or object case fits.",
+      "Blank 1 comes after the preposition 'with,' so it must be object case. Blank 2 does the verb won, so it must be subject case. Blank 3 comes after 'than' (a preposition), so it must be object case, and the pronoun refers to the goalie as a person."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6ELA-5.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "An intensive pronoun is used to add emphasis to a subject or object that is already named in the same sentence. Which sentence uses an intensive pronoun correctly?",
+    "problemText": "Which sentence uses an intensive pronoun correctly? Remember: an intensive pronoun adds emphasis to a subject or object that is already named in the same sentence.",
     "choices": [
-      "The coach told myself to run faster.",
-      "Herself explained the rules to the team.",
-      "We gave the award to ourselves instead of voting.",
-      "Maya finished the project herself, without any help."
+      "Myself and my sister baked cookies together.",
+      "Myself baked the cookies.",
+      "The cookies and myself were delicious.",
+      "I baked the cookies myself."
     ],
     "answer": "D",
     "hints": [
-      "Remember: an intensive pronoun can be deleted, and the sentence will still be complete with the same subject or object.",
-      "Look for a sentence where the -self word emphasizes a subject or object that is already there, not standing in by itself."
+      "Look for a sentence where the -self word is emphasizing a subject or object that is already there, not filling a slot on its own.",
+      "Try the deletion test: remove the -self word and see if the sentence still makes complete sense with the same subject."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6ELA-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'The lifeguard himself spotted the swimmer in trouble.' Use the deletion test to determine whether 'himself' is correct in this sentence. What would the sentence say if you removed 'himself'?",
+    "problemText": "Read this sentence: 'The coach himself gave us feedback on our performance.' Use the deletion test to determine whether 'himself' is used correctly. What happens when you remove it?",
     "choices": [
-      "The lifeguard spotted the swimmer in trouble.",
-      "The lifeguard himself spotted in trouble.",
-      "Spotted the swimmer in trouble.",
-      "The swimmer in trouble was spotted by himself."
+      "The sentence still reads 'The coach gave us feedback on our performance' with the same meaning, so 'himself' is correctly emphasizing the subject.",
+      "The sentence remains complete and makes sense without it, proving 'himself' is not needed to fill a grammatical role and is therefore serving as a reflexive pronoun incorrectly.",
+      "The sentence loses all its meaning and cannot function without 'himself' because 'himself' is the only subject performing the action of giving feedback.",
+      "The sentence becomes ungrammatical without 'himself' because it is being used as a reflexive pronoun to show that the coach gave feedback to himself rather than to someone else."
     ],
     "answer": "A",
     "hints": [
-      "When you delete an intensive pronoun, the remaining sentence should still be complete and say the same thing.",
-      "What subject is 'himself' emphasizing? What does the sentence say without the -self word?"
+      "An intensive pronoun passes the deletion test—the sentence remains complete and means the same thing without it.",
+      "Ask yourself: after you delete the word, is 'the coach' still clearly the subject doing the action?"
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6ELA-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Which sentence uses 'ourselves' correctly as an intensive pronoun? Remember that an intensive pronoun must have a subject or object already present in the sentence to emphasize.",
+    "problemText": "Which sentence contains an error in the use of a -self word? Read each one carefully and ask whether the -self word is emphasizing a subject or object that is already there, or whether it is filling a slot on its own.",
     "choices": [
-      "My sister gave the money to ourselves for the trip.",
-      "We baked the entire cake ourselves without using a mix.",
-      "Ourselves made a terrible mistake that day.",
-      "The team told ourselves to practice harder every day."
+      "Maya solved the math problem herself without using a calculator.",
+      "My brother and myself went to the store after school.",
+      "The two of us ourselves completed the entire project by Friday.",
+      "The principal herself cut the ribbon at the grand opening of the new wing."
     ],
     "answer": "B",
     "hints": [
-      "Try the deletion test: remove the -self word and check if the sentence still makes sense with the same subject or object.",
-      "The intensive pronoun should emphasize a subject or object that is already doing its job somewhere else in the sentence."
+      "In a compound subject or object, look to see if a plain pronoun like 'I' or 'me' is also present in that pair.",
+      "Try covering up the other name in the pair and reading the -self word alone—does it need to fill the slot by itself?"
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6ELA-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two sentences are written below. Sentence 1: 'My best friend and myself went to the movie together.' Sentence 2: 'I wrote the entire essay myself without copying anything.' Which sentence has an error, and what is the correct repair?",
+    "problemText": "Read the sentence: 'The coach and myself watched the game from the sidelines.' This sentence has an error. Use what you learned about the drop test and the deletion test to identify the problem and state the correction.",
     "choices": [
-      "Sentence 1 is correct; Sentence 2 needs to change 'myself' to 'me.'",
-      "Sentence 2 is correct; Sentence 1 needs to change 'myself' to 'I.'",
-      "Sentence 1 is correct; Sentence 2 needs to change 'myself' to 'I myself.'",
-      "Both sentences are correct as written."
+      "The error is that 'myself' needs another -self word to pair with it; the sentence should be 'The coach and himself watched the game from the sidelines.'",
+      "The error is that 'myself' is being used as a reflexive pronoun instead of an intensive pronoun; the sentence should be 'The coach watched myself from the sidelines.'",
+      "The error is that 'myself' is filling the subject slot on its own with no other 'I' present to be emphasized, so the correct subject pronoun is 'I': 'The coach and I watched the game from the sidelines.'",
+      "The error is that 'myself' makes the sentence too informal; use 'me' instead: 'The coach and me watched the game from the sidelines.'"
     ],
     "answer": "C",
     "hints": [
-      "Use the deletion test on both sentences. Which one falls apart when you remove the -self word?",
-      "When a -self word is standing in a slot by itself, use the drop test: cover the other name and ask what pronoun that slot needs."
+      "Run the deletion test: what happens if you remove 'myself'? Does the sentence fall apart, or does it stay complete?",
+      "Use the drop test: cover 'the coach and' and read the pronoun alone—does it work as a subject by itself, and if not, what subject pronoun does belong there?"
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6ELA-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read: 'The principal gave the award to the coach and myself at the assembly.' Explain why 'myself' is incorrect in this sentence and write the correct pronoun to use instead. Your answer should identify what job the pronoun needs to do.",
+    "problemText": "A student wrote: 'The teacher gave the assignment to my friend and myself.' Identify the error and explain why it is wrong using one of the two tests from the lesson.",
     "choices": [
-      "It is incorrect because 'myself' can never appear after a preposition; use 'I' instead.",
-      "It is incorrect because the word needs to be plural; use 'ourselves' instead.",
-      "It is incorrect because 'myself' is standing in the object slot by itself with no other 'me' in the sentence to emphasize; use 'me' instead.",
-      "It is incorrect because 'myself' is not as formal as needed; use 'myself alone' instead."
+      "The error is that 'myself' is too formal; the sentence should use 'me' but only when standing alone, not in a compound.",
+      "The error is that 'myself' is correctly used because it emphasizes the object; the sentence should stay exactly as written.",
+      "The error is that 'myself' cannot follow a preposition; the sentence should use 'I' instead: 'gave the assignment to my friend and I.'",
+      "The error is that 'myself' is filling the object slot after the preposition 'to' on its own, with no other 'me' in the sentence for it to emphasize; when you remove 'myself' and read 'gave the assignment to,' the sentence is incomplete because an object pronoun is needed."
     ],
     "answer": "D",
     "hints": [
-      "Remember: an intensive pronoun can only emphasize a subject or object that is already present elsewhere in the sentence.",
-      "Cover 'the coach and' and read the pronoun alone. What job does that slot need? Is there another 'me' somewhere else for the -self word to point back to?"
+      "An intensive pronoun repeats a subject or object that is already in the sentence; look for another 'I' or 'me' somewhere else for 'myself' to be emphasizing.",
+      "The deletion test shows that the sentence breaks without the -self word, which proves it was never adding emphasis—it was standing in the slot by itself."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6ELA-5.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Three sentences are listed below. Sentence A: 'The twins decorated the gym themselves, so the decorations looked amazing.' Sentence B: 'Our neighbors told my sister and myself about the surprise party.' Sentence C: 'The winner hugged her parents themselves to thank them.' For each sentence, identify whether the -self word is correct or incorrect. Explain your reasoning using the deletion test or the presence of a subject or object to emphasize.",
+    "problemText": "A classmate wrote two sentences in a story: 'Sarah and myself went to the beach. We built a sandcastle, and I decorated it myself.' Which sentence has an error, which is correct, and what is the one key difference that makes one right and one wrong?",
     "choices": [
-      "Sentence A is correct (deletion test passes); Sentence B is incorrect (no other 'me' to emphasize); Sentence C is incorrect (no other subject for 'themselves' to emphasize).",
-      "Sentence A is incorrect (no other subject for 'themselves' to emphasize); Sentence B is correct (deletion test passes); Sentence C is correct (deletion test passes).",
-      "All three sentences are correct because each contains a reflexive pronoun that refers back to a noun in the sentence.",
-      "Sentence A is correct (deletion test passes); Sentences B and C are both incorrect because each uses a -self word in a slot where no other pronoun of the same person is present to be emphasized."
+      "The first sentence is wrong because 'myself' is filling the subject slot in the compound with no other 'I' present, but the second sentence is correct because 'myself' emphasizes 'I,' which is already named as the subject earlier in the sentence.",
+      "The first sentence is correct because 'myself' adds emphasis to the entire compound subject 'Sarah and myself,' but the second sentence is wrong because using -self words in the middle of a sentence makes writing unclear and confusing.",
+      "Both sentences are wrong because -self words should never appear in stories or narrative writing, and they only belong in formal academic papers and business documents.",
+      "Both sentences are correct because 'myself' is an acceptable pronoun choice in both compound subjects and object positions when writers want to add emphasis and formality."
     ],
     "answer": "A",
     "hints": [
-      "For each sentence, ask: Is there another copy of the subject or object somewhere else in the sentence? Could you delete the -self word and still have a complete sentence?",
-      "Remember that the trap is when a -self word stands in a slot by itself, with no other pronoun doing that job elsewhere in the sentence to point back to."
+      "In the second sentence, ask yourself: is there another 'I' named somewhere else in that sentence that 'myself' could be emphasizing?",
+      "For the first sentence, run the deletion test mentally: if you removed 'myself' from 'Sarah and __ went to the beach,' what subject pronoun would you need to fill that blank?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-5.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A writer opens a passage with 'I spent the whole day at the beach with my friends.' Later in the same paragraph, the writer says 'You build sandcastles for hours.' What is the mistake in the second sentence?",
+    "problemText": "What does it mean for pronouns to be consistent in a piece of writing? Explain using the two parts that have to match throughout.",
     "choices": [
-      "The pronoun 'you' shifts to second person, but the passage is written in first person, so it should be 'I' to stay consistent.",
-      "The pronoun 'you' incorrectly addresses the reader directly when the passage should maintain focus on the writer's experience using the first person throughout.",
-      "The verb 'build' should be changed to 'built' to match the past tense established by 'spent' in the opening sentence.",
-      "The pronoun 'you' does not clearly refer to the friends mentioned in the first sentence, making the sentence confusing to the reader."
+      "The pronoun's person and number must stay the same from the beginning of the piece to the end, unless the writing gives a real reason for them to change.",
+      "The pronouns must be spelled correctly and refer back to the same person each time they are used, with no switches between singular and plural forms allowed.",
+      "A pronoun is consistent when it stays in the same grammatical tense as the verb it describes and does not shift between past and present action.",
+      "Pronouns are consistent if the piece maintains one voice throughout, meaning all pronouns must follow the rules of formal writing by avoiding contractions and informal speech patterns."
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches that the most common shift swaps person, not number.",
-      "Look at who is telling the story in the first sentence, then check if that person stays the same in the second sentence."
+      "Think about the two vocabulary words from the lesson: person and number. Both of these have to stay steady.",
+      "The lesson said 'EVERY PIECE OF WRITING SETS A PERSON AND A NUMBER FOR ITS STORY, AND BOTH HAVE TO HOLD FOR THE WHOLE PIECE.' What has to hold steady?"
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage: 'My best friend and I joined the soccer team together. We practiced every Tuesday after school. I scored a goal in the game on Friday.' Which sentence contains a pronoun shift, and what should it be changed to?",
+    "problemText": "Read this passage: 'I made a smoothie for breakfast this morning. You blend the frozen berries with yogurt until it is thick and creamy. Then I added a handful of granola on top.' Which sentence contains the pronoun that does not match the rest of the passage, and what should it be changed to?",
     "choices": [
-      "The first sentence uses 'My best friend and I,' which should be 'We' to match the rest of the passage.",
-      "The second sentence uses 'We,' but since only the writer scored the goal, it should be 'I' to match the third sentence.",
-      "The third sentence uses 'I,' but since the friend is still part of the team, it should be 'we' to stay consistent.",
-      "There is no pronoun shift in this passage because all three sentences describe the same event."
+      "The second sentence should change 'You' to 'we' because the passage talks about making something together.",
+      "The second sentence should change 'You' to 'I' because the passage is about only one person making a smoothie.",
+      "The third sentence should change 'I' to 'you' because the passage is giving instructions to the reader.",
+      "The first sentence should change 'I' to 'you' because breakfast is something everyone eats."
     ],
     "answer": "B",
     "hints": [
-      "Check which pronouns refer to the same person or group across the whole passage, not just one sentence.",
-      "The passage opens with 'My best friend and I,' which is plural. Ask whether a real reason is given for why only one person scored the goal."
+      "Hold the pronoun from the first sentence in your mind. Is it first person or second person? Now check the second sentence. Does it match?",
+      "The passage opens with 'I' and nobody new is introduced. The passage is not speaking to a reader. So what pronoun should the second sentence use?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wrote: 'I organized my rock collection on Saturday morning. Every rock was sorted by color and size. We placed each one in a labeled drawer.' Is there a pronoun shift? If so, what is the problem?",
+    "problemText": "A student wrote: 'My best friend and I entered the talent show together. We practiced our dance routine for three weeks straight. I added special lighting effects that made the stage glow during our performance.' Is there a pronoun shift in this passage? Why or why not?",
     "choices": [
-      "Yes. 'We' is second person, and the passage is written in first person, so it should be 'I'.",
-      "Yes. 'We' is plural, but no second person has been introduced to the reader, so it should be 'I'.",
-      "No. The passage correctly shifts from 'I' to 'we' because the student and the rocks are both part of the collection.",
-      "No. All the pronouns match because 'we' refers to the student and the collection working together."
+      "Yes, there is a shift from plural to singular, which is always wrong in a piece of writing.",
+      "Yes, there is a shift. The passage should say 'we added special lighting effects' because the same people did everything together.",
+      "No, there is no shift. The passage opens with 'I' and 'my friend' together (we), and 'I' later marks a solo task the passage explains.",
+      "No, because all three sentences use the same pronouns and nothing changes."
     ],
     "answer": "C",
     "hints": [
-      "Ask yourself: did the passage introduce another person who joined the student to place rocks in drawers?",
-      "A number shift happens when 'I' and 'we' get mixed up with no real reason in the story."
+      "The lesson said a shift is only a mistake if the writing did NOT give a real reason for the pronoun to change. Did this passage explain why one person was doing something alone?",
+      "Look for what changed in the story, not just what changed in the pronouns. Did the task change? Did the group get smaller?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage: 'My cousin and I built a treehouse all summer long. We nailed boards to the oak tree and added a rope ladder. I cut the wood for the railing while my cousin held it steady. We finished just before school started in September.' How many pronouns shift, and which one sentence contains the pronoun that does not match what the passage already set?",
+    "problemText": "Read this passage: 'My brother and I painted the fence in the backyard on Saturday. We mixed the paint and poured it into the roller tray. I painted the left side while my brother painted the right side. By the end of the day, we high-fived because it was finished.' The passage uses both 'I' and 'we.' Explain whether this is a pronoun shift that needs fixing, and tell what rule from the lesson you used to decide.",
     "choices": [
-      "Two pronouns shift: 'I' in the third sentence and 'we' in the fourth sentence both break the pattern.",
-      "One pronoun shifts: the 'I' in the third sentence shifts to singular when the passage opens with 'we,' but this is allowed because a real reason is given.",
-      "No pronouns shift because the passage correctly shows the two builders working together and then one person doing a solo task.",
-      "One pronoun shifts: the 'we' in the fourth sentence shifts back to plural after the passage showed only one person railing."
+      "This is a shift that needs fixing because the passage switches between 'I' and 'we' too many times, violating the lesson's rule that you must pick one pronoun at the start and never change it under any circumstance.",
+      "This is a shift that needs fixing because a piece of writing should never switch between 'I' and 'we' no matter what happens in the story or how the tasks are divided.",
+      "This is a shift that needs fixing because the passage should stay in 'I' the whole time since one person is the main narrator telling the story.",
+      "This is not a shift that needs fixing because the passage explains real reasons for the pronouns to change. The 'I' marks one person's solo task (painting one side), and 'we' returns when both were working together again (high-fiving about the finished job)."
     ],
     "answer": "D",
     "hints": [
-      "First, hold the opening pronoun in mind: the passage opens with 'My cousin and I,' which is first person plural.",
-      "Check each later pronoun against that opening. The third sentence gives a real reason to shift—one person does one task while the other does another. But does the fourth sentence have a reason to shift back?"
+      "The lesson said: 'NOT EVERY CHANGE IS A MISTAKE — CHECK WHETHER SOMETHING REAL CHANGED FIRST.' Did something real change in this passage? Did the group doing the task change?",
+      "The rule says to ask: 'Did the writing introduce a reason for this pronoun to be different, or did it just slide?' What reason does this passage give for the pronouns to change?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer needs to fix this passage: 'I learned to bake cookies at my grandmother's house. She taught me how to measure flour and mix the dough. You have to wait exactly twelve minutes before taking the cookies out of the oven, or they will burn.' Which sentence should be rewritten, and what should the pronoun become?",
+    "problemText": "A student is fixing this passage: 'I saved money all summer by walking dogs in the neighborhood. By August, I had enough to buy a used skateboard. You can customize it with new grip tape and wheels, which I did right away. Now I show it off at the skate park every day.' The student sees a problem in the third sentence and must decide what to change. What is the correct fix, and why does it work?",
     "choices": [
-      "The third sentence should read 'I have to wait exactly twelve minutes before taking the cookies out of the oven, or they will burn' because the passage is written in first person about the writer's own experience.",
-      "The second sentence should read 'She taught me how to measure flour and mix the dough together with you' to introduce the second person pronoun that appears later in the passage.",
-      "The first sentence should read 'I learned to bake cookies at my grandmother's house with her help' to explain who the 'you' refers to in the third sentence before it appears.",
-      "The third sentence should stay as written because 'you' is an accepted way to give general advice and instructions about waiting for baked goods to finish cooking."
+      "Change 'You' to 'I' in the third sentence because the passage is about one person's experience, not instructions for a reader.",
+      "Change 'I' to 'you' in the fourth sentence so the whole passage speaks to the reader instead of mixing up who is talking.",
+      "Delete the word 'You' from the third sentence and rewrite the whole passage in third person to avoid confusion.",
+      "Change 'skateboard' to 'skateboards' in the second sentence so that 'you' and 'I' both refer to plural objects."
     ],
     "answer": "A",
     "hints": [
-      "Read the whole passage. Who is telling the story, and what pronoun opens it?",
-      "The passage introduces only one narrator learning to bake. Check where the pronoun slides to a different person even though nobody new has joined the story."
+      "The passage opens in first person singular ('I'). When you find a pronoun that does not match, change only THAT pronoun, not the whole passage.",
+      "Who is the passage actually about? Is it giving instructions to a reader, or telling about one person's summer? What pronoun should fit from start to finish?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-5.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this passage carefully: 'My teammates and I practiced our free throws for an hour. We shot from the line over and over until our coach said to stop. Then he asked me to help him carry the equipment to the storage closet. I dragged the heavy box while he held the door open. After that, we celebrated our hard work by getting ice cream together.' How many pronoun shifts occur, which ones are mistakes, and which ones are allowed by the lesson?",
+    "problemText": "Read this passage: 'My cousin and I decided to build a treehouse together last spring. We gathered wood and nails from the garage. We climbed into the oak tree with our supplies. Once we were up there, I hammered the boards while you held them steady. By sunset, we had built a frame that would hold our weight.' Find all the pronouns that do not match the person and number set at the opening of the passage. Which pronouns need to be fixed, and what should they be changed to? Explain your reasoning.",
     "choices": [
-      "There are four shifts total: one allowed shift to 'me' when the coach singles out the writer, one allowed shift back to 'we' when the team reunites, one mistake when 'he' refers to the coach instead of the team, and one mistake in using both 'I' and 'he' in the same sentence.",
-      "There are two shifts total: one allowed shift to 'me' in the third sentence because the coach singled out the writer, and one allowed shift back to 'we' in the fifth sentence because the whole team is together again.",
-      "There are three shifts total: one allowed shift to 'me' when the coach asks for help, one mistake when 'he' is used instead of 'we' for the coach, and one mistake when 'we' returns in the final sentence.",
-      "There are five shifts total: every time the pronoun changes from one sentence to the next counts as a shift, and most of them are mistakes because pronouns should never change within a single passage."
+      "Change 'we' in the last sentence to 'I' because the passage should stick to singular pronouns once any task is split between people doing different parts of the work.",
+      "Change 'you' to 'my cousin' because the passage opens about two people working together, but no reader is present. The passage never introduces a second person to address, so 'you' has nobody real to point at.",
+      "Change only 'I' to 'we' in the fourth sentence because the passage is telling a story from the perspective of two builders, and that sentence breaks the shared perspective even though the work continued to involve both people.",
+      "Change both 'I' and 'we' to 'my cousin and I' because mixing pronouns in different numbers makes the passage unclear and confusing to readers who are trying to follow the story."
     ],
     "answer": "B",
     "hints": [
-      "Check whether a real reason is given for each time the pronoun changes. Did the passage explain what happened that would cause a different group to be involved?",
-      "The passage mentions at least three different groupings: the whole team, then the writer alone with the coach, then the team again. Ask which shifts are explained by the story and which are not."
+      "Read the whole passage and list who is actually in it. Are there two people building together, or is a reader present too? What does the passage tell you?",
+      "The lesson said that if a pronoun like 'you' or 'we' has no real person to point at in the passage, it is a shift with no reason. Does this passage ever speak directly to a reader or introduce a third person?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-5.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this sentence in a math homework assignment: 'I don't have no pencil to write with.' Which choice shows the correct revision for standard English?",
+    "problemText": "Which sentence contains a double negative that needs to be revised for standard English?",
     "choices": [
-      "I have no pencil to write with.",
-      "I do not have any pencil to write with.",
-      "I don't have a pencil to write with.",
-      "I have not got no pencil to write with."
+      "I do not have any pencils left.",
+      "She didn't bring nothing to the meeting.",
+      "They were not ready for the test.",
+      "He does not like the new rule."
     ],
     "answer": "B",
     "hints": [
-      "Standard English allows only one negative word per clause.",
-      "When there are two negative words, change one to a positive word like 'any.'"
+      "A double negative means two negative words in the same clause.",
+      "Look for 'not' or 'don't' paired with 'no,' 'nothing,' or 'nobody.'"
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence from a student's draft science report: 'The experiment ain't finished yet, so we can't measure the results.' What verb form should replace 'ain't' in this sentence?",
+    "problemText": "A student wrote this sentence in a science report: 'The experiment ain't shown the results we expected.' Which revision uses the exact standard verb form that fits this sentence?",
     "choices": [
-      "is not",
-      "are not",
-      "has not",
-      "have not"
+      "The experiment is not shown the results we expected.",
+      "The experiment was not shown the results we expected.",
+      "The experiment has not shown the results we expected.",
+      "The experiment does not shown the results we expected."
     ],
     "answer": "C",
     "hints": [
-      "Look at what comes after 'ain't' — 'finished' — to find the helper verb that pairs with it.",
-      "'Finished' is a past participle, so you need a helper like 'has' or 'have.'"
+      "Ask yourself: what helper verb works with 'shown'? Is it about the past or the present?",
+      "'Ain't' can mean am not, is not, are not, has not, or have not—pick the one that matches the action described."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is writing a thank-you letter to a speaker who visited the class. The draft says: 'Our class don't have words to thank you for your time.' Which revision fixes the subject-verb mismatch for standard English?",
+    "problemText": "Read this sentence from a draft: 'They doesn't want to stay late after school.' Which change fixes the subject-verb mismatch in this sentence?",
     "choices": [
-      "Our class is not having words to thank you for your time.",
-      "Our classes don't have words to thank you for your time.",
-      "Our class does not have words to thank you for your time.",
-      "Our class did not have words to thank you for your time."
+      "Change 'they' to 'he.'",
+      "Change 'want' to 'wants.'",
+      "Change 'to stay' to 'stay.'",
+      "Change 'doesn't' to 'don't.'"
     ],
     "answer": "D",
     "hints": [
-      "The subject is 'our class,' which is singular, so find the singular form of the verb.",
-      "Match the singular subject 'class' with the standard verb form for 'don't.'"
+      "The subject is 'they,' which is plural. What verb form goes with a plural subject?",
+      "Standard English pairs 'they' with 'do not' or 'don't,' not 'does not' or 'doesn't.'"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student's permission slip says: 'I ain't got no permission slip signed yet.' This sentence has two nonstandard forms. Revise it correctly for formal writing.",
+    "problemText": "A caption for a yearbook photo reads: 'We wasn't expecting the surprise, and nobody didn't yell louder than the team captains.' Rewrite this sentence so it follows standard English for formal print without changing its meaning.",
     "choices": [
-      "I have not got any permission slip signed yet.",
-      "I don't have no permission slip signed yet.",
-      "I ain't got permission slip signed yet.",
-      "I have got no permission slip that is signed yet."
+      "We were not expecting the surprise, and nobody yelled louder than the team captains.",
+      "We weren't expecting the surprise, and nobody didn't yell louder than the team captains.",
+      "We were expecting the surprise, and nobody clapped louder than the team captains.",
+      "We wasn't expecting the surprise, and nobody yelled louder than the team captains."
     ],
     "answer": "A",
     "hints": [
-      "First, replace 'ain't' with the correct helper verb form for 'got' (a past participle).",
-      "Then, remove the double negative by changing 'no' to a positive word like 'any.'"
+      "Look for two kinds of errors: a subject-verb mismatch and a double negative in the second half.",
+      "When you fix 'wasn't' for the plural subject 'we,' and when you fix the two negative words 'nobody' and 'didn't,' does the sentence still mean the same thing?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence from a school newsletter about a sports day: 'The team captain say she don't think nobody can beat us this year.' Which revision fixes both the subject-verb mismatch and the double negative?",
+    "problemText": "A student's draft says: 'The coach ain't never given up on this team, and she don't accept no excuses.' Which sentence revises both errors correctly and keeps the same meaning?",
     "choices": [
-      "The team captain says she does not think anyone can beat us this year.",
-      "The team captain says she doesn't think nobody can beat us this year.",
-      "The team captain say she does not think anyone can beat us this year.",
-      "The team captain says she don't think anyone can beat us this year."
+      "The coach is not never giving up on this team, and she don't accept any excuses.",
+      "The coach has never given up on this team, and she does not accept any excuses.",
+      "The coach isn't ever giving up on this team, and she doesn't accept no excuses.",
+      "The coach has never given up on this team, and she do not accept excuses."
     ],
     "answer": "B",
     "hints": [
-      "Match the singular subject 'captain' with its correct verb form.",
-      "Change the double negative 'don't think nobody' to use only one negative word."
+      "One sentence uses 'ain't' with 'given'—what helper verb works with the past-tense form 'given'?",
+      "The second half has 'don't' with a singular subject 'coach,' which needs a different form, plus a double negative with 'accept' and 'no.'"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-5.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student's draft of a field trip report reads: 'The museum wasn't no place we hadn't never been before, but we was surprised how much there was to see.' This sentence contains three nonstandard forms. After you fix all three for standard English, which sentence below is correct?",
+    "problemText": "A student is writing a formal letter to the school principal. The draft contains three sentences: (1) 'I ain't received my report card yet.' (2) 'The office don't have my address on file.' (3) 'They can't find nothing in the system.' The student wants to revise all three for standard English. Which set of revisions is correct and keeps each sentence's original meaning intact?",
     "choices": [
-      "The museum is not a place we have never been before, and we were surprised how much there was to see.",
-      "The museum was a place we had never been before, but we were surprised how much there was to see.",
-      "The museum was a place we had ever been before, but we were surprised how much there was to see.",
-      "The museum wasn't a place we hadn't been before, and we was surprised how much there was to see."
+      "I haven't never received my report card yet. The office does not has my address on file. They cannot find no information in the system.",
+      "I am not received my report card yet. The office is not having my address on file. They can't find nothing in the system.",
+      "I have not received my report card yet. The office does not have my address on file. They cannot find anything in the system.",
+      "I have not been receiving my report card yet. The office don't have my address on file no longer. They can't find nothing there anymore."
     ],
     "answer": "C",
     "hints": [
-      "Remove both the double negative 'wasn't no' and the triple negative 'hadn't never,' replacing them with single negatives.",
-      "Fix the subject-verb mismatch 'we was' and keep the original meaning of the sentence about surprise at the museum."
+      "For each sentence, identify whether the error is 'ain't,' a subject-verb mismatch, a double negative, or a combination.",
+      "After you revise, reread all three sentences together—does the letter still say the same thing it did before, or did the meaning change?"
     ]
   }
 ]

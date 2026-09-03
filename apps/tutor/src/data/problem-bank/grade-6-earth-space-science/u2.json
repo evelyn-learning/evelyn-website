@@ -5,17 +5,17 @@
     "cedCode": "M6SCI-2.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Earth spins on an imaginary line called its axis. This complete spin from start to finish is called a rotation. About how long does one full rotation take?",
+    "problemText": "Earth completes one full rotation about its axis in approximately how much time? This rotation is what causes day and night to occur.",
     "choices": [
-      "About 12 hours",
-      "About 365 days",
-      "About 1 month",
-      "About 24 hours"
+      "about 30 days",
+      "about 365 days",
+      "about 12 hours",
+      "about 24 hours"
     ],
     "answer": "D",
     "hints": [
-      "One rotation is what causes one complete day-night cycle.",
-      "Think about how long it takes for the sun to rise, cross the sky, and set, then night to pass and the sun to rise again in the same spot."
+      "Think about how often you experience a full cycle of day and night in your own life.",
+      "Remember that rotation is Earth spinning, not orbiting the sun."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6SCI-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is standing outside at midnight local time. According to the rotation model, which of the following best explains why it is dark where the student is standing?",
+    "problemText": "A city in the Northern Hemisphere is currently in darkness. According to the rotation model, what must be true about the position of this city relative to the sunlit half of Earth?",
     "choices": [
-      "Earth's rotation has carried the student's location to the side of Earth facing away from the sun",
-      "The sun has moved to the far side of Earth to create the darkness",
-      "The tilt of Earth's axis is pointing the student's hemisphere away from sunlight",
-      "The student is so far north or south that the sun has disappeared below the horizon for the season"
+      "The city is on the half of Earth that is facing away from the sun.",
+      "The city is on the half of Earth that faces the sun but is shaded by clouds.",
+      "The city has rotated so far east that it has caught up to the sunset line.",
+      "The city is located north of the Arctic Circle where the sun never reaches."
     ],
     "answer": "A",
     "hints": [
-      "The rotation model explains day and night by how Earth's spinning moves different places into and out of sunlight.",
-      "Consider whether the sun's position changes or the student's location changes due to Earth's spinning."
+      "At any instant, exactly one half of Earth is lit by the sun and one half is dark.",
+      "A location experiences night because of where Earth's rotation has carried it, not because of anything the sun is doing."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6SCI-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Earth rotates from west to east, which means it spins in a particular direction. From this fact alone, which statement correctly describes what an observer in most of the Northern Hemisphere should see happening to the sun across the sky during a day?",
+    "problemText": "Earth spins from west to east. Based on this direction of rotation, in which direction does the sun appear to move across the sky as seen from the ground?",
     "choices": [
-      "The sun should appear to stay in one spot in the south all day long",
-      "The sun should appear to rise in the east, reach its highest point toward the south at midday, and set in the west",
-      "The sun should appear to move from west to east across the sky, ending where it started",
-      "The sun should appear to rise in the south and set in the north, opposite to how it does in the Southern Hemisphere"
+      "from west to east",
+      "from east to west",
+      "from north to south",
+      "from south to north"
     ],
     "answer": "B",
     "hints": [
-      "If Earth spins one direction, the ground beneath you moves one way, so the sun appears to move the opposite way.",
-      "Recall that this apparent motion is like sitting in a spinning chair—the room appears to turn around you even though you're the one turning."
+      "The sun's apparent motion is opposite to Earth's real spin direction, just like how a room appears to spin the opposite way when you spin in a desk chair.",
+      "Think about the sunrise in the east and the sunset in the west—which direction is the sun crossing the sky?"
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6SCI-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two cities, East Town and West Town, are on the same latitude and exactly 45 degrees of longitude apart, with East Town directly east of West Town. Earth rotates 15 degrees of longitude every hour. If West Town experiences sunrise at 6:00 a.m. local time, about what time will East Town experience sunrise, and why does the direction matter?",
+    "problemText": "Two locations, X and Y, are separated by 45 degrees of longitude, with location Y to the east of location X. Earth rotates 15 degrees per hour. If location X experiences sunrise at 6:00 AM, at approximately what time will location Y experience sunrise?",
     "choices": [
-      "East Town will experience sunrise at 9:00 a.m. because it is farther away from the sun",
-      "East Town will experience sunrise at 3:00 a.m. because it rotates into the lit half of Earth before West Town does, due to Earth spinning west to east",
-      "West Town will experience sunrise first at 6:00 a.m. and East Town will experience it at 12:00 p.m., which shows that direction does not affect which location sees sunrise first",
-      "East Town will experience sunrise at 12:00 p.m. because being east means it takes longer for Earth's rotation to carry it into sunlight"
+      "at 12:00 PM",
+      "at 9:00 AM",
+      "at 3:00 AM",
+      "at 6:00 PM"
     ],
     "answer": "C",
     "hints": [
-      "Calculate the time gap using the 15-degrees-per-hour rotation rate and the 45-degree separation.",
-      "Remember that because Earth spins west to east, locations farther east encounter the sunrise line sooner than locations farther west."
+      "Calculate how many hours it takes to rotate 45 degrees if the rotation rate is 15 degrees per hour.",
+      "Remember that the eastern location reaches the sunrise line first, so its sunrise happens before the western location's sunrise."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6SCI-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student observes that the sun rises, crosses the sky, and sets roughly in the same place and at roughly the same time each day, even though the date changes from winter to spring. Using the rotation model from this lesson, explain why the rotation period stays nearly the same across these seasons and why this fact does not contradict the idea that day length and night length can shift at certain latitudes.",
+    "problemText": "A student observes that the sun appears to climb higher in the sky around midday compared to sunrise or sunset, and wonders if this means the sun is moving closer to Earth. Using the rotation model, explain why the sun appears at different heights in the sky without assuming the sun's distance to Earth has changed.",
     "choices": [
-      "The sun's position in space changes with the seasons, but Earth's spin rate increases to keep sunrise times constant",
-      "Earth's spin rate stays nearly constant all year, producing a nearly constant 24-hour rotation period and day-night cycle, but the distribution of those hours between daylight and darkness can shift at latitudes away from the equator",
-      "The tilt of Earth's axis causes the rotation period to speed up in spring and slow down in winter, keeping the total cycle time the same",
-      "Day and night lengths stay exactly 12 hours each at every location all year, so there is no shift to explain"
+      "The sun moves in a circular path around Earth, and midday is when it reaches the closest point in that circle, bringing it directly overhead at that time of day.",
+      "The sun orbits Earth in an ellipse, and the gravitational pull is strongest around midday, which makes the sun appear higher and causes it to be closer to Earth during those hours.",
+      "As Earth rotates, different parts of the surface point toward the sun at different times, and the angle between the sun's rays and your location changes throughout the day, making the sun appear higher or lower without any change in actual distance.",
+      "Earth's rotation carries the observer's location to different angles relative to the sun throughout the day, making the sun appear to climb and fall in the sky without the sun actually moving closer or farther away."
     ],
     "answer": "D",
     "hints": [
-      "This lesson focuses on rotation; it deliberately does not explain why the split between daylight and darkness hours can change at different latitudes.",
-      "Look for the choice that correctly states what this lesson teaches about rotation rates and what it saves for the next lesson about Earth's orbit."
+      "Think about how a fixed light source (the sun) would appear to move through the sky as a spinning Earth carries you around in a circle.",
+      "The sun's apparent height in the sky changes because your location on the spinning Earth is constantly changing its angle relative to the sunlight, not because the sun is moving."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6SCI-2.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An observer at the equator and another observer at 45 degrees north latitude both experience darkness at the same instant in time. According to the rotation model, both observers are on the night side of Earth at that moment. Now suppose Earth's rotation rate were to double—completing one full spin in 12 hours instead of 24 hours. How would this change affect the way these two observers experience day and night, and what would remain the same?",
+    "problemText": "A student claims: 'Earth's axis is tilted, so the tilt must be the reason why one full day-night cycle takes 24 hours instead of some other length of time.' Identify the flaw in this reasoning and explain what actually determines how long one rotation takes, using the concepts taught in this lesson.",
     "choices": [
-      "Both observers would still be on the night side of Earth at the same instant, but each would complete their day-night cycle twice as fast; the fact that one location can be in day while another is in night would not change, because half of Earth is always lit by the sun",
-      "The observer at the equator would experience shorter periods of daylight per day, while the observer at 45 degrees north would experience proportionally more nighttime than the equator observer, reflecting the difference in latitude and solar angle",
-      "Both observers would see the sun rise and set from the same direction throughout the year, but the elevation angle of the sun at noon would appear different at each latitude due to their distance from the equator",
-      "The observer at 45 degrees north would transition between day and night twice per spinning period, but the total number of daylight hours per year would remain the same percentage of daylight as before the rotation rate change"
+      "The tilt of Earth's axis does not affect the rotation rate or the time it takes for one complete rotation. The length of one day-night cycle is determined by how fast Earth spins on its axis, which stays nearly constant throughout the year at all latitudes.",
+      "The tilt directly causes the rotation rate to slow down to exactly 24 hours because it creates friction between Earth's inner and outer layers, and this friction ensures that Earth's spin speed remains constant at a 24-hour cycle regardless of seasonal changes.",
+      "The tilt changes how much of Earth is lit by the sun at any given moment, which stretches or compresses the perceived length of daylight hours until they average out to exactly 24 hours over the course of a year.",
+      "The tilt affects the speed at which Earth rotates by shifting the distribution of mass toward the equator, which causes Earth to spin more slowly and creates the 24-hour rotation period that we measure as one complete day-night cycle."
     ],
     "answer": "A",
     "hints": [
-      "Think about what the rotation rate controls versus what it does not control: does it determine which half of Earth is lit, or only how fast the lit and dark halves are defined?",
-      "Ask yourself: if Earth spun twice as fast, would the fundamental rule that exactly one half is always lit by the sun change? Would the reason why two locations on a spinning sphere can be in day and night at the same moment change?"
+      "Remember that this lesson teaches why day and night happen (rotation and a lit half of Earth), but saves the reason why day length shifts across the year (the tilt's role in revolution) for the next lesson.",
+      "The tilt is described in the lesson as a real feature of Earth, but does it directly change how fast Earth spins or how long one complete rotation takes?"
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6SCI-2.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Earth's axis is tilted about 23.5 degrees and stays pointed toward the same spot in space all year long as Earth revolves around the sun. What is the name of this imaginary line that Earth spins around?",
+    "problemText": "Earth's axis is tilted about 23.5 degrees from straight up. What key fact about this tilted axis makes seasons happen?",
     "choices": [
-      "axis",
-      "orbit",
-      "equator",
-      "hemisphere"
+      "The axis stays pointed the same direction in space all year as Earth revolves around the sun.",
+      "The axis swings around to follow the sun as Earth moves in its orbit, always keeping the same hemisphere tilted toward it.",
+      "The axis flips halfway through the year to point in the opposite direction, causing one hemisphere to reverse its seasonal tilt.",
+      "The axis tilts more steeply in summer and less steeply in winter, increasing and decreasing the angle of sunlight."
     ],
     "answer": "A",
     "hints": [
-      "This is the line through Earth's center that never changes direction during the year.",
-      "The term describes what Earth rotates on, not the path Earth travels."
+      "Think about whether the axis moves with the sun or stays fixed in one direction.",
+      "The lesson emphasizes that the axis points toward the same spot in the sky the whole year."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6SCI-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student observes that on a particular day in January, the Northern Hemisphere receives sunlight at a low, slanting angle and has only about 9 hours of daylight. Based on what causes seasons, which season is the Northern Hemisphere experiencing at this time?",
+    "problemText": "In early January, Earth is at its closest point to the sun, yet the Northern Hemisphere is in winter with cold temperatures and short days. What does this tell you about whether distance from the sun causes the seasons?",
     "choices": [
-      "Summer, because the tilt of Earth points the Northern Hemisphere toward the sun, causing direct rays and long days",
-      "Winter, because the tilt points the Northern Hemisphere away from the sun",
-      "Spring, because the day length is increasing and the tilt is moving toward a more direct angle with the sun",
-      "Fall, because the tilt is positioned at an intermediate angle that produces slanting sunlight and moderate day length"
+      "Distance must be the cause, because when Earth is closest to the sun, the closest hemisphere should receive the most energy and be warmest.",
+      "Distance cannot be the cause, because if it did, the Northern Hemisphere should be warmest when closest to the sun, but it is coldest.",
+      "Distance causes seasons for the Northern Hemisphere but not the Southern Hemisphere, which has opposite seasonal patterns throughout the year.",
+      "Distance is partially the cause, but the tilt angle determines which hemisphere gets direct versus slanting sunlight at that distance."
     ],
     "answer": "B",
     "hints": [
-      "Low, slanting sunlight and short days happen when a hemisphere is tilted away from the sun.",
-      "Remember that day length and sunlight angle work together—both point to the same season."
+      "Compare what the distance theory predicts (warmest when closest) with what actually happens in January.",
+      "The lesson shows that distance moves in exactly the wrong direction to explain Northern Hemisphere seasons."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6SCI-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "On July 15, the Northern Hemisphere is tilted toward the sun and experiences summer weather with long days and direct, overhead-like sunlight. At that exact same moment, which statement correctly describes what the Southern Hemisphere experiences?",
+    "problemText": "At a certain moment in Earth's orbit, sunlight strikes a hemisphere at a steep, close-to-overhead angle and days there are about 15 hours long. At that same moment, is it summer or winter in that hemisphere?",
     "choices": [
-      "Summer, because both hemispheres are the same distance from the sun",
-      "Summer, because July is warm everywhere on Earth",
-      "Winter, because the tilt points the Southern Hemisphere away from the sun",
-      "Winter, because the Southern Hemisphere is tilted toward the sun more steeply"
+      "Winter, because long days mean less time for the sun to warm the ground.",
+      "Neither, because steepness of sunlight and day length do not affect temperature.",
+      "Summer, because steep sunlight is direct and concentrated, and long days add more hours of warming.",
+      "Winter, because the hemisphere must be tilted away from the sun to receive steep sunlight."
     ],
     "answer": "C",
     "hints": [
-      "Both hemispheres sit on the same Earth at the same distance from the sun, so tilt—not distance—must explain why they have opposite seasons.",
-      "If the Northern Hemisphere's tilt points it toward the sun, which direction does the Southern Hemisphere's tilt point?"
+      "Recall what two things make a season warm according to the lesson.",
+      "Steep, direct sunlight and longer days work together — neither alone tells the whole story."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6SCI-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student claims: 'Earth is closest to the sun in July, which is why the Northern Hemisphere has summer then.' Use two different types of evidence from Earth's orbit and hemispheres to explain why this claim is wrong and give the correct reason for Northern Hemisphere summer.",
+    "problemText": "In June, the Northern Hemisphere is tilted toward the sun and has summer. At that exact same moment, what season is the Southern Hemisphere in, and why is it different from the Northern Hemisphere even though both hemispheres are the same distance from the sun?",
     "choices": [
-      "The claim is correct because July is when Earth is closest to the sun and the sun's rays are strongest.",
-      "The claim is wrong because Earth is actually farthest from the sun in July, and because the Southern Hemisphere has winter in July even though it is the same distance from the sun. Summer in the Northern Hemisphere happens because Earth's tilt points that hemisphere toward the sun, giving it more direct sunlight and longer days.",
-      "The claim is wrong because distance does not matter at all—only the tilt of Earth's axis affects seasons.",
-      "The claim is wrong because Earth is closest to the sun in December, not July, but the Northern Hemisphere still has summer in July due to the tilt."
+      "Spring, because the Southern Hemisphere is in a transition season halfway through the year, with temperatures increasing as it moves toward its summer solstice.",
+      "Autumn, because the Southern Hemisphere lags six months behind the Northern Hemisphere in its seasonal cycle and receives fewer direct sun rays.",
+      "Summer, because both hemispheres receive the same amount of solar energy from the same sun, so they must experience the same season.",
+      "Winter, because when Earth's fixed-pointed axis tilts one hemisphere toward the sun, the other hemisphere is tilted away, giving it slanted sunlight and shorter days."
     ],
     "answer": "D",
     "hints": [
-      "First, check the actual orbit data: when is Earth nearest and farthest? Then check the hemisphere logic: if distance controlled the season, would both hemispheres have the same season at the same time?",
-      "You need to show the distance claim fails on two counts—the orbit itself and the opposite hemispheres test."
+      "Remember that the axis stays pointed one fixed direction, so when one hemisphere leans toward the sun, the other must be leaning away.",
+      "Seasons on opposite hemispheres are opposite at the same moment — if one is summer, the other is winter."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6SCI-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "At a solstice, a hemisphere reaches its maximum tilt toward or away from the sun. Describe what three things are true about that hemisphere at a solstice and explain why they all occur together because of Earth's fixed tilt.",
+    "problemText": "A student claims that in July, Earth must be closer to the sun than in January, which is why July is warmer in the Northern Hemisphere. Explain why this claim is wrong by using both a fact about Earth's actual orbit and a fact about what happens in the Southern Hemisphere at the same time.",
     "choices": [
-      "The hemisphere has its longest or shortest day of the year, the sunlight arrives at its most direct or most slanted angle, and the hemisphere is either closest to or farthest from the sun at that moment in the orbit.",
-      "The hemisphere has its longest or shortest day of the year, the sunlight arrives at its most direct or most slanted angle, and because Earth's axis keeps pointing the same direction all year, the tilt reaches its extreme lean toward or away from the sun at that orbital position.",
-      "The hemisphere has equal day and night, the sunlight arrives at a medium angle, and the tilt is neutral so both hemispheres are equally tilted.",
-      "The hemisphere has constant day length throughout the month, the sunlight arrives at a weak angle, and the tilt causes Earth to move faster in its orbit."
+      "Earth is actually farther from the sun in July than in January, and in July the Southern Hemisphere has winter while the Northern Hemisphere has summer — if distance were the cause, both hemispheres would have summer at once.",
+      "Earth is closer to the sun in July, but the tilt causes the Northern Hemisphere to lean away from the sun in a way that reduces the intensity of incoming rays, making it colder than January despite closer distance.",
+      "The student is partly correct that Earth is closer in July, but Australia in the Southern Hemisphere is farther from the sun at that time, so the greater distance there would make it winter rather than summer if distance mattered most.",
+      "The axis tilts the Northern Hemisphere toward the sun in July, increasing the angle of incoming rays and extending daylight hours, while simultaneously tilting the Southern Hemisphere away from the sun, shortening its daylight hours and lowering the angle of its incoming rays to create winter conditions."
     ],
     "answer": "A",
     "hints": [
-      "At a solstice, the tilt is at its maximum, so think about what that means for day length and sunlight angle in the tilted hemisphere.",
-      "A solstice is the point in Earth's orbit where the tilt of a hemisphere toward or away from the sun is greatest—what do extreme tilt positions do to both daylight hours and the angle of incoming sunlight?"
+      "Check two separate facts: where Earth sits in its orbit in July, and what season the Southern Hemisphere has in July.",
+      "The lesson calls this the killer fact — two hemispheres, same distance, opposite seasons."
     ]
   },
   {
@@ -214,131 +214,17 @@
     "cedCode": "M6SCI-2.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Imagine Earth's axis did not stay pointed toward the same spot in space all year. Instead, suppose the axis swung around to always face the sun directly, like a weathervane following the wind. Using the lesson's reasoning about hemispheres and distance, explain why this would make it impossible to have opposite seasons in the Northern and Southern Hemispheres at the same time, and describe what season both hemispheres would have to share.",
+    "problemText": "A location on Earth receives sunlight at a very shallow, slanting angle and has only 9 hours of daylight. Six months later, the same location receives sunlight at a much steeper, more overhead angle and has about 15 hours of daylight. Describe what must be true about Earth's axis and its position in orbit to produce this dramatic change, and name the two points in Earth's orbit where changes like this happen.",
     "choices": [
-      "Both hemispheres would have spring and fall at the same time because the axis would be neutral and not tilted at all.",
-      "Both hemispheres would have the same season—summer—all year long because the axis would always point toward the sun.",
-      "Both hemispheres would have opposite seasons, just as they do now, because the distance from the sun would still be the same for both.",
-      "Both hemispheres would alternate between summer and winter every month because the axis would swing back and forth constantly."
+      "Earth's axis must swing around to follow the sun's position as Earth orbits, and the two points are the two solstices, where the maximum tilt in each direction causes the largest change in angle and daylight length.",
+      "Earth's axis stays pointed the same fixed direction in space while Earth revolves; the hemisphere moved from being tilted away from the sun to being tilted toward it. The two points are a solstice (maximum tilt in one direction) and the opposite solstice six months later (maximum tilt in the opposite direction).",
+      "Earth's distance from the sun must change dramatically, moving much closer in summer and much farther in winter, and the two points are perihelion and aphelion, where Earth reaches its nearest and farthest orbital positions, causing the angle and daylight hours to shift accordingly.",
+      "The axis tips more steeply in summer and less steeply in winter, changing the angle of tilt relative to the sun's rays, and the two points are the equinoxes, where equal day and night lengths occur due to the axis being perpendicular to the sun's rays at those moments in Earth's orbit."
     ],
     "answer": "B",
     "hints": [
-      "If the axis always pointed toward the sun, both hemispheres would be tilted toward the sun at the same time. Think about what happens to sunlight angle and day length when a hemisphere is tilted toward the sun.",
-      "The lesson shows that opposite seasons happen because the axis stays pointed the same way while Earth travels around the sun. If the axis changed to always chase the sun, what would that do to the relative tilt of the two hemispheres?"
-    ]
-  },
-  {
-    "id": "m6sci-solar-lunar-eclipses-001",
-    "loId": "m6sci.solar-and-lunar-eclipses",
-    "cedCode": "M6SCI-2.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "During a solar eclipse, which body sits in the middle of the three-body alignment? Remember, the order of the bodies tells you which type of eclipse it is.",
-    "choices": [
-      "Earth",
-      "The Sun",
-      "The Moon",
-      "None of the above; all three are equally in the middle"
-    ],
-    "answer": "C",
-    "hints": [
-      "A solar eclipse happens when the Moon blocks sunlight from reaching Earth.",
-      "The body in the middle is the one doing the blocking."
-    ]
-  },
-  {
-    "id": "m6sci-solar-lunar-eclipses-002",
-    "loId": "m6sci.solar-and-lunar-eclipses",
-    "cedCode": "M6SCI-2.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "You observe that the Moon is passing between the Sun and Earth, and as a result, a shadow sweeps across a narrow strip of Earth's daytime side. At what phase of the Moon must this event be occurring? Think about when the Moon sits between the Sun and Earth in its orbit.",
-    "choices": [
-      "Full moon",
-      "Waxing crescent",
-      "Waning gibbous",
-      "New moon"
-    ],
-    "answer": "D",
-    "hints": [
-      "The Moon can only sit between the Sun and Earth at one specific phase.",
-      "This is the phase when the Moon is not visible from Earth because it is lined up with the Sun."
-    ]
-  },
-  {
-    "id": "m6sci-solar-lunar-eclipses-003",
-    "loId": "m6sci.solar-and-lunar-eclipses",
-    "cedCode": "M6SCI-2.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A lunar eclipse is about to occur. Based on what you know about Earth's size compared to the Moon's size and about how shadows work, what will happen to the Moon during this eclipse? Hint: Think about whether Earth's shadow is large or small compared to the Moon.",
-    "choices": [
-      "The Moon will sit fully inside Earth's shadow and darken completely",
-      "The Moon will only partially enter Earth's shadow, so only part of it darkens",
-      "The Moon will cast its own shadow on Earth instead",
-      "The Moon will move out of Earth's orbit to avoid the shadow"
-    ],
-    "answer": "A",
-    "hints": [
-      "Earth is much larger than the Moon.",
-      "A large shadow can completely cover a small object."
-    ]
-  },
-  {
-    "id": "m6sci-solar-lunar-eclipses-004",
-    "loId": "m6sci.solar-and-lunar-eclipses",
-    "cedCode": "M6SCI-2.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student claims that because we have a full moon about every 29.5 days and a new moon about every 29.5 days, we should see a lunar eclipse and a solar eclipse roughly twice each month, every month. Explain why this prediction is wrong, and identify which factor prevents so many eclipses from actually happening.",
-    "choices": [
-      "The Sun's brightness varies throughout the year because of Earth's distance from it, so the shadow cast by the Moon becomes too faint to see during certain seasons and cannot be observed on most days.",
-      "The Moon's orbit is tilted about 5 degrees from Earth's orbital plane, so most new and full moons occur when the three bodies are not lined up closely enough for an eclipse.",
-      "Earth's atmosphere scatters sunlight in ways that depend on the time of year, which prevents shadows from forming on the surface during most lunar months and blocks the view of solar shadows.",
-      "The Moon moves too quickly across the sky relative to Earth's shadow, so it passes through Earth's shadow too rapidly for the eclipse to be visible from most locations on Earth's surface."
-    ],
-    "answer": "B",
-    "hints": [
-      "An eclipse needs the Sun, Earth, and Moon to be lined up close to a straight line.",
-      "The Moon's orbit does not sit in exactly the same plane as Earth's orbit around the Sun."
-    ]
-  },
-  {
-    "id": "m6sci-solar-lunar-eclipses-005",
-    "loId": "m6sci.solar-and-lunar-eclipses",
-    "cedCode": "M6SCI-2.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "During a full moon, Earth lines up between the Sun and the Moon. A lunar eclipse occurs and is visible from the entire night side of Earth at the same time. Using what you know about the sizes of Earth's shadow and the Moon and about Earth's rotation, explain why a lunar eclipse can be seen from so many places at once, whereas a solar eclipse can only be seen from a narrow strip.",
-    "choices": [
-      "A lunar eclipse lasts much longer than a solar eclipse, giving people more time to travel to see it.",
-      "Earth's shadow is large enough to cover the entire Moon, and everyone on the night side of Earth is looking at the same Moon in the same shadow at the same moment.",
-      "The Moon reflects Earth's shadow more brightly than the Moon's shadow reflects off Earth, making lunar eclipses visible from farther away.",
-      "A lunar eclipse happens at full moon, while a solar eclipse happens at new moon, and full moons are brighter and travel faster across the sky."
-    ],
-    "answer": "C",
-    "hints": [
-      "Compare the size of Earth's shadow to the size of the Moon's shadow.",
-      "Think about whether everyone on Earth's night side is looking at the same Moon or whether they are looking at different parts of Earth."
-    ]
-  },
-  {
-    "id": "m6sci-solar-lunar-eclipses-006",
-    "loId": "m6sci.solar-and-lunar-eclipses",
-    "cedCode": "M6SCI-2.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Two friends are debating whether an eclipse could occur on any day of the Moon's orbit around Earth. Friend A says an eclipse can happen at any time because the Sun, Earth, and Moon are always out there. Friend B says an eclipse can only happen on certain days when specific conditions are met. Which friend is correct, and describe at least two separate conditions that must be satisfied for an eclipse to actually occur.",
-    "choices": [
-      "Friend A is correct; the three bodies exist every day, so an eclipse is always possible.",
-      "Friend B is correct; an eclipse requires the Moon to be at a specific phase (new moon or full moon) and the three bodies must be lined up close to a straight line, which happens only when the orbits align at the crossing points where the tilted Moon orbit meets Earth's orbital plane.",
-      "Neither friend is correct; eclipses are random events that cannot be predicted based on phases or orbital positions.",
-      "Friend B is correct; an eclipse can only happen during daylight hours on Earth, which limits when it can occur."
-    ],
-    "answer": "D",
-    "hints": [
-      "An eclipse is not just about the three bodies existing; it requires a specific geometric arrangement.",
-      "Recall why eclipses do not happen at every new moon and full moon despite those occurring roughly every 29.5 days."
+      "The axis does not move relative to the sun — it stays pointed the same way in space. What must change is the hemisphere's tilt relative to the sun as Earth moves around it.",
+      "Solstices are the points of maximum tilt, one pointing each hemisphere toward the sun; they are six months apart."
     ]
   },
   {
@@ -347,17 +233,17 @@
     "cedCode": "M6SCI-2.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Half of the Moon is always lit by the sun, just as half of Earth is lit during daytime. Which statement correctly explains why we see the Moon's shape change from night to night over the course of a month?",
+    "problemText": "Half of the Moon is always lit by the sun. Which of the following best explains why we do not always see the entire lit half from Earth?",
     "choices": [
-      "Earth's shadow moves across the Moon's surface and blocks different amounts of the lit half from our view each night as the Moon orbits.",
-      "The angle between the sun, Earth, and the Moon changes, so we see a different slice of the always-lit half from where we stand.",
-      "The Moon's distance from the sun changes as it orbits Earth, making the lit portion appear to grow and shrink in brightness each night.",
-      "The Moon rotates on its axis at different speeds throughout the month, which causes us to see different portions of its lit hemisphere each night."
+      "Earth's shadow completely covers the Moon and blocks all sunlight from reaching its surface every single night, which is why we cannot see the lit half.",
+      "The angle between the sun, Earth, and the Moon changes as the Moon orbits, so we see different amounts of the lit half from our position.",
+      "The far side of the Moon is dark and does not receive any sunlight because it always faces away from Earth and toward deep space.",
+      "The Moon only travels through half its orbit each month, so the other half of the Moon's surface remains permanently unlit and cannot be seen."
     ],
     "answer": "B",
     "hints": [
-      "Remember: half the Moon is ALWAYS lit. What changes is our VIEW of that lit half.",
-      "The phase comes from the angle, not from a shadow or the Moon's distance."
+      "Remember that half the Moon is always lit—what changes is how much of that lit half we can see from Earth.",
+      "Think about whether Earth's shadow plays a role in everyday Moon phases or only during eclipses."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6SCI-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student observes the Moon in the evening sky and sees that the lit part is a thin sliver on the left side (for a Northern Hemisphere observer). Based on this observation, which of the following statements is true?",
+    "problemText": "A student observes the Moon low in the western sky just after sunset, appearing as a thin crescent. Based on where the Moon is in its orbit at this moment, what should the student expect to see three nights later?",
     "choices": [
-      "The Moon is waxing because a thin sliver is close to the beginning of the cycle.",
-      "The Moon is waning and moving toward the new moon phase.",
-      "The lit part is on the left because Earth's shadow is blocking the right side.",
-      "This phase is called the first quarter because the lit sliver covers about one-quarter of the disk."
+      "The same thin crescent will appear again, because the Moon's phase does not change from one night to the next and stays fixed throughout the entire month.",
+      "A full moon, because the Moon will have moved so that Earth is positioned directly between the sun and the Moon in three nights' time.",
+      "A larger crescent with the lit part still on the right side in the Northern Hemisphere, higher in the sky at sunset.",
+      "A thin crescent on the left side of the moon's disk, because the lit part is now shrinking and moving in the opposite direction on the disk."
     ],
     "answer": "C",
     "hints": [
-      "In the Northern Hemisphere, waning moons are lit on the LEFT side and waxing moons are lit on the RIGHT side.",
-      "Waning means the lit part is shrinking, which matches a thin sliver."
+      "A thin crescent low in the west just after sunset is called a waxing crescent—what direction is the lit part growing?",
+      "Three nights is not enough time for the Moon to complete a full cycle; think about how the shape changes gradually over time."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6SCI-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student in the Northern Hemisphere sees a full moon rising in the eastern sky just as the sun is setting in the west. Explain which of the following correctly describes the positions of the sun, Earth, and Moon at this moment.",
+    "problemText": "Which of the following observations correctly rules out the idea that Earth's shadow causes Moon phases?",
     "choices": [
-      "The Moon is between Earth and the sun, blocking sunlight from reaching Earth and creating a solar eclipse in the sky.",
-      "Earth, the Moon, and the sun are positioned in a line with Earth in the middle, so the lit half of the Moon points straight toward us.",
-      "The Moon is closest to the sun in its orbit, so gravity pulls it into a fully lit spherical shape that we see completely illuminated.",
-      "The Moon is on the opposite side of Earth from the sun, which is why we see the entire lit half."
+      "The far side of the Moon receives sunlight for half the month, so it cannot remain in Earth's shadow for the entire month or even for very long, meaning Earth's shadow alone cannot explain why we see different lit portions throughout the lunar cycle.",
+      "The Moon sometimes rises during daylight hours when the sun is still above the horizon, so Earth's shadow—which always points directly opposite the sun—would be positioned on the opposite side of Earth and therefore could not be blocking the sunlight reaching the Moon at that moment.",
+      "A lunar eclipse lasts only a few hours while moon phases take weeks to complete their cycle, so the mechanism causing a temporary total darkening of the Moon's surface cannot be the same mechanism responsible for the gradual changes in which portion of the Moon appears lit over many days.",
+      "At first quarter, the Moon is high in the southern sky at sunset while the sun is low on the horizon, but half the Moon still appears dark even though Earth's shadow points away from the Moon at that moment."
     ],
     "answer": "D",
     "hints": [
-      "When Earth sits between the sun and the Moon, the lit half of the Moon points straight at us.",
-      "A full moon rises when the sun sets because it is directly opposite the sun in the sky."
+      "Think about where Earth's shadow points relative to the Moon at different times.",
+      "A first quarter moon looks like a half circle—why is the other half dark if Earth's shadow is nowhere near it?"
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6SCI-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Over five nights, a student observes these Moon phases in order: waxing gibbous, full moon, waning gibbous, third quarter, and waning crescent. For each phase, the student also records the time the Moon rises (when it first appears above the eastern horizon). Which statement best explains why the rise time of the Moon gets later each night during this five-night period?",
+    "problemText": "A student in the Northern Hemisphere notes that over one week the Moon's lit part grew from a half circle to a large gibbous shape, with the lit part always on the right side of the moon's disk. Name the phase at the start of the week and explain why the student can be confident in this answer using two different kinds of evidence from the lesson.",
     "choices": [
-      "As the Moon moves around Earth, the angle between the sun, Earth, and the Moon changes continuously, so the Moon's position in the sky shifts later each night.",
-      "The Moon is moving farther from the sun each night in its orbit, so the gravitational pull weakens and causes the rise time to delay measurably each evening.",
-      "Earth is rotating slower during this period of the lunar cycle, which causes all objects including the Moon to rise and set later than they did the previous night.",
-      "The Moon is passing through Earth's penumbra shadow, which slows its apparent motion across the sky and makes it rise at progressively later times."
+      "First quarter at the start. The lit part on the right side confirms waxing motion for a Northern Hemisphere observer, and a half circle fits the first quarter phase, which occurs one quarter of the way through the 29.5-day cycle.",
+      "Waxing gibbous at the start. The lit part on the right side shows the Moon is waxing in the Northern Hemisphere, and more than half of the disk being lit means the Moon is already well past first quarter in its orbit.",
+      "Full moon at the start. A half circle lit shape looks the same as a full moon when viewed from the Northern Hemisphere, and the right-side illumination is the feature that confirms the student's location on Earth.",
+      "Waning crescent at the start. The lit part on the right side indicates the moon is moving toward the new moon phase, and the rapid week-long change in shape toward a larger lit area is consistent with the waning phase of the cycle."
     ],
     "answer": "A",
     "hints": [
-      "The phase sequence tells you which direction the Moon is orbiting and how fast it is moving relative to Earth's day-night cycle.",
-      "The phase depends on the Sun-Moon-Earth angle, and this angle shifts a little each night, moving the Moon later in the sky."
+      "Remember that the shape you see (like a half circle) is different from how far the Moon has traveled through its orbit—that is what the phase name describes.",
+      "In the Northern Hemisphere, a lit part on the right means the Moon is waxing; use both the lit-side rule and the sequence of phases in order to lock in your answer."
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6SCI-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is told that a first quarter moon looks like a half circle, and then the student looks it up and finds that a first quarter moon is also called the Moon at 90 degrees in its orbit. The student is confused: 'If the Moon is a quarter of the way around its orbit, why is it called first QUARTER? And if a quarter moon looks like half a circle, how can that be a quarter?' Which explanation clarifies this confusion correctly?",
+    "problemText": "Suppose the Moon reaches the point in its orbit where it is directly opposite the sun in the sky. What phase is it, and what should an observer on Earth notice about when this Moon rises and sets compared to the sun?",
     "choices": [
-      "The name 'first quarter' is actually a misnomer from ancient times, and it should be called the 'half moon' because exactly half of the visible disk appears illuminated to observers on Earth.",
-      "The name 'first quarter' refers to how far the Moon has traveled through its orbit around Earth, not how much of the disk we see lit up. A half-circle shape and a quarter of the orbit are two different measurements.",
-      "The term 'quarter' refers to one quarter of the Moon's total brightness, meaning one quarter of the full moon's light reaches Earth, even though half the circular disk appears lit.",
-      "The first quarter moon looks like half a circle because Earth's rotation divides the visible Moon into quarters, and we see only two of those four quarters from our position on Earth's surface."
+      "New moon. The Moon sits between Earth and the sun, so almost nothing is visible. It rises and sets close to the same time as the sun and cannot be seen at night.",
+      "Full moon. The lit half faces Earth, so the entire disk is visible. It rises around the time the sun sets and remains up all night, nearly opposite the sun in the sky.",
+      "First quarter. Half the moon's disk is lit and visible. It rises around noon and is high in the sky at sunset, lagging about six hours behind the sun.",
+      "Full moon. The lit half faces Earth, but the Moon's position in its orbit means it rises before sunset and sets before sunrise, following close behind the sun across the sky."
     ],
     "answer": "B",
     "hints": [
-      "The name of a phase is based on how much of the ORBIT the Moon has completed, not on the SHAPE we see.",
-      "A first quarter moon is 25% through its 29.5-day cycle, but it looks like 50% of a disk is lit."
+      "When Earth sits between the sun and the Moon, the lit half of the Moon is pointed straight at us—what does that look like?",
+      "Think about the everyday observation that a full moon is up all night; that happens because it is opposite the sun, so it rises when the sun sets."
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6SCI-2.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student observes the Moon high in the southern sky at noon on a clear, sunny day and measures that about three-quarters of the lit disk is visible (a waning gibbous phase). The student then argues: 'This proves that a phase is NOT caused by Earth's shadow, because Earth's shadow always points away from the sun, and the sun is high in the sky right now at noon, so the shadow is pointing down into the ground beneath my feet. The shadow cannot be covering the Moon when it is straight up.' Is the student's reasoning correct, and why or why not?",
+    "problemText": "A student sees a waxing gibbous moon high in the southern sky one evening in April. Another student at the same location reports the same moon setting in the western sky four hours later. Explain why both observations make sense together by describing (1) the current phase and what it tells us about the Sun-Moon-Earth angle, (2) why a waxing gibbous moon should be visible in the afternoon or evening sky, and (3) why seeing the Moon in daylight does not contradict the idea that phases depend on the Sun-Moon-Earth angle rather than on shadows.",
     "choices": [
-      "The reasoning is incorrect because a waning gibbous phase requires the Moon to be in Earth's shadow, which only occurs during a lunar eclipse, and no eclipse is happening.",
-      "The reasoning is correct, and it proves that the shape of the Moon depends on the Sun-Moon-Earth angle, not on whether Earth blocks sunlight.",
-      "The reasoning is incorrect because the Moon's position does not affect where Earth's shadow points; the shadow always faces the same direction.",
-      "The reasoning is correct, but it only works at noon; at night, Earth's shadow can reach the Moon and change the phase."
+      "The waxing gibbous phase means the Moon is approaching full moon and the sun-moon-earth angle puts them nearly opposite, so the Moon is visible during daylight hours because the large lit portion is bright enough to see through the glare. This daylight visibility proves that phases depend on the sun-moon-earth angle, not on Earth's shadow, because if shadow caused phases you would never see the Moon when the sun is above the horizon.",
+      "The waxing gibbous phase means the Moon is one quarter of the way through its complete orbit, so it must be visible high in the midday sky. The Moon appears in daylight because Earth's shadow has not yet covered it, which is the same reason all waxing phases are visible, and observing it four hours after solar noon proves that orbit speed determines phases rather than angles.",
+      "The waxing gibbous phase means Earth and the Moon are not far from a full moon configuration, so the moon is already well above the horizon in the afternoon. A waxing gibbous is visible in daylight because the large lit part is bright enough to see even with daylight glare, and this occurs simply because of the angle between the sun, Earth, and the Moon—no shadow model is needed.",
+      "The waxing gibbous phase means the Moon is between Earth and the sun in space, so it rises very late in the evening and cannot be seen until after midnight. Seeing it high in the sky one moment and setting four hours later proves the moon's cycle depends on how fast it orbits Earth, not on the geometric angle formed by the sun, Earth, and the Moon."
     ],
     "answer": "C",
     "hints": [
-      "The student is right that Earth's shadow points away from the sun, but think about what that means for the Moon's position. If the Moon is high in the sky DURING the day, where is it relative to the sun and Earth?",
-      "At a waning gibbous phase, the Sun-Moon-Earth angle means the Moon is in a specific place in its orbit. Is the Moon between Earth and the Sun? Is Earth between them? Or is the Moon nearly opposite the Sun?"
+      "A waxing gibbous moon is nearly full—how far is it from Earth in terms of the sun-moon-earth angle, and when should nearly-full phases be visible?",
+      "The fact that the Moon can be seen in daylight is a clue about what causes phases; if phases were caused by Earth's shadow, would you expect to see the Moon when the sun is up?"
+    ]
+  },
+  {
+    "id": "m6sci-solar-lunar-eclipses-001",
+    "loId": "m6sci.solar-and-lunar-eclipses",
+    "cedCode": "M6SCI-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a solar eclipse, which body is in the middle of the three-body alignment: the Sun, Earth, and Moon?",
+    "choices": [
+      "The Sun",
+      "Earth",
+      "The Moon",
+      "All three are equally in the middle"
+    ],
+    "answer": "C",
+    "hints": [
+      "The name 'solar eclipse' refers to the Sun's light being blocked. Think about which body must be doing the blocking.",
+      "Recall the order: Sun, Moon, Earth. Which one sits between the other two?"
+    ]
+  },
+  {
+    "id": "m6sci-solar-lunar-eclipses-002",
+    "loId": "m6sci.solar-and-lunar-eclipses",
+    "cedCode": "M6SCI-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A solar eclipse occurs when the Sun, Moon, and Earth line up in that order. During which phase of the Moon does this alignment happen, and why can this only occur at that phase?",
+    "choices": [
+      "Full moon, because that is the only phase when the Moon sits between the Sun and Earth",
+      "Waning crescent, because the Moon blocks the most sunlight at that phase",
+      "First quarter, because that is when the Moon is closest to the Sun",
+      "New moon, because that is the only phase when the Moon sits between the Sun and Earth"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about which moon phase puts the Moon in the position between the Sun and Earth in the sky.",
+      "A new moon is when we cannot see the Moon from Earth because it is on the same side of Earth as the Sun. How does that position relate to the order Sun, Moon, Earth?"
+    ]
+  },
+  {
+    "id": "m6sci-solar-lunar-eclipses-003",
+    "loId": "m6sci.solar-and-lunar-eclipses",
+    "cedCode": "M6SCI-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "During a lunar eclipse, Earth blocks sunlight from reaching the Moon. From what location on Earth can people see a lunar eclipse happening?",
+    "choices": [
+      "From the entire night side of Earth at the same time",
+      "Only from a narrow strip on Earth's daytime side",
+      "Only from the equator, where Earth's shadow is strongest",
+      "Only from locations directly opposite the Moon in the sky"
+    ],
+    "answer": "A",
+    "hints": [
+      "In a lunar eclipse, Earth's shadow falls on the Moon. Think about the size of Earth's shadow compared to the Moon.",
+      "During a lunar eclipse, everyone on Earth's night side is looking at the same object—the Moon. How does that affect visibility compared to a solar eclipse?"
+    ]
+  },
+  {
+    "id": "m6sci-solar-lunar-eclipses-004",
+    "loId": "m6sci.solar-and-lunar-eclipses",
+    "cedCode": "M6SCI-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Last month there was a full moon, but no lunar eclipse occurred. This month, there is another full moon. Explain why a lunar eclipse did not happen last month but might happen this month, using what you know about the Moon's orbit relative to Earth's orbit around the Sun.",
+    "choices": [
+      "The Moon was farther away from Earth last month, so Earth's shadow could not reach it, but this month the Moon is closer and the shadow can reach it.",
+      "The Moon's orbit is tilted about 5 degrees from Earth's orbit, so the Moon passes above or below Earth's shadow at most full moons, but only lands in the shadow when the full moon is near the two points where the orbits cross.",
+      "Last month the full moon occurred when the Moon was not lined up with the crossing point of its tilted orbit and Earth's orbital plane, so it missed Earth's shadow, but this month the alignment with a crossing point could place the Moon directly in the shadow.",
+      "The Sun's gravitational pull was stronger last month, pushing the Moon out of alignment with Earth's shadow, but this month the gravitational force has weakened enough to let the Moon move into the shadow zone."
+    ],
+    "answer": "B",
+    "hints": [
+      "The lesson explains that new and full moons happen about every 29.5 days, but eclipses happen far less often. What geometric fact causes this difference?",
+      "Think about the two places where the Moon's tilted orbit crosses the plane of Earth's orbit around the Sun. Eclipses only happen when a full moon or new moon occurs near those crossing points."
+    ]
+  },
+  {
+    "id": "m6sci-solar-lunar-eclipses-005",
+    "loId": "m6sci.solar-and-lunar-eclipses",
+    "cedCode": "M6SCI-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student observes that on one night, the Moon appears dark and is visible only as a silhouette against Earth's shadow. The student wants to figure out the order of the Sun, Earth, and Moon at that moment. Without looking at the Sun or using a compass, what should the student do to determine whether Earth or the Moon is in the middle of the three-body alignment?",
+    "choices": [
+      "Count how many days have passed since the last new moon, because the day count tells you the Moon's phase and whether the Moon is between Earth and the Sun or Earth is between the Moon and the Sun.",
+      "Measure the width of Earth's shadow on the Moon's surface, because the size of the shadow compared to the Moon's diameter reveals which body is casting the shadow and therefore which is in the middle.",
+      "Check the time of night and the position of the Moon. If the Moon is visible on the night side of Earth, then Earth is in the middle blocking sunlight from the Moon during a lunar eclipse.",
+      "Wait for the event to pass and observe which direction the next lunar phase moves toward, because the direction of the Moon's motion through its phases reveals the order of the three bodies in the most recent alignment."
+    ],
+    "answer": "C",
+    "hints": [
+      "In a lunar eclipse, you are standing on the night side of Earth, looking at the Moon. That tells you something about which body is in the middle.",
+      "Think about what phase the Moon must be at during a lunar eclipse. At that phase, which body is between the Sun and the Moon?"
+    ]
+  },
+  {
+    "id": "m6sci-solar-lunar-eclipses-006",
+    "loId": "m6sci.solar-and-lunar-eclipses",
+    "cedCode": "M6SCI-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "In model A, the Sun, Moon, and Earth are positioned Sun–Moon–Earth, and the Moon is very close to the straight-line path between the Sun and Earth. In model B, the Sun, Earth, and Moon are positioned Sun–Earth–Moon, and again the Moon is very close to the straight-line path. Both alignments happen at different times this year. For each model, identify the type of eclipse that could occur, describe what part of Earth or the Moon loses sunlight, and explain why the eclipse in model A would be visible from fewer people on Earth than the eclipse in model B.",
+    "choices": [
+      "Model A: solar eclipse visible from the entire daytime side; Model B: lunar eclipse visible from the entire night side. Model A affects fewer people because the Moon's shadow covers only a small part of Earth while Earth's shadow covers the whole Moon, so the lunar eclipse in Model B can be seen simultaneously by anyone on the night side.",
+      "Model A: lunar eclipse visible from a narrow area on Earth's night side; Model B: solar eclipse visible from the entire daytime side of Earth. Model A affects fewer people because the Moon is much smaller than Earth, so its shadow touches only a narrow strip while Earth's shadow can cover the much larger Moon.",
+      "Model A: solar eclipse visible from one location only; Model B: lunar eclipse visible from one location only. Model A affects fewer people because it is rarer than Model B and occurs at a smaller scale than a lunar eclipse.",
+      "Model A: solar eclipse visible from a narrow daytime strip; Model B: lunar eclipse visible from the entire night side. Model A affects fewer people because the Moon's small shadow covers only a narrow strip, while Model B's large Earth shadow can cover the entire Moon so everyone on the night side sees it at once."
+    ],
+    "answer": "D",
+    "hints": [
+      "Start by identifying which body sits in the middle of each alignment. The middle body is the one doing the blocking, and that tells you the eclipse type.",
+      "Compare the size of the Moon to Earth's shadow, and the size of Earth to the Moon's shadow. How does that size relationship explain the difference in visibility between the two eclipse types?"
     ]
   }
 ]

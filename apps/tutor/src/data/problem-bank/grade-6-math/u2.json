@@ -5,17 +5,17 @@
     "cedCode": "M6MATH-2.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What does the percent sign (%) mean? A teacher writes 45% on the board. According to the definition taught in class, what does this notation represent?",
+    "problemText": "What does the percent sign (%) mean? Write 35% as a fraction with 100 in the denominator.",
     "choices": [
-      "45 dollars out of every dollar",
-      "45 parts out of every 10 equal parts",
-      "45 parts out of every 1000 equal parts",
-      "45 parts out of every 100 equal parts"
+      "35",
+      "35/1",
+      "100/35",
+      "35/100"
     ],
     "answer": "D",
     "hints": [
-      "The word 'percent' itself gives a clue about what it compares to.",
-      "Think about what 'per hundred' means in everyday language."
+      "The word 'percent' means 'per hundred,' so the denominator is always 100.",
+      "Drop the % sign and put the number over 100."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6MATH-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A hundredths grid is a square divided into 100 smaller squares. If you shade 35 of those squares, what percent is represented by the shaded region?",
+    "problemText": "A school's library has 50% of its books checked out right now. Which decimal represents this percent?",
     "choices": [
-      "35%",
-      "3.5%",
-      "350%",
-      "0.35%"
+      "0.50",
+      "50.0",
+      "5.0",
+      "0.05"
     ],
     "answer": "A",
     "hints": [
-      "Recall that percent means 'per hundred,' so think about how many out of 100 squares are shaded.",
-      "The number of shaded squares tells you the percent directly when the grid has exactly 100 squares."
+      "To convert a percent to a decimal, divide by 100, which slides the decimal point two places to the left.",
+      "Check your answer against something you know: half of a whole is 0.5 and 50%."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6MATH-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student needs to convert 0.72 to a percent. She remembers that to go from a decimal to a percent, she must multiply by 100, which slides the decimal point two places to the right. What percent does she get?",
+    "problemText": "A recipe calls for 3/4 of a cup of milk. Which percent is equivalent to 3/4?",
     "choices": [
-      "7.2%",
-      "72%",
-      "720%",
-      "0.072%"
+      "34%",
+      "75%",
+      "43%",
+      "25%"
     ],
     "answer": "B",
     "hints": [
-      "Multiplying by 100 means moving the decimal point two places to the right.",
-      "Check your answer by thinking: is 0.72 more than half or less than half? The percent should match that."
+      "Scale the denominator up to 100 by multiplying both the top and bottom by the same number.",
+      "Once the fraction has 100 on the bottom, read the top number as the percent."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6MATH-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A recipe calls for 3/20 of a cup of sugar. To understand how much of the total that is, a baker wants to write this fraction as a percent. First, she scales the fraction so the denominator becomes 100. Then she reads the percent directly from the numerator. What percent of a cup is 3/20?",
+    "problemText": "A video is 72% downloaded. Write 72% as a fraction in simplest form and identify which statement about it is true.",
     "choices": [
-      "3%",
-      "20%",
-      "15%",
-      "6.7%"
+      "72/100 cannot be simplified because 72 and 100 share no common factors.",
+      "72/100 simplifies to 36/50 by dividing both by 2, but 36/50 represents a different download rate than 72%.",
+      "72/100 simplifies to 18/25 by dividing both by 4, and 18/25 names the same download rate as 72%.",
+      "72/100 simplifies to 9/12 by dividing both by 8, and 9/12 names the same download rate as 72%."
     ],
     "answer": "C",
     "hints": [
-      "Find what number you multiply 20 by to get 100, then multiply the numerator by that same number.",
-      "Once the denominator is 100, the numerator tells you the percent directly."
+      "Find the greatest common factor of 72 and 100 to reduce the fraction as far as possible.",
+      "Simplifying changes only the way you write the rate, not the rate itself—all equivalent forms describe the exact same amount."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6MATH-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student writes 8% as a fraction over 100, getting 8/100. She then simplifies by dividing both the numerator and denominator by their greatest common factor. What is the simplified fraction?",
+    "problemText": "A student claims that 0.08 converts to 8% by sliding the decimal point two places to the right. Convert 0.08 to a percent and explain whether the student's reasoning is correct.",
     "choices": [
-      "4/50",
-      "2/25",
-      "1/12",
-      "8/10"
+      "0.08 = 8%, but the student's reasoning is backwards—dividing by 100 slides the point left, not right.",
+      "0.08 = 0.8%, and the student correctly identified that multiplying by 100 moves the decimal right, but miscounted the number of places to move.",
+      "0.08 = 80%, and the student used the right method of sliding the decimal point two places to the right, but forgot to include the percent sign in the final answer.",
+      "0.08 = 8%, and the student's reasoning is correct because multiplying by 100 slides the decimal point two places to the right."
     ],
     "answer": "D",
     "hints": [
-      "Find the greatest common factor of 8 and 100 by listing factors or checking which numbers divide both evenly.",
-      "Once you simplify, the fraction should still equal 8% when you check by scaling back up to 100 on the denominator."
+      "To convert a decimal to a percent, multiply by 100, which slides the point two places to the right.",
+      "Check: if 0.5 = 50%, does moving the decimal right by two places give you a percent that makes sense?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6MATH-2.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student is given three equivalent forms of a rate: 9/100, 0.09, and a percent. She correctly identifies all three as equivalent. Then another student claims that 9% written as a decimal should be 0.9, not 0.09, because '9 comes before the zero.' Explain why that student's reasoning is wrong and identify which decimal form is actually correct.",
+    "problemText": "A hundredths grid shows 45 shaded squares out of 100. A student writes this as 45% and 0.45, then claims that 45/100 and 9/20 are not equivalent because they look different. Use the concept of percent as a rate per 100 to explain why the student is wrong and write both fractions in simplest form.",
     "choices": [
-      "0.09 is correct; moving the decimal point two places left from 9. gives 0.09, and when you multiply 0.09 by 100, you get 9%, which checks out.",
-      "0.9 is correct; the percent sign means you divide by 10, not 100, so the decimal point moves only one place to the left from 9.",
-      "0.09 is correct; the fraction 9/100 has 100 in the denominator, so the decimal form must have exactly two digits after the decimal point to represent hundredths.",
-      "0.9 is correct; since 9% contains the digit 9, the decimal form should also start with 9 in the tenths place to preserve the value of the numerator."
+      "Both 45/100 and 9/20 equal 45% (or 0.45) because they have the same value when scaled to a common denominator; 45/100 simplifies to 9/20 by dividing both by 5.",
+      "45/100 equals 45% but 9/20 equals 18%, so they represent different rates per 100 and the student is correct that they are not equivalent.",
+      "45/100 simplifies to 9/20, but 9/20 simplifies further to 9/10 when reduced completely, which means they are different simplified forms of the grid's value.",
+      "Both 45/100 and 9/20 convert to 0.45 when written as decimals, but this does not prove they are equivalent fractions because equivalent fractions must have identical numerators and denominators."
     ],
     "answer": "A",
     "hints": [
-      "Use the 'slide rule': dividing by 100 slides the decimal point exactly two places to the left. Start with 9. and slide twice.",
-      "Check your answer by multiplying the decimal by 100; you should get back to 9, which becomes 9% when you add the percent sign."
+      "Simplify 45/100 by finding the greatest common factor of 45 and 100, then compare the result to 9/20.",
+      "Remember: equivalent forms name the exact same rate, even if they look different. The hundredths grid shows 45%, and any fraction equal to 45/100 represents the same shaded amount."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What does the word percent mean? Explain what 35% represents.",
+    "problemText": "What does it mean to find 1% of a quantity first when solving a percent problem?",
     "choices": [
-      "Percent means a rate that compares a number to 100. The value 35% means 35 out of every 100.",
-      "Percent means a rate that compares a number to 10. The value 35% means 35 out of every 10.",
-      "Percent means dividing a number by itself. The value 35% means 35 divided by 35.",
-      "Percent means multiplying a number by 100. The value 35% means 35 times 100."
+      "You divide the whole quantity by 100 to get the value that represents 1% of that quantity.",
+      "You multiply the whole quantity by 100 to see how many groups of 1% fit inside it.",
+      "You subtract 1 from the percent number to find what remains.",
+      "You add the percent number to the quantity to find the total increase."
     ],
     "answer": "A",
     "hints": [
-      "The lesson defines percent as a comparison to a specific number.",
-      "Think about what the word 'percent' breaks down to: 'per cent' or 'per 100.'"
+      "Think about what 1% means in terms of the whole — it is 1 out of every 100 parts.",
+      "The lesson shows that 1% of 80 is found by dividing 80 by 100."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A library has 200 books. To find 50% of the books using the value-of-1% method, what is the first step you should take?",
+    "problemText": "A restaurant has 200 chairs. 10% of the chairs need to be reupholstered. How many chairs need reupholstering?",
     "choices": [
-      "Multiply 200 by 50 to get the total percentage you need to find.",
-      "Divide 200 by 100 to find the value of 1%.",
-      "Multiply 200 by 0.50 because 50% as a decimal is 0.50.",
-      "Subtract 50 from 200 to reduce the total by the percentage amount."
+      "10 chairs",
+      "20 chairs",
+      "100 chairs",
+      "190 chairs"
     ],
     "answer": "B",
     "hints": [
-      "The first step in the value-of-1% method is to find what 1% equals.",
-      "To find 1% of any quantity, you divide the whole by 100."
+      "Start by finding the value of 1% of 200 by dividing 200 by 100.",
+      "Since you need 10%, multiply the value of 1% by 10."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A school has 300 students. To find 10% of the students, you divide 300 by 100 to get 3 (the value of 1%). What is the next step?",
+    "problemText": "A library book collection has 300 books. 50% of the books are fiction. Which calculation shows the correct way to find how many fiction books there are?",
     "choices": [
-      "Add 3 to 300.",
-      "Divide 3 by 10.",
-      "Multiply 3 by 10.",
-      "Subtract 3 from 300."
+      "50 times 300, which equals 15,000",
+      "300 times 50 divided by 100, which equals 150",
+      "300 divided by 2, which equals 150",
+      "300 minus 50, which equals 250"
     ],
     "answer": "C",
     "hints": [
-      "Once you know what 1% equals, you need to find 10% by scaling up.",
-      "The percent number you want (10) tells you how many copies of 1% to use."
+      "Recall that 50% is a benchmark percent — it means half of the whole.",
+      "The answer should be much smaller than the whole collection, not larger."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A farm has 400 sheep. The farmer needs to find 35% of the sheep to move to a new pasture. Using the value-of-1% method, what is the correct answer? Choose the work that is entirely correct.",
+    "problemText": "A store orders 80 bottles of juice. By the end of the day, 25% have been sold. The manager wants to check this answer by using the benchmark that 25% equals one quarter of the quantity. What should the manager calculate to verify the answer?",
     "choices": [
-      "Divide 400 by 100 to get 4 (which is 1% of 400). Multiply 4 by 35 to get 140 sheep. Check: 25% of 400 is 100, and 50% of 400 is 200, so 35% should be between them, closer to 50%. 140 is between 100 and 200, closer to 200.",
-      "Divide 400 by 100 to get 4 (which is 1% of 400). Multiply 4 by 35 to get 140 sheep. Check: 10% of 400 is 40, and 50% of 400 is 200, so 35% should be between them, closer to 50%. 140 is between 40 and 200, closer to 40.",
-      "Divide 400 by 100 to get 4 (which is 1% of 400). Multiply 4 by 35 to get 140 sheep. Check: 10% of 400 is 40, and 50% of 400 is 200, so 35% should be between them, closer to 10%. 140 is between 40 and 200, and closer to 200.",
-      "Multiply 400 by 35 to get 14,000 sheep. Check: 50% of 400 is 200, so 35% should be less than 200. Since 14,000 is much larger than 200, this answer is wrong."
+      "Find 10% and 50% of 80, then see if 25% falls between them.",
+      "Multiply 80 by 0.25 and compare it to 80 divided by 4.",
+      "Add 25 to 80 and check if the sum is reasonable.",
+      "Divide 80 by 4 to see if it matches the 25% calculation."
     ],
     "answer": "D",
     "hints": [
-      "After you compute an answer using the value-of-1% method, use a benchmark percent to check whether your answer makes sense in size.",
-      "Remember that the percent number itself is never the answer by itself, and multiplying the whole by the percent number without scaling by 100 gives a false result."
+      "The lesson explains that 25% can be checked against a benchmark — think about what fraction 25% represents.",
+      "If your 25% calculation and the benchmark calculation give the same answer, you have verified your work."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A sports store has 250 basketballs. The manager wants to mark 20% of them for a sale. How many basketballs should be marked using the decimal shortcut method (writing the percent as a decimal and multiplying)?",
+    "problemText": "A video game has 160 levels. 5% of the levels are bonus levels. Another player says the answer is 800 levels because they multiplied 160 times 5. Explain why this answer is wrong and show the correct calculation.",
     "choices": [
-      "50 basketballs",
-      "25 basketballs",
-      "125 basketballs",
-      "200 basketballs"
+      "The player forgot to divide the percent number by 100 first; the correct answer is 160 divided by 100, then multiplied by 5, which is 8 levels.",
+      "The player mistakenly multiplied instead of dividing by the percent; the correct answer is 160 divided by 5, which is 32 levels.",
+      "The player should have converted 5% to 0.05 and then divided; the correct answer is 160 divided by 0.05, which is 3200 levels.",
+      "The player used multiplication when they should have subtracted the percent from the whole number; the correct answer is 160 minus 5 percent, which is 152 levels."
     ],
     "answer": "A",
     "hints": [
-      "Convert 20% to its decimal equivalent by dividing 20 by 100.",
-      "Multiply that decimal by the whole quantity (250) to find the percent of the quantity."
+      "The lesson emphasizes that the percent number must always be scaled down by 100 before it multiplies the whole.",
+      "Check the size: could 800 levels exist in a game with only 160 total levels?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A restaurant ordered 500 napkins. After one week, 30% of them had been used. The manager wants to reorder enough napkins to replace those used and have 500 napkins in stock again. How many napkins must the manager order? Show that your answer is sensible by checking it against a benchmark percent.",
+    "problemText": "A nature center has 250 visitors one day. 20% are adults, and 30% are teenagers. The remaining visitors are children. Using the value-of-1% method, find the number of children at the center that day, then verify your answer using two different benchmark percents.",
     "choices": [
-      "200 napkins; 10% of 500 is 50 and 50% of 500 is 250, so 30% should be between them closer to 50%, meaning 150 to 250 napkins would be sensible.",
-      "150 napkins; 10% of 500 is 50 and 50% of 500 is 250, so 30% should be between them closer to 50%, meaning 150 to 250 napkins would be sensible.",
-      "250 napkins; 10% of 500 is 50 and 50% of 500 is 250, so 30% should be between them closer to 10%, meaning 50 to 150 napkins would be sensible.",
-      "350 napkins; 50% of 500 is 250, so 30% should be less than that, and 350 is more than 250, which makes sense."
+      "Children: 125. Benchmark check: 50% of 250 is 125, and 10% is 25, so children (125) is between them.",
+      "Children: 100. Benchmark check: 10% is 25, so 20% and 30% together total 50%, leaving 50% as children, which is half of 250.",
+      "Children: 50. Benchmark check: 20% and 30% add to 50%, leaving 50% for children, which should be 125 by the 50% benchmark.",
+      "Children: 150. Benchmark check: 20% of 250 is 50 and 30% is 75, so 20% plus 30% equals 125, leaving 125 for children."
     ],
     "answer": "B",
     "hints": [
-      "First find 30% of 500 using the value-of-1% method or the decimal shortcut, then interpret that in the context of the story to find how many to reorder.",
-      "Use a benchmark like 10% (which is 50) or 50% (which is 250) to check whether your percent calculation is the right size before you apply it to the problem."
+      "First find 1% of 250, then multiply by 20 and by 30 to find the number of adults and teenagers. Subtract both from 250 to find children.",
+      "Use the 10% and 50% benchmarks to check: 10% of 250 is 25, and 50% of 250 is half, which is 125. Does your answer make sense in relation to these?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6MATH-2.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "When you convert a percent to its decimal form, what do you do to the percent number? For example, how would you write 35% as a decimal?",
+    "problemText": "To find the whole when you know the part and the percent, which operation should you use after converting the percent to a decimal?",
     "choices": [
-      "Move the decimal point one place to the left, so 35% becomes 3.5",
-      "Divide the percent number by 100, so 35% becomes 0.35",
-      "Multiply the percent number by 100, so 35% becomes 3500",
-      "Subtract 100 from the percent number, so 35% becomes −65"
+      "Multiply the part by the decimal",
+      "Divide the part by the decimal",
+      "Subtract the decimal from the part",
+      "Add the decimal to the part"
     ],
     "answer": "B",
     "hints": [
-      "Percent means 'out of 100,' so think about how to convert it to that denominator.",
-      "Look at the worked example: 40% became 0.40 and 25% became 0.25."
+      "Remember that PART equals DECIMAL times WHOLE, so you need to undo the multiplication.",
+      "Think about what operation undoes multiplication."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6MATH-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Marcus earned 24 points on his math quiz, and that score is 75% of the total points possible. What is the total number of points the quiz was worth?",
+    "problemText": "A basketball team won 80% of their games this season, and that is 16 wins. How many games did the team play in total?",
     "choices": [
-      "18 points",
-      "28 points",
-      "32 points",
-      "99 points"
+      "13 games",
+      "28 games",
+      "20 games",
+      "96 games"
     ],
     "answer": "C",
     "hints": [
-      "Start by converting 75% to its decimal form.",
-      "The whole quiz is worth more than 24 points, since 24 is only part of it."
+      "First, convert 80% to a decimal by dividing by 100.",
+      "The whole should be bigger than the part (16 games), since 16 is only part of the season."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6MATH-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A family donated 36 books to the library, and that donation was 45% of all the books they owned. How many books did the family own before the donation?",
+    "problemText": "Marcus found that 9 of his trading cards are holographic cards, and this represents 30% of his entire collection. Which equation should Marcus use to find the total number of cards in his collection?",
     "choices": [
-      "16 books",
-      "49 books",
-      "64 books",
-      "80 books"
+      "9 ÷ 30",
+      "30 ÷ 9",
+      "9 × 30",
+      "9 ÷ 0.30"
     ],
     "answer": "D",
     "hints": [
-      "Divide the part (36 books) by the decimal form of the percent.",
-      "Your answer should be larger than 36, since 36 books is only 45% of the whole collection."
+      "You must convert the percent to decimal form before setting up the division.",
+      "The part (9) should be divided by the decimal, not by the raw percent number."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6MATH-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A furniture store received a shipment of new chairs. After inspecting the delivery, the manager found that 18 chairs had a defect, which was 12% of the entire shipment. How many chairs were in the shipment? Then use a size check to verify your answer makes sense.",
+    "problemText": "A video game costs $45 on sale, which is 75% of its original price. After finding the original price, which check should you perform to make sure your answer is correct?",
     "choices": [
-      "150 chairs; a size check shows 150 is larger than 18, which makes sense because 18 is only 12% of the shipment",
-      "216 chairs; a size check shows 216 is larger than 18, which makes sense because 18 is only 12% of the shipment",
-      "21.6 chairs; a size check shows this is smaller than 18, so the answer is impossible",
-      "30 chairs; a size check shows 30 is larger than 18, which makes sense because 18 is only 12% of the shipment"
+      "Multiply the original price by 0.75 and see if you get $45",
+      "Add 75 to the original price and check if the result equals the sale price of $45",
+      "Divide the original price by 75 and verify that you get back the percent of the sale",
+      "Subtract $45 from the original price and confirm that the difference represents 25% of the original cost"
     ],
     "answer": "A",
     "hints": [
-      "Convert 12% to a decimal and divide 18 by that decimal.",
-      "After you find the whole, apply the size check: the whole must be bigger than the part when the percent is less than 100%."
+      "The check involves using the decimal form of the percent.",
+      "If you multiply the whole by the decimal, you should get back the part that was given in the problem."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6MATH-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Keisha solved a problem where the part was 28 and the percent was 35%. She got an answer of 80 for the whole. Which statement best explains what she did correctly and what check she should do next?",
+    "problemText": "Jasmine's teacher said that 24 students participated in the science fair, and that is 60% of the sixth-grade class. Jasmine calculates that the whole class has 16 students. What mistake did Jasmine most likely make?",
     "choices": [
-      "She converted 35% to 0.35 correctly, but she should divide 28 by 0.35 instead of multiply to find the whole",
-      "She divided 28 by 0.35 to get 80, and now she should multiply 0.35 times 80 to check that she gets back 28",
-      "She got 80 by using the wrong decimal, moving the decimal point only one place instead of two",
-      "She set up the equation correctly, but 80 is smaller than 28, so the answer must be wrong"
+      "She multiplied 24 by 0.60 instead of dividing",
+      "She divided 24 by 60 instead of by 0.60",
+      "She forgot to convert the percent to a decimal at all",
+      "She correctly found the answer but did not check it by multiplying back"
     ],
     "answer": "B",
     "hints": [
-      "The lesson says to check by multiplying back: multiply the decimal times the whole you found.",
-      "If that product equals the original part, the answer is correct."
+      "16 is smaller than 24, but the whole must always be bigger than the part when the percent is less than 100%.",
+      "Think about what number Jasmine should have divided by instead of what she used."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6MATH-2.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A bakery made two batches of cookies. In the first batch, 16 cookies were chocolate chip, and that was 20% of the batch. In the second batch, 24 cookies were oatmeal, and that was 30% of the batch. Which statement correctly compares the two batches and uses the part-percent-whole relationship to explain the result?",
+    "problemText": "During a survey, 12 people said their favorite color was green, and this represents 40% of everyone surveyed. After you find the total number of people surveyed, you multiply the total by 0.40 and get 12, confirming your answer is correct. How many people were surveyed in total, and why does the multiply-back check work?",
     "choices": [
-      "The first batch had 80 cookies total and the second batch had 80 cookies total, so both batches had the same size even though different percents were chocolate chip and oatmeal",
-      "The first batch had 80 cookies total and the second batch had 80 cookies total, so the percent tells you what fraction of each batch was that flavor, not which batch was bigger",
-      "The first batch was bigger because 20% is less than 30%, so the batch with 20% chocolate chip must have had more cookies overall",
-      "The second batch was bigger because 24 is more than 16, so the batch with 24 oatmeal cookies contained more cookies total"
+      "30 people; the check works because 0.40 is the decimal form of 40%",
+      "20 people; the check works because 40% of any number must equal 12",
+      "30 people; the check works because multiplying undoes the division you used to find the whole",
+      "50 people; the check works because dividing by 0.40 gives the same result as multiplying by 40"
     ],
     "answer": "C",
     "hints": [
-      "Use the part-percent-whole equation to find the total size of each batch separately.",
-      "Remember that a smaller percent of a larger whole can equal a larger part."
+      "Divide 12 by the decimal form of 40% to find the whole, then think about why the reverse operation (multiplication) confirms your work.",
+      "The check multiplies the whole by the decimal to recover the original part—this reverses the division equation."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-2.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A conversion factor is a ratio that connects two equivalent units within the same system of measurement. Which of the following is a conversion factor?",
+    "problemText": "A conversion factor is a ratio between two equivalent units in the same system. Which of the following is a conversion factor?",
     "choices": [
-      "A comparison between miles and kilometers, which measure distance but belong to different measurement systems",
-      "A number that tells you whether to multiply or divide when changing from one unit to another",
-      "The ratio of 1000 milliliters to 1 liter, since both describe volume in the metric system",
-      "The ratio of 16 ounces to 1 pound, where both units measure mass within the same customary system"
+      "inches compared to ounces",
+      "feet to meters",
+      "12 inches to 1 foot",
+      "1 kilogram to 500 grams"
     ],
     "answer": "C",
     "hints": [
-      "Look for two units that measure the same thing and belong to the same system.",
-      "Both milliliters and liters measure volume, and both are metric units."
+      "Think about two units that describe the exact same length or amount.",
+      "Conversion factors connect units within the same measurement system, not across different systems."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-2.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A swimming pool is 50 meters long. Your friend asks how many centimeters that is. There are 100 centimeters in 1 meter. Which calculation should you use to find the answer?",
+    "problemText": "A student needs to convert 7 meters into centimeters. There are 100 centimeters in 1 meter. Should the student multiply or divide by 100 to find the answer?",
     "choices": [
-      "50 ÷ 100",
-      "100 ÷ 50",
-      "50 + 100",
-      "50 × 100"
+      "Divide by 100, because centimeters are a smaller unit",
+      "Multiply by 100, because the answer should be a whole number",
+      "Divide by 100, because 7 is too small a number",
+      "Multiply by 100, because centimeters are a smaller unit"
     ],
     "answer": "D",
     "hints": [
-      "You are converting from a larger unit (meters) to a smaller unit (centimeters).",
-      "When converting to a smaller unit, the number should get bigger, so you should multiply."
+      "When converting from a larger unit to a smaller unit, the number describing the amount should get bigger.",
+      "Ask yourself: should 7 meters become a larger or smaller number when written in centimeters?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-2.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A bottle contains 5,000 milliliters of juice. You want to know how many liters that is. There are 1,000 milliliters in 1 liter. How many liters of juice are in the bottle?",
+    "problemText": "A recipe calls for 48 ounces of butter. There are 16 ounces in 1 pound. How many pounds of butter does the recipe call for?",
     "choices": [
-      "5 liters",
-      "50 liters",
-      "500 liters",
-      "5,000,000 liters"
+      "3 pounds",
+      "64 pounds",
+      "768 pounds",
+      "32 pounds"
     ],
     "answer": "A",
     "hints": [
-      "You are converting from a smaller unit (milliliters) to a larger unit (liters), so divide.",
-      "A bottle you can hold should not contain an enormous volume; check which answer makes sense for juice."
+      "You are converting from a smaller unit (ounces) to a larger unit (pounds), so the number should get smaller.",
+      "Divide 48 by the conversion factor 16."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-2.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A piece of string is 3 feet long. You cut it into pieces and measure them in inches. One piece is 24 inches. To check your work, you want to verify that the original 3 feet and the sum of all pieces in inches match. First convert 3 feet to inches. Then explain why you divided or multiplied.",
+    "problemText": "A bottle contains 2 liters of juice. There are 1000 milliliters in 1 liter. A student converts this to milliliters and gets 2000 milliliters. To check if this answer is correct, what operation should the student perform next, and what result would show the answer is right?",
     "choices": [
-      "3 ÷ 12 = 0.25 inches; you divided because converting from a larger unit to a smaller unit requires division to make the number smaller",
-      "3 × 12 = 36 inches; you multiplied because you are converting from a larger unit to a smaller unit, and a smaller unit needs a bigger number",
-      "3 ÷ 12 = 0.25 inches; you divided because feet are larger than inches, so you must always divide when converting down",
-      "3 × 12 = 36 inches; you multiplied because inches are smaller than feet and you need more of them to equal the same length"
+      "Multiply 2000 by 1000; the result should be 2,000,000",
+      "Divide 2000 by 1000; the result should be 2",
+      "Divide 2000 by 2; the result should be 1000",
+      "Add 2000 and 1000; the result should be 3000"
     ],
     "answer": "B",
     "hints": [
-      "Going from feet to inches is going from a larger unit to a smaller unit; which operation does that require?",
-      "Think about it: would 36 inches or 0.25 inches make more sense as equivalent to 3 feet?"
+      "To check a conversion, you reverse the operation you used. What operation was used to go from liters to milliliters?",
+      "When you divide back by the conversion factor, you should land on the number you started with."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-2.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A recipe calls for 64 ounces of milk. There are 16 ounces in 1 pound. You convert to pounds and get 4 pounds. Now you want to double-check your answer by reversing the operation. Which statement describes the correct check and what it tells you?",
+    "problemText": "A contractor needs 15 feet of copper wire. The wire is sold in rolls measured in inches, and there are 12 inches in 1 foot. After the contractor calculates how many inches of wire to buy, she does a size test. What should she notice about her answer?",
     "choices": [
-      "Divide 4 ÷ 16 to get 0.25; if the number is very small compared to the original, your conversion was correct",
-      "Add 4 + 16 to get 20; if you return to a whole number that matches the original amount, your conversion was correct",
-      "Multiply 4 × 16 to get 64; if you get 64 ounces back, the conversion changed the units but not the amount",
-      "Multiply 4 × 16 to get 64; if you get 64 ounces back, your original conversion was correct and you can trust it"
+      "The number of inches should be smaller than 15, because inches are smaller units",
+      "The number of inches should be equal to 15, because the length does not change",
+      "The number of inches should be larger than 15, because she is converting to a smaller unit",
+      "The number of inches should be 12 times as large as the feet, but only for metric measurements"
     ],
     "answer": "C",
     "hints": [
-      "When you converted, did you multiply or divide? The reverse operation should undo that.",
-      "The point of checking is to confirm that the actual amount of milk is still the same, just written in different units."
+      "A smaller unit requires a bigger number to describe the same amount.",
+      "When converting from feet to inches, does the number go up or down?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-2.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A scientist measures a sample that weighs 2.5 kilograms. She needs to record it in grams for her lab report. There are 1,000 grams in 1 kilogram. After converting, she realizes she made an error: she divided instead of multiplied and got 0.0025 grams. She wants to correct her mistake without starting over. What should she do, and why?",
+    "problemText": "A science class collected data on water volume. One measurement is 5000 milliliters; another is 8 liters. There are 1000 milliliters in 1 liter. To compare these two volumes using the same unit, a student must convert one of them. After converting, which statement correctly compares the two original measurements?",
     "choices": [
-      "Multiply 0.0025 by 1,000 to get 2.5 grams, because reversing division with multiplication always works",
-      "Multiply 0.0025 by 1,000 to get 2,500 grams, because she did the wrong operation the first time and must undo it",
-      "Divide 2.5 by 1,000 to get the correct answer, because she should start fresh with the right method",
-      "Divide 0.0025 by 1,000 to get the correct answer, because converting kilograms to grams always requires division"
+      "5000 milliliters is larger than 8 liters because 5000 is a bigger number than 8",
+      "The two amounts cannot be compared without knowing the container's shape",
+      "8 liters is smaller than 5000 milliliters because liters are larger units",
+      "5000 milliliters equals 5 liters, so it is smaller than 8 liters"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
-      "She divided when she should have multiplied. Reversing a wrong operation means doing the opposite of what she did.",
-      "Think: kilograms to grams is larger unit to smaller unit, which requires multiplication. She did division, so multiply to undo it."
+      "Convert 5000 milliliters to liters by dividing by the conversion factor 1000.",
+      "Once both measurements use the same unit, you can compare the numbers directly."
     ]
   }
 ]

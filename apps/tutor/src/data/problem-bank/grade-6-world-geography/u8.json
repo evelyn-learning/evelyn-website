@@ -7,15 +7,15 @@
     "responseFormat": "mcq",
     "problemText": "Which of the following is a physical characteristic of a place?",
     "choices": [
-      "A weekly market where farmers sell vegetables",
-      "A steep mountain valley that runs through the region",
-      "A workshop where people build wooden boats",
-      "A festival that people hold every spring"
+      "A marketplace where traders sell vegetables every morning",
+      "A mountain range that rises steeply from a coastal plain",
+      "A bridge that people built to cross a river",
+      "A festival that the local people hold every summer"
     ],
     "answer": "B",
     "hints": [
-      "Physical characteristics come from the land or weather, not from what people built or do.",
-      "Would this feature still be there if nobody ever lived in the place?"
+      "Physical characteristics are features of the land or weather, not things people built or do.",
+      "A physical characteristic would be there even if nobody lived in that place."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6GEO-8.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this description of a town called Millbrook: 'Millbrook sits at the edge of a wide river on flat land. Every morning, workers load grain onto boats to send downriver.' Which statement correctly explains why this description is complete?",
+    "problemText": "Read this description of a town called Millbrook: 'Millbrook has cold winters and warm summers. Its people run textile factories and workshops.' Does this description include both a physical characteristic and a human characteristic?",
     "choices": [
-      "It mentions the flat land and the river, which are two different physical characteristics.",
-      "It includes both a landform and a climate pattern that define the town.",
-      "It names both a physical characteristic (the river and flat land) and a human characteristic (loading grain onto boats).",
-      "It provides three separate details, which is always enough to describe any place."
+      "Yes, because it mentions both seasons and human work",
+      "No, because the climate and economic activities are two separate topics that cannot both count as characteristics of a place",
+      "Yes, because it describes the climate and the buildings and activities people have there",
+      "No, because it only lists facts about the town without explaining why those facts are important to geography"
     ],
     "answer": "C",
     "hints": [
-      "A complete description must pass both questions: does it name a physical characteristic AND a human characteristic?",
-      "Loading grain is something people do—that is a human characteristic. What natural feature of the land does the description mention?"
+      "Use the two-question check: Does it name a physical characteristic? Does it name a human characteristic?",
+      "Climate counts as a physical characteristic, and factories and workshops are human characteristics."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6GEO-8.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student describes a place called Highpeak as follows: 'Highpeak has cold, snowy winters and mild summers. The streets are lined with buildings painted in bright colors, and artisans create crafts in small studios.' A classmate says the description is incomplete. Is the classmate right or wrong, and why?",
+    "problemText": "A student is describing a town called Northpass and says: 'Northpass sits in a steep valley surrounded by high cliffs. This description is complete because it has two details.' Explain why the student is wrong, and then identify what kind of characteristic the description is missing.",
     "choices": [
-      "The classmate is wrong because the description includes four different details.",
-      "The classmate is wrong because it mentions both the climate and the painted buildings.",
-      "The classmate is right because the description mentions climate but only human details about buildings.",
-      "The classmate is right because the description does not name any landforms."
+      "The student did not name enough different types of landforms; Northpass is missing a description of the snow and ice",
+      "The student is wrong because cliffs and valleys are not real landforms; Northpass is missing any description of climate",
+      "The student is right that two details are enough, but both details describe climate instead of landforms",
+      "The student counts details incorrectly; Northpass is missing a human characteristic such as a building or activity"
     ],
     "answer": "D",
     "hints": [
-      "Check both questions: does it name a physical characteristic (landform OR climate)? Does it name a human characteristic (building OR activity)?",
-      "Climate counts as a physical characteristic. Does the description include any natural landforms like a mountain, plain, or coastline?"
+      "A complete description needs one physical characteristic and one human characteristic, not just two details of any kind.",
+      "The valley and cliffs are both landforms, so the description has no human characteristic."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6GEO-8.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two geographers are describing the same town, Willowport. Geographer A says: 'Willowport has a wide harbor and mild, rainy winters. Fishing boats fill the docks every day, and the people hold a festival each summer.' Geographer B says: 'Willowport lies on a bay with sandy beaches. The townspeople run a busy port with warehouses full of traded goods.' Which geographer has provided a complete description, and why?",
+    "problemText": "Two geographers are describing the same town. Geographer A says: 'This town has a dry, sunny climate and lies on a flat plateau.' Geographer B says: 'This town has a busy harbor where fishing boats dock, and its people hold a market festival every month.' Which statement correctly compares these two descriptions?",
     "choices": [
-      "Geographer A has provided a complete description because both a climate detail and a human activity are named, while Geographer B mentions only buildings and no natural features.",
-      "Geographer B has provided a complete description because it identifies both a landform (bay and beaches) and human characteristic (port operations and warehouses).",
-      "Both geographers have provided equally complete descriptions because each mentions physical features and human activities in similar amounts.",
-      "Neither geographer's description is complete because Geographer A omits landforms and Geographer B omits any mention of climate or weather patterns."
+      "Both descriptions are incomplete, but each one could become complete by adding details from the other",
+      "Geographer B's description is complete because harbors and markets are the most important human features to describe in any town",
+      "Both descriptions are incomplete because neither one names both a landform and a climate in the exact same sentence",
+      "Geographer A's description is complete because it includes two different types of physical characteristics instead of just one"
     ],
     "answer": "A",
     "hints": [
-      "Apply the two-question check to each description separately. Geographer A names the harbor (landform), winters (climate), fishing boats and festivals (activity). Geographer B names the bay and beaches (landforms) and warehouses (building).",
-      "Does Geographer B's description include any mention of the town's climate or weather pattern? Is that required for completeness?"
+      "Check each description separately using the two-question routine: does it name a physical characteristic, and does it name a human characteristic?",
+      "Geographer A has physical characteristics but no human characteristics; Geographer B has human characteristics but no physical characteristics."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6GEO-8.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A geography student says: 'A place cannot have a complete description using only one landform and one activity. You need at least one landform, one climate detail, and one building to describe any place properly.' Is this reasoning correct? Explain your answer using an example from the lesson.",
+    "problemText": "A place can be described in many different complete ways. Use the definitions from the lesson to explain why both of these descriptions of the same village are complete, even though they mention completely different details: Description 1: 'The village sits on a river with cool, wet summers, and the people operate a boat-building workshop.' Description 2: 'The village sits on a river with rolling hills nearby, and the people hold a pottery market every season.'",
     "choices": [
-      "The reasoning is correct because the lesson teaches that you must have at least three kinds of detail to describe a place.",
-      "The reasoning is incorrect because one physical characteristic (such as a landform) and one human characteristic (such as an activity) make a description complete, even if the climate and buildings are not mentioned.",
-      "The reasoning is correct because a description without climate information is always incomplete.",
-      "The reasoning is incorrect because climate is a human characteristic and should not be part of a geographic description."
+      "Both descriptions are complete because they both name a river; naming the same landform in both descriptions is what makes them both complete",
+      "Both descriptions are complete because each one includes at least one physical characteristic and at least one human characteristic, even though the details are different",
+      "Both descriptions are complete because one provides climate details while the other provides landform details, and together these physical characteristics make a description complete",
+      "Both descriptions are complete because they each mention human activities like workshops and markets, which are the essential elements that make any place description complete"
     ],
     "answer": "B",
     "hints": [
-      "The lesson shows that the check has only two questions, not three. What does each question ask for?",
-      "The worked example shows that naming one physical detail and one human detail is enough—no third kind of detail is required."
+      "Remember: a description is complete when it has at least one physical characteristic AND at least one human characteristic, not because of how many details it has.",
+      "The specific landform, climate, building, or activity does not matter as long as you have one of each type."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6GEO-8.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geographer examines three descriptions of a mountain town called Slate Ridge. Description 1: 'Slate Ridge is built high in a mountain pass where winters are long and snowy.' Description 2: 'Slate Ridge has narrow streets lined with stone buildings, and miners work in tunnels beneath the town.' Description 3: 'Slate Ridge sits in a mountain pass with a cool, dry climate. The town square holds a weekly market where local crafts are sold.' The geographer says that only one of these descriptions can be made complete by adding a single detail. Which description is that, and what kind of detail would complete it?",
+    "problemText": "A student reads four descriptions of different places and sorts them into two groups: those that are complete and those that are incomplete. The student says all four of these descriptions are complete: (1) 'A city built on a steep hillside where stone houses line narrow streets.' (2) 'A desert town with scorching hot days and dry wind, surrounded by sand dunes.' (3) 'A coastal settlement where fishing is the main activity, with docks and nets everywhere.' (4) 'A riverside market where traders meet daily, in a region with four seasons.' Which of these descriptions would you move to the incomplete group, and why? Use the lesson's two-question check to explain your choice.",
     "choices": [
-      "Description 1 would be complete with the addition of any human characteristic, such as a building or an activity.",
-      "Description 2 would be complete with the addition of any physical characteristic, such as a landform or a climate description.",
-      "Description 3 is already complete and needs nothing added to it.",
-      "None of these descriptions can be made complete by adding just one detail because they are all too vague."
+      "Move description 1 because hillsides are not true landforms; they are too steep to be a physical characteristic",
+      "Move description 2 because it names too many physical characteristics and no buildings where people actually work",
+      "Move description 3 because it mentions fishing as an activity but no climate or landform, so it lacks a physical characteristic",
+      "Move description 4 because traders and markets are human characteristics, but four seasons describe human behavior, not climate"
     ],
     "answer": "C",
     "hints": [
-      "First check each description against the two-question routine. Description 3 mentions a mountain pass (landform), climate (climate), and a weekly market (activity). Does it pass both questions?",
-      "Remember: completeness requires at least one physical characteristic and at least one human characteristic. Once both are named, the description is complete—adding more details does not change that."
+      "Apply the two-question routine: First, does it name a landform or climate? Second, does it name a building or activity?",
+      "Description 3 has human characteristics but when you check question 1, it does not name either a landform or describe the climate."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6GEO-8.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A student reads this sentence: 'Perception is how one particular person understands or describes a place, built from that person's own experience.' Based on the lesson, which statement about perception is correct?",
+    "problemText": "What does the word perception mean in geography? Choose the best definition.",
     "choices": [
-      "Perception is the same for everyone who visits a place because all people naturally see the same physical features and remember them in the same way.",
-      "Perception depends on whether a person is smart enough to notice details that other people miss when they visit places.",
-      "Perception comes from what each individual person has actually experienced, not from the place itself changing.",
-      "Perception is most accurate when it comes from someone who has studied the place in a book rather than visiting it in person."
+      "An objective fact about a location that remains constant regardless of who observes it or what background they bring to their observation.",
+      "A measurement tool used by geographers to calculate the distance from which a person can see landscape features and identify small details.",
+      "The way one particular person understands or describes a place, built out of that person's own experience of it.",
+      "A survey method that asks tourists and visitors to rate how much they like a place based on the number of attractions they visit."
     ],
     "answer": "C",
     "hints": [
-      "Look for the choice that matches the definition taught in the lesson about where perception comes from.",
-      "The lesson says perception is built from experience — not from book knowledge or being smart."
+      "Perception is not about what is objectively true about a place, but about how one person sees it.",
+      "Think about where perception comes from — what shapes it?"
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6GEO-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "In the invented town of Hartwell, a resident named Omar lives on a street where a loud factory operates every weekday morning. He says, 'The street is not very loud.' A visitor spending one Saturday night there says, 'What a quiet, peaceful street!' Both people are describing the same street. Based on the lesson, why do their descriptions not match?",
+    "problemText": "Jordan has lived on Maple Street for five years and walks to the bus stop at the same time every morning. He says the street is very quiet. His cousin is visiting for the first time and says Maple Street is noisy because she hears a lot of sounds she has never heard before. Based on what the scenario tells you about their experience, what best explains why they describe the same street differently?",
     "choices": [
-      "One of them is not paying close attention and must be making a mistake.",
-      "The visitor is lying to make the street sound better than it really is.",
-      "Omar's weekday routine at this location has made the factory noise feel ordinary to him, while the visitor experienced the street on a quiet night and has no routine there yet.",
-      "The street actually changes how loud it is depending on who is walking on it."
+      "Jordan has lived there longer, so he has learned to ignore sounds better than people who just arrived.",
+      "Jordan must be wearing headphones, which is why he does not hear the noise that his cousin can clearly hear.",
+      "The street is actually quieter in the morning when Jordan walks, and noisier at other times when the cousin is there.",
+      "Jordan is used to hearing the sounds on Maple Street because he experiences them every day, while his cousin is noticing them for the first time because they are new to her."
     ],
     "answer": "D",
     "hints": [
-      "Think about what experiences Omar and the visitor have actually had on this street — not about who they are as people.",
-      "The lesson teaches that a resident's routine can make things feel ordinary, and a visitor might see a place at a different time or without routine experience."
+      "Look at what the scenario states about how long each person has been on Maple Street and what they are used to.",
+      "Does the street actually change, or does how each person notices it change?"
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6GEO-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is reading two descriptions of the same city market: (1) A person who works in the market six days a week says, 'This market is an ordinary shopping place.' (2) A person visiting the city for the first time says, 'The market is crowded and dazzling — there are smells and colors everywhere!' The student thinks one of these people must be wrong. Based on the lesson, is the student correct?",
+    "problemText": "A student reads two descriptions of the same park. Resident: 'The park is a good place to cut across when I am in a hurry.' Visitor: 'The park is huge and confusing — I got lost trying to find my way through it.' The student thinks the resident must be telling the truth and the visitor must be wrong. What is wrong with that conclusion, based on what you know about how residents and visitors experience places differently?",
     "choices": [
-      "No. Both people are accurately reporting what their own experience of the market actually was, and neither description is more correct than the other.",
-      "Yes, because the person who works there every day has learned the market better through repeated visits and must be describing it more truthfully than a visitor.",
-      "Yes, because a first-time visitor always notices more important details about a place than someone whose daily routine has made them overlook things.",
-      "No, because the market changes its layout and inventory too frequently for any two different people to make stable observations about it."
+      "The resident's routine through the park over time has taught her a fast route, but the visitor is crossing the park for the first time without knowing a route yet, so both descriptions are accurate reports of their own experience.",
+      "The visitor is clearly not paying attention to the signs in the park, while the resident knows to look for them.",
+      "The student should ask a park official which description is correct, since the resident and visitor cannot both be right.",
+      "The visitor must have poor directions or a bad map, which is why the park seems confusing to her."
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches the 'equal-validity rule' — check what that means about which person's description is more correct.",
-      "Think about what each person has experienced: one has routine experience, one has newness experience. Can both be accurate at the same time?"
+      "Can both descriptions be true at the same time if each person is reporting what they actually experienced?",
+      "What does the resident's daily routine teach her that the visitor has not had time to learn?"
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6GEO-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "In the invented village of Brookside, a resident named Yuki walks the same hilly path to school almost every day. She describes it as 'a normal path with some ups and downs.' A visitor named Marcus, who grew up in a completely flat region where there are no hills at all, walks the same path for the first time and says, 'This path is incredibly steep and exhausting.' Why do the lesson concepts suggest their perceptions differ?",
+    "problemText": "Maya has lived in the mountain town of Pinewood for twelve years. She says the hills around town are not very steep. Jamal is visiting Pinewood for the first time, and he comes from a region with completely flat land. Jamal says the hills are extremely steep and hard to walk up. A student writes: 'Jamal thinks the hills are steeper because he is not used to walking in the mountains.' Using what you learned about point of comparison and resident routine, identify what is incomplete or missing from that explanation.",
     "choices": [
-      "Yuki is a faster and stronger walker than Marcus, so the physical effort required to climb hills does not affect her perception of the path's difficulty.",
-      "Marcus's point of comparison is flat land from his home region, so the same path feels much steeper to him than to Yuki, whose routine experience has made the hills feel ordinary.",
-      "Yuki is being deliberately polite and understating the actual steepness of the path because she does not want Marcus to feel discouraged or upset.",
-      "The path is actually constructed at two different steepnesses depending on which direction you walk it and the time of day each person chose to walk it."
+      "The explanation is wrong because it fails to note that Jamal comes from a flat region, which is his actual point of comparison for evaluating steepness.",
+      "The explanation mentions what Jamal is used to comparing hills to, but it does not say why Maya's daily experience with the hills affects how steep she perceives them to be.",
+      "The explanation does not explain that Maya has had twelve years to become familiar with the hills, which affects her perception of their steepness through routine.",
+      "The explanation should not mention what Jamal is used to, only how long Maya has lived there."
     ],
     "answer": "B",
     "hints": [
-      "Find the choice that explains their different perceptions using stated experience — what each person is used to at home, and how often they have walked this path.",
-      "The lesson teaches about 'point of comparison' — what place is each person already used to measuring things against?"
+      "A complete explanation traces both descriptions back to stated experience — what about both Maya and Jamal's experience matters?",
+      "One person's perception comes from what they compare hills to; the other comes from how often they experience hills. What does the explanation leave out?"
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6GEO-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is explaining why a resident and a visitor describe their town's river differently. The student writes: 'The visitor says the river is beautiful and amazing because she is more observant than the resident. The resident does not say the river is beautiful because he does not notice beauty the way visitors do.' Based on the lesson, what is wrong with this explanation?",
+    "problemText": "Read this scenario. Suki lives in a small village where she has worked at the same market stall for eight years. She says, 'This market is peaceful and predictable.' A traveler visiting the market for the first time says, 'This market is exciting and full of surprises.' Both statements refer to the exact same market at the exact same time. Which statement best explains why neither person is wrong, even though their descriptions do not match?",
     "choices": [
-      "It correctly explains the difference but uses the wrong word — 'beautiful' instead of 'amazing.'",
-      "It traces the difference to who the people are (how observant or sensitive they are) instead of tracing it to each person's stated experience with the river.",
-      "It fails to mention that rivers are usually more beautiful in the spring than in other seasons.",
-      "It incorrectly assumes that residents think about rivers, when actually residents never think about the places they live."
+      "The traveler is imagining and exaggerating the excitement in the market because she lacks experience with markets and does not understand that most markets are genuinely quiet and predictable environments.",
+      "Suki must be feeling unusually tired or emotionally distracted on the day the traveler visits, which prevents her from noticing the actual excitement and surprises that are really present in the market.",
+      "Suki's eight years of routine at the market have made its patterns familiar to her, so she experiences it as peaceful; the traveler is noticing the same things for the first time, so unfamiliar details stand out and feel exciting. Both are accurate reports of what each person has actually experienced.",
+      "The market operates differently during different hours of the day or week, so Suki is describing it based on her usual shift times while the traveler happens to visit during a busier, more chaotic period."
     ],
     "answer": "C",
     "hints": [
-      "The lesson teaches how to explain differences in perception: point to stated experience, not to what kind of person someone is.",
-      "A good explanation should mention things like routine, how long someone has been there, or what they are used to comparing things to — not personality traits."
+      "Think about how familiarity affects what stands out to a person. What does Suki's eight years teach her that the traveler does not have yet?",
+      "Both people are in the same market at the same time. What about their experience — not the market itself — explains the different descriptions?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6GEO-8.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this scenario: In the town of Millstone, a resident named Teo lives on a street where there is a small, old library. He walks past it every morning on his way to work and calls it 'unremarkable — just an old building.' A visitor named Sofia, who is from a town with no public library, walks past the same library for the first time and says, 'What an incredible place! I have never seen anything like it.' A student offers three possible explanations: (1) Teo is not smart enough to appreciate the library; (2) Sofia's home town being without a library makes this one feel special to her by comparison, and Teo's daily routine has made it feel ordinary; (3) The library is actually beautiful only on days when visitors come. Which explanation best uses the lesson concepts?",
+    "problemText": "A student reads this scenario: Kenji has lived beside the ocean for his whole life and crosses a rocky beach to get to his job every day. He says, 'The rocks on this beach are normal and easy to walk across.' Priya is visiting the beach for the first time. She grew up in a landlocked country where there are no beaches, and she says, 'These rocks are strange and difficult to navigate.' Another student makes this claim: 'Kenji's description is more accurate because he actually lives at the beach, so he understands it better.' Using only the stated experience in the scenario, explain what is wrong with that claim and provide the correct reason for why the two people describe the beach rocks differently.",
     "choices": [
-      "Explanation 1, because Teo has lived there longer and should understand the library better.",
-      "Explanation 2, because it traces each person's perception to their stated experience — Sofia's point of comparison and Teo's routine.",
-      "Explanation 3, because it acknowledges that places change depending on who is looking at them.",
-      "All three explanations are equally valid because perception is individual."
+      "Kenji is more accurate because living at a beach for his entire life has taught him to see and understand beach rocks correctly, whereas visitors always misjudge the difficulty and strangeness of unfamiliar beach environments.",
+      "Priya is actually more accurate because she is observing the rocks with fresh attention and care, while Kenji has stopped paying close attention to his surroundings after walking the same beach route for so many years.",
+      "Both descriptions are equally inaccurate because rocks on a beach are objectively neither normal nor strange as properties, and the accuracy of a description should not depend on a person's residence or background.",
+      "Kenji's daily routine has made rocky beaches familiar to him, while Priya is experiencing a rocky beach for the first time and has never walked on rocks by the sea before. His description is not more correct — both are accurate based on each person's own stated experience, not based on who 'understands better.'"
     ],
     "answer": "D",
     "hints": [
-      "Review the lesson's core teaching about how to explain differences in perception — should you use who people are, or should you use their stated experience?",
-      "Test each explanation by asking: Does it trace back to something stated about how each person has experienced the place, or does it make a claim about the people themselves?"
+      "Trace each description back to what the scenario actually states about each person's experience — not to who is smarter or who lives there.",
+      "Does living somewhere longer make a person's description 'more correct,' or does it just make certain things feel familiar and routine to that person?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6GEO-8.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "When you compare two places, you need to match the same kind of characteristic on both sides. Which pair shows a correctly matched comparison?",
+    "problemText": "A physical characteristic of a place is a feature created by nature. Which of the following is a physical characteristic?",
     "choices": [
-      "Comparing one place's mountains to another place's wheat farming",
-      "Comparing one place's cold winters to another place's wooden buildings",
-      "Comparing one place's tall buildings to another place's river valley",
-      "Comparing one place's climate to another place's climate"
+      "The jobs and activities people do",
+      "The buildings and stores in a place",
+      "The roads and bridges people built",
+      "The landforms and climate of a place"
     ],
     "answer": "D",
     "hints": [
-      "Remember: physical characteristics go with physical, and human characteristics go with human.",
-      "Look for two characteristics that are the same KIND, not two characteristics from different places."
+      "Think about what 'created by nature' means.",
+      "Which choice describes only things that exist without people building them?"
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6GEO-8.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Lakeside sits on flat land next to a large lake and has cool summers. Most people there build houses with large windows to let in light. Hilltown sits on steep, rocky slopes and has cool summers too. Most people there build houses with small, thick walls to stay warm. Which sentence is a genuine similarity between these two places?",
+    "problemText": "Eastport has a sandy beach and warm ocean water. Westport has rocky cliffs and cold ocean water. Which sentence correctly compares a physical characteristic of both towns?",
     "choices": [
-      "Both Lakeside and Hilltown have cool summers",
-      "Lakeside has flat land while Hilltown has steep slopes",
-      "Lakeside's houses have large windows but Hilltown's houses have small, thick walls",
-      "Lakeside is next to water but Hilltown is in the mountains"
+      "Eastport has a sandy beach, while Westport has rocky cliffs",
+      "Eastport's warm water is better for swimming than Westport's cold water",
+      "Eastport has a sandy beach, while Westport grows fish for food",
+      "Eastport is near the ocean, and Westport catches fish"
     ],
     "answer": "A",
     "hints": [
-      "A similarity means both places share the same kind of characteristic, and that characteristic is the same in both.",
-      "Check each choice: does it describe the same kind of characteristic for both places, and is that characteristic alike in both?"
+      "Look for a comparison that matches the same KIND of characteristic on both sides.",
+      "Which choice compares a landform (or water feature) from Eastport to a landform (or water feature) from Westport?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6GEO-8.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Plainville stretches across wide, open grassland with very dry summers. Forestholm lies in a thick forest region with very dry summers as well. Plainville's residents grow grain crops, while Forestholm's residents cut timber for building. Which sentence correctly states a difference between these two places?",
+    "problemText": "Two towns both sit in flat valleys and both experience cool winters. A student writes: 'Eastfield's buildings are made of brick, while Westfield's buildings are made of stone, so Westfield's architecture is very different from Eastfield's cool winters.' What is wrong with this sentence?",
     "choices": [
-      "Plainville grows grain, so it has better summers than Forestholm",
-      "Plainville sits on grassland while Forestholm sits in a forest",
-      "Plainville's summers are drier because it is not surrounded by trees",
-      "Forestholm cuts timber, which means it has different landforms than Plainville"
+      "It fails to mention that both towns sit in flat valleys, which is an important shared characteristic",
+      "It compares a human characteristic from one town to a physical characteristic of the other town, which is not a genuine comparison",
+      "It incorrectly states that Westfield's stone buildings are somehow connected to Eastfield's winter temperatures",
+      "It ranks one town's building material as superior to the other town's building material"
     ],
     "answer": "B",
     "hints": [
-      "A difference compares the same kind of characteristic and shows how they are NOT alike.",
-      "Check which choice matches a physical characteristic with a physical characteristic — not a landform with an activity."
+      "Ask yourself: is 'architecture' (buildings) a physical or human characteristic, and is 'cool winters' a physical or human characteristic?",
+      "Do the two things being compared match in type?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6GEO-8.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student writes: \"Porttown has a busy harbor where ships dock every day, while Mountainview has tall peaks. Therefore, Porttown's location is much different from Mountainview's location.\" This statement has a problem. Which correction fixes it?",
+    "problemText": "Sundale sits on a wide plain with hot, dry summers. Most residents raise cattle and sell meat at market. Lakeside sits beside a large lake with cool, wet summers. Most residents fish the lake and run restaurants. Which of the following is a genuine difference that correctly compares the same kind of characteristic for both towns?",
     "choices": [
-      "The student should remove the word 'much' so the statement sounds more objective",
-      "The student should say that Porttown is a better place because harbors bring more visitors",
-      "The student should describe Mountainview's location (a coastal plain or a mountainside) instead of just naming its landform, so the comparison matches location with location",
-      "The student should compare Porttown's activity (ships docking) to Mountainview's activity (mining or farming), instead of comparing a human characteristic to a physical characteristic"
+      "Sundale's plain location makes it a superior place for raising cattle compared to Lakeside's lake-based fishing economy",
+      "Sundale has a hot, dry climate that shapes its settlement, while Lakeside's cool, wet climate shapes its different economic activities",
+      "Sundale's main activity is raising cattle, while Lakeside's main activity is fishing and restaurant work",
+      "Sundale relies on grazing animals for income, while Lakeside has water resources and a cooler temperature year-round"
     ],
     "answer": "C",
     "hints": [
-      "The error is mixing a human characteristic (busy harbor with ships) with a physical characteristic (tall peaks). What should be compared instead?",
-      "Both places have a location — their overall setting. What is Porttown's location or setting? What is Mountainview's location or setting?"
+      "Identify what kind of characteristic each activity is—human or physical?",
+      "Look for the choice where both towns' characteristics are the same kind (both activities, or both climates, or both landforms)."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6GEO-8.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Desert Town has hot, dry summers and winters, and its people live in low, thick-walled buildings made of clay. Garden Town has mild, cool summers and mild, cool winters, and its people live in tall wooden houses with many windows. A student compares the two towns and says: \"Desert Town's weather is much harsher, so Garden Town must be the better place to live.\" Why is this statement wrong as a geography comparison?",
+    "problemText": "Northport sits in a steep mountain valley with long, snowy winters. Its buildings have thick walls and pitched roofs. Southmere sits in a wide grassland with mild, short winters. Its buildings have thin walls and flat roofs. A student claims: 'Northport is a better place to live because its buildings are designed to handle snow.' Why is this claim not a proper geography comparison?",
     "choices": [
-      "Because Desert Town actually has milder weather than Garden Town",
-      "Because the student did not look at both places' buildings in addition to their weather",
-      "Because a difference in climate does not make one place better or worse — it just makes them different",
-      "Because the student should have mentioned that Desert Town's buildings are made of clay instead of wood"
+      "Because it describes the climate of one town while describing the building design of the other town instead of comparing the same type of feature",
+      "Because it ignores that Southmere's grassland terrain is actually superior for human settlement compared to Northport's mountain valley",
+      "Because it assumes that buildings with thick walls and pitched roofs are always better than buildings with thin walls and flat roofs in every location",
+      "Because it turns a difference in building design into a ranking of which town is better, rather than simply stating the difference"
     ],
     "answer": "D",
     "hints": [
-      "The error is not about whether one place is better. Reread the lesson rule about comparisons and ranking.",
-      "A comparison can correctly identify a difference, but what does the lesson say about turning a difference into a rank or judgment?"
+      "A difference is not a rank. What would be the proper way to state this as a comparison without saying one place is 'better'?",
+      "Remember: geography describes how two places are alike or different, not which one is better."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6GEO-8.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Coastal Landing sits on a sandy shore with warm, wet summers and is flooded by rain and storm surge each year. Its buildings are built on tall stilts. Most people work as fishers. Dry Ridge sits on a high, rocky plateau with warm, dry summers and rarely sees rain. Its buildings are built close to the ground with deep foundations. Most people work as herders. A student is asked to find a genuine similarity and a genuine difference between the two places. The student writes: \"Both places have warm summers, which is a similarity. Their buildings are different because Coastal Landing uses stilts while Dry Ridge uses deep foundations.\" Is this comparison correct?",
+    "problemText": "Hilltown sits on a rocky hilltop and has cold, snowy winters. Its people build thick-stone houses and work as loggers, cutting timber from nearby forests. Flatfield sits on a wide, flat plain and has warm, dry summers. Its people build adobe houses and work as farmers growing corn. A student writes two sentences: (1) 'Hilltown has snow while Flatfield has farmers,' and (2) 'Both towns build houses that match their different climates.' Which sentence is a genuine comparison, and why?",
     "choices": [
-      "Yes, because both statements correctly match the same kind of characteristic on each side and accurately describe what the lesson said about each place",
-      "No, because warm summers are not truly the same when one place experiences wet conditions and the other experiences dry conditions, making the climate pattern fundamentally different",
-      "No, because the student identified a building style difference when the lesson shows that the real difference lies in how precipitation and landform shape construction choices differently",
-      "No, because the student should have compared how each place's geography affects the types of work people do rather than comparing physical features like climate and building styles"
+      "Sentence 2 is genuine because it compares how both towns' buildings relate to their climates, matching human characteristics on both sides",
+      "Sentence 1 is genuine because it mentions snow and farmers from both places",
+      "Neither sentence is genuine; sentence 1 mixes a physical characteristic with a human activity, and sentence 2 fails to name the specific difference in their buildings",
+      "Sentence 2 is genuine because it mentions that the two towns have different climates"
     ],
     "answer": "A",
     "hints": [
-      "Check each statement: does it match physical-with-physical or human-with-human? Does it accurately describe what was said about each place?",
-      "For the first statement, look at the descriptions again: does Coastal Landing have warm, wet summers? Does Dry Ridge have warm, dry summers? Is 'both have warm summers' what the descriptions say?"
+      "Check sentence 1: is 'snow' the same kind of characteristic as 'farmers'? No—one is physical and one is human.",
+      "Check sentence 2: does it compare how BOTH towns design their houses (a human characteristic) in relation to their different CLIMATES (physical characteristics)? Yes—it correctly matches the kinds on both sides."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "When you sketch and label a community map, what do you add to each landmark that a mental map does not have?",
+    "problemText": "A community map must include two pieces of information for each landmark. What are these two pieces of information that every labeled landmark needs to show?",
     "choices": [
-      "A label that identifies whether the landmark is physical or human",
-      "A compass rose showing north, south, east, and west directions",
-      "A distance scale showing how many miles apart the landmarks are",
-      "A color code that matches each landmark to a different neighborhood"
+      "The landmark's name and whether it is a physical or human characteristic",
+      "The landmark's name and how far away it is from the starting point",
+      "The landmark's location on the map and the time it takes to reach it",
+      "The landmark's description and the route that leads away from it"
     ],
     "answer": "A",
     "hints": [
-      "Think about what makes a community map different from just remembering the route in your head.",
-      "The lesson says a community map 'adds one more piece to each landmark: a label.'"
+      "Think about what 'labeled' means in the lesson — what label goes on each landmark?",
+      "A community map connects landmarks by routes, but each landmark itself gets one specific type of label."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is sketching a community map that includes a tall oak tree standing alone in a field. Which label should the student write next to the oak tree?",
+    "problemText": "You are making a labeled community map and one of your landmarks is an old rock formation that sits at the edge of your town and was never built by people. How should you label this landmark on your map?",
     "choices": [
-      "Human, because trees are important landmarks in a community and must be labeled to show their significance to residents",
-      "Physical, because the tree occurs on its own without being built or added by people",
-      "Human, because someone planted the tree in that location years ago, making it a landmark created through human action",
-      "Physical, because it is old and has been there a long time, which means it developed naturally over many years"
+      "Human characteristic, because people know about it and use it as a landmark",
+      "Physical characteristic, because it occurs on its own without being built or added by people",
+      "Physical characteristic, because it is older than human landmarks",
+      "Human characteristic, because people created it by carving rocks and shaping the formation over time"
     ],
     "answer": "B",
     "hints": [
-      "Remember: physical landmarks occur on their own; human landmarks are built or added by people.",
-      "Even if a person planted it long ago, does that mean the tree itself is something people built or constructed?"
+      "A rock formation was not built or added by people — it occurred on its own.",
+      "The lesson defines physical characteristic as something that happens naturally, not something people made."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student's labeled map of River Town shows these landmarks in order: town hall (human), small pond (physical), park gate (human), rocky outcrop (physical). When the student checks this map against the written description, the order of landmarks and all the turns match perfectly. What should the student conclude about this labeled map?",
+    "problemText": "Your friend sketched a community map showing a park, a playground, a footbridge, and a small creek, in that order and connected by the correct turns. Your friend labeled the playground as 'physical' and the footbridge as 'human.' Which label or labels are incorrect?",
     "choices": [
-      "The map is wrong because it has too many physical landmarks",
-      "The map is wrong because the turns do not match the description",
-      "The map is correctly labeled because the order and turns match the description",
-      "The map needs to be redrawn because a park gate is actually a physical landmark"
+      "Both the playground and the footbridge are incorrect — they should switch labels",
+      "Only the footbridge is incorrect — it should be labeled physical because it crosses water",
+      "Only the playground is incorrect — it should be labeled human because people built it",
+      "Both labels are correct — playgrounds and footbridges are both human characteristics"
     ],
     "answer": "C",
     "hints": [
-      "The lesson says that getting the order and turns right is separate from labeling correctly.",
-      "If the order and all the turns match the description, and each label fits what the landmark actually is, then what is the verdict?"
+      "A playground is something people built for recreation — what kind of characteristic is that?",
+      "The footbridge was built by people to cross the creek, so the footbridge label is correct. Check the playground label separately."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student sketches a map of Millbrook following this description: 'Starting at the library, go straight to a small waterfall. From the waterfall, turn to the town square. From the town square, turn to a gravel path.' The student's finished map shows the landmarks in the correct order with the correct turns, but labels them: library (human), waterfall (human), town square (human), gravel path (human). How many labels are incorrect, and which landmark or landmarks should be relabeled?",
+    "problemText": "A student describes a route through Midfield: 'Starting at the town library, go straight to a meadow. From the meadow, turn left to Midfield High School. From the school, turn right to a small pond.' The student sketches the map with landmarks in the correct order and turns, but labels them: library (human), meadow (human), high school (human), pond (human). When checking this labeled map against the description, which landmarks have incorrect labels and why?",
     "choices": [
-      "One label is wrong: the waterfall should be physical",
-      "Two labels are wrong: the waterfall and the gravel path should be physical",
-      "Three labels are wrong: the waterfall, the town square, and the gravel path should be physical",
-      "All four labels are wrong and the entire map must be redrawn"
+      "The library and high school are labeled incorrectly — they should be physical because they are permanent features of the community",
+      "Only the meadow is labeled incorrectly — it is a physical characteristic, but the pond should remain labeled human",
+      "Only the pond is labeled incorrectly — it is a physical characteristic, but the meadow should remain labeled human",
+      "The meadow and pond are labeled incorrectly — both are physical characteristics because they occur naturally without being built by people"
     ],
     "answer": "D",
     "hints": [
-      "Go through each landmark one at a time and ask: did people build or add this, or does it occur on its own?",
-      "A waterfall, a town square, a gravel path — think carefully about which ones are features people created and which occur naturally."
+      "Go through each landmark one at a time. Ask yourself: Did people build this, or does it occur on its own?",
+      "A meadow is an open grassy area that occurs naturally. A pond is a body of water that forms naturally. Neither was built by people."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student describes a community map out loud: 'From the fire station (human), straight ahead to Pine Creek (physical); turn left to the covered bridge (human); turn right to a sandy beach (physical) at the water's edge.' When the student sketches this map and checks it against the description, the order, turns, and labels all match. What can the student confidently say about this labeled community map?",
+    "problemText": "You are checking a friend's labeled map of Oakbrook against its description. The description says the route goes from the post office straight to a hiking trail, then turns to a gazebo, then turns again to a grove of trees. Your friend's map shows these landmarks in exactly that order with exactly those turns. However, the labels read: post office (human), hiking trail (human), gazebo (human), grove of trees (human). Explain what is wrong and what the correct labels should be.",
     "choices": [
-      "The map is correctly labeled and ready to present because every landmark is in the right place with the right label",
-      "The map must be wrong because a covered bridge is too small to be considered an important landmark on most community maps",
-      "The map cannot be checked yet because it does not include the student's neighborhood name or other residential streets",
-      "The map needs revision because Pine Creek should be labeled human since streams and creeks are often managed by communities"
+      "The order and turns are correct, but the hiking trail and grove of trees are mislabeled — a hiking trail is physical and a grove of trees is physical, so the correct labels are: post office (human), hiking trail (physical), gazebo (human), grove of trees (physical)",
+      "The order and turns are correct, but the gazebo and post office are mislabeled — both are physical because they are built structures that people designed in Oakbrook, so the correct labels are: post office (physical), hiking trail (human), gazebo (physical), grove of trees (human)",
+      "The order is wrong — the gazebo should come before the hiking trail according to the description given, so the map placement does not match what was described",
+      "The labels are correct — every landmark in a community is a human characteristic because people notice them and use them for navigation and landmarks on their maps"
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches you to check one landmark at a time: the name, the turn, and whether its label is physical or human.",
-      "If the order, turns, and physical-or-human labels all match the description, what does that tell you?"
+      "Check whether each landmark was built by people or occurs on its own in nature.",
+      "A hiking trail runs through natural terrain. A grove of trees grows naturally. A gazebo is built. The post office is built."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student's friend creates a labeled map of Ashwood from this description: 'Starting at the schoolhouse, a path leads straight ahead to a large ravine. From the ravine, a turn leads to the community center. From the community center, another turn leads to an old wooden dock.' The friend's labels read: schoolhouse (human), ravine (physical), community center (human), dock (human). The student is asked to check this map. The student notices that the order and turns match the description perfectly. However, when the student rechecks the description to confirm whether 'dock' should be labeled physical or human, the student realizes this label might be wrong. Why might the dock label be incorrect, even though the order and turns are right?",
+    "problemText": "A student is asked to sketch and describe a labeled map of Brookside using this description: 'Start at the recreation center, go straight ahead to a small cliff overlooking a valley, turn left at the cliff to a community garden, turn right at the garden to Brookside Museum, and end at a stand of tall pine trees past the museum.' The student sketches the route correctly with all landmarks in order and all turns matching the description. When the student describes the map aloud, she says: 'From the recreation center (human), straight to a cliff (human), turn left to a community garden (physical), turn right to Brookside Museum (human), and end at pine trees (human).' Identify which labels do not match the description and explain why they are wrong.",
     "choices": [
-      "Because a dock is constructed by people as a structure built into or over the water, making it a human landmark rather than a physical one",
-      "Because a dock is a structure people built or added, so it should be labeled human, which matches the friend's label and is correct",
-      "Because the description does not provide enough detail about whether the dock was originally built by people or formed naturally over time",
-      "Because a dock must be very old if it is wooden, so it should be labeled as a historical feature that does not fit either the physical or human category"
+      "The cliff is mislabeled as human but should be physical; however, the community garden is correctly labeled as physical because gardens are natural spaces that grow without help from people",
+      "The cliff and community garden are mislabeled — the cliff is a physical characteristic because it is a natural rock formation, and the community garden is a human characteristic because people built and tend it",
+      "The pine trees are mislabeled as human when they should be physical because trees grow naturally in forests and are not made by people, and the gazebo should have been labeled as well",
+      "The recreation center is mislabeled as human when it should be physical because it is a building for outdoor recreation, and the museum should also be labeled as physical since both structures exist on the landscape"
     ],
     "answer": "B",
     "hints": [
-      "Think about what a dock is: is it something that occurs on its own in nature, or something people built?",
-      "The friend labeled the dock as human. Is that label correct based on what a dock actually is?"
+      "A cliff is a rock formation that occurs on its own in nature. A community garden is created and maintained by people. Apply the physical and human definitions to each one separately.",
+      "When checking a labeled map, go landmark by landmark and ask: Does this landmark occur naturally, or did people build it and add it there?"
     ]
   }
 ]

@@ -5,17 +5,17 @@
     "cedCode": "M6GEO-6.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A natural resource is classified as renewable if nature can supply a new amount of it within a person's lifetime. Which of the following is an example of a renewable resource?",
+    "problemText": "A natural resource is something from the natural world that people use. Which of the following is a natural resource?",
     "choices": [
-      "Coal buried deep underground that takes millions of years to form",
-      "Petroleum pumped from oil deposits that took hundreds of millions of years to create",
-      "Mineral ore containing copper that forms over timescales far longer than a human life",
-      "Wind energy that keeps blowing as long as the sun heats Earth's atmosphere"
+      "A bicycle built from metal parts",
+      "A plastic bag made in a factory",
+      "A computer chip designed by engineers",
+      "Coal dug from underground"
     ],
     "answer": "D",
     "hints": [
-      "The one-question test asks: can nature make more of it within a person's lifetime?",
-      "Look for a resource that nature keeps producing right now, not one that took geological ages to form."
+      "Natural resources come directly from nature, not made by people in factories.",
+      "Think about what the word 'natural' means — does it come from the Earth or from a factory?"
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6GEO-6.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geothermal power plant uses heat energy from deep inside Earth to generate electricity for a city. Apply the one-question test to geothermal energy. Which statement correctly classifies this resource and gives the right reason?",
+    "problemText": "A farmer wants to know whether the water in a river is a renewable or nonrenewable resource. Use the one-question test to classify it. Which answer is correct?",
     "choices": [
-      "Geothermal energy is renewable because Earth continues to produce heat deep inside it at a pace that makes new heat available within a person's lifetime",
-      "Geothermal energy is nonrenewable because it comes from underground, just like coal and mineral ore, and resources found below Earth's surface cannot be replaced quickly enough to matter for human use",
-      "Geothermal energy is renewable because people can easily access it by drilling wells and the ease of extraction means the resource will never be depleted no matter how much we use",
-      "Geothermal energy is nonrenewable because it will eventually run out if we use too much of it over time, just like all other energy sources that humans depend on for power"
+      "Water is renewable because rain and melting snow refill rivers within a person's lifetime.",
+      "Water is nonrenewable because nature takes hundreds of years to cycle water through the atmosphere and back to rivers.",
+      "Water is nonrenewable because some rivers run underground and are harder for people to access.",
+      "Water is renewable because it has always existed on Earth since before humans lived here."
     ],
     "answer": "A",
     "hints": [
-      "Remember that location underground does not decide the classification—only how fast nature resupplies it does.",
-      "The test asks whether nature can make more of this resource within a human lifetime, not whether the resource is easy to reach or might someday be used up."
+      "The one-question test asks: can nature supply a new amount of this resource within a person's lifetime?",
+      "Think about the water cycle — how often does nature refill rivers with new water?"
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6GEO-6.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A factory uses natural gas extracted from underground deposits to heat its buildings. The natural gas formed in Earth's rocks over hundreds of millions of years. Apply the one-question test to classify natural gas. Which statement is correct?",
+    "problemText": "A mining company extracts iron ore from rock deep beneath the ground. How should iron ore be classified, and why?",
     "choices": [
-      "Natural gas is renewable because it is found underground where nature is always at work creating new deposits in the rocks at the same speed we remove it",
-      "Natural gas is nonrenewable because nature cannot supply a new deposit of it within a person's lifetime",
-      "Natural gas is renewable because it comes from a gas form, not a solid like coal, and this physical state means it regenerates faster than solid resources can",
-      "Natural gas is nonrenewable because humans extract it from one place at a time, removing all the reserves from a single location before moving to drill another well elsewhere"
+      "Renewable, because it comes from deep underground where there is a very large quantity available for mining.",
+      "Nonrenewable, because it takes far longer than a person's lifetime for nature to form new iron ore deposits.",
+      "Renewable, because ore is a solid material that people can dig up, process, and use for tools and construction.",
+      "Nonrenewable, because miners have to use special equipment and dig very deep into the ground to extract it."
     ],
     "answer": "B",
     "hints": [
-      "Ask yourself: can nature make a new supply of natural gas in the time a person lives?",
-      "The fact that it is underground or comes from far below tells you where it is found, but not whether it is renewable—only the timescale of resupply matters."
+      "Location underground does not decide whether a resource is renewable or nonrenewable.",
+      "Ask yourself: after a deposit of iron ore is mined out, how long does it take nature to make a new one?"
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6GEO-6.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two mining operations remove resources from the same geological area. Operation A removes iron ore, which took millions of years to form. Operation B harnesses geothermal energy from the heat in those same rocks. A student claims both operations must take the same amount of time to resupply because both work with resources from the same underground location. Explain why this claim is wrong, and classify each resource correctly.",
+    "problemText": "Two students are debating whether natural gas is renewable. Student A says, 'Natural gas must be nonrenewable because it comes from underground, just like fossil fuels.' Student B says, 'Natural gas could be renewable because it is a gas, not a solid, so maybe nature can make more of it quickly.' Who is correct, and what is the best explanation?",
     "choices": [
-      "The claim is wrong because iron ore and geothermal energy come from different planets, so they cannot be compared at all in terms of how quickly nature resupplies them",
-      "The claim is wrong because one resource takes longer to form than the other, even though location does not decide the classification; iron ore is nonrenewable and geothermal energy is nonrenewable because both require millions of years to regenerate",
-      "The claim is wrong because location does not decide whether a resource is renewable or nonrenewable; iron ore is nonrenewable because it takes far longer than a lifetime to form, and geothermal energy is renewable because Earth keeps producing heat continuously",
-      "The claim is wrong because geothermal energy is much more useful than iron ore, so it must be classified differently based on how important the resource is to human needs"
+      "Student A is correct. All resources found underground are nonrenewable because they must be extracted by mining or drilling.",
+      "Student B is correct. Gases are always renewable resources because their form allows them to move and regenerate quickly in nature.",
+      "Student A is closer to correct, but for the wrong reason. Natural gas is nonrenewable because it takes far longer than a person's lifetime to form, not just because it is underground.",
+      "Neither student used the right method. The classification depends on whether natural gas is burned for energy or stored in tanks."
     ],
     "answer": "C",
     "hints": [
-      "The key warning from the lesson: where a resource is found does NOT decide its classification—only how long nature takes to resupply it does.",
-      "Test each resource separately using the one-question test: can nature supply more of it within a person's lifetime?"
+      "Recall the worked example with geothermal energy and copper ore — both come from underground but are classified differently.",
+      "The one-question test asks about time, not about location or the form of the resource."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6GEO-6.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student reads that coal and petroleum are both fossil fuels found underground and concludes that all fossil fuels must be nonrenewable. She then reasons that since fossil fuels are nonrenewable, any resource that is nonrenewable must also be a fossil fuel. Which part of her reasoning is correct, and which is incorrect?",
+    "problemText": "A geothermal power plant uses heat energy from deep inside Earth to produce electricity. Another power plant burns coal for the same purpose. Explain why these two energy sources are classified differently, even though both must be extracted from underground.",
     "choices": [
-      "Both parts are correct because fossil fuels and nonrenewable resources refer to the same group of materials",
-      "The first part is correct, but the second part is incorrect because not all nonrenewable resources are fossil fuels—mineral ore is also nonrenewable but is not a fossil fuel",
-      "The first part is incorrect because fossil fuels can be renewable if they are found in certain locations",
-      "Both parts are incorrect because the classification of a resource depends on its location, not on how long nature takes to resupply it"
+      "Geothermal energy is renewable and coal is nonrenewable because geothermal energy produces electricity more efficiently and with less waste than coal does.",
+      "Geothermal energy is renewable and coal is nonrenewable because geothermal energy is found in more locations worldwide than coal deposits are.",
+      "Geothermal energy is renewable and coal is nonrenewable because heat travels continuously upward from Earth's interior while coal deposits form only in rare underground conditions.",
+      "Geothermal energy is renewable and coal is nonrenewable because Earth keeps producing new geothermal heat within a person's lifetime, but coal takes far longer than a person's lifetime to form."
     ],
     "answer": "D",
     "hints": [
-      "Recall the definition of fossil fuel from the lesson and consider whether it includes all nonrenewable resources.",
-      "Use the worked example of copper ore: it is nonrenewable but it is not a fossil fuel—this shows that 'nonrenewable' is a broader category than 'fossil fuel.'"
+      "Remember that location does not decide the classification — only how long nature takes to resupply the resource does.",
+      "Apply the one-question test to each one: can nature supply a new amount within a person's lifetime?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6GEO-6.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An explorer discovers that a region contains sunlight, wind, coal deposits, and iron ore, all in the same geographic area. She also learns that deep geothermal energy is accessible there. A company wants to build an energy facility and must choose which resources to use based on how long nature takes to resupply them. Sort all five resources into renewable and nonrenewable groups using the one-question test, and then explain why a company trying to operate for the next hundred years might prefer to use one group over the other based on the principle of resource resupply.",
+    "problemText": "A student reads that oil is pumped from underground, then concludes: 'Since oil is nonrenewable and comes from underground, all underground resources must be nonrenewable.' Test this claim by classifying wind energy and geothermal energy using the one-question test. Which explanation correctly shows why the student's conclusion is wrong?",
     "choices": [
-      "Renewable: sunlight, wind, geothermal energy; Nonrenewable: coal, iron ore. A company planning for a hundred years might prefer renewable resources because nature resupplies them within a person's lifetime, so the energy source will not run out during the company's operation",
-      "Renewable: coal, geothermal energy; Nonrenewable: sunlight, wind, iron ore. Location is the deciding factor in classification, so resources found underground last longer and are better for long-term company planning than surface resources",
-      "Renewable: sunlight, iron ore; Nonrenewable: wind, coal, geothermal energy. Solid materials are renewable because they can be mined and molded into new forms, while gases and energy forms are nonrenewable and deplete quickly",
-      "Renewable: geothermal energy only; Nonrenewable: all others. Only energy that comes from deep inside Earth is renewable because it is hidden and protected from human use, whereas all other resources are exposed and vulnerable to overuse"
+      "The student is wrong because geothermal energy is found deep underground and is renewable — nature produces new geothermal heat continuously within a person's lifetime, proving that underground location does not determine the classification.",
+      "The student is wrong because wind and geothermal energy are not extracted from underground locations, so the one-question test does not apply to them in the same way as it does to oil.",
+      "The student is wrong because wind and geothermal energy are newer technologies that scientists have only recently developed for practical human use and electricity production.",
+      "The student is wrong because the one-question test applies only to fossil fuels and mined materials, not to energy sources that come from the sun or from inside Earth."
     ],
     "answer": "A",
     "hints": [
-      "Apply the one-question test to each resource separately: can nature supply a new amount within a person's lifetime?",
-      "Think about what 'renewable' means for a company's long-term planning: if nature keeps resupplying a resource fast enough, the company will not run out during its operation."
+      "One contrasting case is enough to disprove a claim that uses 'all' or 'must.' Does geothermal energy fit or break the student's rule?",
+      "Look back at the worked example comparing geothermal energy and copper ore — they make the same point about location."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6GEO-6.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Natural resources are not spread evenly across Earth. What does this mean? Look for the choice that correctly defines resource distribution.",
+    "problemText": "Which of the following is an example of a natural resource? Consider what people use from nature to meet their needs.",
     "choices": [
-      "Some places have large amounts of a resource while other places have very little or none of that same resource.",
-      "All places on Earth have exactly the same amount of every natural resource available to them for economic use.",
-      "Resources only exist in cities and towns, not in remote areas where population is sparse or development is limited.",
-      "A place that has one type of resource must also have all other types of resources in similar quantities and concentrations."
+      "Fertile soil in a farming region",
+      "A paved road built through a city",
+      "A factory that processes crops",
+      "A store that sells food to families"
     ],
     "answer": "A",
     "hints": [
-      "Think about whether every place has the same amount of forests, minerals, and fertile soil.",
-      "Consider what 'uneven' or 'unequal' distribution means."
+      "A natural resource is found in nature, not built by people.",
+      "Think about what exists in the environment before people use it."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6GEO-6.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Region X has a concentrated deposit of valuable minerals underground and rock formations suitable for mining. Based only on this resource, which large-scale activity would this region best support? Use the lesson's examples of how resources match activities.",
+    "problemText": "A coastal region has very thick forest but thin, rocky soil with little rainfall. Based on the region's resources, which large-scale activity would be most practical there?",
     "choices": [
-      "Large-scale farming, because minerals can be processed and mixed into soil to replace nutrients lost over time.",
-      "Large-scale mining, because a mineral deposit is a concentrated amount of valuable mineral in one place.",
-      "Large-scale logging, because rock formations that contain minerals must be cleared away to access timber resources.",
-      "Large-scale fishing, because mineral deposits in underground rock attract groundwater to the region and support aquatic life."
+      "Large-scale crop farming, because the region has land available",
+      "Large-scale logging, because the region has abundant trees to cut",
+      "Large-scale mining, because forests contain valuable minerals",
+      "Large-scale ranching, because the region has open space for grazing"
     ],
     "answer": "B",
     "hints": [
-      "Remember: mining depends on having a concentrated amount of a mineral to dig out.",
-      "Look at which activity's need matches Region X's actual resource."
+      "Match the resource that is actually present to the activity that depends on it.",
+      "Logging requires a specific resource; what does thick forest provide that logging needs?"
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6GEO-6.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student observes that Town A has wide, flat land with deep, fertile soil and steady rain, while Town B has thin, rocky soil in hilly terrain. The student concludes: 'Town A has better land than Town B.' Using the lesson's correction about comparing places with different resources, explain what is wrong with this conclusion.",
+    "problemText": "Town Ashville has wide, flat land, deep fertile soil, and steady yearly rainfall. Which statement best explains why large-scale farming would be difficult in a town that lacks these exact resources?",
     "choices": [
-      "The student is correct; fertile land is objectively better than rocky land in all situations.",
-      "The student ranked one place above another because of which resources it has, but different resources simply suit different activities—neither is 'better.'",
-      "The student should have measured the land area of both towns before making a comparison.",
-      "The student forgot that Town B might have thick forest, which would make its land better after all."
+      "Large-scale farming requires a different type of land shape in other locations.",
+      "Towns without farming must support a different activity, making farming impossible everywhere else.",
+      "The resources that farming depends on—fertile soil, flat land, and regular water—would not all be present.",
+      "Fertile soil and rainfall are not actually important to growing crops on a large scale."
     ],
     "answer": "C",
     "hints": [
-      "Recall the worked example about Sunfield and Pinehollow and how the correction addressed ranking.",
-      "Think about whether having one resource instead of another makes a place superior or just different."
+      "Think about what farming needs to work: what specific conditions support it?",
+      "If even one of those conditions is missing, what happens to the activity?"
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6GEO-6.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Place 1 has thick forest but thin, rocky soil. Place 2 has fertile, flat, well-watered land but very few trees. A student claims: 'Place 1 cannot support any useful activity because it lacks fertile soil for farming.' Using the lesson's key ideas, identify the flaw in this reasoning and explain what activity Place 1's resources actually support.",
+    "problemText": "Town Pinewood is heavily forested but has thin, rocky soil. A student claims: \"Pinewood has no useful resources because it cannot support large-scale farming.\" Identify the error in this claim and explain what resource Pinewood actually has.",
     "choices": [
-      "The flaw is that Place 1 is too far from Place 2 to share resources. Place 1's thin soil could still support farming if forests were removed.",
-      "The flaw is that missing the resource a particular activity needs does not mean a place has no resources at all. Place 1's thick forest supports large-scale logging, even though its soil does not suit farming.",
-      "The flaw is that the student should have checked whether Place 1 has minerals underground. Mineral deposits could make up for the lack of fertile soil.",
-      "The flaw is that thin, rocky soil is actually quite useful for farming because rocks protect plant roots. Place 1 can farm after all."
+      "The student is wrong because forests grow in places with thin soil, so the soil must also be fertile for farming somewhere else.",
+      "The student is wrong because thin, rocky soil is actually a valuable resource that some activities need more than fertile soil.",
+      "The student is wrong because farming is not the only activity people do, so Pinewood must have all types of resources.",
+      "The student is wrong because Pinewood's forest is a useful resource that supports large-scale logging, even though the soil does not suit farming."
     ],
     "answer": "D",
     "hints": [
-      "Look for the choice that applies the lesson's key idea: 'A place missing one resource still has others.'",
-      "Think about what logging needs (trees) versus what farming needs (fertile soil and water)."
+      "Missing one resource (fertile soil for farming) does not mean a place has no resources at all.",
+      "What specific resource does Pinewood have in abundance that suits a different activity?"
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6GEO-6.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two regions are being evaluated for economic development. Region M has a rich mineral deposit but poor soil. Region N has excellent farming land but no known mineral deposits. A development planner writes: 'Region N is the better choice because it has fertile soil, and farming is more important to people than mining.' Using the lesson's ideas about resource distribution and activity, identify what the planner did wrong.",
+    "problemText": "Two neighboring regions have different resources. Region A has thick forest and thin soil; Region B has fertile soil, flat land, and little forest. A student writes: \"Region B has better land than Region A.\" What is the error in this statement, and how should it be corrected?",
     "choices": [
-      "The planner made a value judgment by ranking one region above another based on which resource it has, when in fact each region's resources suit a different activity, and neither resource is inherently 'better.'",
-      "The planner forgot that Region M might also have fertile soil hidden in another area that the geological survey did not yet uncover.",
-      "The planner should have counted how many people currently live in each region and whether they have the skills needed for that region's primary activity.",
-      "The planner incorrectly assumed that farming requires fertile soil; in reality, mining operations can also produce food through underground cultivation methods."
+      "The error is calling one region's land \"better\" when it simply suits a different activity; each region's resources support different activities, and neither is better or worse.",
+      "The error is that Region A actually has better land because forested areas with thin soil are superior for supporting dense populations compared to flat farmland.",
+      "The error is that \"better\" is only correct when measuring by total quantity of resources, and Region B has a larger area of usable land than Region A does.",
+      "The error is that Region B's fertile soil and flat land are worse than Region A's forest because agricultural land is now less valuable in modern economies than timber is."
     ],
     "answer": "A",
     "hints": [
-      "Recall the worked example correction: 'Ranking one place above another because of which resource it has is not' what geography does.",
-      "Does the lesson say one type of resource is more important or 'better' than another?"
+      "A resource difference is not the same as a ranking of which place is better overall.",
+      "How would the statement sound if you switched which region's resource was the focus?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6GEO-6.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geographer studies four regions and their main activities: Region P (thick forest, logging); Region Q (fertile, flat, well-watered land, farming); Region R (thin soil, no forest, but mineral deposits, mining); Region S (unclear resources, struggling with all three activities). Based on the lesson's ideas about how resources shape activities, which statement best explains Region S's struggle and correctly identifies what Region S is likely missing?",
+    "problemText": "A prospector discovers a large mineral deposit in a mountain region with poor soil and sparse vegetation. Local leaders debate whether to develop mining there. One leader says: \"This region will become wealthy because it has valuable minerals.\" Another says: \"This region is worthless because it cannot farm.\" Using what you know about resource distribution and activity, explain why both statements are incomplete and what a more accurate description would be.",
     "choices": [
-      "Region S must be a 'bad' place overall because it supports none of the three major activities as well as the others do, which shows that some places are naturally cursed with no useful resources whatsoever.",
-      "Region S likely lacks a concentrated amount of any one resource—it may have scattered trees, poor soil, and few minerals. Without large amounts of the specific resource an activity needs, that activity cannot operate at large scale.",
-      "Region S's people are not working hard enough to develop their economy; the lesson shows that resources are the only thing that matters, so Region S residents must have chosen not to succeed.",
-      "Region S probably has all three resources present in very small quantities spread across a wide area, which proves that uneven distribution of resources causes all regions with mixed resources to remain equally poor and underdeveloped."
+      "The first leader ignores the fact that mineral deposits do not occur naturally; the second ignores that farming is always more profitable than mining. A complete view is that the region's minerals suit mining, which is different from farming but not worse.",
+      "The first leader assumes minerals guarantee wealth without considering the effort needed to extract them; the second falsely assumes the region has no resources. A complete view is that the region has a mineral deposit that suits large-scale mining as an activity, separate from whether it can farm.",
+      "Both leaders are correct because a region either has resources or it does not, and there is no middle ground between wealth and worthlessness.",
+      "The first leader overestimates mineral value; the second is correct that regions without fertile soil cannot succeed. A complete view is that mining always fails in poor soil."
     ],
     "answer": "B",
     "hints": [
-      "Think about what each activity requires: logging needs thick forest, farming needs fertile soil and water, mining needs a concentrated mineral deposit.",
-      "Consider what it means for a resource to be present 'in large amount' versus present but scattered or thin."
+      "Each leader is making an error about what resources the region has and what activities they suit. What resource is actually present, and what activity does it support?",
+      "One leader ranks the region by one missing resource; the other ignores a resource that is actually there. How does the lesson distinguish between having one resource versus another?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A student brings lunch in a metal container and washes it each evening so she can use the same container again tomorrow. What conservation practice is she using?",
+    "problemText": "What does it mean to conserve a natural resource? Explain what changes and what stays the same when a resource is conserved.",
     "choices": [
-      "Repair, because she is maintaining her container in working order by washing it regularly each time.",
-      "Reuse, because the same item is used again for its job instead of being thrown away.",
-      "Recycle, because she is cleaning the container to break it down and transform it into a different product.",
-      "Reduce, because she is washing rather than buying a new lunch container each day for her meals."
+      "Conserving a resource means stopping people from using it altogether so that nature can make more of it faster and builds up a surplus that will never run out.",
+      "Conserving a resource means slowing down how fast people use it, so the same supply lasts longer over time. Nature does not change how it makes or replaces the resource—only the rate at which people draw from it changes.",
+      "Conserving a resource means finding a brand new resource to use instead, so the old one is never touched again and can recover on its own without any human activity interfering.",
+      "Conserving a resource means that nature automatically produces more of it in response to human use, so people can use it without any limits or concern for depletion."
     ],
     "answer": "B",
     "hints": [
-      "The same container keeps doing the same job—lunch storage—day after day.",
-      "Think about whether the item is being broken down and remade, or just used again as-is."
+      "Think about the key idea: what changes is how fast people draw from the resource, not how nature replaces it.",
+      "A conserved resource lasts longer—does that happen because nature speeds up, or because people slow down?"
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A boy's shoes develop a hole in the sole. Instead of throwing them away, his parent glues the sole back together and he wears them for another six months. Which practice is this, and what does it accomplish?",
+    "problemText": "A school cafeteria used to give every student a new paper napkin each lunch. This year, they bought cloth napkins that students wash and reuse throughout the month. Which conservation practice does this change represent, and why does it lower how much new material must be made?",
     "choices": [
-      "Reuse, because the shoes are being worn again in their original form rather than being discarded or transformed.",
-      "Recycle, because the parent is breaking down the shoe material and reforming it into a new product for use.",
-      "Repair, because fixing the broken part lets the same shoes keep doing their job without buying new ones yet.",
-      "Reduce, because fewer shoes are purchased overall when broken ones are fixed instead of being replaced with new pairs."
+      "Recycle, because the napkins are washed and broken down into fibers that are spun into completely new napkins with different materials each time.",
+      "Reduce, because using cloth instead of paper means the school decides to buy fewer napkins overall and stops purchasing paper products entirely.",
+      "Reuse, because the same cloth napkins do their job multiple times instead of new napkins being made for each lunch.",
+      "Repair, because cloth napkins can be mended if they tear, allowing them to serve their purpose for a longer period of time before replacement."
     ],
     "answer": "C",
     "hints": [
-      "The shoes were broken and then made to work again—what practice specifically fixes something that stopped working?",
-      "After the fix, the shoes do the same job for the same person, not a different job or a different product."
+      "The key difference: are the same items being used again for the same job, or is something else happening to them?",
+      "When you wash a cloth napkin and use it again, nothing is broken down or remade—what is actually happening to that napkin?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two families need to carry their groceries home from the store. Family A uses plastic bags from the store one time and throws them away, then buys new bags the next week. Family B brought cloth bags from home, uses them for groceries, takes them home, and brings them back to the store again next week. Why does Family B's practice matter for conserving resources?",
+    "problemText": "A student's backpack zipper breaks. Instead of buying a new backpack, she takes it to a repair shop where a worker replaces the broken zipper with a new one. The student keeps using the same backpack for another two years. Why does this action conserve natural resources?",
     "choices": [
-      "They are reducing because they are making a choice to use fewer bags at the very start.",
-      "They are recycling because the bags are being remade into new materials each time.",
-      "They are reusing because the same bags do their job again instead of new ones being made each week.",
-      "They are repairing because they maintain their bags so they last longer before breaking."
+      "Because the student reuses the backpack after the repair, which means no new backpack is ever needed and the student will never have to buy a replacement again.",
+      "Because repairing teaches the student to want fewer things, which reduces how much they buy overall and changes their shopping habits.",
+      "Because metal zippers can be melted down and remade, so the broken one becomes material for another zipper instead of being thrown away.",
+      "Because fixing the broken zipper allows the same backpack to keep doing its job, so a new backpack does not have to be made from new material yet."
     ],
     "answer": "D",
     "hints": [
-      "The bags still work perfectly—they were never broken and needed fixing.",
-      "The same set of bags keeps being used for the same job, week after week, rather than being thrown away."
+      "Repair works by fixing something that stopped working so it keeps doing its job. Does that delay when a new one has to be made?",
+      "Think about the rate idea: over those two years, how many new backpacks does this family have to make compared to families that replace a broken backpack right away?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A factory makes plastic toys. The factory changes its process so that each toy uses 20% less plastic from the very start, instead of using the normal amount and hoping people will recycle the toys later. Why is this change in practice a more powerful way to conserve the plastic resource than relying on recycling alone?",
+    "problemText": "Two families each buy a plastic lunch container. Family A uses the same container every day to pack their child's lunch for six years before it finally breaks. Family B uses a container for one month, then throws it away and buys a new one to replace it. Over those same six years, which family's practice does more to conserve natural resources, and what is the key difference between what happens in each case?",
     "choices": [
-      "Using less plastic from the start means fewer raw materials have to be drawn out and made into toys, so the resource lasts longer than if a normal amount were made and later recycled.",
-      "Reducing plastic in toys costs less money than setting up recycling programs, so factories will see profits increase and choose to conserve more over time.",
-      "Recycling plastic from old toys requires so much energy that it wastes more resources than simply reducing the amount made from the beginning of production.",
-      "Making toys with less plastic forces people to reuse their toys instead of throwing them away and buying new ones every few months."
+      "Family A conserves more because the same container does its job for many years, so fewer new containers need to be made from new material during that time. Family B needs to make or buy a new container many times, each time drawing new material.",
+      "Family B conserves more because throwing away containers allows the materials to be collected separately and processed into recycled products more efficiently than trying to reuse a single worn container.",
+      "Neither family conserves more because both families eventually discard their containers, and the environmental impact per person is the same whether disposal happens all at once or spread over time.",
+      "Family A conserves more, but only if the broken container is donated to someone else instead of being thrown away, otherwise both families create equal waste over the six-year period."
     ],
     "answer": "A",
     "hints": [
-      "Think about the rate idea: conserving a resource means slowing how fast people draw from it. How does using less material from the start affect that rate?",
-      "Recycling does conserve, but it happens after the material has already been made into a toy. What happens if less material is needed for the toy in the first place?"
+      "Count how many new containers each family needs over six years. Does that number affect how much new material has to be drawn?",
+      "Reuse means the same item keeps working instead of being replaced. How many times is the same item replaced in each family's story?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A community collects old bicycles that no longer work and sends them to a repair shop. The shop fixes them and donates them to students who need transportation. Compare this to a scenario where the shop instead melts down the metal parts and remakes them into new bicycle frames. Which approach is an example of reuse, and why does it conserve the resource more effectively in this situation?",
+    "problemText": "A community runs a clothing swap where people bring clothes they no longer wear, and take home clothes that others brought. After the swap, some clothes are worn again by new owners for years. Other clothes that no one wants at the swap are sent to a factory where they are shredded and the fibers are spun into new yarn for making blankets. Why do both of these practices conserve natural resources, even though they work in completely different ways?",
     "choices": [
-      "Melting down and remaking is reuse because the metal material from old bicycles is being used to produce new bicycle frames instead of purchasing virgin metal from new mining operations.",
-      "Fixing and donating the old bicycles is reuse because the same bicycles do their job again rather than being thrown away or melted down, and each repair postpones the need for new bicycles longer than melting and remaking does.",
-      "Both are equally effective at conserving because both avoid throwing away the bicycles and both result in usable transportation for the community within a few months.",
-      "Fixing is reuse, but melting down and remaking into new frames is more effective because the metal gets transformed into a stronger, newer material with better performance for the students."
+      "Both practices are forms of reuse because they both prevent clothes from being thrown into landfills and keep the items in circulation for extended periods of use.",
+      "Both practices lower how much new material must be drawn and made over time. Reuse keeps a worn item in service so no new item is made yet; recycling turns used material into material for a new product instead of making that product from freshly taken material.",
+      "Both practices work by reducing—people swap clothes because they decide to buy less, so fewer new clothes need to be made in factories and fewer resources are extracted overall.",
+      "Both practices are forms of repair because the clothes are restored to working condition and made to function again in some form, whether as clothing for new owners or as fiber for new products."
     ],
     "answer": "B",
     "hints": [
-      "Reuse means the same item keeps doing its job. Recycling means the material is broken down and remade into something new. Which is which?",
-      "Consider how long the resource lasts: does a bike that keeps working do more to slow down material use than bike metal that gets melted down and made into new frames?"
+      "Look at what happens to the clothes that find new owners versus what happens to the clothes sent to the factory. Are they treated the same way?",
+      "Think about the definitions: one keeps the same item doing a job again, the other breaks down used material and remakes it into something new. How are both of these different from each other, yet both lower how much is drawn?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student notices that her school throws away cardboard boxes every week after deliveries arrive. She proposes three solutions: (1) the school could order supplies in smaller shipments so fewer boxes arrive in the first place; (2) the school could flatten the boxes and donate them to a local art program that uses them for projects; (3) the school could bundle the boxes, take them to a paper mill, and have them remade into new office paper for the school to buy back. Rank these three solutions from slowest to fastest at drawing down the cardboard resource over one year, and explain which practices they represent.",
+    "problemText": "A family owns a wooden table that has one broken leg. They have three options: (1) hire a carpenter to fix the broken leg so the table keeps doing its job; (2) donate the broken table to a school, which will use it as-is to store supplies instead of throwing it away; (3) chop up the table and feed the wood into a chipper to make mulch for a garden. Which of these options is repair, which is reuse, and which would NOT be considered a conservation practice from this lesson? Explain why the one that is not a conservation practice does not meet the definition of conserve.",
     "choices": [
-      "Solution 2 (donate to art), then 1 (smaller shipments), then 3 (remake into new paper). Solution 2 is reuse, solution 1 is recycle, and solution 3 is reduce.",
-      "Solution 1 (smaller shipments), then 2 (donate to art), then 3 (remake into new paper). Solution 1 is reduce, solution 2 is reuse, and solution 3 is recycle.",
-      "Solution 1 (smaller shipments), then 2 (donate to art), then 3 (remake into new paper). Solution 1 is reduce, solution 3 is recycle, and solution 2 is reuse.",
-      "Solution 3 (remake into paper), then 1 (smaller shipments), then 2 (donate to art). Solution 1 is reuse, solution 2 is reduce, and solution 3 is recycle."
+      "Option 1 is reduce because the family chooses not to buy a new table. Option 2 is reuse. Option 3 is recycle since the wood becomes mulch. All three conserve because nothing ends up in a landfill or wasted.",
+      "Option 1 is repair. Option 2 is recycle because the table becomes something new and useful. Option 3 is not a conservation practice because mulch must be remade every season and does not provide permanent or lasting resource value.",
+      "Option 1 is repair (fixing the broken leg so the same table does its original job). Option 2 is reuse (the same table does another job instead of being thrown away). Option 3 is not a conservation practice because breaking the table apart and turning it into mulch does not slow down how fast people draw raw materials—the wood is used up and gone.",
+      "Option 1 is reuse because the table continues to function after being fixed by a carpenter. Option 2 is repair because the school restores it by putting it back into active use. Option 3 is not a conservation practice because wood that becomes mulch cannot be recovered or repurposed again into any other form."
     ],
     "answer": "C",
     "hints": [
-      "Remember: reduce uses less from the very start, before anything is made or used. Reuse uses the same item again. Recycle breaks down used material and remakes it into something new. Which practice stops the need for new material earliest in the cycle?",
-      "Consider the rate of drawing resources: the fewer new boxes that arrive, the fewer new boxes ever need to be used, donated, or remade. Does cutting the supply at the source conserve faster than using what has already been made?"
+      "Remember: repair fixes something broken so it does its original job again; reuse takes an item that works and gives it a new or continued job; recycle breaks down used material and remakes it into material for a new product. Which of these three definitions fit options 1, 2, and 3?",
+      "For the option that is not a conservation practice, ask: does turning wood into mulch slow down how fast new raw material has to be drawn? Does it make the same supply of wood last longer, or does it use it up?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "People in a cold climate with long winters wear clothing in layers. What does layering help the body do in a cold climate?",
+    "problemText": "A climate has long, freezing winters and heavy snowfall for several months each year. Which type of clothing adaptation would help people stay warm in this climate?",
     "choices": [
-      "It makes the body look bigger so other people notice the person.",
-      "It allows the person to add or remove pieces as the day gets warmer or cooler.",
-      "It traps warm air between the layers so body heat does not escape quickly.",
-      "It uses dark colors that absorb heat from the sun during the day."
+      "Wearing dark-colored clothing that absorbs heat from the sun",
+      "Wearing loose, lightweight clothing that lets air move freely against the skin",
+      "Wearing several layers of clothing so that warm air gets trapped between them",
+      "Wearing tightly fitted clothing made of thin fabric to reduce bulk"
     ],
     "answer": "C",
     "hints": [
-      "Think about how warm air moves between layers of clothing.",
-      "The lesson teaches that layering keeps heat from leaving the body."
+      "Think about what happens to warm air when layers of clothing are stacked on top of each other.",
+      "The lesson explains layering as a way to trap warm air — which direction should that air move to keep a body warm in a freezing climate?"
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A climate has heavy rain for many months each year, and rivers often flood low-lying areas and turn the ground into mud. Which transportation method would work best for people who need to travel during the rainy season in this climate?",
+    "problemText": "A region has hot, sunny weather almost all year, with very little rainfall. People there wear loose-fitting, light-colored clothing. Explain why this clothing choice fits this climate better than wearing dark-colored, tightly fitted clothing would.",
     "choices": [
-      "Bicycles and motorcycles, because they are light and do not need roads.",
-      "Heavy trucks with thick tires, because they can push through mud and floods without getting stuck or damaged.",
-      "Cars with sealed windows, because they keep people dry during floods and protect them from water damage.",
-      "Boats and raised walkways, because they let people move over water and mud instead of through it."
+      "Light-colored fabric reflects more of the sun's heat away from the body, while dark colors absorb heat and make the wearer hotter in intense sun",
+      "Dark-colored clothing absorbs sunlight and traps heat against the skin, while tight-fitting clothes prevent air from circulating and cooling the body",
+      "Loose-fitting clothing allows air to circulate around the body and helps sweat evaporate, whereas tight clothing blocks airflow and keeps moisture on the skin",
+      "Light-colored, loose clothing reflects sunlight and allows air to move against the skin, helping the body release heat instead of trapping it"
     ],
     "answer": "D",
     "hints": [
-      "Think about what happens to the ground during heavy rain and flooding.",
-      "The lesson teaches that transportation should work with water, not against it."
+      "Look at what light colors do to sunlight, and what loose clothing allows air to do.",
+      "The lesson states that loose clothing 'lets air move against the skin' — how does that help a body in extreme heat?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A climate stays hot and dry almost all year, with very little rain. People in this climate wear loose, lightweight, light-colored clothing. Why does this type of clothing fit this climate better than tight, heavy, dark-colored clothing would?",
+    "problemText": "A climate stays cold and snowy for most of the year, with very little time when crops can grow. What type of food adaptation would help people have enough to eat during the long winter months when nothing can be grown?",
     "choices": [
-      "Loose, lightweight, light-colored clothing lets air move against the skin and reflects sunlight, helping the body release heat instead of trapping it.",
-      "Tight, heavy, dark-colored clothing absorbs heat from the sun and traps warm air against the skin, making people feel hotter and more uncomfortable.",
-      "Loose, lightweight, light-colored clothing is easier to wash in dry climates where water is scarce and expensive to use.",
-      "Tight, heavy, dark-colored clothing prevents sweat from evaporating off the skin, which stops the body from cooling itself naturally."
+      "Storing dried or preserved foods that last for months, so there is enough supply when nothing grows",
+      "Growing only fresh vegetables outdoors during the brief warm season and eating them immediately to stay healthy",
+      "Importing all food from warmer regions year-round to replace crops that cannot survive the local climate",
+      "Eating only small amounts of food each day to stretch fresh supplies through the entire winter season"
     ],
     "answer": "A",
     "hints": [
-      "Think about how loose fabric lets air move and what happens when light colors are hit by sunshine.",
-      "The lesson explains that clothing should help the body release heat in a hot climate."
+      "The lesson explains that a climate with a long season when little grows 'needs food that can be stored for months.'",
+      "When a growing season is short and the rest of the year has no crops, what property must food have to provide nourishment for months?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A region has long, cold, snowy winters and a short growing season when few crops can grow. A student claims that the best solution is to build greenhouses so people can grow fresh vegetables all year long, just like people do in warm climates with long growing seasons. What is wrong with this plan, and what adaptation would actually fit this climate better?",
+    "problemText": "A climate has extremely cold winters with deep, heavy snow on the ground for months, and it also has heavy seasonal rains in spring that cause flooding. A house is being designed for this climate. Which statement correctly explains why a house with thick walls, small windows, a steep roof, and raised floors on stilts would fit this climate well?",
     "choices": [
-      "Greenhouses are too expensive, so people should just move to warmer climates instead.",
-      "Greenhouses require constant energy to heat in a cold climate, which is costly and not how the climate itself works. Instead, people should store dried, preserved foods that last through the months when nothing grows.",
-      "Greenhouses work fine, but people in cold climates prefer to eat only frozen food because it tastes better.",
-      "Greenhouses let too much cold air inside during winter, so the extra fuel needed to keep them warm makes them impractical for long, harsh seasons."
+      "Thick walls and small windows hold heat in during winter, but the raised floors are unnecessary since heavy snow prevents flooding",
+      "Thick walls and small windows hold heat in during winter, while the steep roof sheds heavy snow, and raised floors keep the house above spring floodwaters",
+      "The raised floors are the only necessary feature because they protect against both the cold and flooding at the same time",
+      "Steep roofs help shed snow in winter, but wide windows are needed to let sunlight warm the house during the brief spring season before flooding"
     ],
     "answer": "B",
     "hints": [
-      "Think about what the toughest condition is in a long, cold, snowy climate and what food solution actually fits that condition.",
-      "The lesson teaches that an adaptation should match the climate's biggest problem, not fight against it."
+      "This climate has two different tough problems: extreme cold in winter AND seasonal flooding in spring. Which features solve each problem?",
+      "Review what the lesson teaches about steep roofs for snow and about raised floors for floods — does this climate need both solutions?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A house is built with thick walls, small windows, and a steep roof in a climate with long, cold winters and heavy snowfall. A builder wants to use this same design for a new house in a climate that is hot and humid all year, with heavy rain and no winter season at all. Which statement best explains why this house design would NOT fit the hot, humid climate?",
+    "problemText": "A student claims: 'A house with wide window openings and open sides is the best design for any climate because it lets light and air inside.' Explain two reasons why this design would actually fail badly in a climate with long, bitterly cold winters and heavy snowfall.",
     "choices": [
-      "Thick walls and small windows are too expensive to build in hot climates compared to thin walls with large windows.",
-      "Thick walls and small windows trap heat inside instead of letting it escape, making the house feel hot and uncomfortable. The same design that solves the cold-climate problem creates the opposite problem in a hot climate.",
-      "The steep roof is too steep for warm climates and will cause water to run off too quickly instead of keeping the house dry.",
-      "Small windows reduce air flow through the house, which prevents cool breezes from entering and makes it harder for the body to cool down naturally in hot weather."
+      "Wide windows are expensive to build and would require extra materials compared to small windows in any climate",
+      "The open design would allow warm air to escape during winter and let cold air flow inside constantly, while snow would accumulate inside through the open areas",
+      "Open sides and wide windows would let cold air pour inside and let warm air escape quickly, and the open roof would allow heavy snow to pile up inside the house",
+      "Open sides would prevent the roof from supporting the weight of heavy snow, and wide windows would crack when snow pressure pushes against them"
     ],
-    "answer": "B",
+    "answer": "C",
     "hints": [
-      "Think about what a thick-walled, small-windowed house does to heat and air movement.",
-      "The lesson teaches that the same adaptation can fail in a different climate because it solves a different problem."
+      "Think about the two biggest problems that a cold, snowy climate creates for a house: holding heat inside AND managing heavy snow.",
+      "What does the lesson teach about why small windows are better than wide ones in a cold climate, and why a steep roof is better than a flat one?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A climate has a long, warm growing season with steady rain, so fresh fruits and vegetables grow for most of the year. Another climate is very cold and dry for eight months, with only a short period when crops can grow. A person claims that both climates should have the same food strategy: eating mainly fresh produce all year long. Using what you know about how food adapts to climate, explain why this claim is wrong for one of the climates, describe what food strategy would actually fit that climate, and explain why the claim works for the other climate.",
+    "problemText": "Two regions have very different climates. Region X has a hot, humid climate with heavy seasonal rains and frequent flooding. Region Y has long, cold, snowy winters with very little rain or melting snow — water freezes and stays frozen. A person suggests building the same type of house in both regions: a house with thin walls, wide window openings, and a flat roof. For each region, state whether this design would fit or fail, and for each answer, explain which specific climate problem the design either solves or creates.",
     "choices": [
-      "Fresh produce works everywhere because it is healthy. The cold, dry climate should grow hot peppers in winter, and the warm, wet climate should grow the same peppers all year.",
-      "The cold, dry climate cannot grow enough fresh food for eight months of the year, so it needs stored, dried, or preserved foods to last through the long season when little grows. The warm, wet climate has a long growing season with steady rain, so fresh foods can be grown and eaten across most months.",
-      "Both climates should use the same strategy because people need fresh food everywhere. The difference is only that cold climates need to refrigerate produce, and warm climates do not.",
-      "The warm, wet climate is too humid for fresh produce to stay fresh, so it should only eat dried food. The cold, dry climate has a short growing season but can use stored food just like the warm climate does."
+      "Region X: fails (flooding would destroy thin walls); Region Y: fails (thin walls cannot support heavy snow)",
+      "Region X: fails (would trap too much heat); Region Y: fits (wide windows bring in sunlight to warm the house)",
+      "Region X: fits (is cheaper to build); Region Y: fits (flat roofs are easier to maintain in snow)",
+      "Region X: fits (lets air move and water drain away); Region Y: fails (would let heat escape and allow snow to pile up)"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
-      "Think about the growing season in each climate and what happens when little or nothing can grow for months.",
-      "The lesson teaches that food adapts to what the climate allows to grow and to how long storage must last."
+      "For Region X, remember that the lesson teaches open sides and wide roof overhangs help in hot, humid climates with flooding. For Region Y, recall that the lesson teaches thick walls and steep roofs are needed in cold, snowy climates.",
+      "Ask yourself: in Region X, does water need to drain away, and does air need to move? In Region Y, does heat need to stay inside, and does snow need to slide off?"
     ]
   }
 ]

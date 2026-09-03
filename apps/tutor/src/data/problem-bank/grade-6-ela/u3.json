@@ -5,17 +5,17 @@
     "cedCode": "M6ELA-3.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which statement correctly describes the difference between a topic and a central idea?",
+    "problemText": "Which of the following is a CENTRAL IDEA rather than just a topic?",
     "choices": [
-      "A topic is a word or short phrase that names what a text is about, while a central idea is a complete sentence that states the main point the text makes about that topic.",
-      "A topic is a complete sentence that expresses the full main idea, while a central idea is just a single word or short phrase that identifies the subject being discussed.",
-      "A topic and a central idea are two names for the same concept and serve identical purposes when analyzing any piece of writing or text.",
-      "A topic is something mentioned only in titles or introductions, while a central idea is a detail that must appear in the body paragraphs to support the topic."
+      "Bees produce honey that lasts a very long time because it contains very little water and is highly acidic.",
+      "Honey is a food made by bees from flower nectar and pollen, which represents one of nature's most useful products.",
+      "The ways that honey can stay fresh for many years involves understanding its chemical composition and storage conditions.",
+      "Stories about ancient honey jars found inside Egyptian tombs demonstrate how long this substance can survive without modern refrigeration."
     ],
     "answer": "A",
     "hints": [
-      "Remember the lesson: a topic is very short, while a central idea must be a full sentence.",
-      "Think about 'earthworms' versus 'Earthworms make soil healthier in more than one way.' Which is the topic and which is the central idea?"
+      "A central idea is a complete sentence that makes a claim, not just a word or short phrase.",
+      "The correct answer explains WHY something is true, not just WHAT the text is about."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6ELA-3.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this paragraph: 'Monarch butterflies migrate thousands of miles each year to escape cold winters. They travel south in enormous groups, sometimes numbering in the millions. Scientists track these migrations using special tags attached to the butterflies' wings. The journey takes several months, and the butterflies rest on milkweed plants along the way.' Which statement is the central idea of this paragraph?",
+    "problemText": "Read this paragraph: \"Penguins have flippers instead of wings that can fly through the air. These flippers are perfect for pushing a penguin through water very fast, the way airplane wings push through air. A penguin's flippers also help it steer and stop while swimming.\" Which sentence best states the central idea of this paragraph?",
     "choices": [
-      "Monarch butterflies are tagged by scientists using special equipment attached to their wings for research purposes.",
-      "Monarch butterflies migrate thousands of miles each year in massive groups to survive cold winters, a journey that takes several months.",
-      "Monarch butterflies need to rest frequently on milkweed plants during their annual journey because the migration is physically demanding and exhausting.",
-      "Scientists have developed methods to study monarch butterfly migrations by attaching tracking devices to individual butterflies in the population."
+      "Penguins have flippers.",
+      "Penguins' flippers are built to help them move, steer, and stop in the water.",
+      "Penguins' flippers work in water the way airplane wings work in air.",
+      "Penguins can swim very fast."
     ],
     "answer": "B",
     "hints": [
-      "The central idea should cover what the paragraph keeps returning to across every sentence, not just one fact from one sentence.",
-      "Look for a sentence that includes the reason (why) the butterflies migrate, how many travel together, and how long it takes—the main points the paragraph adds up to."
+      "Look for a sentence that covers ALL the different jobs the paragraph describes the flippers doing, not just one.",
+      "The central idea should explain the main point across the whole paragraph, not focus on only one detail like the comparison to airplanes."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6ELA-3.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage: 'Coral reefs are made up of tiny animals called polyps that build hard outer skeletons. These skeletons stack on top of each other over hundreds of years to create the reef structure. Coral reefs provide shelter and food for thousands of fish and sea creature species. Many medicines used to treat human diseases have been developed from chemicals found in reef organisms.' The central idea is 'Coral reefs form over time and support both wildlife and human health.' Which detail from the passage does NOT support this central idea?",
+    "problemText": "A student reads a passage about how coral reefs protect coastlines from hurricanes and storm waves. The passage also mentions that coral reefs provide food and shelter for thousands of fish species. The student writes: \"Coral reefs are important ecosystems.\" Why is this sentence NOT a good central idea for this passage?",
     "choices": [
-      "Coral polyps build hard outer skeletons that stack on top of each other over hundreds of years.",
-      "Coral reefs provide shelter and food for thousands of fish and sea creature species.",
-      "Many medicines used to treat human diseases come from chemicals found in reef organisms.",
-      "Polyps are tiny animals that make up the structure of coral reefs."
+      "It is too short to be a central idea because central ideas must always be longer than one sentence.",
+      "It uses the word 'important' which is not specific enough to explain what the passage actually says about coral reefs, leaving out the particular benefits mentioned.",
+      "It does not cover the specific ways the passage explains that coral reefs matter, such as protecting coastlines and housing sea life.",
+      "It fails to mention the storm waves and hurricanes that are the main focus of the entire passage."
     ],
     "answer": "C",
     "hints": [
-      "Ask yourself: does this detail explain why the reef forms, why it lasts long, or what lives there and benefits from it?",
-      "The central idea is about the reef's structure and what depends on it—not about medicines, even though the passage mentions them."
+      "A central idea needs to be broad enough to cover every main point the text makes, not so vague that it could mean almost anything.",
+      "Think about what the passage actually DOES say coral reefs do — not just that they are important, but HOW they matter."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6ELA-3.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage: 'Jellyfish have existed in Earth's oceans for over 500 million years, making them older than dinosaurs. They survive in nearly every ocean environment, from warm tropical waters to the freezing Arctic. Jellyfish have no brain, no heart, and no blood, yet they can still hunt prey using stinging tentacles and digest food in a simple stomach pouch. Their simple body structure allows them to thrive with minimal energy and resources.' A student claims the central idea is 'Jellyfish have been on Earth longer than dinosaurs.' Is this claim correct? Why or why not?",
+    "problemText": "Read this passage, then identify which statement is the CENTRAL IDEA and which is a SUPPORTING DETAIL that proves it. \"Monarch butterflies travel thousands of miles each year as they migrate south for the winter. Along the way, they must find milkweed plants to lay their eggs on, because monarch caterpillars only eat milkweed leaves. When milkweed becomes harder to find because of farming or development, the butterflies have fewer safe places to raise their young. Scientists worry that without enough milkweed, the monarch population will continue to decline.\"",
     "choices": [
-      "Yes, this is correct because the passage states jellyfish existed over 500 million years ago.",
-      "No, this is not correct because this statement is only one detail from the text and does not account for what the whole passage keeps returning to across multiple sentences.",
-      "Yes, this is correct because it is the most interesting fact in the passage.",
-      "No, this is not correct because the passage does not mention dinosaurs in the second or third sentence."
+      "The central idea is 'Monarch caterpillars only eat milkweed leaves,' and a supporting detail is 'Scientists worry that without enough milkweed, the monarch population will continue to decline.'",
+      "The central idea is 'Monarch butterflies travel thousands of miles each year,' and a supporting detail is 'Along the way, they must find milkweed plants to lay their eggs on.'",
+      "The central idea is 'Milkweed plants are disappearing because of farming and development,' and a supporting detail is 'Monarch butterflies travel thousands of miles each year.'",
+      "The central idea is 'The loss of milkweed threatens monarchs because they need it to reproduce and raise their young,' and a supporting detail is 'Monarch caterpillars only eat milkweed leaves.'"
     ],
     "answer": "D",
     "hints": [
-      "Apply the two-detail test from the lesson: can you find two separate places in the passage that support 'Jellyfish have been on Earth longer than dinosaurs'?",
-      "Notice what idea the passage keeps coming back to—not just when they arrived, but how they survive with their simple body design, where they live, and how they hunt."
+      "The central idea should connect the two biggest ideas the passage keeps returning to: milkweed's disappearance AND why monarchs need it.",
+      "Look for a central idea that explains WHY the loss of milkweed is a problem, not just WHAT is happening or WHERE monarchs travel."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6ELA-3.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage: 'Penguins are flightless birds that live almost entirely in the Southern Hemisphere, with most species living near Antarctica. Their wings have evolved into flippers that make them excellent swimmers rather than fliers. A penguin's dense feathers and a thick layer of blubber underneath keep it warm in water temperatures near freezing. The shape of a penguin's body is streamlined, which reduces water resistance and helps it move quickly while hunting for fish.' A student writes two possible central ideas: (1) 'Penguins have adapted to survive in extremely cold ocean environments.' (2) 'Penguins live only in Antarctica and cannot fly.' Which central idea is better supported by the full passage, and why?",
+    "problemText": "A student writes the following central idea: \"Jellyfish do not have brains or hearts.\" She finds these two facts in her passage: (1) \"Jellyfish lack a centralized brain and nervous system.\" (2) \"Jellyfish are over 90 percent water.\" Does the second fact actually support her central idea? Explain why or why not.",
     "choices": [
-      "Neither central idea works because the passage contains facts about both adaptation and habitat.",
-      "Idea 1 is better because it connects the passage's repeated focus on physical features (flippers, feathers, blubber, streamlined body) that all work together to let penguins thrive in cold water, whereas Idea 2 only names one detail about location.",
-      "Idea 2 is better because it correctly states that penguins cannot fly, which is the most important fact.",
-      "Both central ideas are equally good because they are both stated directly in the passage."
+      "No, because being 90 percent water is a true fact about jellyfish but does not explain why jellyfish do not have brains or hearts.",
+      "Yes, because when jellyfish are made mostly of water, they cannot develop the organs that land animals need to survive.",
+      "Yes, because both facts are found in the passage and both describe unusual characteristics of how jellyfish are built and structured.",
+      "No, because the 90 percent water fact is too small and minor to count as a detail that supports any central idea at all."
     ],
     "answer": "A",
     "hints": [
-      "Return to the lesson rule: a central idea must be broad enough to cover every paragraph or every major point in the text, not narrow enough to fit only one detail.",
-      "Look at how many details support Idea 1 (flippers for swimming, dense feathers, blubber layer, streamlined body) and how many support Idea 2 (the passage does name Antarctic habitat, but what else connects to that location fact?)."
+      "A supporting detail must connect directly to the central idea and help prove it is true.",
+      "Ask yourself: does knowing that jellyfish are 90 percent water help explain why they have no brains or hearts? Or is it a different fact entirely?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6ELA-3.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this passage: 'Porcupines are covered with roughly 30,000 sharp quills that act as their primary defense. Unlike hedgehogs, porcupine quills have tiny barbs at the tip that make them difficult to remove once they stick into skin. The quills are coated with an oil that prevents infection if they pierce an animal's body. When threatened, a porcupine does not shoot its quills; instead, it backs into its attacker or curls into a tight ball with its quills pointing outward.' A student writes the central idea: 'Porcupine quills are the porcupine's only survival tool.' Is this central idea correct? Using the lesson's two-detail test, explain whether you can find two separate supporting details from the passage that prove this statement is true, or whether the passage contradicts it.",
+    "problemText": "Read this passage: \"The Great Barrier Reef stretches over 1,400 miles and contains thousands of coral species. Most coral species can only live in warm, shallow saltwater, where sunlight reaches the ocean floor. Coral also depends on tiny algae that live inside its cells and provide food through photosynthesis. When water temperature rises even a few degrees because of climate change, the algae die, and the coral turns white and dies soon after. Scientists have documented massive coral bleaching events occurring more frequently in recent decades.\" A student proposes this central idea: \"The Great Barrier Reef is the largest coral reef in the world.\" Use the two-detail test to explain whether this central idea works for the passage.",
     "choices": [
-      "Yes, the central idea is correct because the passage clearly states that quills are the 'primary defense' and repeatedly discusses different aspects of how the quills function to protect the porcupine from harm.",
-      "No, the central idea is not correct because while the passage does explain how quills work as a defense (barbs make them stick, oil prevents infection, and the porcupine's behavior backs the defense), these details show quills work alongside the porcupine's own actions like backing into attackers or curling into a ball, not as the only tool.",
-      "Yes, the central idea is correct because the passage provides multiple details about quill structure, including the barbs at the tip and the protective oil coating that work together to make them effective.",
-      "No, the central idea is not correct because the passage does not specify the exact number of different types of quills or explain whether all quills have barbs and oil coating in equal amounts."
+      "The central idea works because the passage opens by describing the reef's size and location, which serves as the foundation for all the other information presented.",
+      "The central idea does not work because although the passage mentions the reef's size once, most of the passage explains what coral needs to survive and why it is dying, not why the Great Barrier Reef is large.",
+      "The central idea works because it is supported by the fact that the reef contains thousands of coral species and also by the documented bleaching events that show it is under threat.",
+      "The central idea does not work because the passage does not explicitly state that the Great Barrier Reef is larger than every other coral reef in existence."
     ],
     "answer": "B",
     "hints": [
-      "The lesson teaches that a detail supporting a central idea must connect back to that idea. Ask: does the passage show the porcupine's own movements and behaviors also playing a role in its survival, not just the quills alone?",
-      "Look for a detail that shows the porcupine doing something actively (not just being a quill-covered animal) to survive. What does the porcupine do when threatened that works with—not instead of—its quills?"
+      "Try the two-detail test: can you find two separate facts in the passage that explain WHY the reef is the largest? Or do most of the passage's details point to a different main idea?",
+      "Remember: a central idea must be broad enough to cover what the passage keeps returning to across nearly all its paragraphs, not just what appears in the opening sentence."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of these is the first step when you begin writing an objective summary of an informational text?",
+    "problemText": "What is the main difference between a summary and a retelling of an informational text?",
     "choices": [
-      "Look through the passage to find all the interesting facts and list them in order.",
-      "Start by writing down the central idea of the text, which you have already identified.",
-      "Add your own thoughts about what the passage teaches and why it matters.",
-      "Recount every sentence from the passage in the same order the passage uses."
+      "A summary drops facts that don't support the central idea, while a retelling includes every fact the passage gives in the order it appeared.",
+      "A summary includes only details that support the central idea, while a retelling lists all the facts in the order they appeared.",
+      "A summary and a retelling are the same thing, just with different names.",
+      "A summary repeats every sentence from the original passage in fewer words."
     ],
     "answer": "B",
     "hints": [
-      "The lesson says the central idea 'becomes the first sentence of the summary.'",
-      "Finding the central idea was done in a previous lesson, so you are not hunting for it again here."
+      "Think about what the lesson said retelling does with every fact the passage gives.",
+      "Remember: a summary drops facts that don't connect to the central idea, but a retelling does not."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A passage explains that many plants need sunlight, water, and soil to grow. The central idea is that plants require three things: sunlight, water, and soil. Which sentence should you leave out of your summary? A) Plants need sunlight to make food. B) Plants need water for their roots to absorb nutrients. C) Plants need soil to stay anchored in place. D) Plants with colorful flowers look beautiful in gardens.",
+    "problemText": "Read this sentence from a student's summary: 'This shows that seeds are incredible at surviving harsh conditions.' Why should this sentence be removed from an objective summary?",
     "choices": [
-      "Sentence A, because it mentions only one of the three things plants need.",
-      "Sentence B, because it adds extra detail about how water works.",
-      "Sentence C, because it explains why soil matters to a plant.",
-      "Sentence D, because it does not explain why plants need the three things to grow."
+      "It uses judgment language like 'incredible' that tells the reader what to think instead of reporting the facts from the passage.",
+      "It repeats information that already appeared earlier in the summary.",
+      "It announces the summarizer's own conclusion about how impressive something is, using a quiet judgment phrase.",
+      "It includes a fact that is not actually true."
     ],
     "answer": "C",
     "hints": [
-      "A summary keeps only details that connect back to the central idea.",
-      "The central idea is about what plants need to grow, not about what keeps them standing upright."
+      "Look for the phrase 'this shows that' — the lesson said that is a quiet judgment phrase.",
+      "An objective summary reports facts, not what the summarizer thinks about those facts."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this student summary: 'Hurricanes form over warm ocean water where the air is moist. The warm water makes the air rise, and as it rises, it cools and forms clouds. The spinning motion of Earth causes the clouds to spin faster and faster. Eventually, the storm becomes so powerful that it destroys buildings and causes terrible damage.' The central idea is that hurricanes form and grow stronger over warm water because of rising air and spinning motion. What is the main problem with this summary?",
+    "problemText": "A student wrote this summary: 'Jellyfish move by contracting and relaxing their bell-shaped bodies. They are amazing creatures. Most jellyfish live in salt water. They are transparent.' Which sentence should be cut because it does not support the central idea that jellyfish move by contracting and relaxing their bodies?",
     "choices": [
-      "It leaves out important details about when hurricanes happen during the year.",
-      "It includes a sentence that gives the summarizer's own judgment instead of reporting what the passage says.",
-      "It is too short and does not explain enough about how hurricanes form.",
-      "It retells every fact from the passage instead of picking out only the supporting details."
+      "'Jellyfish move by contracting and relaxing their bell-shaped bodies.'",
+      "'They are amazing creatures.'",
+      "'They are transparent.'",
+      "'Most jellyfish live in salt water.'"
     ],
     "answer": "D",
     "hints": [
-      "Look at how many separate sentences the summary has and whether each one is a key fact or a smaller detail.",
-      "A summary should be noticeably shorter than the passage because not every fact matters equally."
+      "The central idea is about how jellyfish move, not where they live.",
+      "A supporting detail must connect back to the main point about movement."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A passage explains: 'Bees carry pollen from flower to flower as they collect nectar. When a bee lands on a flower, pollen sticks to its fuzzy body. As the bee moves to the next flower, some of that pollen rubs off on the new flower's center. This cross-pollination helps the flower make seeds. Some flowers have bright colors and sweet smells to attract bees.' The central idea is that bees help flowers make seeds by carrying pollen from one flower to another. Which of these would be the best objective summary?",
+    "problemText": "Read this passage and its central idea. Which version is the best objective summary?\n\nPassage: 'A thermometer has a thin tube filled with a liquid called mercury. When the temperature around the thermometer rises, the mercury expands and moves up the tube, where numbers show how hot it is. When the temperature drops, the mercury shrinks and moves back down. This is why thermometers are such helpful tools for doctors and scientists.'\n\nCentral idea: A thermometer works because mercury expands when temperature rises and shrinks when temperature falls, moving up and down a numbered tube to show the temperature.",
     "choices": [
-      "Bees help flowers make seeds by carrying pollen from one flower to another as they collect nectar; pollen sticks to their fuzzy bodies and rubs off onto the next flower's center.",
-      "Bees visit flowers to drink nectar and carry pollen. Pollen sticks to their fuzzy bodies. Then the pollen rubs off on new flowers. Flowers have bright colors and sweet smells. This helps flowers make seeds.",
-      "Bees are amazing helpers for flowers because they carry pollen without even thinking about it, which shows how perfect nature is.",
-      "Bees collect nectar from flowers. When they land, pollen sticks to them. Bees then fly to another flower. The pollen rubs off. This makes seeds."
+      "A thermometer works because mercury inside a tube expands when temperature rises, moving up the tube to show how hot it is, and shrinks when temperature falls, moving back down.",
+      "A thermometer has mercury in a tube. When temperature rises, mercury expands and moves up. When temperature drops, mercury shrinks and moves down. The numbers on the tube show how hot it is. This is why thermometers are so helpful.",
+      "Mercury is a liquid inside a thermometer. The temperature around the thermometer rises and falls. When it rises, the mercury expands. When it falls, the mercury shrinks.",
+      "Thermometers have mercury in a thin tube. Doctors and scientists use them. The mercury moves up and down. Numbers on the tube show the temperature."
     ],
     "answer": "A",
     "hints": [
-      "A good summary combines related details into one or two clear sentences instead of listing each fact as its own short sentence.",
-      "Watch out for judgments like 'amazing' or 'perfect,' and remember that every sentence should connect directly to the central idea."
+      "The best summary starts with the central idea as one sentence, not as separate facts.",
+      "Look for the version that leaves out the sentence about why thermometers are helpful to doctors and scientists — that is the summarizer's own conclusion, not a fact that explains how thermometers work."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A passage says: 'Mirrors reflect light back to your eyes, which is why you see your own image when you look at one. A flat mirror reflects light at the same angle it receives it, so the image you see is the same size as you are. A curved mirror can bend light more or less, which is why mirrors in fun houses make you look stretched or squished.' The central idea is that you see your image in a mirror because light bounces back to your eyes at a specific angle. A student wrote this summary: 'Mirrors show you your image because light bounces back at the same angle it hits the mirror. Curved mirrors are weird because they bend light differently and make people look silly.' Which problem does this summary have?",
+    "problemText": "A student wrote this summary of a passage about how crystals form: 'When a liquid cools down, its molecules slow down and pack tightly together in a repeating pattern, which forms a crystal. Different liquids make different-shaped crystals. Growing crystals is an amazing process that shows how nature creates perfect geometric shapes.' Which problem does this summary have, and how should it be fixed?",
     "choices": [
-      "It includes a quiet judgment when it says curved mirrors are 'weird' and make people look 'silly,' reporting the summarizer's opinion instead of a fact.",
-      "It fails to mention that flat mirrors keep your image the same size as you are.",
-      "It does not explain clearly enough how light bounces inside a mirror.",
-      "It adds a detail about fun houses that was not part of the central idea."
+      "It includes too many retellings because it lists every fact the passage gives; the student should have picked only the most important sentence about crystals.",
+      "It includes both a judgment phrase and a sentence that does not support the central idea; the last sentence should be removed because it announces the summarizer's opinion, not a fact about crystal formation.",
+      "It uses words that are too difficult for readers to understand; it should simplify technical terms like 'molecules' and 'geometric shapes' into simpler language.",
+      "It includes sentences that do not appear in the original passage; it should be rewritten using only words and ideas that came directly from the text."
     ],
     "answer": "B",
     "hints": [
-      "Two students who disagree about whether mirrors are interesting should still be able to sign the same summary.",
-      "Compare the student's summary to the central idea and ask what information the central idea requires that the summary leaves out."
+      "Look at 'amazing process' and 'shows how nature creates' — those sound like the summarizer's own thoughts.",
+      "Check whether every sentence reports a fact that helps explain how crystals form, or whether any sentence tells the reader what to think about the topic."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A passage explains how salt helps keep ice cream from melting as fast as regular ice: 'When you freeze ice cream without salt, the ice stays at 32 degrees Fahrenheit, which is its normal freezing point. Salt lowers the freezing point of ice, making the ice much colder, sometimes down to 5 degrees or below. The colder the ice is, the longer it takes for the ice cream to melt. At very cold temperatures, the heat from the ice cream container cannot warm the ice fast enough to make it melt into liquid water.' The central idea is that salt keeps ice cream from melting quickly because salt makes ice colder than it normally would be, and colder ice melts more slowly. A student is deciding between two summaries. Summary 1: 'Salt lowers the freezing point of ice, making it much colder than regular ice. The ice cream stays frozen longer in very cold ice because the heat from the container cannot warm it fast enough to melt.' Summary 2: 'Without salt, ice stays at 32 degrees, but salt makes it go down to 5 degrees or below. The colder ice melts slower. Heat from the ice cream container cannot warm the ice fast enough.' Which summary better follows the rules for an objective summary, and why?",
+    "problemText": "Read this passage. The central idea is: 'Whales migrate thousands of miles because food sources move with the seasons, and whales follow them.' Which of the following best explains why the sentence 'Whale migration is the most incredible journey in the animal kingdom' would make this summary fail the objectivity test, and what principle from the lesson it violates?",
     "choices": [
-      "Summary 2 is better because it includes all the temperatures mentioned in the passage.",
-      "Summary 1 is better because it connects each detail directly to why salt works, and combines related ideas into fewer, fuller sentences.",
-      "Both summaries are equal because they both report facts from the passage without adding judgment.",
-      "Summary 2 is better because it repeats the passage's own words instead of combining ideas."
+      "It violates the rule that every sentence in a summary must explain why the event happens; calling the journey incredible does not explain the reason whales migrate each year.",
+      "It violates the rule that a summary must list facts in the order the passage gave them; this sentence appears at the end instead of in the middle where migration is first mentioned.",
+      "It violates the rule that every sentence should sound like the passage is being reported, not like the summarizer is reacting to it; two readers who disagree about how incredible migrations are should still be able to sign the exact same summary.",
+      "It violates the rule that a summary must be noticeably shorter than the original passage; adding a sentence about the journey being incredible makes the summary too long."
     ],
     "answer": "C",
     "hints": [
-      "A summary should be noticeably shorter than the passage by picking out only what supports the central idea, not by including every number or detail the passage gives.",
-      "Think about how many separate facts Summary 1 ties together in one sentence versus how many short, separate sentences Summary 2 uses for the same facts."
+      "The lesson said 'test a summary by asking who is talking' — does this sentence sound like the passage reporting, or like the summarizer reacting?",
+      "Think about two different readers with different opinions: could they both sign a summary that includes 'most incredible'?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-3.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A marine biologist examines the symbiosis, the close relationship between two organisms where each one benefits from the other, that exists between clownfish and sea anemones. Which meaning of symbiosis comes directly from the passage?",
+    "problemText": "A marine biologist observes the bioluminescence, the ability of certain organisms to produce light through a chemical reaction inside their bodies, in deep-sea fish. What does bioluminescence mean as used in this passage?",
     "choices": [
-      "A shared living space in which many different sea creatures occupy the same reef area and compete for resources.",
-      "A harmful relationship in which one organism hunts, captures, and consumes another organism for food.",
-      "A close relationship between two organisms where each one benefits from the other.",
-      "A short-term partnership that forms only during specific times of the year when organisms need to breed."
+      "A type of reflection that occurs when moonlight bounces off the ocean surface during nighttime hours",
+      "The scientific study of how different wavelengths of light travel and refract through seawater",
+      "The ability of certain organisms to produce light through a chemical reaction inside their bodies",
+      "The natural luminescence that results when organisms consume and metabolize their food sources"
     ],
     "answer": "C",
     "hints": [
-      "Look for the exact phrase the passage uses right after the comma to define the term.",
-      "Do not add any information beyond what the passage actually states after the dash or comma."
+      "Look right after the technical term for a restatement set off by a comma or dash.",
+      "Use exactly what the passage tells you, not what you might guess about the word."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-3.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A chef explains that tempering chocolate, the slow process of heating and cooling chocolate to precise temperatures so it sets with a smooth, shiny finish, requires patience and attention. If you swap the meaning from the passage back into the sentence, which phrase should make sense in place of the underlined term?",
+    "problemText": "A chef explains that to achieve the perfect emulsion, the thick mixture that forms when oil and vinegar are beaten together into a smooth blend, you must whisk the ingredients slowly and steadily. If the chef's emulsion separates and becomes thin and watery again, which of these is most likely to have happened?",
     "choices": [
-      "Making chocolate taste better by adding extra cocoa butter.",
-      "Mixing chocolate with other ingredients to change its flavor.",
-      "The slow process of heating and cooling chocolate to precise temperatures so it sets with a smooth, shiny finish.",
-      "Keeping chocolate at room temperature for several hours before use."
+      "The chef used vinegar and oil from different suppliers than what was used previously",
+      "The chef added an ingredient that prevented the oil and vinegar from combining into the thick, smooth blend required for an emulsion",
+      "The chef selected a bowl made from material that did not have the right surface texture for whisking",
+      "The oil and vinegar stopped being beaten together into a smooth blend"
     ],
     "answer": "D",
     "hints": [
-      "Use the swap-back test: which meaning fits smoothly where the technical term was used?",
-      "Eliminate choices that add information not printed in the passage itself."
+      "Swap the definition of emulsion back into the sentence about what happened when it separated.",
+      "The definition tells you exactly what an emulsion is—so when it stops being that, what must have gone wrong?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-3.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "An entomologist studies the metamorphosis of butterflies, describing stages such as caterpillar, chrysalis, and adult butterfly, to understand how insects change shape completely during their life cycle. Based on the examples the passage provides, what does metamorphosis mean in this context?",
+    "problemText": "A meteorologist describes the formation of precipitation, such as rain, sleet, and snow that falls from clouds. Later in the same text, the meteorologist mentions that \"water droplets inside the cloud continue to grow until they become heavy enough to fall as precipitation.\" Based on the passage, which of these is an example of precipitation?",
     "choices": [
-      "A complete change in body shape and form that an insect goes through during its life cycle.",
-      "The process of growing larger and developing wings on an insect's body.",
-      "A period of time when an insect rests and does not move or eat.",
-      "The ability of certain insects to produce light or change colors when threatened."
+      "Hail that falls from a storm cloud",
+      "A mist that hovers just above the ground without falling",
+      "Frost that forms on a window during a cold night",
+      "Dew that appears on grass in the early morning"
     ],
     "answer": "A",
     "hints": [
-      "Look for example clues introduced by words such as 'such as' that show what the term covers.",
-      "Notice which choice matches the specific examples of caterpillar, chrysalis, and adult butterfly the passage lists."
+      "Look for the example clue words—the passage uses 'such as' to show what precipitation includes.",
+      "Remember the definition tells you precipitation falls from clouds—check which choice actually falls that way."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-3.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student reads: 'The astronomer measures the luminosity, the total amount of light energy a star gives off, of distant stars to compare how bright they really are, not how bright they seem from Earth.' The student first thinks luminosity means 'how bright something looks to your eye.' Why is that everyday meaning a trap here, and what should the student do instead?",
+    "problemText": "A student read this sentence: \"The captain ordered the crew to trim the ballast, the heavy material carried in the bottom of a ship to keep it stable in rough water.\" The student's classmate said ballast means \"a small ball used in games.\" Why is the classmate's answer wrong, and what should the classmate have done instead?",
     "choices": [
-      "The everyday meaning confuses luminosity with apparent brightness, which is only what we see from Earth rather than the star's actual total light output; the student should apply the restatement that follows the comma to learn the real meaning.",
-      "The everyday meaning leaves out the crucial detail that luminosity is the total light energy the star actually gives off, not just how bright it appears from Earth; the student should use the restatement the passage provides after the comma.",
-      "The everyday meaning fails to account for the distance between Earth and the star, so it cannot measure how much total energy the star produces in space; the student should trust the passage's explanation instead of relying on visual impression.",
-      "The everyday meaning focuses on human perception rather than on the measurable, actual amount of light a star emits into space; the student should replace it with the technical definition the passage supplies right after the comma."
+      "The classmate chose a meaning that appears in dictionaries but never applies to anything related to ships, so technical definitions never vary based on the subject being discussed",
+      "The classmate borrowed an everyday meaning instead of reading the restatement the passage provided; the correct meaning is the heavy material carried in the bottom of a ship to keep it stable",
+      "The classmate overlooked the comma that signals a restatement is coming, even though passages always use punctuation marks like commas and dashes to introduce definitions for technical terms",
+      "The classmate failed to use context clues before consulting the definition, even though most passages do not actually include direct definitions for specialized vocabulary words"
     ],
     "answer": "B",
     "hints": [
-      "Identify the signal (comma or dash) that the text uses to hand you the correct meaning right away.",
-      "Remember that a multiple-meaning word carries one everyday sense that is exactly what gets in the way—trust the text's restatement, not what you knew before."
+      "Think about the everyday-meaning trap—what meaning did the classmate already know before reading?",
+      "The passage gives a signal right after the technical term—what does that signal tell you to do?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-3.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two passages use the word reservoir in different fields. Passage 1 (geology): 'Geologists study the reservoir, the natural or artificial hollow in the ground that holds water or oil for long periods.' Passage 2 (medicine): 'A disease reservoir, such as birds or bats, is an animal population that carries a pathogen and can spread it to other species.' Why is it important to use the text's own clues in each passage, rather than using the same meaning for both?",
+    "problemText": "A geologist writes: \"The plateau, a flat-topped landform that rises abruptly from the surrounding terrain, covers thousands of square miles in that region. From the air, the plateau looks like a giant table sitting on top of the land.\" Which statement best explains why the second sentence helps confirm your understanding of plateau?",
     "choices": [
-      "Technical words in geology always have longer definitions than words in medicine, so you need to count the words to know which definition is right.",
-      "The word 'reservoir' has a different, more exact meaning in each field, and each passage supplies its own restatement or example to show what it means inside that specific text; using the same everyday meaning for both would give you wrong answers in one or both cases.",
-      "Passages about animals use simpler words than passages about rocks, so the animal passage definition must be wrong.",
-      "The first passage gives a restatement but the second gives an example, so you should only trust the first passage and ignore the second one."
+      "It provides a specific example by naming the exact geographic region where the plateau is located and explaining how the surrounding terrain differs from it",
+      "It restates the scientific definition word-for-word to reinforce the technical vocabulary and ensure the reader memorizes all the key terms introduced in the first sentence",
+      "It offers a comparison that matches the key feature named in the restatement—something flat and elevated that looks different from the land around it",
+      "It introduces a visual image that simplifies the concept by comparing the plateau to familiar household furniture, allowing readers to imagine how the landform actually appears from above"
     ],
     "answer": "C",
     "hints": [
-      "Think about what the lesson taught: a domain word belongs to one field and the text supplies the meaning for that field.",
-      "Consider what happens when you swap each passage's meaning back into its own sentence: does it make sense in both cases?"
+      "The first sentence has a restatement—what key features does it name?",
+      "Does the second sentence add a completely new definition, or does it help you picture what 'flat-topped' and 'rises abruptly' actually look like?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-3.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student encounters this passage: 'The geologist describes the escarpment, a long, steep slope of rock face created by erosion or faulting, and notes that hikers often mistakenly believe it is simply a very steep mountain.' The student has never heard the word escarpment before and does not know what 'erosion' or 'faulting' mean either. Using only the clues the passage supplies, what is the best strategy to determine what escarpment means without needing to look up those two unfamiliar terms?",
+    "problemText": "A naturalist writes: \"To study the canopy—the continuous layer of leaves and branches formed by the highest trees in a forest—researchers often must climb or use rope bridges positioned high in the treetops. Some canopies are so thick that almost no sunlight reaches the forest floor.\" A student concludes that 'canopy' means 'the rope bridges used by researchers.' Why is this conclusion wrong, and what error did the student make when reading for the technical term's meaning?",
     "choices": [
-      "Ignore the definition after the comma because you do not understand all the words in it, and instead search through the rest of the passage for sentences that might contain simpler descriptions or helpful examples.",
-      "Stop and look up both 'erosion' and 'faulting' in a reference source before you read any further, then return to reread the restatement once you understand those terms fully.",
-      "Use the comparison the passage makes between an escarpment and a steep mountain to infer that they must be almost identical, and decide that escarpment is just another word for mountain, even though the passage says hikers are mistaken about this.",
-      "Ask yourself what the overall topic of the sentence is (comparing what an escarpment really is to what hikers mistakenly think it is), use the restatement the passage supplies right after the comma, and notice that even if some words in the restatement are new, the core meaning is 'a long, steep slope of rock face,' which you can understand and swap back into the sentence to confirm it makes sense."
+      "The student remembered the everyday meaning of canopy and applied it instead of trusting the definition the passage printed",
+      "The student looked for example clues using words like 'such as' but did not notice the restatement signal that comes before them",
+      "The student correctly identified the technical term but swapped back the wrong meaning and did not check whether the sentence would still make sense",
+      "The student found the restatement in dashes but confused a supporting detail mentioned elsewhere in the passage with the actual definition provided"
     ],
     "answer": "D",
     "hints": [
-      "The lesson teaches that you do not need to already know every single word the text uses—your job is to find the clues the text provides close by.",
-      "Remember the swap-back test: you can confirm your meaning even when part of the restatement holds unfamiliar terms, as long as you can grasp the core phrase and verify it fits the sentence."
+      "The student picked out something from the passage that is connected to canopy but is not the definition itself—what is that something, and where is the real definition?",
+      "What comes right after 'canopy' in dashes, and does a rope bridge match that description?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A text feature is any part of a section added on purpose to help readers. Which of the following is a text feature? A photograph showing a volcano. A caption under the photograph. A sentence in the main paragraph. An empty space on the page.",
+    "problemText": "A page about desert animals has four section headings: \"Snakes of the Desert,\" \"Desert Birds,\" \"Small Mammals,\" and \"Lizards and Other Reptiles.\" What is the main job of these headings?",
     "choices": [
-      "A photograph showing a volcano",
-      "A caption under the photograph",
-      "A sentence in the main paragraph",
-      "An empty space on the page"
+      "They prove that desert animals are more interesting than animals in other climates by ranking each group by appeal.",
+      "They explain in detail how each animal survives in the hot, dry climate through biological adaptation.",
+      "They organize the page into separate topics so a reader can find information about a specific animal group quickly.",
+      "They divide the page into separate topics so a reader can locate information about a specific animal group without reading the entire page."
     ],
     "answer": "D",
     "hints": [
-      "Remember: a text feature is something a writer adds ON PURPOSE to help understanding—not the main paragraph sentences themselves.",
-      "Which choice is something the writer deliberately chose to include as a tool to help readers?"
+      "Think about what a heading does before a reader reads the paragraph's sentences.",
+      "A heading names the topic of a section, not the details or proof inside it."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A history textbook section about the Civil War has three headings: 'The War Begins', 'Major Battles', and 'The War Ends'. A student wants to find information about the Battle of Gettysburg. Which heading should the student read first to locate that information? Which of the following best explains what that heading accomplishes for the reader?",
+    "problemText": "A section about rainforest plants includes a photograph of tall trees packed closely together, their leaves forming a thick green canopy high above the ground. The caption reads: \"A rainforest canopy in Peru, where over 80 percent of the light is blocked by the upper leaves.\" The paragraph states that rainforest plants have adapted to live in shade and low light. What does the caption add that the photograph alone cannot show?",
     "choices": [
-      "It tells the reader which section to read—'Major Battles'—so the reader can find Gettysburg without reading about when the war started or how it ended",
-      "It organizes the textbook by historical time periods so that readers know battles only happened during the middle section of the war",
-      "It summarizes the most important facts about the Battle of Gettysburg and explains why it changed the course of the Civil War",
-      "It provides information about the generals and soldiers who participated in the Battle of Gettysburg and their strategies"
+      "The exact location of this rainforest and a concrete fact about how much light actually reaches below the canopy.",
+      "A description of the scientific term that botanists use when discussing the dense leaf layer found at the top of tropical forests.",
+      "A visual comparison showing how the thickness of leaves changes at each different height throughout the forest structure.",
+      "An explanation of why the plants living in rainforests are generally considered more valuable than plants found in other types of environments."
     ],
     "answer": "A",
     "hints": [
-      "A heading names the TOPIC of a section and separates it from other sections. Does it tell you the answer to your question, or does it tell you WHERE to find the answer?",
-      "Think about what a heading does NOT do: it doesn't give you all the details about a topic, it just names what that section covers."
+      "A photograph shows what a camera sees, but what can it not show about a place?",
+      "Look for what number or location appears in the caption but nowhere else on the page."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "An article about penguins includes a paragraph that says: 'Penguins are flightless birds that live in very cold climates. Most species live in the Southern Hemisphere, where temperatures stay below freezing for much of the year.' Below the paragraph is a map showing the coastlines where different penguin species live. What does the map contribute to the reader's understanding that the paragraph alone does not clearly provide?",
+    "problemText": "A section explains how a tornado forms. The paragraph describes wind moving in a circular pattern, pressure dropping, and a funnel forming downward from a cloud. Next to the paragraph is a labeled diagram showing wind arrows swirling around the sides of a funnel and a label marking the center as \"low pressure.\" If you covered the diagram with your thumb and reread only the paragraph, what would be harder to picture all at once?",
     "choices": [
-      "The precise degrees of temperature recorded in each location where penguins have been observed throughout the entire year",
-      "The specific locations and boundaries of where different penguin species are actually found on Earth",
-      "The historical dates when each penguin species first arrived in the locations where they currently live today",
-      "The detailed description of how penguins adapted their bodies and behaviors to survive in cold ocean environments"
+      "The fact that a tornado is formed by wind rotating in a circular pattern as described in the text.",
+      "Where the wind is moving and where the low pressure sits in relation to each other as the funnel forms.",
+      "The specific scientific terminology that meteorologists use to describe the low-pressure zone at the center of a tornado.",
+      "The dangers that tornadoes create for communities and buildings located in their path on the ground."
     ],
     "answer": "B",
     "hints": [
-      "Use the thumb test: cover the map and reread the paragraph. What information about penguin locations is missing from the paragraph?",
-      "A graphic shows relationships and locations that would take many sentences to describe. What can you see all at once on the map that the paragraph could not show?"
+      "The thumb test asks what information you lose when you hide the feature.",
+      "A graphic shows relationships and positions; a paragraph describes them one at a time."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A science article about how plants grow includes a labeled diagram showing the parts of a seed—the root, stem, and leaves—and how each grows in a different direction underground or above ground. The paragraph beside the diagram says: 'When a seed sprouts, the root grows downward into the soil to collect water and nutrients, while the stem pushes upward through the soil and the leaves unfold to catch sunlight.' The same article includes a sidebar that reads: 'Did you know? Some seeds can stay dormant in soil for years before sprouting.' Why is the diagram a better choice for showing how seed parts grow in different directions than the sidebar would be?",
+    "problemText": "A magazine section on penguins has the heading \"How Penguins Catch Fish.\" The paragraph explains that penguins dive deep into the water and use their flipper-like wings to chase fish at high speed. Below the paragraph is a sidebar titled \"Did You Know?\" that states: \"Emperor penguins can dive deeper than 1,500 feet and stay underwater for over 20 minutes.\" A reader who skips the sidebar will still understand how penguins catch fish from the paragraph alone. Why does the sidebar belong in this particular section instead of appearing in a different section about penguin records?",
     "choices": [
-      "The sidebar provides general background knowledge, but the diagram shows the exact spatial relationships all at once, which the paragraph's sentence-by-sentence description would take longer to make clear",
-      "The sidebar tells a reader something new, but the diagram repeats what the paragraph already said",
-      "The diagram saves space on the page, while the sidebar takes up too much room",
-      "The sidebar is only for fun facts, while the diagram is for serious information"
+      "Because it proves that the paragraph's explanation of how penguins catch fish is correct and supported by scientific measurement.",
+      "Because it describes the exact technique and muscle movements that penguins use to move their flippers through water at high speed.",
+      "Because it adds a related detail about the depth and duration of penguin dives, which connects to the paragraph's main point about how penguins chase fish underwater without interrupting that main explanation.",
+      "Because it introduces all the different penguin species and provides rankings showing which ones can dive to the greatest depths."
     ],
     "answer": "C",
     "hints": [
-      "Think about what each text feature does: a diagram shows relationships and position all in one glance, while a sidebar adds a separate, related fact without interrupting the main explanation.",
-      "Ask yourself: which feature directly supports the main paragraph's explanation of how seed parts grow, and which one stands apart as an extra detail?"
+      "A sidebar adds extra information that helps you understand the topic more fully, but it is not the main point of the section.",
+      "Think about what connects the sidebar to the paragraph's topic and what the reader already knows without it."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "An article about ancient Egypt includes a section titled 'How Egyptians Built the Pyramids'. The paragraph under that heading explains the step-by-step process: workers cut stone blocks, transported them using ramps and sleds, and stacked them in precise rows. Below the paragraph is a photograph of the interior of a pyramid, showing narrow stone passages and chambers. The caption reads: 'The inside of a pyramid, showing the passages and chamber built into the massive structure.' A student reads only the paragraph and the heading, then skips the photograph and caption. What is the student missing that the caption provides?",
+    "problemText": "An article about the water cycle includes a section headed \"How Water Moves Through the Atmosphere.\" The paragraph describes evaporation, condensation, and precipitation using only words. Below it is a diagram with arrows showing water rising from the ground, cooling and forming clouds, and then falling as rain. The diagram has no new facts that the paragraph does not already mention—it shows the same three steps in the same order. Based on the lesson's thumb test, what is this diagram's actual contribution to understanding this section?",
     "choices": [
-      "An explanation of why the Egyptians built pyramids in the first place",
-      "The names of all the workers and builders involved in pyramid construction",
-      "A visual understanding of how the interior of a pyramid is actually organized—the passages and chambers that the paragraph's word description alone does not make concrete",
-      "Proof that the paragraph's description of the pyramid-building process is completely accurate in every detail"
+      "It shows the specific geographic regions where water evaporates most quickly and where precipitation falls most frequently.",
+      "It proves that the paragraph's explanation of the water cycle is scientifically accurate and supported by research.",
+      "It provides the Latin and scientific names for each stage of the water cycle that the paragraph describes only in everyday language.",
+      "It shows all three steps of the water cycle at the same time so a reader can see the entire cycle in one glance instead of following each step one at a time through the paragraph's sentences."
     ],
     "answer": "D",
     "hints": [
-      "Use the thumb test: what does the photograph and caption show you that the paragraph's sentences do not already make clear to you?",
-      "A caption adds something the picture and paragraph do NOT already give. It might show a detail visually that was only described in words, or it might add brand-new information."
+      "What would be missing from your understanding if you read only the paragraph and skipped the diagram?",
+      "Think about how a graphic lets a reader hold a relationship in their head all at once, versus reading about it step by step."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A magazine article about weather patterns includes a section with the heading 'How Hurricanes Form'. The paragraph explains that warm ocean water, low pressure, and wind patterns work together to create rotating storms. Next to the paragraph is a four-step labeled diagram showing the progression of a hurricane from a tropical disturbance to a full hurricane, with arrows showing wind movement at each stage. Below the diagram is a caption: 'The stages of hurricane development, showing how wind patterns change as the storm strengthens.' In the same section, there is also a sidebar stating: 'The costliest hurricane in U.S. history was Hurricane Katrina in 2005.' A reader covers the diagram with their thumb, rereads the main paragraph, and then uncovers the diagram. What has the diagram contributed to this section that the paragraph cannot do equally well?",
+    "problemText": "A section titled \"How Volcanoes Form\" includes three text features: a labeled diagram of Earth's layers, a caption under a photograph that reads \"Mount Kilimanjaro in Tanzania, formed when magma cooled above the surface,\" and a sidebar stating \"Underwater volcanoes erupt on the ocean floor where plates meet.\" The main paragraph explains that volcanoes form where molten rock rises through cracks in Earth's crust. A reader wants to know the following four things: (1) what Earth's layers look like and where magma comes from, (2) a real-world example of a volcano and where it is located, (3) the main explanation of how volcanoes form, and (4) an additional fact about volcanoes that extends the topic beyond the main explanation. Which feature or combination of features provides answer (1)?",
     "choices": [
-      "It shows in one glance how the four stages of hurricane development follow a sequence and how wind patterns transform visibly from one stage to the next, which the paragraph's description of conditions does not make as easy to hold in your mind at once",
-      "It demonstrates that Hurricane Katrina was the most destructive storm because it followed the exact pattern shown in the diagram's four stages",
-      "It explains which warm ocean waters and low pressure systems are necessary to begin the hurricane formation process from the very first stage",
-      "It identifies the specific dates and times when hurricanes are most likely to form during the Atlantic storm season"
+      "The diagram alone.",
+      "The paragraph alone.",
+      "The caption alone.",
+      "The sidebar and the paragraph together."
     ],
     "answer": "A",
     "hints": [
-      "Ask: what does a graphic show about relationships and sequences that would need many sentences to describe step by step?",
-      "The thumb test: if you read only the paragraph, do you understand the sequence and transformation of wind patterns as clearly as if you saw it all mapped out visually?"
+      "What does the diagram show that words in a paragraph would have to describe one layer at a time?",
+      "A labeled diagram can display spatial relationships and positions all at once, which the paragraph's sentences cannot."
     ]
   }
 ]

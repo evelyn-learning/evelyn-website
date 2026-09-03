@@ -5,17 +5,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "You are writing an informative paragraph about what a \"book club\" is for a new student who has never heard of one before. Which organizing strategy should you choose to introduce and explain this topic?",
+    "problemText": "A writer is organizing an informative piece about what a 'growth mindset' means. Which organizing strategy should the writer choose?",
     "choices": [
-      "Cause/effect, because you need to explain what happens as a result of students joining book clubs and reading together.",
-      "Classification, because book clubs can be sorted into different types based on genre, meeting frequency, and membership size.",
-      "Definition, because the reader needs to know what the topic is and what its key features are.",
-      "Comparison/contrast, because you need to compare a book club to a regular class to show how they are similar and different."
+      "Comparison/contrast strategy, because growth mindset needs to be weighed against a fixed mindset",
+      "Classification strategy, because growth mindset can be sorted into different types",
+      "Definition strategy, because the topic asks what something is and describes its key features",
+      "Cause/effect strategy, because growth mindset causes students to improve"
     ],
     "answer": "C",
     "hints": [
-      "The lesson teaches that definition strategy works when the reader has probably never heard the topic explained before.",
-      "Your notes describe what a book club is and what it does, not how it splits into kinds or compares to something else."
+      "Think about what the topic is really asking: what IS a growth mindset?",
+      "The lesson says definition strategy 'fits a topic the reader has probably never heard explained before.' Does this fit that pattern?"
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is organizing a paragraph about three types of school field trips: science museum trips, historical site trips, and nature center trips. She opens with: \"Our school offers three types of field trips, each with a different focus.\" Which sentence should come next to stay inside the classification strategy?",
+    "problemText": "A student's notes for an informative paragraph include: soccer requires teamwork; basketball requires teamwork; soccer uses a ball and field; basketball uses a ball and court. The student picks comparison/contrast as the organizing strategy. Why is this a good fit for these notes?",
     "choices": [
-      "Science museum trips cost more than historical site trips because they require special equipment.",
-      "Some students prefer historical site trips because they enjoy learning about the past more than science.",
-      "The first type is a science museum trip, where students see experiments and learn about how things work.",
-      "Field trips are important because they help students understand lessons they learned in class."
+      "Because the notes describe what teamwork is and how it functions as a concept across multiple sports activities",
+      "Because the notes explain the reasons why soccer and basketball have become popular choices at the school",
+      "Because the notes organize sports into separate categories based on the type of equipment and playing area each one needs",
+      "Because the notes mention two different sports that can be weighed side by side across the same categories"
     ],
     "answer": "D",
     "hints": [
-      "Classification names one group at a time and describes it, then moves to the next group without comparing or explaining why.",
-      "Look for a sentence that introduces the first type of field trip and tells what students do or learn in that group."
+      "Look at the notes again. How many named things are being described? Are they being sorted into groups, or being set side by side?",
+      "The lesson says comparison/contrast 'fits a topic that is really about two named things.' Do the notes fit that pattern?"
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A paragraph opens: \"The cafeteria's new lunch line has two sides: one for hot foods and one for cold foods.\" The writer has notes about how many students use each side and which foods are popular on each side. Which strategy is already set by this opening sentence?",
+    "problemText": "A writer gathers these notes for an informative piece: a tornado forms when warm and cold air masses collide; the spinning air pulls up from the ground; the spinning gets faster and faster; a strong tornado can move at 60 miles per hour or faster. Which organizing strategy fits these notes best?",
     "choices": [
-      "Classification, because the lunch line is sorted into two groups or kinds.",
-      "Definition, because the opening explains what a lunch line is.",
-      "Cause/effect, because the opening tells why there are two sides.",
-      "Comparison/contrast, because the opening mentions both a hot side and a cold side."
+      "Cause/effect strategy, because the notes explain how a tornado forms and what happens as the spinning motion increases",
+      "Definition strategy, because the notes list and describe the key characteristics and features that define a tornado",
+      "Classification strategy, because the notes sort different types of tornadoes into groups based on their speeds and wind strengths",
+      "Comparison/contrast strategy, because the notes describe how tornadoes are similar to and different from other severe weather phenomena"
     ],
     "answer": "A",
     "hints": [
-      "The opening sorts the lunch line into two groups: hot foods and cold foods—that is what classification does.",
-      "Even though two things are mentioned, the strategy is not comparison/contrast because the focus is on sorting into types, not weighing two specific things side by side."
+      "Ask yourself: are these notes explaining WHY something happens and WHAT happens next, or are they listing groups or features?",
+      "The lesson says cause/effect strategy 'fits a topic that is really an explanation of why something is true.' Do the notes start with a cause and show effects?"
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this draft paragraph about why bicycles need brakes:\n\n(1) When a rider squeezes the brake handles, cables pull pads against the wheel rims. (2) The friction between the pads and the rims slows the wheel down. (3) This is the same way train brakes work, since trains also have friction-based stopping systems. (4) As the wheel slows, the bike comes to a stop. Which sentence breaks the one-strategy rule, and what strategy does the paragraph use?",
+    "problemText": "Read the draft paragraph. Which sentence breaks the one-strategy rule, and what should replace it to keep the piece organized with a single strategy?\n\n(1) The school library has three zones for students to use. (2) The quiet zone has desks and computers for reading and research. (3) The quiet zone is less fun than the collaboration zone because students cannot talk. (4) The collaboration zone has tables and whiteboards for group projects.",
     "choices": [
-      "Sentence 2, because the paragraph uses definition strategy to explain what friction is and sentence 2 interrupts that explanation with unnecessary mechanical details.",
-      "Sentence 3, because the paragraph uses cause/effect strategy and sentence 3 shifts to comparison instead of continuing the chain of cause and effect.",
-      "Sentence 4, because the paragraph uses classification strategy and sentence 4 introduces a fourth category of braking systems that does not belong in the main explanation.",
-      "Sentence 1, because it does not compare the brake cable system to other stopping methods used in different vehicles."
+      "Sentence 1 breaks the rule because it names zones instead of comparing them. Replace it with a sentence that explains how the quiet zone and collaboration zone serve different purposes.",
+      "Sentence 3 breaks the rule because it compares two zones using cause/effect language instead of just naming what is in each zone. Replace it with a sentence that describes what the quiet zone offers.",
+      "Sentence 2 breaks the rule because it uses sorting language instead of explaining what causes students to prefer the quiet zone. Replace it with a sentence about why the quiet zone is important.",
+      "Sentence 4 breaks the rule because it focuses on features instead of contrasting the collaboration zone with the quiet zone. Replace it with a sentence that compares how the two zones differ."
     ],
     "answer": "B",
     "hints": [
-      "The paragraph explains why something happens (squeezing handles causes braking) and what happens as a result—that is the cause/effect strategy.",
-      "One sentence stops explaining the cause-and-effect chain and instead compares bicycles to trains; find which sentence does that and explain why it breaks the rule."
+      "Name the strategy the paragraph opens with. Sentences 1, 2, and 4 all sort zones and name what is in each one. What strategy is that?",
+      "Sentence 3 compares two zones and explains why one is 'less fun.' Is that the same job the other sentences are doing, or is it a different job?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer has gathered these notes for a paragraph about the school library:\n\n—The library has a fiction section with novels and short story collections.\n—The library has a nonfiction section with biographies and reference books.\n—The library has a media section with audiobooks and videos.\n—The library keeps all sections in separate areas of the room.\n\nBased on these notes, which organizing strategy best fits this information, and why?",
+    "problemText": "A writer has these notes and is choosing an organizing strategy: Butterflies have thin wings and are active during the day; moths have thick wings and are active at night; both insects have six legs; butterflies land with wings closed; moths land with wings open. The writer decides to use classification strategy. Why would comparison/contrast be a better choice?",
     "choices": [
-      "Cause/effect, because the notes explain why the library separates its sections.",
-      "Classification, because the notes describe three different types of materials the library sorts into groups and keeps separate.",
-      "Comparison/contrast, because the notes explain how fiction is different from nonfiction.",
-      "Definition, because the notes tell what a library is and what makes it work."
+      "Because the notes focus on sorting insects into groups by their physical traits, and classification fits that job better than comparison/contrast does",
+      "Because the notes explain why butterflies and moths behave differently, which requires cause/effect reasoning instead of classification",
+      "Because the notes describe two named things (butterflies and moths) across the same categories, which fits comparison/contrast better than sorting into groups",
+      "Because the notes cover too many different features and comparison/contrast can organize multiple features while classification can only handle one trait at a time"
     ],
     "answer": "C",
     "hints": [
-      "Look at the notes as a whole: do they describe one topic split into kinds, or do they set two named things side by side, or do they explain a chain of why and what?",
-      "The notes cluster materials into three groups (fiction, nonfiction, media), which is what classification does, and that strategy fits information sorted into kinds."
+      "Count how many named things are in the notes. Are they two things being weighed against each other, or groups being sorted?",
+      "The lesson says comparison/contrast 'fits a topic that is really about two named things.' Do these notes fit that description?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student drafts this paragraph about two lunch options:\n\n(1) The salad bar lets students pick individual vegetables and toppings. (2) The hot lunch plate comes with a main dish, a side, and a dessert already chosen. (3) Some students think the salad bar is more expensive than the hot lunch plate. (4) The salad bar gives students more control, while the hot lunch plate saves time because everything is ready. Which two sentences should be removed or rewritten to keep the paragraph inside the comparison/contrast strategy only?",
+    "problemText": "A student drafts an opening sentence for a piece about why students get nervous before performing in the school talent show: 'There are three reasons why students get nervous before performing: fear of forgetting their part, worry about audience judgment, and lack of practice time.' Is this opening sentence a good fit for the cause/effect strategy? Explain why or why not, using what you know about how one organizing strategy should carry a whole piece.",
     "choices": [
-      "Sentences 1 and 2, because they define each option instead of comparing them.",
-      "Sentences 1 and 3, because sentence 1 does not make a comparison and sentence 3 shifts focus to price without signal.",
-      "Sentences 3 and 4, because they give opinions about the lunch options instead of facts.",
-      "Sentences 2 and 3, because sentence 2 shifts to definition and sentence 3 does not compare both options directly."
+      "Yes, because the opening mentions reasons, which is the job of cause/effect strategy, and the writer can develop each reason in the paragraphs that follow",
+      "Yes, because the opening identifies multiple causes that lead to the same effect, which is exactly what cause/effect strategy does when explaining why something happens",
+      "No, because cause/effect strategy should explain what happens after students get nervous, not what causes them to be nervous in the first place",
+      "No, because the opening names three different reasons, which signals classification strategy, but cause/effect strategy requires connecting one cause to one effect in a chain, not listing separate reasons"
     ],
     "answer": "D",
     "hints": [
-      "Comparison/contrast sets two specific named things side by side to show how they are alike and different; reread each sentence and ask whether it compares the salad bar and hot lunch plate.",
-      "Sentence 4 compares both options across the same category (control versus time), which fits the strategy, but one other sentence does not; find the sentence that introduces or describes one option without weighing it against the other."
+      "Look at the opening sentence again. Does it connect one cause to one effect in a chain, or does it list multiple separate reasons? Which pattern matches cause/effect?",
+      "The worked example about the Music Club shows a sentence that compares two instruments breaks a classification piece. What strategy does an opening sentence like this one actually signal?"
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6ELA-9.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A concrete detail is a specific, exact particular instead of a vague generality. Which sentence is a concrete detail that develops the topic rather than just restating it?",
+    "problemText": "Which of the following is a concrete detail rather than a vague generality?",
     "choices": [
-      "The recipe uses interesting spices that add flavor and depth to the dish in a good way.",
-      "The recipe includes a lot of different flavors that work together and make it taste better.",
-      "The recipe is really complicated to follow because it has many steps and takes a long time to prepare.",
-      "The recipe calls for one teaspoon of cumin, half a teaspoon of cinnamon, and a pinch of cloves."
+      "The science classroom contains a variety of useful items and materials that help students learn many different concepts about science.",
+      "The science classroom has many things in it that are interesting and neat to use for different learning activities.",
+      "The science classroom is really cool and has stuff that seems useful for studying science in general.",
+      "The science classroom has three microscopes with 400x magnification and a dissection kit containing forceps, scissors, and pins."
     ],
     "answer": "D",
     "hints": [
-      "A concrete detail names exact things—numbers, names, or actions—that a reader could actually check.",
-      "Look for the choice that gives specific measurements or names instead of general words like 'interesting' or 'a lot of.'"
+      "A concrete detail includes specific names, numbers, or exact descriptions that a reader could check.",
+      "Look for the choice that tells you exact what things are there, not just that there are 'a lot' or 'many.'"
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6ELA-9.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this topic sentence: 'Monarch butterflies have an incredible migration.' Which sentence actually develops this topic with new, checkable information instead of just repeating what the topic sentence already says?",
+    "problemText": "A student wrote this topic sentence: 'Medieval castles were built to protect people from attack.' Which sentence actually develops this topic by adding new information instead of just restating it?",
     "choices": [
-      "Each fall, millions of monarch butterflies fly south from Canada and the northern United States to mountain forests in Mexico, traveling over two thousand miles, then fly back north in the spring.",
-      "Monarch butterflies are really incredible travelers that can fly very far and accomplish amazing things during their journey.",
-      "The migration is something that monarch butterflies are very good at doing because they have special abilities that help them travel.",
-      "Monarch butterflies migrate, and their migration is one of the most amazing things in nature because it shows how powerful they are."
+      "Thick stone walls and narrow windows made it difficult for invaders to break in or shoot arrows at people inside.",
+      "Medieval builders had to think carefully about ways to keep people safe from danger and threats.",
+      "Castles were structures that offered protection and safety to people living in them during dangerous times.",
+      "Medieval castles were designed with defensive features to serve a protective purpose for their residents."
     ],
     "answer": "A",
     "hints": [
-      "Look for the sentence that tells the reader a specific fact—a direction, a distance, or a behavior they could actually look up and verify.",
-      "The other choices use vague words like 'really,' 'incredible,' or 'amazing' but never say what the butterflies actually do or where they actually go."
+      "Test each sentence by asking: does this tell me something new about how castles protected people, or does it just say 'protection' again in different words?",
+      "The correct answer shows a specific way the castle design actually worked to stop attackers."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6ELA-9.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Your topic sentence is 'Rain forests are home to plants that are found nowhere else on Earth.' Which choice actually develops this specific topic instead of only making a general statement about rain forests?",
+    "problemText": "A student is developing the topic sentence 'Monarch butterflies make an incredible journey.' Which detail actually supports this specific topic instead of being only a general fact about monarch butterflies?",
     "choices": [
-      "Rain forests get a lot of rain every year because the climate in those areas supports heavy rainfall and wet conditions.",
-      "The canopy in a rain forest is so thick that many plant species live their entire lives in the treetops and never touch the forest floor.",
-      "Rain forests are important ecosystems that contain many living things and provide valuable resources for people.",
-      "There are many plants growing in rain forests because the environment provides the right conditions for plant growth."
+      "Monarch butterflies have special physical features and adaptations that allow them to survive successfully in many different environments and weather conditions.",
+      "Monarch butterflies fly thousands of miles from Canada to Mexico each autumn, crossing mountains and oceans despite weighing less than a paper clip.",
+      "Monarch butterflies are found living in various locations across North America and also appear in other regions around the world.",
+      "Monarch butterflies have distinctive wings that display bright orange and black coloring with specific patterns used to identify them as a particular species."
     ],
     "answer": "B",
     "hints": [
-      "Ask yourself: which choice actually explains something about plants being unique to rain forests, rather than just being true about rain forests in general?",
-      "Choices A, C, and D are true facts about rain forests, but none of them show why certain plants are only found there."
+      "The topic sentence is about their journey specifically, not just about what monarchs are or where they live.",
+      "Look for the choice that shows how far they go and the specific obstacles they face during that journey."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6ELA-9.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this topic sentence: 'The great white shark is built perfectly for hunting in the ocean.' Then the student added: 'A great white shark can detect a single drop of blood in an Olympic-sized swimming pool from a mile away.' Is this sentence a good development of the topic? Why or why not?",
+    "problemText": "A student wrote about the topic 'Ants work together as a team to survive.' The student then added this sentence: 'Ants are small insects that live in colonies.' Why is this sentence a problem, and how should it be fixed?",
     "choices": [
-      "Yes, because it states a specific fact about the shark that is amazing.",
-      "Yes, because it uses a number, which makes it a concrete detail.",
-      "No, because the fact is too unbelievable to be true, and writers should only use facts readers will accept.",
-      "Yes, because it shows one specific way the shark's body is designed to help it hunt successfully."
+      "It uses vague language instead of specific numbers; the sentence should state 'Ants are insects that live in colonies composed of approximately 50,000 to 500,000 individual members depending on the species.'",
+      "It does not explain anything about size; it should be changed to say 'Ants are very small insects that weigh less than a grain of sand and live together in organized colonies.'",
+      "It is a vague generality; it should be replaced with a fact about how ants actually coordinate their work, such as 'Ants share information about food sources by touching antennae and leaving scent trails that other ants can follow.'",
+      "It is incomplete because it mentions only one trait; it should describe multiple features by saying 'Ants are small insects with six legs that live in colonies and have different jobs.'"
     ],
     "answer": "C",
     "hints": [
-      "Remember the lesson taught about invented numbers: you should never state an exact number or statistic you cannot actually verify, even if it sounds official.",
-      "Check whether this sentence passes the 'checkable' test—would a reader really be able to confirm that exact measurement?"
+      "The sentence only restates what 'team' and 'survive' already told the reader—it does not show a specific way ants actually work together.",
+      "The fix needs to name an actual, observable behavior that demonstrates their teamwork."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6ELA-9.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Here is a topic sentence: 'Jellyfish are ancient ocean creatures.' A student wants to add a sentence that is both a fact about this specific topic and a concrete detail—not just a general statement about jellyfish. Which sentence best accomplishes both at once?",
+    "problemText": "A student developed the topic 'Cormorants are excellent hunters underwater.' She added this sentence: 'A cormorant can dive to depths of 100 feet and stay underwater for up to seven minutes while chasing fish.' Then she added: 'The ocean is home to many different kinds of hunters.' Why is the second sentence a problem for this paragraph?",
     "choices": [
-      "Jellyfish have been in the ocean for a very long time.",
-      "Jellyfish are older than dinosaurs, appearing in the fossil record roughly 500 million years ago.",
-      "The ocean is full of many creatures, and jellyfish are one of them.",
-      "Jellyfish are interesting animals that have been around for ages."
+      "It uses exact numbers without a qualifier, which violates the no-invented-numbers rule.",
+      "It introduces a new topic about the ocean when the paragraph should stay focused only on one sentence at a time.",
+      "It restates the first sentence in a different way instead of adding new information.",
+      "It is true but does not develop the specific topic; it is a general fact about the ocean, not about how cormorants hunt."
     ],
     "answer": "D",
     "hints": [
-      "Find the sentence that gives an exact, checkable number or date that proves the topic sentence's claim about 'ancient,' not just repeats the word 'ancient' or 'old.'",
-      "The sentence must also name a specific time period or measurement that a reader could actually verify in a book."
+      "Test the sentence against the specific topic sentence: does it explain something new about cormorant hunting, or is it just a general statement about ocean life?",
+      "Even true facts about a related subject can fail to develop the exact topic sitting above them."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6ELA-9.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A writer was developing this topic: 'Honeybees communicate with each other through a special dance.' The writer added: 'There are about 20,000 different types of bees in the world.' Does this sentence develop the topic as taught? Explain your reasoning using the relevance test and the verification rule.",
+    "problemText": "A student is writing about 'Termites cause billions of dollars in damage to buildings each year.' She wants to add three supporting sentences: Sentence 1 is 'Termites eat wood.' Sentence 2 is 'In Australia, termites destroyed a wooden house in just three months by tunneling through the walls and eating the support beams inside.' Sentence 3 is 'Many insects damage property.' Read all three sentences against the topic and identify which ones actually develop the topic, which only restate it, and which are off-topic.",
     "choices": [
-      "No, because while the number sounds official, the writer probably cannot verify it, and it does not explain how bees use dance to communicate with each other.",
-      "Yes, because it gives an exact number with a specific measurement, which qualifies as a concrete detail that adds factual information to the paragraph.",
-      "Yes, because it is a true fact about bees in general, so it belongs in any paragraph about bees and helps readers learn more about the topic.",
-      "No, because the sentence discusses the total number of bee species rather than explaining the specific dance moves that honeybees use to send messages."
+      "Sentence 1 only restates the topic in simpler words; Sentence 2 develops the topic by showing a concrete example of how fast and thorough the damage can be; Sentence 3 is off-topic because it talks about damage in general instead of termite damage specifically.",
+      "Sentence 1 describes one reason why termite damage happens without giving specific examples; Sentence 2 is off-topic because it focuses on a location rather than the mechanism of damage; Sentence 3 restates the topic by discussing costly property damage caused by living creatures.",
+      "Sentence 1 restates the topic by naming what termites do but without showing the extent of damage; Sentence 2 develops the topic through a detailed example showing the speed and severity of termite destruction; Sentence 3 shifts away from the specific topic by discussing insects in general rather than termites.",
+      "Sentence 1 develops the topic because it explains what termites do; Sentence 2 is off-topic because it names a specific country and building rather than addressing the scale of termite damage globally; Sentence 3 restates the topic by talking about the financial impact of insect damage on buildings."
     ],
     "answer": "A",
     "hints": [
-      "Remember: you must apply TWO tests here—the relevance test (does it develop THIS topic?) and the verification rule (can you actually check that exact number?).",
-      "The sentence fails both: even if the number were checkable, it does not explain the dance communication that the topic sentence names."
+      "Ask of each sentence: Does it tell me something new about termite damage, or does it just repeat what the topic sentence already said? Does it explain the specific topic, or jump to a different subject that is only loosely connected?",
+      "A concrete example that shows how severe and fast the damage is will develop the topic better than a general statement about what termites eat."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-9.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What is the main job of a transition in an informative paragraph? A transition should name the relationship between two ideas, not just decorate a paragraph or show that the ideas are loosely connected.",
+    "problemText": "A transition in informative writing should name the relationship between two ideas. Which of these is NOT one of the seven transition families taught for informative paragraphs?",
     "choices": [
-      "It names the specific relationship between the fact just stated and the fact coming next",
-      "It makes the paragraph sound more interesting and grown-up by using fancy words and varied sentence openings instead of explaining connections",
-      "It fills space between sentences by adding words like 'also' or 'next' without requiring the writer to clarify how one idea connects logically to another",
-      "It tells the reader that two facts exist somewhere in the paragraph without showing whether one caused the other, follows the other, or contradicts the other"
+      "Agreeing with the reader's personal opinion",
+      "Contrasting a real difference or exception",
+      "Adding one more fact on the same side",
+      "Showing cause and effect"
     ],
     "answer": "A",
     "hints": [
-      "Think about what the lesson says a transition actually does, not how it makes writing sound",
-      "A transition gives information to the reader—it is not just decoration"
+      "The seven families all describe how one fact connects to another fact in the text.",
+      "Look for the family that talks about connecting to something outside the paragraph."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-9.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this pair of sentences: \"Frogs begin their lives as eggs laid in water. ___ they transform into tadpoles with tails, gills, and no legs at all.\" Which transition best fills the blank?",
+    "problemText": "Read this pair of sentences from an informative paragraph about penguins: \"Emperor penguins can dive deeper than 500 meters underwater to find fish. They hold their breath for up to 20 minutes during these deep dives.\" Which transition word would best fill the blank between these sentences?\n\nEmperor penguins can dive deeper than 500 meters underwater to find fish. ___ they hold their breath for up to 20 minutes during these deep dives.",
     "choices": [
       "However,",
-      "Next,",
+      "In addition,",
       "For example,",
-      "Most importantly,"
+      "Therefore,"
     ],
     "answer": "B",
     "hints": [
-      "What does the second sentence do with the first fact—does it turn against it, or does it show the next step that happens to the frog?",
-      "The lesson names a family of transitions that marks the order in which steps happen one after another"
+      "Ask yourself: does the second sentence turn against the first, explain why it happens, give one case of it, or add another fact about the same topic?",
+      "The second sentence gives you another separate fact about how deep penguins can dive."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-9.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this pair of sentences: \"Cats have excellent night vision because their eyes contain many more cells sensitive to light than human eyes do. ___ cats can see in light levels six times dimmer than humans need to hunt or move around safely.\" Which transition best fills the blank?",
+    "problemText": "A student is revising an informative paragraph about salt water and freshwater fish. The paragraph says: \"Saltwater fish have special kidneys that help them get rid of extra salt. ___ freshwater fish have different kidneys that help them hold onto salt they need.\" Which transition correctly shows the relationship here?",
     "choices": [
+      "As a result,",
       "Also,",
       "However,",
-      "As a result,",
       "For instance,"
     ],
     "answer": "C",
     "hints": [
-      "The first sentence explains a reason why cats have an ability. Does the second sentence show a result of that ability, or does it add a separate unrelated fact?",
-      "The lesson names a family of transitions that marks when one fact explains why a second fact is true"
+      "The two facts are about different types of fish with opposite kidney jobs. What kind of relationship is that?",
+      "One sentence is about saltwater fish, and the other is about freshwater fish—these are a real difference."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-9.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student wrote: \"Elephants live in family groups called herds, with a wise older female leading the rest. However, baby elephants stay with their mothers for many years and learn how to find food and survive from the adults around them.\" The student's teacher says the transition is wrong. What is the problem, and what transition family should the student use instead? (Note: The teacher is correct.)",
+    "problemText": "Read this longer section from an informative paragraph: \"Lightning forms when electrical charge builds up inside a cloud. ___ the negative charge at the bottom of the cloud pushes away negative charge on the ground below. ___ the ground becomes positively charged. ___ this imbalance finally releases as a lightning bolt that strikes upward from the ground to the cloud.\"\n\nWhich pair of transitions correctly fills the first two blanks in order?",
     "choices": [
-      "The word \"however\" sounds too formal; the student should use a different contrast word like \"on the other hand\" to sound more casual",
-      "The second sentence adds another fact about how elephants live in families, not a turn against the first fact; the student should choose a transition from the adding family",
-      "The second sentence gives a specific example of the general idea that elephants live in family groups; the student should use \"for example\" instead",
-      "The second sentence reveals a cause that explains why elephants have family herds; the student should use \"because\" to show the connection"
+      "First, / However, / Finally,",
+      "However, / Also, / As a result,",
+      "For example, / Because, / In short,",
+      "In addition, / Therefore, / Next,"
     ],
     "answer": "D",
     "hints": [
-      "First, ask yourself: what does the second sentence actually do with the first fact? Does it turn against it, or does it do something else?",
-      "The lesson warns that a correctly spelled word like \"however\" can still be wrong if it names a relationship that is not actually there"
+      "The first blank comes after 'Lightning forms when charge builds up'—what does the next sentence do, add another cause or add another fact?",
+      "The second blank connects 'pushing away negative charge' to 'the ground becomes positively charged'—is one the result of the other?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-9.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer is working on an informative paragraph and notices that every single sentence begins with a transition word: \"First, birds build nests. Second, they lay eggs. Third, the eggs hatch. Fourth, the parents feed the chicks. Finally, the chicks fly away.\" The writer wonders whether this is correct. According to the lesson, what should the writer do?",
+    "problemText": "A student writes an informative paragraph about different types of owls and includes this sentence with a blank: \"Great horned owls hunt small mammals like rabbits and mice. ___ barn owls also hunt small rodents, but they prefer to hunt in open grasslands instead of forests.\"\n\nThe student chooses the word \"However\" to fill the blank. Is this the correct transition? Explain why or why not based on what the two sentences actually say.",
     "choices": [
-      "Keep all the transitions because every sentence in an informative paragraph must start with a transition to show readers how the facts connect",
-      "Remove some transitions and keep only the ones that genuinely need to signal a connection, because piling transitions on every sentence buries the connections that actually matter",
-      "Replace the word \"third\" with \"subsequently\" because more sophisticated transition words make the paragraph sound more informative",
-      "Add more transitions at the end of each sentence so the reader receives multiple signals about how each fact connects to the next"
+      "No, because the second sentence adds a new fact about barn owls rather than turning against what was said about great horned owls.",
+      "Yes, because the second sentence contradicts the first by showing that barn owls hunt in a completely different way and location, making \"however\" show the contrast between the two owl species.",
+      "Yes, because \"however\" is a polite, grown-up word that works in informative writing and sounds professional when explaining facts about animals.",
+      "No, because \"however\" is used only to show the order that events happen in, and these sentences describe the hunting habits of different owls rather than events in time sequence."
     ],
     "answer": "A",
     "hints": [
-      "The lesson explicitly states when transitions should and should not be used; it is not a rule that every sentence needs one",
-      "Think about what happens when the reader sees a transition on every single sentence—does that help or confuse them about which connections really matter?"
+      "Does the second sentence disagree with or contradict the first sentence, or does it give one more fact on the same side?",
+      "Remember: a transition can sound right and still name the wrong relationship—check what the second sentence actually does to the first fact."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-9.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read these four sentence pairs. In three of them, the transition is correct; in one, it is wrong. The wrong one has a correctly spelled transition that names the wrong relationship. Which pair has the incorrect transition? A. \"Giraffes have very long necks to reach leaves high in acacia trees. Therefore, their long necks also allow them to spot predators from far away.\" B. \"Coral reefs are home to thousands of fish, sea stars, and other creatures. For example, parrotfish eat algae that would otherwise smother the coral and kill it.\" C. \"Mountain goats live on steep rocky cliffs where other animals cannot survive. However, mountain goats have special hooves with textured pads that grip the rock securely.\" D. \"Some butterflies migrate thousands of miles to find food and avoid cold weather. In addition, monarch butterflies are guided by an invisible magnetic field that helps them navigate to Mexico.\"",
+    "problemText": "A student revises an informative paragraph about bird migration and reads it aloud: \"Many bird species migrate to warmer places in the fall. Similarly, monarch butterflies fly south to escape the cold. However, some birds migrate to find food rather than warmth. Therefore, the path a migrating animal takes depends on what resources it is looking for.\"\n\nWhich sentence has a transition that names the wrong relationship, and what is the actual relationship that sentence shows?",
     "choices": [
-      "Pair A",
-      "Pair C",
-      "Pair D",
-      "Pair B"
+      "Sentence 2: 'Similarly' names the adding relationship, but the sentence actually shows an example relationship.",
+      "Sentence 3: 'However' names the contrast relationship, but the sentence actually adds a separate cause for migration.",
+      "Sentence 4: 'Therefore' names the cause-and-effect relationship, but the sentence actually concludes the paragraph.",
+      "No sentence has the wrong transition; all four transitions correctly name their relationships."
     ],
     "answer": "B",
     "hints": [
-      "Look for a transition that sounds grown-up and correct but actually names a relationship that is not there; pay special attention to contrast and cause-and-effect transitions",
-      "Ask yourself: does the second sentence turn against the first, explain why it is true, give one specific case of it, or add another fact on the same side?"
+      "Read each sentence before and after the transition, and ask: does the relationship the transition announces match what the sentence actually does?",
+      "Look especially at sentence 3. It gives one more reason why animals migrate—is that turning against the migration-for-warmth idea, or adding to it?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "When you orient a reader at the start of a narrative, which three pieces of information must you establish before the first event finishes? Think about what a reader needs to picture and understand right at the beginning.",
+    "problemText": "When a writer orients a reader at the start of a narrative, what three things must the opening answer before the first event finishes?",
     "choices": [
-      "the character's entire life history, the reason the character was born, and everything that will happen in the story",
-      "where and when the story is happening, who is in the scene, and what the first event is",
-      "the weather, the main character's mood, and a description of every building in the setting",
-      "why the reader should care, what the character ate for breakfast, and how the story will end"
+      "what the main character looks like, why the story matters, and how the story will end",
+      "where and when the action is happening, who is in the scene, and what the first event is",
+      "how long the story will take to read, what the setting sounds like, and who is telling the tale",
+      "where the character came from, what the character wants most, and what happens next"
     ],
     "answer": "B",
     "hints": [
-      "Look for the three-job checklist from the lesson: context, character, and first event.",
-      "Orienting means giving a reader just enough to start, not everything about the character's past or the whole plot."
+      "Look for the three questions that help a reader avoid confusion at the very start.",
+      "Think about what a reader needs to picture a scene: the place, the moment, and the people in it."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A writer drafts this opening: 'The library was built in 1952 and has always been a central place in the community. Many students have studied there over the decades. Keisha walked through the front door on a Tuesday afternoon to look for a book.' What is the main problem with this opening? How should the writer fix it?",
+    "problemText": "A writer begins a story this way: 'Devon had always been interested in science, and his family had lived in the city for three years, and he got good grades in math, and then one Tuesday morning he found a strange crystal in his backyard.' Why does this opening fail to orient the reader well?",
     "choices": [
-      "The opening provides unnecessary history about the library's founding and reputation before introducing Keisha's action, which delays the story and should be removed by starting directly with Keisha entering the building.",
-      "The opening stalls by giving background history before anything happens; it should cut the first two sentences and start with Keisha's action.",
-      "The opening mentions that it is Tuesday but does not explain why that day matters to the plot, so the writer should either develop the significance of Tuesday or choose a more important detail to include instead.",
-      "The opening establishes the library's location clearly but fails to describe what Keisha looks like, making it difficult for the reader to imagine her appearance as she enters the building."
+      "It includes too many details about Devon's background, when orienting only needs one or two concrete details of place and time.",
+      "It does not name the city where Devon lives, so readers cannot picture the setting.",
+      "It gives a list of facts about the character before showing what he is doing right then, and it waits too long to reach the first event.",
+      "It tells readers the ending before the story has a chance to unfold naturally."
     ],
-    "answer": "B",
+    "answer": "C",
     "hints": [
-      "The lesson says that a paragraph of background before anything happens is not orienting—it is stalling.",
-      "An oriented opening answers three questions, but does not include facts that a reader does not need to picture the scene right now."
+      "An opening should introduce a character by name and by what that person is doing right then, not by a list of facts.",
+      "How much of Devon's history and personality does a reader need to know before the story's first event happens?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Which of the following is the best way to introduce a character when orienting a reader? A writer is starting a story and needs to bring in a person for the first time.",
+    "problemText": "Which of the following is an example of stalling rather than orienting?",
     "choices": [
-      "Give the character's full name, birth date, favorite food, and the names of all their family members so the reader knows them completely.",
-      "Describe what the character looks like from head to toe before showing anything they do.",
-      "Name the character and show what that person is doing right then in the scene, so the reader knows who is there and how they fit.",
-      "Explain the character's whole history and all the reasons why they came to be at this moment."
+      "A sentence that gives the day of the week, the season, and shows a character already in motion doing something.",
+      "A sentence that tells readers the place is a diner, the time is early morning, and names the waitress who is pouring coffee.",
+      "A sentence that puts a reader inside a gymnasium five minutes before the first game of the season.",
+      "A paragraph that explains the neighborhood's history and how it was built before naming a single character or describing what happens."
     ],
-    "answer": "C",
+    "answer": "D",
     "hints": [
-      "The lesson teaches that you introduce a character by name and by what that person is doing right then, not by a list of facts.",
-      "Orienting means giving a reader just enough to picture the scene and start the action, not the character's entire past."
+      "Stalling gives readers a history lesson with nothing to picture yet; orienting gives them a place and moment to stand in.",
+      "Does the choice give readers a concrete picture they can stand in right now, or does it explain something that happened before the story begins?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer drafts this opening: 'Owen finally found his lost baseball card after searching for three weeks, and it was wedged behind the dresser the whole time, and he felt so happy that he called his best friend to tell him the news, and they laughed about all the places Owen had already checked.' Why is this opening a problem, and what should the writer do to fix it? Think about the difference between orienting and summarizing.",
+    "problemText": "A writer starts with this draft: 'The soccer tournament was held every summer in Oak Park, and last year Santiago's team didn't make it far, but this year he was determined to play better, and during the first game he kicked the ball out of bounds in the third minute.' What are two problems with this draft as an opening that orients a reader?",
     "choices": [
-      "The opening jumps straight to the ending without establishing where Owen is or what time it is, and it should start at the moment Owen first realizes the card is missing, with the setting and his name already clear.",
-      "The opening does not name Owen's best friend, so the reader cannot tell who the friend is, and the writer should add the friend's full background before Owen calls.",
-      "The opening does not say what Owen's favorite baseball team is, so the reader cannot understand why the card matters to him.",
-      "The opening is too long, and the writer should cut it down to a single sentence that includes all the main events."
+      "It does not name the place and time clearly enough, and it introduces Santiago by listing his thoughts instead of showing what he is doing right then.",
+      "It gives away the ending by mentioning last year's tournament, and it fails to name the character's full name and hometown.",
+      "It starts the sequence too late in the action by summarizing Santiago's past, and it uses connecting words like 'but' and 'and' to string together too many separate events.",
+      "It does not explain why the tournament happens every summer, and it does not say what Santiago's parents think about his performance."
     ],
     "answer": "A",
     "hints": [
-      "A natural sequence begins where the story actually starts—the first event, not the ending or the discovery that comes after weeks of searching.",
-      "The lesson warns that the moment an opening tells a reader how things turned out, it has stopped orienting and started summarizing."
+      "A natural sequence begins with the first event that gets the story moving, not with explaining what the character thinks or wanted before that moment.",
+      "Good context takes one or two concrete details; look at how much time and history this draft includes before anything actually happens."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer is starting a narrative from this idea: a student accidentally breaks a borrowed skateboard at the skate park. The writer has drafted two possible openings. Which one better orients the reader by establishing all three necessary pieces—context, a character, and a natural first event—without stalling or summarizing?",
+    "problemText": "Which revision best fixes this opening so it orients the reader and stops at the first event instead of summarizing the whole story? Original: 'It was raining when Zoe got to the skate park, and she fell on her first trick, and she kept trying, and by the end of the afternoon she had landed it, and everyone cheered, and she felt proud.'",
     "choices": [
-      "Devon had always loved skateboarding since he was seven years old, and he had owned five skateboards in his life, and on Thursday afternoon at Riverside Skate Park he borrowed his friend's board for the first time and rode toward the rail when the tail cracked under his feet.",
-      "On a bright Thursday afternoon at Riverside Skate Park, Devon rolled his friend's borrowed skateboard toward the rail, and as he leaned in for the trick, the tail cracked and snapped.",
-      "Skateboarding is an exciting and dangerous sport that attracts many young people, and Devon was one of them, and he went to the skate park and borrowed a board and something went wrong with it.",
-      "Devon broke the skateboard that he borrowed, and it happened at the skate park on a Thursday, and he felt terrible about it, and his friend eventually forgave him, and they are still friends today."
+      "It was raining when Zoe got to the skate park, and she was the kind of person who never gave up because she had been practicing for weeks and was determined to land her first trick.",
+      "It was raining hard when Zoe got to the skate park on Saturday afternoon, and she was gripping her skateboard at the edge of the deep bowl when her feet froze and she wondered if she should try the trick everyone had been talking about.",
+      "Zoe went to the skate park one day when it was raining, and she was standing at the edge of the bowl with her board in her hands, nervous about attempting the difficult flip trick that she had been thinking about all week.",
+      "It was Saturday afternoon at the skate park, and it was raining, and Zoe was gripping her skateboard tightly while standing at the top of the concrete bowl, hesitating before she committed to trying the challenging maneuver she had watched other skaters do."
     ],
     "answer": "B",
     "hints": [
-      "An oriented opening answers three questions and then stops at the first event; it does not give away what happens later or waste time on history before the action.",
-      "Context takes one or two concrete details (a place, a time of day) to anchor the reader, not a list of facts about the character's past."
+      "A good opening stops at the first event that starts the story moving, not at the happy ending or at the character's feelings about the whole journey.",
+      "Look for the choice that gives place and time, shows what Zoe is doing right then, and ends before we know how the attempt turns out."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A writer has drafted this opening: 'On a cold December evening, Sophia entered the community center for the first time and went straight to the swimming pool. But before she could dive in, the lifeguard blew the whistle and told everyone to get out of the water because a pipe had burst, and the pool had to close for the rest of the winter, and all the swimmers felt disappointed, and Sophia decided to sign up for lessons at the next facility instead.' What are two specific problems with how this opening is organized, and how should the writer fix them?",
+    "problemText": "A writer has outlined a narrative idea: 'A student's phone dies during an important video interview, and the student has to reschedule it, and the second interview goes better because the student is more prepared.' The writer produces this opening: 'My phone was always running out of battery because I never remembered to charge it, so it died during my interview with Dr. Patel, and I had to ask to reschedule, and the next time we talked, I was ready, and she loved what I had to say, and I felt relieved.' What are two specific problems with this opening, and what does the writer need to fix?",
     "choices": [
-      "The opening fails to describe the lifeguard's appearance and background before he acts, which confuses the reader about who he is; also, it should include Sophia's thoughts about swimming pools in general before she enters the building.",
-      "The opening gives away the ending—Sophia signing up at another facility—before the reader has a real reason to care, and it should stop right after the lifeguard's whistle or right after Sophia learns the pool is closed; also, the opening does not make clear why Sophia came to the center in the first place.",
-      "The opening establishes context and character correctly but then races through multiple events and the story's resolution, so it should cut everything after the lifeguard blows the whistle and stop at that first event; also, it summarizes how the swimmers felt instead of showing the reader what Sophia is actually doing right then.",
-      "The opening does not tell the reader what Sophia is wearing or describe the color of the pool water, which prevents a full picture of the scene; also, it skips over what Sophia ate before coming to the center, leaving gaps in the narrative."
+      "The opening does not provide enough information about when and where the interview was scheduled to take place, and it does not explain the purpose of the interview or why it mattered to the narrator's goals. The writer should specify the interview location, the time it was supposed to happen, and what the interview was for.",
+      "The opening does not make clear who Dr. Patel is or how the narrator knew her before this interview, and it does not say what kind of job or opportunity this interview was supposed to lead to. The writer should add background information about Dr. Patel and explain why this particular interview was so important.",
+      "The opening summarizes the whole story from beginning to end instead of stopping at the first event; it also introduces the narrator by listing a habit instead of showing what the narrator is doing in that specific moment. The writer should cut everything after the phone dies and show the narrator during the interview, not explain the character's phone habits.",
+      "The opening tells readers about the narrator's phone habits and past behavior instead of describing what the narrator looks like or what the narrator was wearing during the interview. The writer should replace the character background with physical details about the narrator and describe the narrator's appearance in the moment the phone dies."
     ],
     "answer": "C",
     "hints": [
-      "A natural sequence starts at the true first event and does not report the middle or ending in advance; once an opening summarizes how things turn out, it has stopped orienting and started summarizing.",
-      "An oriented opening stops at the first event—the moment that gets the story moving—not at all the events that follow or at how the character feels about what happens later."
+      "Remember that orienting is not the same as summarizing—an opening sets up a beginning, not the whole story from middle to end.",
+      "Think about how to introduce a narrator: by what they are doing right then, or by listing their habits from before?"
     ]
   }
 ]

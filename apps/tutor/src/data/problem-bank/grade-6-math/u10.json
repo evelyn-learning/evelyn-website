@@ -5,17 +5,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A statistical question is one that anticipates variability in the data. Which of these is the best test to decide if a question is statistical?",
+    "problemText": "Which of the following is a statistical question? Remember: a statistical question is one where you expect the answers to differ from person to person or object to object.",
     "choices": [
-      "Check whether the question mentions more than one person or object.",
-      "Check whether the question uses the word 'each' somewhere in it.",
-      "Check whether the question is interesting and would be fun to ask.",
-      "Ask yourself: would the answers come back the same every time, or would they differ from person to person or time to time?"
+      "How many languages does the principal of our school speak?",
+      "What is the current temperature in our city at this exact moment?",
+      "How many grains of sand are on this specific beach right now?",
+      "What is the favorite color of each student in our class?"
     ],
     "answer": "D",
     "hints": [
-      "The lesson calls this test the 'variability test.' What does it ask you to think about?",
-      "Remember that mentioning a group is not enough by itself. What matters is whether separate answers are expected to differ."
+      "A statistical question asks something of many different people or objects, where separate answers are expected.",
+      "Three of these questions have only one correct answer. Which one expects many different answers?"
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A coach asks the team members: 'How many hours did each player practice this week?' Is this a statistical question? Explain your reasoning.",
+    "problemText": "Maya's teacher asks her to collect data about snack preferences. Maya writes: 'What is the favorite snack of our school?' Is this a statistical question? Explain why or why not.",
     "choices": [
-      "Yes, because different players will likely have practiced for different numbers of hours, so the answers are expected to differ.",
-      "No, because it limits the data to one specific week instead of asking about practice time across multiple weeks or the whole season.",
-      "No, because asking about a single week means there can be only one correct answer for the entire team rather than many separate answers.",
-      "Yes, but only if the coach keeps a record for multiple weeks, otherwise the question would not create enough data to analyze."
+      "No, because even though many students are in the school, the question only produces one answer total for the whole school.",
+      "Yes, because the question mentions a large group (the whole school) and large groups always lead to multiple different answers.",
+      "Yes, because each student in the school will answer the question separately, giving many different responses that vary from person to person.",
+      "No, because the question asks 'what is the favorite snack' meaning it seeks one single favorite rather than collecting separate answers from each student."
     ],
     "answer": "A",
     "hints": [
-      "Apply the variability test: if you asked this question and collected the answers from each player, would they all be the same number, or would they differ?",
-      "Think about whether each team member's practice time is expected to be identical or different from the others."
+      "Use the variability test: would each member of the school give a separate, different answer, or does the question ask for just one number for the whole group?",
+      "Mentioning a group is not enough by itself. Count how many final answers the question would produce."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wants to learn what kinds of lunch foods the sixth-graders prefer. She writes: 'What is the favorite lunch food of the sixth grade?' Why is this not yet a statistical question, and what would make it one?",
+    "problemText": "A coach observes his track team during practice. He wants to turn this question into a statistical question: 'How fast did the runner complete the 100-meter race?' Which rewrite would make it statistical?",
     "choices": [
-      "It is not statistical because it asks about lunch foods instead of breakfast foods. Changing it to 'What is the favorite breakfast food?' would make it statistical.",
-      "It is not statistical because it treats the entire sixth grade as a single unit with one favorite, rather than asking each student separately. Changing it to 'What is the favorite lunch food of each student in the sixth grade?' would make it statistical.",
-      "It is not statistical because the word 'favorite' is too vague. Changing it to 'What is the most common lunch food?' would make it statistical.",
-      "It is not statistical because it is too short. Adding more words like 'in the school' would make it longer and therefore statistical."
+      "How fast did the fastest runner on the team complete the 100-meter race?",
+      "How fast did each member of the team complete the 100-meter race?",
+      "How fast should runners on the team try to complete the 100-meter race?",
+      "How did the team's average speed compare to other schools' speeds?"
     ],
     "answer": "B",
     "hints": [
-      "Remember: a question becomes statistical only when each member of the group can give a separate, possibly different answer.",
-      "Think about what the lesson teaches: to turn a single-answer question into a statistical question, change WHO the question reaches."
+      "To make a question statistical, change it so that each member of a group can give a separate, possibly different answer.",
+      "The original question names one runner. What change would let every team member answer separately?"
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Four students wrote these questions. (1) 'How many minutes of screen time did I have yesterday?' (2) 'How many minutes of screen time does each student in my class have per day?' (3) 'How many students are in my class?' (4) 'How many minutes of screen time do most students in my class have per day?' Which questions are statistical questions, and why?",
+    "problemText": "A student reads these two questions and claims they are both statistical questions: (1) 'How many siblings does each student in our grade have?' and (2) 'How many siblings do all the students in our grade have combined?' Apply the variability test to both questions. Which statement is correct?",
     "choices": [
-      "Only question 1, because it asks about one specific person's experience.",
-      "Questions 1 and 3, because they ask about things you can measure and count.",
-      "Only question 2, because it asks each student separately and expects different answers from different students.",
-      "Questions 2 and 4, because they both mention groups of students and ask about screen time."
+      "Both are statistical because they both ask about students in our grade and require data collection from the group.",
+      "Only Question 2 is statistical because combining information from many students automatically makes a question statistical.",
+      "Only Question 1 is statistical because each student can give a different answer, while Question 2 has only one combined total.",
+      "Neither is statistical because the answer depends on family information rather than classroom characteristics."
     ],
     "answer": "C",
     "hints": [
-      "For each question, ask: Would the answers differ from person to person, or is there only one correct answer?",
-      "Question 3 mentions the whole class, but does it produce many separate answers or just one total? What does the lesson say about this?"
+      "For each question, ask: would the answers differ from student to student, or would there be only one final number?",
+      "A statistical question needs each member of the group to give a separate, possibly different answer. Which question structure allows that?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A librarian wants to understand whether students check out books for pleasure or for school assignments. She has to choose between these two questions: (1) 'How many books did the student council president check out last month?' (2) 'What was the reason each student in the library's club checked out books last month?' Explain which question is statistical and why, using the variability test.",
+    "problemText": "Jordan wants to research how students in his school spend their free time after school. He starts with this question: 'What do students do after school?' Explain what is wrong with this question, and then rewrite it so that it becomes a statistical question.",
     "choices": [
-      "Question 1 is statistical because the student council president's reasons are important and represent many students.",
-      "Question 2 is statistical because it asks about each member of a group separately, and different students are expected to have different reasons for checking out books.",
-      "Both questions are statistical because they both ask about reasons for checking out books.",
-      "Neither question is statistical because reasons are opinions, and statistical questions must ask about numbers that can be measured."
+      "The question is too vague. Rewrite it as: 'What is the most common thing that students do after school?'",
+      "The question is incomplete because it does not specify which school. Rewrite it as: 'What do students in middle schools do after school?'",
+      "The question is wrong because free time is too personal. Rewrite it as: 'Do students prefer indoor or outdoor activities after school?'",
+      "The question is too vague and does not clearly show that each student should give a separate answer. Rewrite it as: 'How many hours does each student in our school spend on free time activities after school?'"
     ],
     "answer": "D",
     "hints": [
-      "Question 1 asks about only one person at one moment in time. Does it produce different answers, or just one answer?",
-      "Question 2 asks about each club member's reasons. Before you collect the data, would you expect different students to give the same reason or different reasons?"
+      "A statistical question must be specific enough that different students can give separate, measurable answers. What makes the original question unclear about this?",
+      "When you rewrite, think about the lesson tip: change who or what the question asks about so every member of a group can answer separately."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Marcus collected data by asking: 'How many minutes did each student in our class spend eating lunch today?' After he collected everyone's answers, he found that the times ranged from 18 minutes to 41 minutes. Now Marcus wants to ask a follow-up question to understand what affects how long students eat. Which follow-up question is statistical and would help him gather the data he needs?",
+    "problemText": "A student analyzing four questions decides that exactly two of them are statistical: (A) 'How old is our class pet?' (B) 'How much does each student in our class weigh?' (C) 'What is the total cost of all the books in our school library?' (D) 'How many hours of video games do the students in our class play each week?' Apply the variability test to all four questions. Which pair did the student correctly identify as statistical?",
     "choices": [
-      "How many minutes do students in other grade levels spend eating lunch?",
-      "Why do you think some students eat faster or slower than others during lunch period?",
-      "Is eating lunch in about 30 minutes healthy and good for helping students digest their food?",
-      "How many lunch periods does our school have in one day?"
+      "A and B",
+      "B and D",
+      "C and D",
+      "A and C"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
-      "A statistical question must allow each member of a group to give a separate answer that is expected to differ. Which choice asks about separate answers from different people?",
-      "Think about whether Marcus is asking about one thing or about comparing the lunch times of different groups of students."
+      "For each question, test whether you expect one single answer or many different answers. Do not just count how many people or things the question mentions.",
+      "Remember: even if a question talks about a group, it is not statistical if it only produces one final number for that whole group. Check questions C and D carefully."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6MATH-10.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "In a dot plot, what happens when a data value appears more than once in the data set?",
+    "problemText": "A dot plot shows data on a number line where each value in a data set gets its own dot. What happens when the same value appears more than once in the data set?",
     "choices": [
-      "Multiple dots for that value are stacked directly on top of each other at that spot on the number line.",
-      "Only one dot is placed at that value, and a number label is written next to it to show how many times it appears.",
-      "The value is grouped into an interval with other nearby values and shown as a bar instead.",
-      "The repeated value is removed from the data set so the dot plot does not become too crowded."
+      "The dots are stacked directly on top of each other above that value.",
+      "The dots are placed side by side horizontally next to each other.",
+      "Only one dot is drawn, no matter how many times the value appears.",
+      "The value is combined with nearby values and shown as a single mark."
     ],
     "answer": "A",
     "hints": [
-      "The lesson says dots are 'stacked directly on top of each other' when a value repeats.",
-      "Think about what happens to the individual dots when the same number of pets appears three times."
+      "Think about what happens to multiple pets at the same number on Ms. Rivera's plot.",
+      "The key word is 'stack'—dots are placed vertically, not horizontally."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6MATH-10.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A science class asks 8 students how many science fair projects they have completed. The answers are: 1, 2, 1, 3, 2, 1, 3, 2. Would a dot plot or a histogram be the better choice to display this data, and why?",
+    "problemText": "A teacher collects data on the number of books read by 8 students: 2, 3, 2, 4, 3, 3, 2, 4. If this data is displayed as a dot plot, how many dots would be stacked above the value 2?",
     "choices": [
-      "A histogram, because there are 8 students and grouping values into intervals will make the display clearer and easier to read overall.",
-      "A dot plot, because there are only 8 values and just a few different numbers, so every value can fit on the line without crowding.",
-      "A histogram, because the data includes multiple different values that need to be organized into categories to show patterns.",
-      "A dot plot, because dot plots are designed to show small data sets where individual data points matter and should remain visible."
+      "2 dots",
+      "3 dots",
+      "4 dots",
+      "8 dots"
     ],
     "answer": "B",
     "hints": [
-      "The lesson teaches that a dot plot works well for a small data set with only a few different values.",
-      "Count how many different numbers appear in the list: 1, 2, and 3. Is that spread large or small?"
+      "Count how many times the value 2 appears in the list.",
+      "Remember that each occurrence of 2 gets its own dot, stacked above that value."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6MATH-10.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A teacher creates a histogram of the test scores of 30 students using four equal intervals: 60–69, 70–79, 80–89, and 90–99. The bar heights are 6, 10, 10, and 4. When you look at the bar above the 80–89 interval, what can you say for certain about those 10 students?",
+    "problemText": "A histogram displays data with intervals that are all the same width. Why do the bars in a histogram sit directly next to each other with no gaps between them?",
     "choices": [
-      "All 10 students scored exactly 85 on the test.",
-      "Each of the 10 students scored somewhere between 80 and 89, but their exact scores are not visible from the histogram.",
-      "At least 8 of the 10 students scored 85 or higher.",
-      "The 10 students' scores add up to exactly 850 points."
+      "Because gaps would make the histogram look cluttered and interrupt the visual flow showing how data is distributed across intervals.",
+      "Because histograms must follow a formatting rule that distinguishes them from other graph types used in mathematics and statistics.",
+      "Because each value belongs to exactly one interval, and the bars represent consecutive, non-overlapping intervals.",
+      "Because the number line must be completely filled to show all possible values without leaving any empty space."
     ],
     "answer": "C",
     "hints": [
-      "The lesson warns that once values are grouped into an interval, you cannot tell them apart from each other inside that interval.",
-      "A histogram bar shows a count of how many values fall in the interval, but it hides the exact individual values."
+      "Think about what happens if two intervals overlap or if there is a gap between them.",
+      "Every single data value needs to fit into exactly one interval—no value can be counted twice or left out."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6MATH-10.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A dot plot showing the number of siblings for 15 students has 1 dot above 0, 4 dots above 1, 5 dots above 2, 3 dots above 3, and 2 dots above 4. A student claims the dot plot is missing a value. How can you check if this claim is true without looking at the original data?",
+    "problemText": "A coach collects data from 25 players on how many goals they scored. The values range from 3 goals all the way to 48 goals, and most players scored a different number. The coach wants to display this data on a single page that is easy to read. Should the coach use a dot plot or a histogram, and what is the main reason?",
     "choices": [
-      "Count how many different values appear on the number line; if there are fewer than 6, a value is missing.",
-      "Add up all the dots on the plot; if the total does not equal 15, at least one value was missed or miscounted.",
-      "Measure the height of each stack of dots; if one stack is noticeably taller than the others, a value was placed in the wrong spot.",
-      "Look for gaps between the dots; if there are gaps, it means values are missing from that part of the number line."
+      "A dot plot, because it can display any amount of data and makes every individual score visible so nothing gets hidden in intervals.",
+      "A histogram, because histograms are more professional and work for any data set no matter the size.",
+      "A dot plot, because 25 values is a small data set and small data sets always use dot plots.",
+      "A histogram, because there are many values spread across a wide range, and grouping them into intervals keeps the display readable."
     ],
     "answer": "D",
     "hints": [
-      "The lesson teaches a checking method: 'the total number of dots in a dot plot must equal the total number of values in the data set.'",
-      "What does the total of all the dot counts (1 + 4 + 5 + 3 + 2) equal, and how does it compare to the 15 students?"
+      "Look at the size of the data set (25) and how spread out the values are (3 to 48).",
+      "Compare this situation to Mr. Okafor's 20 homework-minutes data—what made a histogram a good choice there?"
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6MATH-10.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A survey asks 35 people how much time they spend gardening per week. The times range from 2 hours to 72 hours. Why would a histogram with intervals be a better choice than a dot plot for this data set?",
+    "problemText": "A histogram shows how many hours 16 students spent studying for a test. The intervals are 0-2, 3-5, 6-8, and 9-11 hours. The bars have heights of 4, 6, 4, and 2 respectively. A student looks at the bar above the 6-8 interval and says, 'This bar tells me that 4 students studied for exactly 7 hours.' Why is this statement incorrect?",
     "choices": [
-      "A histogram with equal-width intervals will keep the display readable, even though the exact time for each person will no longer be visible once values are grouped into intervals.",
-      "A dot plot would require 70 different marks on the number line, creating a spread so wide and sparse that it would be difficult to see patterns or compare frequencies across the range.",
-      "A histogram automatically shows the exact value of every data point without any loss of information, while a dot plot only shows approximate locations.",
-      "A histogram is better for any data set where the range is larger than 50 units because intervals provide clearer organization of widely spread values."
+      "Because the bar only tells us that 4 students studied somewhere between 6 and 8 hours, not that all of them studied exactly 7 hours.",
+      "Because the interval 6-8 contains more than 4 specific values that could be scored, so grouping them loses information about which exact values actually occurred.",
+      "Because histograms record frequencies in ranges rather than exact measurements, and 4 students somewhere in that interval could have studied 6, 6.5, 7, 7.5, or 8 hours separately.",
+      "Because the bar height represents a frequency count across an entire interval, not the number of students who chose one particular value within that range."
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches that a histogram 'works well for a larger data set, or one where the values are spread across many different numbers, because grouping keeps the picture readable.'",
-      "Think about the trade-off: what do you gain in readability, and what do you lose about individual values?"
+      "Think about what is lost when individual values are grouped into an interval.",
+      "A histogram groups data together for readability—what exact information is no longer visible once values are grouped?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6MATH-10.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A coach creates a histogram showing the number of goals scored by 20 soccer players, using intervals of 5 goals each: 0–4, 5–9, 10–14, and 15–19. The bar heights are 8, 7, 4, and 1. After looking at this histogram, a coach says, 'I can tell exactly which players scored 7 goals.' Is the coach's statement possible, and why or why not?",
+    "problemText": "A teacher displays student test scores on a histogram with equal intervals: 60-69, 70-79, 80-89, and 90-99. The bar heights are 3, 7, 8, and 2 respectively. The teacher then decides to create a dot plot of the same data. What would be a valid concern about making this switch from a histogram to a dot plot?",
     "choices": [
-      "Yes, because the bar height of 8 in the first interval tells us that 8 players scored between 0 and 4 goals, so we can count exactly who scored 7.",
-      "No, because once values are grouped into equal-width intervals in a histogram, the exact individual values inside each interval become invisible.",
-      "Yes, because the bar above the 5–9 interval has a height of 7, which directly represents 7 players who each scored exactly 7 goals in that range.",
-      "No, because a histogram only shows how many players are in each interval, not the specific score each player achieved within that interval."
+      "A dot plot cannot show scores in the 60-69 range because those are too low to measure accurately.",
+      "The dot plot would need 20 dots spread across 40 possible exact values, and if students actually scored many different exact scores, the plot could become crowded and hard to read.",
+      "A dot plot is not allowed if there are more than 15 data points because the display rules require switching to intervals for larger data sets.",
+      "A dot plot would require intervals like the histogram uses, so it would not actually simplify or improve the way the data is shown to viewers."
     ],
     "answer": "B",
     "hints": [
-      "A histogram shows a count per interval, but what does it NOT show about the individual values inside that interval?",
-      "The lesson explains: 'Once values are grouped into an interval, you cannot tell them apart from each other inside that interval anymore.'"
+      "Count the total number of data values represented by the histogram bars.",
+      "Think about how many different exact scores the students could have—if spread across a wide range with many different values, what happens to readability on a dot plot?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Four students took a spelling test and earned these scores: 78, 82, 85, 91. What is the mean score?",
+    "problemText": "Four students scored 78, 82, 85, and 89 on a quiz. What is the mean score?",
     "choices": [
-      "82",
+      "85.5",
       "84",
-      "85",
-      "336"
+      "83.5",
+      "86"
     ],
     "answer": "B",
     "hints": [
       "Add all four scores together first.",
-      "Then divide your total by how many students took the test."
+      "Then divide your total by how many students took the quiz."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A basketball player recorded the number of points she scored in each of five games: 12, 14, 16, 18, 20. What is the median number of points she scored?",
+    "problemText": "A student ordered the heights of five classmates from shortest to tallest: 52 inches, 54 inches, 56 inches, 59 inches, 61 inches. What is the median height?",
     "choices": [
-      "14",
-      "16",
-      "18",
-      "20"
+      "54 inches",
+      "57.6 inches",
+      "56 inches",
+      "59 inches"
     ],
     "answer": "C",
     "hints": [
-      "The median is the middle value when all data are arranged from least to greatest.",
-      "Count which position is in the middle of five values."
+      "The median is the middle value when the data is already in order.",
+      "With five values, count to find which one sits exactly in the middle."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A teacher measured the heights, in inches, of six sixth-graders: 58, 60, 61, 63, 64, 66. Since there is an even number of values, what should the teacher do to find the median height?",
+    "problemText": "Six students recorded the number of books they read last month: 2, 3, 3, 4, 5, 6. Since there is an even number of values, which two numbers should you use to find the median?",
     "choices": [
-      "Pick whichever of the two middle values is larger, since the median must be one of the actual data points in the set.",
-      "Add all six heights together and divide the sum by 6 to get the average height of the group.",
-      "Find the average of the two middle values by adding them and dividing by 2, which gives the median when the data set has an even count.",
-      "Remove the smallest and largest heights, then count what remains."
+      "2 and 6",
+      "3 and 4",
+      "3 and 5",
+      "4 and 5"
     ],
     "answer": "D",
     "hints": [
-      "Review what to do when there is no single middle value.",
-      "The two middle values in a set of six are in positions 3 and 4."
+      "With six values, the two middle ones are in positions 3 and 4 when counted from left to right.",
+      "Find the two values that sit in the exact middle of your ordered list."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A store sells five identical notebooks. Four of them cost $3 each, and one costs $15 because it has a special leather cover. Which statement correctly compares the mean and median price and explains why?",
+    "problemText": "A teacher measured the times, in seconds, that eight students held their breath: 18, 20, 21, 22, 23, 25, 27, 58. One student held their breath much longer than everyone else. Calculate both the mean and the median, then explain why one measure better describes a typical hold time for this group.",
     "choices": [
-      "The mean is pulled higher by the $15 outlier, but the median stays close to $3, so the median better describes a typical price.",
-      "The median is pulled higher by the $15 outlier, but the mean stays close to $3, so the mean better describes a typical price.",
-      "The mean and median are always the same, regardless of outliers, so both equally describe the typical price.",
-      "The $15 price is not an outlier because it is still part of the data set, so the mean and median describe the same typical price."
+      "Mean is 26.75 seconds; median is 22.5 seconds. The median is better because the 58-second outlier pulls the mean up away from where most students clustered.",
+      "Mean is 28.5 seconds; median is 22.5 seconds. The mean is better because it includes information from the student who held their breath longest.",
+      "Mean is 26.75 seconds; median is 23.5 seconds. The mean is better because using the average of all values gives a more complete picture than picking the middle.",
+      "Mean is 26.75 seconds; median is 22.5 seconds. Both measures are equally good because they both use data from the same eight students."
     ],
     "answer": "A",
     "hints": [
-      "Recall that an outlier pulls the mean but does not pull the median.",
-      "Think about which measure is based on the total of all values and which measure is based only on order."
+      "Add all eight times and divide by 8 for the mean. Then find the average of the 4th and 5th values for the median.",
+      "Think about where the 58-second value pulls the mean, and where most of the actual data sits."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Three friends have saved these amounts of money: $10, $12, $14. Their friend Tamara also joins the group with $75 saved. After Tamara joins, which statement is true?",
+    "problemText": "A soccer team recorded how many goals each of nine players scored in the season: 2, 3, 3, 4, 5, 5, 5, 6, 7. Two students need to report the center of this data set. Jordan says the mean is about 4.4 goals, and Casey says the median is 5 goals. Which student's measure is correct, and why is it still an appropriate choice for describing a typical player's goals?",
     "choices": [
-      "The mean increases by exactly $75, but the median stays the same.",
-      "The mean increases by more than $18, but the median is still only $12 or $13.",
-      "The median increases by exactly $61, matching the increase in the mean.",
-      "Both the mean and the median increase by the same dollar amount."
+      "Only Jordan is correct; the mean always works best when the data is spread evenly across a range.",
+      "Both are correct; since there is no outlier pulling the data to one side, both the mean and median land close together and describe the data well.",
+      "Only Casey is correct; the median only works when there are no outliers at all in the data.",
+      "Both are correct; the median is always more reliable than the mean no matter what the data looks like."
     ],
     "answer": "B",
     "hints": [
-      "Calculate what the mean and median were with three friends, then with four friends.",
-      "An outlier affects the mean more dramatically than it affects the median."
+      "Check whether there is a value far above or far below the rest of the data set.",
+      "When no outlier exists, how close together do the mean and median usually sit?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6MATH-10.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A librarian recorded the number of books checked out each day over one week: 45, 48, 50, 52, 55, 58, 200. The 200 represents a day when the library held a special book giveaway event. The librarian wants to report a number that represents how many books are typically checked out on a regular day. The librarian calculates that the mean is approximately 72 books per day. Is the mean a good choice, and why or why not?",
+    "problemText": "A store tracks the number of items seven customers bought: 1, 2, 2, 3, 3, 4, 15. The customer who bought 15 items was stocking up for a charity event. If the manager uses the mean to predict how many items a typical customer will buy next week, what error would she make, and how would using the median instead give a more honest prediction?",
     "choices": [
-      "Yes, the mean is a good choice because it uses every single day's count in its calculation.",
-      "No, the mean is not a good choice because the 200 is an outlier that pulls the mean far above the typical regular day.",
-      "Yes, the mean is a good choice because 72 is close to half of 200 and shows the average.",
-      "No, the mean is not a good choice because we should never use data from special events in any calculations."
+      "The mean would be about 3.7 items, which accurately reflects that seven customers bought a total of 30 items. The median would be 3 items, but medians cannot be used to predict future purchases.",
+      "The mean would be about 3.7 items, which is too low because most customers buy more than that. The median would be 3 items, which is also too low, so neither measure works.",
+      "The mean would be about 3.7 items, which is too high because the 15-item purchase is an outlier. The median would be 3 items, which sits where most customers actually cluster, so it better predicts a typical purchase.",
+      "The mean would be about 5.2 items, which correctly accounts for the one large purchase. The median would be 3 items, which ignores the customer's needs and is therefore unfair."
     ],
     "answer": "C",
     "hints": [
-      "Think about what an outlier does to the mean and whether it describes what is typical.",
-      "Compare 72 to the six regular days' counts: 45, 48, 50, 52, 55, 58."
+      "First, add up all seven values and divide by 7 to find the mean. Then find the middle value when the data is ordered.",
+      "Think about what most customers actually bought, and how the 15-item outlier moves the mean away from that typical amount."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "The interquartile range (IQR) is calculated by taking which two values from the five-number summary and subtracting them? Explain which one you subtract from which.",
+    "problemText": "A data set has a minimum value of 8 and a maximum value of 35. What is the range?",
     "choices": [
-      "Subtract the minimum from the maximum.",
-      "Subtract Q1 from the median.",
-      "Subtract Q1 from Q3.",
-      "Subtract the median from the maximum."
+      "8",
+      "43",
+      "27",
+      "35"
     ],
     "answer": "C",
     "hints": [
-      "The IQR measures the spread of the middle half of the data, not the whole range.",
-      "Look for the two quartile values in the five-number summary."
+      "Range means the spread from smallest to largest.",
+      "Subtract the minimum from the maximum."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A coach recorded the number of push-ups completed by six students: 8, 12, 15, 18, 20, 25. What is the range of push-ups for this group?",
+    "problemText": "Four students timed how long they could hold a plank: 25 seconds, 18 seconds, 32 seconds, and 20 seconds. Order the data and identify the median of this data set.",
     "choices": [
-      "7 push-ups",
-      "13 push-ups",
-      "15 push-ups",
-      "17 push-ups"
+      "18 seconds",
+      "32 seconds",
+      "25 seconds",
+      "22.5 seconds"
     ],
     "answer": "D",
     "hints": [
-      "Range = maximum minus minimum.",
-      "Identify the smallest and largest values in the data set."
+      "Arrange all four times in order from least to greatest first.",
+      "With an even number of values, the median is the average of the two middle values."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student collected data on how many text messages nine friends received in one hour: 3, 5, 7, 8, 9, 10, 12, 14, 16. When finding the five-number summary, which value should be the median?",
+    "problemText": "The five-number summary for minutes spent on chores is: minimum 10, Q1 = 15, median = 20, Q3 = 28, maximum = 40. Calculate the interquartile range (IQR).",
     "choices": [
-      "9 messages",
-      "7 messages",
-      "10 messages",
-      "8 messages"
+      "13 minutes",
+      "10 minutes",
+      "20 minutes",
+      "30 minutes"
     ],
     "answer": "A",
     "hints": [
-      "The median is the middle value when the data is ordered from least to greatest.",
-      "With nine values, count to the center position."
+      "The IQR is the spread of the middle half of the data.",
+      "Subtract Q1 from Q3."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two classes recorded their test scores. Class A has a median of 78 and a range of 35. Class B has a median of 78 and a range of 12. Both classes have the same center, but what does the difference in their ranges tell you about the two classes?",
+    "problemText": "A teacher recorded test scores for eight students: 62, 71, 78, 81, 85, 88, 92, 96. After ordering the data, what is the value of Q3 (the third quartile)?",
     "choices": [
-      "Class A has better test performance because its range of 35 shows the scores are spread across a wider interval, indicating more consistent mastery of different difficulty levels.",
-      "Class B's test scores are more tightly bunched together, while Class A has scores spread much farther apart.",
-      "Class A's students studied harder than Class B's students, which is why their scores show a wider range from lowest to highest performance.",
-      "Both classes learned the material equally well since they have the same median of 78, meaning the center of each distribution reflects identical overall achievement."
+      "88",
+      "89",
+      "90",
+      "92"
     ],
     "answer": "B",
     "hints": [
-      "Remember that a center alone can hide the story—spread tells you what the middle value does not.",
-      "A smaller range means values are closer together; a larger range means they are more spread out."
+      "Q3 is the median of the upper half of the data.",
+      "With 8 values (even count), split at the center without including the middle values themselves in either half."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A library tracked the number of books borrowed by ten patrons in one week: 2, 4, 5, 6, 7, 9, 10, 12, 14, 18. After finding the five-number summary, which statement best explains what the interquartile range tells you that the range does not?",
+    "problemText": "Two classes tracked pages read over a month. Class A has a five-number summary of: 5, 20, 50, 80, 120 (pages). Class B has: 5, 40, 50, 60, 120 (pages). Both classes have the same median of 50 pages, yet their data look different. Compute the IQR for each class and explain what the difference tells you.",
     "choices": [
-      "The IQR shows the total number of books borrowed by all ten patrons combined.",
-      "The IQR describes how spread out the middle half of the data is, ignoring the most extreme values like the 2 and 18.",
-      "The IQR is always a smaller number than the range, so it is more reliable for all data sets.",
-      "The IQR tells you the average number of books borrowed per patron during the week."
+      "Class A has an IQR of 115 and Class B has an IQR of 115; both classes are identical.",
+      "Class A has an IQR of 60 and Class B has an IQR of 20; Class A's middle half is more tightly bunched.",
+      "Class A has an IQR of 60 and Class B has an IQR of 20; Class B's middle half is more tightly bunched.",
+      "Class A has an IQR of 60 and Class B has an IQR of 20; the classes have the same spread."
     ],
     "answer": "C",
     "hints": [
-      "Think about which values the IQR uses versus which values the range uses.",
-      "The IQR focuses on the middle half, leaving out the very smallest and very largest values."
+      "Remember that the center alone can hide the story — the median is the same, but spread matters.",
+      "Calculate IQR = Q3 − Q1 for each class, then think about what a smaller IQR means."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student found the five-number summary for a data set of eight daily temperatures (in degrees): minimum 62, Q1 = 68, median = 72, Q3 = 76, maximum = 88. The student then said, 'The box plot will have a short box and long whiskers, which means most temperatures cluster in the middle with a few very hot days pulling the maximum up.' Is this statement correct? Explain why or why not using what you know about box plots and the IQR.",
+    "problemText": "A scientist measured the height (in centimeters) of nine seedlings: 12, 8, 15, 14, 10, 11, 13, 16, 9. One seedling grew unusually tall at 16 cm. Compute the five-number summary, the range, and the IQR. Then explain why the IQR is a better measure of spread than the range for describing the typical spread of these seedlings.",
     "choices": [
-      "Yes, because the range of 26 degrees is much larger than the IQR, so extreme values definitely exist.",
-      "No, because the IQR is 8 degrees and the whiskers only span 62 to 68 (left) and 76 to 88 (right), so the right whisker is much longer, suggesting the data spreads out on the hot end, not in the middle.",
-      "Yes, because the median 72 is closer to Q3 than to Q1, so temperatures must be higher on most days.",
-      "No, because a data set with eight values cannot have a box plot that shows this pattern."
+      "Range is 8 cm, IQR is 3.5 cm; the range is better because it uses all the data values from minimum to maximum and therefore gives the most complete picture of variability.",
+      "Range is 8 cm, IQR is 4 cm; the range is always the larger number, and a larger measure of spread is more reliable than a smaller one for describing how the seedlings vary in height.",
+      "Range is 8 cm, IQR is 3.5 cm; the range is better because the unusually tall seedling at 16 cm is part of the data and should be counted fully in any measure of how spread out the heights are.",
+      "Range is 8 cm, IQR is 3.5 cm; the IQR ignores the one unusually tall seedling and better describes the spread of most of the data."
     ],
     "answer": "D",
     "hints": [
-      "Calculate the IQR first to see how long the box actually is compared to the whiskers.",
-      "Compare the length of the left whisker (from min to Q1) to the length of the right whisker (from Q3 to max) to see where the data really spreads out."
+      "Order the nine values first: 8, 9, 10, 11, 12, 13, 14, 15, 16. The median is the 5th value. For an odd count, exclude it when finding Q1 and Q3.",
+      "Think about which measure is affected more by the one very tall seedling at 16 cm."
     ]
   }
 ]

@@ -1,363 +1,21 @@
 [
   {
-    "id": "m6math-polygons-in-the-coordinate-plane-001",
-    "loId": "m6math.polygons-in-the-coordinate-plane",
-    "cedCode": "M6MATH-9.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A polygon is a closed, flat shape. Which of the following is an important step to make sure your drawn polygon is actually closed and complete?",
-    "choices": [
-      "Connect all the vertices to the center point of the shape.",
-      "Use a straight edge to draw every line segment between any two vertices.",
-      "Connect the last vertex back to the first vertex after connecting all vertices in order.",
-      "Plot each vertex at the intersection of the grid lines and mark it with a dot."
-    ],
-    "answer": "D",
-    "hints": [
-      "A polygon must have no gaps—think about what creates a gap at the end.",
-      "Review the key idea about closing the shape after you have connected all consecutive vertices."
-    ]
-  },
-  {
-    "id": "m6math-polygons-in-the-coordinate-plane-002",
-    "loId": "m6math.polygons-in-the-coordinate-plane",
-    "cedCode": "M6MATH-9.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A triangle has vertices at A(3, 5), B(3, 11), and C(8, 5). After you plot these three points and draw the sides in order, which side is horizontal?",
-    "choices": [
-      "Side AC is horizontal because both A and C share the same second coordinate, 5.",
-      "Side AB is horizontal because both A and B share the same first coordinate, 3.",
-      "Side BC is horizontal because it connects two points on the right side of the grid.",
-      "All three sides are horizontal because the triangle sits on the coordinate plane."
-    ],
-    "answer": "A",
-    "hints": [
-      "A horizontal side runs left to right, so the points must have the same height value (second coordinate).",
-      "Check which pair of vertices has a matching y-coordinate."
-    ]
-  },
-  {
-    "id": "m6math-polygons-in-the-coordinate-plane-003",
-    "loId": "m6math.polygons-in-the-coordinate-plane",
-    "cedCode": "M6MATH-9.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A quadrilateral has corners at P(2, 1), Q(2, 6), R(7, 6), and S(7, 1), where each unit is one inch. Your task is to identify which side is vertical and runs up and down on the grid.",
-    "choices": [
-      "Side RS is vertical because R and S both have the first coordinate 7.",
-      "Side QR is vertical because Q and R both have the second coordinate 6.",
-      "Side SP is vertical because S and P both have the second coordinate 1.",
-      "All sides are vertical because the shape is drawn on a vertical grid."
-    ],
-    "answer": "B",
-    "hints": [
-      "A vertical side runs up and down, which means the two endpoints must share the same left-right position (first coordinate).",
-      "Look at the first coordinates of each pair of connected vertices and find the pair that matches."
-    ]
-  },
-  {
-    "id": "m6math-polygons-in-the-coordinate-plane-004",
-    "loId": "m6math.polygons-in-the-coordinate-plane",
-    "cedCode": "M6MATH-9.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A lot has vertices at M(4, 3), N(4, 10), O(9, 10), and P(9, 3), where each unit represents one yard. To find the length of side MN, you need to check which coordinates the vertices share and then find the distance. What is the length of side MN?",
-    "choices": [
-      "3 yards",
-      "4 yards",
-      "7 yards",
-      "14 yards"
-    ],
-    "answer": "C",
-    "hints": [
-      "Side MN is vertical or horizontal—check which coordinate is the same for both M and N.",
-      "Once you know which coordinate differs, find each point's distance from zero using absolute value, then decide whether to add or subtract."
-    ]
-  },
-  {
-    "id": "m6math-polygons-in-the-coordinate-plane-005",
-    "loId": "m6math.polygons-in-the-coordinate-plane",
-    "cedCode": "M6MATH-9.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A garden border forms a quadrilateral with vertices at X(-2, 4), Y(6, 4), Z(6, -1), and W(-2, -1), where each unit is one meter. First, determine which side is horizontal. Then find its length.",
-    "choices": [
-      "Side XY is horizontal and is 4 meters long.",
-      "Side XY is horizontal and is 8 meters long.",
-      "Side ZW is horizontal and is 7 meters long.",
-      "Side ZW is horizontal and is 8 meters long."
-    ],
-    "answer": "D",
-    "hints": [
-      "Horizontal sides connect vertices that share the same second coordinate (y-value).",
-      "When the endpoints are on opposite sides of zero, add their distances from zero instead of subtracting."
-    ]
-  },
-  {
-    "id": "m6math-polygons-in-the-coordinate-plane-006",
-    "loId": "m6math.polygons-in-the-coordinate-plane",
-    "cedCode": "M6MATH-9.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A roof outline is an irregular hexagon with vertices, in order, at A(-5, 2), B(-5, -3), C(0, -3), D(4, -3), E(4, 2), and F(0, 2). A contractor needs to find the perimeter by adding the lengths of all six sides. Sides that are vertical or horizontal can be measured using coordinates; sides that are diagonal cannot be precisely measured with the tools in this lesson. How many sides of this roof polygon are horizontal or vertical, and what is the total length of those sides?",
-    "choices": [
-      "5 sides are horizontal or vertical, with a total length of 22 units.",
-      "4 sides are horizontal or vertical, with a total length of 18 units.",
-      "6 sides are horizontal or vertical, with a total length of 26 units.",
-      "5 sides are horizontal or vertical, with a total length of 20 units."
-    ],
-    "answer": "A",
-    "hints": [
-      "Check each consecutive pair of vertices: do they share a first coordinate (vertical) or a second coordinate (horizontal)? Mark those that do.",
-      "For each horizontal or vertical side, use the method of absolute value and determine whether to add or subtract based on whether the endpoints are on the same side of zero or opposite sides."
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-001",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Volume measures how many cubes fit inside a solid shape. What does it mean to say a rectangular prism has a volume of 24 cubic inches?",
-    "choices": [
-      "It takes 24 unit cubes, each with an edge length of 1 inch, to pack the prism completely with no gaps and no cubes sticking out.",
-      "The perimeter of the base of the prism is 24 inches, which is found by adding the lengths of all four sides of the bottom rectangle.",
-      "The sum of all the edge lengths of the prism is 24 inches, calculated by adding the measures of every edge in the three dimensions.",
-      "The area of one rectangular face of the prism is 24 square inches, which would be found by multiplying two of the three dimensions together."
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about the key idea: volume means counting cubes that fill a solid.",
-      "A cubic unit is used to measure volume because volume counts cubes, not flat squares."
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-002",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism has whole-number edge lengths of 5 inches, 3 inches, and 2 inches. How many unit cubes (each with 1-inch edges) fit inside it?",
-    "choices": [
-      "30 cubes, arranged as 5 layers of 6 cubes each.",
-      "30 cubes, arranged as 2 layers of 15 cubes each.",
-      "10 cubes, arranged as 5 layers of 2 cubes each.",
-      "15 cubes, arranged as 3 layers of 5 cubes each."
-    ],
-    "answer": "B",
-    "hints": [
-      "Multiply all three edge lengths together using the formula V = l × w × h.",
-      "Think about how many 1-inch cubes fit along the length and width to form one layer, then count how many layers fit along the height."
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-003",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A small storage bin measures 1/2 inch long, 1/2 inch wide, and 1/2 inch tall. What is the volume of one small cube with an edge length of 1/2 inch?",
-    "choices": [
-      "1/2 cubic inch.",
-      "1/4 cubic inch.",
-      "1/8 cubic inch.",
-      "2 cubic inches."
-    ],
-    "answer": "C",
-    "hints": [
-      "Use the formula V = edge × edge × edge to find the volume of the small cube.",
-      "When you multiply fractions, multiply numerator by numerator and denominator by denominator."
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-004",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism measuring 3/2 inches by 1/4 inch by 2 inches needs to be packed with small cubes of the same size. Which edge length should each small cube have so that a whole number of cubes fits evenly along every edge of the prism?",
-    "choices": [
-      "1/2 inch, because it is smaller than all three edges.",
-      "1/4 inch, because it divides evenly into 3/2, into 1/4, and into 2.",
-      "1/8 inch, because it is the smallest unit fraction mentioned.",
-      "2 inches, because it is the longest edge of the prism."
-    ],
-    "answer": "D",
-    "hints": [
-      "The small cube's edge length must divide evenly into all three prism edges so that no gaps are left and no cubes stick out.",
-      "Check each option: does 3/2 ÷ choice come out to a whole number? Does 1/4 ÷ choice? Does 2 ÷ choice?"
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-005",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism with fractional edges measures 2/3 inch by 2/3 inch by 1/3 inch. A student packs it with small cubes that each have an edge length of 1/3 inch. After packing, the student finds that exactly 6 small cubes fit inside. What should the student multiply next to find the total volume of the prism in cubic inches?",
-    "choices": [
-      "Multiply 6 by the volume of one small cube, which is 1/3 × 1/3 × 1/3 = 1/27 cubic inch.",
-      "Multiply 6 by the sum of all three edges: 6 × (2/3 + 2/3 + 1/3), because the total edge length tells you the total volume.",
-      "Multiply the three edge counts together again: 2 × 2 × 1 = 4, treating the cube count as edge-length information.",
-      "Divide 6 by the volume of one small cube, which is 6 ÷ (1/27), to scale up the cube count into cubic inches."
-    ],
-    "answer": "A",
-    "hints": [
-      "Once you count the small cubes that pack the prism, you need to account for the fact that each small cube has a fractional volume.",
-      "Review the worked example: after counting small cubes, multiply that count by one small cube's volume."
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-006",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A party favor box measures 5/2 inches long, 1/2 inch wide, and 3/4 inch tall. A student wants to check the volume using both the packing method and the formula V = l × w × h. First, the student must choose a small cube size that divides evenly into all three edges. Which size should be chosen, and why is it the only option that works?",
-    "choices": [
-      "1/2 inch, because it is the smallest edge of the prism and works for all three edges when checked, since 1/2 divides into 5/2, 1/2, and 3/4.",
-      "1/4 inch, because it divides evenly into 5/2 (giving 10), into 1/2 (giving 2), and into 3/4 (giving 3), and no larger unit fraction works for all three.",
-      "1/3 inch, because 3/4 is close to 1 and 1/3 is a common unit fraction that students often use for packing problems.",
-      "1 inch, because the box is too large to pack with smaller cubes and using the largest possible unit makes the computation simpler."
-    ],
-    "answer": "B",
-    "hints": [
-      "A unit fraction works for all three edges if each edge length divided by that unit fraction gives a whole number.",
-      "Try 1/2 inch first: Does 5/2 ÷ 1/2 give a whole number? Does 3/4 ÷ 1/2 give a whole number?"
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-001",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A net is a flat pattern that can be folded into a three-dimensional solid. Which statement correctly describes what a net shows?",
-    "choices": [
-      "All the faces and edges of a solid arranged in a sequence, showing how many vertices the solid has when it is unfolded flat.",
-      "Every face of a solid as a separate flat shape, with each face attached to at least one neighbor along a shared edge.",
-      "Only the top and bottom faces of a solid arranged separately, representing the bases that determine the volume of the three-dimensional shape.",
-      "A single large rectangle that represents the lateral surface area and wraps around the curved or straight sides of a solid."
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what happens when you unfold a box completely.",
-      "Every face of the solid becomes one piece in the net."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-002",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism has length 8 cm, width 5 cm, and height 3 cm. Its net shows six rectangles in three matching pairs. What are the dimensions of the two rectangles that form the top and bottom pair?",
-    "choices": [
-      "5 cm by 3 cm each",
-      "8 cm by 3 cm each",
-      "8 cm by 5 cm each",
-      "5 cm by 8 cm by 3 cm"
-    ],
-    "answer": "C",
-    "hints": [
-      "The top and bottom faces of a box match each other exactly.",
-      "Which two dimensions of the box form the top face?"
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-003",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A triangular prism has two identical right-triangle ends, each with legs 5 inches and 12 inches and a third side of 13 inches. The prism is 7 inches long between its two triangular ends. Which rectangles must appear in the prism's net?",
-    "choices": [
-      "Three rectangles with dimensions 5 by 7, 12 by 7, and 13 by 7; plus two triangles.",
-      "Two rectangles with dimensions 5 by 7 and 12 by 7; plus two triangles.",
-      "Three rectangles with dimensions 5 by 7, 12 by 7, and 13 by 13; plus two triangles.",
-      "One rectangle with dimensions 5 by 12; plus two triangles."
-    ],
-    "answer": "D",
-    "hints": [
-      "Each side of the triangular end wraps around its own rectangular face.",
-      "The width of each rectangle equals one side length of the triangle, and the height is the prism's length."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-004",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism box is 9 cm long, 4 cm wide, and 2 cm tall. Before calculating any areas, explain why you must count all six faces of the net before adding their areas together. Then find the total surface area.",
-    "choices": [
-      "Counting the faces first ensures no face is skipped or counted twice; the total surface area is 124 square centimeters.",
-      "Counting the faces first ensures no face is skipped or counted twice; the total surface area is 136 square centimeters.",
-      "Counting the faces first ensures the rectangles are arranged correctly in the net; the total surface area is 124 square centimeters.",
-      "Counting the faces first ensures the net can be folded without overlaps; the total surface area is 136 square centimeters."
-    ],
-    "answer": "A",
-    "hints": [
-      "The most common mistake in surface area is forgetting a face, especially one that is hidden in your mind's picture of the solid.",
-      "Find the area of each face pair, double each, and add them all: (9 × 4), (9 × 2), and (4 × 2)."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-005",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student is drawing the net for a triangular prism. She attaches the two triangular faces to the strip of three rectangles. When she checks her net by matching edges, she notices that one edge of a triangle has length 6 cm, but the rectangle it is supposed to attach to has a width of only 5 cm. What does this mismatch tell her?",
-    "choices": [
-      "She should erase one rectangle from the net because the prism does not need it.",
-      "The net she drew is incorrect and will not fold into the intended triangular prism, so she must fix the dimensions.",
-      "She should label the rectangle's width as 6 cm to match the triangle, even though the triangle's actual side is 5 cm.",
-      "The triangular faces are the wrong size for the rectangles, so she should draw a larger triangle."
-    ],
-    "answer": "B",
-    "hints": [
-      "In a correct net, every shared edge must have the exact same length on both faces.",
-      "If the dimensions do not match, the net will not fold up properly into the solid."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-006",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Two students are finding the surface area of the same triangular prism. The prism has two identical right-triangle ends with legs 6 m and 8 m and a third side of 10 m. The prism is 4 m long. Student A uses the method of adding each face's area one by one. Student B uses a faster method: she finds the perimeter of one triangular end, multiplies it by the prism's length to get the area of all three rectangles, then adds the areas of the two triangular ends. Which statement correctly compares both methods?",
-    "choices": [
-      "Both methods give the same answer only if the triangle is a right triangle; otherwise they disagree.",
-      "Both methods give the same answer because every side of the triangle has its own rectangular face, and both methods include all five faces exactly once.",
-      "Student A's answer will be correct, but Student B's answer will be wrong because she forgot to multiply by 2 for the two triangular ends.",
-      "Student B's method is faster but works only for triangular prisms, while Student A's method works for any solid."
-    ],
-    "answer": "C",
-    "hints": [
-      "In Student B's method, she multiplies the perimeter by the length, then adds the area of the two triangular ends; check if she actually counts both triangles.",
-      "Try calculating: the perimeter method gives 6 + 8 + 10 = 24, times 4 = 96; then add the triangles: (6 × 8 ÷ 2) = 24, times 2 = 48; total is 96 + 48 = 144."
-    ]
-  },
-  {
     "id": "m6math-area-of-triangles-quadrilaterals-001",
     "loId": "m6math.area-of-triangles-and-quadrilaterals",
     "cedCode": "M6MATH-9.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A triangle has a base of 12 meters. A perpendicular line drawn from the base to the opposite corner is 8 meters long. What is the area of the triangle?",
+    "problemText": "A triangle has a base of 10 meters and a height of 6 meters, measured perpendicular to the base. What is the area of the triangle?",
     "choices": [
-      "96 square meters",
-      "40 square meters",
-      "48 square meters",
-      "20 square meters"
+      "16 square meters",
+      "60 square meters",
+      "30 square meters",
+      "48 square meters"
     ],
     "answer": "C",
     "hints": [
-      "Remember that the area of a triangle equals base times height divided by two.",
-      "The height must be the perpendicular distance from the base, not a slanted side."
+      "Recall the triangle area rule: base times height, divided by two.",
+      "The height must be perpendicular to the base, not the length of a slanted side."
     ]
   },
   {
@@ -366,36 +24,36 @@
     "cedCode": "M6MATH-9.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A rectangle is 6 inches wide and 8 inches tall. You draw a diagonal line from one corner to the opposite corner. What is the area of one of the two triangles created by that diagonal?",
+    "problemText": "A parallelogram has two parallel sides that are each 12 inches long. A side connecting those parallel edges is 8 inches long and slanted. The straight up-and-down distance between the two parallel sides is 5 inches. What is the area of the parallelogram?",
     "choices": [
-      "24 square inches",
-      "48 square inches",
-      "12 square inches",
-      "36 square inches"
+      "96 square inches",
+      "100 square inches",
+      "40 square inches",
+      "60 square inches"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
-      "A diagonal divides a rectangle into two triangles of equal area.",
-      "First find the area of the whole rectangle, then divide by two to get the area of one triangle."
+      "Identify which measurement is perpendicular to the base.",
+      "Do not multiply by the length of the slanted side; use only the straight up-and-down distance."
     ]
   },
   {
     "id": "m6math-area-of-triangles-quadrilaterals-003",
     "loId": "m6math.area-of-triangles-and-quadrilaterals",
     "cedCode": "M6MATH-9.1",
-    "difficulty": 3,
+    "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A composite shape is made by placing a triangle on top of a rectangle. The rectangle is 12 feet wide and 6 feet tall. The triangle sits on top of the rectangle, with its base matching the rectangle's width of 12 feet, and its height is 4 feet, measured straight up from that base. What is the total area of the composite shape?",
+    "problemText": "A rectangle has a length of 9 centimeters and a width of 4 centimeters. One diagonal line is drawn from one corner to the opposite corner, splitting the rectangle into two triangles. What is the area of one of those triangles?",
     "choices": [
-      "72 square feet",
-      "96 square feet",
-      "120 square feet",
-      "48 square feet"
+      "18 square centimeters",
+      "13 square centimeters",
+      "36 square centimeters",
+      "26 square centimeters"
     ],
-    "answer": "B",
+    "answer": "A",
     "hints": [
-      "Decompose this composite shape into the two pieces: a rectangle and a triangle.",
-      "Find the area of each piece separately using the appropriate rule, then add them together."
+      "A diagonal splits a rectangle into two matching pieces, each half the rectangle's area.",
+      "First find the area of the whole rectangle, then divide by two."
     ]
   },
   {
@@ -404,36 +62,397 @@
     "cedCode": "M6MATH-9.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A banner is shaped like a trapezoid. To find its area, you decide to decompose it by drawing a vertical line that divides it into a rectangle on the left and a right triangle on the right. The rectangle part has a width of 8 inches and a height of 5 inches. The triangle part has a base of 3 inches and a height of 5 inches. Which statement correctly describes how to find the total area of the banner?",
+    "problemText": "A composite figure is shaped like a house: a rectangle 8 feet wide and 6 feet tall, with a triangular roof on top. The roof's base is the same as the rectangle's width, and the height of the roof (from base to peak) is 4 feet, measured perpendicular to the base. What is the total area of the entire figure, in square feet?",
     "choices": [
-      "Add 5 × 8 and 3 × 5 to find the total.",
-      "Add 8 × 5 and (3 × 5) ÷ 2 to find the total.",
-      "Multiply (8 + 3) × 5 ÷ 2 to find the total.",
-      "Multiply 8 × 5 × 3 ÷ 2 to find the total."
+      "80 square feet",
+      "112 square feet",
+      "64 square feet",
+      "48 square feet"
     ],
-    "answer": "C",
+    "answer": "B",
     "hints": [
-      "You have decomposed the trapezoid into a rectangle and a triangle. Find each area using the correct formula.",
-      "The rectangle area is base times height. The triangle area is base times height divided by two."
+      "Decompose the house into two pieces: a rectangle and a triangle on top.",
+      "Find the area of each piece separately, then add them together."
     ]
   },
   {
     "id": "m6math-area-of-triangles-quadrilaterals-005",
     "loId": "m6math.area-of-triangles-and-quadrilaterals",
     "cedCode": "M6MATH-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A trapezoid-shaped garden bed has a bottom edge of 20 meters and a top edge of 12 meters. Both edges run horizontally. The straight up-and-down distance between them is 8 meters. To find the area, Maya cuts the trapezoid into one rectangle and one triangle. If the rectangle uses the shorter top edge as its width, what should be the area of the triangle piece, in square meters?",
+    "choices": [
+      "64 square meters",
+      "96 square meters",
+      "32 square meters",
+      "48 square meters"
+    ],
+    "answer": "C",
+    "hints": [
+      "The rectangle piece has width 12 meters and height 8 meters; the remaining triangle has its base as what is left of the bottom edge.",
+      "The triangle's base is 20 minus 12 equals 8 meters, and its height is the same 8 meters as the rectangle."
+    ]
+  },
+  {
+    "id": "m6math-area-of-triangles-quadrilaterals-006",
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "cedCode": "M6MATH-9.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A parallelogram-shaped piece of fabric has a base of 20 inches and a perpendicular height of 12 inches. You want to check your area calculation by decomposing the shape differently. You draw a diagonal line from one corner of the parallelogram to the opposite corner, splitting it into two triangles. What is the area of each triangle that you created?",
+    "problemText": "An L-shaped wall panel is made from a large rectangle 16 inches wide and 10 inches tall, with a rectangular notch cut out of the bottom-right corner. The notch is 6 inches wide and 4 inches tall. A student wants to find the area by composing the L-shape into simpler pieces. Which of the following combinations of decomposed pieces would correctly give the area of the L-shaped panel?",
     "choices": [
-      "60 square inches",
-      "100 square inches",
-      "240 square inches",
-      "120 square inches"
+      "A rectangle 16 by 4 (64 square inches) plus a rectangle 10 by 6 (60 square inches), for a total of 124 square inches",
+      "A rectangle 10 by 10 (100 square inches) plus a rectangle 6 by 10 (60 square inches), for a total of 160 square inches",
+      "A rectangle 16 by 6 (96 square inches) plus a rectangle 10 by 4 (40 square inches), for a total of 136 square inches",
+      "A rectangle 16 by 10 (160 square inches) minus a rectangle 6 by 4 (24 square inches), for a total of 136 square inches"
     ],
     "answer": "D",
     "hints": [
-      "A diagonal through a parallelogram creates two triangles of equal area, just as it does in a rectangle.",
-      "First calculate the total area of the parallelogram using base times height. Each triangle is exactly half of that."
+      "You can start with the whole large rectangle and subtract the piece that was removed, or build the L-shape from smaller rectangles by adding them.",
+      "Check that the dimensions of each piece match the actual cuts shown; a piece's width and height must match sides that are actually present in the L-shape."
+    ]
+  },
+  {
+    "id": "m6math-polygons-in-the-coordinate-plane-001",
+    "loId": "m6math.polygons-in-the-coordinate-plane",
+    "cedCode": "M6MATH-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A polygon has vertices that are plotted on a coordinate plane, then connected in order. After connecting all the vertices to each other in the order given, what must you do to finish drawing the polygon?",
+    "choices": [
+      "Stop after connecting the last two vertices listed",
+      "Erase all the plotted points so only the sides remain",
+      "Draw a diagonal line from one corner to the opposite corner",
+      "Connect the last vertex back to the first vertex to close the shape"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what makes a polygon a closed shape with no gaps.",
+      "A polygon is closed and flat — how does that happen if you stop at the last vertex?"
+    ]
+  },
+  {
+    "id": "m6math-polygons-in-the-coordinate-plane-002",
+    "loId": "m6math.polygons-in-the-coordinate-plane",
+    "cedCode": "M6MATH-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A triangular garden has vertices at A(4, 1), B(4, 7), and C(8, 1), where each unit is one meter. What can you say about side AB?",
+    "choices": [
+      "It is vertical because both endpoints have the same first coordinate",
+      "It is horizontal because both endpoints have the same first coordinate",
+      "It is diagonal because the endpoints do not share a coordinate",
+      "It is horizontal because both endpoints have the same second coordinate"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at what coordinate A and B share: is it the first or second coordinate?",
+      "If two points share the same first coordinate, do they run left-right or up-down?"
+    ]
+  },
+  {
+    "id": "m6math-polygons-in-the-coordinate-plane-003",
+    "loId": "m6math.polygons-in-the-coordinate-plane",
+    "cedCode": "M6MATH-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular bench has corners at P(2, 5), Q(9, 5), R(9, 8), and S(2, 8), in order. Find the length of side PQ in units.",
+    "choices": [
+      "3 units",
+      "7 units",
+      "10 units",
+      "5 units"
+    ],
+    "answer": "B",
+    "hints": [
+      "First, check what coordinate P and Q share — that tells you whether the side is horizontal or vertical.",
+      "Use only the coordinate that differs between the two points to find the length."
+    ]
+  },
+  {
+    "id": "m6math-polygons-in-the-coordinate-plane-004",
+    "loId": "m6math.polygons-in-the-coordinate-plane",
+    "cedCode": "M6MATH-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A parking lot forms a quadrilateral with vertices at M(-3, 4), N(-3, -2), O(5, -2), and P(5, 4), where each unit is one meter. Find the length of side MN and the length of side NO, then add them together.",
+    "choices": [
+      "10 meters",
+      "12 meters",
+      "14 meters",
+      "16 meters"
+    ],
+    "answer": "C",
+    "hints": [
+      "For side MN, check which coordinate both vertices share. For side NO, do the same — it will be different.",
+      "Remember: if the two endpoints are on opposite sides of zero, add the distances from zero instead of subtracting."
+    ]
+  },
+  {
+    "id": "m6math-polygons-in-the-coordinate-plane-005",
+    "loId": "m6math.polygons-in-the-coordinate-plane",
+    "cedCode": "M6MATH-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pentagonal flower bed has vertices at A(1, 6), B(1, -4), C(7, -4), D(7, 2), and E(4, 6), in order. To draw this polygon correctly, you must plot all five vertices and connect them in a specific order, ending by connecting E back to A. Which of these correctly describes side BC and side CD?",
+    "choices": [
+      "Side BC is vertical and 10 units long; side CD is horizontal and 6 units long",
+      "Side BC is vertical and 11 units long; side CD is horizontal and 5 units long",
+      "Side BC is horizontal and 6 units long; side CD is vertical and 6 units long",
+      "Side BC is horizontal and 6 units long; side CD is vertical and 10 units long"
+    ],
+    "answer": "D",
+    "hints": [
+      "For side BC: B and C share one coordinate — identify which one. For side CD: C and D share a different coordinate.",
+      "When finding lengths, remember to check whether both points are on the same side of zero or opposite sides."
+    ]
+  },
+  {
+    "id": "m6math-polygons-in-the-coordinate-plane-006",
+    "loId": "m6math.polygons-in-the-coordinate-plane",
+    "cedCode": "M6MATH-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A hexagonal walking path has vertices at U(-5, 3), V(-5, -4), W(2, -4), X(2, 1), Y(6, 1), and Z(6, 3), listed in order. To close the shape, you will draw a final segment from Z back to U. Which of these statements is true about the side lengths of this polygon?",
+    "choices": [
+      "Sides UV and WX are both vertical, and side UV is 7 units while side WX is 5 units",
+      "Sides UV and WX are both horizontal, and they are equal in length",
+      "Side ZU is diagonal, and sides UV and WX are both vertical with the same length",
+      "Sides VW and XY are both horizontal and equal to each other, and side UV is vertical and 6 units long"
+    ],
+    "answer": "A",
+    "hints": [
+      "Sketch or list each consecutive pair of vertices. Identify which sides are vertical by looking at which coordinates match.",
+      "For each vertical side, remember the rule: if endpoints are on opposite sides of zero, add their distances from zero."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-001",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism has edge lengths of 2 inches, 3 inches, and 4 inches. What does the volume of this prism represent?",
+    "choices": [
+      "The number of unit cubes with edge length 1 inch needed to pack the prism completely with no gaps or leftover cubes",
+      "The total distance around all edges of the prism when measured and added together as a sum of lengths",
+      "The total area covered by multiplying the length and width of the base rectangular face",
+      "The distance you travel if you walk around the perimeter of the prism's bottom face one complete time"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what 'packing' the prism means — what are you actually counting?",
+      "Volume uses cubes, not flat shapes. Which choice talks about cubes?"
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-002",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism measures 2 inches long, 3 inches wide, and 1 inch tall. Using the formula V = l × w × h, what is its volume?",
+    "choices": [
+      "6 square inches",
+      "6 cubic inches",
+      "5 cubic inches",
+      "12 cubic inches"
+    ],
+    "answer": "B",
+    "hints": [
+      "Multiply the three edge lengths together: 2 × 3 × 1.",
+      "Volume is always measured in cubic units, not square units. Which choice uses the correct unit?"
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-003",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You want to pack a small rectangular prism with side lengths of 1/2 inch, 1/2 inch, and 1 inch using small unit fraction cubes. What edge length should each small cube have so that it fits a whole number of times along every edge of the prism?",
+    "choices": [
+      "1/4 inch",
+      "1 inch",
+      "1/2 inch",
+      "2 inches"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find a unit fraction that divides evenly into 1/2 inch and also into 1 inch.",
+      "A smaller cube fits better. Check: does 1/2 divide evenly into 1/2, and into 1?"
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-004",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular jewelry box measures 3/4 inch long, 1/2 inch wide, and 1/2 inch tall. To find its volume using the packing method, you choose small cubes with edge length 1/4 inch. How many small cubes will fit in the box, and what is the volume of one small cube?",
+    "choices": [
+      "12 small cubes; each small cube has volume 1/8 cubic inch",
+      "6 small cubes; each small cube has volume 1/8 cubic inch",
+      "24 small cubes; each small cube has volume 1/64 cubic inch",
+      "12 small cubes; each small cube has volume 1/64 cubic inch"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count how many 1/4-inch cubes fit along each edge: divide 3/4 ÷ 1/4, then 1/2 ÷ 1/4, then 1/2 ÷ 1/4, and multiply those counts.",
+      "A cube with edge 1/4 inch has volume 1/4 × 1/4 × 1/4. Work out this multiplication carefully."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-005",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two rectangular prisms are packed with unit cubes. Prism A measures 2 inches by 2 inches by 2 inches. Prism B measures 1/2 inch by 1/2 inch by 1/2 inch. Which statement correctly compares their volumes?",
+    "choices": [
+      "Prism A has a volume of 8 cubic inches and Prism B has a volume of 1/8 cubic inch, so Prism A holds 64 times as many unit cubes",
+      "Prism A has a volume of 4 cubic inches and Prism B has a volume of 1/4 cubic inch, so Prism A holds 16 times as many unit cubes",
+      "Both prisms hold the same volume because they are both cubes",
+      "Prism A holds 8 unit cubes and Prism B holds 1/2 unit cube, so they cannot be compared"
+    ],
+    "answer": "A",
+    "hints": [
+      "Calculate V = l × w × h for each prism separately. Remember that fractional edges give fractional volumes.",
+      "To compare volumes, divide the larger by the smaller: 8 ÷ (1/8) = ?"
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-006",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism measures 5/4 inches long, 2/3 inch wide, and 3/2 inches tall. You want to pack it with small cubes. What is the smallest edge length a unit fraction cube can have so that it fits a whole number of times along every edge? Then calculate the volume of the prism using the formula V = l × w × h. Show that your chosen cube size works.",
+    "choices": [
+      "1/6 inch; the volume is 5/8 cubic inches; and 1/6 fits evenly into all three edges when written with denominator 6 because 5/4 = 7.5/6, 2/3 = 4/6, and 3/2 = 9/6",
+      "1/12 inch; the volume is 5/16 cubic inches; and 1/12 divides evenly into all three edges because they share a common denominator of 12",
+      "1/4 inch; the volume is 15/8 cubic inches; and 1/4 is smaller than all three edge lengths so it will divide into each one",
+      "1/2 inch; the volume is 5/4 cubic inches; and 1/2 divides all whole numbers because it is a unit fraction with a small denominator"
+    ],
+    "answer": "B",
+    "hints": [
+      "Rewrite each edge with a common denominator. What is the least common denominator of 4, 3, and 2? Once you find it, the unit fraction cube should have edge length equal to the denominator of that common form, written as a unit fraction.",
+      "After choosing your cube size, multiply the three edge lengths using the formula. Check that your cube choice divides evenly: 5/4 ÷ 1/12 = ?, 2/3 ÷ 1/12 = ?, 3/2 ÷ 1/12 = ? (all should be whole numbers)."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-001",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A net is a flat pattern of two-dimensional shapes that folds up to form a three-dimensional solid. What does the term 'surface area' mean in relation to a net?",
+    "choices": [
+      "The area of only the largest face in the net, measured by finding which individual rectangle or polygon has the greatest area and using only that measurement",
+      "The total area of every face on the outside of the solid, found by adding up the area of each flat piece in the net",
+      "The perimeter of the net when all of its pieces are arranged in a line, calculated by measuring around the outer edge of the entire flat pattern",
+      "The area of the space inside the solid after it has been folded up from the net, which represents the volume rather than the outer covering"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what 'surface' means — it refers to the outside covering of an object, not the inside.",
+      "Surface area is found by calculating the area of each individual flat piece and combining them together."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-002",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism-shaped storage container has a net with six rectangles. Three of those rectangles have dimensions 5 cm × 8 cm, and the other three rectangles have different dimensions. Why must the other three rectangles have the same dimensions as each other, even though they are different from the first three?",
+    "choices": [
+      "Because the three larger rectangles need three smaller rectangles to balance the net and keep all edges aligned properly when folded",
+      "Because all rectangles in a net must follow a pattern where every other rectangle is the same size to ensure the net folds without gaps or overlaps",
+      "Because a rectangular prism has six faces that form three matching pairs, and faces in each pair must have identical dimensions",
+      "Because the net's arrangement requires matching dimensions for rectangles that will eventually touch each other at shared edges when the solid is formed"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall the structure of a rectangular prism: opposite faces match each other.",
+      "In a net, each pair of opposite faces (top-bottom, front-back, left-right) must be identical in size."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-003",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A triangular prism's net contains two triangles and three rectangles. The triangle has sides of lengths 5 m, 5 m, and 6 m. When the net is folded into a solid, what are the widths of the three rectangles in the net?",
+    "choices": [
+      "The widths cannot be determined from the information given in the problem",
+      "5 m, 6 m, and 6 m, because the two matching sides wrap identical rectangles",
+      "All three rectangles are 5 m wide, because that is the most common side length",
+      "5 m, 5 m, and 6 m, because each rectangle wraps around one side of the triangle"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that each rectangular face connects along one side of the triangle once folded.",
+      "The width of each rectangle must match the length of the side of the triangle it wraps around."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-004",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism has dimensions 7 inches long, 5 inches wide, and 3 inches tall. A student starts to find its surface area by drawing a net with six rectangles. They correctly calculate the areas of four rectangles as 7 × 3 = 21, 7 × 3 = 21, 7 × 5 = 35, and 7 × 5 = 35 square inches. What is the total surface area, and what are the areas of the two remaining rectangles?",
+    "choices": [
+      "The two remaining rectangles are each 5 × 3 = 15 square inches; total surface area is 142 square inches",
+      "The two remaining rectangles are each 7 × 5 = 35 square inches; total surface area is 182 square inches",
+      "The two remaining rectangles are each 5 × 5 = 25 square inches; total surface area is 156 square inches",
+      "The remaining rectangles cannot have equal areas, so the prism cannot have a valid net"
+    ],
+    "answer": "A",
+    "hints": [
+      "A rectangular prism has three matching pairs of opposite faces. The student has found two pairs already; think about what dimensions the remaining pair must have.",
+      "The third pair of faces represents the two ends of the prism — their dimensions should be width × height."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-005",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student draws a net for a rectangular prism with dimensions 8 cm × 6 cm × 4 cm and labels the edges where rectangles meet. Two rectangles in the net are supposed to attach along an edge labeled 8 cm on one rectangle and 6 cm on the other. The student wants to know if this net will fold correctly. Explain why or why not, then determine the correct surface area.",
+    "choices": [
+      "The net will fold correctly because 8 and 6 are close enough in length to attach; the correct surface area is 208 square centimeters",
+      "The net will not fold correctly because shared edges must have matching lengths; the correct surface area is 208 square centimeters",
+      "The net will not fold correctly because the prism's dimensions are not in the right order; the correct surface area is 192 square centimeters",
+      "The net will fold correctly, and any two edge lengths can be matched in a valid net; the correct surface area is 200 square centimeters"
+    ],
+    "answer": "B",
+    "hints": [
+      "Check the rule about shared edges: two faces that touch once folded must share an edge of exactly the same length in the net.",
+      "Calculate the surface area by finding the areas of the three pairs: 8×6, 8×4, and 6×4, then doubling the sum."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-006",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A triangular prism pencil holder has two identical triangular ends. Each triangle has a base of 6 cm and a height of 4 cm. The pencil holder is 12 cm long between the two triangular ends. A student calculates the area of the two triangles as 6 × 4 ÷ 2 = 12 square centimeters for both combined. They then add areas of two rectangles that wrap around the triangle's base and height, getting 6 × 12 = 72 and 4 × 12 = 48 square centimeters. Their total is 12 + 72 + 48 = 132 square centimeters. Identify the error and find the correct surface area.",
+    "choices": [
+      "The student double-counted the triangular ends by including both triangles when only one should be measured for the net; the correct surface area is 120 square centimeters",
+      "The student incorrectly calculated the triangle area using the formula for a parallelogram instead of a triangle; the correct surface area is 144 square centimeters",
+      "The student forgot to include the hypotenuse of the triangle as a third rectangular face; the correct surface area is 162 square centimeters",
+      "The student miscalculated the dimensions of the rectangles by using individual triangle dimensions instead of the prism's actual edge lengths; the correct surface area is 156 square centimeters"
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall that a triangular prism has five faces total: two triangles and three rectangles. Count how many rectangles the student included.",
+      "The hypotenuse (the slanted side of the right triangle) is also a side of the triangle that must wrap around with its own rectangular face."
     ]
   }
 ]

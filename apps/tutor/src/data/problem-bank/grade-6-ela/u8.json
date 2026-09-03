@@ -1,135 +1,21 @@
 [
   {
-    "id": "m6ela-introducing-a-claim-001",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which sentence is a claim rather than a fact, a question, or a topic?",
-    "choices": [
-      "Should students be allowed to bring water bottles to class?",
-      "Students should be allowed to bring water bottles to class.",
-      "Water bottles in the classroom.",
-      "Students bring water bottles to class every day."
-    ],
-    "answer": "B",
-    "hints": [
-      "A claim states a position plainly in one sentence that a reader could reasonably disagree with.",
-      "Cross out the option that only asks without answering, and the one that only names a subject without taking a side."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-002",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Your classmate wrote: \"The school cafeteria is crowded at lunch.\" Your teacher says this is not a claim yet—it is a fact. What change would turn it into a claim that someone could reasonably disagree with?",
-    "choices": [
-      "Add the words 'do you think' at the beginning to make it a question.",
-      "Remove the specific details about when and where the crowding happens.",
-      "Argue for what should be done about the problem, such as opening a second lunch line or staggering lunch periods.",
-      "Explain why you believe the cafeteria is crowded rather than just stating it is."
-    ],
-    "answer": "C",
-    "hints": [
-      "A claim picks a side and says what should happen, not just what is true.",
-      "Think about the difference between describing a problem and proposing a solution someone could argue against."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-003",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this opening to an argument: \"The school parking lot is not big enough for all the cars. The basketball team could use the extra space for practice. We should turn part of the parking lot into a basketball court.\" Which problem does this opening have?",
-    "choices": [
-      "The claim appears at the end instead of at the beginning, so the reader does not know what is being argued until after reading other sentences.",
-      "The first sentence is phrased as a question instead of a statement that takes a side.",
-      "The evidence about the parking lot being too small is placed before its own reason instead of right after it.",
-      "Two separate claims have been stitched together, and each one would need its own full argument."
-    ],
-    "answer": "D",
-    "hints": [
-      "Look at the last sentence and the first sentence—do they argue the same single position, or are they pushing two different ideas?",
-      "A claim should be one position, not multiple positions tied together."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-004",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote a draft argument with these three sentences: (1) \"Last week, three students said they ran out of time to finish lunch.\" (2) \"The lunch period is only twenty minutes long.\" (3) \"Our school should extend the lunch period to thirty minutes.\" The sentences are jumbled. Rank them in the order that makes the claim clear and keeps the evidence paired with its own reason.",
-    "choices": [
-      "Sentence 3, then sentence 2, then sentence 1.",
-      "Sentence 1, then sentence 2, then sentence 3.",
-      "Sentence 2, then sentence 1, then sentence 3.",
-      "Sentence 3, then sentence 1, then sentence 2."
-    ],
-    "answer": "A",
-    "hints": [
-      "The claim should come first so the reader knows what is being argued right away.",
-      "After the claim, a reason should be followed by the specific evidence that supports it, not by another reason."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-005",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this attempted opening: \"Having a morning announcement broadcast at school would save class time because announcements would reach everyone at once instead of taking up five minutes of each class. Having a morning announcement broadcast at school would save class time because students could focus better if they heard news all together in one place.\" Why does this opening fail to organize a claim and its supporting reasons clearly?",
-    "choices": [
-      "The claim is buried at the end and does not appear until after all the reasons have been listed.",
-      "Both reasons are phrased exactly the same way, so the reader cannot tell whether they are actually two different reasons or a repetition of the same reason.",
-      "The evidence for each reason is placed after both reasons instead of right next to the reason it actually supports.",
-      "Two different claims have been joined together, so the argument is trying to prove more than one position at once."
-    ],
-    "answer": "B",
-    "hints": [
-      "Look carefully at what each reason is actually saying—do they sound like two separate reasons, or do they seem to repeat the same idea?",
-      "When two reasons overlap or sound alike, a reader cannot tell which evidence belongs to which reason."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-006",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is planning an argument that the school should add more bathroom stalls in the girls' bathroom. The student has collected two reasons: (1) hallway traffic backs up because students wait in line, and (2) students are sometimes late to class because they spend too long waiting. The student also has three pieces of evidence: (A) last Tuesday the hallway line reached the water fountain, (B) the teacher in room 204 reported that four students came in late and said they were in the bathroom line, and (C) there are only three stalls for eighty girls at lunch. Before writing the full paragraph, the student must organize which evidence goes with which reason. Which pairing is correct?",
-    "choices": [
-      "Reason 1 with evidence A and C; Reason 2 with evidence B.",
-      "Reason 1 with evidence A; Reason 2 with evidence B and C.",
-      "Reason 1 with evidence C; Reason 2 with evidence A and B.",
-      "Reason 1 with evidence B; Reason 2 with evidence A and C."
-    ],
-    "answer": "C",
-    "hints": [
-      "Match each reason to the specific evidence that actually supports it, not to evidence that supports a different reason.",
-      "Reason 1 is about hallway traffic; Reason 2 is about students being late to class. Which piece of evidence directly shows each problem?"
-    ]
-  },
-  {
     "id": "m6ela-supporting-a-claim-with-reasons-evidence-001",
     "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
     "cedCode": "M6ELA-8.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A student wrote: 'I should join the school choir because I want to be in the choir.' Is this a good reason? What is wrong with it?",
+    "problemText": "A reason is a statement that answers the question why—it explains why a claim is true. Which sentence is a reason rather than just a restatement of the claim?",
     "choices": [
-      "It is a good reason and clearly explains why the student should join.",
-      "It is a good reason but needs more specific evidence to support it.",
-      "It only repeats the claim instead of explaining an actual why behind it.",
-      "It is a good reason but uses a source that is not credible enough."
+      "Students should be allowed to choose their lunch table partners because students really want to choose their lunch table partners.",
+      "Students should be allowed to choose their lunch table partners because sitting with friends they did not pick themselves often makes them feel uncomfortable during meals.",
+      "Students should be allowed to choose their lunch table partners because many students feel nervous eating with friends they did not pick themselves.",
+      "Students should be allowed to choose their lunch table partners because this would be a good policy that gives students more freedom at lunch."
     ],
     "answer": "C",
     "hints": [
-      "Test the reason by saying it right after the claim with 'because' in between. Does it tell you anything the claim did not already say?",
-      "A real reason has to answer the question 'why is this true?' not just restate what the claim already said."
+      "Test each reason by reading it right after the claim with 'because' in between. Does it tell you something new, or does it just say the claim again with different words?",
+      "Look for a reason that names an actual why—a problem the claim solves or a real situation that makes the claim necessary."
     ]
   },
   {
@@ -138,17 +24,17 @@
     "cedCode": "M6ELA-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student makes the claim: 'Our school should have a snack stand in the gym during free time.' The student offers this reason: 'Because students get hungry during the day and need food.' Does this reason actually explain why the school should add a snack stand in the gym specifically, or does it only restate the claim?",
+    "problemText": "A student wrote the claim 'The school cafeteria should serve breakfast at 7:00 a.m. instead of 7:15 a.m.' and the reason 'Because buses from the neighborhoods on the east side do not arrive until 7:05, and those students have only ten minutes to eat before class starts.' Which piece of information would count as evidence that actually backs this specific reason?",
     "choices": [
-      "It explains why — it gives a concrete problem that the snack stand in the gym would solve.",
-      "It explains why — it shows that many students would use a snack stand.",
-      "It only restates the claim — saying students need food does not explain why a snack stand in the gym is the answer.",
-      "It explains why — it describes what a snack stand is and what it does."
+      "Many students skip breakfast when they do not have enough time to eat.",
+      "Eating a healthy breakfast helps students pay attention better in class.",
+      "Other schools in the district serve breakfast at different times.",
+      "During a survey last week, nine of the twelve students from the east-side bus said they never buy cafeteria breakfast because they get to school too late."
     ],
     "answer": "D",
     "hints": [
-      "Read the reason right after the claim with 'because' in between. Does it say something new that the claim itself did not already say?",
-      "A real reason for a snack stand in the gym would need to explain a specific problem about where students are during free time or why the gym location matters."
+      "Run the relevance test: Does this piece of evidence make the specific reason about east-side buses running late more believable, or does it only relate to breakfast in general?",
+      "Look for evidence that is checkable and documented—something a reader could actually verify, like a survey or a count."
     ]
   },
   {
@@ -157,17 +43,17 @@
     "cedCode": "M6ELA-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Which choice is a piece of evidence that directly backs up this reason: 'The library is overcrowded at lunch, so students who want quiet space cannot find it there'?",
+    "problemText": "A student wants to support this claim: 'The school library should stay open one hour later on Thursdays.' The student offers this reason: 'Because the library is already crowded on Thursdays.' What is the problem with this reason?",
     "choices": [
-      "On Tuesday and Wednesday last week, the librarian counted seventeen students turned away at the library door during the lunch period because there was no room for more.",
-      "Our school library has three large tables and lots of books about science and history, but the librarian reported that the collection is not the issue affecting student access during busy times.",
-      "Many students at our school like to read books and study during lunch, and surveys show that reading and studying are popular activities among sixth graders.",
-      "The library is located next to the cafeteria, so students can get lunch and then go study, making it a convenient destination for afternoon academic work."
+      "It only repeats the claim in slightly different words and does not explain why staying open later would help.",
+      "It describes a condition that already exists rather than explaining how the proposed change would address a specific problem that students face.",
+      "It fails to identify which day of the week the library is most crowded and therefore cannot be tested through observation.",
+      "It makes an assumption about the library without providing any data or measurements to support the statement about crowding."
     ],
     "answer": "A",
     "hints": [
-      "Evidence must show that this exact reason — the overcrowding — is actually real, not just that the topic of libraries or studying is important.",
-      "Look for something you could actually check: an observation someone made, something written down, or a statement from someone who was there."
+      "Read the reason right after the claim: 'The school library should stay open one hour later on Thursdays, because the library is already crowded on Thursdays.' Does the reason tell you anything the claim did not already say?",
+      "A real reason answers the question: why would staying open later actually solve a problem or help students?"
     ]
   },
   {
@@ -176,17 +62,17 @@
     "cedCode": "M6ELA-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student writes: Claim: 'The school should provide free water bottles to all students.' Reason: 'Many students forget to bring water to school.' Evidence: 'Water bottles come in different colors and sizes at the store.' What is wrong with this set of claim, reason, and evidence?",
+    "problemText": "A student made this claim: 'Students should be able to eat lunch outside when the weather is nice.' She wrote two potential reasons. Reason A: 'Because eating outside would help students enjoy their lunch more.' Reason B: 'Because right now, the cafeteria is so loud that many students cannot hear their friends talking, and eating outside would give them a quieter space.' Which reason is stronger, and why?",
     "choices": [
-      "The reason is good but the evidence is weak because it only talks about water bottles in general, not about students forgetting to bring them.",
-      "The evidence does not actually back the reason because it talks about store-bought water bottles instead of proving students forget to bring their own.",
-      "The claim is too broad and the reason does not connect to the evidence at all.",
-      "The evidence is strong but the reason needs more details about why students forget water."
+      "Reason A is stronger because it explains that eating outside would improve students' moods and make lunch a more pleasant experience for everyone.",
+      "Reason B is stronger because it names a specific problem in the cafeteria that eating outside would actually solve, instead of just restating that outdoor eating would be better.",
+      "Reason A is stronger because enjoying lunch more is a benefit that would apply to all students every day they eat outside, making it a reason that reaches a wider group.",
+      "Reason B is stronger because it gives two connected facts—that the cafeteria is loud and that students cannot hear each other—rather than making only a general statement about eating."
     ],
     "answer": "B",
     "hints": [
-      "Run the relevance test: Does the evidence about water bottles in stores show that the reason about students forgetting water is true?",
-      "Good evidence has to be checkable and has to back this exact reason, not just relate to the same topic."
+      "Test both reasons by asking whether they add a new idea to the claim or just say it again with different wording.",
+      "A real reason should name an actual problem or situation that makes the claim necessary—not just a nice benefit that restates why the claim is good."
     ]
   },
   {
@@ -195,17 +81,17 @@
     "cedCode": "M6ELA-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student writes: Claim: 'Our class should have a class pet hamster.' Reason: 'Because I have had a hamster at home for two years and know how to take care of one properly.' Which choice shows evidence that truly backs this specific reason?",
+    "problemText": "A student wrote: Claim: 'The school gym should get new basketballs.' Reason: 'Because the basketballs are deflating too fast, so students cannot practice properly.' Evidence: 'New equipment is expensive and has to be ordered from a supply company.' What is the problem with the evidence in relation to the reason?",
     "choices": [
-      "Hamsters are small animals that live in cages and eat seeds and vegetables.",
-      "My mom said that I have done a great job feeding my hamster every day and cleaning its cage every weekend without being reminded.",
-      "Lots of classrooms have class pets, and many of them are hamsters.",
-      "Hamsters can live for up to three years if they are cared for the right way."
+      "The evidence describes a problem about costs and ordering, but the reason is about basketballs deflating too fast, so the evidence does not actually back up the specific reason given.",
+      "The evidence discusses equipment expenses in general, but it does not include any information about whether the current basketballs are actually losing air faster than they should.",
+      "The evidence is only about the general topic of equipment costs, not about whether the basketballs are actually deflating too fast as the reason claims.",
+      "The evidence talks about ordering procedures instead of talking about how quickly the basketballs lose air, which is the real cause mentioned in the reason."
     ],
     "answer": "C",
     "hints": [
-      "The evidence must prove that this student actually knows how to care for a hamster, not just that hamsters exist or that pets are popular.",
-      "Look for something specific and observable that backs the exact claim: proof the student can handle the responsibility."
+      "Run the relevance test: Say the reason aloud, then say the evidence aloud. Does the evidence make the reason about deflating basketballs more believable?",
+      "Evidence must back the specific reason sitting above it, not just relate to the same general topic."
     ]
   },
   {
@@ -214,17 +100,17 @@
     "cedCode": "M6ELA-8.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student claims: 'Our school should add a basketball hoop in the back parking lot.' She gives this reason: 'Because students do not have a place to play basketball after school on the days the gym is locked for cleaning.' Another student then says: 'That evidence is not credible because it is just an opinion.' What should the first student do to fix this problem and still use the same reason?",
+    "problemText": "A student is building support for the claim: 'The school should add a water fountain on the second floor.' She drafted this reason: 'Because kids on the second floor get thirsty during the day.' A teacher asked her to revise the reason into something stronger. Which revision actually fixes the problem and creates a real reason that could be backed up with evidence?",
     "choices": [
-      "She should change her reason to focus on a different problem, like that many students like basketball.",
-      "She should find a documented example or an observation that proves the gym really is locked on certain days and students really cannot access it.",
-      "She should find a source that talks generally about the importance of sports for student health.",
-      "She should ask a friend who plays basketball whether the gym is ever locked, so she has someone else's opinion to share."
+      "Because drinking water is very important for staying healthy and hydrated during the school day.",
+      "Because students need water fountains in order to drink water and stay alive.",
+      "Because a water fountain on the second floor would make it easier for kids on the second floor to get water.",
+      "Because the only water fountain in our school is in the basement next to the cafeteria, and most students on the second floor forget to walk down there, so they go thirsty instead of drinking."
     ],
     "answer": "D",
     "hints": [
-      "The problem is that the current evidence is not checkable or credible. What kind of evidence from the lesson would prove this reason without relying on just one person's say-so?",
-      "Think about what counts as good evidence: an observation you can point to, something written down that another person could look at, or a statement from someone actually in a position to know."
+      "Remember the restated-claim test: Read the original reason right after the claim. Why is it just the claim again? Now look for the choice that names a specific problem the claim solves.",
+      "A strong reason should name something checkable—a real situation, problem, or pattern that evidence could back up, not just a general truth about thirst or water."
     ]
   },
   {
@@ -233,17 +119,17 @@
     "cedCode": "M6ELA-8.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which linking word belongs to the REASON family because it attaches a reason directly to the claim it explains? Read the sentence: \"Students enjoy reading time at school, _____ it gives them a chance to find books they love.\" What word goes in the blank?",
+    "problemText": "A linking word names the relationship between a claim and a reason. Which linking word belongs to the REASON family — the family that explains why a claim should be accepted?",
     "choices": [
+      "for instance",
       "therefore",
-      "for example",
-      "as a result",
+      "consequently",
       "because"
     ],
     "answer": "D",
     "hints": [
-      "A reason word answers the question 'why?' — does the blank need to answer why students enjoy reading time?",
-      "The reason family puts the claim and reason in the same sentence, joined together."
+      "The reason family joins a claim and its explanation into one sentence.",
+      "Think about which word answers the question 'why?' when you read it aloud with the claim."
     ]
   },
   {
@@ -252,17 +138,17 @@
     "cedCode": "M6ELA-8.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this pair of sentences. The first sentence states a reason on its own. The second sentence should state what follows as a result of that reason. Which choice correctly completes the second sentence with a linking word from the RESULT family?\n\nThe school dropped the price of lunch from $4 to $3.50 last week. _____, more students are bringing their lunch trays through the line instead of packing lunch at home.",
+    "problemText": "Read the claim and reason below. Which sentence correctly links them?\n\nClaim: The school lunch line moves too slowly.\nReason: It takes most students at least ten minutes just to get their food.",
     "choices": [
-      "Consequently,",
-      "For example,",
-      "Because",
-      "For instance,"
+      "The school lunch line moves too slowly, because it takes most students at least ten minutes just to get their food.",
+      "The school lunch line moves too slowly. Therefore, it takes most students at least ten minutes just to get their food.",
+      "The school lunch line moves too slowly. For example, it takes most students at least ten minutes just to get their food.",
+      "The school lunch line moves too slowly. Consequently, it takes most students at least ten minutes just to get their food."
     ],
     "answer": "A",
     "hints": [
-      "The first sentence is already complete and standing on its own — it is not joined to the second sentence.",
-      "The second sentence tells you what happens next because of the price drop — that is a result, not an example or reason."
+      "Ask yourself: does the reason explain why the claim is true, or does it follow as a result of something already said?",
+      "The reason family joins two ideas into one sentence when the second idea explains the first."
     ]
   },
   {
@@ -271,17 +157,17 @@
     "cedCode": "M6ELA-8.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this paragraph and needs to fill in the blank. The first sentence gives a general reason. The second sentence should give one specific case that proves the general reason actually happens. Which linking word belongs in the blank?\n\nOur school should offer more after-school clubs because students need a place to explore interests they do not get to study in class. _____, the science club that started last month already has eighteen members who all signed up in the first week.",
+    "problemText": "A reason has been stated. Which sentence correctly uses a linking word to show what follows because of that reason?\n\nReason: The playground equipment is over twenty years old and breaks down often.\n\nWhat comes next?",
     "choices": [
-      "Therefore,",
-      "For example,",
-      "Consequently,",
-      "Because"
+      "The playground equipment is over twenty years old and breaks down often. Because the swings were repaired last week, the playground will stay open.",
+      "The playground equipment is over twenty years old and breaks down often. Therefore, the school needs to budget money for a new climbing structure.",
+      "The playground equipment is over twenty years old and breaks down often. For example, the swings were fixed last week and the slide was repainted.",
+      "The playground equipment is over twenty years old and breaks down often, so the principal decided to inspect all the equipment and plan replacements."
     ],
     "answer": "B",
     "hints": [
-      "The science club story is not a brand-new result — it is a specific moment that shows the general pattern true.",
-      "The EXAMPLE family lets a reader see one real case that proves a general reason works."
+      "The result family uses words like therefore or consequently to introduce what happens next.",
+      "The sentence that comes after the reason should tell what problem or consequence results from it."
     ]
   },
   {
@@ -290,17 +176,17 @@
     "cedCode": "M6ELA-8.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this three-sentence argument. Two linking words are already filled in. The third blank needs a linking word, and you have to pick the one that names the RIGHT relationship for that sentence, even if the other word in the sentence sounds very formal or grown-up.\n\nThe school cafeteria only has four tables in the quiet eating area. Therefore, many students who need a calm place to eat lunch end up sitting in loud, crowded spots instead. _____, the school should add two more quiet tables so that students who struggle with noise have somewhere to sit.\n\nWhich choice correctly names the relationship and provides the right linking word?",
+    "problemText": "Read this student's draft: \"The school should offer after-school homework help, however many students struggle with math and science. A tutor could make the difference for them.\" The student used a linking word, but is it the right one? Explain why or why not by naming what the relationship actually is.",
     "choices": [
-      "The third sentence shows a result of the crowding problem, so it needs \"Consequently,\"",
-      "The third sentence gives an example of a student struggling, so it needs \"For instance,\"",
-      "The third sentence explains why the crowding problem is a reason to act, so it needs \"Because\"",
-      "The third sentence shows what should happen next as a solution, so it needs \"Therefore,\""
+      "Yes, it is correct. 'However' is a formal, mature-sounding word that works well in persuasive writing about school policy.",
+      "No, it is wrong. 'However' signals what follows as a result, but the second sentence gives one specific example instead, so it needs a for-example word.",
+      "No, it is wrong. 'However' signals a turn against what was said, but the second sentence explains why the claim is true, so it needs a reason word like 'because.'",
+      "Yes, it is correct. 'However' introduces additional information that supports the main claim, and that is what happens in this paragraph."
     ],
     "answer": "C",
     "hints": [
-      "Before you pick a word, name the relationship that is actually there — does the third sentence explain something, give an example, or show a result?",
-      "The third sentence does not join to the one before it in a single sentence — it stands as a new claim that needs support."
+      "Do not trust how smooth or formal a sentence sounds — check what the second sentence actually does to the claim.",
+      "Ask: does the second sentence turn against the claim, or does it explain why the claim should be accepted?"
     ]
   },
   {
@@ -309,17 +195,17 @@
     "cedCode": "M6ELA-8.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is revising her argument and reads it out loud. It sounds smooth and serious, but she is not sure the linking word is doing the right job. Read her sentences and decide whether the linking word matches the real relationship.\n\n\"Our class should start a compost bin in the garden. However, composting teaches students how to reduce waste and creates rich soil for growing vegetables.\"\n\nWhich statement correctly explains whether the linking word is right or wrong, and what should replace it?",
+    "problemText": "A student is writing about why her school should recycle more. She has written: \"Most recyclable materials end up in landfills instead of being reused. This wastes resources and takes up valuable space. Paper, plastic, and metal could be sorted right in every classroom.\" She now needs to add one more sentence that gives one specific example proving that recycling actually works. Which sentence should come next?",
     "choices": [
-      "The word is correct because \"however\" sounds formal and serious, which matches an academic argument.",
-      "The word is wrong because \"however\" signals a turn against the claim, but the second sentence actually agrees with it and explains a reason to accept it; it should say \"because\" instead.",
-      "The word is wrong because \"however\" should only be used at the end of a paragraph, not in the middle; it should say \"therefore\" instead.",
-      "The word is correct because \"however\" joins two sentences together in one thought."
+      "For example, many countries in Europe have successful recycling programs that have operated for decades with strong participation rates.",
+      "Because classroom sorting reduces contamination in the waste stream, our school should implement a new sorting system in every classroom and create separate stations for different material types.",
+      "Therefore, schools across the region have started collecting cardboard and aluminum cans from their cafeterias and hallways to reduce their environmental impact.",
+      "For instance, last year the Riverside School District diverted five thousand tons of material from landfills through their classroom recycling program."
     ],
     "answer": "D",
     "hints": [
-      "Do not trust how smooth or serious a word sounds — check what the second sentence DOES to the claim, not the tone of the word.",
-      "The second sentence explains why the claim should be accepted — that is a relationship that belongs to the REASON family, not the turn-against family."
+      "An example sentence should show one specific moment or case, not a general pattern or new claim.",
+      "Look for the choice that names a particular school or event with numbers or details, not a whole group or idea."
     ]
   },
   {
@@ -328,17 +214,17 @@
     "cedCode": "M6ELA-8.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student wrote four versions of an argument. Each version has two linked sentences. In each version, identify which one correctly uses linking words that match BOTH relationships — the first linking word must match the relationship in the second sentence, AND the second linking word must match the relationship in the third sentence. Read all four versions before you decide.\n\nVersion 1: \"Students should bring a water bottle to school, because staying hydrated helps them focus in class. Consequently, the school should allow water bottles in every classroom instead of just the cafeteria.\"\n\nVersion 2: \"Students should bring a water bottle to school because staying hydrated helps them focus in class. For example, during the hot day last week, several students felt lightheaded by lunchtime before they got to the water fountain.\"\n\nVersion 3: \"Students should bring a water bottle to school. Therefore, staying hydrated helps them focus in class. As a result, the school should allow water bottles in every classroom.\"\n\nVersion 4: \"Some students forget to drink water during the day. However, they become dehydrated and cannot focus. For example, one student missed an important quiz because she was too dizzy to read the questions.\"\n\nWhich version uses both linking words correctly to match the real relationships between sentences?",
+    "problemText": "Read this paragraph a student drafted for a persuasive essay: \"Students should be allowed to bring water bottles to every class, not just lunch and recess. Dehydration makes it hard to concentrate during lessons. For instance, staying hydrated helps kids focus better in school. Therefore, the school should allow water bottles everywhere. The average sixth grader needs to drink water at least six times during the school day.\" Which sentence is using the wrong linking word for the relationship it is trying to show? Identify the sentence and explain what relationship is actually there and which linking word would be correct.",
     "choices": [
-      "Version 2",
-      "Version 1",
-      "Version 3",
-      "Version 4"
+      "\"For instance, staying hydrated helps kids focus better in school\" is wrong. It restates the general reason instead of giving a specific example, so it should begin with 'because' or be removed.",
+      "\"Therefore, the school should allow water bottles everywhere\" is wrong. It does not introduce a result that follows from the reason, but rather restates the main claim, so it should use 'since' or 'for example' instead.",
+      "\"The average sixth grader needs to drink water at least six times during the school day\" is wrong. It is a new reason, not an example or result, so it needs to be joined with 'because' or start a new paragraph.",
+      "\"Dehydration makes it hard to concentrate during lessons\" is wrong. It should use 'for instance' because it is meant to illustrate why water bottles matter, not explain the main claim."
     ],
     "answer": "A",
     "hints": [
-      "For each version, ask: Does the second sentence explain the first (reason family), show what happens because of the first (result family), or give a specific case of the first (example family)?",
-      "Watch out for linking words that sound formal but name the wrong relationship — a smooth-sounding word used in the wrong spot is still wrong."
+      "Look for a sentence that uses 'for example' or 'for instance' but does not actually give one specific case — instead, it restates something already said in general terms.",
+      "An example should include a detail or moment that proves the pattern is real, not just repeat the pattern itself in different words."
     ]
   },
   {
@@ -347,17 +233,17 @@
     "cedCode": "M6ELA-8.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A concluding statement is the last piece of an argument. What is its main job?",
+    "problemText": "A concluding statement must do which of the following?",
     "choices": [
-      "To wrap up the claim and reasons already given, without opening a new topic or leaving the argument stopping cold",
-      "To introduce a new reason that makes the argument stronger than it was before",
-      "To remind the reader of general facts that apply to almost any topic, like caring about the environment",
-      "To repeat the exact claim sentence that opened the argument so the reader remembers it word for word"
+      "Restate the claim using new words and tie back to reasons already given in the argument",
+      "Introduce a brand-new reason that proves the claim is correct without repeating earlier support",
+      "Copy the exact opening sentence of the argument word for word so readers remember it clearly",
+      "Make a general appeal that could close almost any argument on any topic without specifics"
     ],
     "answer": "A",
     "hints": [
-      "Look for the choice that describes what a concluding statement does with the ideas already on the page, not what it adds.",
-      "Think about what 'follows from' means — it is built only out of ideas the argument already gave."
+      "Think about what 'follows from' means — what has to be true of everything in a concluding statement?",
+      "Which choice matches the restate-not-repeat rule and the no-new-reason rule?"
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6ELA-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "An argument claims that students should bring lunch from home instead of buying the school lunch. The two reasons given are that the school lunch line is always crowded and slows down eating time, and that packed lunches cost less money than buying lunch every day. Which sentence is the best concluding statement for this argument?",
+    "problemText": "An argument claims that students should have a later start time for school because morning traffic would decrease and students would be more awake in first period. A student wrote this concluding statement: 'Starting school later would help our town's traffic problem and make students more alert, which is why we should also add more lunch options.' What is wrong with this ending?",
     "choices": [
-      "It is important to make healthy food choices every single day because your body needs good nutrition to stay strong.",
-      "Packing lunch would let students eat faster without waiting in that long line and would save money that they could use for other things.",
-      "The school should also build a bigger cafeteria so the lunch line does not get crowded in the first place and students can eat quicker.",
-      "Students should pack lunch from home because it takes less time to eat and allows them to spend their allowance on things they actually want."
+      "It restates the claim by using the exact same phrasing as the opening instead of using new words to rephrase it",
+      "It introduces a new reason about lunch options that was never argued for earlier in the argument",
+      "It fails to mention at least one of the two reasons that were already proven in the body of the argument",
+      "It does not use enough descriptive language to explain how the claim would actually benefit students"
     ],
     "answer": "B",
     "hints": [
-      "Look for a sentence that traces back to both of the reasons that were already argued, not a brand-new idea.",
-      "A good concluding statement restates the claim in new words and ties back to the specific reasons given. Does it do both?"
+      "Check whether every idea in the ending came from either the claim or the two reasons given at the start.",
+      "Does the lunch-options idea appear anywhere in the claim or reasons, or does it pop up only in the conclusion?"
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6ELA-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this conclusion for an argument about installing bike racks at school: 'Installing bike racks at school would give students a safe place to leave their bikes during the day instead of locking them to the fence, and it would also make sure that students exercise more.' What is the problem with this conclusion?",
+    "problemText": "An argument states that a school cafeteria should serve lunch outside on nice days because students need more physical activity and fresh air gets children to focus better. Which of these would be a weak concluding statement for this argument?",
     "choices": [
-      "It repeats the exact claim sentence instead of restating it in new words.",
-      "It introduces a new reason about exercise that was never argued for earlier in the essay.",
-      "It uses words that are too simple and makes the argument sound less mature.",
-      "It is too short and does not explain enough details about how the bike racks would work."
+      "Letting students eat outside would give them the movement and fresh air they need to stay healthy and learn better.",
+      "Moving lunch outdoors on warm days would address both the lack of movement that happens inside and the mental focus that fresh air brings.",
+      "Students should remember that being a good student means paying attention in class.",
+      "Eating outside would provide the exercise and outdoor time that research shows students are missing."
     ],
     "answer": "C",
     "hints": [
-      "Check each part of the conclusion against the reasons the argument already gave. Does every piece of it trace back to something already on the page?",
-      "Look at the rule about never introducing a new reason at the end. Where in this conclusion does that happen?"
+      "Which choice could close an argument about almost any school issue, not just this one?",
+      "Apply the test: cover up the claim and reasons, then read only the ending. Does it still make perfect sense all by itself, or does it only fit this specific argument?"
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6ELA-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "An argument states that seventh-graders should get ten extra minutes of lunch time. Reason 1 is that many students only have ten minutes to eat before they have to line up. Reason 2 is that they also spend five minutes walking to and from the cafeteria, so they barely have time to sit down. A student drafted this ending: 'All students deserve a lunch break that gives them time to relax and eat.' Why does this sentence fail to work as a concluding statement, and what would fix it?",
+    "problemText": "An argument claims that student lockers should be moved closer to classrooms because students waste class time running back and forth, and because crowded hallways near the current lockers create safety problems. A student wrote: 'We need to move lockers closer to classrooms so we can get to class faster and avoid the crowded hallways.' Is this a strong concluding statement, and why?",
     "choices": [
-      "It fails because it uses too many words; it should be shorter and more direct. Fix it by removing the word 'deserve.'",
-      "It fails because it could close an argument about almost any grade or topic, not just this specific argument about seventh-graders and ten minutes. Fix it by tying it back to the two specific reasons: the eating time and the walking time that were already argued.",
-      "It fails because it does not restate the claim in new words; it copies the exact opening sentence. Fix it by changing 'lunch break' to 'lunch period.'",
-      "It fails because it introduces a new reason about student stress that was never mentioned before. Fix it by removing the word 'relax.'"
+      "Yes, because it uses simpler words than the original claim and is easier to understand for most readers to process",
+      "No, because it introduces a new concern about hallway traffic patterns that the original argument had not previously established or discussed",
+      "No, because it only mentions one of the two reasons instead of connecting back to both the time-wasting problem and the safety issue from the original claim",
+      "Yes, because it restates the claim in new words and ties back to both of the reasons already given"
     ],
     "answer": "D",
     "hints": [
-      "Apply the test taught in the lesson: cover the claim and reasons and read only the ending by itself. Would this sentence also close an argument about a different grade's lunch time, or does it only make sense for THIS argument?",
-      "Two of the choices name problems that are real mistakes in concluding statements. Which one is actually wrong with this sentence?"
+      "Does this ending restate the claim without copying it word for word?",
+      "Can you trace every part of it back to the two reasons given at the start of the argument?"
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6ELA-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "An argument claims that the school should serve breakfast in the morning before first period. Reason 1 is that many students skip breakfast at home because they wake up late, and an empty stomach makes it hard to focus in class. Reason 2 is that the cafeteria workers arrive at the school an hour before the first bus anyway, so they could prepare breakfast without doing extra work. A student is writing the concluding statement. Which of the following best explains what the conclusion needs to do?",
+    "problemText": "Read this argument and concluding statement. Claim: School dances should be held during the school day instead of at night. Reason 1: Night dances make it hard for families without a car to attend because they need a ride home late in the evening. Reason 2: Day dances would let more students dance with their friends because nobody would be tired from a full school day. Concluding statement: 'Moving dances into daytime hours would solve the transportation problem families face and let tired students have more fun dancing with their friends.' What makes this concluding statement effective?",
     "choices": [
-      "Restate the claim about serving breakfast in new words, then tie it back to both the focus problem and the fact that cafeteria workers are already there, showing that both reasons support the claim.",
-      "Introduce a third reason that proves breakfast is the most important meal of the day so the reader understands why good nutrition matters and supports the school making this change.",
-      "Use very formal language and repeat the exact claim sentence word-for-word, because the conclusion is the most important part of an argument and must sound official.",
-      "Explain what would happen if the school did not serve breakfast by describing how hungry students struggle to learn, so the reader sees the danger of not following the claim."
+      "It restates the claim using a new phrase, ties directly to both original reasons, and contains nothing that could close a different argument",
+      "It adds the new idea that students get tired from school, which makes the argument stronger by introducing more background information about student fatigue levels",
+      "It is longer than the original claim and uses more descriptive language, which shows the writer has thought deeply about why the school policy should be changed",
+      "It uses formal vocabulary and concrete details that make the statement sound more convincing when compared to casual or informal language choices"
     ],
     "answer": "A",
     "hints": [
-      "Remember that a concluding statement must follow from what came before — every piece must trace back to the claim and reasons already given.",
-      "Think about what 'tying back' means. A good conclusion does not introduce new facts; it shows how the reasons already argued lead to the claim."
+      "Does this ending restate the claim or copy it? Does every part of it come from the claim and reasons already on the page?",
+      "Could this same ending close an argument about something completely different, like school uniforms?"
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6ELA-8.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An argument states that the school gym should be open during lunch for students to use. Reason 1 is that many students sit inside during lunch and do not get to move around or exercise. Reason 2 is that the school already pays a gym teacher to be there at lunch, so opening the gym would not cost extra money. A student wrote two possible endings:\n\nEnding X: 'Opening the gym at lunch would give students who sit inside a place to run and play, and it would not make the school spend more money.'\n\nEnding Y: 'Opening the gym at lunch would solve the problem of kids not exercising enough, and all students should take care of their health no matter what.'\n\nWhich ending better follows from the argument, and why?",
+    "problemText": "Read this argument: Claim: The school library should have more computers. Reason 1: In the computer lab there is a line of waiting students during lunch, and many leave without getting a turn. Reason 2: The library stays quiet, so students who use computers there can focus better than in the noisy lab. A student is trying to decide between two concluding statements. Version A: 'Adding computers to the library would give waiting students a fair turn and help them focus while working.' Version B: 'Computers in the library would solve the line problem while letting students work in a quiet place.' Which version better follows from the argument, and what is the key reason why?",
     "choices": [
-      "Ending Y is better because it explains that all students should care about their health, which is an important reminder for the reader to understand the value of exercise.",
-      "Ending X is better because both parts of it trace back to reasons that were already argued, while Ending Y includes a vague general statement that could close almost any argument about health.",
-      "Ending Y is better because it adds an extra reason about health that makes the argument stronger and more convincing to those who doubt the benefits of daily exercise.",
-      "Ending X is better because it uses simpler words and shorter sentences that are easier for a reader to understand without confusion."
+      "Version B follows better because it uses the exact words 'quiet place' from the reasons, while Version A changes too many words and becomes unclear",
+      "Version B follows better because it restates the claim differently and connects to both reasons using language tied closely to what was already argued",
+      "Version A follows better because it mentions 'fair turn,' which directly matches the language of Reason 1 without paraphrasing",
+      "Both versions follow equally well from the argument, because they both mention computers, waiting, and focus or quiet"
     ],
     "answer": "B",
     "hints": [
-      "Apply the test from the lesson: could this sentence close a different argument? Which ending could ONLY close this specific argument about the gym at lunch?",
-      "Look at Ending Y's final clause about 'all students should take care of their health.' Is that statement built from the reasons already given, or does it sound like it could fit many different arguments?"
+      "The key is whether the ending restates the claim in new words while tying back to the original reasons — check if each version does both parts well.",
+      "Does Version B restate the claim in a fresh way instead of copying it, and does every part trace back to what was already given?"
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-001",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of the following is a claim rather than a fact, question, or topic?",
+    "choices": [
+      "The school cafeteria serves lunch from 11:30 to 1:00 every day, which is a checkable piece of information.",
+      "Students should be allowed to eat lunch outside on nice days instead of only in the cafeteria.",
+      "Does the cafeteria serve healthy food, and if so, what kinds of meals are available?",
+      "School lunch options and the different types of food offered in the cafeteria."
+    ],
+    "answer": "B",
+    "hints": [
+      "A claim takes a side on something reasonable people could disagree about.",
+      "A fact is checkable and nobody argues with it; a question asks but does not answer; a topic only names a subject."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-002",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student has written, 'Homework is assigned every night.' She wants to turn this into a claim for an argument. Which revision best turns her fact into a claim?",
+    "choices": [
+      "Homework is assigned every night, and some students do not like it because they feel tired and stressed.",
+      "Why is homework assigned every night, and who decides how much homework students receive?",
+      "Teachers should limit homework to three nights a week so students have more free time.",
+      "The amount of homework that is assigned each night and how it affects student schedules."
+    ],
+    "answer": "C",
+    "hints": [
+      "A claim must take a clear side and say what should happen, not just state what is true.",
+      "Look for the choice that picks a position and answers a question, rather than just naming a topic or asking."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-003",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing an argument about adding a water fountain near the gym. He has already decided on this claim: 'The school should install a water fountain near the gym.' Before he writes the rest of his argument, what should he do next?",
+    "choices": [
+      "Write all the reasons and evidence together in one long paragraph so readers see everything at once.",
+      "Count how many pieces of evidence he will need to make sure he has enough.",
+      "Check whether there are any opposing views to the claim that he should mention in his opening.",
+      "Decide which reasons will support the claim and in what order each reason and its evidence will appear."
+    ],
+    "answer": "D",
+    "hints": [
+      "The lesson says that organizing means deciding before writing the rest which reason comes first, which comes next, and which evidence belongs with which reason.",
+      "Think about what comes after introducing a claim—what does a writer need to plan for?"
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-004",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has written the opening below for an argument about recess. Read it and identify the problem.\n\n'Recess should be thirty minutes instead of twenty minutes. Students would have more time to play games and make friends. Every day at least three or four students do not get to play because everyone pairs up quickly. In the wintertime, students also spend the first five minutes putting on coats, so they have even less time outside.'\n\nWhich statement correctly describes why this opening is not organized in a clear order?",
+    "choices": [
+      "One reason does not have its own evidence placed right beside it; the evidence about wintertime coats and limited outdoor time is separated from the reason it supports.",
+      "The claim appears in the middle of the paragraph instead of at the beginning, making it hard for readers to know what the argument is about before they read further.",
+      "The paragraph mixes two different claims about recess length, which confuses readers about whether the argument supports twenty or thirty minutes.",
+      "The evidence about students pairing up and not getting to play is presented before the evidence about wintertime coats, which means the stronger evidence comes first."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lesson teaches that a clear order keeps each reason next to its own evidence, not piled together at the end.",
+      "Look for where each reason is stated, then trace whether its evidence appears right after it or gets separated."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-005",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Four students each wrote an opening for an argument that the school lunch period should be forty minutes instead of thirty minutes. Which opening is organized in a clear order, with the claim first and each reason paired with its own matching evidence?",
+    "choices": [
+      "The lunch period should be forty minutes instead of thirty. Many students rush through eating and do not finish because they feel pressured by time, and they also stand in long lines that consume most of their lunch period, which causes them stress and frustration when the bell rings.",
+      "The lunch period should be forty minutes instead of thirty. Many students rush through eating and do not finish: last week, three students threw away half-full trays because the bell rang. Students also have more time to sit with friends: with only thirty minutes, many students eat alone because they do not know where to sit by the time they reach a table.",
+      "Many students rush through eating and do not finish, and students do not have enough time to stand in line and eat before the bell rings because the lunch period is too short. The lunch period should be forty minutes instead of thirty so everyone can eat at a comfortable pace and socialize without feeling rushed.",
+      "Students rush through lunch because thirty minutes is not enough time to reach the cafeteria and eat their food, and the lunch line is long which makes it worse. With only thirty minutes, students cannot finish eating or talk with friends, so the school should make the lunch period forty minutes."
+    ],
+    "answer": "B",
+    "hints": [
+      "The claim should come first, followed by each reason paired with its own evidence right beside it.",
+      "Check whether each reason is explained with a specific fact or detail that actually supports that reason, not mixed in with other evidence."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-006",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student has collected the following pieces of information for an argument about starting school later:\n— Students who sleep more do better in math and reading.\n— The school currently starts at 7:45 a.m.\n— Students need at least eight hours of sleep, but many get only six or seven.\n— Starting school at 8:30 a.m. instead of 7:45 a.m. would help most students get more sleep.\n— Teenagers' bodies naturally wake up later in the morning.\n\nThe student wants to write the claim: 'The school should start at 8:30 a.m. instead of 7:45 a.m.' She plans to organize her reasons in a clear order. Which pair of reason-and-evidence combinations would work best for this argument?",
+    "choices": [
+      "Reason 1: Students need at least eight hours of sleep. Evidence: The school currently starts at 7:45 a.m. Reason 2: Starting school at 8:30 would help students get more sleep. Evidence: Teenagers' bodies naturally wake up later in the morning.",
+      "Reason 1: A later start would let students sleep more, since teenagers' bodies naturally wake up later. Evidence: Students who sleep more do better in math and reading. Reason 2: Many students currently do not get enough sleep. Evidence: The school currently starts at 7:45 a.m.",
+      "Reason 1: Starting school at 8:30 a.m. would help students get more sleep. Evidence: Many students need at least eight hours of sleep but get only six or seven. Reason 2: Students who sleep more do better in school. Evidence: Teenagers' bodies naturally wake up later in the morning.",
+      "Reason 1: The school currently starts too early. Evidence: Students need eight hours of sleep and do not get it. Reason 2: A later start would help students. Evidence: Teenagers' bodies naturally wake up later."
+    ],
+    "answer": "C",
+    "hints": [
+      "Each reason must be supported by evidence that actually explains why that reason is true, not evidence that supports a different reason.",
+      "Look for the pairing where the specific facts and details clearly back up the reason they are supposed to support."
     ]
   }
 ]

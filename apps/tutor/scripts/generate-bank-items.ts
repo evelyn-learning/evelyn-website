@@ -400,6 +400,29 @@ function rotateAnswers(items: GenItem[], targetIdx: (i: number) => number): GenI
   });
 }
 
+/** Coerce an `answer` the model expressed as something other than a bare
+ *  letter back into its letter.
+ *
+ *  Some LOs make the model answer in prose — `m6geo.major-landform-vocabulary`
+ *  returned the full choice text for all six items, every one of which failed
+ *  validation as "out of range" and left the LO with zero items across three
+ *  separate regeneration attempts. The items themselves were fine; only the
+ *  label was in the wrong shape. Recovering here is strictly safer than
+ *  regenerating, because it keeps content that already passed every other
+ *  check instead of rolling the dice on a fresh sample. */
+function normalizeAnswer(it: GenItem): GenItem {
+  if (typeof it.answer !== 'string' || !Array.isArray(it.choices)) return it;
+  const raw = it.answer.trim();
+  if (/^[A-E]$/.test(raw)) return it;
+  const flat = (t: string) => t.toLowerCase().replace(/\s+/g, ' ').trim().replace(/[."']+$/, '');
+  const exact = it.choices.findIndex((c) => flat(c) === flat(raw));
+  if (exact >= 0) return { ...it, answer: 'ABCDE'[exact] };
+  // "A.", "(B)", "C) the mountain"
+  const lead = /^\(?([A-E])[).:\s-]/.exec(raw);
+  if (lead) return { ...it, answer: lead[1] };
+  return it;
+}
+
 /** Items whose correct choice is strictly longest by more than `slack`
  *  characters. That margin is the tell: a key two characters longer than its
  *  nearest rival is a tie, one thirty characters longer is a signpost. */
@@ -588,7 +611,7 @@ async function main() {
         .join('');
       const parsed = JSON.parse(stripFences(text));
       if (!Array.isArray(parsed)) throw new Error('not an array');
-      items = parsed as GenItem[];
+      items = (parsed as GenItem[]).map(normalizeAnswer);
     } catch (e) {
       console.log(`  ✗ generation FAILED for ${lo.loId} (${lo.title}): ${(e as Error).message}`);
     }

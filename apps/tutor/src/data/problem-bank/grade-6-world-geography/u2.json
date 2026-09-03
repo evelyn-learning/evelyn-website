@@ -5,17 +5,17 @@
     "cedCode": "M6GEO-2.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "You are looking at a map and you want to know what the entire map is showing you. Which map part should you read?",
+    "problemText": "You are looking at a map for the first time. Near the top of the page, you see the words 'Mountain Valley State Park Map' printed in large letters. What is the name of this map part, and what question does it answer?",
     "choices": [
-      "the legend, to find out what each symbol represents",
-      "the compass rose, to determine which direction is north",
-      "the scale bar, to figure out real-world distances between places",
-      "the title, to learn the overall subject or location of the map"
+      "It is the scale bar, and it answers the question 'About how big a distance on the map really is?'",
+      "It is the legend, and it answers the question 'What do these symbols and colors mean?'",
+      "It is the compass rose, and it answers the question 'Which way is north?'",
+      "It is the title, and it answers the question 'What does this whole map show?'"
     ],
     "answer": "D",
     "hints": [
-      "Think about which part is usually printed near the top of a map.",
-      "This part answers the question 'What does this map show?'"
+      "The lesson teaches that printed words near the top of a map name what the map is about.",
+      "Remember that each map part answers its own question — this part answers a question about the map's subject."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6GEO-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is holding a map titled 'Lake District Recreation Map.' On the map, she sees a small blue X symbol that she does not recognize. Where should she look to find out what the blue X stands for on this particular map?",
+    "problemText": "A student finds a map with a small box containing a list: a green square paired with 'park,' a red line paired with 'road,' and a blue circle paired with 'pond.' The student wants to know what a red line represents on this map. Which part should the student use to find this answer?",
     "choices": [
-      "in the legend, where symbols are paired with their meanings for this map",
-      "at the compass rose, which shows all four cardinal directions",
-      "at the scale bar, which shows how far apart places really are",
-      "by remembering what blue X symbols mean on other maps she has seen"
+      "The legend, because it pairs each symbol and color with its meaning",
+      "The title, because it names the overall subject of the map",
+      "The compass rose, because it shows which way is north",
+      "The scale bar, because it shows how big distances really are"
     ],
     "answer": "A",
     "hints": [
-      "Each map creates its own symbols, so you need to check the map in front of you, not a different one.",
-      "The part that explains what symbols mean is the one that answers 'What do these symbols mean?'"
+      "The question is about what a symbol means on this particular map, not about direction or distance.",
+      "The lesson describes one part as 'a list that pairs each symbol with what that symbol stands for.'"
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6GEO-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "On the Mountain Ridge Trail Map, a hiker notices the compass rose shows the arrow labeled N pointing toward the right edge of the page. A shelter symbol sits directly to the left of a water fountain symbol on the page. Based on the compass rose, in which real-world direction is the shelter from the water fountain?",
+    "problemText": "You are hiking and you want to know about how far it is between two landmarks on your paper map. You look at the map and find a small straight bar near the bottom corner with marks showing '0' on the left and '2 miles' on the right. Why is this bar helpful for answering your question about distance?",
     "choices": [
-      "north, because when the compass rose points right, the left side of the page automatically points toward north instead",
-      "west, because left on the page means west when that map's compass rose points right for north",
-      "south, because the shelter is positioned away from the direction that the compass rose arrow is pointing",
-      "east, because the right side of any map page is always considered the east direction in real-world navigation"
+      "Because it shows you the names and locations of all the landmarks printed on the map",
+      "Because it translates a length on the page into a real-world distance you can understand",
+      "Because it explains which direction is north and where each landmark sits relative to that direction",
+      "Because it displays all the different symbols used on the map and what real-world features they represent"
     ],
     "answer": "B",
     "hints": [
-      "You must use this map's own compass rose, not what you remember from other maps.",
-      "If north points right, then left points in the opposite direction."
+      "The lesson says this part is 'the only one of the four parts that connects a length on the page to a distance in the real world.'",
+      "Think about what information you need to know if two landmarks are close together on paper but far apart in real life."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6GEO-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student wants to plan a camping trip and has two questions: first, 'How far apart are the campsite and the fishing dock on the map?' and second, 'What symbol does the map use to mark a ranger station?' The student starts to answer both questions by reading the scale bar. Explain why reading only the scale bar will answer one question but not the other. Which question is which?",
+    "problemText": "A student studying the Riverside Campground Map sees a small drawing with an arrow labeled N pointing toward the left edge of the page, with three shorter lines branching off to show the other directions. Another student claims, 'A picnic table symbol sits directly above a stream symbol on this page, so the picnic table must be north of the stream.' Is the second student correct, and why or why not?",
     "choices": [
-      "The scale bar answers the ranger station question because the names of all symbols are listed along the edges of the scale bar on most maps.",
-      "The scale bar answers both questions equally well because it contains all the information needed to interpret everything shown on any map.",
-      "The scale bar answers the distance question, but you need to read the legend to find out what symbol marks a ranger station, because the legend is what explains what symbols mean.",
-      "The scale bar answers only the ranger station question because the bar marks themselves are designed to show what each symbol represents on the map."
+      "Yes, the student is correct, because page position always matches cardinal direction regardless of how the map is rotated or printed",
+      "Yes, the student is correct, because the legend identifies what each symbol means and confirms the picnic table symbol's location",
+      "No, the student is incorrect, because the compass rose shows that north points left, not up, so directly above means west, not north",
+      "No, the student is incorrect, because the scale bar measures distance between locations rather than showing directions"
     ],
     "answer": "C",
     "hints": [
-      "Remember: each map part answers its own specific question, not all questions.",
-      "The scale bar shows distances, and the legend shows what symbols mean—these are two different jobs."
+      "Remember that the compass rose tells you which real-world direction matches each location on this particular map page.",
+      "The lesson warns: 'On this page, directly above cannot mean anything but north' only if north points to the top — but what if the compass rose points a different direction?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6GEO-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "On the Willow Creek Park Map, a hiker reads the compass rose and sees that north points toward the bottom of the page. Later, the hiker notices two locations on the map: a picnic table directly above a parking lot on the page itself. The hiker concludes: 'The parking lot must be north of the picnic table.' Is this conclusion correct? Explain by referring to the compass rose and what it means.",
+    "problemText": "A student wants to find out three pieces of information from the Eagle Ridge Trail Map: (1) what the whole map shows, (2) what a purple star symbol means on this map, and (3) which cardinal directions are shown. For each piece of information, which single map part would the student need to check?",
     "choices": [
-      "Yes, the conclusion is correct because things directly above other things on a map are always north.",
-      "Yes, the conclusion is correct because the title tells you that Willow Creek Park is in the north.",
-      "No, the conclusion is wrong because the compass rose on this map shows that down on the page is north, so directly above on the page means south, not north.",
-      "No, the conclusion is wrong because the scale bar does not confirm the direction."
+      "The scale bar for (1), the compass rose for (2), and the legend for (3)",
+      "The legend for (1), the scale bar for (2), and the title for (3)",
+      "The compass rose for (1), the title for (2), and the scale bar for (3)",
+      "The title for (1), the legend for (2), and the compass rose for (3)"
     ],
     "answer": "D",
     "hints": [
-      "The compass rose tells you what direction each part of the page points to for this particular map.",
-      "If the compass rose shows north pointing down, then 'above on the page' points toward the top, which is the opposite of north."
+      "Match each question to the part built to answer it: what-is-this-map, what-does-this-symbol-mean, and which-way-is-which.",
+      "Recall that the lesson teaches: 'A question about the map's overall subject' goes with one part, 'a question about what a symbol means' goes with another, and 'a question about which way' goes with a third."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6GEO-2.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student is reading two different maps: Map A shows 'Pine Valley State Park' with a scale bar marked 0 to 5 miles, and Map B shows 'Oak Ridge County' with a scale bar marked 0 to 50 miles. The student measures a straight-line distance of 2 inches on both maps and uses each map's scale bar to find the real-world distance. Will the student find that 2 inches stands for the same real-world distance on both maps? Use the information from the lesson to explain your reasoning.",
+    "problemText": "A hiker compares two different maps of nearby areas. On Map A, a town symbol sits in the exact center of the page, and the compass rose shows N pointing upward. On Map B, the same town symbol sits in the exact center of the page, but the compass rose shows N pointing to the right. If both maps show the same area of the real world, why is the town's position relative to north different between the two maps, and what does this teach you about reading direction on any map?",
     "choices": [
-      "No, because each map has its own scale bar, and the marks on one map's scale bar do not mean the same thing as the marks on another map's scale bar. A 2-inch line on a map showing 50 miles per bar segment stands for a much larger real-world distance than a 2-inch line on a map showing 5 miles per bar segment.",
-      "Yes, because inches are always the same measurement, so 2 inches will always stand for the same real-world distance no matter which map you measure on.",
-      "No, because the titles of the maps are different, which means they were created by different mapmakers and therefore use different measurement systems.",
-      "Yes, because the scale bar is a standard tool that all mapmakers use in exactly the same way, so the relationship between page length and real-world distance stays constant across all maps."
+      "The pages are turned different ways; every map's own compass rose determines which direction is north for that particular page, not memory or habit",
+      "The scale bars on the two maps are different sizes; this difference in scale affects how directions are measured and displayed on each map",
+      "The town moved between when Map A and Map B were made; north always points to the top of any page and locations cannot change on a map",
+      "The legends on the two maps use different symbols; the symbols chosen determine what cardinal directions will point to on that particular map"
     ],
     "answer": "A",
     "hints": [
-      "Remember: each map picks its own scale bar marks, just like each map picks its own symbols for the legend.",
-      "The scale bar connects a length on the page to a real-world distance, and those marks are different from map to map."
+      "The compass rose is described in the lesson as the part that shows 'which way is north' — for that particular map.",
+      "The lesson includes a warning: 'Always read the compass rose printed on the map in front of you,' and gives an example of how the same page position means different real-world directions on different maps."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6GEO-2.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A mapmaker is building a map whose legend shows different colors for each country and a star symbol marking the capital city of each country. What is the main job of this map?",
+    "problemText": "A map's legend shows country borders marked with black lines and capital cities marked with a star inside a circle. What main job is this map built to do?",
     "choices": [
-      "To show human-made boundaries such as country borders and the names and locations of capital cities",
-      "To show how high or low the land sits in different parts of each country using elevation colors and contour lines",
-      "To show how one piece of information, such as rainfall or population density, changes across the countries using shading patterns",
-      "To show rivers, lakes, and mountain peaks without any human-made borders or political boundaries marked"
+      "Show the human-made boundaries and place names of countries",
+      "Show how high or low the land sits in different areas",
+      "Show how one kind of data, such as rainfall, spreads across the region",
+      "Show the names of all rivers and mountains in the area"
     ],
     "answer": "A",
     "hints": [
-      "Look at what the legend lists: country colors and capital-city symbols.",
-      "Ask yourself: does this legend tell you about the shape of the land, or about human-made places and borders?"
+      "Look at what the legend actually lists — borders and capital cities are what kind of information?",
+      "Remember: the three map types are built around different purposes. Which purpose does a legend of borders and capitals serve?"
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6GEO-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geography student needs to find out which parts of a region receive the most rainfall and which parts receive the least. The student's legend shows light green for areas getting under 15 inches of rain per year, medium blue for 15 to 40 inches, and dark blue for more than 40 inches. Why is this map the right choice for the student's question?",
+    "problemText": "A map's legend lists these three entries: dark green for elevation from sea level to 500 feet, tan for elevation from 500 to 2,000 feet, and gray-brown for elevation above 2,000 feet. No country borders or rainfall data appear on the legend. What kind of map is this, and why?",
     "choices": [
-      "Because it shows country borders so the student can see which countries are in the region",
-      "Because it uses one chosen kind of information—rainfall amounts—spread across different areas to answer the question",
-      "Because it shows elevation colors that tell the student how mountainous each area is",
-      "Because it marks capital cities with special symbols so the student can locate the biggest population centers"
+      "A political map, because it uses three different colors to show three different countries",
+      "A physical map, because its colors show elevation, the height of the land at different places",
+      "A thematic map, because it spreads information across an area using different colors",
+      "A thematic map, because the three colors represent three different kinds of geographical data"
     ],
     "answer": "B",
     "hints": [
-      "The student's question is about one specific topic: how much rain falls in different places.",
-      "Which map type is built to show one chosen kind of data spread across an area?"
+      "What does each color on this legend stand for — elevation or something else?",
+      "Recall: a physical map's colors specifically represent how high or low the land is. Do the colors here match that job?"
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6GEO-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A teacher shows two students different maps of the same country. One map's legend lists green for low elevation and brown for high elevation, with symbols for mountain peaks and rivers. The other map's legend lists a different flat color for each province and black lines showing where province borders are drawn. Which map should a student use to find out where the mountains and valleys are located in that country?",
+    "problemText": "A student is looking at a map with colors showing which areas grow mostly coffee, which grow mostly cocoa, and which grow mostly sugar cane. The student says this must be a physical map because it uses colors to show differences across the land. What is the error in the student's reasoning?",
     "choices": [
-      "The map with the province colors and black border lines, because borders always mark where the land changes",
-      "The map with elevation colors and mountain symbols, because it shows the natural shape of the land",
-      "Either map would work equally well, because they both show the country",
-      "The map with the province colors, because flat colors are always used to show natural features"
+      "The student confused what the colors represent with the fact that colors exist; since the legend shows crop types rather than elevation or landforms, this is a thematic map focused on one data topic",
+      "The student incorrectly assumed that using any colors at all makes a map physical, when in fact the legend determines the type based on whether it lists natural features, boundaries, or one chosen data theme",
+      "The student judged the map by the fact that colors were used, not by what the colors stand for; the map is thematic, showing one chosen data topic spread across an area",
+      "The student failed to recognize that the legend shows agricultural products spread across regions, which makes this a thematic map built to display how one kind of data varies from place to place"
     ],
     "answer": "C",
     "hints": [
-      "Think about what each legend is built to show: one shows human-made boundaries, the other shows how high the land sits.",
-      "Which map type uses color to stand for elevation and includes symbols for natural features like mountains and rivers?"
+      "What do the colors actually represent on this map — elevation, or something else?",
+      "The key rule from the lesson: never choose a map type by noticing colors are used; instead, ask what those colors stand for."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6GEO-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A mapmaker creates three different maps of the same desert region. Map 1's legend shows country borders and capital cities. Map 2's legend shows colors for elevation and symbols for oases and salt flats. Map 3's legend shows different colors representing the percentage of people who speak Arabic as their main language in each area. A visitor to this region wants to understand both the natural landscape and the human geography. Why would the visitor need to look at more than one of these maps to get a complete picture?",
+    "problemText": "Three different maps all show the same country. Map A's legend lists country borders and capital cities. Map B's legend lists colors showing elevation from low to high and symbols for rivers and mountain peaks. Map C's legend lists colors showing how population is distributed across different regions. Which statement correctly describes what each map is built to do?",
     "choices": [
-      "Because Map 1 shows all the natural features, so the other maps are unnecessary additions",
-      "Because each map shows a different main job, and no single map is built to show both natural landscape and human data at the same time",
-      "Because maps with borders are always more accurate than maps with colors for elevation",
-      "Because physical maps and thematic maps always show the same information in different colors"
+      "Map A shows natural landforms, Map B shows boundaries, and Map C shows where people live in larger numbers",
+      "Map A shows climate zones, Map B shows natural features, and Map C shows country borders",
+      "Map A shows elevation, Map B shows boundaries, and Map C shows rainfall patterns",
+      "Map A shows boundaries and place names, Map B shows the natural shape of the land, and Map C shows how one kind of data spreads across the area"
     ],
     "answer": "D",
     "hints": [
-      "Recall the lesson idea: every map is built around one main job, and a map cannot show everything without becoming confusing.",
-      "Map 1 is political, Map 2 is physical, and Map 3 is thematic. What does each one show, and what does each one leave out?"
+      "For each map, look at what its legend actually lists and match it to the three main jobs: showing boundaries, showing natural land shape, or showing one data topic spread across an area.",
+      "Remember: the same place can appear on all three kinds of maps, each one built around a different legend answering a different question."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6GEO-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is looking at a map and says: \"This map has different colors spread all over it, so it must be a physical map showing elevation.\" But the legend actually lists light brown for areas where cattle are raised, tan for areas where sheep are raised, and cream for areas where goats are raised. What is wrong with the student's reasoning, and what kind of map is this actually?",
+    "problemText": "A geographer wants to help city planners understand which areas in a region would be easiest to build roads through based on how steep or flat the land is. The planner asks to see a map. Which type of map should the geographer choose, and which feature of that map's legend would give the answer?",
     "choices": [
-      "This is actually a thematic map, because the colors represent one chosen topic—the type of livestock raised—spread across the area, not elevation",
-      "This is actually a political map, because livestock colors are used instead of country borders to show human activities",
-      "The student's reasoning is correct; this is a physical map with elevation, just using unusual colors instead of the typical green and brown",
-      "The student made no mistake; any map with multiple colors must be a physical map"
+      "A physical map, using colors that show elevation to identify flat versus steep areas",
+      "A thematic map showing population density, because more populated areas have better roads already built",
+      "A political map, using the capital city symbols to mark the best route",
+      "A thematic map showing rainfall, because dry areas are easier to build roads in"
     ],
     "answer": "A",
     "hints": [
-      "The key question is not 'does the map use color?' but 'what does that color represent in the legend?'",
-      "Physical-map colors stand for elevation. What do these colors actually stand for?"
+      "To plan road building, what information about the land matters most — its borders, its height, or rainfall?",
+      "Which map type's legend is built to show how high or low the land sits in different places?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6GEO-2.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geographer has three maps of West Africa side by side. Map X shows country borders with each country in a different flat color and capital cities marked with a star. Map Y shows green and yellow colors representing low elevation, tan for medium elevation, and dark red for high elevation, plus blue symbols for rivers. Map Z shows only two colors: light orange for areas where fewer than 500,000 people live, and dark orange for areas where 500,000 or more people live. A student needs to complete three different tasks: (1) find the location of major mountain ranges, (2) find which country contains a capital city, and (3) find which areas are most densely populated. Which map should the student use for each task, and why would using the wrong map for any task make the answer unclear or impossible to find?",
+    "problemText": "A student examines two different maps of the same forest region. Both maps use green color across most of the area, but the legends are different. On Map 1, the legend says green stands for elevation between 1,000 and 3,000 feet. On Map 2, the legend says green stands for areas where oak trees are the most common species. Explain why these two maps are different types despite both using green in the same places, and identify each type.",
     "choices": [
-      "For all three tasks, use Map X, because it shows the complete picture of the region in a single map with all information available",
-      "Use Map Y for task 1 because its legend lists elevation; use Map X for task 2 because its legend marks capital cities with symbols; use Map Z for task 3 because its colors show where the most people live in each area",
-      "Use Map Y for all tasks, because physical maps show every kind of information geographers need to know",
-      "Use Map X for tasks 1 and 2, and Map Z for task 3, because political maps include some natural features along with human features"
+      "Map 1 is physical because it shows elevation as a natural feature, and Map 2 is political because it identifies specific plant boundaries even though it uses the same green color in those regions",
+      "Map 1 is physical and Map 2 is thematic because the colors stand for different things — elevation versus one chosen data topic — even though the color itself is the same",
+      "Map 1 is thematic and Map 2 is physical because Map 1 focuses on height data while Map 2 displays a natural feature like vegetation distribution across the landscape",
+      "Map 1 represents land height using green to show elevation ranges, while Map 2 uses green to show where a single tree species dominates, making them different types because their legends show different purposes even if the color appearance is identical"
     ],
     "answer": "B",
     "hints": [
-      "Remember that each map type shows one main job in its legend. Match each task to the map whose legend includes that information.",
-      "Map X is political (borders and capitals), Map Y is physical (elevation and rivers), and Map Z is thematic (population). Which legend contains the data each task requires?"
+      "The lesson teaches that the type of map is decided by what the legend lists, not by what color is used or what it looks like.",
+      "On Map 1, what do the colors represent? On Map 2, what do the same colors represent? How does that difference change the map type?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "According to the lesson, what is a continent? Which of the following correctly defines the term as it is used in this course?",
+    "problemText": "According to the seven-continent convention used in this lesson, which one of the following is a continent? Remember that a continent is one of Earth's largest continuous areas of land.",
     "choices": [
-      "A body of salt water that covers most of Earth's surface.",
-      "One of Earth's largest continuous areas of land.",
-      "A narrow strip of land that connects two larger landmasses.",
-      "Any area of land that is surrounded by ocean on all sides."
+      "The Arctic Ocean",
+      "Antarctica",
+      "Greenland",
+      "The Atlantic Ocean"
     ],
     "answer": "B",
     "hints": [
-      "The lesson defines both continents and oceans separately, using the word 'largest' and 'continuous' for both.",
-      "Think about whether the definition should describe land or water."
+      "A continent is land, not water.",
+      "Look for the largest continuous area of land, not an ocean or an island that is not counted as a continent on its own."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "You are describing the location of Africa to a friend who cannot see a map. Using the two-question routine from the lesson, you first ask what touches Africa along its edges. Which of the following correctly identifies Africa's neighbors?",
+    "problemText": "You are looking at a globe and you can see that North America touches both the Pacific Ocean and the Atlantic Ocean. According to what the lesson taught about the four oceans and their positions, which direction would you look from North America to find the Atlantic Ocean?",
     "choices": [
-      "The Atlantic Ocean to the west, the Indian Ocean to the east, and Europe to the north, with no land connection to Asia.",
-      "The Arctic Ocean to the north, the Atlantic Ocean to the west, and the Pacific Ocean to the south.",
-      "The Atlantic Ocean to the west, the Indian Ocean to the east, the Mediterranean Sea to the north, and Asia joined by a narrow strip of land.",
-      "The Pacific Ocean to the east, the Atlantic Ocean to the west, and South America connected by land to the south."
+      "North",
+      "West",
+      "East",
+      "South"
     ],
     "answer": "C",
     "hints": [
-      "Africa touches two oceans on its sides and has a specific land neighbor to its east; the lesson states this connection explicitly.",
-      "Remember that three continents sit on one continuous landmass even though they are counted separately."
+      "The Atlantic Ocean lies between the Americas on one side and Europe and Africa on the other side of the globe.",
+      "Think about which side of North America faces toward Europe — that is the direction you would travel across the Atlantic Ocean to reach Europe."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student claims that Australia is joined to Asia by a narrow strip of land, the same way North America and South America are connected. Is this claim correct, and why or why not?",
+    "problemText": "A geographer describes Europe's position by saying: 'Europe has Asia to its east, and the Atlantic Ocean to its west.' Using the two-question routine taught in the lesson, which of the following checks whether this description is correct by flipping one of the statements?",
     "choices": [
-      "Yes, it is correct; the lesson lists Australia as one of the seven continents, so it must be connected to another continent like all the others.",
-      "No, it is not correct; Australia stands alone as an island continent surrounded entirely by ocean, with the Indian Ocean to its west and the Pacific Ocean to its east.",
-      "Yes, it is correct; both Australia and North America are large continents, so they must both have land connections to their neighbors.",
-      "No, it is not correct; Australia is actually separated from Asia by the Atlantic Ocean, not connected by land."
+      "If Asia is east of Europe, then Asia must also be north of Europe.",
+      "If Europe has the Atlantic Ocean to its west, then the Atlantic Ocean must have land to its east.",
+      "If Europe is east of Asia, then it cannot also be west of the Atlantic Ocean.",
+      "If Europe has Asia to its east, then Asia must have Europe to its west."
     ],
     "answer": "D",
     "hints": [
-      "The lesson specifically states which continents have land connections and which ones stand alone surrounded by ocean.",
-      "Think about what the lesson says is between Australia and other continents — water, land, or neither."
+      "The lesson taught that you can flip a position statement to check it — read the relationship from the other side, and it should come out flipped but never contradicted.",
+      "When you flip a direction, east becomes west and west becomes east, but the two places stay connected."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Using the two-question routine to describe the Pacific Ocean's location: the Pacific touches the Americas on one side and Asia and Australia on the other. If the Pacific Ocean lies west of Asia, then what direction must Asia lie relative to the Pacific Ocean, and why does checking this direction matter?",
+    "problemText": "The lesson states that Africa, Europe, and Asia are counted as three separate continents even though they sit on one continuous landmass with no water between them. Australia, by contrast, is an island continent surrounded entirely by ocean. Based on the two-question routine taught in the lesson, what is one key difference in the answer you would give to the first question — 'what does this continent touch along its edges?' — when comparing Australia to Europe?",
     "choices": [
-      "Asia must lie east of the Pacific Ocean; flipping the relationship like this catches if a direction was written backward.",
-      "Asia must lie south of the Pacific Ocean; this confirms the ocean separates two continents completely.",
-      "Asia must lie north of the Pacific Ocean; this proves the lesson's description is the only true way to divide the world.",
-      "Asia must lie west of the Pacific Ocean; flipping it shows the two regions are actually on the same landmass."
+      "Europe touches at least one other continent, but Australia touches only oceans on all sides.",
+      "Europe touches only water bodies, while Australia touches both other continents and oceans at different points along its border.",
+      "Europe is separated from other continents by small seas, but Australia is isolated from other continents by vast oceans only.",
+      "Europe has land borders with neighboring continents, but Australia has no land borders with any other continent."
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches that flipping a position statement is a way to check that directions are not backward — think about what 'west of' becomes when you flip it.",
-      "When you reverse a direction relationship, the directions swap but the fact that they touch remains true."
+      "The first question asks what touches a continent along its edges — could be other continents or could be oceans.",
+      "Think about the lesson's point that Australia has no land connection to any other continent, while Europe sits on a shared landmass."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "The lesson states that Europe and Asia sit on one continuous landmass with no ocean between them, yet geographers still count them as two separate continents. Which of the following best explains why a continent can be defined as a separate entity even when it is joined by land to another continent?",
+    "problemText": "A student learns that the Pacific Ocean is the largest of the four oceans and lies between the Americas on one side and Asia and Australia on the other. The student then tries to describe the Pacific Ocean's position using the two-question routine: 'The Pacific Ocean touches North America to its east, South America to its southeast, Asia to its west, and Australia to its southwest.' Why is this description incomplete, and what should the student have included?",
     "choices": [
-      "The lesson defines continents solely by size, so any landmass larger than a certain threshold must be counted as its own continent.",
-      "A convention is an agreed-upon way of dividing something; continents are divided by convention rather than by natural boundaries like water.",
-      "Continents are always separated from one another by either an ocean or a sea, except in the special case of Europe and Asia.",
-      "The two-question routine requires that every continent be surrounded by at least one ocean, so Europe and Asia are only counted as separate because each borders its own body of water."
+      "The student gave directions that were too specific (southeast and southwest) instead of using only the four main directions (north, south, east, west).",
+      "The student forgot to mention that the Arctic Ocean lies to the north of the Pacific Ocean, which is a neighbor that touches its edges.",
+      "The student listed too many neighbors; the Pacific Ocean touches only one ocean and one continent, not four places.",
+      "The student included South America when he should have included Central America, because Central America is more important to the Pacific Ocean's position."
     ],
     "answer": "B",
     "hints": [
-      "The lesson introduces the word 'convention' and explains that it means a group has agreed on a way to divide something that could have been done differently.",
-      "Notice that the lesson says some geographers combine Europe and Asia into one continent — this shows the division is a choice, not a fact of nature."
+      "Reread the lesson's description of what borders the Arctic Ocean and what borders the Pacific Ocean — do they touch each other?",
+      "The two-question routine asks what touches a place along its edges; think about whether the Arctic Ocean's southern edge might touch the Pacific Ocean's northern edge."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student states: 'The four oceans are separate bodies of water divided by walls, just like the seven continents are separate because water or land separates them.' Identify what is wrong with this claim, explain what is actually true about the oceans according to the lesson, and describe how the two-question routine for oceans differs from its use for continents because of this fact.",
+    "problemText": "The lesson explains that geographers do not all divide the world the same way, and gives two examples of different conventions: some count six continents instead of seven, and some name a fifth ocean (the Southern Ocean) instead of four. Based on what the lesson taught about how and why continents are separated, which of the following best explains why a geographer might choose to combine Europe and Asia into one continent instead of counting them separately?",
     "choices": [
-      "The claim is wrong because oceans have no walls; they are one connected body of water divided by name rather than by barriers, so the two-question routine asks what continents touch an ocean's edges, not what walls surround it.",
-      "The claim is wrong because there are actually five oceans, not four, and the Southern Ocean is the largest; the two-question routine treats oceans as separate in all other respects.",
-      "The claim is wrong because oceans do have walls made of continents; the two-question routine asks which oceans touch a continent's edges, not which continents touch an ocean's edges.",
-      "The claim is wrong because most continents are not separated by water; the two-question routine works differently for oceans because they are named by geographers rather than occurring naturally."
+      "Because Europe and Asia are closer to each other than any other pair of continents, making them more similar to each other than to their other neighbors.",
+      "Because the Arctic Ocean is so small and cold that it does not separate Europe from Asia the way larger oceans separate other continents.",
+      "Because Europe and Asia sit on one continuous landmass with no ocean between them, even though the lesson's convention still counts them as two separate continents for practical reasons.",
+      "Because the Indian Ocean lies between Europe and Asia, and using the Indian Ocean as a boundary is easier than drawing an invisible line through land."
     ],
     "answer": "C",
     "hints": [
-      "The lesson explicitly states that the four oceans are one connected body of water divided by name, not divided by physical barriers or walls.",
-      "When applying the two-question routine, think about what the routine actually asks: what does a feature touch along its edges, and in which direction?"
+      "The lesson specifically taught that Europe and Asia are joined on one landmass with no water between them — this is a fact about how they are actually connected on Earth.",
+      "Think about what reason a geographer might have for counting them as one continent instead of two — would it relate to how they are physically connected, or to how far apart they are, or to how similar their weather is?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6GEO-2.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "The word hemisphere comes from two parts: 'hemi' and 'sphere.' What does the word hemisphere mean?",
+    "problemText": "What is a hemisphere? Use the word parts to explain what the term means.",
     "choices": [
-      "A line that runs around the middle of Earth",
-      "An imaginary circle that divides Earth into east and west",
-      "Half of Earth",
-      "The area between the North Pole and the South Pole"
+      "The area near the North Pole and the South Pole",
+      "A line that runs around the middle of Earth from east to west",
+      "Half of Earth, because hemi means half and sphere means ball",
+      "One of the four imaginary lines that people agreed to draw on maps"
     ],
     "answer": "C",
     "hints": [
-      "Think about what 'hemi' means and what 'sphere' means.",
-      "The lesson breaks apart the word into its two pieces."
+      "The lesson breaks down the word into two parts: hemi and sphere.",
+      "Think about what each word part means on its own before combining them."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-2.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A pilot flying over the Atlantic Ocean crosses a line running east to west that divides the Northern Hemisphere from the Southern Hemisphere. Which line has the pilot just crossed?",
+    "problemText": "A location sits south of the Equator and east of the Prime Meridian. Which two hemispheres contain this location?",
     "choices": [
-      "The Prime Meridian",
-      "A line invented by pilots for navigation",
-      "The boundary between Europe and Africa",
-      "The Equator"
+      "Northern Hemisphere and Eastern Hemisphere",
+      "Northern Hemisphere and Western Hemisphere",
+      "Southern Hemisphere and Western Hemisphere",
+      "Southern Hemisphere and Eastern Hemisphere"
     ],
     "answer": "D",
     "hints": [
-      "Recall which line decides whether a place is north or south of something.",
-      "This line runs east to west all the way around Earth at its widest part."
+      "Remember to answer question 1 first: is the place north or south of the Equator?",
+      "Then answer question 2: is the place east or west of the Prime Meridian?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-2.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A whale in the ocean is swimming west and crosses an imaginary line running from the North Pole to the South Pole. This line passes through Greenwich, England. After crossing, the whale is now west of this line. Which hemisphere has the whale entered?",
+    "problemText": "Which imaginary line separates the Eastern Hemisphere from the Western Hemisphere?",
     "choices": [
-      "The Western Hemisphere",
-      "The Southern Hemisphere",
-      "The Northern Hemisphere",
-      "The Eastern Hemisphere"
+      "The Prime Meridian, which runs from the North Pole to the South Pole through Greenwich",
+      "The Equator, which runs from the North Pole to the South Pole and divides east from west",
+      "The International Date Line, which runs east and west around the widest part of Earth",
+      "The Tropic of Cancer, which runs from the North Pole to the South Pole and marks the hemisphere boundary"
     ],
     "answer": "A",
     "hints": [
-      "The line that runs from pole to pole through Greenwich is the Prime Meridian.",
-      "Crossing west of this line puts you on the west side of it."
+      "Think about which line creates the east-west pair of hemispheres.",
+      "The correct line passes through a specific city in England."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-2.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A research team collects samples at a location. They record that the location is south of the Equator and east of the Prime Meridian. Using the two-question method taught in class, which pair of hemispheres describes this location?",
+    "problemText": "A plane is flying north and crosses the Equator. A few hours later, it flies west and crosses the Prime Meridian. Based on these movements alone, which two hemispheres is the plane now in?",
     "choices": [
-      "The Northern Hemisphere and the Eastern Hemisphere",
-      "The Southern Hemisphere and the Eastern Hemisphere",
-      "The Southern Hemisphere and the Western Hemisphere",
-      "The Northern Hemisphere and the Western Hemisphere"
+      "Southern Hemisphere and Western Hemisphere",
+      "Northern Hemisphere and Western Hemisphere",
+      "Northern Hemisphere and Eastern Hemisphere",
+      "Southern Hemisphere and Eastern Hemisphere"
     ],
     "answer": "B",
     "hints": [
-      "Always ask question 1 first: is it north or south of the Equator?",
-      "Then ask question 2: is it east or west of the Prime Meridian?"
+      "When you cross a line while heading in a direction, you end up on that side of the line. Crossing while flying north puts you north of the line.",
+      "Work through both questions in order: first the Equator crossing, then the Prime Meridian crossing."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-2.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two students are debating where South America is located. Student A says, 'South America must be in the Southern Hemisphere only, because it is called South America.' Student B says, 'South America is in two hemispheres, one from each pair.' Which student is correct, and why?",
+    "problemText": "A student claims that South America is only in the Southern Hemisphere. Explain what is wrong with this statement using the two-question method taught in the lesson.",
     "choices": [
-      "Student A is correct; the name tells you which hemisphere it is in.",
-      "Student B is correct; a place sits in two hemispheres, one from the north-south pair and one from the east-west pair.",
-      "Both are partially correct; South America is in multiple hemispheres depending on which part you measure.",
-      "Neither is correct; hemispheres are only for oceans, not continents."
+      "The student did not know that South America is larger than most other continents",
+      "The student forgot that the Prime Meridian runs through South America, so it must also be in the Western Hemisphere",
+      "The student answered only question 1 and never ran question 2 about east or west of the Prime Meridian",
+      "The student did not realize that the Equator does not actually divide South America into two parts"
     ],
     "answer": "C",
     "hints": [
-      "Remember that every place on Earth (except points exactly on a line) sits in two hemispheres.",
-      "You must run both questions—the north-south question and the east-west question—on every place."
+      "Every place on Earth should be named by answering two questions in order.",
+      "The student only answered the first question about north or south, but skipped checking east or west."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-2.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geography class studies four continents: North America lies entirely north of the Equator and entirely west of the Prime Meridian. South America has land both north and south of the Equator, but all of it is west of the Prime Meridian. Asia has land both north and south of the Equator and land both east and west of the Prime Meridian. Antarctica lies entirely south of the Equator and entirely east of the Prime Meridian. Which continent has land in all four hemispheres?",
+    "problemText": "The Equator runs across the middle of Africa, and the Prime Meridian runs down through its western part. Based on this information and the lesson rules, how many hemispheres contain land from Africa?",
     "choices": [
-      "North America, because it is the largest",
-      "South America, because it has two different latitudes",
-      "Antarctica, because it is farthest south",
-      "Asia, because both lines cross through it"
+      "Two hemispheres, because Africa straddles the Equator but lies mostly on one side of the Prime Meridian",
+      "Two hemispheres, because every place on Earth sits in exactly two hemispheres",
+      "Three hemispheres, because the Prime Meridian splits Africa into eastern and western parts while the Equator creates northern and southern divisions",
+      "All four hemispheres, because both lines cross the continent and divide it into parts that belong to different halves"
     ],
     "answer": "D",
     "hints": [
-      "For a place to be in all four hemispheres, both the Equator and the Prime Meridian must cross through it.",
-      "Check each continent: does the Equator run across it, and does the Prime Meridian run across it?"
+      "A single point sits in two hemispheres, but a whole continent can span more than one of each pair.",
+      "When both lines cross a continent, think about what lands exist on each side of each line."
     ]
   }
 ]

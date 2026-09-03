@@ -5,17 +5,17 @@
     "cedCode": "M6ELA-4.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of the following best defines what an organizational pattern is in an informational text?",
+    "problemText": "Which of the following is a signal word that usually shows a cause/effect pattern in an informational text?",
     "choices": [
-      "A series of interesting words that signal what the author thinks about the topic.",
-      "The shape a whole text uses to connect its paragraphs and ideas to one another.",
-      "The order in which sentences appear on the page from top to bottom.",
-      "A single sentence that tells the reader what the text will be about."
+      "unlike",
+      "because",
+      "first",
+      "solved this by"
     ],
     "answer": "B",
     "hints": [
-      "An organizational pattern is not just about one sentence or one idea — it is about how the whole text holds together.",
-      "Think about how paragraphs connect to each other, not how individual words sound."
+      "Signal words point to the pattern. Which word links one event to a result it produces?",
+      "Cause/effect shows why one event makes another happen."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6ELA-4.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this short text. Which organizational pattern does it use?\n\nParagraph 1: Honeybees collect pollen from flowers and bring it back to the hive. Paragraph 2: The bees store the pollen and mix it with nectar to make food for the colony. Paragraph 3: This stored food feeds the young bees and helps the colony survive the winter.",
+    "problemText": "Read this short text: 'Paragraph 1: The school library had a problem — the tables were old and wobbly, and students did not feel safe using them. Paragraph 2: The librarian asked the principal for new tables, and the principal approved the purchase. Paragraph 3: After the new tables arrived, students started spending more time in the library.' What is the organizational pattern of this text?",
     "choices": [
-      "Compare/contrast, because it describes bees at different stages of growth.",
-      "Chronological, because it lists what happens first, second, and third.",
-      "Cause/effect, because each step causes the next one to happen in the food-making chain.",
-      "Problem/solution, because the text explains how bees solve the problem of feeding the colony."
+      "Chronological, because the events happen one after another in time",
+      "Cause/effect, because the wobbly tables caused students to stay away",
+      "Problem/solution, because it names a trouble and then explains how it was fixed",
+      "Compare/contrast, because it shows the library before and after the purchase"
     ],
     "answer": "C",
     "hints": [
-      "Notice the signal words that connect the ideas — do they show time order, or do they show one action causing another?",
-      "Ask yourself: is this text explaining steps that follow each other in time, or is it explaining why each step leads to the next one?"
+      "Look for a real trouble that needs to be named first, then a fix that solves it.",
+      "The key signal words are 'had a problem' and the approval of new tables."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6ELA-4.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student read this text and said it was organized in chronological order. Is the student correct? Explain your reasoning.\n\nParagraph 1: Glaciers are large, slow-moving rivers of ice. Paragraph 2: When glaciers move across the land, they carve deep valleys into the bedrock below because their weight and friction grind away rock over thousands of years. Paragraph 3: As a result of this grinding, many of the valleys we see in mountainous regions today were shaped by glaciers that melted away long ago.",
+    "problemText": "A text about how to make a clay pot includes these paragraphs in order: first gathering the clay, then shaping it on a wheel, next letting it dry, and finally firing it in a kiln. Why is chronological order the right pattern for this topic?",
     "choices": [
-      "Yes, the student is correct, because the text moves through events that happened a long time ago.",
-      "Yes, the student is correct, because the three paragraphs appear in order from first to last.",
-      "No, the student is incorrect, because the text shows how one thing causes another to happen, not just events in time order.",
-      "No, the student is incorrect, because the text talks about the same subject twice and compares it to itself."
+      "Because the topic is solving a problem by listing all the equipment needed to make pottery in the workshop",
+      "Because the topic is comparing different ways to make pottery using wheels versus hand-shaping methods",
+      "Because the topic is explaining why clay shrinks when it dries out during the kiln-firing stage",
+      "Because the topic requires showing the steps in the exact order they must happen"
     ],
     "answer": "D",
     "hints": [
-      "Look at the signal words: 'because,' 'as a result' — what do they tell you about how the ideas connect?",
-      "Remember the trap from the lesson: just because events happen over time does not mean the text is organized chronologically."
+      "Think about what the topic itself needs. Can you skip steps or do them out of order?",
+      "Directions and real processes need events to happen in a particular sequence."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6ELA-4.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this text, then choose the best statement about its organizational pattern and why that pattern fits the topic.\n\nParagraph 1: Many students struggle to finish their homework because they feel overwhelmed by the amount of work. Paragraph 2: When students feel this way, they often procrastinate, which means they delay starting the work, and the deadline gets closer without any progress. Paragraph 3: One way students have solved this is by breaking homework into smaller chunks and completing one chunk at a time. Paragraph 4: As a result of this strategy, students report that they feel less anxious and finish their work on time more often.",
+    "problemText": "Read this text: 'Paragraph 1: A hurricane brings heavy rain and high winds to a coast. Paragraph 2: The heavy rain causes flooding in low-lying areas because water has nowhere to go. Paragraph 3: The high winds cause damage to buildings and trees, which then blocks roads and power lines. Paragraph 4: As a result, people lose their homes and power for weeks after the storm.' A student says this text is chronological because it describes events happening during a hurricane. Explain what the student got wrong and name the correct pattern.",
     "choices": [
-      "The text uses problem/solution because it names the struggle students face with homework and then explains a strategy that helps them solve it, which fits a topic about fixing a real trouble.",
-      "The text uses chronological order because it describes the homework process in the sequence a student follows, moving from starting the task, to getting distracted, to finally completing all the work step by step.",
-      "The text uses cause/effect because it identifies that overwhelm and procrastination cause missed deadlines and incomplete work, showing how one problem leads directly to another negative outcome.",
-      "The text uses compare/contrast because it examines the differences between how students felt before using the chunking strategy and how they feel after trying this new approach."
+      "The student missed that even though events happen in time, the text is really showing cause/effect because each paragraph explains how one event makes another event happen.",
+      "The student confused the topic with the pattern; while hurricanes occur in time, this text is problem/solution because it identifies a weather disaster and then describes ways people prepare to stay safe.",
+      "The student overlooked that this is compare/contrast because the text separates the heavy rain damage from the high wind damage and shows how they differ from each other.",
+      "The student misread the signal words; the text is actually chronological only for the first half, then switches to cause/effect in the second half, so it uses a mixed pattern overall."
     ],
     "answer": "A",
     "hints": [
-      "Identify the real trouble first, then ask whether the text explains what fixed it.",
-      "Remember that a pattern must fit the topic — ask yourself what the text is really trying to do: explain why something happens, or explain how to fix something broken?"
+      "Look at the connecting words: 'causes,' 'because,' 'as a result.' What do these words signal about how the paragraphs connect?",
+      "A text can move through time without being chronological. The pattern depends on whether paragraphs just list events or show one event making another happen."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6ELA-4.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student said this text uses compare/contrast because it talks about how a butterfly is different from how it was before. Is this reasoning correct? Why or why not?\n\nParagraph 1: A caterpillar eats leaves and grows bigger, but it cannot fly. Paragraph 2: One day, the caterpillar stops eating and forms a hard shell called a chrysalis around itself. Paragraph 3: Inside the chrysalis, the caterpillar's body completely changes over several weeks, which causes it to transform into a butterfly with wings and a long tongue for sipping nectar. Paragraph 4: Once the butterfly emerges, it can fly away and search for flowers.",
+    "problemText": "Two students read a text about how a town planted trees to reduce flooding during heavy storms. Student A says the pattern is problem/solution. Student B says the pattern is before-and-after compare/contrast, since it shows the town before the trees and after the trees. Using what you know about organizational patterns and how they fit their topics, explain which student is correct and why.",
     "choices": [
-      "Yes, the reasoning is correct, because any text that shows a before-and-after is organized as compare/contrast, and this text clearly describes what the creature was like before and what it became after the transformation.",
-      "No, the reasoning is wrong because the text actually uses chronological order to show the stages of one creature's life cycle from the beginning to the end, and life cycles need time order to make sense.",
-      "No, the reasoning is wrong because a before-and-after of a single subject showing stages of development over time follows cause and effect, where each stage causes the next one to happen, not a side-by-side comparison of two different things.",
-      "Yes, the reasoning is correct, because the text mentions both caterpillars and butterflies, which are two separate living things being examined and compared to each other throughout the paragraphs."
+      "Student B is correct, because whenever a text describes conditions at one point in time and then describes conditions at a later point in time, that structure automatically qualifies as a compare/contrast pattern.",
+      "Student A is correct, because the text names a real trouble (flooding) and explains the fix (planting trees). Before-and-after is not automatically compare/contrast if a fix is what caused the change.",
+      "Both students are correct because the text could be read either way depending on which paragraphs you focus on and how you interpret the author's main purpose.",
+      "Neither student is correct, because this text is actually chronological order since it follows the events in sequence through time rather than presenting two separate subjects to examine."
     ],
     "answer": "B",
     "hints": [
-      "Ask yourself: does this text introduce two separate things to set side by side, or does it follow one creature through its life stages in order?",
-      "Remember the trap from the lesson: before-and-after does not automatically mean compare/contrast — it could be chronological if it is showing stages of a life cycle."
+      "Remember the trap: a before-and-after description is not automatically compare/contrast. Check whether the text names two separate things to weigh against each other.",
+      "A pattern fits its topic for a reason. Does this topic call for weighing two separate things, or for explaining how a problem was solved?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6ELA-4.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this text and then choose the correct pattern and explanation. Pay close attention to whether the pattern truly fits the topic the text is explaining.\n\nParagraph 1: Many forests in North America were cut down in the 1800s, so animals that lived there lost their homes and had nowhere to find food. Paragraph 2: Because of this loss of habitat, some animal populations shrank dangerously, which caused species like the eagle and the wolf to almost disappear forever. Paragraph 3: Starting in the 1900s, the government created national forests and protected areas to give animals safe places to live again. Paragraph 4: As a result of these protected areas, eagle and wolf populations recovered over the next hundred years.",
+    "problemText": "Read this text: 'Paragraph 1: Frogs and toads both have bumpy skin and lay eggs in water, but they are different in many ways. Paragraph 2: Toads have thick, dry bumps and live mostly on land, while frogs have smooth, wet skin and spend most of their lives in water. Paragraph 3: Because toads live on land, they need to come to water only to breed, so they can survive in places where water is scarce. Paragraph 4: Frogs, however, must stay near water or moisture all the time because their skin dries out easily.' Now choose the statement that names the pattern correctly and explains both what makes that pattern fit and what could make a student get confused.",
     "choices": [
-      "Cause/effect, because the text explains how cutting down forests caused animal populations to shrink, even though it also mentions a solution.",
-      "Problem/solution, because the text first names the real trouble of habitat loss and shrinking animal populations, then explains how the government's protected areas fixed the problem, which fits a topic about solving a real conservation challenge.",
-      "Chronological, because the text moves through events from the 1800s, to the 1900s, to modern times in time order.",
-      "Compare/contrast, because the text shows the difference between forests that were cut down and forests that were protected."
+      "Cause/effect, because the repeated use of connecting words such as 'because' and 'so' in multiple paragraphs signals that the text is showing why one thing happens as a result of another rather than weighing two items.",
+      "Chronological order, because the text describes how both animals developed their unique traits over time and explains the sequence of their evolution from a common ancestor.",
+      "Compare/contrast, because it sets frogs and toads side by side to show how they are alike and different, even though some paragraphs use 'because' and 'so' which might make a student think the text is cause/effect.",
+      "Problem/solution, because the text identifies the challenge that each animal faces in finding appropriate habitats and presents the physical adaptations as the solution to that challenge."
     ],
     "answer": "C",
     "hints": [
-      "Notice that the text contains cause/effect signal words, but ask yourself: is the main job of the text to explain cause and effect throughout, or is it to name a problem and explain a fix?",
-      "Remember: naming the pattern is only half the job — you also need to explain whether it truly fits what the topic is trying to do."
+      "The whole text's job is to set two separate creatures side by side and show how they differ. That is compare/contrast. But look at those connecting words—why might they fool a reader into seeing a different pattern?",
+      "A text can use signal words from more than one pattern. The key is to ask: what is the main job of the whole text? Is it to weigh two things, or to show why one thing causes another?"
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What is the difference between an author's purpose and an author's topic? Explain what each one means.",
+    "problemText": "What is the difference between an author's purpose and an author's topic? Give your answer in one sentence.",
     "choices": [
-      "The topic is how long the text is, and the purpose is how many readers it reaches.",
-      "The purpose is the subject the author writes about, and the topic is why the author wrote the text.",
-      "The topic is the subject the author writes about, and the purpose is the reason the author wrote the text.",
-      "The purpose and topic are the same thing, just two different words for the idea the author is discussing."
+      "An author's purpose and topic are the same thing because both refer to the main idea that the author wants to communicate to readers.",
+      "An author's topic is always more important than the author's purpose because readers care more about what a text is about than why it was written.",
+      "An author's purpose is the reason the text was written, while the topic is what the text is about.",
+      "An author's purpose is about facts and information, while the topic is about the author's personal opinions and beliefs."
     ],
     "answer": "C",
     "hints": [
-      "Think about the worked example with the cafeteria announcements. Both versions had the same topic. What was different?",
-      "Purpose answers 'why did the author write this?' Topic answers 'what is this text about?'"
+      "Think about what the lesson said: 'Author's purpose is the reason a text was written, not its subject.'",
+      "The lesson showed that two texts about the same event can have different reasons for being written."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence from a school announcement: 'The library is extending its hours to 5 p.m. on Tuesdays and Thursdays starting next week.' Which purpose does this sentence most clearly signal, and why?",
+    "problemText": "Read this sentence from a sports newsletter: 'The track team finished third in the district championships last Saturday.' Does this sentence use neutral or persuasive language, and why?",
     "choices": [
-      "Persuade, because it tells readers the library is a good place to study.",
-      "Persuade, because it asks readers to use the library more often.",
-      "Inform, because it explains when something will happen without asking readers to feel or do anything.",
-      "Inform, because it uses the word 'starting,' which is a neutral word."
+      "Persuasive language, because it uses the word 'finished' instead of a different verb that would sound more neutral or objective.",
+      "Persuasive language, because it tells readers that they should care about the track team's performance and should support them.",
+      "Neutral language, because it is a short sentence.",
+      "Neutral language, because it reports what happened without judging the outcome or asking the reader to do anything."
     ],
     "answer": "D",
     "hints": [
-      "Look for judgment words or calls to action in the sentence. Do you see any?",
-      "The sentence reports a schedule. Does reporting a schedule count as neutral word choice, or is it trying to persuade the reader?"
+      "Look for judgment words or calls to action. Does this sentence tell you how to feel, or just what happened?",
+      "The lesson says neutral words 'report information without pushing the reader anywhere.'"
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence from a school newsletter: 'Every parent should insist that the district hire more counselors because students deserve better access to mental health support.' Which element of this sentence most clearly reveals the author's purpose to persuade?",
+    "problemText": "Read this announcement: 'The school library will add ten new computers in the study area starting next month.' Which sentence below would change the purpose of this announcement from informing to persuading?",
     "choices": [
-      "The word 'should' gives a command and tells the reader what to do or believe.",
-      "The phrase 'school newsletter' shows this is official writing.",
-      "The mention of counselors tells the reader what the text is about.",
-      "The length of the sentence shows it is trying to persuade rather than inform."
+      "Every student who wants to improve their grades should take advantage of these new computers as soon as they arrive.",
+      "The library will purchase the computers from a company that sells educational equipment and has a strong reputation in schools.",
+      "The computers will be available during all hours that the library is open to students and staff.",
+      "The library is conveniently located on the second floor of the main building next to the media center."
     ],
     "answer": "A",
     "hints": [
-      "Look at the types of words the lesson calls 'judgment words' or words that ask readers to act. Which one is in this sentence?",
-      "A sentence that tells someone what they 'should' do is giving a command. Commands are a type of persuasive language."
+      "Persuasive language tells readers what they should do or what they should believe. Which choice contains a command or a judgment?",
+      "Look for words that urge the reader to act or words that tell the reader what is worthwhile."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A passage about a new school dress code includes only examples of problems caused by loose, colorful clothing. It then ends with 'Students will focus better on learning when they wear the standard uniform.' Which two features work together to show the author's purpose is to persuade readers that the dress code is necessary?",
+    "problemText": "Read the two passages below about a new community garden. Both describe the same project, but which one is written to persuade, and what specific proof shows this?\n\nPassage 1: 'The community garden opened on Maple Street this spring. Volunteers spent four weekends preparing the soil and building raised beds. Forty families signed up to grow vegetables in the garden, and fifteen families are currently on a waiting list to join.'\n\nPassage 2: 'The community garden finally opened on Maple Street, and it is going to change our neighborhood. Volunteers generously gave their time to prepare the soil and build raised beds for this worthy project. Forty families are already growing vegetables, and even more are waiting to get in. You should sign up today and become part of this thriving community effort.'",
     "choices": [
-      "The passage selects only examples that support uniforms and uses the word 'better' to describe the outcome, creating a one-sided argument that appeals to readers' desire for student success.",
-      "The passage selects only examples that favor the dress code, and the closing sentence makes a judgment about what will help students learn.",
-      "The passage includes specific details about clothing problems and repeats the word 'uniform' multiple times throughout to reinforce the main message about dress code requirements.",
-      "The passage presents evidence about how dress codes affect behavior and uses persuasive language to convince readers that uniforms are the only solution to school distractions."
+      "Passage 1 is written to persuade, proven by the fact that it describes a community garden and mentions that volunteers helped build it.",
+      "Passage 2 is written to persuade, proven by the command 'You should sign up today and become part of this thriving community effort.'",
+      "Passage 1 is written to persuade, proven by the word 'currently' and the mention of a waiting list showing that many people want to join.",
+      "Passage 2 is written to persuade, proven by mentioning that families signed up to grow vegetables and that the garden is located on Maple Street."
     ],
     "answer": "B",
     "hints": [
-      "The lesson says selected details reveal purpose just as much as word choice does. Look for which choice names both a detail choice AND a word choice together.",
-      "Remember the worked example about the phone ban. It selected only examples favoring one side and ended with a judgment. What two things made that persuasive?"
+      "Remember: naming a purpose is only half the job. You must also point at the exact word or detail that proves it.",
+      "Look for sentences that tell the reader what to do or that use judgment words like 'worthy' or 'finally.'"
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two passages describe the same community garden project. Passage X reports that 'thirty neighbors planted vegetables, five neighbors donated tools, and two neighbors left before finishing.' Passage Y states that 'the community came together to create a garden, and it proves that when people work as one, amazing things happen.' Which statement correctly identifies both authors' purposes and points to proof from the lesson?",
+    "problemText": "Read this passage about a school's new homework policy:\n\n'The school raised the homework limit to ninety minutes per night this semester. Students in math classes report that the extra practice helps them understand challenging concepts better. However, students in science classes say the increased workload makes them feel stressed, and some say they have less time to play sports. The policy has benefits and drawbacks that affect different students in different ways.'\n\nWhat does the author's choice of selected details—which benefits and drawbacks to include—tell you about the author's purpose?",
     "choices": [
-      "Both passages persuade because they both talk about the community garden and its success.",
-      "Passage X informs by reporting outcomes on more than one side, while Passage Y persuades by including only positive details and a judgment about what the project 'proves.'",
-      "Passage X persuades because it mentions the number of neighbors, while Passage Y informs because it uses the word 'amazing.'",
-      "Passage X informs about the garden, and Passage Y informs about community, so both passages have different purposes even though they cover the same topic."
+      "The author is trying to persuade readers to support the new homework policy by showing only the positive effects it has on math students.",
+      "The author is trying to persuade readers that homework should be banned because it makes most students feel stressed and prevents them from playing sports.",
+      "The author is trying to inform readers by reporting outcomes on both sides of the issue, not just favoring one side.",
+      "The author is trying to inform readers that the policy is bad by listing more drawbacks than benefits in the passage."
     ],
     "answer": "C",
     "hints": [
-      "Look at what details each passage chose to include. Does one side with only good news, or does one report both positive and negative outcomes?",
-      "The lesson says an informing passage about an event 'would usually report outcomes on more than one side.' Which passage does that?"
+      "The lesson says: 'A passage that reports outcomes on more than one side is informing about those outcomes; a passage that lines up only the details that favor one side is persuading.'",
+      "Notice what the author chose to include: benefits from math and drawbacks from science. Does this pick only one side, or both?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this announcement about a new after-school club: 'The Art Club meets every Tuesday and Thursday from 3:30 to 4:30 p.m. in the art room. All supplies are provided by the school at no cost to students. Students with any level of art experience are welcome, and the club's only requirement is that members stay for the entire meeting.' If the author's purpose were to persuade students to join the club, which sentence would need to be added or changed, and why?",
+    "problemText": "Read these two excerpts about the same city park renovation project:\n\nExcerpt A: 'The city will invest $2 million in the park renovation. The project will include new walking paths, updated playground equipment, and improved lighting. The renovation is expected to take fourteen months and is scheduled to begin in September.'\n\nExcerpt B: 'The city is investing $2 million to transform our neglected park into a safe gathering place. New walking paths and updated playground equipment will finally give families a reason to visit. The improved lighting will protect everyone who uses the park after dark. This project deserves community support, and residents should volunteer for the work and attend the planning meetings starting in July.'\n\nWhich excerpt is written to persuade, and what combination of word choice and selected details (or calls to action) proves this?",
     "choices": [
-      "A sentence stating when the club was created, because readers need to know the club's history.",
-      "A sentence explaining where the art room is located, because readers need to understand why the location matters.",
-      "A sentence saying something like 'You should join because art club gives you a place to grow as an artist and meet new friends,' because the announcement currently has no judgment words or call to action.",
-      "A sentence adding that some students have won art awards through the club, because all persuasive texts need to include examples of success."
+      "Excerpt A is written to persuade, because it mentions that the project will cost $2 million and will take fourteen months to complete.",
+      "Excerpt B is written to persuade, because it mentions walking paths and playground equipment that will be built in the park.",
+      "Excerpt A is written to persuade, because it lists specific details about what will be renovated and provides a timeline for the work.",
+      "Excerpt B is written to persuade, because it uses judgment words like 'neglected' and 'safe,' includes a call to action ('residents should volunteer'), and selects only benefits while leaving out any drawbacks."
     ],
     "answer": "D",
     "hints": [
-      "The announcement currently uses neutral language: it explains the schedule, cost, and requirements without judging or commanding. What would change that?",
-      "The lesson says persuasive language includes judgment words or calls to action. Look at which choice adds the kind of language the lesson identifies as persuasive."
+      "Look for more than one signal of persuasion: judgment words, calls to action, and one-sided selected details all point in the same direction.",
+      "The lesson teaches that purpose must be proven by multiple clues—word choice AND selected details AND what the passage leaves out. Which excerpt shows all three?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A claim counts as SUPPORTED when a reason and evidence are attached to it. Which of the following best describes what this means?",
+    "problemText": "What is the difference between a reason and evidence in an argument? Use the definitions from the lesson to explain.",
     "choices": [
-      "The claim uses confident words like 'clearly' or 'obviously' so readers will believe it and accept the statement without needing proof.",
-      "The claim repeats the same idea in multiple sentences throughout the text to reinforce the message and make it stick in the reader's mind.",
-      "The claim sounds like something most people in the school already know and agree with, so it feels familiar and commonly accepted.",
-      "The claim has a sentence nearby that explains why it should be believed and includes a specific fact or example to back that up."
+      "A reason is something everybody already knows, and evidence is information from outside the text.",
+      "A reason is a claim that the writer wants the reader to accept, and evidence is a sentence that sounds confident about it.",
+      "A reason is what comes at the end of a paragraph, and evidence is what comes at the beginning.",
+      "A reason explains why a claim should be believed, and evidence is the specific fact, count, or example that backs the reason up."
     ],
     "answer": "D",
     "hints": [
-      "Look for the definition of 'supported' in the lesson — what two things must be present?",
-      "Remember: evidence is a fact or example, not just a feeling or a confident tone."
+      "Look for the definitions taught in the lesson content.",
+      "Remember that evidence must be something actually printed in the text, not outside knowledge."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage from an argument about adding more lunch periods to the school day. Then identify which specific claim is NOT SUPPORTED by any reason or evidence. \"Lincoln Middle School should add a lunch period before noon instead of at 12:30 pm. Students eat lunch too late in the day right now. When students eat late, they get hungry again before the end of the school day, and that makes it harder for them to focus on afternoon lessons. Late lunch is also super unfair.\"",
+    "problemText": "Read this claim from an argument: \"Walking to school is healthier than riding the bus.\" The next sentence says: \"When you walk, your body moves and your heart pumps blood, which strengthens your cardiovascular system over time.\" Is this claim supported or not supported?",
     "choices": [
-      "Late lunch is also super unfair.",
-      "Students eat lunch too late in the day right now.",
-      "When students eat late, they get hungry again before the end of the school day.",
-      "Lincoln Middle School should add a lunch period before noon instead of at 12:30 pm."
+      "Supported, because a reason and evidence are attached right after the claim.",
+      "Not supported, because the reason given is about the bus instead of about walking.",
+      "Not supported, because confident-sounding words like \"healthier\" are used.",
+      "Supported, but only if students actually believe walking is better than the bus."
     ],
     "answer": "A",
     "hints": [
-      "Follow the two steps: find the claim sentence, then read the sentence or two right around it. Is there a reason and a fact?",
-      "Notice which sentence has no explanation following it — the argument simply moves on."
+      "Check the sentence right after the claim for a reason and evidence.",
+      "The reason explains how walking strengthens the body—does it back up the claim about health?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this argument about adding a water fountain in the gymnasium. \"The gym needs its own water fountain because students get very thirsty during basketball practice. During a forty-minute practice, students sweat a lot and lose water from their bodies, so they need to drink more than usual. Right now students have to leave the gym to find a water fountain down the hall, which wastes practice time.\" Which specific claim is SUPPORTED by a reason and evidence?",
+    "problemText": "Which of the following sentences from an argument is a specific claim that is NOT supported? \"The school cafeteria should add salad to the lunch menu. Adding salad would give students a healthy vegetable option. Studies show that students who eat vegetables at lunch have better concentration in afternoon classes. Salad is obviously the most delicious thing anyone could ever eat.\"",
     "choices": [
-      "Students get very thirsty during basketball practice because they sweat a lot during a forty-minute practice and lose water from their bodies.",
-      "The gym needs its own water fountain so that students do not have to leave practice and waste time walking down the hall.",
-      "Students have to leave the gym during practice.",
-      "Water fountains are the most important part of any school building."
+      "Adding salad would give students a healthy vegetable option.",
+      "Salad is obviously the most delicious thing anyone could ever eat.",
+      "The school cafeteria should add salad to the lunch menu.",
+      "Studies show that students who eat vegetables at lunch have better concentration in afternoon classes."
     ],
     "answer": "B",
     "hints": [
-      "Find each specific claim and check the next sentence — is there a reason and a fact that backs it up?",
-      "The correct answer is a claim that the text actually explains or gives a concrete problem for."
+      "Look for a claim that the text states and then moves on from, with no reason or fact backing it up.",
+      "Do not let confident-sounding words like \"obviously\" fool you into thinking a claim has evidence."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this argument about starting a school garden. \"Meadows Middle School should start a vegetable garden in the south courtyard. The garden would teach students where their food comes from because they would plant seeds, water the plants, and watch them grow from start to finish. Growing vegetables also teaches students science because they learn about soil, sunlight, and how plants use water and nutrients to grow.\" One of these specific claims sounds well-backed at first, but when you check carefully for a reason and evidence, you find it is actually NOT SUPPORTED. Which one is it?",
+    "problemText": "Read this argument: \"The community center should extend its library hours until 8 p.m. on weeknights. Working parents cannot pick up their children before the current 5 p.m. closing time, so they miss out on library programs. Opening until 8 p.m. would give working families time to visit after work. Extended hours are definitely something every library should do.\" Identify which specific claim is supported by a reason and evidence, and explain why the other is not supported.",
     "choices": [
-      "Growing vegetables teaches science because students learn about soil and sunlight.",
-      "The garden would teach students where food comes from.",
-      "Students would plant seeds, water the plants, and watch them grow.",
-      "A garden in the south courtyard would be useful to have."
+      "Both claims are supported because the argument uses strong language like \"definitely\" to show the author believes in both the idea about extended hours and the impact on working parents, making them equally convincing and important.",
+      "The claim about extended hours is supported by mentioning the time 8 p.m., while the claim about working parents missing programs is not supported because it fails to describe what specific library programs are most popular with families.",
+      "The claim about working parents missing programs is supported because it gives a reason (they cannot pick up before 5 p.m.) and an example (library programs). The claim about what every library should do is not supported because it is only a confident opinion with no reason or fact attached.",
+      "The claim about what every library should do is supported because it uses the word \"definitely,\" while the claim about working parents missing programs is not supported because it does not provide a specific number of affected families."
     ],
     "answer": "C",
     "hints": [
-      "Watch out: a sentence that describes what would happen is not the same as a claim that is backed up by a reason and evidence.",
-      "Ask yourself: which sentence tells what students would do, but does not explain why the garden should be built?"
+      "Follow the two steps: find each specific claim, then look at the sentences right around it for a reason and evidence.",
+      "Remember that confident wording like \"definitely\" or \"every library\" is tone, not a reason or fact."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage and answer the question that follows. \"The school should start a breakfast club that meets every Tuesday. Students who eat breakfast do better in school because their brains work better when they have fuel in the morning. Eating breakfast within one hour of waking up helps students focus, remember information, and stay awake during class. A breakfast club would also be the best way to make the school better.\" Which statement correctly sorts one of the specific claims as SUPPORTED or NOT SUPPORTED and gives the right reason?",
+    "problemText": "An argument states: \"The school should switch to a later start time.\" The next two sentences are: \"Students would get more sleep because they would have an extra hour in the morning. Research shows that teenagers need eight to ten hours of sleep per night and that most teenagers do not get that much sleep currently.\" Is the claim supported? Which sentence or sentences provide the evidence needed to support it?",
     "choices": [
-      "The claim about students doing better in school is NOT SUPPORTED because the text does not say what time breakfast club would meet.",
-      "The claim that students do better in school when they eat breakfast is SUPPORTED because the text explains that eating breakfast helps their brains work better and gives examples of how it helps them focus and remember.",
-      "The claim about focusing and remembering is NOT SUPPORTED because it comes before the claim about breakfast club.",
-      "The claim that breakfast club would be the best way to make the school better is NOT SUPPORTED because no reason or evidence is given for why this is true."
+      "No, the claim is not supported because the text does not explain the specific reasons why the school administration chose the current start time or what challenges they might face changing it.",
+      "No, the claim is not supported because there is no guarantee that students with an extra hour in the morning would actually use that time to sleep instead of other activities.",
+      "Yes, the claim is supported, but only because the word \"research\" appears in the text, which automatically means that credible sources are backing up the entire argument being made in the passage.",
+      "Yes, the claim is supported. The reason is that students would get more sleep with an extra hour, and the evidence is the research about how much sleep teenagers need and how much they currently get."
     ],
     "answer": "D",
     "hints": [
-      "Check each claim and the sentence or two right around it — does a reason and a fact follow, or does the text simply move on?",
-      "Remember: 'best' is a confident word, but confident words are not evidence. Look for an actual reason and fact."
+      "The reason explains why students would benefit; the evidence is the printed fact about teenage sleep needs.",
+      "Do not evaluate whether the reasoning is truly sound—only sort whether a reason and evidence are actually there in the text."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this argument. \"Central Middle School should extend recess by ten minutes. Students need more outdoor time to be healthy and happy. Medical experts say that children should get at least sixty minutes of physical activity every day, and most students at Central only get thirty minutes during the school day, which means they have to make up the rest after school. However, the claim that 'Recess is the most fun part of the day' appears at the very end of the passage and is immediately followed by a period.\" Based on the lesson, explain why the second claim (about recess being the most fun) is NOT SUPPORTED, and identify what common mistake might lead someone to think it was.",
+    "problemText": "Read this longer argument: \"The town should build a public swimming pool in the park. A pool would give children a safe place to cool off during hot summer months. Right now, many families cannot afford memberships at private pools, so their children miss out on a way to stay healthy and have fun. Building a public pool would cost money, but it would serve hundreds of families every summer. Kids at other towns with public pools love them and think they're amazing.\" Trace all the specific claims in this argument and identify which ones are supported and which are not supported by reasons and evidence printed in the text.",
     "choices": [
-      "The claim about recess being fun is not supported because no reason or evidence follows it, even though it appears at the end where a strong finish is expected. A careless reader might assume such a statement must be backed up just because of where it is placed.",
-      "The claim about recess being fun is not supported because it is an opinion about feelings rather than a factual statement, and opinions cannot ever be supported by any kind of evidence or reasoning.",
-      "The claim about recess being fun is not supported because it uses the word 'most' instead of providing a specific measurement or comparison that would make the statement clearer and more believable to the reader.",
-      "The claim about recess being fun is not supported because it refers to a personal experience or preference rather than establishing a connection to the main argument about extending recess time."
+      "Three claims are supported: the pool would give kids a safe place, many families cannot afford private pools (proven by the fact that families miss out), and a public pool would serve hundreds. One claim is not supported: kids love pools because they think they are amazing.",
+      "Two claims are supported because they mention specific places and groups: the claim about kids loving pools at other towns and the claim about a safe place to cool off in summer months. Two claims are not supported because they discuss costs and affordability issues without citing actual budget figures.",
+      "All claims are supported equally because the text provides reasoning and background information for every statement made in the argument.",
+      "Only one claim is supported by facts rather than opinions: the claim about the cost of building. The other three claims depend on personal feelings and beliefs rather than concrete evidence or statistics."
     ],
     "answer": "A",
     "hints": [
-      "Remember the lesson: do not grade the claim as good or bad, just check whether a reason and evidence are there. Position matters — unsupported claims can hide where they should be strong.",
-      "A claim at the end of the passage does not automatically count as supported, even though it is a prominent position. You must still follow the two steps."
+      "Separate the main claim (what the town should do) from the specific claims meant to convince the reader it should be done.",
+      "For each specific claim, look at the surrounding sentences for a printed reason and fact—not outside knowledge, and not confident tone."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "You are comparing two accounts of the same school event. Before you look for what is different between them, what must you check first?",
+    "problemText": "Two students write accounts of the same school assembly that happened on Tuesday. Before you compare what each student included, what must you check first?",
     "choices": [
-      "That both accounts describe the same real event on the same day and place",
-      "That one account is longer than the other one, since longer accounts tend to be more reliable and detailed",
-      "That both accounts use identical words and sentences throughout, proving they are copies of the same original source",
-      "That both accounts agree perfectly on every single detail without any differences or disagreements at all"
+      "That both accounts describe the same event—the same day, place, and happening",
+      "That one account is longer than the other one and therefore more detailed and accurate",
+      "That both students used the same words and phrases to describe what they observed happening",
+      "That both accounts include the writers' personal feelings and emotions about what occurred"
     ],
     "answer": "A",
     "hints": [
-      "The lesson calls this step 'confirming the event matches' before comparing anything else.",
-      "You need to verify the foundation—the same day, place, and happening—before moving forward."
+      "The lesson says to confirm the event matches before comparing anything else.",
+      "Think about what 'same event' means—what details have to line up?"
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read these two accounts of a field trip. Source A says the bus left at 8:15 a.m. and arrived at the museum at 9:00 a.m. Source B says the bus left at 8:15 a.m. and the students spent two hours looking at dinosaur fossils. Do these two accounts contradict each other?",
+    "problemText": "Read these two accounts of a field trip to the science museum:\n\nSource A (a student's journal): \"We went to the science museum on Friday and spent the most time in the space exhibit. The planetarium show made me feel so small looking at all those stars.\"\n\nSource B (the teacher's field trip report): \"The class visited the science museum on Friday. Students explored four exhibits and attended a planetarium show.\"\n\nWhich fact appears in BOTH accounts?",
     "choices": [
-      "Yes, because Source A mentions the time and Source B does not",
-      "No, because both facts can be true of the same field trip without clashing",
-      "Yes, because one account talks about arrival time and the other talks about activities",
-      "No, but Source A is more complete than Source B"
+      "The class spent more time in the space exhibit than in any other exhibit at the museum",
+      "The class visited the science museum on Friday and saw a planetarium show",
+      "The planetarium show made students feel small and insignificant when they looked up at the stars",
+      "Students explored exactly four different exhibits and spent equal time in each one"
     ],
     "answer": "B",
     "hints": [
-      "The lesson teaches that different details do not make accounts wrong—only facts that actually clash count as disagreement.",
-      "Ask yourself: can a bus leave at 8:15, arrive at 9:00, AND the students spend two hours looking at fossils all on the same day?"
+      "Look for the sentence or words that appear in both Source A and Source B with the same meaning.",
+      "Shared facts are the parts that both writers mention, no matter how they phrase it."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two accounts describe the same morning soccer game. Source A focuses on how nervous the goalkeeper felt before the game started and how proud she was after her team won. Source B focuses on the final score, the number of goals each player made, and the weather conditions. Which statement best explains the difference between these two accounts?",
+    "problemText": "Read these two accounts of a sports tournament:\n\nSource A (a coach's email): \"Our soccer team played in the tournament on Saturday and won two games. The team stayed focused and communicated well on the field.\"\n\nSource B (the sports league's standings): \"Our soccer team played in the tournament on Saturday and won two games. The team scored eight goals total and allowed only two goals against.\"\n\nWhich detail appears in Source A but NOT in Source B?",
     "choices": [
-      "Source A is more truthful because it explores the goalkeeper's inner feelings and emotional reactions to the game",
-      "Source B is more complete because it includes numerical data about goals and weather observations from the game",
-      "The accounts emphasize different details because the writers chose to focus on different parts of the same game",
-      "The accounts contradict each other because they do not say the same thing about the soccer game"
+      "The team won two games",
+      "The team scored eight goals total",
+      "The team stayed focused and communicated well on the field",
+      "The tournament took place on Saturday"
     ],
     "answer": "C",
     "hints": [
-      "The lesson calls this difference 'emphasis' and 'selection'—writers choose what to focus on and what to leave out.",
-      "Remember: choosing different details to include is not the same as disagreement or one account being wrong."
+      "Look at what Source A includes that Source B does not mention at all.",
+      "One account talks about how the team played mentally; the other gives numbers instead."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two accounts describe a library book donation. Source A is a warm thank-you note from a library volunteer: 'We had such wonderful community members come by on Saturday with boxes and bags of books. The children's section received so many new stories, and it was heartwarming to see families bringing books together.' Source B is the library's official report: 'On Saturday, the library received a book donation. A total of 347 books were added to the collection: 180 to the children's section, 95 to young adult, and 72 to adult fiction.' Both accounts are about the same donation on the same Saturday. Which of the following is a fact that BOTH accounts share, and which details belong to only one account each?",
+    "problemText": "Read these two accounts of a school talent show:\n\nSource A (a student's text to a friend): \"The talent show was amazing last night! My best friend performed a dance routine and was so nervous beforehand, but the audience loved it and she got a huge standing ovation.\"\n\nSource B (the school's announcement): \"Last night's talent show featured twenty student performers. Performers included dancers, singers, and musicians. The event raised $300 for the school's arts program.\"\n\nBoth accounts describe the same talent show. What is the shared fact that both accounts state?",
     "choices": [
-      "Shared fact: families brought books. Source A adds the exact book count; Source B adds that it was heartwarming.",
-      "Shared fact: a book donation happened on Saturday at the library. Source A adds warm feeling and community spirit; Source B adds the exact number of books and how they were sorted.",
-      "Shared fact: 347 books were donated. Source A adds nothing; Source B adds the breakdown by section.",
-      "Shared fact: the children's section received new books. Source A adds that families worked together; Source B adds that it was officially recorded."
+      "The audience gave a standing ovation to the performers",
+      "The best friend performed a dance routine",
+      "The event raised money for the school's arts program",
+      "The talent show happened last night and included student performers"
     ],
     "answer": "D",
     "hints": [
-      "Start by finding what both accounts actually state in common—the base event that both could not leave out.",
-      "Then list what is unique to each: Source A's emphasis on feelings and warmth, and Source B's numbers and organization."
+      "Find what both sources mention, even if they say it in different ways or with different amounts of detail.",
+      "The shared fact is the core event itself—what date, what kind of event, and who was involved."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two students wrote accounts of a school talent show. Maya's account (a personal email to her grandma) says: 'The talent show on Friday night was so much fun! My best friend sang a solo, and I could tell she was nervous at first, but by the middle of her song she was beaming. I was on the edge of my seat the whole time.' The school's official program says: 'The Spring Talent Show was held Friday evening in the auditorium. Fifteen students performed, including singing, dancing, comedy, and instrumental acts. The event lasted 90 minutes and raised $200 for the school arts program.' After you confirm both accounts describe the same event, what can you conclude about why the two accounts are so different from each other?",
+    "problemText": "Read these two accounts of a community garden project:\n\nSource A (a volunteer's blog post): \"Working in the community garden on Sunday morning felt peaceful. We planted tomatoes, beans, and lettuce, and by lunchtime my hands were dirty but my heart was full.\"\n\nSource B (the park district's project log): \"Community garden volunteers worked on Sunday morning. They planted tomatoes, beans, and lettuce in twelve new garden beds. The work was completed by noon.\"\n\nHow do these two accounts differ in what they choose to include?",
     "choices": [
-      "Maya's account is incomplete and therefore less useful than the school program because it does not include facts like the number of performers or how much money was raised",
-      "The accounts differ in stance and emphasis because Maya wrote from a personal, feeling-focused viewpoint while the program reported facts and numbers that were its job to record",
-      "One account must be wrong because they do not contain the same information",
-      "Maya's account is better because it captures the real experience while the program is too dry and formal"
+      "Source A emphasizes personal feelings about the work, while Source B emphasizes numbers and completion time",
+      "Source A describes volunteer emotions and inner thoughts, while Source B reports facts like quantity of beds and duration",
+      "Source B includes measurements and specific counts of items, while Source A focuses on sensory details and subjective mood",
+      "Source A discusses the volunteer's personal experience and peace, while Source B documents the task with concrete data"
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches that stance is the attitude or feeling behind the words—a personal letter sounds warm, while an official report sounds plain and factual.",
-      "Think about what each writer's job was: Maya was writing to family about her experience, while the program needed to record attendance, format, and fundraising results."
+      "Look at what each account spends its words describing—one focuses on feelings, the other on facts and numbers.",
+      "Think about emphasis: what does each writer care most about reporting?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Two accounts describe a community cleanup day. Source A (a volunteer's blog post) says: 'On the chilly Saturday morning of March 10th, our neighborhood cleanup crew met at Riverside Park. Working together made the morning fly by, and seeing the park transform from littered paths to clean open spaces gave everyone such a sense of accomplishment. By the end, we were all smiling despite our tired muscles.' Source B (the city parks department report) says: 'On March 10th, volunteer crews completed a cleanup of Riverside Park. In four hours, the crew removed 340 pounds of litter from trails and picnic areas, cleared five blocked storm drains, and filled the park's recycling bins. Weather conditions were cool and clear. The cleanup will extend the park's maintenance cycle by approximately two weeks.' You have confirmed both accounts describe the same cleanup on the same day at the same park. Now identify: (1) one fact that BOTH sources state, (2) one detail that appears only in Source A and explains what it shows about the volunteer's stance, and (3) one detail that appears only in Source B and what it shows about the writer's purpose.",
+    "problemText": "Read these two accounts of a book club meeting:\n\nSource A (a member's personal note): \"Our book club met Tuesday evening to discuss the mystery novel everyone loved. Sarah said it was her favorite book this year because the plot twists surprised her, and we all stayed talking until the library closed.\"\n\nSource B (the library's program summary): \"A book club met Tuesday evening in the library's meeting room to discuss a mystery novel. Eight members attended. The group met from 6 to 8 PM and discussed plot, characters, and themes.\"\n\nBoth accounts describe the same book club meeting. Which statement correctly identifies a shared fact AND explains how the two accounts differ?",
     "choices": [
-      "Both state: the park was cleaned on March 10th. Source A only: tired muscles—shows volunteers focused on the effort. Source B only: removed 340 pounds—shows the writer was counting results.",
-      "Both state: a community cleanup happened at Riverside Park on Saturday, March 10th, in cool weather. Source A only: people smiled and felt accomplished—shows the volunteer wrote from a personal, feeling-focused stance. Source B only: removed 340 pounds and cleared storm drains—shows the writer was recording specific work done and its impact on maintenance.",
-      "Both state: the park was cleaned. Source A only: morning flew by—shows volunteers were distracted. Source B only: four hours of work—shows the city pays volunteers by the hour.",
-      "Both state: the crew was tired after the work. Source A only: the paths looked better—shows volunteers were optimistic. Source B only: cool and clear weather—shows the city controls the weather."
+      "Both accounts describe the same Tuesday evening meeting, but Source A says the library closed while Source B says the meeting ended at 8 PM",
+      "Both accounts mention a mystery novel, but Source A focuses on one member's opinion while Source B includes the meeting time and number of attendees",
+      "Both accounts happened at the book club, but Source A reports only Sarah's thoughts while Source B reports all eight members' thoughts",
+      "Both accounts describe characters and themes, but Source A emphasizes Sarah's favorite book while Source B emphasizes the novel's plot twists"
     ],
     "answer": "B",
     "hints": [
-      "First, find the shared fact that appears in both accounts without adding opinion or feeling.",
-      "Then separate: what emotion or personal detail did Source A add (that shows its warm, personal stance), and what measurement or work-tracking detail did Source B add (that shows its role as an official report)?"
+      "First identify the shared fact—what both accounts definitely state about the same event. Then look at what each one adds that the other leaves out.",
+      "Remember: different choices about what to include are not contradictions. A personal note and a program summary naturally focus on different things."
     ]
   }
 ]

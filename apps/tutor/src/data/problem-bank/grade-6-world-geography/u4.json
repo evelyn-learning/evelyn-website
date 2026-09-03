@@ -1,135 +1,21 @@
 [
   {
-    "id": "m6geo-major-landform-vocabulary-001",
-    "loId": "m6geo.major-landform-vocabulary",
-    "cedCode": "M6GEO-4.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A landform rises steeply above the ground around it and comes to a sharp point at the top. What is this landform called?",
-    "choices": [
-      "A hill, because it rises above its surroundings",
-      "A mountain, because it rises steeply and narrows to a peak",
-      "A plateau, because it stands high above the land around it",
-      "A plain, because it has a defined shape"
-    ],
-    "answer": "B",
-    "hints": [
-      "Remember that a mountain must be both HIGH and NARROW at the top, not just one of those properties.",
-      "Think about the shape of the top: does it come to a point, or stay flat?"
-    ]
-  },
-  {
-    "id": "m6geo-major-landform-vocabulary-002",
-    "loId": "m6geo.major-landform-vocabulary",
-    "cedCode": "M6GEO-4.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A piece of land stays flat across a very wide area and rises only a little bit as you move across it. The land around it is about the same height. Which landform best matches this description?",
-    "choices": [
-      "A valley, because it is surrounded by higher land on both sides and the bottom stays relatively flat compared to the steep slopes that contain it",
-      "A plateau, because it is flat on top and stands much higher than the country surrounding it on all sides",
-      "A plain, because it is flat with very little change in elevation",
-      "A hill, because it rises above the land around it with gentle slopes that extend across a very wide area"
-    ],
-    "answer": "C",
-    "hints": [
-      "A plain is defined by having very little change in elevation across a wide stretch, and nothing standing above the land around it.",
-      "Ask yourself: does this land stand ABOVE its surroundings, or does it stay about the SAME height as what is around it?"
-    ]
-  },
-  {
-    "id": "m6geo-major-landform-vocabulary-003",
-    "loId": "m6geo.major-landform-vocabulary",
-    "cedCode": "M6GEO-4.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A strip of low ground runs between two long ridges of much higher land, with one ridge on the north side and one on the south side. What landform is this low strip between the ridges?",
-    "choices": [
-      "A plain, because the strip is mostly flat",
-      "A hill, because there is higher land nearby",
-      "A valley, because it is low ground running between higher land on both sides",
-      "A mountain, because the ridges are very high"
-    ],
-    "answer": "D",
-    "hints": [
-      "A valley is not just defined by being low—it is also defined by what sits on both sides of it.",
-      "Think about whether the higher land on both sides of the low strip matters to what the landform is called."
-    ]
-  },
-  {
-    "id": "m6geo-major-landform-vocabulary-004",
-    "loId": "m6geo.major-landform-vocabulary",
-    "cedCode": "M6GEO-4.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student looks at a description of a piece of land and says, 'Because this land is high above the country around it, it must be a mountain.' Explain why this student's reasoning is incomplete and give a second property that must also be checked before calling something a mountain.",
-    "choices": [
-      "The student checked only height and missed checking the shape of the top. A mountain must be high AND narrow to a peak, not just high. Land that is high with a flat top is a plateau instead.",
-      "The student forgot to measure how far the mountain extends horizontally across the land, because mountains must cover a smaller area than plateaus or plains to earn their name.",
-      "The student did not account for the type of rock and soil that make up the landform, since mountains are composed of harder, more resistant materials than hills or plateaus.",
-      "The student overlooked how close the mountain is to bodies of water, which is crucial because mountains that are far from water are classified differently than those found near coasts or rivers."
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson teaches a two-question routine: does the land stand HIGH or stay LOW, and is its surface FLAT or does it rise to a POINT?",
-      "A plateau is also high above the land around it, but it differs from a mountain in one key way. What is that difference?"
-    ]
-  },
-  {
-    "id": "m6geo-major-landform-vocabulary-005",
-    "loId": "m6geo.major-landform-vocabulary",
-    "cedCode": "M6GEO-4.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two pieces of land both stand above the ground around them. One rises gently with rounded slopes and does not reach a very high point. The other climbs steeply to a narrow, rocky peak far above everything else. Which statement correctly names both landforms and explains why they are different?",
-    "choices": [
-      "Both are mountains because they both rise above their surroundings, but the first one is a young mountain still being eroded and the second is an old mountain that has been shaped by weather over time.",
-      "The first is a hill because it rises gently with rounded slopes, and the second is a mountain because it rises steeply to a narrow peak. Height alone does not determine the landform; the shape of the slopes and top must also match.",
-      "Both are plateaus because they both stand above the surrounding land, but they differ in how much flat surface area remains at the top after erosion has worn them down.",
-      "The first is a plain and the second is a mountain, because plains are always surrounded by higher land while mountains stand isolated above everything around them."
-    ],
-    "answer": "B",
-    "hints": [
-      "Remember that a mountain and a hill are both HIGH, but they differ in how much they rise and how steep their slopes are.",
-      "Size alone does not make something a mountain. What two properties must match the mountain definition before you can call it a mountain?"
-    ]
-  },
-  {
-    "id": "m6geo-major-landform-vocabulary-006",
-    "loId": "m6geo.major-landform-vocabulary",
-    "cedCode": "M6GEO-4.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student makes two statements: (1) 'A valley is just low ground, so any low, flat land is a valley.' (2) 'A mountain can be short as long as it narrows to a point.' Using the lesson definitions, explain which statement contains a mistake and why, then write a correct version of it.",
-    "choices": [
-      "Both statements are correct. Valleys are defined by being low, and mountains are defined by narrowing to a point.",
-      "Only statement 1 is wrong. A valley is not just low ground; it must be low ground running between higher land on both sides. Correct version: A valley is low ground squeezed between higher land on both sides, while a plain is a wide, level stretch not defined by what borders it.",
-      "Only statement 2 is wrong. A mountain must be both high and narrow to a peak; it cannot be short. Correct version: A mountain must rise far above the land around it and narrow to a point or ridge; a landform that simply has a narrow top but stays low is not a mountain.",
-      "Both statements are wrong for different reasons, but only statement 1 needs correction."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson emphasizes that every landform needs BOTH of its properties checked: how it compares in height AND the shape of its surface or what borders it.",
-      "A mountain is defined as high AND steep-sided AND narrowing to a peak. Remove any one of those and it is no longer a mountain."
-    ]
-  },
-  {
     "id": "m6geo-coastal-connecting-landforms-001",
     "loId": "m6geo.coastal-and-connecting-landforms",
     "cedCode": "M6GEO-4.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A piece of land has water touching every single edge—north, south, east, and west. When you trace all the way around it, you never step onto any other piece of land. What is this landform called?",
+    "problemText": "A piece of land has water touching all of its edges on every side. It is not connected to any other land. What is this landform called?",
     "choices": [
-      "A peninsula, since it has water surrounding it on most sides and connects to mainland on only one edge",
-      "An isthmus, since it is a narrow strip of land surrounded by water on all sides without connection to larger landmasses",
-      "An island, because water touches every edge and it is not connected to any larger landmass",
-      "A coast, since it represents the boundary where land meets water all the way around its perimeter"
+      "Isthmus",
+      "Peninsula",
+      "Island",
+      "Coast"
     ],
     "answer": "C",
     "hints": [
-      "Think about what 'attached' means—is this piece of land connected to a bigger piece of land by a land bridge?",
-      "If water touches every single edge with no land connection anywhere, what does the definition say it must be?"
+      "Trace the entire edge of this land with your finger. What do you find along every part of that edge?",
+      "The definition says this landform has no connection to any larger landmass at all."
     ]
   },
   {
@@ -138,17 +24,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "In a made-up region, a narrow strip of land has ocean water running along its entire western edge and ocean water running along its entire eastern edge. At the northern end, this strip widens into a large mainland area. At the southern end, it widens into a completely separate island nation. Which landform is this narrow strip?",
+    "problemText": "A narrow strip of land has ocean water running along both its north and south edges for its entire length. At its western end, the strip widens into a large continent. At its eastern end, the strip widens into a completely different, separate continent. Is this strip an isthmus or a peninsula?",
     "choices": [
-      "A peninsula, since it has water on two opposite sides and one end widens into a larger land area",
-      "A coast, since the water runs along both long edges of the strip continuously for its entire length",
-      "An island, since water surrounds it on both the eastern and western sides along its entire length",
-      "An isthmus, because it is a narrow strip with water on both long sides that connects two larger land areas at its ends"
+      "A peninsula, because it is a narrow strip of land with water on at least one side throughout its length",
+      "A peninsula, because it widens into a continent only at one of its two ends",
+      "An isthmus, because the water surrounds it on both of its long sides and land appears at both ends",
+      "An isthmus, because it has water on both long sides and land at both ends"
     ],
     "answer": "D",
     "hints": [
-      "Check what sits at each end of the strip—does land meet the water there, or only water?",
-      "Use the one-question check: does this narrow strip lead to more land at its far ends, or does it dead-end in water?"
+      "Use the one-question check: does the narrow strip lead to more land at its far end, or does it leave you surrounded by water?",
+      "An isthmus connects two land areas, while a peninsula dead-ends in water. What happens at each end of this strip?"
     ]
   },
   {
@@ -157,17 +43,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A mapmaker describes a fictional landform this way: water touches the northern edge, the eastern edge, and the southern edge. On the western edge only, the land stays connected to the mainland with no water breaking that connection. Based on this description, what is this landform?",
+    "problemText": "A mapmaker describes a piece of land in her invented region. Water touches its northern, eastern, and southern edges. Its western edge is attached to a much larger area of land with no water breaking the connection. Which landform is being described?",
     "choices": [
-      "A peninsula, because three of its sides are bordered by water while one side remains attached to a larger landmass",
-      "An island, because it has three sides completely surrounded by water with only one dry edge",
-      "An isthmus, because it maintains a land connection on one side and has water on the other sides",
-      "A coast, because it forms a boundary line where water meets the land along three of its four edges"
+      "A peninsula",
+      "An isthmus",
+      "An island",
+      "A coast"
     ],
     "answer": "A",
     "hints": [
-      "Count how many sides have water touching them, and how many sides have land connection instead.",
-      "Can you reach this place by staying on land the whole way, or do you have to cross water no matter which direction you come from?"
+      "Count how many sides have water and how many sides have land connection. Does water touch most sides or all sides?",
+      "This landform reaches out into water but stays attached on one side to a larger landmass."
     ]
   },
   {
@@ -176,17 +62,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two students are arguing about a narrow strip of land in a made-up country. Student A says it is a peninsula because it is narrow and surrounded mostly by water. Student B says it is an isthmus because it connects one area of land to another area of land. To settle the argument, you trace the strip's edge: water runs along both long sides, one end widens into a large region called Nortia, and the other end simply ends in a large ocean with no land on the far side. Which student is correct, and why?",
+    "problemText": "Two narrow strips of land are described below. Strip A has water on both its long sides but leads to more land at both ends. Strip B has water on both its long sides but leads to more land at one end and runs out into open ocean at the other end. Which strip is an isthmus, and why does the other strip fail to be one?",
     "choices": [
-      "Student A is correct, because a narrow strip of land with water on both sides is always a peninsula",
-      "Student B is correct, because the strip connects to one region of land even though the other end reaches only water",
-      "Neither student is correct; this is a coast, not a named landform shape",
-      "Student A is correct, because an isthmus must have land at both ends, and this one has water at one end, making it a peninsula instead"
+      "Strip B is an isthmus because it has water on both long sides and connects to at least one larger landmass; Strip A is a peninsula because one end does not connect to any land",
+      "Strip A is an isthmus because both ends lead to land; Strip B is a peninsula because one end reaches water instead of land",
+      "Strip B is an isthmus because it has water on two sides and touches two continents; Strip A fails because it is too narrow to be counted as land",
+      "Strip A is a peninsula because it is narrower; Strip B is an island because it is surrounded by water on both long sides and at one end"
     ],
     "answer": "B",
     "hints": [
-      "Apply the one-question check to both ends of the strip separately: what do you find at the far end when you trace one long side? What do you find at the far end when you trace the other long side?",
-      "An isthmus connects two land areas—does it need land at both ends, or can it have water at one end and still be an isthmus?"
+      "An isthmus connects two land areas, not just one. Check the far end of each strip carefully.",
+      "A peninsula dead-ends in water on all sides except one. Which strip matches that definition better?"
     ]
   },
   {
@@ -195,17 +81,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student claims: 'A coast is found only on mainland areas, not on islands or peninsulas, because a coast is defined as the outer edge of a country or continent.' Using what you learned in the lesson, explain why this claim is wrong and provide a correct definition of coast.",
+    "problemText": "A student says, 'An island has no coast, because a coast is only found on mainlands.' Use the lesson definition of coast to explain why this statement is wrong.",
     "choices": [
-      "The claim is wrong because islands do not have any edge at all; they are completely surrounded by land",
-      "The claim is wrong because coast simply names the strip of land right where it meets an ocean or a sea, no matter what shape the land is—an island has a coast running all the way around it, and a peninsula has a coast wherever its water-touching sides are",
-      "The claim is wrong because peninsulas are too small to have a coast; only mainlands and continents have coasts",
-      "The claim is wrong because coasts are found in all oceans and seas everywhere, not just at the edges of countries"
+      "The student is correct because islands are surrounded by water, so they cannot have a coast along the edges where water meets land",
+      "The student is wrong because coast names wherever land meets an ocean or sea, and a peninsula has a coast, so the same must be true for islands",
+      "Coast names wherever land meets an ocean or a sea, so an island has a coast running all the way around it because water touches every side",
+      "The student is partially correct because coasts are found on mainlands and peninsulas, but islands have edges called shorelines instead of coasts"
     ],
     "answer": "C",
     "hints": [
-      "Think about the difference between how much water touches a piece of land (which defines island, peninsula, and isthmus) and where the land and water meet (which defines coast).",
-      "If an island has water touching every single edge, does it have a coast, or does the definition of coast prevent islands from having one?"
+      "Coast answers a different question than island, peninsula, and isthmus. It names a place, not a shape.",
+      "Think about what the word coast means: the edge where land meets an ocean or sea. Does an island have such an edge?"
     ]
   },
   {
@@ -214,17 +100,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "In a fictional region, Landform X is a narrow strip with water on both long sides. Its western end widens into Area A. Its eastern end widens into Area B, which is much smaller and separated from Area A by a wide ocean. A student says that Landform X is a peninsula because the definition of peninsula includes any narrow strip of land with water on its sides. Evaluate this reasoning by applying the definitions from the lesson, and identify what Landform X actually is and why the student's logic fails.",
+    "problemText": "A geography student is shown three different landforms in her region and must sort them correctly. Landform X is a narrow strip with water on both long sides and land at both ends. Landform Y is reached only by crossing water no matter which direction you come from. Landform Z touches the ocean but is attached to a larger landmass on one side and surrounded by water on three sides. The student also needs to name the edge running along the ocean for each landform. Which pairing is completely correct?",
     "choices": [
-      "The student is correct because having water on two opposite sides and narrowing at one end matches the key features of a peninsula as taught",
-      "The student is wrong; Landform X is an isthmus because it connects two separate areas of land (Area A and Area B) at its ends, which is the defining property of an isthmus, not the mere presence of water on two sides",
-      "The student is partially correct; Landform X functions as both a peninsula at its western end and an isthmus at its eastern end depending on which direction you approach it",
-      "The student is wrong; Landform X is a coast because a coast is any narrow strip of land with water on both its long sides running parallel to the water's edge"
+      "X is a peninsula, Y is an island, Z is an isthmus; all three have coasts along their ocean edges",
+      "X is a peninsula, Y is an island, Z is an isthmus; only Y has a coast all the way around",
+      "X is an isthmus, Y is an island, Z is an isthmus; only X and Y have coasts",
+      "X is an isthmus, Y is an island, Z is a peninsula; all three have coasts along their ocean edges"
     ],
-    "answer": "B",
+    "answer": "D",
     "hints": [
-      "The key difference between peninsula and isthmus is not whether water touches both long sides, but what you find at the far end of the strip—check both ends of Landform X and see if land meets water at each end.",
-      "Reread the one-question check from the lesson: does Landform X dead-end in water on every side but one (making it a peninsula), or does it connect two land areas with water only on the long sides (making it an isthmus)?"
+      "Assign X, Y, and Z to their landforms using the one-question check: what is at the far end, and how many sides are attached to land?",
+      "Remember that coast is not the same list as the three shapes. Every landform that touches an ocean or sea has a coast somewhere along that edge."
     ]
   },
   {
@@ -233,17 +119,17 @@
     "cedCode": "M6GEO-4.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A body of water flows downhill through a channel cut across the land and eventually empties into the ocean. Which water feature is being described?",
+    "problemText": "Which water feature is defined by water that flows through a channel across the land, moving from higher ground toward lower ground?",
     "choices": [
-      "A lake, because water bodies that flow downhill must be enclosed on all sides by land with no outlet",
-      "A sea, because any body of water that flows toward the ocean must contain salt water",
-      "A gulf, because water that moves downhill and reaches the ocean creates a gulf-shaped body of water",
-      "A river, because water moves through a channel from higher ground toward lower ground"
+      "Strait",
+      "Lake",
+      "Sea",
+      "River"
     ],
     "answer": "D",
     "hints": [
-      "Think about what makes a river different from other water features — is it about movement or about enclosure?",
-      "The description mentions water flowing downhill through a channel, which is the one defining property of which feature?"
+      "Think about which water feature is always moving, not still.",
+      "This feature flows downhill in a channel, the way water naturally runs."
     ]
   },
   {
@@ -252,17 +138,17 @@
     "cedCode": "M6GEO-4.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student discovers a body of water shown on a map with the label 'Lake Meridian.' The water is completely enclosed by land on all sides, with no opening to the ocean or any sea. However, a small river flows into it from the north and another river flows out of it to the south. Based on the defining properties taught in this lesson, is Lake Meridian actually a lake according to the water feature definitions?",
+    "problemText": "A body of water is completely surrounded by land on every side, with no place along its edge that opens to an ocean or a sea. The water is fresh, not salty. What is this water feature?",
     "choices": [
-      "Yes, it is a lake because land completely surrounds it on every side with no opening to the ocean or a sea, even though rivers flow in and out",
-      "No, it is not a lake because the presence of rivers flowing through it means it functions as a river system rather than a stationary lake",
-      "No, it is not a lake because having a river enter from one direction and exit from another direction transforms it into a strait",
-      "Yes, it is a lake because any body of water labeled with 'lake' in its name must meet the definition of a lake"
+      "Lake",
+      "Gulf",
+      "Strait",
+      "Sea"
     ],
     "answer": "A",
     "hints": [
-      "Remember that a river is a separate channel through the land — the lake itself is still what matters for its definition.",
-      "What is the one defining property that makes something a lake, no matter what flows into or out of it?"
+      "Look for the clue about complete enclosure by land—which feature is fully enclosed with no opening at all?",
+      "This feature has land on every side, unlike a gulf or sea which always have at least one opening to larger water."
     ]
   },
   {
@@ -271,17 +157,17 @@
     "cedCode": "M6GEO-4.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two water features are described below. Feature X: salt water with land bordering only part of its edge and a broad, open connection to the ocean. Feature Y: salt water entered and exited through the same narrow opening, with land curving around most of its edge. Which feature is the gulf?",
+    "problemText": "A ship enters a narrow stretch of water from a large open ocean. It sails straight through the narrow water, passing land on both its left and right sides, and exits into a different large body of water on the opposite end. Which water feature did the ship travel through?",
     "choices": [
-      "Feature X is the gulf because it contains salt water and has land bordering some of its edges along with an ocean connection",
-      "Feature Y is the gulf because land curves around most of its edge and the opening is comparatively narrow",
-      "Feature X is the gulf because the broad connection to the ocean is the defining characteristic that separates gulfs from other salt-water bodies",
-      "Feature Y is the gulf because it is entered and exited through a single opening, making it distinct from a sea"
+      "Gulf",
+      "Strait",
+      "Lake",
+      "Sea"
     ],
     "answer": "B",
     "hints": [
-      "A gulf is not just any salt water with an opening — look at the proportion of land that curves around it.",
-      "The key difference between a sea and a gulf is how much of the edge is land and how narrow the remaining opening is."
+      "Notice that the ship enters from one body of water and comes out into a different body of water—this is a through-passage, not a pocket.",
+      "This feature connects two larger bodies of water end to end, not side to side."
     ]
   },
   {
@@ -290,17 +176,17 @@
     "cedCode": "M6GEO-4.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A ship's captain is planning a voyage. She wants to sail through a narrow passage of water with land on both sides and emerge into a completely different body of open water on the far side, rather than returning to the same place she entered. Which water feature must she sail through to accomplish this goal, and why would sailing through a gulf not work for her plan?",
+    "problemText": "Two water features are being described. Water Feature X is salty, has land curving around most of its edge, and connects back to the ocean through one narrower opening. Water Feature Y is fresh, has land all the way around it, and has no opening to the ocean anywhere. Explain why Feature X cannot be a lake and Feature Y cannot be a gulf.",
     "choices": [
-      "She must sail through a sea because seas contain more water and connect directly to the open ocean on multiple sides",
-      "She must sail through a lake because lakes are large enough to allow a ship to pass through to a different body of water",
-      "She must sail through a strait because a strait joins two larger bodies of water end to end, while a gulf is entered and exited through the same opening",
-      "She must sail through a gulf because gulfs have narrow passages between land that allow ships to reach different destinations"
+      "Feature X is narrower than a gulf should be, and Feature Y is too large to be a lake.",
+      "Feature X is too salty and Feature Y is not salty enough to be either water feature.",
+      "Feature X is salty but lakes are always fresh, and Feature Y has no opening but gulfs always keep one opening to the ocean.",
+      "Feature X connects to the ocean but lakes connect to rivers, and Feature Y connects to rivers but gulfs connect to oceans."
     ],
     "answer": "C",
     "hints": [
-      "What is the key difference between how you move through a strait and how you move through a gulf?",
-      "A strait is a passage that goes all the way through — can you say the same thing about a gulf?"
+      "Remember that lakes are defined by being completely enclosed with no opening, while gulfs are defined by having exactly one opening to the ocean or sea.",
+      "Salt water vs. fresh water, and the presence or absence of an opening to the ocean, are key properties that separate these features."
     ]
   },
   {
@@ -309,17 +195,17 @@
     "cedCode": "M6GEO-4.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A geography student is given a description of a body of water and told it is 'a sea.' The description states that land curves around the water on almost every side, leaving only a very narrow opening back to the ocean. The student says this description does not match the definition of a sea in the lesson. Explain why the student might be correct, and name the water feature that the description actually matches.",
+    "problemText": "A geography student describes a water feature as follows: 'This body of salt water is bordered by land on part of its edge, and the rest of its edge stays broadly open to a larger ocean it connects with. You enter it and exit it through the very same opening.' Is the student's description complete and accurate for identifying this as a sea? Explain why or why not.",
     "choices": [
-      "The student is correct because a sea has salt water, but this description does not mention salt",
-      "The student is correct because a sea keeps a broad, open connection to the ocean, while this description shows a narrower opening with land curving around most of the edge — this is a gulf",
-      "The student is incorrect because any water connected to the ocean can be called a sea",
-      "The student is correct because a sea must have land on both sides equally, and this description shows land on only one side"
+      "Yes, the description is complete because it mentions salt water, land bordering part of the edge, and a broad opening to the ocean.",
+      "No, the description is incomplete because it does not distinguish between a sea and a gulf, since both are entered and exited through one opening but a gulf has a much narrower connection to the ocean.",
+      "No, the description is wrong because a sea must be surrounded by land on all sides except for multiple openings, whereas this feature only has one opening to the ocean.",
+      "No, the description is inaccurate because a sea is entered and exited through the same opening, but so is a gulf, and the student did not explain what separates them."
     ],
     "answer": "D",
     "hints": [
-      "The lesson says that naming history means some bodies of water named 'sea' don't fit the definition perfectly — so the student might still be right about what the definition says.",
-      "What is the main property that separates a sea from a gulf based on how much land surrounds each one?"
+      "Both a sea and a gulf are entered and exited through the same opening—so just mentioning that does not tell them apart.",
+      "What separates a sea from a gulf? Think about how broad or narrow the opening is, and how much of the edge is curved around by land."
     ]
   },
   {
@@ -328,17 +214,17 @@
     "cedCode": "M6GEO-4.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Three invented water features are described: (1) A body of water completely surrounded by land, through which a river flows in from the east and another river flows out to the west. (2) A salt-water body entered from one side and exited from the same side through a narrow opening, with land on three sides. (3) A narrow passage of salt water between two stretches of land, through which a ship can sail from a large open ocean on the north and exit into a different large sea on the south. A student claims that features (1) and (3) are the same type of water feature because both allow water to pass through them. Explain why this claim is wrong, and identify each feature by its correct name.",
+    "problemText": "A geographer is studying three water features in the same region. The first flows downhill through a channel, emptying into the second water feature. The second is completely enclosed by land with no opening to the ocean. The third is nearby and is salt water bordered by land on most of its edge, with only a narrow connection to the ocean. The geographer wants to name each feature correctly. Identify which feature is the river, which is the lake, and which is the gulf, and explain one property that makes each one impossible to confuse with the other two.",
     "choices": [
-      "The student is wrong because feature (1) is a gulf and feature (3) is a sea; rivers pass through gulfs while straits pass between oceans, so they are fundamentally different in structure and location",
-      "The student is wrong because feature (1) is a lake and feature (3) is a river; the student confused salt water with fresh water and did not recognize that rivers can pass through all types of water features",
-      "The student is wrong because feature (1) is a lake and feature (3) is a strait; passing through a lake means entering and exiting on the same body of land, while passing through a strait means entering from one large body of water and exiting into a different large body of water",
-      "The student is correct because both features allow water to pass through them, making feature (1) a strait and feature (3) also a strait in terms of their function"
+      "The first is a river because it flows downhill; the second is a lake because it is enclosed with no ocean opening; the third is a gulf because salt water with mostly enclosed edges connects narrowly to the ocean. Rivers move through channels, lakes have no opening at all, and gulfs always keep exactly one opening.",
+      "The first is a river because it is smaller than the second feature; the second is a lake because it receives water from the first feature; the third is a gulf because it contains salt water instead of fresh water. The combination of size, position in the water cycle, and salt content determines the correct identification.",
+      "The first is a river because it flows into the second feature; the second is a lake because the first feature empties into it; the third is a gulf because it is bordered mostly by land but connected to the ocean. Each feature's relationship to the others and the presence of land and ocean connections define them.",
+      "The first is a river because fresh water flows through it; the second is a lake because fresh water collects in it; the third is a gulf because salt water fills it with land boundaries around it. The salinity of the water determines whether each feature is a river, lake, or gulf."
     ],
-    "answer": "C",
+    "answer": "A",
     "hints": [
-      "Pay attention to what 'passing through' means for each water feature — is it the same thing for a lake and a strait?",
-      "A strait connects two different large bodies of water at its two ends — does a lake do that, or is it completely enclosed?"
+      "Focus on the defining relationship between water and land for each feature, not on size, location, or just whether the water moves.",
+      "A river's defining feature is movement through a channel downhill; a lake's is complete enclosure with no opening; a gulf's is salt water with exactly one narrower opening to the ocean."
     ]
   },
   {
@@ -347,17 +233,17 @@
     "cedCode": "M6GEO-4.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A place's elevation is measured from a shared starting point. What is this starting point called?",
+    "problemText": "What does the word elevation mean in geography? Choose the best definition.",
     "choices": [
-      "Sea level",
-      "The highest mountain peak in the region",
-      "The center of Earth",
-      "The lowest valley nearby"
+      "How high a point of land sits above sea level",
+      "How much the height of the land changes across an area",
+      "How steep the hills are near a town",
+      "How far a place is from the nearest ocean"
     ],
     "answer": "A",
     "hints": [
-      "The lesson calls this the shared starting line that every elevation is measured up from.",
-      "This is the height of the ocean surface."
+      "Think about the word 'level' — elevation is measured up from a standard starting point.",
+      "Sea level is the shared reference line used for all elevations on Earth."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6GEO-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A town sits about 800 meters above sea level, and for several miles in every direction the ground stays nearly the same height. Based only on this description, which statement is correct about this town?",
+    "problemText": "A place is described as sitting 150 meters above sea level, with the ground staying nearly the same height for miles around it. What is the elevation and relief of this place?",
     "choices": [
-      "It has a high elevation and a high relief.",
-      "It has a high elevation and a low relief.",
-      "It has a low elevation and a low relief.",
-      "It has a low elevation and a high relief."
+      "High elevation and high relief",
+      "Low elevation and low relief",
+      "Low elevation and high relief",
+      "High elevation and low relief"
     ],
     "answer": "B",
     "hints": [
-      "Check the elevation first by comparing 800 meters to sea level, then check the relief separately by looking at how much the height changes nearby.",
-      "Low relief means the height barely changes across the area."
+      "150 meters is a small distance above sea level compared to mountains — is that high or low?",
+      "If the ground stays nearly the same height for miles around, is that much change or little change?"
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6GEO-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two places are described below. Granite Ridge sits about 2,300 meters above sea level. Flat Prairie sits about 2,250 meters above sea level. Which place has the higher elevation?",
+    "problemText": "Two places both sit about 2,000 meters above sea level. Place A has ground that stays almost level for a long stretch. Place B has ground that rises and falls sharply within a short distance. Which statement is true?",
     "choices": [
-      "Flat Prairie, because its name suggests flat land.",
-      "Granite Ridge, because it sits about 50 meters higher above sea level.",
-      "They have nearly the same elevation since both sit well above sea level.",
-      "Flat Prairie, because elevation is lower when the land is flatter."
+      "Both places have the same elevation and the same relief",
+      "The places have different elevations but the same relief",
+      "Both places have the same elevation but different relief",
+      "The places have different elevations and different relief"
     ],
     "answer": "C",
     "hints": [
-      "Elevation is measured by comparing how high each place sits above sea level, not by looking at what happens to the land nearby.",
-      "The difference between 2,300 and 2,250 is 50 meters, which is very small compared to how far either place sits above sea level."
+      "If both places sit at about 2,000 meters above sea level, what does that tell you about their elevations?",
+      "The descriptions of the ground around each place are different — so check relief by itself, separate from elevation."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6GEO-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Pine Summit is described as sitting about 3,100 meters above sea level, where the ground climbs and drops sharply over short distances. Meadow Crossing is described as sitting about 85 meters above sea level, where the land barely changes height for long stretches. Which of the following correctly compares both the elevation and relief of these two places?",
+    "problemText": "A student says: 'Highcliff sits 3,000 meters above sea level, so it must have high relief with steep cliffs and sharp drops all around it.' Highcliff is actually described this way: it sits 3,000 meters above sea level, but the ground around it stays nearly flat and level for a long stretch in every direction. What is wrong with the student's reasoning, and what is the correct description of Highcliff?",
     "choices": [
-      "Pine Summit has higher elevation and higher relief; Meadow Crossing has lower elevation and lower relief.",
-      "Pine Summit has higher elevation but lower relief; Meadow Crossing has lower elevation but higher relief.",
-      "Pine Summit has higher elevation and lower relief; Meadow Crossing has lower elevation and higher relief.",
-      "Pine Summit has higher elevation and higher relief; Meadow Crossing has lower elevation and higher relief."
+      "The student mixed up the definitions of elevation and relief. Highcliff has low elevation and low relief.",
+      "The student wrongly assumed that high elevation means high relief. Highcliff has low elevation and high relief.",
+      "The student was correct that high elevation always means high relief. Highcliff must have high relief.",
+      "The student wrongly assumed that high elevation means high relief. Highcliff has high elevation and low relief."
     ],
     "answer": "D",
     "hints": [
-      "Answer the elevation question for each place first, then answer the relief question for each place separately without letting the elevation answer affect it.",
-      "High relief means sharp climbs and drops; low relief means the land barely changes."
+      "Look at what the student did — they looked at the elevation (3,000 meters) and then guessed about the relief without reading what the ground is actually like.",
+      "The description says the ground stays nearly flat and level — what does that tell you about relief, no matter how high the place sits?"
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6GEO-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student says: 'Lighthouse Point sits very close to sea level because it is near the ocean, so the land around it must be almost flat and have low relief.' A description then reveals that Lighthouse Point sits about 30 meters above sea level, and the ground around it rises and dips sharply with steep cliffs and sudden valleys. Which part of the student's statement is wrong, and why?",
+    "problemText": "Deepvalley sits about 80 meters above sea level. The ground right around Deepvalley rises steeply on all sides, with deep dips and sharp climbs. Plainridge sits about 1,800 meters above sea level. The ground around Plainridge changes very little, staying nearly the same height for miles. Which place has the higher elevation, and which place has the higher relief?",
     "choices": [
-      "The entire statement is wrong because elevation and relief are two separate facts, and a place's elevation does not decide its relief.",
-      "Only the elevation claim is wrong because the student should have checked the actual height above sea level instead of assuming proximity to ocean means low elevation.",
-      "Only the relief claim is wrong because being near the ocean guarantees that the surrounding land must be almost flat and have no steep cliffs or valleys.",
-      "The statement is completely correct because any location with an elevation below 50 meters always has low relief and flat terrain."
+      "Plainridge has higher elevation; Deepvalley has higher relief",
+      "Deepvalley has higher elevation and higher relief",
+      "Deepvalley has higher elevation; Plainridge has higher relief",
+      "Plainridge has higher elevation and higher relief"
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches that you must answer the elevation question and the relief question on their own, one never deciding the other.",
-      "Think about whether a place's height above sea level has anything to do with whether the land nearby changes height sharply or stays level."
+      "Answer the elevation question first by comparing the heights above sea level: 80 meters versus 1,800 meters.",
+      "Answer the relief question second by checking each description separately: one place has sharp changes, the other has little change."
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6GEO-4.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Three places are described: Sunridge sits at 1,950 meters above sea level with land that stays nearly level for long stretches. Deepvalley sits at 75 meters above sea level where ground climbs and drops sharply. Flatcrest sits at 1,900 meters above sea level with sharp rises and dips over short distances. A student looks at only the elevations of Sunridge and Flatcrest and concludes: 'These two places must have the same relief because their elevations are so close.' Why is this conclusion a mistake, and what do the full descriptions actually show?",
+    "problemText": "Three places are described below. Use the elevation and relief of each to sort them correctly. Mesa View sits 2,200 meters above sea level with ground that stays nearly level. Craggy Peak sits 2,100 meters above sea level with ground that rises and falls sharply nearby. Flatshore sits 5 meters above sea level with ground that stays nearly level. Which statement correctly places all three places by their elevation, and separately by their relief?",
     "choices": [
-      "The conclusion is wrong because elevation difference determines relief, and Sunridge and Flatcrest differ by 50 meters, so they must have different reliefs.",
-      "The conclusion is wrong because elevation and relief are separate facts; Sunridge has low relief but Flatcrest has high relief, even though their elevations are nearly the same.",
-      "The conclusion is correct; any two places with nearly equal elevations must have nearly equal reliefs.",
-      "The conclusion is wrong because Deepvalley's low elevation means Sunridge and Flatcrest must both have high relief."
+      "By elevation from highest to lowest: Craggy Peak, Mesa View, Flatshore. By relief from high to low: Craggy Peak, Flatshore, Mesa View.",
+      "By elevation from highest to lowest: Mesa View, Craggy Peak, Flatshore. By relief from high to low: Craggy Peak, Mesa View, Flatshore.",
+      "By elevation from highest to lowest: Craggy Peak, Flatshore, Mesa View. By relief from high to low: Mesa View, Craggy Peak, Flatshore.",
+      "By elevation from highest to lowest: Flatshore, Craggy Peak, Mesa View. By relief from high to low: Mesa View, Flatshore, Craggy Peak."
     ],
     "answer": "B",
     "hints": [
-      "You must check each place's description all the way through to find its relief, not predict relief from elevation alone.",
-      "The lesson emphasizes checking the two-question routine fresh on every place, never using one place's answer to guess another's."
+      "Start with elevation alone: line up the three heights above sea level (2,200, 2,100, and 5 meters) from highest to lowest. Then ignore elevation completely and check only the relief descriptions.",
+      "Remember that a place can sit higher than another but still have less relief — you must check both facts separately for each place."
+    ]
+  },
+  {
+    "id": "m6geo-major-landform-vocabulary-001",
+    "loId": "m6geo.major-landform-vocabulary",
+    "cedCode": "M6GEO-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A landform has a flat surface across a wide area and rises far above the land next to it. What is this landform called?",
+    "choices": [
+      "A plain",
+      "A plateau",
+      "A valley",
+      "A hill"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the two questions: does it stand HIGH or LOW, and is its top FLAT or does it narrow to a point?",
+      "This one is high AND flat on top, just like a plateau is described."
+    ]
+  },
+  {
+    "id": "m6geo-major-landform-vocabulary-002",
+    "loId": "m6geo.major-landform-vocabulary",
+    "cedCode": "M6GEO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Picture a piece of land that rises only slightly above the ground around it and has smooth, rounded slopes instead of steep, jagged sides. The top does not form a sharp point. Which landform does this describe?",
+    "choices": [
+      "A mountain",
+      "A plateau",
+      "A hill",
+      "A plain"
+    ],
+    "answer": "C",
+    "hints": [
+      "Does this rise HIGH and steep, or not as high with gentler slopes?",
+      "Mountains come to narrow peaks; this one has rounded slopes, so it must be the lower, gentler landform."
+    ]
+  },
+  {
+    "id": "m6geo-major-landform-vocabulary-003",
+    "loId": "m6geo.major-landform-vocabulary",
+    "cedCode": "M6GEO-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student sees a strip of lowland sandwiched between two mountain ranges on either side. What defines this strip as a valley?",
+    "choices": [
+      "It is low ground that has mountains nearby but not always directly on both sides of it",
+      "It is surrounded by mountains with steep peaks that rise above it on all edges",
+      "It has a completely flat and level surface with water running through the middle",
+      "It is low ground that sits between higher land on both sides"
+    ],
+    "answer": "D",
+    "hints": [
+      "A valley's definition depends on what sits NEXT to it, not just how low it is.",
+      "Remember: a valley is squeezed between higher land on two sides, which is what makes it a valley and not just any low ground."
+    ]
+  },
+  {
+    "id": "m6geo-major-landform-vocabulary-004",
+    "loId": "m6geo.major-landform-vocabulary",
+    "cedCode": "M6GEO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two regions both stand well above the land surrounding them. Region X has a flat top that stretches for many miles, with edges that drop steeply. Region Y narrows to a single sharp peak and climbs more steeply than Region X. Which region is which landform, and why must you check both height AND shape to tell them apart?",
+    "choices": [
+      "Region X is a plateau and Region Y is a mountain; you must check both because two landforms can stand high but have different top shapes",
+      "Region X is a hill and Region Y is a mountain; you must check both because height determines the name while shape determines the slope angle",
+      "Region X is a mountain and Region Y is a plateau; you must check both because steepness of climb is what tells them apart from all other landforms",
+      "Region X is a plateau and Region Y is a hill; you must check both because the number of peaks on top is what separates high landforms from each other"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both regions stand high, so HEIGHT alone won't tell them apart. What is different about their TOPS?",
+      "A flat top makes a plateau; a narrow peak makes a mountain. You need both the height question AND the shape question to name them correctly."
+    ]
+  },
+  {
+    "id": "m6geo-major-landform-vocabulary-005",
+    "loId": "m6geo.major-landform-vocabulary",
+    "cedCode": "M6GEO-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student says: 'A plain is the same thing as a valley because both are flat and level.' Explain why this statement is wrong by describing what makes a valley different from a plain in terms of what lies next to it.",
+    "choices": [
+      "A valley is surrounded by higher land on both sides that defines its shape, whereas a plain is simply a wide flat area and requires no specific features bordering it",
+      "A valley has higher land on both sides that borders it, while a plain is a wide stretch with no requirement for what sits next to it",
+      "A plain is defined by being surrounded by valleys on multiple sides, whereas a valley is only recognized when it appears between exactly two hills of equal height",
+      "A valley must contain running water to be called a valley, but a plain can be either wet or dry depending on the season and climate region"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both can be flat, so flatness is not what makes them different. What is the key property of what borders a valley?",
+      "A valley is DEFINED by the higher land on both its sides. A plain is just a wide, level stretch and is NOT defined by what surrounds it."
+    ]
+  },
+  {
+    "id": "m6geo-major-landform-vocabulary-006",
+    "loId": "m6geo.major-landform-vocabulary",
+    "cedCode": "M6GEO-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An imaginary continent has four different landforms. Landform A stands very high with steep sides and comes to a narrow rocky peak. Landform B is high and flat on top with steep drop-offs at its edges. Landform C rises gently above its surroundings with rounded slopes and moderate height. Landform D stretches for hundreds of miles with almost no change in elevation, and nothing around it stands much higher. One student claims that A, B, and C are all the same because they all stand above their surroundings, while D is different because it does not. Explain why this claim misses an important property that actually makes three of these landforms different from each other, even though they all stand high.",
+    "choices": [
+      "The claim is wrong because A is a mountain with a peak, B is a plateau with a flat top, C is a hill with rounded slopes, and D is a plain with no high points, so comparing only height ignores the shape property that defines each",
+      "The claim is wrong because the shape of the TOP or SURFACE is the second property that must be checked; A has a point, B has a flat top, C has rounded slopes, so they are three different landforms",
+      "The claim is wrong because A, B, and C all require checking a second property beyond height—whether the top is pointed, flat, or rounded—whereas D is determined by height alone since it has no surface variation",
+      "The claim is wrong because A stands very high with steep sides while B and C stand at moderate heights, making them different categories even though all three are above their surroundings"
+    ],
+    "answer": "B",
+    "hints": [
+      "The student checked only one question: does it stand high? What is the SECOND question from the lesson that must also be answered?",
+      "Remember the two-question routine: high or low compared to surroundings, AND is the top flat or does it come to a point? Check how A, B, and C are different in their second property."
     ]
   }
 ]

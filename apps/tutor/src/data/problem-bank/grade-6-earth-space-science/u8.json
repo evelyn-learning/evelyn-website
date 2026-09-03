@@ -5,17 +5,17 @@
     "cedCode": "M6SCI-8.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A meteorologist describes the atmosphere in a city as follows: 'Right now, the temperature is 18 degrees Celsius, the wind is blowing at 12 kilometers per hour, and there are scattered clouds.' What kind of statement is this, and why?",
+    "problemText": "A weather reporter on the evening news says: 'Right now, the temperature is 12 degrees Celsius and it is raining.' Is this a weather statement or a climate statement, and why?",
     "choices": [
-      "A climate statement, because it includes temperature and wind information",
-      "A weather statement, because it describes atmospheric conditions at a specific moment in time",
-      "A climate statement, because it describes several different atmospheric measurements",
-      "A weather statement, because the temperature is measured in Celsius"
+      "It is a climate statement because the reporter is giving information about rain and temperature.",
+      "It is a weather statement because it describes the atmosphere at a specific moment in time, not an average across many years.",
+      "It is a climate statement because rain and temperature collected over time establish what a region's typical conditions are.",
+      "It is a weather statement because the words 'right now' indicate a single point in time rather than a long-term pattern."
     ],
     "answer": "B",
     "hints": [
-      "Think about whether this description is about right now, at this moment, or about a long-term pattern across many years.",
-      "Does this sentence include words like 'right now' or 'at this moment'? What does that tell you about the timescale?"
+      "Ask yourself: does this describe what is happening RIGHT NOW at one moment, or does it describe a pattern built from many years of records?",
+      "Look for timescale clues in the sentence — words like 'right now' or 'average' or 'typical' tell you whether you are looking at weather or climate."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6SCI-8.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A scientist has two pieces of information about Location F: (1) Today's low temperature was 3 degrees Celsius; (2) Over the past 35 years, Location F's average winter low has been about 2 degrees Celsius. Which piece of information describes Location F's climate, and what clue tells you?",
+    "problemText": "A student writes: 'Yesterday it was 28 degrees Celsius and sunny in my town, so my town's climate must be warm and dry.' Explain what is wrong with this reasoning.",
     "choices": [
-      "Today's temperature (1) describes the climate, because today is when the weather is actually happening",
-      "Both pieces describe the climate equally, since they both mention low temperatures",
-      "The 35-year average (2) describes the climate, because it is built from many years of data averaged together",
-      "Neither piece describes the climate; you would need 50 years of data, not 35"
+      "The student is confusing climate with latitude, which determines whether a place is warm or cold.",
+      "The student is correct — a warm, sunny day is the best evidence of a warm, dry climate in any region.",
+      "The student is confusing one day of weather with a long-term climate pattern; climate requires many years of averaged records, not a single day.",
+      "The student should have said 'yesterday's weather' instead of 'my town's climate,' but the conclusion about the climate is still correct."
     ],
     "answer": "C",
     "hints": [
-      "Remember that climate must be calculated by combining data from many years, not from a single day.",
-      "Which piece of information tells you about a pattern, and which tells you what actually happened on one particular day?"
+      "Climate is defined by averaging records over how many years — one day, one week, or many decades?",
+      "Could a region have a cold, wet climate overall but still have one warm, sunny day? Think about whether that one day would prove the climate is warm and dry."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6SCI-8.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A desert region's climate record shows that it receives an average of only 25 centimeters of rain per year. One evening, an unusual storm brings 8 centimeters of rain to the region in just two hours. Based on this information, what should you correctly conclude about the region's climate?",
+    "problemText": "A town's official climate records, collected over 35 years, show that summer temperatures average 26 degrees Celsius. On one summer day this year, the temperature reaches 38 degrees Celsius. Which description is correct?",
     "choices": [
-      "The region's climate has changed, because a storm this heavy proves the area is getting wetter",
-      "The region's climate is no longer correctly described as dry, since the storm showed it can receive heavy rainfall",
-      "The region's climate is still correctly described as dry; the storm is one unusual weather event, not a change to the long-term pattern",
-      "The region now has two different climates: a dry average and a wet storm pattern"
+      "The 38-degree day changes the town's climate record because one hot day proves the climate is getting hotter over the full period.",
+      "The 38-degree day means the town's climate record will now show an average of 32 degrees Celsius instead of 26 degrees Celsius when recalculated.",
+      "The 38-degree day raises the overall average slightly because adding one new temperature reading of 38 degrees will shift the total sum used in calculating the mean.",
+      "The 38-degree day is unusual weather for that town, but by itself it does not change the long-term climate average that was built from 35 years of data."
     ],
     "answer": "D",
     "hints": [
-      "One event, no matter how unusual or large, cannot change a pattern built from averaging many years of data. What does the lesson tell you about treating single events as proof of climate change?",
-      "Ask yourself: if one unusual afternoon storm changed the entire climate description, would climate descriptions ever stay the same year to year?"
+      "Does one reading on one day change an average that was built from thousands of daily readings across 35 years?",
+      "Climate is the average; weather is the actual conditions on any one day. Can an unusual weather event replace a multi-decade average all by itself?"
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6SCI-8.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A news report states: 'Location G has a climate with warm summers and mild winters.' The next day, an unexpected cold snap brings freezing temperatures to Location G for three days. A concerned citizen says, 'The climate report must have been wrong; it's freezing here!' Explain why the citizen's reasoning is faulty, and what the correct interpretation of this situation should be.",
+    "problemText": "Three pieces of information are given about Location F: (1) 'Today, the wind is gusting up to 40 kilometers per hour.' (2) 'Over the last 30 years, Location F's average wind speed has been 15 kilometers per hour.' (3) 'Last week, Location F had three days of rain in a row.' Which statement or statements describe Location F's climate, and why do the others not?",
     "choices": [
-      "The citizen is confusing weather with climate. The three-day cold snap is unusual weather; it does not erase the region's long-term climate pattern, which is established by many years of averaged data, not by a single short event",
-      "The citizen is correct because weather and climate describe the same atmospheric conditions, so a freezing temperature now means the climate report was wrong about being mild",
-      "The citizen is partly right because one unusual event can change a region's climate classification if that event is severe enough to offset decades of previous temperature records",
-      "The citizen should disregard the three-day cold snap entirely because single weather events always occur randomly in any climate zone and tell us nothing useful about long-term patterns"
+      "Only statement 2 describes climate because it is based on 30 years of averaged records; statements 1 and 3 describe specific short-term conditions, not an average.",
+      "Statements 1 and 3 both describe climate because they document actual wind speeds and precipitation events that represent the typical weather patterns at that location.",
+      "Only statement 1 describes climate because it measures wind speed in kilometers per hour, which is the standard unit that climate scientists use to quantify atmospheric conditions.",
+      "Statements 2 and 3 describe climate together because one provides the long-term average wind speed and one gives a specific rainfall event that illustrates how that average behaves in practice."
     ],
     "answer": "A",
     "hints": [
-      "The lesson warns against 'the trap' of treating one day or even one week as proof of a climate pattern. What is the key difference between one weather event and a climate average?",
-      "Climate is defined by averaging many years of records. Can one three-day event, however unusual, outweigh decades of averaged data?"
+      "Look at the timescale in each statement: which one names a long span with the word 'average,' and which ones name a specific day or short period?",
+      "Climate requires averaged records from many years to be properly defined. Does a single day's wind, or three consecutive days of rain, give you enough data to know the long-term average?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6SCI-8.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student observes that Location H had very little rainfall last month. She concludes, 'Location H must have a dry climate.' A meteorologist replies, 'I need more information before I can confirm that.' Which question would the meteorologist most likely ask to decide whether Location H truly has a dry climate, and why is that question important?",
+    "problemText": "Location G has a climate described as 'dry, with very little rain.' One winter, Location G receives twice as much rain as it normally does in an entire year, spread across the season. A scientist checks Location G's 50-year climate records before and after that winter and finds the climate description remains unchanged at 'dry, with very little rain.' Explain why the unusually rainy winter did not change Location G's official climate description.",
     "choices": [
-      "Did it rain at all last week, or was the entire month dry, because knowing the exact timing of rainfall within the month determines whether a climate is truly dry",
-      "What is the average yearly rainfall in Location H over the past three decades or more, based on official records?",
-      "How many dry months has Location H had in the past year, because a single dry year is enough to establish that a climate zone is dry rather than wet",
-      "Is Location H located near mountains or oceans, because geographic features alone determine whether a region's climate classification should be considered dry"
+      "The scientist made an error; a winter with twice the normal yearly rain should have changed the climate description because any increase in precipitation alters the official classification.",
+      "One season of above-average rain is weather, not climate. Climate is defined by a 50-year average of all years together, and one season cannot overpower 49 other years of records.",
+      "The climate description did not change because the extra rain was spread across the whole season rather than concentrated in one month, so it had less impact on the yearly total.",
+      "The winter did change the climate temporarily, but the long-term records automatically adjusted back to the original description after that season ended and new years were added to the average."
     ],
     "answer": "B",
     "hints": [
-      "To determine a region's climate, what kind of data is actually required? Does one month count as enough information?",
-      "The lesson defines climate as an average built from many years of records. What timescale does the meteorologist need?"
+      "What timescale defines climate — one season or many years averaged together?",
+      "If 49 years of dry data are already averaged into the 50-year record, how much weight does one season of extra rain have in that average?"
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6SCI-8.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Location I's official climate record shows an average summer high of 28 degrees Celsius (built from 40 years of data) and an average winter low of 2 degrees Celsius. Last summer, the region had three days with temperatures above 35 degrees Celsius. This year, when Location I's climate record is updated and recalculated using the new 40-year average (now including last summer's data), it still shows an average summer high of about 28 degrees Celsius. Which statement best explains why the official climate average did not change much, even though three days were extremely hot?",
+    "problemText": "A student makes four claims about two locations that both have 'cold, snowy climates' based on 40 years of averaged records: Claim A: 'Both locations will have snow on the ground every single day of winter.' Claim B: 'Both locations must have at least one day next winter when it is not snowing.' Claim C: 'A record-breaking warm day could occur in either location's upcoming winter and would disprove its climate classification.' Claim D: 'Both locations' official climate records would only change if their typical winter conditions shifted across many future years.' Which claim correctly reflects the relationship between weather and climate for these two locations?",
     "choices": [
-      "The three hot days were recorded incorrectly, so they do not count in the average",
-      "Three extremely hot days, spread across one summer, are still only three data points out of 40 years of summer readings; one unusual event across one season does not have enough weight to shift a 40-year pattern, even if it was much hotter than the average",
-      "The three hot days happened in summer, but Location I's climate includes both summer and winter, so summer extremes do not affect the overall average",
-      "The climate must not be changing, because climate averages always remain constant year to year no matter what weather events occur"
+      "Claim A, because a snowy climate means it snows all the time without exception on every day of every winter.",
+      "Claim B, because a snowy climate does not guarantee continuous snow, only that snow is typical across many winters overall.",
+      "Claim D and also Claim B together, because climates can vary day to day but only change when the long-term average shifts, and a climate does not promise every single day matches the pattern.",
+      "Claim C, because a single warm day anywhere in the region's upcoming winter would prove that the snowy climate classification was incorrect from the start."
     ],
     "answer": "C",
     "hints": [
-      "Think about the scale: 40 years of summers means roughly 40 × 90 days = 3,600 summer days in the dataset. How much can three individual days shift a number based on 3,600 readings?",
-      "One individual event, however extreme, is just one entry in a much larger set of averaged data. Why does the size of the dataset matter for climate?"
+      "A climate statement describes the typical pattern across many years; does it predict what must happen on every single day, or what usually happens overall?",
+      "If one unusual day of weather could overturn a 40-year climate average, how stable could any climate classification ever be?"
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6SCI-8.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A region's climate is its typical weather pattern averaged over many years. Which of the following best describes what climate is NOT?",
+    "problemText": "What does latitude describe about a location on Earth? Which answer gives the correct definition?",
     "choices": [
-      "The average temperature and rainfall a place receives year after year",
-      "The pattern of seasons a region experiences over decades",
-      "What the weather happens to be doing this particular week",
-      "The long-term conditions that shape whether a place is usually hot or cold, wet or dry"
+      "How close a location is to a large body of water.",
+      "How high a location sits above sea level.",
+      "How far north or south of the equator a location sits.",
+      "How much rain or snow a location receives each year."
     ],
     "answer": "C",
     "hints": [
-      "The lesson distinguishes climate — which is measured over many years — from something much shorter that changes quickly.",
-      "Think about the difference between 'this week's weather' and 'this region's typical weather.'"
+      "The lesson vocabulary section defines latitude as a measure of position relative to a specific line on Earth.",
+      "Think about the equator and the poles — what is being measured between them?"
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6SCI-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A town sits at the equator at sea level, surrounded by ocean. A second town sits at the same latitude but is located high in the mountains, far from any large body of water. Based only on what the lesson teaches, which town would you expect to have a warmer typical temperature?",
+    "problemText": "A mountain town and a nearby valley town sit at the same latitude and are both far from any ocean. The mountain town sits at 3,000 meters elevation, while the valley town sits at 200 meters elevation. Based on what you learned about elevation's effect on climate, which town would you expect to have cooler typical temperatures?",
     "choices": [
-      "The mountain town, because higher elevation brings the location closer to the sun",
-      "The mountain town, because being far from water removes cooling effects",
-      "The sea-level coastal town, because its higher elevation does not pull its temperature down",
-      "The sea-level coastal town, because higher elevation typically means cooler typical temperatures"
+      "The valley town, because it is closer to sea level where the sun's warmth is stronger.",
+      "The mountain town, because it is farther from the equator.",
+      "Both towns, because they share the same latitude and distance from water.",
+      "The mountain town, because higher elevation typically results in cooler typical temperatures."
     ],
     "answer": "D",
     "hints": [
-      "Elevation acts on temperature in a consistent way, regardless of what latitude is. Look for the statement that correctly describes the elevation rule.",
-      "The lesson states that high elevation typically makes a location cooler, not warmer."
+      "Both towns receive the same angle of sunlight and neither has water nearby to moderate temperature, so focus only on the one factor that differs.",
+      "The lesson states a clear rule about how elevation affects temperature — apply it directly."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6SCI-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two locations sit at different latitudes but at the same low elevation and the same distance from a large lake. Location P, closer to the equator, receives sunlight that arrives close to straight down for most of the year. Location Q, closer to a pole, receives sunlight at a low, slanting angle. Which statement correctly explains why Location P would typically be warmer?",
+    "problemText": "Two coastal cities sit at low elevation right next to the same large ocean, but City X is located close to the equator while City Y is located much farther north, closer to a pole. Which statement correctly explains why their typical climates would differ?",
     "choices": [
-      "Location P is closer to the sun, so it receives the sun's energy over a shorter distance",
-      "Location P's concentrated sunlight lands on a smaller area of ground, delivering more energy to each spot compared to Location Q's spread-out sunlight",
-      "Location P is farther from the pole, so the atmosphere is thinner and retains less heat",
-      "Location Q is colder simply because it is at a higher latitude, without any reason related to sunlight angle"
+      "City X receives sunlight at a more direct angle throughout the year, making it typically warmer with smaller swings between seasons, while City Y receives slanting sunlight and is typically cooler with larger swings between seasons.",
+      "City X receives sunlight at a steep angle year-round due to its equatorial location, so it stays warm with little seasonal change, whereas City Y's higher latitude means sunlight hits at a shallow angle, producing cooler temperatures and dramatic seasonal temperature shifts.",
+      "City Y is positioned closer to a pole where the atmosphere is thinner, reducing the amount of solar radiation that can penetrate to the surface, which explains why it experiences colder typical temperatures compared to City X at the equator.",
+      "City X has a larger ocean surface area nearby that warms it constantly, while City Y's polar location means ocean water is frozen most of the year and cannot moderate temperature as effectively, making City Y much colder and more seasonal."
     ],
     "answer": "A",
     "hints": [
-      "The lesson explains that what changes with latitude is the ANGLE sunlight arrives at, not the distance it travels.",
-      "Look for the choice that describes how direct, overhead sunlight concentrates energy compared to slanting sunlight."
+      "Elevation and distance from water are the same for both cities, so the difference must come from latitude.",
+      "Remember that at the equator, sunlight arrives close to straight down, while near the poles it arrives at a low, slanting angle — how does this affect typical temperature and seasonal swings?"
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6SCI-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Region M and Region N both sit at the same latitude and at the same elevation. Region M is located right on the coast of a large ocean. Region N is located deep in the interior of a continent, far from any ocean. The lesson teaches that large bodies of water moderate temperature and affect precipitation. Based on this, which statement best predicts how their typical climates would differ?",
+    "problemText": "Region P sits at low elevation, close to the equator, and far inland, hundreds of kilometers from any ocean or large lake. Region Q sits at higher elevation, at the same latitude as Region P, and right next to a large ocean. Considering all three factors — latitude, elevation, and distance from water — which of the following correctly compares their typical climates?",
     "choices": [
-      "Region M would be both warmer on average and receive less precipitation than Region N, because the ocean absorbs extra heat and prevents moisture from traveling inland to the continent",
-      "Region N would have bigger swings between its hottest and coldest times of year and would typically be drier than Region M, because it lacks a nearby large body of water to moderate temperature and supply moisture",
-      "Both regions would have identical climates, because latitude and elevation are the same for both, and these factors alone determine all aspects of regional climate patterns",
-      "Region M would be cooler because the ocean removes heat from the nearby land through constant evaporation and wind patterns that push cold air toward the coast"
+      "Region P would be warmer year-round with smaller seasonal swings and more precipitation because it is close to the equator and far from any ocean, so solar heating is strong and consistent without water to moderate temperature changes.",
+      "Region Q would be cooler because of its higher elevation, would have smaller seasonal swings because of the nearby ocean, and would likely receive more precipitation from the ocean, even though both regions share the same latitude.",
+      "Region Q would be cooler because of its higher elevation, but it would swing more between seasons because being at higher elevation amplifies seasonal extremes, and it would be drier because the elevation prevents moisture from rising.",
+      "Region P would have a hotter and more variable climate because it sits far from the ocean where temperature swings are extreme, while Region Q stays moderate because water moderates temperature, even though higher elevation in Region Q works against this moderation effect."
     ],
     "answer": "B",
     "hints": [
-      "Two regions with matching latitude and elevation can still differ in climate if one differs from the other in distance from a large body of water.",
-      "The lesson states that a large body of water moderates temperature swings and is a nearby source of moisture."
+      "Both regions share the same latitude, so that factor is equal — focus on how elevation and distance from water differ, and apply what the lesson teaches about each.",
+      "Consider how elevation affects temperature, how a large body of water moderates temperature swings, and how water is a source of nearby moisture."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6SCI-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is trying to predict the climate of a mountain town located at high elevation in a tropical region close to the equator, on the coast of a large ocean. The student writes: 'This town will be hot all year with very small differences between summer and winter, because it is so close to the equator.' Which statement best explains why this prediction is incomplete?",
+    "problemText": "A student is trying to predict the typical climate of a location that sits at the same latitude as another well-known location, but much farther from any ocean. The student says: 'Since they are at the same latitude, they must have the same typical temperature and precipitation pattern.' Is this reasoning correct, and why or why not?",
     "choices": [
-      "The student correctly identified the latitude factor but failed to account for the distance from water, which would make the climate even hotter",
-      "The student correctly identified the latitude factor but failed to account for the elevation factor, which would make the town typically cooler than the student predicted",
-      "The student correctly identified both latitude and elevation but failed to account for distance from water, which affects only precipitation and not temperature",
-      "The student's prediction is complete; latitude alone determines all aspects of a region's climate regardless of elevation or distance from water"
+      "Yes, the reasoning is correct, because latitude is the only factor that determines how much heat a location receives from the sun and sets the climate pattern.",
+      "No, the reasoning is incorrect, because locations closer to the equator always receive more precipitation no matter how far they are from water sources like oceans or lakes.",
+      "No, the reasoning is incorrect. Although both locations receive the same angle of sunlight, elevation and distance from water are different and will create different typical temperature and precipitation patterns.",
+      "Yes, the reasoning is correct, because latitude determines the angle of sunlight and that angle is the main force that shapes climate, while elevation and distance from water are only minor influences."
     ],
     "answer": "C",
     "hints": [
-      "A region's climate comes from all three factors combined, not from latitude alone. The student overlooked something.",
-      "Even though the student correctly noted that being close to the equator brings warm conditions, the student forgot that high elevation pulls typical temperature down."
+      "The lesson explicitly warns against assuming that shared latitude alone means similar climates — what else needs to be checked?",
+      "Review the worked example in the lesson where Region B and Region C sit at the same latitude but have very different climates because of different elevation and distance from water."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6SCI-8.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An explorer plans to travel from Location X at sea level on the coast of an ocean at the equator to Location Y at the same latitude and distance from the ocean but at a very high mountain elevation. Along the way, the explorer will pass through Location Z, which sits at the same latitude as X and Y but at low elevation far inland, hundreds of kilometers from the ocean. Based on the three factors taught in this lesson, which ordering best predicts the explorer's experience of typical temperatures and precipitation patterns from X to Y?",
+    "problemText": "A travel guide describes two mountain regions that are both located far from any ocean, far from the equator, and therefore both tend to be cold. However, one mountain region (A) sits at 2,500 meters elevation while the other mountain region (B) sits at 1,200 meters elevation. A visitor asks: 'Will both regions have the same typical winter temperatures?' Based on the three factors from this lesson, explain which region would be expected to have colder typical winter temperatures and why, even though both share the same latitude and distance from water.",
     "choices": [
-      "X would be warmest and wettest, Z would be cooler and drier, Y would be coldest and wettest again",
-      "X would be warmest and wettest, Z would be warmer and drier, Y would be coldest and driest",
-      "X and Z would be equally warm and wet, Y would be coldest and driest",
-      "X would be warmest and wettest, Z would be cooler and drier, Y would be coldest and driest"
+      "Both regions will have equally cold winters because they are both far from the equator and far from water, so latitude and distance from water are the dominant factors that set winter temperature at any location.",
+      "Neither region's winter temperature can be predicted because elevation changes so dramatically across mountains that it overwhelms the effects of latitude and distance from water in ways that require local data to know.",
+      "Region B will have colder typical winter temperatures because it is at lower elevation and therefore sits closer to the troposphere where cold air masses from the poles can more easily reach it.",
+      "Region A will have colder typical winter temperatures because it sits at a higher elevation, and the lesson teaches that higher elevation typically means cooler typical temperatures, even when comparing two locations at the same latitude and far from water."
     ],
     "answer": "D",
     "hints": [
-      "All three locations share the same latitude, so they all receive the same angle of sunlight. But elevation and distance from water differ among them. Track how each factor changes as the explorer moves.",
-      "As elevation increases from X (sea level) to Z (low) to Y (high mountain), temperature decreases. As distance from the ocean increases from X (coast) to Z (far inland) to Y (coast again), precipitation changes."
+      "Two of the three factors (latitude and distance from water) are the same, so focus on how the third factor — elevation — differs and apply what the lesson taught.",
+      "The lesson gives a real-world example of a mountain town and a valley town at the same latitude — which one is colder?"
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6SCI-8.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A warm current is defined as a surface current that is warmer than the ocean water it is currently flowing through. If a current starts near the tropics and flows toward the North Atlantic, carrying water that remains warmer than the surrounding North Atlantic water, how should this current be classified?",
+    "problemText": "A surface current is described as a warm current. What does this mean?",
     "choices": [
-      "A cold current, because it is moving away from the equator",
-      "A warm current only while it is near the tropics, then it becomes cold",
-      "Neither warm nor cold, because classification depends on depth, not surface temperature",
-      "A warm current, because its water is still warmer than the ocean around it"
+      "The current flows only during the warm months of the year.",
+      "The water in the current started near the equator and has not cooled down yet.",
+      "The water in the current is always warm enough to swim in comfortably.",
+      "The water in the current is warmer than the ocean water surrounding it at that location."
     ],
     "answer": "D",
     "hints": [
-      "The lesson defines warm and cold currents by comparing the current's temperature to its surroundings at that location.",
-      "A current can keep its label 'warm' even far from the tropics, as long as it stays warmer than what surrounds it there."
+      "Think about the definition: warm or cold is a comparison, not a fixed temperature number.",
+      "A current keeps its label based on how it compares to what is around it right now, not where it came from or the calendar."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6SCI-8.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "The coast of northwestern Europe sits at a high latitude where most coastlines have very cold winters. Yet the United Kingdom and Norway have much milder winters than other places at the same latitude. Based on the lesson, which surface current is most likely responsible for this difference?",
+    "problemText": "The North Atlantic Current flows east toward the coast of northwestern Europe after bending away from the coast of the United States. This current carries warm water from near the Gulf of Mexico. Based on the current's starting point and direction, what should you predict about the winter climate of northwestern Europe?",
     "choices": [
-      "The Gulf Stream and North Atlantic Current, which carries warm water from the tropics northeast across the Atlantic",
-      "The Labrador Current, which originates in the Arctic and transports cold water southward along the North American coast, cooling the air above it below what latitude alone would suggest",
-      "A cold current that starts near Antarctica and flows northward, bringing frigid water and cold air masses that dominate the climate of high-latitude European coastlines",
-      "Multiple currents that all flow in different directions and cancel each other out, leaving latitude as the only factor that determines whether a coastline has mild or harsh winters"
+      "Winters should be milder than at other places at the same latitude, because warm water from the tropics flows alongside the coast.",
+      "Winters should be much colder than at other places at the same latitude, because the current flows so far north.",
+      "Winters should be about the same as other places at the same latitude, because climate depends only on how far north a place is.",
+      "Winters should be warmer than places near the Gulf of Mexico, because the current moves toward colder water."
     ],
     "answer": "A",
     "hints": [
-      "Warm currents keep nearby air milder than latitude alone would predict; trace which current actually reaches northwestern Europe.",
-      "The lesson provides a specific named example of a warm current that flows all the way to the UK and Norway."
+      "Trace the current's starting point—where is it warm?—and follow it forward to where it reaches the coastline.",
+      "The lesson says the offshore water next to a coastline becomes part of that coastline's climate. What kind of water is next to northwestern Europe?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6SCI-8.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student observes that the coast of Newfoundland and Labrador, in eastern Canada, has cold, foggy winters even though it sits at roughly the same latitude as the United Kingdom. Which statement best explains why these two coastlines have such different climates despite being at similar latitudes?",
+    "problemText": "Two students are looking at a map of ocean currents near the east coast of Canada. One current flows south from Arctic waters, and another flows north from warmer mid-Atlantic waters. The first student says, 'Both currents flow in opposite directions, so they will have opposite effects on the coast.' Is this reasoning correct? Why or why not?",
     "choices": [
-      "The United Kingdom is located closer to the equator than Newfoundland and Labrador, so it receives more direct sunlight year-round and experiences warmer temperatures at the same latitude",
-      "Newfoundland and Labrador sit along the path of a cold current that carries Arctic water southward, making the nearby air colder than latitude alone would predict",
-      "Elevation is the primary factor that determines coastal climate, and the United Kingdom sits at much lower elevation than Newfoundland and Labrador, which causes it to be warmer",
-      "Ocean currents do not meaningfully affect coastal climates; instead, differences in ocean depth create different water temperatures that change weather patterns in ways unrelated to latitude"
+      "Yes, because any current flowing south has a cooling effect and any current flowing north has a warming effect.",
+      "No, because a current's effect depends on whether its water is warmer or colder than the water around it, not just on which compass direction it flows.",
+      "Yes, because the Labrador Current and Gulf Stream are named opposites and do the opposite things.",
+      "No, because currents that flow north always stay warm and currents that flow south always stay cold, so the direction alone tells you the effect."
     ],
     "answer": "B",
     "hints": [
-      "The lesson states that a current's effect stacks on top of latitude, elevation, and distance from water—it adds an extra push.",
-      "Identify which current flows along the Newfoundland coast and trace where it originates."
+      "What makes a current 'warm' or 'cold' according to the lesson? Is it the direction it flows, or something else?",
+      "A current starting in the tropics and flowing north stays warm because it stays warmer than what surrounds it. What about a current starting in the Arctic and flowing south?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6SCI-8.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A warm current and a cold current both flow toward the same coastline from opposite directions and meet offshore. The warm current originates in tropical water near the equator and carries water that is still warmer than the surrounding ocean. The cold current originates near the Arctic and carries water that is still colder than the surrounding ocean. Based on the lesson, what can you predict about the climate of this coastline?",
+    "problemText": "A student is comparing two coastal towns, San Diego and Charleston, that sit at nearly the same latitude along the United States coast. The student notices that San Diego's winter temperatures are milder than Charleston's. The student first thinks, 'They must be at different latitudes,' but then checks a map and finds they are almost the same distance from the equator. What information from the lesson would help the student explain why the climates are actually different despite similar latitudes?",
     "choices": [
-      "The coastline's climate will be very extreme, with the warm current creating extremely hot summers and the cold current creating extremely cold winters because both currents fully reach the shore",
-      "The coastline's climate will be determined entirely by its latitude, because the two opposing currents neutralize each other's effects and cancel out any warming or cooling influence",
-      "The coastline's climate will be affected by whichever current is closer to shore or stronger, pushing it warmer or cooler than latitude alone would predict",
-      "The coastline will experience continuous fog and storms because the meeting point of warm and cold water creates severe weather systems that overwhelm the effects of latitude on climate"
+      "San Diego must be at a higher elevation than Charleston, which means the air temperature drops with altitude and makes San Diego's winters consistently colder regardless of any ocean effects.",
+      "Charleston must be on a peninsula that extends farther into the ocean, which exposes it to stronger winds that cool the air during winter months more than San Diego experiences.",
+      "San Diego must have a different ocean current running along its coast than Charleston does, which pushes its winter climate milder or cooler than latitude alone would predict.",
+      "San Diego must receive more rain from its ocean current, which increases cloud cover and thereby traps heat in the atmosphere to keep winters warmer year-round."
     ],
     "answer": "C",
     "hints": [
-      "The lesson explains that a current adds an extra push on top of latitude and other factors—it does not replace them or necessarily cancel out.",
-      "Consider which current would be flowing closer to the actual coastline and affecting the air above the water right there."
+      "The lesson says a current's effect stacks on top of latitude and other factors. If two places are at the same latitude but different climates, what could the difference be?",
+      "Trace what kind of current runs along each coast. Does one carry warmer water than the other?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6SCI-8.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two coastlines, San Diego and Charleston, sit at very different latitudes along the United States coast, yet they can have surprisingly similar climates in some seasons. Using the lesson's explanation of how surface currents affect climate, which of the following would best account for this similarity?",
+    "problemText": "A cold current starts near the Arctic and flows south along a coastline toward lower latitudes. As it flows south, the surrounding ocean water becomes warmer. Using the definition of a cold current, explain whether this current remains a cold current throughout its journey south, or whether it should be reclassified at some point.",
     "choices": [
-      "Both cities are at the same elevation, so elevation cancels out any effects from latitude",
-      "Both cities experience the exact same amount of rainfall throughout the year",
-      "San Diego sits where a cold current flows along the coast, while Charleston sits where a warm current flows, and these competing effects partially offset the latitude difference",
-      "Both cities are located the same distance from the equator, so they have identical climates by definition"
+      "It stops being a cold current once it reaches the latitude where the surrounding water is warm, because the current itself will have warmed up by then and can no longer be classified as cold.",
+      "It is no longer either a warm or cold current once it crosses the equator, because the rotation of Earth changes the direction and properties of all water currents in the southern hemisphere.",
+      "It becomes a warm current by the time it reaches lower latitudes, because the current will have absorbed enough heat from the surrounding water to match tropical ocean temperatures.",
+      "It remains a cold current for as long as it is colder than the ocean water it is flowing through, even if the surrounding water is warmer at lower latitudes than it was near the Arctic."
     ],
     "answer": "D",
     "hints": [
-      "Reread the lesson's statement: 'A current does not replace those factors—it adds an extra push on top of them.'",
-      "The lesson teaches that two coastlines at nearly the same latitude can end up with such different climates. What would make two coastlines at very different latitudes more similar than latitude alone predicts?"
+      "Warm and cold are comparisons: a current's label depends on whether it is warmer or colder than what surrounds it right then, not on a fixed temperature.",
+      "Does the Labrador Current stay a cold current the entire way south even though it flows toward warmer water? Use that example to think through this one."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6SCI-8.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A researcher studying coastal fog notices that the thickest fog off the coast of Newfoundland occurs right where the cold Labrador Current from the north meets warmer Atlantic water from the south. The lesson notes that where cold and warm currents meet, moist air passing over warm water is cooled sharply as it crosses into cold water, causing fog. Using only the origin, direction, and temperature comparison of the two currents involved, explain why fog would be most intense at their meeting point rather than elsewhere along either current's path alone.",
+    "problemText": "Two explorers sail along different coasts at the 50° north latitude. Explorer A travels past the coast of northwestern Europe, where the warm North Atlantic Current flows. Explorer B travels past the coast of eastern Canada, where the cold Labrador Current flows. Both explorers measure the winter air temperature and compare it to what their maps predict the climate should be at 50° north latitude (based only on how far north the location is). Which explorer would most likely measure an air temperature warmer than the map predicts, and which would measure a temperature colder than the map predicts? Use the concept of how a current's origin and direction determine its effect.",
     "choices": [
-      "Fog forms only when two currents collide, because single currents do not change the temperature of the air above them",
-      "The Labrador Current originates in the Arctic and flows south carrying cold water, while the North Atlantic water it meets is warmer; the sharp temperature contrast between these two adjacent masses of water cools air most abruptly at their boundary",
-      "Fog is caused by currents mixing with fresh water from rivers, which happens most often where currents meet",
-      "The Labrador Current flows so slowly at its southern end that water stops moving and pools, trapping moisture"
+      "Explorer A would measure warmer than predicted, because the North Atlantic Current starts in the tropics and carries warm water that keeps the nearby air milder than latitude alone would suggest. Explorer B would measure colder than predicted, because the Labrador Current starts near the Arctic and carries cold water that keeps the nearby air cooler than latitude alone would suggest.",
+      "Explorer B would measure warmer than predicted, because the Labrador Current originates in tropical regions and transports heat energy northward along the coast, raising air temperatures above the latitude baseline. Explorer A would measure colder than predicted, because the North Atlantic Current loses thermal energy as it travels northward and becomes dominated by colder Arctic water masses.",
+      "Both explorers would measure temperatures significantly warmer than predicted, because ocean currents always transport heat from the equator and enhance warming at higher latitudes regardless of whether they originate in warm or cold regions, making latitude irrelevant to climate prediction.",
+      "Explorer A would measure colder than predicted, because currents lose their heat energy as they travel long distances northward and dissipate into surrounding water. Explorer B would measure warmer than predicted, because the Labrador Current flows southward and accumulates thermal energy from equatorial regions before reaching 50° north."
     ],
     "answer": "A",
     "hints": [
-      "Trace the origin and direction of each current separately: where does the Labrador Current's cold water come from, and what warmer water does it encounter?",
-      "The sharpest temperature contrast occurs where cold and warm sit next to each other; the lesson explains this is what causes the fog, not single currents alone."
+      "Trace each current from its origin to its effect: where does it start, what temperature water does it carry, and what does that do to the coastline's climate?",
+      "The worked examples show that the United Kingdom (with the warm Gulf Stream) has mild winters, and Newfoundland (with the Labrador Current) has cold ones, even though they are at similar latitudes. Use that pattern here."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6SCI-8.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A climatograph shows twelve numbers for temperature and twelve numbers for precipitation, one for each month of the year. What do these numbers represent?",
+    "problemText": "A climatograph shows twelve monthly average temperatures and twelve monthly average precipitations for one location. What does the annual temperature range tell you about that location?",
     "choices": [
-      "Monthly average values built up from many years of weather at that location, showing the location's typical pattern",
-      "The exact temperature and rainfall that occurred on a specific day last month at that location",
-      "The highest and lowest temperatures and precipitation amounts that have ever been recorded at that location throughout its entire history",
-      "Daily weather readings collected only during the warmest and coldest days of the year at that location"
+      "The difference between the warmest month's average temperature and the coldest month's average temperature",
+      "How much the temperature changes each day based on the overnight low and daytime high throughout the year",
+      "The total amount of heat energy measured in calories that the location receives from the sun annually",
+      "Whether the location experiences more rainfall or snowfall depending on its distance from the equator"
     ],
     "answer": "A",
     "hints": [
-      "The lesson explains that climatograph numbers are averages, not individual weather events.",
-      "Think about what 'typical pattern' means — it must come from many observations, not just one day."
+      "Think about what 'annual' means and what 'range' means when talking about two different months.",
+      "The annual temperature range is a math calculation using two specific numbers from the climatograph."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6SCI-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Location G's monthly average temperatures in degrees Celsius from January through December are: 5, 6, 9, 14, 19, 23, 26, 25, 21, 15, 9, 6. What is Location G's annual temperature range?",
+    "problemText": "A location's monthly average temperatures in degrees Celsius from January through December are: 15, 16, 18, 21, 25, 28, 30, 29, 26, 22, 18, 15. Calculate the annual temperature range for this location.",
     "choices": [
-      "26 degrees Celsius",
-      "21 degrees Celsius",
+      "12 degrees Celsius",
       "15 degrees Celsius",
-      "19 degrees Celsius"
+      "18 degrees Celsius",
+      "30 degrees Celsius"
     ],
     "answer": "B",
     "hints": [
-      "The annual temperature range is found by subtracting the coldest month from the warmest month.",
-      "Scan the list to find which month has the highest temperature and which has the lowest."
+      "You need to find which month is warmest and which month is coldest, then subtract.",
+      "The warmest month shown here is 30 degrees Celsius; find the coldest month and do the subtraction."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6SCI-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Location H's monthly average precipitation in millimeters from January through December is: 85, 90, 75, 30, 10, 2, 1, 3, 15, 45, 70, 88. Which pair of months marks the beginning and end of Location H's dry season?",
+    "problemText": "Location X has monthly precipitation in millimeters of: 120, 115, 98, 45, 12, 5, 3, 4, 8, 35, 95, 110. Which statement correctly describes the wet and dry seasons at Location X?",
     "choices": [
-      "October and February",
-      "February and December",
-      "May and August",
-      "January and April"
+      "Location X has no wet season because no month receives more than 120 millimeters",
+      "Location X is wet all year because every month receives at least 3 millimeters of rain",
+      "Location X has a wet season from December through March and a dry season from June through August",
+      "Location X has a dry season in May because that month receives less than the annual average"
     ],
     "answer": "C",
     "hints": [
-      "A dry season is a stretch of months when precipitation is clearly lower than the rest of the year.",
-      "Look for a group of consecutive months with much smaller numbers than those around them."
+      "Scan all twelve numbers and look for a stretch of months that are clearly higher than the others, and another stretch that is clearly lower.",
+      "The three highest numbers cluster around the beginning and end of the year, and the three lowest numbers are bunched in the middle months."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6SCI-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Location I's warmest months are December, January, and February, with temperatures around 30°C, and its coolest months are June, July, and August, with temperatures around 15°C. Location I's precipitation is 120 millimeters in June, 130 millimeters in July, 115 millimeters in August, but only 5 millimeters in December, 6 millimeters in January, and 4 millimeters in February. In which hemisphere is Location I located, and what type of season does it have when its temperature is lowest?",
+    "problemText": "Location G's monthly average temperatures in degrees Celsius are: 12, 13, 15, 18, 22, 26, 28, 27, 24, 19, 15, 12. Location H's monthly average temperatures in degrees Celsius are: 24, 25, 23, 20, 16, 12, 10, 12, 15, 19, 22, 24. Both locations have an annual temperature range of about 16 degrees Celsius, yet they are in different hemispheres. Which pair of statements correctly explains why and identifies each location's hemisphere?",
     "choices": [
-      "Northern Hemisphere; the coldest season is the driest part of the year",
-      "Northern Hemisphere; the coldest season is the wettest part of the year",
-      "Southern Hemisphere; the coldest season is the driest part of the year",
-      "Southern Hemisphere; the coldest season is the wettest part of the year"
+      "Both locations have the same size range, so they must be in the same hemisphere because annual temperature range is the only factor that determines hemisphere location",
+      "Location H has its warmest months spread across the Northern Hemisphere summer season while Location G shows warming across the Southern Hemisphere summer season based on the calendar timing of peak temperatures",
+      "Location G receives more precipitation than Location H, which shows it is in the wetter Northern Hemisphere with stronger monsoon patterns",
+      "Location G's warmest months are June-August and coolest are December-February (Northern Hemisphere), while Location H's warmest months are December-February and coolest are June-August (Southern Hemisphere)"
     ],
     "answer": "D",
     "hints": [
-      "The hemisphere is determined by which calendar months are warmest and which are coolest.",
-      "Once you know the hemisphere, check what the precipitation numbers show for the coldest season."
+      "Hemisphere is determined by which calendar months are warm and which are cool, not by the size of the temperature range.",
+      "Compare the position of the warmest and coldest numbers in each list to the calendar months January through December."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6SCI-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Location J has an annual temperature range of only 8 degrees Celsius, with every month's temperature between 22°C and 30°C. Its monthly precipitation totals are: 12, 10, 8, 5, 3, 2, 2, 3, 5, 8, 10, 12 millimeters. Based on these two pieces of information, which statement correctly describes Location J's climate pattern?",
+    "problemText": "Location J's monthly precipitation totals (in millimeters) are: 85, 80, 70, 50, 25, 8, 4, 5, 15, 40, 65, 80. When you add all twelve numbers, the annual total is 527 millimeters. If three months account for 235 millimeters of that total, what does this reveal about Location J's climate pattern that a single wet month's number alone would not show?",
     "choices": [
-      "Location J has almost no temperature seasons and almost no precipitation seasons, making it very dry all year",
-      "Location J has a strong wet season in the middle of the year and a strong dry season at the ends",
-      "Location J has a moderate temperature range like Location A from the lesson and receives abundant rain",
-      "Location J must be in the Northern Hemisphere because all its temperatures are above freezing"
+      "That more than 44 percent of Location J's yearly precipitation falls into just three months, revealing a strongly marked wet season rather than evenly distributed rain throughout the year",
+      "That Location J receives enough total precipitation each year to support ecosystems because 235 millimeters divided by twelve months gives an average monthly precipitation that plants can use for growth",
+      "That Location J's annual precipitation of 527 millimeters places it in a climate category between arid regions receiving under 250 millimeters annually and tropical zones receiving over 2000 millimeters annually",
+      "That Location J's range from 4 millimeters to 85 millimeters across its twelve months indicates seasonal variation, which proves the location experiences distinct periods of higher and lower water availability"
     ],
     "answer": "A",
     "hints": [
-      "A small temperature range means the location does not have strongly marked warm and cool seasons.",
-      "Look at the precipitation numbers — do they show months that are clearly much wetter or drier than others?"
+      "Calculate what fraction of the year's 527 millimeters those three months represent: 235 ÷ 527 ≈ 0.446 or about 44 percent.",
+      "The lesson teaches that adding all twelve numbers and comparing the total to parts of it shows whether precipitation is concentrated in a real season or spread evenly."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6SCI-8.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Location K's monthly average precipitation is: 50, 45, 60, 70, 85, 95, 110, 105, 80, 60, 50, 45 millimeters, and Location L's monthly average precipitation is: 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80 millimeters. When you add up all twelve months for each location, Location K totals 855 millimeters and Location L totals 960 millimeters. Based on these annual totals alone, which statement correctly compares the two locations' actual climate patterns?",
+    "problemText": "A student reads a climatograph for Location K and notices that January's average temperature is 22°C and January's precipitation is 180 millimeters. The student concludes: 'Location K must have a very wet climate because January alone shows a lot of rain.' Explain why this conclusion violates the one-month trap and what the student should do instead to read Location K's climate correctly. Which statement best identifies both the error and the correct method?",
     "choices": [
-      "Location L is wetter overall because its annual total is higher, so it must have a larger wet season than Location K",
-      "Location K has a more clearly marked wet season despite receiving less total precipitation, while Location L receives slightly more rain but spreads it evenly throughout the year",
-      "Both locations receive the same amount of rain each month because they are in the same climate zone, which means their precipitation patterns must be identical",
-      "Location K must be in the Southern Hemisphere because its total is lower than Location L's, indicating that hemisphere receives less rainfall annually"
+      "The error is that 180 millimeters in one month cannot support the idea of a wet climate unless that same amount appears in every other month; the student should multiply January's precipitation by twelve to estimate whether the annual total would actually be considered wet",
+      "The error is that one month, even a wet one, does not prove the whole year's pattern without comparing all twelve months to each other and computing the annual total; the student should read all twelve precipitation numbers and check whether January is part of a longer wet season or an outlier",
+      "The error is that the student focused on precipitation while ignoring temperature, which is equally important for defining climate; the student should add January's temperature value to the precipitation value to create a combined climate index for Location K",
+      "The error is that without knowing Location K's latitude and longitude, a single month's data cannot establish climate patterns; the student should identify the geographic region first and then verify January's data matches known climate zones for that region"
     ],
     "answer": "B",
     "hints": [
-      "The annual total is a sum, but it tells a different story than the shape of the precipitation across the year.",
-      "Compare not just the totals, but how the twelve monthly numbers are distributed — is one location's spread even, and the other's lumpy?"
+      "The lesson teaches that comparing one month to the other eleven months is exactly what makes climate reading different from just reading one number off an axis.",
+      "Recall the worked example where 90 millimeters in January seemed large until compared to the annual total and the pattern of other months."
     ]
   }
 ]

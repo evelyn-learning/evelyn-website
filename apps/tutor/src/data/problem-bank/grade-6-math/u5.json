@@ -5,17 +5,17 @@
     "cedCode": "M6MATH-5.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A bank account starts empty. Zero dollars in this situation means the account has no money in it. Which statement correctly uses a signed number and a direction word together to describe $25 withdrawn from this empty account?",
+    "problemText": "On a number line, positive numbers are placed to the right of zero and negative numbers are placed to the left of zero. What does the minus sign in front of a number tell you?",
     "choices": [
-      "Negative 25 dollars below the account.",
-      "Positive 25 dollars taken out.",
-      "Negative 25 dollars.",
-      "25 dollars negative removed."
+      "How many steps to take on the number line",
+      "That you should subtract that number from something",
+      "Which side of zero the number sits on",
+      "That the number is smaller than all positive numbers"
     ],
     "answer": "C",
     "hints": [
-      "The lesson teaches: use the sign OR the direction word, never both at once.",
-      "Withdrawal means the account goes down, so what sign should the number have?"
+      "Think about what the sign labels, not what operation it means.",
+      "The lesson says the minus sign is a label, not a subtraction operation."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6MATH-5.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A thermometer reads 6 degrees Celsius. On a Celsius thermometer, zero means the temperature at which water freezes. What signed number represents a temperature that is the opposite of 6 degrees Celsius?",
+    "problemText": "A bank account starts empty. Marcus withdraws $25 from the account. Which signed number represents this withdrawal?",
     "choices": [
-      "-6 degrees Celsius",
-      "+12 degrees Celsius",
-      "-12 degrees Celsius",
-      "+6 degrees Celsius"
+      "+25 dollars",
+      "-25 empty account",
+      "25 dollars",
+      "-25 dollars"
     ],
     "answer": "D",
     "hints": [
-      "Opposites sit the same distance from zero but on opposite sides of it.",
-      "If 6 degrees is on one side of the freezing point, what number sits the same distance on the other side?"
+      "First, name what zero means for a bank account.",
+      "Withdrawing money is the opposite direction from depositing money."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6MATH-5.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A cave explorer marks the entrance to the cave as 0 feet. She then descends 85 feet deeper into the cave. Which signed number correctly represents her position on the cave map?",
+    "problemText": "Two scuba divers are at different depths. Diver A is 8 meters below sea level. Diver B is 8 meters above sea level. How are their signed numbers related to each other?",
     "choices": [
-      "-85 feet",
-      "+85 feet",
-      "85 feet below the entrance",
-      "Negative 85 feet down"
+      "They are opposites because they sit the same distance from zero but on opposite sides",
+      "They are the same number because they are both 8 meters away from something",
+      "They are different because one is underwater and one is in the air",
+      "They are opposites because one number is bigger than the other"
     ],
     "answer": "A",
     "hints": [
-      "Descending means going down, which is the negative direction from the entrance.",
-      "Remember: the sign already says the direction, so do not repeat it with a word."
+      "The lesson defines opposites as two numbers the same distance from zero but on opposite sides.",
+      "Look at which direction each diver is from sea level, which is zero."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6MATH-5.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A submarine is 300 feet below sea level. A ship floats on the ocean surface. On a vertical number line where zero is sea level, the submarine and ship are at positions on opposite sides of zero. Which pair of signed numbers correctly represents their positions?",
+    "problemText": "On a cave map, the entrance is marked as 0 feet. A tour group descends 55 feet below the entrance to reach an underground lake. Later they climb back up 20 feet and stop at a resting platform. Write the signed number for the resting platform's position on this map, and explain what zero means in this situation.",
     "choices": [
-      "Ship: -300 feet, Submarine: +300 feet",
-      "Ship: 0 feet, Submarine: -300 feet",
-      "Ship: +300 feet, Submarine: -300 feet",
-      "Ship: +300 feet, Submarine: 0 feet"
+      "The platform is at -75 feet; zero means sea level",
+      "The platform is at -35 feet; zero means the cave entrance",
+      "The platform is at +20 feet; zero means the cave entrance",
+      "The platform is at -55 feet; zero means the lowest point of the cave"
     ],
     "answer": "B",
     "hints": [
-      "What does zero represent at sea level—above the water, on the surface, or below it?",
-      "The submarine is definitely below sea level. Where is the ship relative to that same zero line?"
+      "Start by naming what zero represents on this particular map.",
+      "The platform is below the entrance but not as far down as the lake; it is between the entrance and the lake."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6MATH-5.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A golf score of -4 means the golfer is 4 strokes under par. Par (the expected score) is set as zero for this scoring system. The golfer's friend shot the opposite score. What was the friend's score, and what does that number mean in the context of this golf game?",
+    "problemText": "A thermometer shows the current temperature as -7 degrees Celsius. A student writes the answer to a question as negative 7 degrees below zero. Why is this phrasing a mistake, and what is the correct way to say it?",
     "choices": [
-      "The friend shot +4, which means 4 strokes over par.",
-      "The friend shot -4, which means the same as the original golfer.",
-      "The friend shot +8, which means double the original score.",
-      "The friend shot 0, which means exactly par."
+      "The phrasing is wrong because -7 is not a valid temperature and we must instead use the phrase 7 degrees below zero, which is the only accepted format for expressing cold temperatures",
+      "The phrasing is wrong because the minus sign and the phrase below zero both describe the same direction, making it repetitive to use them together; you should say either -7 degrees Celsius or 7 degrees below zero, but not combine both descriptions in one statement",
+      "The phrasing is wrong because the minus sign already means below, so saying below twice is redundant; say either -7 degrees Celsius or 7 degrees below zero, not both together",
+      "The phrasing is wrong because below zero is a measurement that only applies to Fahrenheit scales, so you must convert the temperature before describing its position relative to zero on the Celsius scale"
     ],
     "answer": "C",
     "hints": [
-      "Opposites are the same distance from zero but on opposite sides.",
-      "If -4 is four units below par, where would the opposite number sit relative to par?"
+      "The lesson warns against using the sign and the direction word at the same time.",
+      "The minus sign is a label that already tells you the direction; you should not repeat the direction in words."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6MATH-5.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Two locations are measured from different zero lines. Location A uses sea level as zero and shows an elevation of -150 feet. Location B uses the base of a mountain as zero and shows an elevation of +150 feet. A student claims these two locations are at the same height because the numbers are opposites. Why is this reasoning incorrect, based on what zero means in each situation?",
+    "problemText": "A map uses sea level as zero elevation. Mountain A has an elevation of +1500 feet. A valley on the same map has an elevation of -300 feet. A second mountain, B, has an elevation that is the opposite of mountain A's elevation. A student claims that all three locations are different. Is the student correct, and why or why not?",
     "choices": [
-      "Because -150 is a larger distance from zero than +150.",
-      "Because the zero line is different in each situation, and opposite numbers only tell us the distance from their own zero, not the actual heights relative to each other.",
-      "Because +150 always means higher than -150 no matter what the zero line is.",
-      "Because one location uses feet and the other uses meters."
+      "Yes, the student is correct because +1500, -300, and the opposite of +1500 are three different signed numbers",
+      "Yes, the student is correct because the three elevations have different digits, so they must be at different heights",
+      "No, the student is incorrect because mountain B and mountain A are opposites and will have the same absolute distance from sea level",
+      "No, the student is incorrect because mountain B is at the same elevation as the valley, so they are not all different locations"
     ],
     "answer": "D",
     "hints": [
-      "The lesson teaches that zero means something different every time and whoever writes the numbers chooses it.",
-      "Opposite numbers tell you distance from zero and which side—but only if they share the same zero line."
+      "First, figure out what signed number represents mountain B's elevation using the definition of opposites.",
+      "Then compare all three elevations and see if any two of them are at the same height."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6MATH-5.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A number line shows 0 in the middle, with positive numbers to the right and negative numbers to the left. Where does the number -3 belong on this number line?",
+    "problemText": "Which of the following correctly describes where the number -3 is located on a number line?",
     "choices": [
-      "3 units to the right of 0",
-      "Between -2 and -4 on the right side",
-      "At the center, where 0 is",
-      "3 units to the left of 0"
+      "Between zero and one on the right side",
+      "Three units to the right of zero",
+      "At the zero point itself",
+      "Three units to the left of zero"
     ],
     "answer": "D",
     "hints": [
-      "The negative sign tells you the direction.",
-      "Distance from zero is 3; direction is determined by the negative sign."
+      "Negative numbers are positioned in one direction from zero, positive numbers in the other.",
+      "The distance from zero is found by looking at the number without its sign."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6MATH-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A vertical number line marks the ocean surface as 0. A whale is at -2.5 meters and a dolphin is at 2.5 meters. How are these two positions related on the number line?",
+    "problemText": "A thermometer marks 0 at the freezing point of water. A temperature of -2.5 degrees is recorded. On a vertical number line with zero at the middle, where does -2.5 sit?",
     "choices": [
-      "They are the same distance from 0 but on opposite sides",
-      "The whale is deeper than the dolphin by 5 meters",
-      "They are both in the water below the surface",
-      "They sit at different distances from 0"
+      "Between -2 and -3, exactly halfway between them",
+      "Between -1 and -2, exactly halfway between them",
+      "Between 2 and 3 on the positive side",
+      "Exactly at the -2 mark with no fraction"
     ],
     "answer": "A",
     "hints": [
-      "Think about distance from zero and direction.",
-      "Each number is 2.5 units away from 0; check which side each one is on."
+      "The distance from zero is 2.5, which means the point is 2.5 units away from the middle.",
+      "The negative sign tells you which direction from zero; the decimal tells you where to place the mark between whole numbers."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6MATH-5.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "On a number line, a point sits exactly halfway between -2 and -3. Which number marks that location?",
+    "problemText": "Two points on a number line are opposites of each other. One point is -7/2. Which of the following is true about the other point?",
     "choices": [
-      "-2.3",
-      "-2.5",
-      "-3.5",
-      "0"
+      "It sits 7 units to the left of zero",
+      "It sits 3.5 units to the right of zero",
+      "It sits between -3 and -4",
+      "It sits at the same location as -7/2"
     ],
     "answer": "B",
     "hints": [
-      "The halfway point between two numbers is their midpoint.",
-      "Find the middle distance between -2 and -3; it should be a negative decimal."
+      "Opposites are the same distance from zero but on opposite sides.",
+      "-7/2 is the same as -3.5; find the distance from zero and flip the direction."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6MATH-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A thermometer shows a temperature of -8 degrees. If you find the opposite of -8 and then find the opposite of that result, what temperature do you end up with?",
+    "problemText": "A point P on a number line sits exactly halfway between -5 and -6. Another point Q is the opposite of point P. Which of the following best describes the location of point Q?",
     "choices": [
-      "0 degrees",
-      "8 degrees",
-      "-8 degrees",
-      "16 degrees"
+      "Between 5 and 6, closer to 5",
+      "Exactly at 5.5 on the positive side",
+      "Between 5 and 6, exactly halfway between them",
+      "Between -5 and -6, at the same location as point P"
     ],
     "answer": "C",
     "hints": [
-      "Remember that flipping across zero twice returns you to where you started.",
-      "First flip: find the opposite of -8. Second flip: find the opposite of your answer."
+      "First, find the exact location of point P by identifying the midpoint between two integers.",
+      "Then find the opposite of that point by mirroring it across zero."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6MATH-5.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "On a number line, point A sits at -1/2 and point B is the opposite of point A. If you then find the opposite of point B, where do you land?",
+    "problemText": "A number line shows the positions of several rational numbers. If a student claims that -0.75 and 0.75 are located at different distances from zero, which statement best evaluates this claim?",
     "choices": [
-      "At 1/2",
-      "At 1",
-      "At -1/2",
-      "At 0"
+      "The claim is false; they are the same number written two different ways",
+      "The claim is true; negative numbers are always farther from zero than positive numbers",
+      "The claim is true; 0.75 is closer to zero because it has no negative sign",
+      "The claim is false; both are exactly 0.75 units away from zero, making them opposites"
     ],
     "answer": "D",
     "hints": [
-      "Work through the flips step by step: start at -1/2, find its opposite, then find the opposite of that.",
-      "The opposite of the opposite of any number is the number itself."
+      "Distance from zero is the number without its sign.",
+      "Opposites sit the same distance from zero but on opposite sides of it."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6MATH-5.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A surveyor marks a reference point at 0 feet. Point X is 4.5 feet below reference, and point Y is the opposite of point X on the number line. A helper asks: 'Is the opposite of the opposite of point Y the same as the opposite of point X?' Using only the rule for opposites, what is your answer, and why?",
+    "problemText": "A student places point A at -4.25 on a number line. She then finds the opposite of point A and marks it as point B. Next, she finds the opposite of point B and marks it as point C. When she checks her work, she wants to verify that point C is in the correct location. What should point C's location be, and why?",
     "choices": [
-      "Yes, because the opposite of the opposite of any number is itself, and the opposite of X is Y, so the opposite of the opposite of Y is Y, which equals the opposite of X",
-      "No, because the opposite of the opposite of Y gives you back Y at 4.5 feet, while the opposite of X gives you negative 4.5, and these are not equal to each other",
-      "Yes, because applying the opposite operation twice to any number cancels out and returns you to zero on the number line",
-      "No, because the opposite of the opposite of Y equals negative Y, which is not the same value as the opposite of X which equals positive Y"
+      "Point C should be at -4.25, because taking the opposite twice returns you to the starting number",
+      "Point C should be at 4.25, because the two opposite operations cancel the negative sign",
+      "Point C should be at 0, because two opposite operations together equal zero",
+      "Point C should be at 8.5, because the opposite of a negative is found by doubling its distance"
     ],
     "answer": "A",
     "hints": [
-      "Use the rule: the opposite of the opposite of any number is the number itself.",
-      "Trace through: point X = -4.5, point Y = opposite of X = 4.5, opposite of opposite of Y = Y = 4.5, and opposite of X = Y = 4.5."
+      "Trace through each step: start at -4.25, find its opposite, then find the opposite of that result.",
+      "The rule states that the opposite of the opposite of any number is the number itself; mirror-flipping twice across zero returns you to your starting point."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6MATH-5.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A number is 12 units to the left of zero on the number line. What is the absolute value of this number?",
+    "problemText": "What is the absolute value of -12? Write the absolute value using the vertical bar notation and find its value.",
     "choices": [
       "12",
+      "-12",
       "0",
-      "−12",
       "24"
     ],
     "answer": "A",
     "hints": [
-      "Absolute value is the distance from zero, and distance is never negative.",
-      "Count how many units away from zero the number sits, ignoring which direction."
+      "Absolute value measures distance from zero on a number line.",
+      "Distance is never negative, so think about how many units -12 sits away from zero."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6MATH-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Marcus recorded the temperature as −5 degrees. His sister recorded it as +5 degrees (they used different temperature scales). What is |−5| and what is |+5|?",
+    "problemText": "A diver's depth is recorded as -40 feet below sea level. What does the absolute value of -40 tell you about the diver's position?",
     "choices": [
-      "|−5| = −5 and |+5| = 5",
-      "|−5| = 5 and |+5| = 5",
-      "|−5| = 5 and |+5| = −5",
-      "|−5| = −5 and |+5| = −5"
+      "The diver is 40 feet above sea level, which is the opposite direction from where the negative sign indicates the diver actually is.",
+      "The diver is 40 feet away from sea level, measuring distance only.",
+      "The diver descended 40 feet in one move and the absolute value shows the size of that descent without regard to direction.",
+      "The diver will rise 40 feet to reach sea level because absolute value predicts future position changes."
     ],
     "answer": "B",
     "hints": [
-      "Remember that opposites (like −5 and +5) sit the same distance from zero on opposite sides.",
-      "Absolute value measures distance, which is always a non-negative result."
+      "Absolute value asks 'how far' from zero, not 'which direction.'",
+      "The bars measure distance, which is always a positive number."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6MATH-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Kai's bank balance is −45 dollars. What does the absolute value |−45| represent in this situation?",
+    "problemText": "Two opposite numbers are -7 and +7. Find |-7| and |+7|. Which statement is true?",
     "choices": [
-      "The direction Kai's balance is moving on his account",
-      "The size of Kai's debt in dollars",
-      "The number of days until Kai's balance changes",
-      "How many times Kai has checked his balance"
+      "|-7| is greater than |+7| because -7 is on the left side of the number line.",
+      "|-7| = -7 and |+7| = +7, so they have different absolute values.",
+      "|-7| = 7 and |+7| = 7, so both numbers sit the same distance from zero.",
+      "|-7| = 7 but |+7| = -7 because they are opposites."
     ],
     "answer": "C",
     "hints": [
-      "Absolute value tells you the magnitude or size, not the direction (positive or negative).",
-      "Think about what the bars |−45| measure: how far from zero is −45?"
+      "Opposites always have the same absolute value.",
+      "Count the units from zero for each number: how far is -7 from zero? How far is +7 from zero?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6MATH-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two swimmers dive to different depths. Diver A is at −20 meters (20 meters below the surface), and Diver B is at −8 meters (8 meters below the surface). Which statement is true?",
+    "problemText": "Chen's bank account shows a balance of -25 dollars. His friend Mia's account shows +8 dollars. (a) Whose balance is greater as a signed number? (b) Whose balance represents a greater absolute value, or magnitude?",
     "choices": [
-      "Diver A is at a greater depth, and |−20| is also greater than |−8|",
-      "Diver A is at a greater depth, but |−8| is greater than |−20|",
-      "Diver B is at a greater depth, but |−20| is greater than |−8|",
-      "Diver B is at a greater depth, and |−20| is also greater than |−8|"
+      "Chen's balance (-25) is greater, and his balance also has the greater absolute value.",
+      "Mia's balance (+8) is greater, and her balance also has the greater absolute value.",
+      "Chen's balance (-25) is greater, but Mia's balance has the greater absolute value.",
+      "Mia's balance (+8) is greater, but Chen's balance has the greater absolute value."
     ],
     "answer": "D",
     "hints": [
-      "First decide which diver is deeper (which number sits farther from zero). Then decide which absolute value is greater.",
-      "Greater depth means farther below the surface; greater absolute value means a larger distance from zero."
+      "Remember: 'greater' (order) and 'greater absolute value' (magnitude) are two separate questions.",
+      "On a number line, greater means farther to the right. For absolute value, count distance from zero."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6MATH-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student claims that −7 > −12 and also that |−7| > |−12|. Is this student correct? Explain why or why not, in terms of order and absolute value.",
+    "problemText": "A temperature of -15°C and a temperature of -2°C are recorded in two cities. Which statement correctly compares these two numbers using both order and absolute value?",
     "choices": [
-      "No. −7 > −12 is true, but |−7| > |−12| is false because −12 is farther from zero.",
-      "Yes. Both statements are true because 7 and 12 are both positive numbers.",
-      "No. Both statements are false because −12 is a bigger number.",
-      "Yes. One statement measures order on the number line, and the other measures distance from zero, and both comparisons are correct."
+      "-2 is greater than -15, but |-15| is greater than |-2|.",
+      "-15 is greater than -2, and |-15| is greater than |-2|.",
+      "-2 is greater than -15, and |-2| is greater than |-15|.",
+      "-15 is greater than -2, but |-2| is greater than |-15|."
     ],
     "answer": "A",
     "hints": [
-      "Check which number sits farther to the right (order), then check which sits farther from zero (absolute value). These answer different questions.",
-      "Remember: −7 is to the right of −12 on the number line, but which one sits a greater distance from zero?"
+      "Check which number sits farther to the right on the number line to decide which is greater.",
+      "Then check which number sits farther from zero to decide which has the greater absolute value."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6MATH-5.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A number n is 6 units to the left of zero on the number line. Another number m is 6 units to the right of zero. A student says that because |n| = |m|, the numbers n and m must be equal. Is the student correct? Explain what the absolute values being equal does and does not tell us.",
+    "problemText": "Four students made the following claims about numbers and their absolute values. Which student's claim shows a misunderstanding of the difference between order comparison and absolute-value comparison?",
     "choices": [
-      "Yes, the student is correct because two numbers with equal absolute values must be the same number.",
-      "No, the student is incorrect. Equal absolute values mean n and m are opposites sitting the same distance from zero, but they are not the same number; one is negative and one is positive.",
-      "Yes, the student is correct because if |n| = |m| = 6, then both n and m represent the same quantity and must refer to identical points on the number line.",
-      "No, the student is incorrect because absolute value measures direction and position, so equal absolute values guarantee that n and m are located at identical coordinates on the number line."
+      "James says: '-50 is less than -5 because -50 sits to the left of -5 on the number line, but |-50| is greater than |-5| because 50 is farther from zero.'",
+      "Kai says: 'Since -8 is greater than -30, the absolute value |-8| must also be greater than |-30|.'",
+      "Tessa says: 'The numbers -12 and +12 are opposites, so |-12| = |+12| = 12, even though one is negative and one is positive.'",
+      "Olivia says: 'A debt of $40 is a larger debt than a debt of $6 because the magnitude, or absolute value, of the debt is bigger.'"
     ],
     "answer": "B",
     "hints": [
-      "Think about what it means when two numbers are opposites: they have the same absolute value but are different numbers.",
-      "Absolute value tells you distance from zero, not whether two numbers are identical; it does not preserve direction."
+      "A student with a misunderstanding would confuse 'greater as a number' with 'greater absolute value.'",
+      "Remember: -8 is greater than -30 (it sits to the right), but |-8| = 8 and |-30| = 30, so which is larger?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "On a number line, the number -5 sits to the left of the number 3. Which inequality statement correctly compares these two numbers using the rule that the number farther right is greater?",
+    "problemText": "Which symbol should be used to compare these two rational numbers: -8 and 3? Choose the correct inequality statement.",
     "choices": [
-      "3 < -5",
-      "-5 < 3",
-      "-5 > 3",
-      "3 = -5"
+      "-8 > 3",
+      "-8 < 3",
+      "3 < -8",
+      "3 = -8"
     ],
     "answer": "B",
     "hints": [
-      "The symbol's open side faces the greater number.",
-      "Since -5 is farther left, it must be the smaller number in the inequality."
+      "Remember: the open side of the symbol points toward the smaller number.",
+      "On a number line, -8 sits to the left of 3, so -8 is the lesser number."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A bank app shows Keisha's account balance as -8.25 dollars and her brother's balance as 12.5 dollars. Write an inequality comparing their balances and then explain what it means in the real situation.",
+    "problemText": "A scuba diver records two depths below sea level during a research mission. The first measurement is -45 meters. The second measurement is -28 meters. Write an inequality comparing these two depths, then explain what it means in context.",
     "choices": [
-      "-8.25 > 12.5; Keisha has more money than her brother.",
-      "-8.25 < 12.5; Keisha has more money than her brother.",
-      "-8.25 < 12.5; Keisha's balance is lower than her brother's balance.",
-      "12.5 < -8.25; Keisha owes less money than her brother has."
+      "-28 < -45; the second depth is shallower than the first depth.",
+      "-45 > -28; the first depth is deeper than the second depth.",
+      "-45 < -28; the first depth is deeper than the second depth.",
+      "-45 < -28; the first depth is shallower than the second depth."
     ],
     "answer": "C",
     "hints": [
-      "Identify which number sits farther left on the number line, then use the correct symbol with its open side toward the greater number.",
-      "After writing the inequality, your explanation must connect the numbers back to what the account balances actually mean in the real situation."
+      "A more negative number sits farther left on the number line, making it the lesser number.",
+      "The inequality symbol's open side must face the greater number; then check your explanation matches the real situation."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A meteorologist records temperatures at four weather stations on the same morning: Station A is -6 degrees, Station B is -1 degree, Station C is 4 degrees, and Station D is -9 degrees. Which station recorded the coldest temperature?",
+    "problemText": "Four bank account balances are listed below. One balance is positive, two are negative, and one is zero. Which list orders these balances from least to greatest?",
     "choices": [
-      "Station B",
-      "Station C",
-      "Station A",
-      "Station D"
+      "-15, 0, -2.5, 8",
+      "-2.5, -15, 0, 8",
+      "0, -2.5, -15, 8",
+      "-15, -2.5, 0, 8"
     ],
     "answer": "D",
     "hints": [
-      "The coldest temperature is the one farthest to the left on a number line.",
-      "Do not choose based on which digit looks biggest; choose based on position on the number line."
+      "Start by finding which number sits farthest to the left on the number line—that is the least.",
+      "Remember that between two negative numbers, the one with the larger digit size is not necessarily the greater one; check which sits farther right."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Three divers record their depths below sea level. Diver 1 is at -45 feet, Diver 2 is at -18 feet, and Diver 3 is at -60 feet. Order the three depths from least to greatest, and then explain what the order tells you about which diver is deepest underwater.",
+    "problemText": "A weather station compares temperatures from three cities: City A is at -12°C, City B is at -5°C, and City C is at 0°C. Write an inequality that shows which two cities have temperatures that are closest to each other, then explain what the inequality means.",
     "choices": [
-      "-60, -45, -18; Diver 3 is deepest underwater because -60 is the least depth.",
-      "-18, -45, -60; Diver 1 is deepest underwater because -45 is the middle value.",
-      "-45, -18, -60; Diver 2 is deepest underwater because -18 is the greatest depth.",
-      "-60, -18, -45; Diver 3 is deepest underwater because -60 is the greatest value."
+      "-5 < 0; City B is colder than City C.",
+      "-12 < -5; City A is colder than City B.",
+      "-12 < 0; City A is colder than City C.",
+      "-5 < -12; City B is colder than City A."
     ],
     "answer": "A",
     "hints": [
-      "Read each depth's position from left to right on a number line to find the order from least to greatest.",
-      "The deepest diver has the most negative depth, which is the least number in your ordered list."
+      "First identify which pair of cities differ by the smallest amount when you think about the number line.",
+      "Write the inequality for that pair, then turn it back into a sentence about the actual temperatures in the cities."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is comparing two weeks of her test scores. Last week she earned -5 points for a makeup test (meaning she had to rewrite it). This week she earned 0 points on a quiz she missed. Which statement correctly uses an inequality to compare her two scores and explains what it means?",
+    "problemText": "Five elevations are recorded at different points on a mountain trail: 0, -42, 15, -8, and -50 feet relative to the base camp. Order these elevations from least to greatest, then explain what the greatest elevation tells you about that location compared to the other four locations.",
     "choices": [
-      "-5 < 0; Last week's score was greater than this week's score.",
-      "-5 > 0; Last week's score was worse than this week's score.",
-      "0 > -5; This week's score is better than last week's score.",
-      "-5 = 0; Both scores are the same value."
+      "-50, -42, -8, 0, 15; the point at 15 feet is the highest location on the trail because positive numbers always represent the top of any mountain.",
+      "-50, -42, -8, 0, 15; the point at 15 feet is the highest location, which means it sits farthest to the right on the number line and is the greatest elevation.",
+      "-50, -42, -8, 15, 0; the point at 0 feet is the greatest elevation because it represents the base camp and is therefore the reference point for all other measurements.",
+      "0, 15, -8, -42, -50; the point at 15 feet is the greatest because it has the largest absolute value among all the elevations recorded."
     ],
     "answer": "B",
     "hints": [
-      "Remember that -5 sits to the left of 0 on the number line, so it is the lesser number.",
-      "The inequality symbol's open side points to the greater number, and your explanation must say what the comparison means about her actual test results."
+      "Place all five numbers on a mental number line from left to right, remembering that more negative means farther left.",
+      "After ordering from least to greatest, connect the greatest number back to what 'greatest' means in the real world—it is the farthest right on the number line."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-5.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A climate scientist is ordering five cities by their average temperature anomaly (the difference from normal) in degrees Celsius: City A is -1.5, City B is -2, City C is 0.5, City D is -0.5, and City E is -2.5. List the cities in order from least anomaly to greatest anomaly, then identify which two cities have anomalies closest to each other and write an inequality comparing only those two.",
+    "problemText": "A student is given five rational numbers and asked to order them from least to greatest, then write two separate inequality statements about different pairs from the ordered list. The five numbers are: -3, 1.5, -7.2, 0, and -3.1. The student orders them correctly as -7.2, -3.1, -3, 0, 1.5. Which pair of inequality statements correctly shows two different comparisons that can be made from this ordered list, and explains both in context?",
     "choices": [
-      "E, B, A, D, C; The closest two are D and A, and the inequality is -1.5 < -0.5.",
-      "E, B, A, D, C; The closest two are D and A, and the inequality is -0.5 > -1.5.",
-      "E, B, A, D, C; The closest two are B and E, and the inequality is -2.5 < -2.",
-      "C, D, A, B, E; The closest two are D and A, and the inequality is -0.5 < -1.5."
+      "-3.1 < -3 (the elevation -3.1 meters is lower than -3 meters) and 0 < 1.5 (a zero balance is less than a balance of 1.5 dollars).",
+      "-7.2 < -3.1 (the temperature -7.2°C is colder than -7.1°C) and 1.5 > 0 (a positive number is always greater than zero).",
+      "-3 > -7.2 (the debt of 3 dollars is greater than the debt of 7.2 dollars) and 1.5 > 0 (a gain of 1.5 is worth more than nothing).",
+      "-3.1 > -3 (the number -3.1 is greater than -3) and 0 > -7.2 (zero is greater than a negative number)."
     ],
     "answer": "C",
     "hints": [
-      "First, place all five numbers on a mental number line from left to right, reading them off in order; then scan your ordered list to find which two numbers sit closest to each other.",
-      "Once you identify the closest pair, write an inequality with the correct symbol: the open side must point to the greater (more right) number."
+      "From an ordered list, any pair of numbers maintains its order when written as an inequality; check that your inequality symbol is written correctly by seeing which number sits farther right.",
+      "Your explanation must connect the numbers back to a real situation; it is not complete if it only states the inequality without saying what it means about the actual quantities."
     ]
   }
 ]

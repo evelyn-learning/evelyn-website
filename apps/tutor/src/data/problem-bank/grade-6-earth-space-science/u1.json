@@ -5,17 +5,17 @@
     "cedCode": "M6SCI-1.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "The sun's real diameter is about 1,392,000 kilometers, and Earth's real diameter is about 12,742 kilometers. What does it mean to say that the sun's diameter is about 109 times Earth's diameter?",
+    "problemText": "The sun's real diameter is about 1,392,000 kilometers, and Earth's real diameter is about 12,742 kilometers. About how many times larger is the sun's diameter than Earth's diameter?",
     "choices": [
-      "The sun is 109 kilometers wider than Earth because the difference between the two diameters is measured in units of 109.",
-      "You would need to add Earth's diameter to itself 109 times to equal the sun's diameter because the sun is so much larger than Earth in total volume.",
-      "If you lined up 109 Earths edge to edge in a straight line, they would stretch all the way across the sun's diameter.",
-      "The sun is 109 times older than Earth because size and age are related in the same proportion for all objects in space."
+      "About 390 times larger",
+      "About 11 times larger",
+      "About 109 times larger",
+      "About 1.5 times larger"
     ],
     "answer": "C",
     "hints": [
-      "Think about what 'dividing one diameter by another' tells you.",
-      "Imagine laying Earth-sized objects side by side to see how many fit across the sun."
+      "You need to divide the larger diameter by the smaller one.",
+      "The lesson specifically calculates this ratio early on."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6SCI-1.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "In a scale model, Jupiter is represented by a ball about 11 centimeters across. Jupiter's real diameter is about 11 times Earth's real diameter (about 12,742 kilometers). Using the same scale factor that made Jupiter 11 centimeters, about how big should Earth be in this model?",
+    "problemText": "In a scale model, you decide to use a grapefruit about 20 centimeters across to represent the sun. The sun's real diameter is about 1,392,000 kilometers. What scale factor (in real kilometers per model centimeter) would you use for this model?",
     "choices": [
-      "About 11 millimeters, because Earth is 11 times smaller than Jupiter and the model size should reflect that same ratio directly.",
-      "About 110 millimeters, because you must multiply the Jupiter model size by 11 to account for the size difference between the two planets.",
-      "About 1 centimeter, because Earth's diameter is one-eleventh of Jupiter's, so its model size should also be one-eleventh of Jupiter's model size of 11 centimeters.",
-      "About 1 millimeter, because Earth's diameter divided by Jupiter's diameter is about 1 divided by 11, and 11 centimeters divided by 11 is about 1 centimeter, which is 10 millimeters divided by 10."
+      "About 20,000 real kilometers per model centimeter",
+      "About 46,400 real kilometers per model centimeter",
+      "About 139,200 real kilometers per model centimeter",
+      "About 69,600 real kilometers per model centimeter"
     ],
     "answer": "D",
     "hints": [
-      "If Jupiter is 11 times wider than Earth in reality, how many times wider is Jupiter's model size than Earth's model size?",
-      "Divide the Jupiter model size by the same ratio you would use for the real diameters."
+      "Divide the sun's real diameter by the diameter of the object you chose.",
+      "The lesson shows this same calculation with a 30-centimeter beach ball and gets 46,400; a smaller object would give a larger scale factor."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6SCI-1.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student builds a scale model using a balloon 2 meters across to represent the sun. The sun's real diameter is about 1,392,000 kilometers. Using this scale factor, the student calculates that Earth's model size should be about 28.5 centimeters. Is the student's arithmetic correct?",
+    "problemText": "Mars's real distance from the sun is about 228,000,000 kilometers. In a scale model where Earth's model distance from the sun is about 32 meters, and Earth's real distance is about 150,000,000 kilometers, about how far should Mars sit from the model sun?",
     "choices": [
-      "Yes, because the scale factor 1,392,000 kilometers divided by 2 meters equals 696,000, and Earth's real diameter of 12,742 kilometers divided by 696,000 gives about 0.0183 meters, or about 1.83 centimeters, not 28.5 centimeters, so the student made an error.",
-      "No, because 28.5 centimeters is much larger than the sesame-seed size suggested in the lesson, which indicates the student used the wrong balloon size for the model.",
-      "No, because the student did not account for the fact that Earth must be positioned at a specific distance from the sun rather than being given a specific model size.",
-      "No, because a 2-meter balloon is too large to serve as an accurate sun model when the lesson recommends using objects no larger than 30 centimeters."
+      "About 49 meters",
+      "About 32 meters",
+      "About 228 meters",
+      "About 150 meters"
     ],
     "answer": "A",
     "hints": [
-      "First, compute the scale factor by dividing the balloon diameter in kilometers by the balloon diameter in meters.",
-      "Then divide Earth's real diameter by that scale factor to find the model size."
+      "Mars's real distance is about 1.5 times Earth's real distance.",
+      "If Mars is 1.5 times as far in real life, its model distance should also be 1.5 times as far."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6SCI-1.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "In a scale model with a 30-centimeter beach-ball sun, Earth sits at a model distance of about 32 meters. The real distance from Earth to Mars changes throughout the year as both planets orbit the sun, but Earth's distance from the sun stays nearly constant at about 1 AU (150,000,000 kilometers). If you wanted to build a distance model that showed Mars at its farthest point from Earth, where should you consider placing Mars—at a fixed model distance from the 30-centimeter sun, or at a distance that moves and changes?",
+    "problemText": "In a scale model using a 30-centimeter beach ball for the sun, Earth's model size works out to about 3 millimeters (like a sesame seed) and Earth's model distance from the ball is about 32 meters. Why does a single drawing that shows both the sun and Earth accurately sized AND accurately distanced from each other at this scale not exist?",
     "choices": [
-      "At a fixed distance from the sun, because Mars's distance from the sun is what determines its position in a distance model, even though its distance from Earth is always changing.",
-      "At a distance from the sun that stays fixed, but also at changing distances from Earth depending on where Earth currently is in its orbit, because both distances are measured in the same model.",
-      "At a fixed distance from Earth, because Earth is the observer and all model distances should be measured from Earth's location in order to show which planet is closest.",
-      "At a varying distance from the sun that matches Mars's real orbit exactly, because both Earth and Mars move along their orbital paths at different rates throughout each year."
+      "Because planets and the sun are not actually round; they are different shapes, so applying a single scale factor to both size and distance would distort their true forms differently.",
+      "Because applying one scale factor shrinks sizes so tiny that they become invisible on a page, while stretching distances so large that they extend far beyond a page.",
+      "Because the sun stays in the same place while planets move around it, so the distance scale factor changes over time but the size scale factor remains constant throughout the year.",
+      "Because the scale factor used for sizes must be much larger than the scale factor used for distances in order to show both measurements on the same drawing without one dominating the other."
     ],
     "answer": "B",
     "hints": [
-      "A distance model uses one scale factor to show how far each planet sits from the sun—does that distance change throughout the year?",
-      "Earth and Mars each travel around the sun at their own pace; what does the lesson say about the gap between them?"
+      "Think about what happens when you apply the same scale factor (46,400 kilometers per centimeter) to both tiny planet diameters and huge distances from the sun.",
+      "The lesson explains that one scale factor makes sizes vanish while making distances stretch impossibly far — that mismatch is why the two models are always shown separately."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6SCI-1.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "The moon's average distance from Earth is about 384,000 kilometers. The sun's average distance from Earth is about 150,000,000 kilometers. A student states: 'Since the sun is much farther from Earth than the moon is, if I shrink both distances by the same scale factor to build a model, the sun's model distance will be much larger than the moon's model distance.' Is the student's reasoning correct, and why?",
+    "problemText": "You build a relative-size model where the sun is represented by a 30-centimeter beach ball. A friend suggests you could just make the beach ball twice as big (60 centimeters) to represent the sun in the same model. How would this change affect Earth's model size in your model?",
     "choices": [
-      "No, because the scale factor changes depending on which object you are measuring the distance to.",
-      "Yes, because dividing both real distances by the same scale factor preserves the ratio between them, so the farther object stays farther even after shrinking.",
-      "No, because the moon and sun are different types of objects and cannot be compared using the same scale factor.",
-      "Yes, but only if the scale factor is less than 1,000,000."
+      "Earth's model size would shrink to about 1.5 millimeters, because using a bigger object for the sun makes everything else look smaller by comparison.",
+      "Earth's model size would stay the same, about 3 millimeters, because Earth's real size never changes.",
+      "Earth's model size would also double, to about 6 millimeters, because the same scale factor applies to all objects in a scale model.",
+      "Earth's model size would become impossible to calculate without knowing what the new scale factor is."
     ],
     "answer": "C",
     "hints": [
-      "What does the lesson say about applying one scale factor to every real distance in a model?",
-      "When you divide two different numbers by the same positive number, does the larger number stay larger?"
+      "In a scale model, does the ratio between the sun and Earth in your model stay the same as their real ratio?",
+      "The lesson shows that changing from a 30-centimeter beach ball to a 3-meter weather balloon (ten times bigger) also makes Earth's model size ten times bigger, from about 2.7 millimeters to about 2.7 centimeters."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6SCI-1.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student builds a solar system scale model with a sun ball 30 centimeters across (scale factor 46,400 kilometers per model centimeter). She then decides to change her sun to a 3-meter weather balloon (scale factor 464,000 kilometers per centimeter). She recalculates Earth's model size as about 2.7 centimeters instead of the original 2.7 millimeters, and Mars's model distance as about 490 meters instead of the original 49 meters. She then claims, 'The bigger sun forced Earth and Mars to be bigger and farther away in the model.' What is wrong with this claim?",
+    "problemText": "In a scale model, the sun is a 30-centimeter beach ball and Earth's model distance is 32 meters. Jupiter's real distance from the sun is about 5.2 AU (astronomical units), and one AU equals about 150,000,000 kilometers. About how far from the model sun should Jupiter sit, and how does this distance compare to Earth's model distance?",
     "choices": [
-      "The scale factors are not truly different because 46,400 and 464,000 differ by exactly one order of magnitude, so the model's real-world meaning is unchanged.",
-      "The real distances and real diameters of Earth and Mars have not changed at all; only the scale factor changed, so the ratio of each real object to the sun is still the same. Earth is still 109 times smaller than the sun in the model, and Mars is still 1.5 times farther from the sun than Earth is. The student changed which object she chose to stand in for the sun, not the actual sun, Earth, or Mars.",
-      "Earth and Mars cannot both change size and distance in the same model because one scale factor is used for sizes and a different scale factor is used for distances.",
-      "The model is invalid because a weather balloon is too large to use as the sun in a scale model of the solar system."
+      "About 320 meters, which is about 10 times Earth's model distance of 32 meters.",
+      "About 52 meters, which is about 1.6 times Earth's model distance of 32 meters.",
+      "About 16 meters, which is half of Earth's model distance of 32 meters.",
+      "About 166 meters, which is about 5.2 times Earth's model distance of 32 meters."
     ],
     "answer": "D",
     "hints": [
-      "When the scale factor is multiplied by 10, what happens to all model sizes and model distances?",
-      "What stays the same about the real sun, real Earth, and real Mars no matter which object you pick to represent the sun?"
+      "First figure out Jupiter's real distance in kilometers: if 1 AU is 150,000,000 kilometers, what is 5.2 AU?",
+      "Then use the same reasoning as the Mars example: if Jupiter is 5.2 times as far from the sun in real life, its model distance should be 5.2 times Earth's model distance of 32 meters."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6SCI-1.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of these four planets is a terrestrial planet? Look for the planet that is small, rocky, and has a solid surface.",
+    "problemText": "Which four planets are terrestrial planets? Select the group that lists all of them correctly.",
     "choices": [
-      "Jupiter, because it is a large planet that orbits the sun and has many moons",
-      "Saturn, because it has a bright ring system and orbits beyond the asteroid belt",
-      "Neptune, because it is a gas giant located far from the sun in the outer solar system",
-      "Mercury, because it is small, made of rock and metal, and has a solid surface"
+      "Venus, Mars, Jupiter, and Saturn",
+      "Mercury, Venus, Earth, and Jupiter",
+      "Earth, Mars, Jupiter, and Saturn",
+      "Mercury, Venus, Earth, and Mars"
     ],
     "answer": "D",
     "hints": [
-      "Terrestrial planets are the four inner planets closest to the sun.",
-      "Check which choice describes a planet that is small and rocky with a surface you could land on."
+      "Terrestrial planets are small and made mostly of rock and metal.",
+      "All terrestrial planets orbit closer to the sun than the asteroid belt."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6SCI-1.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A planet you observe has no solid surface anywhere, is much larger than Earth, and orbits far beyond the asteroid belt. To which group does this planet belong, and why?",
+    "problemText": "A newly discovered planet is described as having no solid ground anywhere, even deep inside it, and as being much larger than Earth. Based on these properties, which group does this planet most likely belong to?",
     "choices": [
-      "Gas/ice giant, because it has no solid surface, is much larger than the inner planets, and orbits beyond the asteroid belt",
-      "Terrestrial, because all terrestrial planets orbit the sun and have atmospheres",
-      "Terrestrial, because planets with no solid surface are always inner planets closer to the sun",
-      "Gas/ice giant, because it is very cold and far away from the sun in space"
+      "Gas/ice giant, because it has no solid surface and is much larger than Earth",
+      "Terrestrial, because it is larger than Earth",
+      "Terrestrial, because we have not yet measured its exact distance from the sun",
+      "Gas/ice giant, because it must orbit beyond the asteroid belt"
     ],
     "answer": "A",
     "hints": [
-      "Think about the two key properties that separate the groups: what the planet is made of and whether it has a solid surface.",
-      "Position beyond the asteroid belt, combined with no solid surface and large size, matches which group?"
+      "Look for clues about composition and surface, not just size alone.",
+      "Remember: being large is part of the giant pattern, but composition and surface are what actually decide the group."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6SCI-1.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Four students each describe a different planet. Student A says her planet is small and orbits before the asteroid belt. Student B says his planet orbits after the asteroid belt. Student C says her planet is made mostly of rock and metal. Student D says his planet has no solid surface. Which student is describing a property that, all by itself, is true of every terrestrial planet?",
+    "problemText": "Venus is reported to orbit closer to the sun than the asteroid belt, to have a solid rocky surface, and to be small compared to Jupiter. Which statement correctly classifies Venus?",
     "choices": [
-      "Student A, because all terrestrial planets are located in the inner solar system near the sun",
-      "Student C, because all four terrestrial planets are made of rock and metal",
-      "Student B, because terrestrial planets always orbit after the asteroid belt in our solar system",
-      "Student D, because gas giants are the only planets that have solid surfaces"
+      "Venus is a gas/ice giant because it orbits closer to the sun than Earth and has an atmosphere",
+      "Venus is a terrestrial planet because it is small, rocky, and orbits before the asteroid belt",
+      "Venus is a gas/ice giant because it has a solid surface and is smaller than Jupiter",
+      "Venus is a terrestrial planet because it does not have a ring system like Saturn does"
     ],
     "answer": "B",
     "hints": [
-      "Look for a property that belongs to Mercury, Venus, Earth, and Mars — and only to those four.",
-      "Which choice names something true of all terrestrial planets but would not be true of any giant planet?"
+      "Check the position relative to the asteroid belt first.",
+      "Composition and solid surface both point to the same group that position suggests."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6SCI-1.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A planet is reported to orbit beyond the asteroid belt and to have a ring system. A student claims this means the planet must be Saturn. Explain why the student's reasoning is incomplete, using what you know about which planets have ring systems.",
+    "problemText": "A student observes that Saturn has a bright, easy-to-see ring system, and concludes that any planet with a ring system must be Saturn. Explain why this conclusion is incorrect, using what you know about ring systems across all eight planets.",
     "choices": [
-      "The student is correct; only Saturn has rings, so a ring system always means Saturn",
-      "The student is incomplete; many planets have ring systems, but the ring description does not say whether the rings are bright and easy to see",
-      "The student is incomplete; all four giant planets have ring systems, so a ring system alone does not point to Saturn specifically",
-      "The student is correct; planets beyond the asteroid belt are always giants, and Saturn is the only giant"
+      "The conclusion is wrong because Jupiter, Uranus, and Neptune also have ring systems, though theirs are much fainter and harder to observe than Saturn's bright, distinctive rings",
+      "The conclusion is wrong because terrestrial planets including Earth and Mars have faint rings that can only be detected with powerful ground-based telescopes and space probes",
+      "The conclusion is wrong because all four giant planets have ring systems, so a ring system alone does not identify Saturn specifically, and Saturn's rings happen to be the brightest",
+      "The conclusion is wrong because Mercury, Venus, Earth and Mars all have ring systems that are much brighter and easier to see than Saturn's rings when viewed from space"
     ],
     "answer": "C",
     "hints": [
-      "All four giant planets have ring systems, though they are not equally easy to see.",
-      "If all four giants have rings, what does that tell you about using 'has rings' as the only clue to identify which giant it is?"
+      "Recall which planets definitely have ring systems and compare their brightness.",
+      "A ring alone tells you it is a giant, but only Saturn's rings are the brightest and easiest to see of the four."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6SCI-1.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A newly discovered object orbits the sun inside the asteroid belt, is about the same size as Earth's moon, and is made of rock and metal. Is this object a terrestrial planet? Use the lesson's definition of terrestrial planet to explain your answer.",
+    "problemText": "Two planets are being studied. Planet A is small, made of rock and metal, has no ring system, and orbits before the asteroid belt. Planet B is much larger than Planet A, made mostly of gas, has no solid surface, and orbits beyond the asteroid belt. Both planets have moons. Which statement correctly describes both planets?",
     "choices": [
-      "Yes, because it is made of rock and metal like all terrestrial planets",
-      "Yes, because it orbits inside the asteroid belt with the other terrestrial planets",
-      "No, because it is not one of the eight planets and terrestrial planets are defined as small, rocky, and having a solid surface that a spacecraft could land on",
-      "No, because terrestrial planets must be larger than the moon"
+      "Both are terrestrial planets because they both have moons orbiting them and follow stable paths around the sun",
+      "Both are gas/ice giants because they both orbit the sun and possess natural satellites that can be observed from Earth",
+      "Planet A is a gas/ice giant and Planet B is terrestrial because Planet B is located farther from the sun and has a larger mass than Planet A",
+      "Planet A is terrestrial and Planet B is a gas/ice giant because they differ in composition, size, and position relative to the asteroid belt"
     ],
     "answer": "D",
     "hints": [
-      "Recall that the four terrestrial planets are Mercury, Venus, Earth, and Mars — a specific set of eight.",
-      "Terrestrial planets are small, but what defines the group is not just composition and size — think about what else must be true about the surface and the planet itself."
+      "Look at the pattern of composition, size, and position — do they all point to the same group or different groups?",
+      "Remember that the number of moons is not the property that determines which group a planet belongs to."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6SCI-1.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A space probe sends back data about a distant object. The data show that the object is much larger than Venus, has a faint ring system that requires a telescope to see clearly, is made mostly of gas and ice, and has no solid surface anywhere. The probe also detects many orbiting moons. Is this object one of the eight planets in our solar system? If yes, name which one(s) it could be; if no, explain why using the properties described.",
+    "problemText": "A space probe sends back data on four planets in a distant solar system. Planet 1 is small, rocky, with a solid surface and no rings, orbiting close to its star. Planet 2 is small, icy, with a solid surface and no rings, orbiting close to its star. Planet 3 is huge, made of gas, with no solid surface and faint rings, orbiting far from its star. Planet 4 is huge, made of gas, with no solid surface and very bright rings, orbiting far from its star. Using the classification scheme taught in this lesson, which planets would you group together with Earth and Mars, and which would you group together with Jupiter and Saturn?",
     "choices": [
-      "Yes, it is Jupiter, Uranus, or Neptune, because it is much larger than the inner planets, made of gas and ice with no solid surface, has a faint ring system, and orbits beyond the asteroid belt — all matching the giant-planet group; Saturn has much brighter rings, so the faint-ring clue rules it out",
-      "Yes, it is a terrestrial planet, because terrestrial planets can be very large and have many moons orbiting them",
-      "No, because it has no solid surface and only terrestrial planets are found in our solar system",
-      "Yes, it must be Saturn, because Saturn is known to have the most moons and the brightest ring system of all planets"
+      "Planets 1 and 2 are terrestrial-like; Planets 3 and 4 are giant-like, and Planet 4 most closely resembles Saturn because of its bright rings",
+      "Planets 1 and 2 are terrestrial-like; Planets 3 and 4 are giant-like, although we cannot tell which specific giant each resembles without knowing distances in kilometers",
+      "Only Planet 1 is terrestrial-like; Planets 2, 3, and 4 are all giant-like because they are icy or gaseous",
+      "Planets 1 and 3 are terrestrial-like; Planets 2 and 4 are giant-like based on whether they are made of rock or ice"
     ],
     "answer": "A",
     "hints": [
-      "All four giant planets have ring systems and many moons, but Saturn's rings are the brightest and easiest to see; what does a faint ring tell you?",
-      "Combine the clues: gas and ice composition, no solid surface, size, position (implied by the other properties), and ring brightness — which giants fit all of them?"
+      "Group by the pattern of size, composition, surface, and position — terrestrial planets are small and rocky with solid surfaces, while giants are huge with no solid surface and all have rings.",
+      "Within the giant group, Saturn is uniquely recognized by its bright, easy-to-see rings, while the other three giants have fainter ring systems."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6SCI-1.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Every object with mass exerts a pull on every other object with mass. What is the name of this pull?",
+    "problemText": "Every object that has mass exerts a pull on every other object that has mass. What is the name of this pull?",
     "choices": [
       "Gravity",
-      "Friction",
       "Magnetism",
-      "Velocity"
+      "Friction",
+      "Momentum"
     ],
     "answer": "A",
     "hints": [
-      "This pull connects every object in the solar system, from planets to moons to spacecraft.",
-      "This pull is what keeps planets orbiting the sun instead of flying off in a straight line."
+      "This pull acts between any two objects with mass, no matter how far apart they are.",
+      "This is the force that keeps planets in orbit around the sun."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6SCI-1.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A ball rolls off the edge of a table and falls straight down to the floor, landing a few inches away. A satellite is launched into orbit around Earth and circles the planet for years without ever hitting the ground. If gravity is pulling on both objects the entire time, why does the ball land so quickly while the satellite keeps orbiting?",
+    "problemText": "A rock is thrown hard across a frozen lake with no friction. If no forces acted on the rock, which path would it follow? Now explain why the rock does not actually follow that path.",
     "choices": [
-      "The satellite is so far away that gravity stops pulling on it entirely, while gravity continues to pull the ball downward throughout its fall to the ground.",
-      "The satellite has enormous sideways speed, so gravity curves its path around Earth instead of straight down, while the ball has little sideways speed and gravity pulls it to the ground quickly.",
-      "The satellite is made of metal that resists the pull of gravity, whereas the rubber ball is not made of metal and therefore responds to gravity in the normal way.",
-      "The satellite is traveling so fast that it escapes Earth's gravitational field and no longer needs to fall, unlike the ball which lacks sufficient speed to escape."
+      "It would fly off in a straight line because it is moving fast; the cold temperature causes it to curve downward.",
+      "It would fly off in a straight line because there is nothing to change its direction; gravity pulls it downward and curves its path instead.",
+      "It would circle around the lake because the ice pushes it sideways; gravity has no effect on objects moving across ice because they are sliding on a cold surface.",
+      "It would slow down and stop because all moving objects eventually stop unless pushed; gravity pulls it upward and prevents it from sinking into the frozen lake."
     ],
     "answer": "B",
     "hints": [
-      "Think about how fast the ball is moving sideways when it leaves the table compared to how fast the satellite is moving sideways.",
-      "An orbit happens when an object keeps falling and keeps missing at the same time—how does sideways speed control whether the object misses or crashes?"
+      "Think about what happens to any moving object if nothing pushes or pulls on it.",
+      "Gravity always acts on the rock, whether it is in the air or on the ice—it never switches off."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6SCI-1.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two moons, identical in mass and properties, orbit their parent planets. Moon A orbits close to its planet's surface, and Moon B orbits far above the same planet's surface. Which moon experiences a stronger gravitational pull from its planet, and why?",
+    "problemText": "A spacecraft is in orbit around Earth. Inside the spacecraft, an astronaut releases a pencil and watches it float in the air rather than drop to the floor. What does this tell you about whether Earth's gravity is still pulling on the pencil?",
     "choices": [
-      "Moon B, because moons that are farther away experience a stronger pull so they do not escape.",
-      "Moon A, because gravitational pull grows weaker as distance increases, so the closer moon feels a stronger pull.",
-      "Both moons experience the same pull, because they have identical mass.",
-      "Neither moon experiences any pull because they are already in orbit and have escaped the planet's gravity."
+      "Gravity is pulling on Earth but not on the pencil, because the pencil is made of lighter material and does not experience gravitational force.",
+      "Gravity is no longer pulling on the pencil, because objects in orbit escape Earth's gravitational pull completely when they reach orbital altitude.",
+      "Gravity is still pulling on the pencil, because the pencil and the astronaut are both falling toward Earth at the same rate.",
+      "Gravity is pulling downward on the pencil, which is why it appears to float upward away from the floor because the downward pull is stronger than the floor."
     ],
     "answer": "C",
     "hints": [
-      "The moons are identical to each other—what would make the gravitational pull on them different?",
-      "Gravity's pull depends on two things: the mass of the object doing the pulling, and the distance between the objects. What stays the same between these two moons?"
+      "Remember that gravity does not switch off in space—it keeps pulling the entire time an object orbits.",
+      "An orbiting spacecraft and everything inside it are all in free fall together toward Earth."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6SCI-1.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A spacecraft is launched into orbit around Earth. An astronaut inside lets go of a pencil, and it floats beside her in mid-air rather than falling to the floor of the spacecraft. A student argues: 'The pencil is floating because Earth's gravity has stopped pulling on it up there in space.' Is this explanation correct? Use the idea of free fall to explain your answer.",
+    "problemText": "Two satellites have identical mass and are both in stable orbit around Earth. Satellite P orbits very close to Earth, while Satellite Q orbits much farther away. Both satellites are moving fast enough to stay in orbit. Which satellite feels the stronger pull of Earth's gravity, and what would happen to Satellite Q if it were suddenly slowed down to half its current speed?",
     "choices": [
-      "Yes, the explanation is correct because orbiting spacecraft are far enough from Earth that gravity stops working.",
-      "No, the explanation is incorrect. Earth's gravity is still pulling on the pencil, the astronaut, and the spacecraft. They are all in free fall together—falling toward Earth at the same rate—so the pencil appears to float relative to the astronaut instead of dropping to the floor.",
-      "No, the explanation is incorrect because the pencil is made of wood and wood does not respond to gravity.",
-      "Yes, the explanation is correct because spacecraft have special shielding that blocks gravitational pull."
+      "Satellite Q feels the stronger pull because the farther an object is from Earth, the stronger the gravitational attraction becomes; Satellite Q would immediately crash into Earth because gravity overcomes its velocity.",
+      "Satellite Q feels the stronger pull because it has traveled a greater total distance from Earth's center over time; Satellite Q would fly off into space because slowing it down reduces the strength of gravity's pull on it.",
+      "Satellite P feels the stronger pull because it orbits faster and experiences more gravitational force; Satellite Q would continue to orbit at the same distance because gravity always holds satellites in place no matter their speed.",
+      "Satellite P feels the stronger pull because it is closer to Earth; Satellite Q would fall toward Earth instead of orbiting because slower sideways motion means it cannot keep missing the ground."
     ],
     "answer": "D",
     "hints": [
-      "If gravity stopped, would the spacecraft still stay in orbit, or would it fly off in a straight line?",
-      "Free fall means moving under gravity's pull alone. If the spacecraft, astronaut, and pencil are all falling toward Earth together, would the pencil appear to drop or would it seem to float next to the astronaut?"
+      "Gravity's pull grows weaker as distance increases—which satellite is closer?",
+      "An orbit requires the right balance between falling toward the central body and moving sideways fast enough to keep missing it."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6SCI-1.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "The sun orbits nothing—it sits at the center of the solar system. All the planets orbit the sun. Two planets are being compared: Planet M is less massive than Planet N, and Planet M also orbits much closer to the sun than Planet N does. Which planet feels a stronger gravitational pull from the sun? Explain your reasoning using both mass and distance.",
+    "problemText": "A moon orbits Planet A at a distance of 100,000 kilometers. An identical moon orbits Planet B at the exact same distance. Planet B is far more massive than Planet A. Explain why the moon orbiting Planet B feels a stronger gravitational pull, and describe what would need to change for the moon around Planet A to feel an equally strong pull from its planet.",
     "choices": [
-      "Planet M feels the stronger pull. Even though Planet M is less massive, it orbits closer to the sun, and the closer distance to the sun's enormous mass produces a stronger gravitational pull than the farther distance of Planet N.",
-      "Planet N feels the stronger pull because it is more massive and therefore attracts the sun's gravity more effectively than a less massive planet can.",
-      "Planet M feels the stronger pull because it is less massive and therefore easier for the sun to pull on with a given amount of gravitational force.",
-      "Both planets feel an equal pull because the sun's gravitational strength remains unchanged at every location throughout the solar system."
+      "Planet B pulls more strongly because it is more massive; the moon around Planet A would need to orbit much closer to its planet to feel an equally strong pull.",
+      "Planet B pulls more strongly because it is farther from the sun; the moon around Planet A would need to move much faster to feel an equally strong pull.",
+      "Planet A pulls more strongly because smaller planets have denser material; the moon around Planet B would need to be moved farther away to balance the pull.",
+      "Planet B pulls more strongly because larger planets rotate faster; the moon around Planet A would need to have more mass to match the pull it receives."
     ],
     "answer": "A",
     "hints": [
-      "Gravity's pull depends on two independent factors: the mass of the object pulling and the distance between objects. How does each factor affect the pull on each planet?",
-      "The sun's mass is enormous. How does the sun's massive pull compare between a planet that is close versus a planet that is far away, even if the far planet were more massive?"
+      "A more massive object pulls more strongly than a less massive one—which planet is more massive?",
+      "Distance and mass are the two factors that determine how strong a gravitational pull is; changing distance is one way to change how strong a pull feels."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6SCI-1.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A satellite is in a stable orbit around Earth. An engineer wants the satellite to orbit faster and stay at the same height above Earth, so the engineer tries to increase its sideways speed. Predict what will happen to the satellite's orbit, and explain why, using the concepts of gravity, distance, and the falling-and-missing model of orbit.",
+    "problemText": "A ball rolls off a table and hits the ground a few meters away. A satellite is launched into orbit and circles Earth repeatedly for years without ever hitting the ground, even though Earth's gravity is pulling on both the ball and the satellite the entire time. Both gravity and the path each object follows are outcomes of the same rule. Explain what is different between the ball and the satellite, why that difference matters, and how gravity's pull on each object produces such different results.",
     "choices": [
-      "The satellite will orbit faster at the same height because increasing sideways speed does not change how gravity works at that altitude.",
-      "The satellite will spiral outward away from Earth because it is moving too fast for gravity to curve its path as tightly as before, so it will miss the ground by more and more each time it falls.",
-      "The satellite will crash into Earth because faster sideways motion provides less time for gravity to curve its path and pull the satellite downward toward the surface.",
-      "The satellite will remain in orbit at the same height indefinitely because Earth's gravity automatically strengthens whenever a satellite moves faster, maintaining the same orbital distance regardless of speed."
+      "The ball falls because gravity is pulling on it, while the satellite orbits because gravity switches off once it is far enough from Earth; gravity only works on objects close to the ground where its force is concentrated.",
+      "The ball has very little sideways speed when gravity starts acting on it, so gravity pulls it straight down to the ground quickly; the satellite has enormous sideways speed, so gravity curves its path around Earth instead of down, allowing it to keep falling and also keep missing the ground over and over.",
+      "The ball is moving slowly sideways when it leaves the table, so gravity pulls it down faster than it can travel forward and it strikes the ground; the satellite moves forward at tremendous speed, which means gravity bends its path into a circle while the satellite continues moving and misses Earth repeatedly.",
+      "The ball falls because the pull of gravity on it is directed straight downward with no sideways motion to counteract it; the satellite orbits because its velocity in the forward direction balances the inward pull of gravity, creating a curved path that repeatedly brings it close to Earth without collision."
     ],
     "answer": "B",
     "hints": [
-      "In the falling-and-missing model, what role does sideways speed play in deciding how close the orbiting object gets to Earth?",
-      "If a satellite is moving sideways faster than it needs to in order to just barely miss the ground, will it miss by a smaller amount or a larger amount on each pass?"
+      "Both the ball and satellite are pulled toward Earth by gravity—the key difference is how fast each is moving sideways when that pull starts acting on it.",
+      "An orbit happens when an object is pulled toward a central body and also moves sideways fast enough to keep missing it; think about what 'sideways speed' means for each object."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A small rock fragment is drifting alone through the vacuum of space, millions of miles from Earth. What is this object called?",
+    "problemText": "Which of the following best describes the composition of a comet?",
     "choices": [
-      "A meteor, because it is a small piece of rock traveling through space",
-      "A meteoroid, because it is a small fragment of rock or metal drifting through space before reaching an atmosphere",
-      "A meteorite, because all small rock fragments in space are meteorites",
-      "An asteroid, because anything rocky in space must belong in the asteroid belt"
+      "Rock and metal only",
+      "Ice, frozen gases, and dust",
+      "A hard rocky core surrounded by liquid water",
+      "Gas and dust with no solid material at all"
     ],
     "answer": "B",
     "hints": [
-      "Think about the location rule: the name changes based on WHERE the object is — space, atmosphere, or ground.",
-      "The object has not yet entered an atmosphere or reached the ground, so what is the space-based name?"
+      "Comets are often described using a specific nickname that hints at their makeup.",
+      "Think about what happens to a comet when it gets close to the sun—what must be melting?"
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "An object orbits the sun in a nearly circular path that stays in the region between Mars and Jupiter. It is made of rock and metal, and it is too small for its own gravity to pull it into a round shape, so it looks lumpy and irregular. Which type of solar system object is this?",
+    "problemText": "A student observes an object orbiting the sun in a nearly circular path that stays in the region between Mars and Jupiter. The object does not develop a glowing tail. Based on these observations, what kind of solar system object is it most likely to be?",
     "choices": [
-      "A comet, because it has a rocky composition and orbits in a region far from the sun like all comets do",
-      "A dwarf planet, because it orbits between Mars and Jupiter and its gravitational shape would be round like dwarf planets",
-      "An asteroid, because its rocky composition and steady orbit within the asteroid belt match what an asteroid is",
-      "A meteoroid, because it is small and made of rock and metal like all meteoroids found in the solar system"
+      "A comet, because it orbits between Mars and Jupiter",
+      "A meteor, because it does not have a tail",
+      "An asteroid, because its steady orbit and location match the asteroid belt",
+      "A dwarf planet, because any object between Mars and Jupiter must be round"
     ],
     "answer": "C",
     "hints": [
-      "Start by checking composition — is it ice or rock? Then check the orbit shape — is it steady and circular, or long and stretched?",
-      "Objects that are rocky, lumpy, and orbit steadily in the region between Mars and Jupiter fit the definition of which category?"
+      "Two features are described: the shape of the orbit and the location. Which one is especially linked to the asteroid belt?",
+      "Comets are known for developing tails when they approach the sun. What does the lack of a tail tell you?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A fragment of rock enters Earth's atmosphere at high speed. Friction with the air heats it until it glows, creating a bright streak of light across the night sky. At this exact moment, while the fragment is still burning in the air and has not yet reached the ground, what is the glowing streak called?",
+    "problemText": "A fragment of rock has been traveling through space for thousands of years without entering any planet's atmosphere. What is this fragment called at this stage, and why?",
     "choices": [
-      "A meteorite, because the object has entered our planet's environment",
-      "A meteoroid, because it is still a piece of rock traveling through space",
-      "A meteor, because that is the name for the streak of light produced as a burning fragment moves through Earth's atmosphere",
-      "An asteroid, because it is large enough to create a visible light show"
+      "A meteorite, because it has already landed on a planet's surface after passing through the atmosphere",
+      "An asteroid, because any rock fragment in space between Mars and Jupiter must belong to the asteroid belt",
+      "A meteor, because it is the visible streak of light produced when a rock burns up in a planet's atmosphere",
+      "A meteoroid, because it is a small rock fragment drifting through space before entering an atmosphere"
     ],
     "answer": "D",
     "hints": [
-      "Remember the location rule: the name depends on WHERE the object is. Is it in space, in the atmosphere, or on the ground?",
-      "When the object is burning in the atmosphere and producing a visible streak of light, which of the three names (meteoroid, meteor, or meteorite) applies?"
+      "The three names—meteoroid, meteor, and meteorite—depend on where the object is, not what it is made of. Where is this fragment right now?",
+      "Remember that a meteor is specifically the streak of light you see. If there is no light yet, what stage comes before that?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "An object orbits far beyond Neptune in the Kuiper Belt. Its composition is mostly ice and frozen gases. However, its own gravity has been strong enough to pull it into a round, sphere-like shape. At the same time, many other icy objects of similar size orbit in the same region and share its orbital neighborhood. The object has not cleared these other objects away from its path. Based on both its composition and its gravitational shape, as well as what it shares its orbit with, what type of solar system object is this?",
+    "problemText": "An object orbits far beyond Neptune in the Kuiper Belt. Its own gravity has pulled it into a round, sphere-like shape, similar to how planets are round. However, many other icy objects of similar size orbit very close to it and share its orbital neighborhood. Explain why this object is a dwarf planet and not a full planet.",
     "choices": [
-      "A dwarf planet, because it is round from its own gravity but has not cleared other objects from its orbital neighborhood",
-      "A comet, because its icy composition and location in the Kuiper Belt mean it must be a comet with a stretched-out orbit",
-      "An asteroid, because it orbits in a belt along with many similar objects and asteroids are found in belt-like regions",
-      "A meteoroid, because it is made of ice and frozen gases rather than rock and metal like asteroids are"
+      "It is a dwarf planet because, although it is round from its own gravity, it has not cleared other objects out of its orbital neighborhood the way a full planet does",
+      "It is a dwarf planet because it orbits in the Kuiper Belt, where objects must remain surrounded by other icy bodies in order to avoid gaining enough orbital dominance to become full planets",
+      "It is a dwarf planet because its icy composition means it forms in regions where gravity is insufficient to clear the surrounding neighborhood of other similarly sized objects that share its orbital space",
+      "It is a dwarf planet because it lacks the mass required to generate gravitational pull strong enough to remove competing objects from its orbital zone, keeping it smaller and less dominant than true planets"
     ],
     "answer": "A",
     "hints": [
-      "Two key ideas separate a dwarf planet from a full planet: shape (must be round from its own gravity) and orbital neighborhood (must NOT have cleared out other objects). Does this object meet both conditions?",
-      "Being icy and in the Kuiper Belt might sound like a comet, but comets have stretched-out orbits and develop tails. What does this object's steady, round shape tell you?"
+      "What is the one key difference in the lesson between what makes a dwarf planet and what makes a full planet? It has to do with the neighborhood around the object.",
+      "Being round and orbiting the sun are things both full planets and dwarf planets can do. What is the thing that sets them apart?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A comet is traveling far out in the outer solar system, well beyond Neptune's orbit in the Kuiper Belt. At this stage of its journey, the comet is still far from the sun and very cold. As it begins to move closer to the sun over many years, it will eventually swing past Mars's orbit and even closer to the sun than Earth is. According to what happens to comets as they approach the sun, which of the following will happen, and why?",
+    "problemText": "A small icy object orbits the sun in a long, stretched-out path that carries it from far beyond Neptune almost to the orbit of Mars, then back out again. As it moves toward the sun, a glowing tail forms and streams away from the sun. When the object moves back away from the sun, the tail still points away from the sun, so the tail actually extends in front of the object's direction of travel. What kind of solar system object is this, and what explains why the tail behaves this way?",
     "choices": [
-      "It will develop a tail that stretches backward behind it, in the direction it is traveling because that is how comets move",
-      "It will develop a glowing tail that points away from the sun, because the sun's heat will turn some of the comet's surface ice into gas",
-      "It will become a meteoroid, because all objects that approach Earth's orbit must transform into small fragments as they enter the inner solar system",
-      "It will stop being a comet and become an asteroid, because it entered the inner solar system and only comets exist in the outer solar system"
+      "It is an asteroid because its long, stretched orbit and position in the inner solar system combined with its ability to generate heat show it is a piece of rocky debris from a collision",
+      "It is a comet because the sun's heat turns some of its surface ice into gas, and that gas and dust stream away from the sun rather than trailing behind the object like a kite's tail would",
+      "It is a meteoroid because it is small and icy and moving through space toward the inner solar system, and the glowing tail forms when atmospheric friction burns away its frozen surface layers",
+      "It is a dwarf planet because its long orbital path and the presence of a visible tail indicate that it maintains enough gravitational stability and mass to sustain a permanent presence in the solar system"
     ],
     "answer": "B",
     "hints": [
-      "What is a comet made of? When that material heats up near the sun, what forms and creates the glow?",
-      "The tail points AWAY from the sun, not backward along the comet's path. Why would gas and dust stream away from the sun's direction?"
+      "Three pieces of evidence point to the type of object: composition (icy), orbit shape (long and stretched), and tail behavior. Do all three point the same way?",
+      "The tail does not behave like a wake behind a moving object. What force is pushing the tail away from the object instead?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A piece of a broken asteroid has been drifting through space as a meteoroid for thousands of years. Tonight it enters Earth's atmosphere at high speed, burns up from friction with the air, and produces a meteor — a streak of light across the sky. A small fragment of the original piece survives the journey through the atmosphere and lands in a forest, where it is found the next morning and collected by a scientist. The scientist wants to prepare a label for this object that correctly identifies what it is and explains why. Which label correctly uses the vocabulary and reasoning from what we know about meteoroids, meteors, and meteorites?",
+    "problemText": "A scientist discovers a new round object orbiting the sun in the Kuiper Belt, far beyond Neptune. The object's gravity is strong enough to have pulled it into a sphere shape. To determine whether it is a dwarf planet or something else, the scientist must investigate whether other similar-sized objects share its orbital path. Explain what the scientist would find that would prove the object is a dwarf planet, and explain what would prove it is not a dwarf planet despite being round and orbiting the sun.",
     "choices": [
-      "Label: Meteor. Reason: Because it came from space and traveled through the atmosphere before landing.",
-      "Label: Meteorite. Reason: Because this is the surviving piece that reached the ground after burning in the atmosphere; the same object was called a meteoroid when it drifted in space and a meteor when it was burning in the sky.",
-      "Label: Meteoroid. Reason: Because the object originated as a fragment of an asteroid and has always been the same piece of rock throughout its journey.",
-      "Label: Shooting Star. Reason: Because it created a visible light show in the atmosphere and then fell to Earth."
+      "The object is a dwarf planet if it orbits the sun and is round; it is not a dwarf planet if it has an irregular shape or does not orbit the sun",
+      "The object is a dwarf planet if it is made of ice and frozen materials; it is not a dwarf planet if it is composed primarily of rock and metal like asteroids",
+      "The object is a dwarf planet if plenty of other icy objects of similar size orbit nearby and have not been cleared away; it is not a dwarf planet if its gravity has swept its orbital neighborhood clear of other large objects",
+      "The object is a dwarf planet if it was formed in the Kuiper Belt; it is not a dwarf planet if it originated in the asteroid belt or migrated from elsewhere in the solar system"
     ],
     "answer": "C",
     "hints": [
-      "Trace the object through all three stages: drifting in space, burning in the atmosphere, and now resting on the ground. What is the name that applies at this final location?",
-      "The object itself never changes — only its name changes based on WHERE it is. Since it has now reached the ground, which of the three names (meteoroid, meteor, meteorite) applies, and why does location matter more than composition or origin?"
+      "Reread the lesson definition of a dwarf planet carefully. What is the one criterion that separates a dwarf planet from a full planet?",
+      "The scientist needs to look at the orbital neighborhood. Is it crowded with similar objects, or has the object cleared it out? Which result proves it is a dwarf planet?"
     ]
   }
 ]

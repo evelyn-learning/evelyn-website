@@ -5,17 +5,17 @@
     "cedCode": "M6ELA-1.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which sentence explains what EXPLICIT means?\nA. An explicit statement is one that most readers will understand.\nB. An explicit statement is one the author thinks is important.\nC. An explicit statement is one the text says in plain words, with nothing left for the reader to figure out.\nD. An explicit statement is one that appears near the beginning of a passage.",
+    "problemText": "Read this sentence from a story: 'The dog barked loudly when the mailman arrived at the gate.' Which part of this sentence is an EXPLICIT statement?",
     "choices": [
-      "An explicit statement is one that most readers will understand, regardless of how clearly the author expressed it.",
-      "An explicit statement is one the author thinks is important enough to mention directly.",
-      "An explicit statement is one the text says in plain words, with nothing left for the reader to figure out.",
-      "An explicit statement is one that appears near the beginning of a passage where readers pay the most attention."
+      "The mailman felt scared by the dog's reaction because we must infer the mailman's emotions from context clues in the story.",
+      "The dog was protective of its owner's house based on what we can understand about the dog's behavior and purpose.",
+      "The dog barked loudly when the mailman arrived at the gate.",
+      "The dog had been trained to guard the property as shown by details we can figure out from the text."
     ],
     "answer": "C",
     "hints": [
-      "Look for the choice that matches the definition taught in the lesson.",
-      "Think about the word 'plain' — what does it suggest about how explicit ideas are stated?"
+      "An explicit statement uses plain words that are written right there in the text.",
+      "Look for a fact you can point to word for word, with nothing to figure out."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6ELA-1.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"Zoe arrived at the pool fifteen minutes before practice started. She stretched her arms slowly, then tested the water temperature with one hand. Other swimmers on the team were still getting changed in the locker room.\"\n\nWhich of the following is a valid inference based on the passage?\nA. Zoe is training for the Olympics.\nB. Zoe gets ready more quickly than most of the other swimmers.\nC. The locker room is far from the pool.\nD. Zoe has attended this pool for several years.",
+    "problemText": "Read this passage: 'Yuki had studied the spelling list every night for a week. On test day, she wrote each word carefully and checked her work twice before turning in her paper.' Which statement is an INFERENCE, not something the text states directly?",
     "choices": [
-      "Zoe is training for the Olympics.",
-      "Zoe gets ready more quickly than most of the other swimmers.",
-      "The locker room is far from the pool.",
-      "Zoe has attended this pool for several years."
+      "Yuki studied the spelling list every night for a week.",
+      "The spelling test happened on a day Yuki had prepared for.",
+      "She checked her work twice before turning in her paper.",
+      "Yuki wanted to do well on the spelling test."
     ],
     "answer": "D",
     "hints": [
-      "Find the choice that combines two or more details from the passage rather than introducing an outside idea.",
-      "Ask yourself: which conclusion can you support by pointing to exact words Zoe's early arrival and her routine actions in the passage?"
+      "An inference is something the text does not say in plain words but that you figure out from the details.",
+      "Look for a statement about what Yuki was thinking or feeling, not just what she did."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6ELA-1.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"Every morning, James packed his saxophone in its case before eating breakfast. On Saturday, he skipped breakfast to pack his case early. His mother asked why he was rushing. James said, 'The concert is at noon, and I want to be the first one there to warm up.'\"\n\nWhich sentence from the passage is EXPLICIT — stated directly in plain words?\nA. James said, \"The concert is at noon, and I want to be the first one there to warm up.\"\nB. James cares deeply about playing his instrument well.\nC. James has a habit of packing his saxophone before eating breakfast.\nD. James was nervous about performing at the concert.",
+    "problemText": "A student read this passage and made the claim below. Is this claim an inference supported by textual evidence, or is it just restating something the text already says explicitly?\n\nPassage: 'Kai arrived at soccer practice with his shin guards already on and his cleats laced tight.'\n\nStudent's claim: 'Kai arrived at soccer practice ready to play right away.'\n\nWhich is true?",
     "choices": [
-      "James said, \"The concert is at noon, and I want to be the first one there to warm up.\"",
-      "James cares deeply about playing his instrument well, based on how often he practices it.",
-      "James has a habit of packing his saxophone before eating breakfast every single day shown in the passage.",
-      "James was nervous about performing at the concert, as shown by his decision to rush and arrive early."
+      "It is a valid inference because no sentence in the passage says Kai was ready to play.",
+      "It is just a restatement because the passage already says Kai had his shin guards on and cleats laced.",
+      "It is a guess because the passage does not explain why Kai wore his gear.",
+      "It is an assumption because being ready to play requires knowledge about soccer that the passage does not teach."
     ],
     "answer": "A",
     "hints": [
-      "Look for the choice where you can point to the exact words in the passage — no figuring out needed.",
-      "Which choice is something James actually says or does in the passage, not something you have to build from clues?"
+      "Check whether any sentence in the passage uses the exact words 'ready to play.'",
+      "An inference combines details the text gives to reach a new conclusion; a restatement just rewrites what was already said."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6ELA-1.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"When the new student walked into Mr. Chen's classroom, the desk in the back corner was the only one that had a nameplate. Three students turned to wave. The class had learned about the new student's interests in science club meetings last week.\"\n\nA student makes this inference: \"Mr. Chen and the class prepared for the new student's arrival.\"\nWhich two details from the passage BEST support this inference?\nA. The desk in the back corner had a nameplate, and the class had learned about the student's interests in science club meetings.\nB. The desk in the back corner had a nameplate, and three students turned to wave.\nC. A nameplate was on the only prepared desk, and three students turned to wave at the student.\nD. The student walked into the classroom, and the class had learned about them in science club.",
+    "problemText": "Read this passage, then decide which statement is a valid inference with proper textual evidence.\n\nPassage: 'The library's new computer lab had been closed for three weeks. When it finally opened on Monday, there was a line of twenty students waiting at the door before the librarian unlocked it. By Wednesday, the computers were all taken up during lunch period, and a sign-up sheet had to be posted.'\n\nWhich inference below is best supported by evidence from the text?",
     "choices": [
-      "The desk in the back corner had a nameplate, and the class had learned about the student's interests in science club meetings.",
-      "The desk in the back corner had a nameplate, and three students turned to wave.",
-      "A nameplate was on the only prepared desk, and three students turned to wave at the student.",
-      "The student walked into the classroom, and the class had learned about them in science club."
+      "Students are not interested in using computers at school because they did not sign up for the scheduled time slots.",
+      "Students had been waiting to use the new computer lab and wanted to access it as soon as it became available.",
+      "The library ordered new computers because the old ones were broken and could no longer support student use.",
+      "The librarian decided to close the lab because too many students were using it at once and needed to manage access."
     ],
     "answer": "B",
     "hints": [
-      "Which two details together show that someone planned ahead and that people were ready to welcome the student?",
-      "Think about what evidence would prove the class and teacher knew the student was coming and had made arrangements."
+      "Look for details showing student behavior and what those details suggest about student interest.",
+      "Point to the exact phrases that prove your answer: what did students do when the lab opened, and what does that tell you about how much they wanted it?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6ELA-1.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"The café owner placed a water bowl outside her door every morning at six, just as the sun rose. Every morning at six-oh-five, a stray cat appeared and drank from the bowl. On mornings when the owner forgot to set out the bowl, the cat still arrived at six-oh-five and waited by the door for ten minutes before leaving.\"\n\nA reader concludes: \"The cat has learned to associate six o'clock with the arrival of water.\"\nWhy is this a valid inference rather than a guess?\nA. The passage tells us the cat is smart.\nB. We can point to exact details from the passage—the cat appears at exactly six-oh-five every morning, and the owner sets out water at six—that support combining these facts into a single conclusion.\nC. The passage uses the word 'learned,' which makes the inference valid.\nD. The cat waited by the door, which proves the inference is correct.",
+    "problemText": "A student read this passage and wrote an inference. Read both, then decide if the inference needs to be fixed because it includes information from outside the text.\n\nPassage: 'Every afternoon at three o'clock, Mr. Chen locked his classroom door and walked to the gymnasium. He always carried a stack of clipboards and a whistle. The gymnasium was where students gathered for practice after school.'\n\nStudent's inference: 'Mr. Chen coaches a school sports team because he is athletic and loves to exercise.'\n\nWhat should the student do to fix this inference?",
     "choices": [
-      "The passage tells us the cat is smart.",
-      "We can point to exact details from the passage—the cat appears at exactly six-oh-five every morning, and the owner sets out water at six—that support combining these facts into a single conclusion.",
-      "The passage uses the word 'learned,' which makes the inference valid.",
-      "The cat waited by the door, which proves the inference is correct."
+      "Change 'coaches' to 'works with' because the passage does not use the word coaches to describe Mr. Chen's role.",
+      "Remove the phrase 'a school sports team' because the passage never mentions a specific sport or team name.",
+      "Remove the phrase 'because he is athletic and loves to exercise' because those ideas come from outside the passage, not from its details.",
+      "Keep the entire inference but add supporting details about Mr. Chen's personality traits because the clipboard and whistle prove he must be someone who enjoys physical activity and fitness."
     ],
     "answer": "C",
     "hints": [
-      "A valid inference must be built from details the text actually gives, not from an outside belief.",
-      "Look for the choice that explains the test for a good inference: Can you point to specific evidence in the passage?"
+      "An inference can only use details the passage itself provides; 'athletic' and 'loves to exercise' are not mentioned in the text.",
+      "Check whether the text actually says anything about why Mr. Chen does what he does, or whether the student added an outside belief."
     ]
   },
   {
@@ -100,17 +100,17 @@
     "cedCode": "M6ELA-1.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this passage:\n\"Devon had won the spelling bee last year and the year before. His friends cheered for him every time. This year, a new student, Iris, studied the word list for three hours every evening. At the competition, Iris spelled seventeen words correctly before missing one. Devon misspelled his fifth word. After the results were announced, his friends came up to congratulate him, but Devon shook his head and walked away.\"\n\nA student writes this inference: \"Devon was upset because his friends no longer valued him as much as they used to.\"\nWhy is this inference weak, and what outside idea does it depend on?\nA. It is weak because the passage does not explain what Devon was feeling, only that he walked away, which could mean anything.\nB. It depends on the outside idea that losing a competition always damages a person's friendships, rather than on what the passage actually shows about Devon's specific situation.\nC. It is weak because the passage does not mention Devon's friends enough times to support a conclusion about them.\nD. It depends on the outside assumption that people who lose competitions feel angry at their friends, rather than on evidence the passage provides about Devon's thoughts or words.",
+    "problemText": "Read this passage, then answer the question that follows.\n\nPassage: 'Jamila skipped her usual route through the park and took the long street instead. When she passed the old community center, she slowed down and stared at the colorful construction sign: NEW YOUTH CENTER OPENING NEXT MONTH. That evening, she spent two hours looking at the center's new website, clicked through every photo of the art studio, dance studio, and music room, and saved three pages of information in a folder.'\n\nA reader makes this inference: 'Jamila is interested in the activities at the new youth center.' Which one of these is the BEST textual evidence to support that inference?",
     "choices": [
-      "It is weak because the passage does not explain what Devon was feeling, only that he walked away, which could mean anything.",
-      "It depends on the outside idea that losing a competition always damages a person's friendships, rather than on what the passage actually shows about Devon's specific situation.",
-      "It is weak because the passage does not mention Devon's friends enough times to support a conclusion about them.",
-      "It depends on the outside assumption that people who lose competitions feel angry at their friends, rather than on evidence the passage provides about Devon's thoughts or words."
+      "Jamila took a long street instead of her usual route through the park, which shows she changed her normal behavior that day.",
+      "The construction sign said the center would open next month and displayed colorful information about the upcoming facility.",
+      "The youth center has an art studio, a dance studio, and a music room available for students to use.",
+      "She spent two hours looking at the website, clicked through every photo of the studios, and saved three pages of information."
     ],
     "answer": "D",
     "hints": [
-      "Ask: What belief did the student add from outside the text—a rule about how people in competitions typically behave—instead of building the inference from Devon's own words or actions?",
-      "The passage shows what Devon did (walked away) but never says why. Which choice correctly names the outside assumption the student smuggled in?"
+      "Look for the evidence that shows Jamila's own behavior and choices, not just facts about the building itself.",
+      "The strongest evidence shows what Jamila did with her time and attention, not just what exists at the center."
     ]
   },
   {
@@ -119,17 +119,17 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A story's plot moves through four stages in a specific order. Which stage comes right after the climax and shows how things turned out after the outcome was already decided?",
+    "problemText": "A story's plot moves through four stages in a specific order. Which stage comes immediately after the rising action?",
     "choices": [
-      "Rising action, because complications are still building tension",
-      "Exposition, because it introduces the characters and setting",
-      "Climax, because that is where the tension reaches its peak",
-      "Resolution, because it settles the conflict and shows the new situation"
+      "A new rising action",
+      "The exposition",
+      "The resolution",
+      "The climax"
     ],
     "answer": "D",
     "hints": [
-      "Think about what happens after the turning point of the story.",
-      "This stage comes at the very end and shows what life looks like now that the problem is solved."
+      "Remember the order: exposition, rising action, climax, resolution.",
+      "The climax is the turning point where the outcome becomes decided."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'Kai had practiced his piano piece every day for two months, and his family sat in the front row of the concert hall, ready to hear him perform.' Which plot stage does this sentence belong to, and why?",
+    "problemText": "Read this sentence: 'Maya had never tried out for the soccer team before, but this year she decided to give it a shot.' What plot stage does this sentence belong to, and why?\n",
     "choices": [
-      "Exposition, because it introduces the character, the setting, and the situation before any trouble starts",
-      "Rising action, because it shows practice sessions building up and creates anticipation for the performance event",
-      "Climax, because the concert performance itself is the most important moment in the story",
-      "Resolution, because Kai's preparation is complete and his family is now present to witness the outcome"
+      "Exposition, because it introduces the character and the ordinary situation before conflict appears",
+      "Rising action, because Maya is making an important decision that will lead to obstacles and complications in the plot",
+      "Climax, because trying out for the team represents the moment of greatest tension when Maya faces her biggest challenge",
+      "Resolution, because the decision has already been made and shows how Maya's conflict with herself has been settled"
     ],
     "answer": "A",
     "hints": [
-      "Has any problem or conflict appeared in this sentence yet?",
-      "This sentence sets up who Kai is, where he is, and what the normal situation looks like before anything goes wrong."
+      "Ask yourself: has any trouble or conflict shown up yet in this sentence?",
+      "Exposition sets up characters and situations before any problem appears."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'The basketball rolled out of bounds, the ref called a foul on their team, and now their lead had shrunk to just two points with one minute left in the game.' Which plot stage does this sentence belong to, and why?",
+    "problemText": "A student is sorting a story and found this sentence: 'The skater fell during the final jump, but he managed to land on his feet and kept going.' At what plot stage is this sentence most likely to belong?",
     "choices": [
-      "Exposition, because it provides details about the sport, the rules of basketball, and how the game is played",
-      "Rising action, because a problem has appeared and tension is climbing as the outcome is still uncertain",
-      "Climax, because this is the turning point where the team's chances have shifted and the game's result hangs in balance",
-      "Resolution, because the foul call and score change represent the final outcome that decides who wins"
+      "Exposition, introducing the skater as a character",
+      "Rising action, showing a complication that builds tension",
+      "Climax, because falling is the most stressful moment",
+      "Resolution, showing how things turned out after the conflict"
     ],
     "answer": "B",
     "hints": [
-      "Has the conflict already started, and is the outcome still unknown?",
-      "Look for complications stacking up—problems that keep building the tension without yet deciding what will happen."
+      "The sentence shows something going wrong—a problem happening.",
+      "Does the outcome of the whole story turn at this moment, or is uncertainty still building?"
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is sorting a story and needs to find both the climax and the resolution. She reads: 'The hiker had been lost in the forest for hours, and her phone battery was almost dead. She climbed to the top of a ridge and spotted the ranger station roof in the distance. Three hours later, she sat in the station drinking hot cocoa and calling her parents to say she was safe.' Which sentence or sentences should she label as the climax and which as the resolution?",
+    "problemText": "Read these four sentences from a story about two friends trying to build a treehouse.\n\n1. 'Leo and Jamie had been planning their treehouse all summer long.'\n2. 'They bought wood and nails, but the wood was warped, and when they hammered the first wall, it cracked straight down the middle.'\n3. 'Leo suggested they reinforce it with extra supports, and Jamie test-drove the repair by climbing up halfway—and the wall held strong.'\n4. 'By the end of the weekend, they had a solid treehouse and couldn't wait to invite other kids over.'\n\nWhich sentence is the climax?",
     "choices": [
-      "Climax: the whole story; Resolution: none, because the story ends",
-      "Climax: 'She climbed to the top of a ridge and spotted the ranger station roof in the distance'; Resolution: 'Three hours later, she sat in the station drinking hot cocoa and calling her parents to say she was safe.'",
-      "Climax: 'The hiker had been lost in the forest for hours'; Resolution: 'She climbed to the top of a ridge and spotted the ranger station roof in the distance'",
-      "Climax: 'Three hours later, she sat in the station'; Resolution: 'she was calling her parents to say she was safe'"
+      "Sentence 1",
+      "Sentence 2",
+      "Sentence 3",
+      "Sentence 4"
     ],
     "answer": "C",
     "hints": [
-      "Remember that the climax is the single turning point where the outcome actually turns—not just where things feel worst, but where a decisive action or reveal happens.",
-      "The resolution shows what happens after the outcome is already decided, showing the new situation after the turning point."
+      "The climax is where a decisive action or moment turns the outcome—the tension peaks and the question gets answered.",
+      "Look for the sentence where something actually HAPPENS to solve the problem, not just where the problem gets worse."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student made a mistake sorting this story. Read it and identify the error: 'Owen promised his little sister he would help her practice her spelling words before the school bee. The night before the bee, Owen got sick and went to bed early, and his sister practiced alone, worried she would mess up without him. Owen's sister won the spelling bee anyway, and when she got home, Owen was finally well enough to give her a high-five.' The student labeled 'Owen got sick and went to bed early' as the climax. Why is this label wrong, and which sentence should actually be the climax?",
+    "problemText": "A student labeled a story's plot stages this way: the exposition introduces two friends who play chess every lunch period; the rising action happens when one friend forgets the chess set on the bus; the climax is when students gather around and ask if they can watch; and the resolution is when the friends find the chess set in the lost and found the next day. Which label is in the wrong stage?",
     "choices": [
-      "It is wrong because the climax must introduce all the characters, and the true climax is 'Owen promised his little sister he would help her practice.'",
-      "It is wrong because the climax is where the outcome turns, and the true climax is 'Owen's sister won the spelling bee anyway.'",
-      "It is wrong because the climax always has to be longer than other sentences, and the true climax is 'when she got home, Owen was finally well enough to give her a high-five.'",
-      "It is wrong because the climax must come at the very end of the story, and the true climax is 'his sister practiced alone, worried she would mess up without him.'"
+      "The exposition label is wrong",
+      "The rising action label is wrong",
+      "The resolution label is wrong",
+      "The climax label is wrong"
     ],
     "answer": "D",
     "hints": [
-      "The sentence labeled as climax describes a complication—Owen getting sick is a problem that builds tension, but does it decide the outcome?",
-      "Ask yourself: which sentence reveals whether the sister succeeds or fails? That is where the outcome actually becomes decided."
+      "The climax is where the turning point happens—where something decisive occurs and the outcome becomes decided.",
+      "Ask yourself: does students gathering and asking to watch solve the problem of the lost chess set, or does it just show the problem getting worse?"
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this story and then choose the correct plot breakdown: 'Every morning, Jude walked past the community garden on her way to school, always wishing she could grow something. This spring, the garden manager asked if Jude wanted to claim one plot for the whole growing season. Jude planted tomato seeds, watered them faithfully for six weeks, and watched for the first flowers to appear. One morning, Jude found her plant knocked over and the soil scattered everywhere, and she discovered a neighborhood cat had been digging in the beds. She carefully replanted the seedling, built a fence around her plot, and replanted more seeds in the empty spots. Three months later, Jude harvested twelve tomatoes and donated half of them to the community kitchen.' Which plot stage does the sentence about finding the knocked-over plant belong to, and how do you know?",
+    "problemText": "Read this partial story: 'Carmen had always wanted to write a comic book, so she spent three months drawing and writing pages in a sketchbook. She showed her work to her art teacher, who said it was good but needed better speech bubbles. Carmen redesigned every speech bubble to match comic book style, and her teacher entered it in a district art show. The comic book won third place in the show, and Carmen finally felt like a real artist.'\n\nWhich sentence marks the climax, and what makes it different from the sentence about the teacher's comment?",
     "choices": [
-      "It is exposition, because it introduces the setting of the community garden and explains why Jude is there",
-      "It is the climax, because finding the knocked-over plant is the moment when the outcome of the story becomes decided",
-      "It is rising action, because a new complication appears but the outcome is still uncertain since Jude could still save her plant or might give up",
-      "It is the resolution, because after the plant is fixed, the story shows that Jude succeeded with her garden"
+      "The sentence about redesigning speech bubbles is the climax because that is where a decisive action solves the problem.",
+      "The teacher's comment is the climax because it is the first professional feedback Carmen receives.",
+      "The sentence about the teacher entering the work in the show is the climax because that event leads directly to the resolution.",
+      "The sentence about winning third place is the climax because that is the moment Carmen's goal is fully achieved."
     ],
     "answer": "A",
     "hints": [
-      "Remember that the climax is the one moment where a decisive action or reveal settles whether the goal will be reached. Does finding the knocked-over plant settle that, or does more action still need to happen?",
-      "Consider what question the story is building toward: Will Jude grow tomatoes successfully? When is that question finally answered—when she finds the damaged plant, when she repairs it and builds protection, or when she harvests the tomatoes?"
+      "The climax is a turning point where the outcome actually turns—look for a decisive action or choice, not just an event that happens to the character.",
+      "The teacher's comment creates a new problem; the redesigned speech bubbles actually solve it and change the direction of the story."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-1.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "In a story, a character learns that her best friend is moving away. She stares at the floor, blinks hard, and leaves the room without saying anything. According to the lesson, what is the character's RESPONSE to this event?",
+    "problemText": "Read this sentence from a story: 'When Jake heard the door slam, he froze and looked at his broken vase on the floor.' What is Jake's response to hearing the door slam?",
     "choices": [
-      "She stares at the floor, blinks hard, and leaves the room without saying anything.",
-      "She performs specific actions like staring, blinking, and leaving that show her reaction in the moment.",
-      "She feels deep sadness about her friend's departure, which causes her emotional pain.",
-      "She will experience lasting loneliness and miss her friend for a long time after the move."
+      "He freezes and looks at his broken vase",
+      "He is startled by loud noises",
+      "He feels guilty about breaking the vase",
+      "He is a careless person"
     ],
     "answer": "A",
     "hints": [
-      "A response is what the character DOES, SAYS, or THINKS right after an event — look for actions or words in the text, not labels or feelings someone claims.",
-      "Which choice describes the exact things the character actually did, as shown in the story?"
+      "A response is what a character does, says, or thinks right after an event—look for actions or words in the text, not feelings you have to guess.",
+      "The event is the door slamming. What does Jake do or say immediately after? Use only the exact words the text provides."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-1.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Devon's teacher announces a surprise quiz. Devon immediately slumps in his seat, covers his face with his hands, and whispers to the student next to him, 'I did not study.' Later that day, Devon stays in the classroom and asks the teacher to explain three problems he got wrong. Which statement correctly describes Devon's response to the surprise quiz announcement?",
+    "problemText": "Read the passage: 'During lunch, Amara's friend accidentally knocked her sandwich off the table. Amara bent down, picked it up, brushed off the crumbs, and took a bite without saying anything to her friend.' Which statement correctly describes how Amara responds to her friend knocking over her sandwich?",
     "choices": [
-      "Devon is unprepared for quizzes in general because he has a habit of not studying before tests.",
-      "Devon feels upset and unprepared when the teacher announces the quiz, as shown by his slumping, covering his face, and whispering that he did not study.",
-      "Devon demonstrates that he wants to improve by staying after class and requesting explanations from his teacher for the problems he missed.",
-      "Devon shows he is not serious about school because he does not study ahead of time and makes mistakes on the quiz."
+      "Amara forgives her friend because she does not stay angry",
+      "Amara cleans up the sandwich and continues eating without complaint",
+      "Amara is annoyed but hides it well",
+      "Amara is a patient and forgiving person"
     ],
     "answer": "B",
     "hints": [
-      "A response happens RIGHT AFTER the event — the quiz announcement. What does Devon do or say at that moment, not later?",
-      "The event is the teacher announcing the quiz. Which choice names what Devon does immediately after hearing that announcement?"
+      "Focus on what Amara actually does—pick up the sandwich, brush it off, take a bite—not on what you think she might feel.",
+      "Avoid choosing a trait or feeling word that the text never uses. The response is shown through her actions, not told."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-1.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A story states that 'Jackson is a brave person.' Later in the story, when his skateboard breaks, Jackson sits on the curb and watches other skaters for an hour without trying to fix it or ask for help. According to the lesson, why should you be careful about trusting the sentence that says 'Jackson is a brave person'?",
+    "problemText": "In a story, Chen's bicycle gets a flat tire on the way to practice. Which of the following best shows a response rather than just a claimed trait?",
     "choices": [
-      "Because 'brave' is too hard a word for Grade 6 readers to understand.",
-      "Because the sentence only claims Jackson is brave but does not show him doing anything brave in the text.",
-      "Because every sentence in a story cannot be true at the same time.",
-      "Because Jackson would not break his skateboard if he were really brave."
+      "Chen is the kind of person who never gives up and shows determination in all situations",
+      "Chen is determined and resourceful in the way he handles difficulties and obstacles",
+      "Chen pulls out his repair kit, finds the puncture, and patches it carefully",
+      "Chen demonstrates the trait of solving problems through his resourceful and persistent character"
     ],
     "answer": "C",
     "hints": [
-      "A CLAIMED TRAIT is a label a sentence puts on a character. EVIDENCE is what the character actually does in the story. Which choice explains the difference?",
-      "Look at what Jackson actually does when his skateboard breaks. Does that action prove he is brave?"
+      "A response is shown through actions or words you can find in the text, not through a sentence that assigns a label.",
+      "Look for what the character actually does, says, or thinks after the event, not a general description of who the character is."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-1.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Near the start of a story, when Sofia's group does not want to play her game, Sofia rolls her eyes and plays alone in the corner for the rest of recess. In the middle of the story, her classmates laugh at her new hairstyle, and Sofia immediately tells the teacher she feels left out. By the end of the story, when another student copies her drawing, Sofia talks to the student about it face-to-face instead of complaining to a grown-up. What evidence shows that Sofia HAS changed from the beginning to the end of the story?",
+    "problemText": "Read this story: 'At the start of soccer season, Kenji stayed on the bench during scrimmages and told his coach he was not ready to play. Midway through the season, after the team's best striker got injured, Kenji had to play in a real game and scored two goals. Near the end of the season, Kenji volunteered to take penalty kicks and was the first player to sprint onto the field at the start of every match.' Which sentence best describes how Kenji changes from the beginning to the end?",
     "choices": [
-      "She responds to being laughed at by telling the teacher, which proves she is brave.",
-      "She changes from staying silent and playing alone when hurt to speaking up directly to the person involved when hurt.",
-      "She rolls her eyes in the beginning, which shows she was unhappy the whole time.",
-      "She tells the teacher about the laugh, which is a stronger response than rolling her eyes."
+      "Kenji overcomes his initial hesitation about playing and gains confidence through practice and competition",
+      "Kenji learns from his experience on the bench during scrimmages and decides to work harder",
+      "Kenji becomes confident after his success in the injured striker's game",
+      "Kenji changes from staying off the field to eagerly taking on leadership roles like penalty kicks"
     ],
     "answer": "D",
     "hints": [
-      "To prove a CHANGE, you need to find one detail from near the START and one detail from near the END that show the same kind of thing done two different ways — not just one strong moment in the middle.",
-      "Compare how Sofia handles conflict at the very beginning (when her group rejects her game) to how she handles it at the very end (when the student copies her drawing). What is different?"
+      "A change requires comparing how the character acts near the start with how the character acts near the end—not just describing one moment in the middle.",
+      "Look for evidence from both the beginning and the ending of the story. The starting point is avoiding play; the ending point is volunteering and sprinting onto the field."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-1.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A story shows that when his mother surprises him with a new puppy, Amir shouts 'Yes!' and hugs her tightly. The next day, Amir walks the puppy around the neighborhood and shows it to his friends. A week later, Amir stops walking the puppy because he wants to play video games instead. According to the lesson, which statement correctly describes what happens in this story?",
+    "problemText": "A story includes this event: 'When Rae's group project partner did not show up to the presentation, Rae panicked and turned red, but she took a deep breath and presented the project alone.' Later in the same story, Rae misses one slide during a class discussion, laughs at herself, and keeps talking. Does this show that Rae has changed, or is it just two separate responses?",
     "choices": [
-      "Amir changes from someone who is excited about the puppy to someone who ignores it, as shown by his hug turning into neglect over time.",
-      "Amir responds strongly to the surprise gift with shouting and hugging, but this response does not last — he goes back to his old habits, so there is no lasting change.",
-      "Amir's love for the puppy proves that he is a responsible person.",
-      "Walking the puppy is more important to Amir than playing video games."
+      "It shows two separate responses because each event causes a reaction, but Rae is not shown doing things differently overall",
+      "It shows Rae has changed because she responded with different emotions in each situation, showing she learned from her first experience",
+      "It shows Rae has changed because she handles two separate challenges through her own efforts and remains composed through both events",
+      "It shows just responses, not a change, because the two moments involve different types of situations and different people reacting to them"
     ],
     "answer": "A",
     "hints": [
-      "A change must last across the story — it cannot just be one strong reaction right after an event. Does Amir's excitement stay the same from the beginning to the end?",
-      "Look for two points in the story that show Amir acting differently about the same thing: his feelings toward or behavior with the puppy. What is different?"
+      "A change means the character is different at the end than at the start. Check whether the difference shows up later in the story, not just in the one sentence after the event.",
+      "To prove a change, find one detail from near the beginning and one from near the end that show the same kind of thing done in two different ways. Do both moments show Rae acting in a lasting new way?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-1.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "In a story, Kai's family moves to a new house. On the first day, Kai hides in his room and does not join the moving truck workers for a thank-you pizza dinner. His mom says, 'Kai is shy, so he stays away from strangers.' A week later, a neighbor rings the bell with a casserole, and Kai keeps his head down and mumbles 'thank you' without looking up. By the end of the story, Kai invites two classmates to help him paint a mural on his garage and talks with them the whole afternoon. According to the lesson, which statement most accurately describes Kai's character arc?",
+    "problemText": "A story states: 'Isaac is dependable and hardworking.' Later, the text shows: 'When his experiment failed and shattered glass covered the lab table, Isaac stared at it for thirty seconds, then left the room. For the rest of the week, he avoided the lab and did not turn in his next three assignments.' How does what the text actually shows about Isaac's behavior differ from the claim made at the start?",
     "choices": [
-      "Kai is shy because his mom labels him that way, and his shyness explains why he avoids the pizza dinner and mumbles to the neighbor.",
-      "Kai changes from avoiding strangers and neighbors to working alongside classmates and talking with them throughout the afternoon, as shown by comparing his first day (hiding, not joining dinner) to the end (inviting friends, talking all afternoon).",
-      "Kai's behavior at the beginning and middle of the story proves that his mother's claim about his shyness is accurate and unchanging throughout the narrative.",
-      "Kai demonstrates growing comfort around people by speaking briefly to the neighbor with a casserole, which indicates that he has become fully confident in social situations."
+      "The text shows Isaac is actually dependable because he takes time to think before acting",
+      "The claim says Isaac is hardworking, but his actions show him avoiding work and stopping his assignments",
+      "The text proves Isaac is dependable by showing he walks away calmly instead of breaking more things",
+      "There is no difference because staring and leaving are signs of someone who is hardworking"
     ],
     "answer": "B",
     "hints": [
-      "A claimed trait is when someone says Kai IS shy. EVIDENCE is what Kai actually does. To describe a real change, compare two moments from the text when Kai's actions are different, not what anyone claims about him.",
-      "To prove a lasting change, name what Kai does or says near the start and what he does or says near the end. How do these two moments show he is different by the story's ending?"
+      "A claimed trait is a sentence that assigns a quality in words, rather than one the character's actions show. Trust what the character does over what anyone says about them.",
+      "What does the claim say Isaac is? What do his actual actions—avoiding the lab and not turning in assignments—show instead? Are they the same or different?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What is the difference between naming a part's location in a story and naming its job in the overall structure?",
+    "problemText": "In the lesson, you learned the difference between naming where a part sits in a story and naming what job that part does. Which of these is a description of a part's job in the overall structure?",
     "choices": [
-      "A location tells you where a part sits in the sequence of events, while a job tells you what happens during that part of the narrative.",
-      "A location tells you where a part sits in the story, while a job tells you what that part does for the rest of the story.",
-      "A location describes the setting and characters, while a job describes the plot events and their order in time.",
-      "A location refers to the beginning, middle, or end, while a job refers to whether the part is dialogue or action."
+      "This sentence introduces a character's wish that will either be granted or denied by the end of the story.",
+      "This sentence sets up the broken bicycle lock that the ending depends on.",
+      "This sentence appears somewhere in the middle section of the text, between the opening and closing.",
+      "This sentence belongs to the second paragraph and describes what happens on a Tuesday afternoon."
     ],
     "answer": "B",
     "hints": [
-      "Think about the difference between 'near the beginning' and 'sets up a detail that the ending needs.'",
-      "One answer names position or timing; the other names a connection to what comes later."
+      "A job names what a part does for the rest of the story, not where it sits or what it says.",
+      "Look for an answer that points to a later moment in the story that needs this part."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this three-sentence story: Sentence 1: \"Marcus always kept his skateboard in the garage, tucked behind his dad's toolbox where nobody would step on it.\" Sentence 2: \"One afternoon, his little cousin visited and knocked over the toolbox looking for a hammer.\" Sentence 3: \"The skateboard's edge snapped under the falling metal.\"\n\nHow does Sentence 1 fit into the overall structure of this story?",
+    "problemText": "Read this story and answer the question below.\n\nSentence 1: Maya's parents told her that if she stayed calm during the thunderstorm, she could help her younger brother stay calm too.\nSentence 2: When lightning lit up Maya's room at midnight, she took slow, deep breaths and kept her voice quiet and steady.\nSentence 3: Her brother came to her door, trembling, but after ten minutes of sitting with Maya, he stopped shaking and fell asleep.\n\nHow does Sentence 2 fit into the overall structure of this story?",
     "choices": [
-      "It introduces the character Marcus and establishes that he owns a skateboard.",
-      "It is the beginning of the story and comes before the main events.",
-      "It sets up the location and protection method that Sentence 2's accident depends on — without knowing the skateboard was hidden behind the toolbox, the reader would not understand why the cousin's search led to its damage.",
-      "It describes the setting of the story as a garage where things are kept."
+      "It describes the specific moment when lightning strikes and shows what Maya physically does in response, establishing the behavior that leads to her brother's calming in Sentence 3.",
+      "It explains that the thunderstorm occurs at midnight and describes the darkness of Maya's room during the weather event.",
+      "It shows what Maya does when the lightning happens, so that her brother's calm reaction in Sentence 3 makes sense as a result of her behavior.",
+      "It tells us about Maya's personal characteristics, such as her ability to control her breathing and keep her voice steady when she is afraid."
     ],
     "answer": "C",
     "hints": [
-      "Ask: what happens in Sentence 2 that would not make sense if Sentence 1 were removed?",
-      "Look for the later moment that actually needs the detail about the skateboard's location."
+      "Ask what Sentence 3 needs from Sentence 2 to make sense.",
+      "The job is not just what happens in Sentence 2, but what later moment depends on it."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is asked how a sentence fits into a story's overall structure and answers: \"It tells us that the character is sad.\" Why is this answer incomplete, and what should the student add to fix it?",
+    "problemText": "Read this story and answer the question below.\n\nSentence 1: The old mailbox at the end of Kai's driveway had a rusty hinge that squeaked whenever anyone opened it.\nSentence 2: Kai's grandpa visited in July and oiled the hinge without being asked.\nSentence 3: In August, Kai's little cousin visited and was startled by an unfamiliar noise when the mailbox creaked open.\nSentence 4: Kai realized he had never heard that sound before and understood what his grandpa had done.\n\nWhich sentence is NOT describing a job that later parts of the story depend on?",
     "choices": [
-      "The answer is incomplete because it names only the character's emotion, not the setting of the scene.",
-      "The answer is incomplete because it names only a location in the story, not where the sentence sits.",
-      "The answer is incomplete because it only summarizes what the sentence says, not what the sentence does for the rest of the story — the student should point to a later moment that depends on the character being sad.",
-      "The answer is incomplete because it focuses on theme rather than on plot or setting."
+      "Sentence 1, because if it were cut out, Sentence 4 would make no sense.",
+      "Sentence 2, because without it, Sentence 3 would have no reason for the mailbox to be quiet.",
+      "Sentence 4, because it is the end of the story and nothing comes after it.",
+      "Sentence 3, because it only restates what happens without setting up anything later."
     ],
     "answer": "D",
     "hints": [
-      "Reread the lesson: a job is not the same as a summary.",
-      "What is missing from an answer that just restates what happens in the sentence itself?"
+      "Remember: a summary restates what happens in a part. A job points to a later moment that needs it.",
+      "Ask whether anything that happens after Sentence 3 would stop making sense if Sentence 3 were cut out."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this four-sentence story: Sentence 1: \"Before the big soccer tournament, Coach Lin told the team that the championship game would be played on a field with no shade, and the sun would be intense.\" Sentence 2: \"The team spent the week practicing their usual drills in the gym.\" Sentence 3: \"During the tournament final, three players had to leave the field with heat exhaustion in the second half.\" Sentence 4: \"The team lost by two goals.\"\n\nA student says that Sentence 1 sets up a detail about the playing field that Sentence 3 depends on. Is the student correct? Explain why or why not, using what actually happens in the story.",
+    "problemText": "Read this story and answer the question below.\n\nSentence 1: The community garden plot that Taj's family adopted had crumbly, gray soil that wouldn't hold water.\nSentence 2: Over three months, Taj added mulch and compost every week, turning the soil rich and dark.\nSentence 3: When the tomato plants started growing, they grew twice as fast as the tomatoes in the plot next door.\nSentence 4: The neighboring gardener asked Taj what she had done differently, and Taj explained about the soil.\nSentence 5: By fall, three other families were working on their own soil the same way.\n\nExplain the connection between Sentence 2 and Sentence 5. What is Sentence 2's job in the overall structure of this story?",
     "choices": [
-      "No, the student is incorrect. Sentence 1 only tells us about the coach's warning, not about anything the team did to prepare for heat. The heat exhaustion in Sentence 3 happens anyway, which shows that the warning did not set up a solution that prevents the problem.",
-      "No, the student is incorrect because the team practiced in the gym instead of outside, so they ignored the coach's warning about heat and sun.",
-      "Yes, the student is correct because Sentence 1 mentions the sun and heat, and Sentence 3 shows players suffering from the heat, so the two sentences are connected to the same topic.",
-      "No, the student is incorrect because Sentence 1 is dialogue from the coach, not an action that moves the plot forward."
+      "Sentence 2 sets up the rich soil that makes the tomatoes grow fast in Sentence 3, which leads the neighbor to ask Taj about her method in Sentence 4, and that exchange spreads the practice to three other families by Sentence 5.",
+      "Sentence 2 covers the three-month time period during which Taj performs weekly additions of mulch and compost to transform the soil into a darker and richer texture.",
+      "Sentence 2 demonstrates that compost and mulch improve soil quality, but Sentence 5 shows that other families learned this technique through their own experimentation rather than from Taj's example.",
+      "Sentence 2 proves that Taj is willing to work hard consistently over many weeks to improve her garden plot, which establishes her character as someone who perseveres."
     ],
     "answer": "A",
     "hints": [
-      "Did the team do anything to prepare for the heat based on the coach's warning?",
-      "A setup is true only if the later moment would not make sense without it — ask whether Sentence 3 actually depends on Sentence 1."
+      "Trace the chain: which sentence needs the work from Sentence 2? Then, which sentence needs what happens in that one?",
+      "A complete job answer points to a payoff, but that payoff might not be the very next sentence."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this four-sentence story: Sentence 1: \"Keya's grandmother had given her a recipe for mango lassi written in her grandmother's own handwriting on a faded index card.\" Sentence 2: \"Keya did not touch the card for two years, worried she would ruin it or that her lassi would not taste right.\" Sentence 3: \"One day, Keya made the lassi for the first time, following the card exactly.\" Sentence 4: \"Her little brother said it tasted just like he remembered from visiting grandmother's house.\"\n\nWhich of the following best describes how Sentence 1 fits into the overall structure of this story?",
+    "problemText": "A student was asked how Sentence 1 fits into this story's overall structure, and answered: \"Sentence 1 is at the beginning of the story.\" Explain what is wrong with that answer, and describe Sentence 1's actual job.\n\nSentence 1: Leo noticed that every time he tried to play his guitar in the living room, his dog Biscuit howled.\nSentence 2: The next day, Leo moved his guitar practice to the garage, where Biscuit couldn't hear him.\nSentence 3: A week later, Biscuit stopped howling whenever anyone turned on loud music anywhere in the house.\nSentence 4: Leo realized that by moving his practice away, he had accidentally broken his dog's habit of reacting to the sound.\n\nWhich statement best corrects the student's error and names Sentence 1's real job?",
     "choices": [
-      "It establishes Keya's grandmother as an important character who taught Keya how to cook and passed down family traditions through written instructions.",
-      "It sets up the handwritten recipe as a detail that Sentence 3 needs — without the recipe card existing and mattering to Keya, her decision to make the lassi in Sentence 3 and her brother's recognition in Sentence 4 would have no meaning.",
-      "It introduces the conflict of the story, which is that Keya is afraid to use the recipe because she worries about ruining the card.",
-      "It provides the exposition by describing what the recipe looks like and explaining how Keya received it from her grandmother."
+      "The student was wrong because simply stating that a sentence appears first does not reveal what work that sentence does for the rest of the story; location and function are different things. The real job is that Sentence 1 introduces the howling behavior that Sentence 4 later explains was accidentally broken by Leo's decision to practice elsewhere.",
+      "Saying Sentence 1 is at the beginning only tells you where it sits, not what it does. The real job: Sentence 1 sets up the howling behavior that Sentence 4 explains as accidentally broken by Leo's absence.",
+      "Sentence 1 must be described by its sequence position rather than by what it accomplishes, because all sentences at the start of a story share the same structural purpose.",
+      "The student's answer was incomplete because it failed to identify the specific details about Leo's dog breed and the living room location that Sentence 1 provides as essential background."
     ],
     "answer": "B",
     "hints": [
-      "Ask: what would stop making sense in Sentence 3 and Sentence 4 if the recipe card and its special origin were removed?",
-      "Look for which later moment depends on the specific detail that Sentence 1 introduces."
+      "Location labels and structural jobs are two different things.",
+      "Ask what Sentence 4 needs from Sentence 1 to make sense."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-1.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this five-sentence story: Sentence 1: \"In the basement, Jamal found a box of old vinyl records that his uncle had left behind years ago.\" Sentence 2: \"Jamal had never heard vinyl records before and spent an afternoon learning how the needle and grooves worked.\" Sentence 3: \"When his friends came over the next weekend, they laughed and asked why anyone would listen to music that way.\" Sentence 4: \"Jamal played one record anyway, and his friends stopped talking to listen.\" Sentence 5: \"By the end of the night, they were asking him to teach them how to use the turntable.\"\n\nA student claims that Sentence 1 is only important because it tells us where Jamal found the records. Is that claim accurate? Explain why or why not, using evidence from the whole story. Then name what Sentence 1's actual job is in the overall structure.",
+    "problemText": "Read this story carefully, then answer the question below.\n\nSentence 1: In the spring, Mrs. Chen planted apple seeds in tiny pots on her kitchen windowsill, one for each student in the class.\nSentence 2: Over two months, the seedlings grew, and each student got a pot to take home and plant in their yard.\nSentence 3: By mid-June, some students sent photos of tall saplings with new leaves, while others' plants had turned brown and died.\nSentence 4: In the fall, Mrs. Chen asked the class to bring their plants back for a check-in day.\nSentence 5: Only half the saplings returned, and many had grown large and strong, while others were still struggling.\nSentence 6: Mrs. Chen told the class that caring for a living thing takes time and attention, and that different people learn this lesson at different speeds.\n\nSentence 1 serves a job for multiple later moments in this story. Which choice correctly identifies both of those jobs by pointing to the specific payoffs?",
     "choices": [
-      "The claim is not fully accurate. Sentence 1 does name a location, but its real job is to set up the existence of the records themselves, which Sentence 2 depends on for Jamal to learn about them. However, that still leaves out the full chain: the records also enable Sentences 4 and 5 to happen, where friends discover the appeal of vinyl themselves.",
-      "The claim is accurate. Sentence 1 is only important for establishing that the records are in the basement, and the rest of the story does not actually depend on that location detail.",
-      "The claim is not accurate. Sentence 1 does more than name a location — it introduces the records as a catalyst that sets off a chain of events: Jamal learns about them in Sentence 2, they prompt his friends' skepticism in Sentence 3, and they become the bridge that connects Jamal's interest to his friends' interest in Sentences 4 and 5.",
-      "The claim is partially accurate. Sentence 1 names the location, and that matters for Sentence 3, but only because it explains why Jamal's friends have not heard of records before."
+      "Sentence 1 starts the story by introducing Mrs. Chen as a teacher and describes her action of planting seeds, which explains why there are plants available in Sentence 4.",
+      "Sentence 1 shows that Mrs. Chen is creative because she thought of an activity involving plants, but this does not connect to either the varying outcomes in Sentence 3 or the lesson in Sentence 6.",
+      "Sentence 1 sets up the planted seeds, which lead to the saplings in Sentence 3 that some students neglected and others nurtured. This contrast is what allows Sentence 6 to make its point about different people learning care at different speeds.",
+      "Sentence 1 establishes that there will be one plant per student, which makes Sentence 2's distribution possible and also ensures that Sentence 4's return day works as a measurement of how many plants survived."
     ],
     "answer": "C",
     "hints": [
-      "Reread the lesson: naming a location is different from naming a job. Does Sentence 1 do only one of those, or both?",
-      "Trace the chain: what in Sentence 1 makes Sentence 2 possible? What in Sentence 2 makes Sentences 4 and 5 possible?"
+      "Trace what would stop making sense if Sentence 1 were cut. Would Sentence 3's contrast between healthy and dead plants still matter? Would Sentence 6's lesson?",
+      "A single sentence can set up material that pays off in more than one place, as long as you can point to each payoff."
     ]
   }
 ]
