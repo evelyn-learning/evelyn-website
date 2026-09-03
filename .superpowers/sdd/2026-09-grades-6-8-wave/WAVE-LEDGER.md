@@ -6,10 +6,10 @@ Plan: docs/superpowers/plans/2026-09-02-grades-6-8-ms-course-wave.md (main e78c0
 
 | Course | Curriculum | Sign-off | Exemplars | Plans /40 | Lint+reg | Items | Notes | Guides | Reviewed | Cost actuals |
 |---|---|---|---|---|---|---|---|---|---|---|
-| m6math | ✓ (m6math-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (reviewed) | 40/40 | ✓ 200 OK | ✓ 240 (94.6%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
-| m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | ✓ 237 (97.5%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
-| m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (96.7%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
-| m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 240 (96.2%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
+| m6math | ✓ (m6math-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (reviewed) | 40/40 | ✓ 200 OK | ✓ 239 (95.4%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
+| m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | ✓ 240 (95.0%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
+| m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (97.9%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
+| m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 239 (97.1%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m8math | – | – | – | 0 | – | – | – | – | – | – |
 | m8ela | – | – | – | 0 | – | – | – | – | – | – |
 | m8sci | – | – | – | 0 | – | – | – | – | – | – |
@@ -51,8 +51,7 @@ GUIDES_MODEL=claude-haiku-4-5 npx tsx tools/generate-guides.ts --course <KEY>
 
 ## Grade 6 drop — BUILT 2026-09-03, awaiting Praveen's ship gate
 
-Engine (worktree-demo-gate): plans 160/160 `lint-ms-plans: 320 plans OK`; banks ~960 at
-96.2% verified (no unit <90%, no LO <4); notes 160 baselines + 1,132 pointers; TTS
+Engine (worktree-demo-gate): plans 160/160 `lint-ms-plans: 320 plans OK`; banks 958 at 96.3% verified (no unit <90%, no LO <4); notes 160 baselines + 1,132 pointers; TTS
 double-hyphen fix; new scripts build-los-file / emit-portal-course-nodes.
 Academy (ms-grade6-guides): 4 courses in seed/mappings.json, 160 guides, catalog-nav
 test moved from the uncapped to the capped band, tests/unit 1152 pass.
