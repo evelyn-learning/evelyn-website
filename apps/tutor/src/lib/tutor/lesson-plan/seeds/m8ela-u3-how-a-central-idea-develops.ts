@@ -30,8 +30,9 @@
  * summary (`m7ela-u3-summarizing-informational-text.ts`, RI.7.2). Stops short
  * of HS `engl-u7-central-idea-and-details.ts` (RI.9-10.2, paired with
  * RI.9-10.1 inference at HS register). DELIBERATELY EXCLUDED: finding the
- * central idea — every item and both worked examples tell the student which
- * sentence introduces it, and no item asks the student to locate it (the one
+ * central idea — all three items and the first worked example say in the
+ * prompt itself which sentence introduces it, the second worked example names
+ * it in its second step, and no item asks the student to locate it (the one
  * item that asks the student to choose a statement of the idea, the third
  * try_yourself, asks for the DEVELOPED version with the introducing sentence
  * already named, which is the skill this row owns); the objective summary of
@@ -62,19 +63,23 @@
  * gaps ("they are called expansion joints") so that the example sentence is
  * recognizable, and the step reads that sentence as an example only, never
  * as a definition; (d) one keyIdea and one recap line say that a sentence
- * whose restatement turns into a different idea "is not developing this
- * idea" — that is the boundary of the skill, stated once, not a lesson on
- * off-topic sentences.
+ * whose restatement turns into a different idea "is not developing" it — that
+ * is the boundary of the skill, stated once, not a lesson on off-topic
+ * sentences.
  *
  * NOTE FOR FUTURE AUTHORS: every excerpt in this file is original
  * informational prose written for the item. This course carries no passage
  * machinery — no passageId, no shared texts — so each question must be
  * solvable from the sentences printed inside it, and no published work may
  * be quoted or closely paraphrased. Every phrase this file quotes from one
- * of its excerpts appears character-for-character in that excerpt; quote
- * your own excerpt exactly, never from memory. The excerpts carry NO
- * invented statistics: every quantity is a qualitative one ("slightly",
- * "very few", "for years"), and every factual claim is ledgered below.
+ * of its excerpts appears in that excerpt word for word and in order, with
+ * no change but the mark that closes the quotation where the surrounding
+ * sentence needs a different one; quote your own excerpt exactly, never from
+ * memory. The excerpts carry NO invented statistics: no figure, percentage
+ * or measured quantity appears in them at all, the quantities being
+ * qualitative ones ("slightly", "very few", "for years", "for months") apart
+ * from the tree passage's one ring, one pale band and one dark band a year,
+ * and every factual claim is ledgered below.
  *
  * CLAIM LEDGER (informational passages):
  *   Claim                                    | Where              | Kind       | Grounds
@@ -168,6 +173,10 @@
  *   Popcorn left in an open bag for months   | try-3 passage,     | REAL-WORLD | Kernels lose moisture
  *   pops poorly because the kernels have     | choices            |            | to dry air and pop
  *   lost their moisture                      |                    |            | poorly; settled.
+ *   Popcorn kept in a sealed container       | try-3 choice d     | REAL-WORLD | Follows from the
+ *   holds the moisture it needs -- stated    |                    |            | moisture loss above;
+ *   only inside a distractor the item        |                    |            | settled, and the
+ *   asks the student to reject               |                    |            | distractor is rejected.
  *   A sled dog stays warm sleeping outside   | misconception      | REAL-WORLD | Double-coated northern
  *   in the snow because a dense underlayer   | question and       |            | breeds; underfur traps
  *   of fur traps warm air against the skin   | corrections        |            | insulating air.
@@ -241,8 +250,8 @@ export const SEED_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS: LessonPlan = {
         'The central idea of this paragraph is introduced in Sentence 1. Trace how the writer develops it: name the relationship of each later sentence to the idea, and say what each one does to it.\n\n"(1) Bridges are built with gaps in their decks on purpose. (2) The steel and concrete in a deck get slightly longer as they warm and slightly shorter as they cool, so a deck locked tight at both ends would strain against its own supports on a hot afternoon. (3) The ridged metal strips a car bumps over near each end of a highway bridge cover those gaps; they are called expansion joints. (4) A short footbridge can often be built without any such joint, because a short deck changes length by so little that its supports can absorb the movement."',
       steps: [
         'Start with the version you were handed. Sentence 1 introduces the idea: "Bridges are built with gaps in their decks on purpose." Say it back in your own words, because you will be saying it again after every sentence: bridges have deliberate gaps.',
-        'Sentence 2. Ask what it does to the idea. It tells you why the gaps are there: the deck "get slightly longer as they warm and slightly shorter as they cool," and a deck "locked tight at both ends" would strain. Restate: bridges have deliberate gaps because their decks change length with the temperature. Your sentence gained a "because," so this is a CAUSE, and the idea is refined. It has a mechanism now.',
-        'Sentence 3. Restate again and notice that the wording does not move: bridges have deliberate gaps because their decks change length. What Sentence 3 adds is a case you have felt through a car seat, "the ridged metal strips a car bumps over near each end of a highway bridge." You can picture the idea now. This is an EXAMPLE, and it extends the idea to a real bridge without changing what the idea says.',
+        'Sentence 2. Ask what it does to the idea. It tells you why the gaps are there: the steel and concrete in a deck "get slightly longer as they warm and slightly shorter as they cool," and a deck "locked tight at both ends" would strain. Restate: bridges have deliberate gaps because their decks change length with the temperature. Your sentence gained a "because," so this is a CAUSE, and the idea is refined. It has a mechanism now.',
+        'Sentence 3. Restate again and notice that the wording does not move: bridges have deliberate gaps because their decks change length. What Sentence 3 adds is a case you have felt through a car seat, the "ridged metal strips a car bumps over near each end of a highway bridge." You can picture the idea now. This is an EXAMPLE, and it extends the idea to a real bridge without changing what the idea says.',
         'Sentence 4 is the one that catches people who sort by words. It contains "because," so a word-hunter calls it a cause. Ask what it does to the idea instead. "A short footbridge can often be built without any such joint" tells you the rule fades as bridges get shorter. Restate: LONG bridges have deliberate gaps because their decks change length; a short deck moves so little that it can often do without them. Your sentence gained a condition. This is a LIMIT, and it refines the idea by drawing its edge. The "because" inside Sentence 4 explains the limit, not the central idea.',
         'Put the first version beside the last. First: bridges are built with gaps on purpose. Last: long bridges are built with gaps on purpose, because their decks get longer and shorter with the temperature, and a short deck moves so little that it can often do without them. The distance between those two sentences is the development. Every sentence after the first moved the idea, and no two moved it the same way.',
         'Say the whole answer, relationship by relationship. Sentence 2 is a cause and refines the idea. Sentence 3 is an example and extends it. Sentence 4 is a limit and refines it again. And the developed idea is the last version, not the first.',
@@ -276,9 +285,9 @@ export const SEED_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS: LessonPlan = {
       responseFormat: 'mcq',
       choices: [
         { id: 'a', text: 'Sentence 3 gives an EXAMPLE of the central idea: it shows the yearly rings being put to use in one particular case, a student counting them on a stump, and it leaves the wording of the idea in Sentence 1 unchanged.', correct: true },
-        { id: 'b', text: 'Sentence 3 gives a CAUSE behind the central idea: it comes directly after the explanation of the pale and dark bands and carries that explanation one step further, so it belongs to the reason the rings form.' },
-        { id: 'c', text: 'Sentence 3 puts a LIMIT on the central idea: it narrows the rule in Sentence 1 to trees that have already been cut, since a stump is the only place the sentence shows the rings being counted at all.' },
-        { id: 'd', text: 'Sentence 3 introduces a NEW idea that the paragraph then leaves behind: how to find out a tree\'s age is a different point from how a tree grows, so it belongs to a second central idea rather than to this one.' },
+        { id: 'b', text: 'Sentence 3 gives a CAUSE behind the central idea: it comes directly after the explanation of the pale and dark bands and carries that explanation one step further, so it reads as one more step in the reason the rings form.' },
+        { id: 'c', text: 'Sentence 3 puts a LIMIT on the central idea: it narrows the rule in Sentence 1 to trees that have already been cut, since a stump is the only place the sentence shows the rings being counted at all, and "when it was cut" sounds like a condition.' },
+        { id: 'd', text: 'Sentence 3 introduces a NEW idea that the paragraph then leaves behind: how to find out a tree\'s age is a different point from how a tree grows, so it belongs to a second central idea rather than to this one, and it reads like a change of subject.' },
       ],
       expectedAnswer: 'Sentence 3 gives an EXAMPLE of the central idea: it shows the yearly rings being put to use in one particular case, a student counting them on a stump, and it leaves the wording of the idea in Sentence 1 unchanged.',
       hints: [
@@ -296,8 +305,8 @@ export const SEED_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS: LessonPlan = {
       choices: [
         { id: 'a', text: 'Sentence 2, because explaining that the salt works by dissolving into a film of water tells the reader the one condition under which the idea holds, and a condition narrows the rule stated in Sentence 1.' },
         { id: 'b', text: 'Sentence 3, because it marks the point where the idea stops being true: in very cold air the salt water freezes as well, so the rule in Sentence 1 holds only down to a certain temperature and not below it.', correct: true },
-        { id: 'c', text: 'Sentence 4, because a truck spreading salt on the main roads on one ordinary morning narrows the rule in Sentence 1 to main roads and to mornings when the air is only just under freezing.' },
-        { id: 'd', text: 'Sentence 5, because spreading salt before a storm is a different use from melting ice that is already on the road, so the sentence cuts the rule in Sentence 1 down to storms alone.' },
+        { id: 'c', text: 'Sentence 4, because a truck spreading salt on the main roads on one ordinary morning narrows the rule in Sentence 1 to main roads and to mornings when the air is only just under freezing, since the exact weather sounds like a boundary.' },
+        { id: 'd', text: 'Sentence 5, because spreading salt before a storm is a different use from melting ice that is already on the road, so the sentence cuts the rule in Sentence 1 down to storms alone, since a different moment reads like a restriction.' },
       ],
       expectedAnswer: 'Sentence 3, because it marks the point where the idea stops being true: in very cold air the salt water freezes as well, so the rule in Sentence 1 holds only down to a certain temperature and not below it.',
       hints: [

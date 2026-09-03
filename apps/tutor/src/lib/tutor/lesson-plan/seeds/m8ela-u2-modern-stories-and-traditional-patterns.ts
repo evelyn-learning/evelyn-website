@@ -50,18 +50,22 @@
  * that a pattern tells the reader in advance where the climax sits, which is
  * a one-line reuse of the G7 turning-point vocabulary, not a re-teaching of
  * it, and no plot stage is defined here; (b) "allusion" is named exactly
- * once in the body, in one keyIdea, only to say that a line pointing at
- * another story by name is a different lesson in this unit and that a
- * pattern is borrowed shape rather than a borrowed name — that sentence
- * exists to keep the two rows apart, not to teach allusion; (c) every
- * excerpt's outcome is described in terms of what the pattern PROMISES and
+ * once in the taught prose of the body, in one keyIdea, only to say that a
+ * line pointing at another story by name is a different lesson in this unit
+ * and that a pattern is borrowed shape rather than a borrowed name — that
+ * sentence exists to keep the two rows apart, not to teach allusion (the
+ * word also occurs inside the prerequisite loId
+ * "m8ela.allusions-and-analogies-in-literature", which is an identifier the
+ * student never hears, not teaching); (c) where an excerpt's outcome is
+ * discussed, it is discussed in terms of what the pattern PROMISES and
  * whether the writer delivers or denies it — the second worked example says
- * that a reversal leaves the reader "with her question" and takes "the old
- * story's certainty" away, which is a statement about reader expectation,
- * the mechanism this row teaches, and stops short of saying what either
- * version means; (d) each of the four patterns is stated as a REAL-WORLD
- * claim about what old stories commonly do, and those claims are ledgered
- * below, as the contract requires of row 2.4.
+ * that Version B "takes the old story's certainty away and leaves the
+ * reader where Jess is, unable to decide" between luck and proof, which is a
+ * statement about reader expectation, the mechanism this row teaches, and
+ * stops short of saying what either version means; (d) each of the four
+ * patterns is stated as a REAL-WORLD claim about what old stories commonly
+ * do, and those claims are ledgered below, as the contract requires of
+ * row 2.4.
  *
  * NOTE FOR FUTURE AUTHORS: every excerpt in this file is original prose
  * written for the item. This course carries no passage machinery — no
@@ -73,7 +77,8 @@
  * quotes from one of its excerpts appears character-for-character in that
  * excerpt; quote your own excerpt exactly, never from memory.
  *
- * CLAIM LEDGER (stated patterns and the two incidental real-world facts):
+ * CLAIM LEDGER (the four stated patterns, the one incidental real-world
+ * fact, and the stipulated specifics):
  *   Claim                                  | Where                  | Kind       | Grounds
  *   In many old stories a young hero must  | concept keyIdea 2,     | REAL-WORLD | Long-documented folktale
  *   pass three trials set by a powerful    | worked-1 stem, try-3   |            | structure: tests and
@@ -137,8 +142,12 @@
  *                                          |                        |            | the excerpt (the wobble
  *                                          |                        |            | he asked about twice is
  *                                          |                        |            | the fault he fixes).
- *   Every other excerpt detail in this file is invented narrative fiction,
- *   true by construction, with no factual claim to verify.
+ *   The four choices of try-1 each restate one of the four pattern claims
+ *   above, in the same terms and with the same grounds; the three that are
+ *   not the key are wrong about which pattern the excerpt fits, never about
+ *   what the pattern is. Every other excerpt detail in this file is invented
+ *   narrative fiction, true by construction, with no factual claim to
+ *   verify.
  */
 
 import type { LessonPlan } from '../types';
@@ -253,9 +262,9 @@ export const SEED_M8ELA_U2_MODERN_STORIES_AND_TRADITIONAL_PATTERNS: LessonPlan =
         'In many old stories, the smallest or least regarded member of a group, the one nobody expects anything from, turns out to be the one whose help decides the outcome for everyone else. This excerpt draws on that pattern.\n\n"The robotics team had eleven minutes before judging and a robot that would not turn left. Three eighth graders argued over the code while Sam\'s little brother, who had been brought along because nobody could leave him at home, sat on the floor with the spare parts. He had asked twice whether the left wheel was supposed to wobble like that and been told twice to be quiet. At nine minutes he crawled under the table, pushed the wheel back onto its axle until it clicked, and crawled out again. The robot turned left. Nobody said anything for a second, and then everybody did."\n\nWhich choice best explains how this modern telling renders the pattern new?',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'A reversed outcome: the reader expects the three eighth graders who know the code to be the ones who fix the robot, and instead the help comes from the little brother, so the story turns the promised ending over.' },
-        { id: 'b', text: 'A swapped role: the ones who need saving are the three capable eighth graders and the one who saves them is the little brother nobody listens to, which trades the parts the old stories hand out between the hero and the helper.' },
-        { id: 'c', text: 'The excerpt does not draw on the pattern at all, because a wobbling wheel at a school contest is too ordinary to count as the kind of trouble the old stories put a hero in, and nobody in it is on a quest or in danger.' },
+        { id: 'a', text: 'A reversed outcome: the reader expects the three eighth graders arguing over the code to be the ones who fix the robot, since the little brother is only there because nobody could leave him at home, and instead the help comes from him, so the story turns the promised ending over.' },
+        { id: 'b', text: 'A swapped role: the ones who need saving are the three capable eighth graders and the one who saves them is the little brother who was told twice to be quiet, which trades the parts the old stories usually hand out between the hero and the helper.' },
+        { id: 'c', text: 'The excerpt does not draw on the pattern at all, because a wobbling wheel at a school contest is too ordinary to count as the kind of trouble the old stories put a hero in: there is no forest and no danger here, only eleven minutes and a robot that would not turn left.' },
         { id: 'd', text: 'A changed setting: the bones and the promised ending are kept exactly, an overlooked helper whose help decides things for the group, and what the writer has changed is where it happens, a robotics table instead of a forest, which makes an ordinary contest feel like a rescue.', correct: true },
       ],
       expectedAnswer: 'A changed setting: the bones and the promised ending are kept exactly, an overlooked helper whose help decides things for the group, and what the writer has changed is where it happens, a robotics table instead of a forest, which makes an ordinary contest feel like a rescue.',

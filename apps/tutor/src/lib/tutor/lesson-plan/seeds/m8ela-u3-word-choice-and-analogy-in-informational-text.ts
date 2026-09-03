@@ -37,9 +37,10 @@
  * body (below this comment), and every comparison here is to a familiar
  * object or gesture, never to another story, myth or event; analogy as a
  * move that CONNECTS two ideas or events inside a text, which is row 3.2's —
- * every analogy here compares the one subject being explained to one
- * familiar thing outside the text; the job a sentence does inside a
- * paragraph, which is row 3.4's; the tone-versus-mood distinction, which is
+ * every analogy here compares the subject being explained to something
+ * familiar from outside the text, never one idea in the text to another idea
+ * in it; the job a sentence does inside a paragraph, which is row 3.4's; the
+ * tone-versus-mood distinction, which is
  * `m7ela-u2-tone-mood-and-word-choice.ts`'s (RL.7.4) — the word "mood" does
  * not appear in the body, and no item asks what the reader feels; sorting
  * near-synonyms as positive, neutral or negative, which is
@@ -55,8 +56,8 @@
  * recap line, because this row's own scope names the precise adjective as
  * the deliverable and the rule is reused here in nonfiction, not re-taught;
  * (b) the words "positive", "negative" and "neutral" appear only to say that
- * a polarity is not a tone name — in one keyIdea, one worked step, one recap
- * line and two distractors the student is asked to reject — which is a
+ * a polarity is not a tone name — in one keyIdea, two worked steps, one
+ * recap line and two distractors the student is asked to reject — which is a
  * one-line reminder of the G7 polarity row, not a re-teaching of it; (c) the
  * terms "connotative word" and "figurative word" get vocabulary entries
  * because this row applies them to nonfiction, where the student has not yet
@@ -68,10 +69,11 @@
  *
  * NOTE FOR FUTURE AUTHORS: every excerpt in this file is original prose
  * written for the item — the newsletter notices, the field-guide entries and
- * the nature-center sign are invented, with invented clubs and an invented
- * school. This course carries no passage machinery — no passageId, no shared
- * texts — so each question must be solvable from the sentences printed
- * inside it, and no published work may be quoted or closely paraphrased.
+ * the nature-center sign are invented, with an invented garden club and an
+ * invented school. This course carries no passage machinery — no passageId,
+ * no shared texts — so each question must be solvable from the sentences
+ * printed inside it, and no published work may be quoted or closely
+ * paraphrased.
  * Every phrase this file quotes from one of its excerpts appears character-
  * for-character in that excerpt, including case; quote your own excerpt
  * exactly, never from memory.
@@ -91,7 +93,7 @@
  *   Lost-and-found items will be donated on    | hook (two versions)      | STIPULATED  | Invented school newsletter;
  *   Friday                                     |                          |             | both versions carry the same
  *                                              |                          |             | day, bin and items.
- *   "Regrets to report" is the phrasing of a   | WE-1 step 1, step 4      | REAL-WORLD  | Standard formal-notice
+ *   "regrets to report" is the phrasing of a   | WE-1 step 1, step 4      | REAL-WORLD  | Standard formal-notice
  *   formal announcement                        |                          |             | idiom in English.
  *   A garden club's compost bins were raided   | WE-1 passage             | STIPULATED  | Invented club; consistent:
  *   over a weekend, eggshells on the path,     |                          |             | two bins, second lid on the
@@ -112,8 +114,8 @@
  *   due Thursday; no late slips, no phone      |                          |             | consistent: Thursday due,
  *   permission, no held seats                  |                          |             | Friday refused, each
  *                                              |                          |             | "cannot" a separate rule.
- *   "Casualty" in its plain sense means a      | try-3 hint 2, key        | REAL-WORLD  | Dictionary sense of the
- *   person or thing lost or harmed, usually    |                          |             | word.
+ *   "casualty" in its plain sense means a      | try-3 hint 2, key,       | REAL-WORLD  | Dictionary sense of the
+ *   person or thing lost or harmed, usually    | distractor b             |             | word.
  *   seriously                                  |                          |             |
  *   A barn owl can locate and strike prey by   | try-2 passage            | REAL-WORLD  | Payne's classic
  *   hearing alone in total darkness            |                          |             | total-darkness experiments
@@ -206,10 +208,10 @@ export const SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT: Lesson
       problem:
         'Name the tone of this notice with a precise adjective, and say which words carry it.\n\n"The garden club regrets to report that the raccoons are back. Over the weekend they raided both compost bins, strewed eggshells the length of the path, and left the lid of the second bin balanced on the fence like a trophy. Volunteers are asked to clip the new latches shut every evening, since the old ones were apparently more of a suggestion."',
       steps: [
-        'Find the words a plainer writer would not have used. "Regrets to report" is the phrasing of a formal announcement, borrowed for a raccoon problem. "Raided" instead of got into. "Strewed" instead of left. "Like a trophy." And "more of a suggestion" for latches that did not hold. Five choices in three sentences, and none of them was required by the facts.',
-        'Run the swap test on the loudest one. "They raided both compost bins" becomes "They got into both compost bins." The facts are identical, so "raided" was not carrying meaning. What it was carrying is the feeling that the raccoons are a raiding party and the compost is a fort, which is a joke the writer is making at the raccoons\' expense and slightly at the club\'s.',
-        'Check the figurative word. "Like a trophy" is not reporting a trophy; it is a comparison, and it hands the raccoon a feeling it cannot have, pride in a job well done. Swap it out and the lid is simply on the fence. The comparison is where the writer\'s amusement shows most clearly.',
-        'Ask what the choices have in common, because two or three pointing the same way make a tone. "Regrets to report" is mock-serious. "Raided" and "like a trophy" treat the raccoons as a small victorious army. "More of a suggestion" admits, with a straight face, that the club\'s own latches failed. Every choice is doing the same thing: turning an annoying weekend into a joke told dry.',
+        'Find the words a plainer writer would not have used. The words "regrets to report" are the phrasing of a formal announcement, borrowed for a raccoon problem. Then "raided" instead of got into, and "strewed" instead of left. There is also "like a trophy", and "more of a suggestion" for latches that did not hold. Five choices in three sentences, and none of them was required by the facts.',
+        'Run the swap test on the loudest one. The line "they raided both compost bins" becomes "they got into both compost bins." The facts are identical, so "raided" was not carrying meaning. What it was carrying is the feeling that the raccoons are a raiding party and the compost is a fort, which is a joke the writer is making at the raccoons\' expense and slightly at the club\'s.',
+        'Check the figurative word. The phrase "like a trophy" is not reporting a trophy; it is a comparison, and it hands the raccoon a feeling it cannot have, pride in a job well done. Swap it out and the lid is simply on the fence. The comparison is where the writer\'s amusement shows most clearly.',
+        'Ask what the choices have in common, because two or three pointing the same way make a tone. The borrowed "regrets to report" is mock-serious. Both "raided" and "like a trophy" treat the raccoons as a small victorious army. The line "more of a suggestion" admits, with a straight face, that the club\'s own latches failed. Every choice is doing the same thing: turning an annoying weekend into a joke told dry.',
         'Name it precisely. Not "funny", which describes the effect rather than the attitude, and not "negative", which is only a direction. The writer is annoyed and amused at the same time, and says so without ever raising the voice. That is WRY. "Exasperated" would need more heat than these words have; "cheerful" would miss the annoyance inside "regrets to report".',
         'Say the whole answer: the tone is wry, carried by "regrets to report", "raided", "like a trophy" and "more of a suggestion", each of which replaces a plainer word that would have reported the same weekend with no attitude at all.',
       ],
@@ -241,10 +243,10 @@ export const SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT: Lesson
         'Read the notice, then choose the statement that names its tone with a precise adjective and points to the words that carry it.\n\n"Permission slips for the science museum trip are due in the front office by Thursday. No slip, no seat. The office cannot accept a slip on Friday morning, cannot take a parent\'s word over the phone, and cannot hold a place on the bus for a student whose form is sitting on a kitchen counter."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'Apologetic: the notice is sorry that some students are going to miss the trip, and the three "cannot" clauses are the writer explaining, regretfully, every way the office wishes it could help and is not allowed to.' },
-        { id: 'b', text: 'Alarmed: a museum trip is something students look forward to, so a writer listing the ways a student could lose a seat is worried, and a little panicked, that half the bus will be empty on the morning of the trip.' },
+        { id: 'a', text: 'Apologetic: three "cannot" clauses read as an office listing what is out of its hands rather than what it refuses, and a writer who gives a separate clause to every closed door is saying sorry about the rule without using the word.' },
+        { id: 'b', text: 'Alarmed: a museum trip is something students wait weeks for, so a writer who lists three ways to lose a seat must be worried about how many are going to lose one before Thursday morning.' },
         { id: 'c', text: 'Stern: "No slip, no seat" is four words with nothing to soften them, and the three "cannot" clauses shut every door in a row, ending on a form "sitting on a kitchen counter," which pictures the excuse before anyone can make it.', correct: true },
-        { id: 'd', text: 'Neutral: the notice gives the due day, the place the slips go and the rules the office follows, and a school notice that only states rules is reporting facts, so there is no tone in it to name at all.' },
+        { id: 'd', text: 'Neutral: the notice gives the due day, the place the slips go and the three rules the office follows, and none of that is a comparison or a picture, so it is reporting facts and has no attitude to name.' },
       ],
       expectedAnswer: 'Stern: "No slip, no seat" is four words with nothing to soften them, and the three "cannot" clauses shut every door in a row, ending on a form "sitting on a kitchen counter," which pictures the excuse before anyone can make it.',
       hints: [
@@ -260,9 +262,9 @@ export const SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT: Lesson
         'Read the field-guide entry, then choose the statement that correctly describes what the comparison to cupped hands does.\n\n"The barn owl can hunt by ear alone. The stiff feathers of its face are arranged in a shallow dish, and that dish does for the owl what a pair of hands cupped behind your ears does for you, only far better. A mouse moving through dry grass makes almost no sound, yet a barn owl can place that sound so precisely that it strikes in total darkness."',
       responseFormat: 'mcq',
       choices: [
-        { id: 'a', text: 'It sets the tone only: a picture of hands cupped behind the ears is a playful touch, and it tells the reader nothing about how the owl\'s face works that "a shallow dish" had not already said on its own.' },
-        { id: 'b', text: 'It explains the meaning only: cupped hands show that the dish gathers faint sound and sends it toward the ears, and because a field guide exists to state facts, the comparison carries no attitude toward the owl one way or the other.' },
-        { id: 'c', text: 'It makes the tone ominous: a hunter that finds a mouse in total darkness is frightening, and any comparison in an entry about a night hunter takes on that dread whether or not the writer chose a single frightening word.' },
+        { id: 'a', text: 'It sets the tone only: "a shallow dish" has already given the shape of the owl\'s face, so the cupped hands add nothing about how that face works, and the picture is there to keep a paragraph about feathers from going dry.' },
+        { id: 'b', text: 'It explains the meaning only: cupped hands show that the dish gathers faint sound and sends it toward the ears, and that is all the comparison does, because a field guide records what an animal does rather than admiring it.' },
+        { id: 'c', text: 'It makes the tone ominous: an animal that can place a mouse in dry grass and strike it in total darkness is unsettling, and putting the reader\'s own hands beside a hunter\'s face pulls the reader into the hunt, frightening word or not.' },
         { id: 'd', text: 'It does both jobs: cupped hands show that the dish gathers faint sound and sends it toward the ears, and choosing a gesture the reader has made, then adding "only far better" and "so precisely," gives the entry an admiring tone toward the owl.', correct: true },
       ],
       expectedAnswer: 'It does both jobs: cupped hands show that the dish gathers faint sound and sends it toward the ears, and choosing a gesture the reader has made, then adding "only far better" and "so precisely," gives the entry an admiring tone toward the owl.',
@@ -280,9 +282,9 @@ export const SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT: Lesson
       responseFormat: 'mcq',
       choices: [
         { id: 'a', text: 'Reassuring: "The good news is," "never got wet" and "nothing at all" keep turning a flooded gym into a problem already handled, and calling a moved practice "The only real casualty" borrows a serious word to make the loss sound small.', correct: true },
-        { id: 'b', text: 'Alarmed: a burst pipe and a floor under an inch of water are an emergency, and a notice that opens with the flood and then reports a casualty is warning families how serious the damage was before anyone could stop it.' },
-        { id: 'c', text: 'Apologetic: the school is sorry that volleyball practice has to move to the cafeteria and that the gym is going to smell damp for a week, and the whole notice is built to say so as gently as it can manage.' },
-        { id: 'd', text: 'Neutral: the notice lists what burst, when the custodians came, what has dried and what has moved, and a list of facts in a school newsletter reports the weekend without taking any attitude toward it at all.' },
+        { id: 'b', text: 'Alarmed: a burst pipe and a floor under an inch of water are an emergency, and the notice reaches for "casualty", a word that belongs to disasters, so a writer who opens on the flood and then reports a casualty is warning families how bad the damage was.' },
+        { id: 'c', text: 'Apologetic: a volleyball team losing its court and a week of damp smell are things a school would be sorry about, so the notice must be softening bad news, and "we are told" is a writer hedging a promise to people already let down.' },
+        { id: 'd', text: 'Neutral: the notice lists what burst, when the custodians arrived, what has been dried, what has moved and how long the smell lasts, and a newsletter that reports a weekend in order is giving facts, not an attitude.' },
       ],
       expectedAnswer: 'Reassuring: "The good news is," "never got wet" and "nothing at all" keep turning a flooded gym into a problem already handled, and calling a moved practice "The only real casualty" borrows a serious word to make the loss sound small.',
       hints: [
@@ -302,7 +304,7 @@ export const SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT: Lesson
           misconception:
             'Believing that informational text is attitude-free because its job is to inform. The student has learned to look for tone in stories and switched the search off the moment the text stopped being one.',
           correctsTo:
-            'Facts have to be put into words, and somebody chose these. The word "neighbor" is a connotative word: a plainer sign would have said "animal", and "neighbor" makes the snake something that belongs near your house. Saying the snake "would rather slip into the grass than be found" hands it a preference, which is a figurative touch, and it is the preference of something shy, not something dangerous. "Your lettuce" puts the snake on the reader\'s side. Three choices pointing the same way make a tone, and this one is reassuring, even affectionate. The sign is still informational; it is also written by a person who likes garter snakes and wants you to.',
+            'Facts have to be put into words, and somebody chose these. The word "neighbor" is a connotative word: a plainer sign would have said "animal", and "neighbor" makes the snake something that belongs near your house. Saying the snake "would rather slip into the grass than be found" hands it a preference, which is a figurative touch, and it is the preference of something shy, not something dangerous. The words "your lettuce" put the snake on the reader\'s side. Three choices pointing the same way make a tone, and this one is reassuring, even affectionate. The sign is still informational; it is also written by a person who likes garter snakes and wants you to.',
         },
         {
           answer: 'It is about a snake, so the tone is creepy.',
