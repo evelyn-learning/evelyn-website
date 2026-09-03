@@ -27,6 +27,35 @@ const files = readdirSync(dir)
   .filter((f) => !only.length || only.some((s) => f.endsWith('-' + s + '.ts')))
   .sort();
 if (!files.length) { console.error(`NO FILES MATCHED for ${course} in ${dir} (slugs: ${only.join(' ') || 'all'}) — this audit measured nothing`); process.exit(2); }
+/**
+ * A cross-grade LEAK is the tutor telling the student what they did or learned
+ * in another school year ("Last year you learned this", "Last year you found
+ * the volume of a box"). It is NOT any sentence containing "last year": an
+ * invented passage may legitimately say the pool stayed open two hours later
+ * than last year, or that 40 students signed up and the club should keep the
+ * slot next year.
+ *
+ * History, so nobody re-widens this: the original regex was
+ * /last year|next year/ (case-SENSITIVE). It flagged 11 passage sentences
+ * across 3 m8ela seeds, all false, while MISSING two real leaks that began a
+ * sentence with capitalised "Last year". Narrowing it to a list of teaching
+ * verbs then missed m8math u6's "Last year you FOUND the volume". A verb list
+ * cannot be completed, so this check no longer tries to reach a verdict: it
+ * matches the phrase plus a first/second-person learner and PRINTS THE
+ * SENTENCE for a human to rule on. It is ADVISORY -- expect true negatives in
+ * word problems that legitimately address "you".
+ */
+function schoolYearLeaks(s: string): string[] {
+  return s
+    .split(/(?<=[.!?])\s+/)
+    .filter((sent) => /\b(last|next) year\b/i.test(sent) && /\b(you|your|we|our)\b/i.test(sent));
+}
+// Self-tests: a check that has never been shown to fire is not evidence of absence.
+if (!schoolYearLeaks('Last year you learned that an opinion turns into an argument.').length) throw new Error('self-test: missed a real leak (learned)');
+if (!schoolYearLeaks('Last year you found the volume of a box with V = Bh.').length) throw new Error('self-test: missed a real leak (found)');
+if (schoolYearLeaks('The pool stayed open two hours later than last year.').length) throw new Error('self-test: fired on a passage sentence');
+if (schoolYearLeaks('40 students signed up, and the club should keep the slot next year.').length) throw new Error('self-test: fired on the noun "students"');
+
 const LETTERS = ['a', 'b', 'c', 'd'];
 let total = 0, longest = 0, mcqs = 0;
 const problems: string[] = [];
@@ -108,7 +137,8 @@ for (const f of files) {
   }
   if (tryFormat === 'two-mcq-one-numeric' && tys.filter((x: any) => x.responseFormat === 'numeric').length !== 1) P('math course needs exactly one numeric try_yourself');
   walk(plan.segments, 'segments', (s, p) => {
-    if (/\bGrade [678]\b|\bG[678]\b|last year|next year/.test(s)) P(`spoken field mentions a grade: ${p}`);
+    if (/\bGrade [678]\b|\bG[678]\b/.test(s)) P(`spoken field names a grade band: ${p}`);
+    for (const sent of schoolYearLeaks(s)) P(`ADVISORY -- another school year addressed to the student: ${p}: "${sent.trim().slice(0, 110)}"`);
     if (/\bthis lesson\b|\bin this lesson\b/i.test(s) && /try_yourself|choices|problem/.test(p)) P(`try item references "this lesson": ${p}`);
   });
 }
