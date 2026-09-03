@@ -233,17 +233,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A data set has a minimum value of 8 and a maximum value of 35. What is the range?",
+    "problemText": "A data set has a minimum value of 8, Q1 = 15, median = 20, Q3 = 28, and maximum = 40. What is the interquartile range (IQR)?",
     "choices": [
-      "21.5",
-      "43",
-      "27",
-      "8"
+      "32",
+      "20",
+      "13",
+      "12"
     ],
     "answer": "C",
     "hints": [
-      "Range is found by subtracting the smallest value from the largest value.",
-      "You need to subtract, not add or divide the two numbers."
+      "IQR is the spread of the middle half of the data.",
+      "Subtract the first quartile from the third quartile."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A teacher recorded the number of books read by students in one month: 3, 7, 5, 9, 6. After ordering this data from least to greatest, what is the median?",
+    "problemText": "A coach records the time in seconds it takes each swimmer on the team to complete a lap: 45, 52, 38, 48, 55, 41, 50. Order the data first, then find the median of this seven-value data set.",
     "choices": [
-      "5",
-      "30",
-      "7",
-      "6"
+      "45 seconds",
+      "50 seconds",
+      "52 seconds",
+      "48 seconds"
     ],
     "answer": "D",
     "hints": [
-      "The median is the middle value when the data is ordered from least to greatest.",
-      "With 5 values, count to find which one is in the very center position."
+      "Start by arranging all seven values from smallest to largest.",
+      "The median is the middle value when the data is ordered."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Five friends timed how long they could hold a plank in seconds: 25, 18, 42, 30, 35. The five-number summary for this data is: minimum 18, Q1 = 23.5, median = 30, Q3 = 38.5, maximum = 42. What is the interquartile range (IQR)?",
+    "problemText": "Two sixth-grade classes took a spelling test. Class A had a mean score of 82 and a range of 18. Class B had a mean score of 82 and a range of 5. Both classes have the same average, but what does the range tell you about how the students performed differently?",
     "choices": [
-      "15 seconds",
-      "24 seconds",
-      "8.5 seconds",
-      "19.5 seconds"
+      "Class B's students had scores much closer to each other, while Class A's scores were more spread out.",
+      "Class A has better spellers because a larger range means more students scored very high on the test.",
+      "Class B's students all scored exactly 82 because the range of 5 means no one deviated from the mean.",
+      "The two classes performed identically in terms of consistency because both have the same mean score of 82."
     ],
     "answer": "A",
     "hints": [
-      "The IQR equals Q3 minus Q1.",
-      "Subtract the first quartile value from the third quartile value."
+      "Range measures spread, not center. A small range means values cluster together.",
+      "Two data sets can have the same mean but very different spreads."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A coach recorded sprint times in seconds for eight runners: 12, 14, 15, 16, 18, 19, 21, 25. Order the data, find Q1 and Q3 (remember to leave out the median when splitting an even-count data set), then calculate the range and IQR. Which statement is true?",
+    "problemText": "A art teacher collected data on how many drawings each of her eight students completed in one week: 3, 7, 5, 9, 4, 8, 6, 10. After ordering the data, find both the first quartile (Q1) and the third quartile (Q3), then calculate the interquartile range.",
     "choices": [
-      "The range is 13 seconds and the IQR is 4.5 seconds.",
-      "The range is 13 seconds and the IQR is 6 seconds.",
-      "The range is 10 seconds and the IQR is 6 seconds.",
-      "The range is 13 seconds and the IQR is 8.5 seconds."
+      "Q1 = 5, Q3 = 8.5, IQR = 3.5",
+      "Q1 = 4.5, Q3 = 8.5, IQR = 4",
+      "Q1 = 5, Q3 = 9, IQR = 4",
+      "Q1 = 4, Q3 = 9, IQR = 5"
     ],
     "answer": "B",
     "hints": [
-      "With 8 values (even), after ordering, the median falls between the two middle values. Split the lower half (first 4 values) and upper half (last 4 values) to find Q1 and Q3.",
-      "Range = max − min. IQR = Q3 − Q1. Double-check your Q1 and Q3 by finding the median of each half."
+      "With an even count of values, find the median of the lower half and upper half separately.",
+      "The lower half contains the four smallest values; the upper half contains the four largest values."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two classes took a spelling test. Class A's five-number summary is: min 60, Q1 = 70, median = 80, Q3 = 85, max = 95. Class B's five-number summary is: min 70, Q1 = 75, median = 80, Q3 = 82, max = 90. Both classes have the same median, but which statement correctly uses spread to compare them?",
+    "problemText": "A manager tracks the number of online orders received each day over nine days: 12, 8, 15, 10, 14, 9, 16, 11, 13. One unusual day had only 8 orders. What is the range, and what does the interquartile range tell you about the effect of that unusual day?",
     "choices": [
-      "Class A and Class B have identical spread because they share the same median of 80.",
-      "Class B has a tighter middle half because the IQRs are both the same value.",
-      "Class A has greater spread because its range of 35 is larger than Class B's range of 20.",
-      "Class A must have performed better on the test because its maximum score is higher."
+      "Range = 8; the IQR equals the range, proving the unusual day spreads the data evenly throughout.",
+      "Range = 16; the IQR should always be half the range when extreme values are present in the dataset.",
+      "Range = 8; the IQR is much smaller than the range, showing that the unusual low day barely affects the spread of the middle half of the data.",
+      "Range = 16; the IQR remains stable because it ignores extreme values and focuses only on the middle 50 percent of the data."
     ],
     "answer": "C",
     "hints": [
-      "A center number alone can hide the story. Compare the ranges and IQRs of both classes, not just their medians.",
-      "Calculate: Class A's range and IQR; Class B's range and IQR. Which class shows wider spread in these measures?"
+      "Calculate range as maximum minus minimum. Then find Q1 and Q3 to compute the IQR.",
+      "The IQR focuses on only the middle half of the data, so extreme values have little effect on it."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6MATH-10.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An outdoor club recorded the distance (in meters) each member could throw a ball: 15, 18, 22, 24, 26, 28, 31, 35, 38, 45. After finding the five-number summary and calculating the IQR, one member threw a ball 62 meters on a second attempt—far farther than anyone else. If this 62-meter throw is added to the original data set, which values in the five-number summary would change, and by how much would the IQR change?",
+    "problemText": "Two runners tracked their mile times in minutes over six weeks: Runner A's times were 8.2, 8.0, 7.9, 8.1, 7.8, 8.3; Runner B's times were 7.5, 8.5, 7.4, 8.6, 7.3, 8.7. Both have a median of approximately 8.05 minutes. Calculate the IQR for each runner, then describe what the IQRs tell you about consistency.",
     "choices": [
-      "Only the maximum would change; the IQR would change by about 7 meters.",
-      "The maximum, Q3, median, and IQR would all change significantly.",
-      "The median and maximum would both change; the IQR would change by about 2 meters.",
-      "Only the maximum would change; the IQR would not change."
+      "Runner A's IQR is 0.4 minutes and Runner B's IQR is 0.9 minutes; neither runner is consistent because both their times show some variation week to week.",
+      "Runner A's IQR is 0.3 minutes and Runner B's IQR is 1.0 minutes; Runner B is more consistent because his times span a wider range across the six weeks.",
+      "Runner A's IQR is 0.2 minutes and Runner B's IQR is 1.1 minutes; Runner B is faster because his IQR is larger than Runner A's.",
+      "Runner A's IQR is 0.2 minutes and Runner B's IQR is 1.1 minutes; Runner A is much more consistent because the middle half of his times cluster tightly."
     ],
     "answer": "D",
     "hints": [
-      "The IQR measures only the middle half of the data (from Q1 to Q3). A value far outside that range affects the whiskers but not the box itself.",
-      "When you add one new extreme value to a data set, think about which parts of the five-number summary it can actually touch."
+      "Order each data set, find Q1 and Q3, then subtract to find IQR. Remember to exclude the median itself from both halves.",
+      "A smaller IQR means the middle half of values are packed closer together, showing more consistency."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A statistical question is one that anticipates variability in the data. Which of these is a statistical question?",
+    "problemText": "A statistical question is one that anticipates variability in the answers. Which of the following is a statistical question?",
     "choices": [
-      "How many students are in the eighth grade at Central Middle School?",
-      "How tall is the principal of our school?",
+      "How many students are in the sixth grade at Lincoln Middle School right now?",
       "What is the capital of France?",
-      "How many hours of television does each student in our class watch per day?"
+      "How many legs does a dog have?",
+      "What is the favorite color of each student in our class?"
     ],
     "answer": "D",
     "hints": [
-      "Remember: a statistical question expects different answers from different people or objects.",
-      "Which choice asks about a group where each member could give a different answer?"
+      "Think about whether the question expects one fixed answer or many different answers from different people.",
+      "A statistical question asks about multiple members of a group, where each person or object could give a different answer."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student asks: 'How many cans of soup does our school cafeteria have right now?' Apply the variability test to decide whether this is a statistical question. Would you expect this question to produce one fixed number, or many different numbers depending on when or who you ask?",
+    "problemText": "Ms. Chen is deciding between two questions to ask her students. Question A: 'How tall is the tallest student in our class?' Question B: 'How tall is each student in our class?' Which question is statistical, and why?",
     "choices": [
-      "It is not statistical because the cafeteria's soup count is one fixed number at any given moment.",
-      "It is statistical because asking different people or checking at different times would produce different counts due to soup being used and restocked throughout the day.",
-      "It is statistical because the number of cans is large enough that counting them all would take a long time and require effort from multiple people.",
-      "It is not statistical because soup is purchased in bulk quantities and stored in the same location, so there is only one way to count it."
+      "Question B is statistical because it asks about each student separately, so different students will have different heights.",
+      "Question A is statistical because it asks about one specific student and produces only one answer, with no variability across responses.",
+      "Neither question is statistical because height is a physical characteristic that does not vary between different measurement methods or people.",
+      "Both questions are statistical because they both involve students in the class and use numerical data."
     ],
     "answer": "A",
     "hints": [
-      "Think about whether this question has one correct answer or many different correct answers.",
-      "Even though many items are involved, does asking about all of them together produce variability?"
+      "Remember that mentioning a group does not automatically make a question statistical—what matters is whether each member can give a separate, different answer.",
+      "Question A asks about one specific person (the tallest student), so it has exactly one correct answer. Question B asks each student to answer about themselves."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two students each write a question about pets. Student A writes: 'How many pets does the average household on Oak Street have?' Student B writes: 'How many pets does each household on Oak Street have?' Which student wrote a statistical question, and why?",
+    "problemText": "Jordan wrote this question: 'How many text messages did I send today?' Explain whether this is a statistical question by applying the variability test.",
     "choices": [
-      "Student A, because the question mentions an entire street.",
-      "Student B, because each household can give a separate, possibly different answer about its own pets.",
-      "Both students wrote statistical questions because they both talk about Oak Street.",
-      "Neither student wrote a statistical question because you cannot know the answer without surveying."
+      "Yes, it is statistical because text messages vary in length and students send different amounts each day.",
+      "No, it is not statistical because it asks about one person at one specific time, producing only one answer.",
+      "Yes, it is statistical because many people send text messages every day and the numbers differ across different days.",
+      "No, it is not statistical because text messages are not numerical data and cannot be counted or measured."
     ],
     "answer": "B",
     "hints": [
-      "The key difference is whether each unit (each household) gives its own separate answer.",
-      "Does mentioning a group by itself make a question statistical, or does the way the question is asked matter more?"
+      "The variability test asks: would the answers differ from person to person, object to object, or time to time?",
+      "This question names only Jordan and only one day, so it produces exactly one number—not variability."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A coach writes the question: 'How long did our team's game last yesterday?' The coach then decides to change the question to make it statistical by keeping the topic the same and changing who the question reaches. Which rewritten question would correctly turn it into a statistical question?",
+    "problemText": "A student has these three questions: (1) 'How many ounces of water did I drink today?' (2) 'How many ounces of water does each student in my grade drink per day?' (3) 'What is the total ounces of water all students in my grade drink per day?' Use the variability test to determine which of these are statistical questions.",
     "choices": [
-      "How long do basketball games usually last when played by different teams and leagues?",
-      "How many total minutes did all players on our team play combined during yesterday's game?",
-      "How long did each player on our team play during yesterday's game?",
-      "What time did yesterday's game start and what time did it end?"
+      "Questions 1 and 2 are both statistical.",
+      "Questions 2 and 3 are both statistical.",
+      "Only question 2 is statistical.",
+      "Only question 3 is statistical."
     ],
     "answer": "C",
     "hints": [
-      "Keep the topic (time duration related to yesterday's game) the same, but ask about each person separately instead of the whole game.",
-      "Which choice asks each team member for their own separate answer, creating expected variability?"
+      "Question 1 is about one person on one day—does that produce one answer or many? Question 3 asks for a single total across the entire grade—does that produce one answer or many?",
+      "A statistical question must ask about each member of a group separately so that different answers are expected from different people."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Four questions are being tested with the variability test. (1) 'How much does a new bicycle cost at the bike shop downtown?' (2) 'How much does each bicycle in the rental fleet cost?' (3) 'How many weeks did our class practice for the concert?' (4) 'How many weeks did each band student practice for the concert?' Which two of these four questions are statistical questions?",
+    "problemText": "Marcus wants to know about the number of hours students spend playing video games each week. He writes: 'How many hours do students spend playing video games each week?' But his teacher says this is not quite a statistical question yet. What must Marcus change to make it statistical?",
     "choices": [
-      "Questions 1 and 3",
-      "Questions 1 and 4",
-      "Questions 2 and 3",
-      "Questions 2 and 4"
+      "Change 'hours' to 'minutes' so the question uses smaller units and becomes easier for students to answer accurately.",
+      "Ask about the total number of hours all students play combined rather than each student individually, since statistical questions focus on combined data rather than personal responses.",
+      "Ask about a different topic instead, like sports or reading, because those topics are more suitable for gathering data from groups of people.",
+      "Add a specific group to his question, such as 'students in my class' or 'students in my school,' so each student can answer separately about themselves."
     ],
     "answer": "D",
     "hints": [
-      "For each question, ask yourself: does it have one fixed answer, or does it expect each member of a group to give a possibly different answer?",
-      "Questions that name a group but ask about only one total (like 'the class') are not statistical. Questions that ask each member separately are."
+      "Right now, the question says 'students' but does not specify which students. To make it statistical, you need to name a specific group.",
+      "Once Marcus names a specific group, each student in that group will be asked separately and can give a different answer—that is when it becomes statistical."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A teacher writes: 'What is the favorite color of students in my school?' and then thinks this question might not be statistical. She considers three possible rewrites: (1) 'What is the favorite color?' (2) 'What is the favorite color of each student in my school?' (3) 'What are the favorite colors of students in my school?' Explain why at least one of these would turn the original into a true statistical question, and which one(s) would work. Which statement correctly describes the result?",
+    "problemText": "A researcher is studying breakfast habits. She considers these four questions: (A) 'How many students in the school ate breakfast yesterday?' (B) 'Did each student in the school eat breakfast yesterday?' (C) 'How many minutes did it take the school cafeteria to serve breakfast yesterday?' (D) 'How many minutes did it take for each student to eat their breakfast yesterday?' Two of these questions are statistical. Identify which two, and for each one, briefly explain why using the variability test.",
     "choices": [
-      "Only rewrite 2 works, because it explicitly asks each student to give their own separate answer, creating expected variability.",
-      "Only rewrite 1 works, because it is shorter and more general, allowing anyone to answer without specifying individual students.",
-      "Rewrites 2 and 3 both work, because they both make clear that the answers will differ from student to student based on individual preferences.",
-      "None of the rewrites work, because asking about favorite colors requires students to guess what others like instead of reporting their own preferences."
+      "Questions A and C are statistical because they both ask about large groups and involve counting or measuring outcomes.",
+      "Questions B and D are statistical because different students are expected to give different answers.",
+      "Questions C and D are statistical because they both involve measuring time in minutes and studying cafeteria procedures.",
+      "Questions A and B are statistical because they both ask yes/no questions about breakfast eaten by students in the school."
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
-      "Which rewrite makes it absolutely clear that each individual student will answer for themselves, not just the group overall?",
-      "A statistical question must show that each member of the group can give a separate, possibly different answer. Which phrasing makes that expectation most explicit?"
+      "Apply the variability test to each question separately. Ask yourself: would the answers differ from person to person, or is there only one answer?",
+      "Question A asks for one total count for the whole school. Question C asks about one event (cafeteria service) that happened once. But Questions B and D ask about each student separately, so different students' answers are expected to differ."
     ]
   }
 ]

@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6sci-earth-s-layered-structure-001",
-    "loId": "m6sci.earths-layered-structure",
-    "cedCode": "M6SCI-3.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Earth has four layers arranged in order from the surface toward the center. Starting at the surface and moving straight down, list the four layers in the correct order.",
-    "choices": [
-      "Crust, mantle, outer core, inner core",
-      "Crust, outer core, mantle, inner core",
-      "Mantle, crust, inner core, outer core",
-      "Inner core, outer core, mantle, crust"
-    ],
-    "answer": "A",
-    "hints": [
-      "The crust is the outermost layer that sits directly on top.",
-      "The inner core is at Earth's very center, so it comes last."
-    ]
-  },
-  {
-    "id": "m6sci-earth-s-layered-structure-002",
-    "loId": "m6sci.earths-layered-structure",
-    "cedCode": "M6SCI-3.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A scientist reports finding solid rock at a depth of about 15 kilometers below the surface of the ocean floor. No digging machine has ever reached below the solid rock at this location. Based on Earth's layered structure, which layer is the scientist examining, and what physical state is it in?",
-    "choices": [
-      "The mantle, and it is solid rock",
-      "The crust, and it is solid rock",
-      "The outer core, and it is liquid",
-      "The inner core, and it is solid rock"
-    ],
-    "answer": "B",
-    "hints": [
-      "Oceanic crust ranges from about 5 to 10 kilometers thick, so 15 kilometers is within reach of drilling.",
-      "The mantle sits below the crust and is thousands of kilometers thick, much deeper than 15 kilometers."
-    ]
-  },
-  {
-    "id": "m6sci-earth-s-layered-structure-003",
-    "loId": "m6sci.earths-layered-structure",
-    "cedCode": "M6SCI-3.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two students are discussing what they would expect to find if a drill could somehow reach a depth of 4,000 kilometers below Earth's surface. One student says the drill would find molten (liquid) metal. The other student says it would find hot solid rock. Which student is correct, and why?",
-    "choices": [
-      "The first student is correct, because the outer core begins at 2,900 kilometers depth and consists entirely of molten metal that would be found at 4,000 kilometers.",
-      "The second student is correct, because at 4,000 kilometers the drill would still be within the mantle layer, which remains solid rock despite the extreme temperatures found at that depth.",
-      "The first student is correct, because at 4,000 kilometers the drill would be in the outer core, which is entirely liquid.",
-      "The second student is correct, because the immense pressure at 4,000 kilometers would prevent the rock from melting even though the temperature is hot enough to melt it at Earth's surface."
-    ],
-    "answer": "C",
-    "hints": [
-      "Check which layer contains depths between 2,900 and 5,150 kilometers.",
-      "The outer core is the only layer that is entirely liquid; the mantle above it is solid rock that flows very slowly."
-    ]
-  },
-  {
-    "id": "m6sci-earth-s-layered-structure-004",
-    "loId": "m6sci.earths-layered-structure",
-    "cedCode": "M6SCI-3.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A geologist collects three rock samples from different depths: Sample X from about 1,500 kilometers below the surface, Sample Y from about 3,200 kilometers below the surface, and Sample Z from about 6,100 kilometers below the surface. The geologist knows that one sample must be solid rock, one must be liquid, and one must be solid despite being hotter than the liquid sample. Assign each sample to the correct layer and physical state.",
-    "choices": [
-      "X is in the crust (solid), Y is in the mantle (solid), Z is in the outer core (liquid)",
-      "X is in the outer core (liquid), Y is in the mantle (solid), Z is in the inner core (solid)",
-      "X is in the mantle (solid), Y is in the mantle (solid), Z is in the outer core (liquid)",
-      "X is in the mantle (solid), Y is in the outer core (liquid), Z is in the inner core (solid)"
-    ],
-    "answer": "D",
-    "hints": [
-      "The mantle extends from the surface (after the thin crust) down to about 2,900 kilometers; the outer core runs from about 2,900 to about 5,150 kilometers.",
-      "The inner core stays solid because of extreme pressure, even though it is the hottest layer—heat alone does not determine whether a layer is liquid or solid."
-    ]
-  },
-  {
-    "id": "m6sci-earth-s-layered-structure-005",
-    "loId": "m6sci.earths-layered-structure",
-    "cedCode": "M6SCI-3.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two drill projects are comparing their results. The first project, drilling beneath a tall mountain range, reached the same transition to a new rock layer after going down about 50 kilometers. The second project, drilling beneath the ocean floor, reached the same transition after going down only about 8 kilometers. Both projects were drilling through the same layer of Earth. Explain why the required depth differs so much, and identify which layer both projects drilled through.",
-    "choices": [
-      "Both drilled through the crust; continental crust under mountains is thicker than oceanic crust under the ocean floor.",
-      "Both drilled through the crust; oceanic crust is much thinner than continental crust, so the ocean project reached the mantle first.",
-      "The mountain project drilled through the crust and the ocean project drilled through the outer core; they were not in the same layer.",
-      "Both drilled through the mantle; the mantle is thicker under mountains because the pressure there is higher."
-    ],
-    "answer": "A",
-    "hints": [
-      "Oceanic crust is typically about 5 to 10 kilometers thick, while continental crust is typically about 25 to 70 kilometers thick.",
-      "The crust is the only layer that humans can drill into directly; both depths (8 and 50 kilometers) are far too shallow to reach the mantle."
-    ]
-  },
-  {
-    "id": "m6sci-earth-s-layered-structure-006",
-    "loId": "m6sci.earths-layered-structure",
-    "cedCode": "M6SCI-3.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is creating a scale diagram of Earth's layers. The student has drawn the crust as a 2-millimeter-thick line on the paper. Using the same scale, the student then asks: \"How thick should I draw the mantle?\" and \"Should the outer core and inner core together be drawn thicker or thinner than the mantle?\" Use the actual thickness ranges from Earth's structure to answer both questions. (Hint: Earth's crust ranges from about 5 to 70 kilometers thick; the mantle reaches down to about 2,900 kilometers; the outer core extends to about 5,150 kilometers; the inner core extends to about 6,371 kilometers.)",
-    "choices": [
-      "The mantle should be about 4 centimeters thick; the outer and inner cores together should be thinner than the mantle.",
-      "The mantle should be about 4 centimeters thick; the outer and inner cores together should be thicker than the mantle.",
-      "The mantle should be about 1.5 centimeters thick; the outer and inner cores together should be thicker than the mantle.",
-      "The mantle should be about 4 centimeters thick; the outer and inner cores together should be about the same thickness as the mantle."
-    ],
-    "answer": "B",
-    "hints": [
-      "The crust (2 millimeters) stands for about 35 kilometers on average. Use this ratio to find how many millimeters the mantle (down to 2,900 kilometers) would need.",
-      "Add the thicknesses: the outer core is about 2,250 kilometers thick (5,150 − 2,900) and the inner core is about 1,221 kilometers thick (6,371 − 5,150). The sum is about 3,471 kilometers, which should be compared to the mantle's 2,900 kilometers."
-    ]
-  },
-  {
-    "id": "m6sci-identifying-minerals-by-their-properties-001",
-    "loId": "m6sci.identifying-minerals-by-their-properties",
-    "cedCode": "M6SCI-3.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A mineral is defined as a single natural substance with its own set of properties that stays the same from sample to sample. A rock is a mixture of two or more minerals fused or stuck together. Which of these is a mineral?",
-    "choices": [
-      "A sample made of quartz grains and feldspar grains cemented together",
-      "Pure quartz with no other minerals mixed into it",
-      "A collection of different colored crystals of different types",
-      "A piece of granite containing visible pink, black, and white grains"
-    ],
-    "answer": "B",
-    "hints": [
-      "A mineral must be one substance, not a mixture.",
-      "Look for a sample where every part has the same composition, not multiple grain types."
-    ]
-  },
-  {
-    "id": "m6sci-identifying-minerals-by-their-properties-002",
-    "loId": "m6sci.identifying-minerals-by-their-properties",
-    "cedCode": "M6SCI-3.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student tests a mineral sample by scratching it with a fingernail (about 2.5 on the Mohs scale) and with a copper penny (about 3.5 on the Mohs scale). The fingernail leaves no mark, but the penny scratches the sample easily. What can the student conclude about the mineral's hardness on the Mohs scale?",
-    "choices": [
-      "The hardness is below 2.5",
-      "The hardness is between 2.5 and 3.5",
-      "The hardness is between 3.5 and 5.5",
-      "The hardness is above 6.5"
-    ],
-    "answer": "C",
-    "hints": [
-      "The sample resists the softer tool but loses to the harder one — so its hardness falls between them.",
-      "Since the penny scratches it, the hardness must be above 3.5; since the fingernail does not scratch it, the hardness must be above 2.5."
-    ]
-  },
-  {
-    "id": "m6sci-identifying-minerals-by-their-properties-003",
-    "loId": "m6sci.identifying-minerals-by-their-properties",
-    "cedCode": "M6SCI-3.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two samples of the same mineral from different locations look different on the outside — one sample is bright yellow, and the other is dull brown. When both samples are rubbed across an unglazed streak plate, they both leave behind the same golden-yellow powder. Which property did the student use to identify that both samples are the same mineral despite their different appearances?",
-    "choices": [
-      "Luster",
-      "Hardness",
-      "Cleavage",
-      "Streak"
-    ],
-    "answer": "D",
-    "hints": [
-      "The key is that the powder left behind was the same both times, even though the outward colors differed.",
-      "Streak is the color of the powder a mineral leaves on a streak plate, and it stays consistent from sample to sample even when outward color changes."
-    ]
-  },
-  {
-    "id": "m6sci-identifying-minerals-by-their-properties-004",
-    "loId": "m6sci.identifying-minerals-by-their-properties",
-    "cedCode": "M6SCI-3.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A geologist finds a sample that is shiny and reflects light like a polished metal surface. When she tests it against a piece of glass (about 5.5 on the Mohs scale), the glass gets scratched but the sample does not. She then breaks the sample by dropping it, and it breaks with flat, smooth surfaces that repeat in the same direction. Based on hardness, luster, and cleavage, which pair of properties does this mineral show?",
-    "choices": [
-      "Metallic luster and hardness above 5.5",
-      "Nonmetallic luster and hardness below 5.5",
-      "Metallic luster and hardness below 5.5",
-      "Metallic luster and fracture instead of cleavage"
-    ],
-    "answer": "A",
-    "hints": [
-      "The sample does not get scratched by glass, so its hardness must be above the glass's hardness of 5.5.",
-      "Shiny like metal means metallic luster; breaking along flat, repeating surfaces means cleavage, not fracture."
-    ]
-  },
-  {
-    "id": "m6sci-identifying-minerals-by-their-properties-005",
-    "loId": "m6sci.identifying-minerals-by-their-properties",
-    "cedCode": "M6SCI-3.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student examines a rock sample and observes that it contains three visibly different types of grains fused together: glassy pink grains, shiny black grains that peel into thin flat sheets, and dull gray grains. The student tests the pink grains and finds they resist a fingernail scratch but are easily scratched by a steel file. When the student rubs just the black grains across a streak plate, they leave a dark mark. Why is this sample a rock and not a mineral, and what evidence rules out calling it a single mineral?",
-    "choices": [
-      "It contains multiple mineral types with different properties fused together, whereas a mineral must be a single pure substance with one consistent set of properties throughout",
-      "It shows multiple sets of properties — different lusters, different breaking patterns, and different hardnesses in different grains",
-      "It has grains that behave differently under the same tests, such as some resisting a fingernail scratch while others leave streaks, proving it is not a single mineral with uniform properties",
-      "It is composed of separate mineral grains held together by natural processes, whereas a true mineral must be a single homogeneous crystalline solid with the same properties everywhere within it"
-    ],
-    "answer": "B",
-    "hints": [
-      "Remember that a mineral has ONE set of properties that stays the same throughout — this sample does not.",
-      "Count how many different mineral properties you can name among the grains: different lusters (glassy, shiny, dull), different breaking patterns (peeling sheets versus other), and different hardnesses (fingernail resistant versus file scratched)."
-    ]
-  },
-  {
-    "id": "m6sci-identifying-minerals-by-their-properties-006",
-    "loId": "m6sci.identifying-minerals-by-their-properties",
-    "cedCode": "M6SCI-3.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A miner finds two similar-looking bronze-colored mineral samples at different sites. Sample X scratches glass easily, has a greenish-black streak, and shows metallic luster. Sample Y does not scratch glass, has a golden-yellow streak that matches its color, shows metallic luster, and is extremely rare in the region. Using hardness and streak as your main identification clues, explain why Sample X is likely pyrite ('fool's gold') and Sample Y is likely real gold, even though both are shiny and bronze-colored. What property would be misleading to rely on here?",
-    "choices": [
-      "Luster is misleading because both samples show metallic luster, but hardness and streak differ — Sample X's high hardness and greenish-black streak indicate pyrite, while Sample Y's low hardness and golden streak indicate real gold",
-      "Streak alone is misleading because both samples show bronze or gold color, but hardness combined with streak can distinguish them — Sample X is hard and leaves a green-black streak while Sample Y is soft and leaves a golden streak",
-      "Color alone is misleading because both minerals look metallic and gold-colored, but hardness and streak separate them — Sample X's high hardness and greenish-black streak point to pyrite, while Sample Y's low hardness and matching golden streak point to real gold",
-      "Rarity in the region is misleading because a mineral's scarcity does not reveal its hardness or streak; testing hardness and streak directly shows that pyrite is harder and leaves a different colored streak than soft, golden real gold"
-    ],
-    "answer": "C",
-    "hints": [
-      "Consider which properties the two samples SHARE (both shiny, both bronze-colored, both metallic luster) and which ones DIFFER (hardness and streak).",
-      "Pyrite is about 6 to 6.5 on the Mohs scale and leaves a greenish-black streak; real gold is about 2.5 to 3 and leaves a golden-yellow streak — use these fact to separate them."
-    ]
-  },
-  {
     "id": "m6sci-the-rock-cycle-001",
     "loId": "m6sci.the-rock-cycle",
     "cedCode": "M6SCI-3.4",
@@ -453,6 +225,234 @@
     "hints": [
       "Connect the cooling rate to crystal size for igneous rocks: slow cooling gives time for crystals to grow; fast cooling does not.",
       "Then distinguish igneous crystal growth from metamorphic mineral reorganization — metamorphic rocks develop banding from squeezing minerals into patterns, not from growing new crystals as a melt cools."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-layered-structure-001",
+    "loId": "m6sci.earths-layered-structure",
+    "cedCode": "M6SCI-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Earth's layers are stacked one on top of another from the surface down to the center. Starting at the surface and moving straight down, which sequence correctly lists Earth's four layers in order?",
+    "choices": [
+      "Crust, mantle, outer core, inner core",
+      "Mantle, crust, inner core, outer core",
+      "Outer core, inner core, mantle, crust",
+      "Crust, outer core, mantle, inner core"
+    ],
+    "answer": "A",
+    "hints": [
+      "The crust is the layer you stand on—it must come first.",
+      "The inner core is at Earth's very center—it must come last."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-layered-structure-002",
+    "loId": "m6sci.earths-layered-structure",
+    "cedCode": "M6SCI-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geologist finds that oceanic crust in one location is about 8 kilometers thick, while continental crust in another location is about 50 kilometers thick. Both samples come from the same layer of Earth. Which layer is it, and what explains the large difference in thickness between the two locations?",
+    "choices": [
+      "Both are from the mantle; mantle thickness varies depending on whether it sits under ocean or land.",
+      "Both are from the crust; oceanic crust is naturally thinner than continental crust.",
+      "The oceanic sample is from the crust, but the continental sample is from the mantle because it is much deeper.",
+      "Both are from the outer core; the outer core's thickness changes based on location on Earth's surface."
+    ],
+    "answer": "B",
+    "hints": [
+      "Neither 8 kilometers nor 50 kilometers comes close to the thousands of kilometers needed to reach the mantle.",
+      "Oceanic crust ranges from about 5 to 10 kilometers thick, while continental crust ranges from about 25 to 70 kilometers thick."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-layered-structure-003",
+    "loId": "m6sci.earths-layered-structure",
+    "cedCode": "M6SCI-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student reads that the inner core is hotter than the outer core, yet the outer core is liquid while the inner core is solid. The student thinks this makes no sense because hot material should always be liquid. What explains why the inner core stays solid despite its extreme heat?",
+    "choices": [
+      "The inner core is made of a different material that cannot melt, unlike the metal in the outer core.",
+      "The inner core is actually not as hot as the outer core; the student misread the information.",
+      "The pressure at Earth's center is so great that it keeps the iron-nickel material solid, even at extreme temperatures.",
+      "The inner core sits farther from the heat source, so heat cannot reach it well enough to melt it."
+    ],
+    "answer": "C",
+    "hints": [
+      "Both pressure and temperature determine whether material is solid or liquid; temperature alone does not control this.",
+      "Think about what happens when you squeeze something very hard—how does that affect its behavior?"
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-layered-structure-004",
+    "loId": "m6sci.earths-layered-structure",
+    "cedCode": "M6SCI-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A seismic station records data from a sample collected at about 3,000 kilometers below Earth's surface. Is this sample most likely solid or liquid, and which layer does it come from? Use Earth's layer boundaries: the crust-mantle boundary is at 2,900 kilometers, and the outer core-inner core boundary is at 5,150 kilometers.",
+    "choices": [
+      "Solid, from the mantle; 3,000 kilometers is deeper than the mantle extends, but the sample is solid because the mantle is solid rock.",
+      "Liquid, from the mantle; the mantle is so thick that a depth of 3,000 kilometers must still be within it.",
+      "Solid, from the inner core; the inner core begins at 5,150 kilometers, which is deeper than 3,000 kilometers.",
+      "Liquid, from the outer core; 3,000 kilometers falls within the outer core's range of 2,900 to 5,150 kilometers, which is the only fully liquid layer."
+    ],
+    "answer": "D",
+    "hints": [
+      "Use the boundary depths to determine which layer contains 3,000 kilometers: the crust-mantle boundary is at 2,900 km and the outer core-inner core boundary is at 5,150 km.",
+      "Only one layer is entirely liquid—check which boundary range contains 3,000 kilometers."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-layered-structure-005",
+    "loId": "m6sci.earths-layered-structure",
+    "cedCode": "M6SCI-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two scientists measure the total thickness of all four Earth layers and add them together. They calculate approximately 6,371 kilometers. Which of the following correctly describes what this sum represents and why it is a useful check on the layer model?",
+    "choices": [
+      "It represents the distance from Earth's surface to its center, and it confirms that the layer boundaries and thicknesses add up to Earth's actual full depth.",
+      "It represents the total thickness of only the crust and mantle combined, and it shows that these two layers make up most of Earth's radius measurement.",
+      "It represents the total volume of all rock material in Earth measured in kilometers, and it proves that the mantle contains more rock than all other layers together.",
+      "It represents the distance from the crust surface to the outer core boundary, and it verifies that the model's layer thicknesses are consistent with Earth's known size."
+    ],
+    "answer": "A",
+    "hints": [
+      "Adding the depths of the crust, mantle, outer core, and inner core together should equal Earth's radius, which is the distance from the surface to the center.",
+      "A useful check means the answer should match something we already know about Earth from a different source."
+    ]
+  },
+  {
+    "id": "m6sci-earth-s-layered-structure-006",
+    "loId": "m6sci.earths-layered-structure",
+    "cedCode": "M6SCI-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A research project drills down through oceanic crust and discovers the underlying layer at a depth of about 9 kilometers. The layer below that is reached at about 2,900 kilometers. Later, another project begins on a continental landmass and finds the layer that was discovered at 9 kilometers in the ocean is now 65 kilometers deep. At about what depth would this continental project need to drill to reach the same layer that sits at 2,900 kilometers in the ocean, and why? Earth's layer boundaries sit at fixed absolute depths regardless of surface location, with oceanic crust about 5–10 kilometers thick and continental crust about 25–70 kilometers thick.",
+    "choices": [
+      "About 2,865 kilometers; the layer at 2,900 kilometers is a boundary between the mantle and outer core, and continental crust is thicker, so the boundary is higher up relative to the surface.",
+      "About 2,945 kilometers; the mantle is the same material and thickness everywhere, but the extra continental crust (65 minus 9 kilometers) is added on top, pushing the boundary deeper.",
+      "About 2,900 kilometers; layer boundaries are at fixed depths and do not move, regardless of whether you measure from an ocean or a landmass.",
+      "About 3,000 kilometers; continental crust is always twice as thick as oceanic crust, so all boundaries are pushed down by the extra material above."
+    ],
+    "answer": "B",
+    "hints": [
+      "The layer at 2,900 kilometers is Earth's boundary between the mantle above and the outer core below—this boundary sits at the same absolute depth everywhere inside Earth.",
+      "If you start 65 kilometers below the surface in one place instead of 9 kilometers, you have already traveled 56 kilometers farther down; how does this shift which absolute depth you reach when you drill the same distance?"
+    ]
+  },
+  {
+    "id": "m6sci-identifying-minerals-by-their-properties-001",
+    "loId": "m6sci.identifying-minerals-by-their-properties",
+    "cedCode": "M6SCI-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A mineral is defined as a single natural substance with its own set of properties that stays the same from sample to sample. A rock is different from a mineral in a key way. What makes a rock different?",
+    "choices": [
+      "A rock is harder than any mineral and cannot be scratched.",
+      "A rock is a mixture of two or more minerals fused or stuck together.",
+      "A rock has only one color, while minerals can have many different colors.",
+      "A rock is always found underground, while minerals are found on the surface."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about whether a rock contains one substance or more than one substance.",
+      "Look at the definition of a rock given in the learning content — what is it made of?"
+    ]
+  },
+  {
+    "id": "m6sci-identifying-minerals-by-their-properties-002",
+    "loId": "m6sci.identifying-minerals-by-their-properties",
+    "cedCode": "M6SCI-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geologist tests a mineral sample using a fingernail, a copper penny, and a piece of window glass. The fingernail does NOT scratch the sample. The copper penny does NOT scratch the sample. The window glass DOES scratch the sample. Based on the practical hardness comparisons (fingernail about 2.5, copper penny about 3.5, glass about 5.5), which range best describes this mineral's hardness on the Mohs scale?",
+    "choices": [
+      "Between about 2.5 and 3.5",
+      "Between about 5.5 and 6.5",
+      "Between about 3.5 and 5.5",
+      "Above 6.5"
+    ],
+    "answer": "C",
+    "hints": [
+      "The sample was harder than the penny but softer than the glass — where does that put it?",
+      "Hardness is tested by asking which object scratches the other; the harder one wins and leaves the scratch."
+    ]
+  },
+  {
+    "id": "m6sci-identifying-minerals-by-their-properties-003",
+    "loId": "m6sci.identifying-minerals-by-their-properties",
+    "cedCode": "M6SCI-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two mineral samples look nearly identical to the naked eye — both appear to be shiny and metallic with a silvery-gray color. However, when a geologist rubs each sample across a streak plate, one leaves a bright red streak and the other leaves a black streak. Why is the streak test more reliable than outward color for telling these two minerals apart?",
+    "choices": [
+      "Streak is easier to measure because it is always the same width.",
+      "Outward color only works for rocks, not for minerals.",
+      "Streak is the only test that works on shiny, metallic minerals.",
+      "Streak color stays the same from sample to sample of the same mineral, while outward color can be changed by weathering or thin coatings."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about why a mineral's outward appearance might look different from one sample to another — what could cause that?",
+      "Streak reveals the color of the powder inside the mineral, which is not affected by weathering or surface coatings, making it consistent from sample to sample of the same mineral."
+    ]
+  },
+  {
+    "id": "m6sci-identifying-minerals-by-their-properties-004",
+    "loId": "m6sci.identifying-minerals-by-their-properties",
+    "cedCode": "M6SCI-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student finds a rock sample that has three visibly different types of grains stuck together: glassy pink grains, shiny black flaky grains that peel into thin sheets, and dull gray grains. The student's friend argues that since all the grains are attached as one solid piece, the whole sample must be a single mineral. Use the definition of a mineral and at least one identifying property to explain why the friend's reasoning is incorrect.",
+    "choices": [
+      "The sample is a rock because it shows three different sets of properties (different lusters and different ways of breaking), meaning it is a mixture of more than one mineral, not a single mineral.",
+      "The sample is a rock because it has more than one solid piece in it, and rocks are always made of many separate pieces that fall apart easily.",
+      "The sample is a rock because minerals can only be shiny, so the dull gray grains cannot be part of a true mineral.",
+      "The sample is a rock because it was found on the ground, and minerals are only the ones that come from deep inside the Earth."
+    ],
+    "answer": "A",
+    "hints": [
+      "A mineral must have one set of properties throughout — do all the grains in this sample have the same luster and breaking pattern?",
+      "The different types of grains (pink, black, gray) each show different luster and cleavage or fracture — what does that tell you?"
+    ]
+  },
+  {
+    "id": "m6sci-identifying-minerals-by-their-properties-005",
+    "loId": "m6sci.identifying-minerals-by-their-properties",
+    "cedCode": "M6SCI-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A mineral sample has a metallic luster, looks brassy-gold, scratches a copper penny, and leaves a greenish-black streak on a streak plate. Another sample looks identical to the naked eye — also metallic, also brassy-gold, also scratches a copper penny — but leaves a golden-yellow streak. Using hardness and streak together, explain which sample is more likely to be real gold (Mohs hardness about 2.5 to 3, streak golden-yellow) and which is more likely to be pyrite (Mohs hardness about 6 to 6.5, streak greenish-black to black).",
+    "choices": [
+      "The first sample is gold because it has a metallic luster, and the second is pyrite because it has a different-colored streak.",
+      "The first sample is pyrite because its greenish-black streak matches pyrite, while the second is gold because its golden-yellow streak matches gold's typical streak.",
+      "Both samples are gold because both of them scratch a copper penny, which proves they are hard enough.",
+      "The first sample is gold because it looks gold, and the second is pyrite because it has a misleading streak color."
+    ],
+    "answer": "B",
+    "hints": [
+      "Streak color is more reliable than outward color — which mineral's streak matches each sample's streak?",
+      "Real gold is very soft (hardness 2.5 to 3) and would not scratch a copper penny, so look for which sample's streak tells the true story."
+    ]
+  },
+  {
+    "id": "m6sci-identifying-minerals-by-their-properties-006",
+    "loId": "m6sci.identifying-minerals-by-their-properties",
+    "cedCode": "M6SCI-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A collector has a sample that shows two different breaking patterns in different parts of the same piece. In one area, the sample breaks along smooth, flat surfaces that repeat in the same direction. In another area, the sample breaks with jagged, curved, shell-shaped surfaces with no flat repeating pattern. The collector concludes this is still a single mineral because the areas are physically connected. Using what you know about cleavage, fracture, and the definition of a mineral, evaluate whether this conclusion is correct or incorrect, and explain why.",
+    "choices": [
+      "The conclusion is correct — a single mineral is any sample that is one solid piece, and being physically connected proves it is all one substance.",
+      "The conclusion is correct — minerals show both cleavage and fracture at the same time, so having both patterns in one sample proves it is a true mineral.",
+      "The conclusion is incorrect — a mineral must show the same properties everywhere throughout the sample, and having two different breaking patterns (cleavage in one area and fracture in another) means this sample contains two different minerals mixed together.",
+      "The conclusion is incorrect — a sample with two different breaking patterns must be a rock because one pattern is metallic and one is nonmetallic."
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that a mineral is one substance with one set of properties all the way through — would two different breaking patterns fit that definition?",
+      "Each mineral shows either cleavage OR fracture as its characteristic breaking pattern, not both — what does it mean if the same sample shows both?"
     ]
   }
 ]

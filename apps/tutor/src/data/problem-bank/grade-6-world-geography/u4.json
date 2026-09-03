@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6geo-major-water-feature-vocabulary-001",
-    "loId": "m6geo.major-water-feature-vocabulary",
-    "cedCode": "M6GEO-4.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which water feature is defined by water that flows through a channel across the land, moving from higher ground toward lower ground?",
-    "choices": [
-      "Strait",
-      "Lake",
-      "Sea",
-      "River"
-    ],
-    "answer": "D",
-    "hints": [
-      "Think about which water feature is always moving, not still.",
-      "This feature flows downhill in a channel, the way water naturally runs."
-    ]
-  },
-  {
-    "id": "m6geo-major-water-feature-vocabulary-002",
-    "loId": "m6geo.major-water-feature-vocabulary",
-    "cedCode": "M6GEO-4.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A body of water is completely surrounded by land on every side, with no place along its edge that opens to an ocean or a sea. The water is fresh, not salty. What is this water feature?",
-    "choices": [
-      "Lake",
-      "Gulf",
-      "Strait",
-      "Sea"
-    ],
-    "answer": "A",
-    "hints": [
-      "Look for the clue about complete enclosure by land—which feature is fully enclosed with no opening at all?",
-      "This feature has land on every side, unlike a gulf or sea which always have at least one opening to larger water."
-    ]
-  },
-  {
-    "id": "m6geo-major-water-feature-vocabulary-003",
-    "loId": "m6geo.major-water-feature-vocabulary",
-    "cedCode": "M6GEO-4.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A ship enters a narrow stretch of water from a large open ocean. It sails straight through the narrow water, passing land on both its left and right sides, and exits into a different large body of water on the opposite end. Which water feature did the ship travel through?",
-    "choices": [
-      "Gulf",
-      "Strait",
-      "Lake",
-      "Sea"
-    ],
-    "answer": "B",
-    "hints": [
-      "Notice that the ship enters from one body of water and comes out into a different body of water—this is a through-passage, not a pocket.",
-      "This feature connects two larger bodies of water end to end, not side to side."
-    ]
-  },
-  {
-    "id": "m6geo-major-water-feature-vocabulary-004",
-    "loId": "m6geo.major-water-feature-vocabulary",
-    "cedCode": "M6GEO-4.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two water features are being described. Water Feature X is salty, has land curving around most of its edge, and connects back to the ocean through one narrower opening. Water Feature Y is fresh, has land all the way around it, and has no opening to the ocean anywhere. Explain why Feature X cannot be a lake and Feature Y cannot be a gulf.",
-    "choices": [
-      "Feature X is narrower than a gulf should be, and Feature Y is too large to be a lake.",
-      "Feature X is too salty and Feature Y is not salty enough to be either water feature.",
-      "Feature X is salty but lakes are always fresh, and Feature Y has no opening but gulfs always keep one opening to the ocean.",
-      "Feature X connects to the ocean but lakes connect to rivers, and Feature Y connects to rivers but gulfs connect to oceans."
-    ],
-    "answer": "C",
-    "hints": [
-      "Remember that lakes are defined by being completely enclosed with no opening, while gulfs are defined by having exactly one opening to the ocean or sea.",
-      "Salt water vs. fresh water, and the presence or absence of an opening to the ocean, are key properties that separate these features."
-    ]
-  },
-  {
-    "id": "m6geo-major-water-feature-vocabulary-005",
-    "loId": "m6geo.major-water-feature-vocabulary",
-    "cedCode": "M6GEO-4.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A geography student describes a water feature as follows: 'This body of salt water is bordered by land on part of its edge, and the rest of its edge stays broadly open to a larger ocean it connects with. You enter it and exit it through the very same opening.' Is the student's description complete and accurate for identifying this as a sea? Explain why or why not.",
-    "choices": [
-      "Yes, the description is complete because it mentions salt water, land bordering part of the edge, and a broad opening to the ocean.",
-      "No, the description is incomplete because it does not distinguish between a sea and a gulf, since both are entered and exited through one opening but a gulf has a much narrower connection to the ocean.",
-      "No, the description is wrong because a sea must be surrounded by land on all sides except for multiple openings, whereas this feature only has one opening to the ocean.",
-      "No, the description is inaccurate because a sea is entered and exited through the same opening, but so is a gulf, and the student did not explain what separates them."
-    ],
-    "answer": "D",
-    "hints": [
-      "Both a sea and a gulf are entered and exited through the same opening—so just mentioning that does not tell them apart.",
-      "What separates a sea from a gulf? Think about how broad or narrow the opening is, and how much of the edge is curved around by land."
-    ]
-  },
-  {
-    "id": "m6geo-major-water-feature-vocabulary-006",
-    "loId": "m6geo.major-water-feature-vocabulary",
-    "cedCode": "M6GEO-4.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A geographer is studying three water features in the same region. The first flows downhill through a channel, emptying into the second water feature. The second is completely enclosed by land with no opening to the ocean. The third is nearby and is salt water bordered by land on most of its edge, with only a narrow connection to the ocean. The geographer wants to name each feature correctly. Identify which feature is the river, which is the lake, and which is the gulf, and explain one property that makes each one impossible to confuse with the other two.",
-    "choices": [
-      "The first is a river because it flows downhill; the second is a lake because it is enclosed with no ocean opening; the third is a gulf because salt water with mostly enclosed edges connects narrowly to the ocean. Rivers move through channels, lakes have no opening at all, and gulfs always keep exactly one opening.",
-      "The first is a river because it is smaller than the second feature; the second is a lake because it receives water from the first feature; the third is a gulf because it contains salt water instead of fresh water. The combination of size, position in the water cycle, and salt content determines the correct identification.",
-      "The first is a river because it flows into the second feature; the second is a lake because the first feature empties into it; the third is a gulf because it is bordered mostly by land but connected to the ocean. Each feature's relationship to the others and the presence of land and ocean connections define them.",
-      "The first is a river because fresh water flows through it; the second is a lake because fresh water collects in it; the third is a gulf because salt water fills it with land boundaries around it. The salinity of the water determines whether each feature is a river, lake, or gulf."
-    ],
-    "answer": "A",
-    "hints": [
-      "Focus on the defining relationship between water and land for each feature, not on size, location, or just whether the water moves.",
-      "A river's defining feature is movement through a channel downhill; a lake's is complete enclosure with no opening; a gulf's is salt water with exactly one narrower opening to the ocean."
-    ]
-  },
-  {
     "id": "m6geo-reading-elevation-relief-001",
     "loId": "m6geo.reading-elevation-and-relief",
     "cedCode": "M6GEO-4.4",
@@ -233,7 +119,7 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A piece of land has water touching it on every single edge—north, south, east, and west. It is not connected to any other land at all. What is this landform called?",
+    "problemText": "A piece of land is completely surrounded by water on all sides and has no connection to any larger landmass. What is this landform called?",
     "choices": [
       "Isthmus",
       "Peninsula",
@@ -243,7 +129,7 @@
     "answer": "C",
     "hints": [
       "Think about what happens when you trace the entire edge of this piece of land.",
-      "This landform has no connection to any larger landmass, so you must cross water no matter which direction you approach it from."
+      "This landform has no way to reach it by land — you must cross water no matter which direction you come from."
     ]
   },
   {
@@ -252,17 +138,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Geographers are studying a made-up landform in the country of Solaria. The landform has water along its northern edge, water along its southern edge, and water along its eastern edge. On its western edge, it connects directly to the rest of Solaria with no water breaking that connection. Based on the description of how water touches this landform, which term best describes it?",
+    "problemText": "In a made-up region, a narrow strip of land has ocean water along its entire north side and ocean water along its entire south side. At its western end, the strip widens into a larger area of land. At its eastern end, it runs out into open ocean with no additional land beyond it. What is this narrow strip of land?",
     "choices": [
-      "Coast",
-      "Isthmus",
-      "Island",
-      "Peninsula"
+      "An isthmus, because water runs along both long sides",
+      "A coast, because it touches ocean water on its edges where land meets the sea",
+      "An island, because it has water on two sides and is surrounded by ocean on multiple edges",
+      "A peninsula, because it is attached to land on one end and surrounded by water on the other end"
     ],
     "answer": "D",
     "hints": [
-      "Count how many sides have water touching them and how many sides connect to a larger landmass.",
-      "A peninsula has water on most sides but stays attached to a larger area of land on one side."
+      "Check what sits at each end of the narrow strip — does one end lead to more land and the other to water, or do both ends lead to land?",
+      "An isthmus must have land at both ends; a peninsula ends in water on all sides but one."
     ]
   },
   {
@@ -271,17 +157,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A narrow strip of land in the fictional region of Meridian has water running along both its north and south edges for its entire length. At its western end, the strip widens into a large area of land. At its eastern end, the strip widens into a completely separate country. What landform is this narrow strip?",
+    "problemText": "A mapmaker describes a landform in an invented country called Meridia: water touches its north, south, and east edges completely. On its west edge, it connects without any water break to the rest of Meridia. Which of the following correctly names and explains this landform?",
     "choices": [
-      "Isthmus",
-      "Peninsula",
-      "Island",
-      "Coast"
+      "It is a peninsula because three of its sides have water but it is still attached to a larger landmass on one side",
+      "It is an island because water surrounds three of its edges, which means it is completely separated from all other land areas",
+      "It is an isthmus because it has water on both its long sides and connects two separate landmasses together at their edges",
+      "It is a coast because water meets the land at multiple edges and this boundary creates the shoreline along three directions"
     ],
     "answer": "A",
     "hints": [
-      "An isthmus connects two larger areas of land at its ends, not one.",
-      "Ask yourself: does this strip lead to more land at both ends, or does it dead-end in water at one end?"
+      "Count how many sides touch water and how many sides stay connected to land.",
+      "A peninsula must be attached to a larger landmass on one side — the side that is not water."
     ]
   },
   {
@@ -290,17 +176,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two students are arguing about a fictional landform. Student A says it is a peninsula because it has a coast running along its water-facing sides. Student B says it cannot be a peninsula because it has water all the way around it. Which student is using the correct reasoning, and why?",
+    "problemText": "Two narrow strips of land exist in a region called Vestor. Strip A has water along its north and south sides and connects two larger areas of land — one at its west end and one at its east end. Strip B has water along its north and south sides, connects to a larger area of land at its west end, but at its east end it simply ends in open water. Both strips touch ocean water, but which statement correctly distinguishes between them?",
     "choices": [
-      "Student A is wrong because having a coast does not determine whether a landform is a peninsula; Student B is right that water all the way around means it is an island, not a peninsula.",
-      "Student B is wrong because coast is a different concept from peninsula; both islands and peninsulas have coasts wherever they meet an ocean.",
-      "Student A is right because coasts are found only on peninsulas, not on islands.",
-      "Student B is right because any landform with water all the way around it is called a coast."
+      "Strip A is a peninsula and Strip B is an isthmus; both are narrow with water on two sides, so the names are interchangeable depending on location",
+      "Strip A is an isthmus and Strip B is a peninsula; an isthmus connects two separate areas of land while a peninsula ends in water on all sides but one",
+      "Both are isthmuses because both have water running along their long sides and both are narrow strips of land",
+      "Strip A is a coast and Strip B is a coast; they are the same landform because both touch ocean water and both have coasts running along their edges"
     ],
     "answer": "B",
     "hints": [
-      "Remember that coast names the edge where land meets an ocean or sea—it is not the same kind of definition as peninsula, island, or isthmus.",
-      "A peninsula is defined by having water on most sides but staying attached to a larger landmass on one side, not by whether it has a coast."
+      "Use the one-question check: does the narrow strip lead to more land at its far end, or does it leave you surrounded by water there?",
+      "An isthmus must have larger land areas at both of its ends; a peninsula dead-ends in water everywhere except the one side it is attached by."
     ]
   },
   {
@@ -309,17 +195,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A narrow strip of land in the country of Arkmore has ocean water running along both its long sides. At one end it widens into a large area of land that is part of Arkmore. At the other end it widens into a separate country. A student claims this strip is a peninsula. Explain why this claim is incorrect and name the correct landform.",
+    "problemText": "A student claims: 'A coast is a kind of island, because an island has water all around it, and that water edge is the coast.' Identify the error in this student's thinking and explain why it is incorrect, using the definitions of both terms.",
     "choices": [
-      "The claim is incorrect because a peninsula must have water on all sides except one, but this strip only has water on two sides; the correct landform is an isthmus.",
-      "The claim is incorrect because peninsulas do not have separate countries at their ends; the correct landform is a coast.",
-      "The claim is incorrect because this strip connects two land areas instead of dead-ending in water at its far end; the correct landform is an isthmus.",
-      "The claim is incorrect because the strip has water on two sides instead of three; the correct landform is an island."
+      "The error is correct; a coast is indeed a type of island because both involve water touching the land",
+      "The error is not understanding that an island has no connection to other land while a coast is simply the edge where land meets water, not a landform category itself",
+      "The error is confusing the definition of coast with the shape of a landform. Coast names the edge itself where land meets an ocean or sea, not a shape. An island is a shape defined by water surrounding it on all sides. Every island has a coast, but a coast is not a type of island — it is a feature that can exist on any landform that touches an ocean or sea",
+      "The error is thinking that only islands have coasts; in fact, coasts only form where mainlands meet the ocean and islands cannot have coasts"
     ],
     "answer": "C",
     "hints": [
-      "A peninsula dead-ends in water on every direction except the one it is attached by; this strip has land at both ends, not water at one end.",
-      "Use the one-question check: does this narrow strip lead to more land at its far end, or leave you surrounded by water there instead?"
+      "Think about whether 'coast' and 'island' answer the same question about a piece of land.",
+      "Coast answers the question 'Where does land meet ocean?' Island answers the question 'How much water surrounds this land and what is it attached to?'"
     ]
   },
   {
@@ -328,17 +214,17 @@
     "cedCode": "M6GEO-4.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Three separate landforms exist in a fictional region. Landform X has water on three of its four sides and remains attached to a continent on the fourth side. Landform Y is a narrow strip with water on both its long sides and separate, larger areas of land at each end. Landform Z has water on every edge with no attachment to any other land. A geographer states that landforms X and Z both have coasts, but Y does not. Is this statement correct? Explain your reasoning using what defines each landform.",
+    "problemText": "In an imaginary archipelago region, there are three landforms: Landform X is a large mainland area. Landform Y is a narrow strip of land with ocean on both its long sides that connects Landform X on the west to an entirely separate mainland called Altara on the east. Landform Z is another narrow strip of land with ocean on both its long sides that connects Landform X on the west, but at its east end it simply terminates in open ocean. A student says all three landforms have coasts, and all three can be named by a single term. Which statement best evaluates this claim?",
     "choices": [
-      "The statement is correct because Y is too narrow to have a coast, while X and Z both touch oceans.",
-      "The statement is incorrect because Z is an island with no connection to any ocean, so it cannot have a coast.",
-      "The statement is correct because coasts are found only on continents and peninsulas, not on islands or isthmuses.",
-      "The statement is incorrect because all three landforms have coasts wherever they meet an ocean or sea, regardless of their shape or how they attach to other land."
+      "The student is correct. All three have coasts because all three touch ocean water, and all three are types of land connected to continents",
+      "The student is correct about the coasts but confused about structure. All three have coasts and all three should be called isthmuses because they have water on multiple sides",
+      "The student is partly wrong. Only Landform X is a mainland with a coast; Landforms Y and Z have no coasts because they are surrounded by water on their sides",
+      "The student is partly correct about coasts but wrong about the single term. All three touch ocean, so all have coasts. However, Landform Y is an isthmus, Landform Z is a peninsula, and Landform X is a mainland — three different names because their structure is different"
     ],
     "answer": "D",
     "hints": [
-      "Coast answers a different question than the other three words—it names the edge itself, not a shape defined by how much water surrounds the land.",
-      "Remember that X is a peninsula, Y is an isthmus, and Z is an island. Does every one of these meet an ocean or sea somewhere along its edge?"
+      "Separate the two parts of the student's claim: first check whether all three have coasts, then check whether they can all be named by one term by examining what is at each end of the narrow strips.",
+      "Remember that coast is a different kind of word than island, peninsula, and isthmus — it answers a location question, not a shape question."
     ]
   },
   {
@@ -347,7 +233,7 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A landform rises steeply from the ground around it and comes to a narrow, pointed peak high above everything else nearby. What is this landform called?",
+    "problemText": "A landform rises steeply above the land around it and comes to a narrow, pointed top. Which landform is this?",
     "choices": [
       "A hill",
       "A mountain",
@@ -356,8 +242,8 @@
     ],
     "answer": "B",
     "hints": [
-      "Think about the two questions: does it stand HIGH, and does it come to a POINT or stay FLAT on top?",
-      "A mountain is the landform that rises steeply to a narrow peak."
+      "Does this landform stand HIGH and come to a point, or does it stay LOW and flat?",
+      "Think about whether the top is narrow and steep or rounded and gentle."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two pieces of invented land both stand above the country around them. The first rises steeply to a narrow ridge. The second rises much less steeply and has slopes that curve gently, coming nowhere near a point. Which of these two is a mountain?",
+    "problemText": "You are told that a stretch of land stands much higher than the country around it, but its surface stays flat across a wide area instead of narrowing to a point. Which landform does this describe? Explain why this cannot be a mountain.",
     "choices": [
-      "Both of them are mountains because they both stand above their surroundings",
-      "The second one, because it is taller than the first",
-      "The first one, because it rises steeply to a narrow ridge",
-      "Neither one is a mountain; they are both hills"
+      "A plain, because plains are flat surfaces that extend across wide areas without rising higher than the surrounding land",
+      "A mountain, because anything that stands high must be a mountain",
+      "A plateau, because it is high but flat on top, not high and pointed like a mountain",
+      "A hill, because it rises above the surrounding land and has a rounded shape rather than steep cliffs"
     ],
     "answer": "C",
     "hints": [
-      "Standing high is not enough to be a mountain. What is different about how each one rises?",
-      "A mountain must be both HIGH and have a STEEP, NARROW shape that comes to a point or ridge."
+      "A mountain needs TWO properties: to stand high AND to narrow to a peak. Does this landform have both?",
+      "What does a plateau's flat top tell you about why this is not a mountain?"
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Imagine a wide stretch of ground that is flat or gently rolling from one side to the other, with almost no change in height anywhere across it. Nothing nearby stands taller than this stretch. What landform is this?",
+    "problemText": "Two landforms both rise above the land around them. One climbs steeply with slopes that are sharp and rocky, while the other rises more gently with rounded, rolling slopes. The steep one reaches much higher than the gentle one. Which is the hill and which is the mountain?",
     "choices": [
-      "A plateau",
-      "A hill",
-      "A valley",
-      "A plain"
+      "Both are hills because the gently rolling one is definitely a hill",
+      "The gentle, rolling one is the mountain; the steep one is the hill",
+      "Both are mountains because they both stand above their surroundings",
+      "The steep, high one is the mountain; the gentle, lower one is the hill"
     ],
     "answer": "D",
     "hints": [
-      "A plain stays LOW compared to the land around it. Which choice fits land that is flat and does not stand high?",
-      "The key word is 'flat or gently rolling' across a wide area with very little change in elevation."
+      "Remember that both height and the shape of the slopes matter when sorting mountains from hills.",
+      "A mountain is high AND steep; a hill is lower AND has gentler slopes. Which description fits which landform?"
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Three regions of invented land are described below. Region X is a long, low strip of ground with much higher ridges on both its left and right sides. Region Y is flat across its whole width, stands well above the country around it, but has steep edges where it drops away suddenly. Region Z is a gently rounded rise of land that sticks up above its surroundings, but only a little and without coming to a point. Which region is a plateau, which is a valley, and which is a hill?",
+    "problemText": "Three regions of invented land are described. Region A is a low, flat stretch that goes on for many miles with almost no change in how high the land is. Region B is low ground that runs like a strip between two high ridges, one ridge on each side. Region C is high land with steep drop-offs around its edges, but its top surface is mostly flat. A student says 'Regions A and B are the same landform because they are both low.' Explain what is wrong with this claim, and name each landform correctly.",
     "choices": [
-      "X is a valley, Y is a plateau, Z is a hill",
-      "X is a plateau, Y is a valley, Z is a hill",
-      "X is a valley, Y is a plateau, Z is a plain",
-      "X is a hill, Y is a plateau, Z is a valley"
+      "The claim is wrong because a valley is defined not just by being low, but by having higher land on both sides, while a plain is just a wide level area; Region A is a plain, Region B is a valley, Region C is a plateau",
+      "The claim is wrong because plains are defined by their flat surface and lack of bordering ridges, while valleys require high ground pressed in on both sides; Region A is a valley, Region B is a plain, Region C is a mountain",
+      "The claim is wrong because a plain can have ridges embedded in it, while a valley must run between two distinct boundaries; Region A is a plain, Region B is a plateau, Region C is a mountain",
+      "The claim is wrong because Region B is squeezed between high land on both sides while Region A spreads across open flat land with no required boundaries; Region A is a plateau, Region B is a valley, Region C is a plain"
     ],
     "answer": "A",
     "hints": [
-      "Remember that a valley is defined by what sits NEXT to it: higher land on both sides.",
-      "A plateau must be HIGH on top but FLAT across its surface; a hill must be less high with gentler, rounded slopes."
+      "A valley is not just 'low'—it must be low AND squeezed between higher land. A plain is just a wide flat area with no special requirement about what borders it.",
+      "For Region C, check the two sorting questions: Does it stand high? Is its top flat or pointed?"
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student describes a landform as 'high ground with flat land on top, so it must be the same thing as a mountain.' Explain what is wrong with this reasoning and name the correct landform.",
+    "problemText": "A student draws a picture of a landform and labels it 'This is a mountain because it is the highest point in the area.' But when you read the description, the landform has a flat, level surface across its top that stretches for miles, with steep cliffs only at the edges. Why is the student's naming wrong, and what is the correct name?",
     "choices": [
-      "The student is correct; any high ground with a flat top is a mountain",
-      "The student checked only one property; the flat top actually makes this a plateau, not a mountain",
-      "The student is wrong because mountains are always narrow, but this describes a wide flat area, so it is a plain",
-      "The student is wrong because high, flat ground is always a hill, not a mountain"
+      "The student is correct; the highest point must always be a mountain by definition",
+      "The student checked only height, not the shape of the top; the correct name is a plateau because it is high but flat across its surface, not narrow and peaked like a mountain",
+      "The student did not check whether it has ridges; the correct name is a hill because it has a flat top instead of a peak, which means it does not meet the definition of a mountain",
+      "The student named it wrong because it has steep edges; the correct name is a valley because valleys also have steep boundaries and are surrounded by high ground on multiple sides"
     ],
     "answer": "B",
     "hints": [
-      "A mountain must narrow to a point or ridge, not stay flat. What landform is high but has a flat top?",
-      "Both height and surface shape matter. High plus flat surface equals plateau, not mountain."
+      "What two questions must you ask about any landform to name it correctly? Did the student ask both?",
+      "A mountain is high AND narrows to a point. Does the landform in the picture have both of those properties?"
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An invented continent has four distinct regions described only in words, with no map or pictures. In the north, the land is broad and level, with only small ups and downs scattered across it, and nothing stands noticeably higher than anything else. In the east, the ground drops down sharply to form a narrow low corridor, with tall ridges rising on either side of this corridor. In the west, a large area sits well above all the surrounding country, spreads flat across its top for many miles, and has edges that fall away steeply to the land below. In the center, the terrain slopes up on all sides but reaches a sharp, rocky point at its highest spot. Using only the two-question method taught (height and surface shape), name all four landforms and explain why one of them is NOT a mountain even though it has the most dramatic rise in the center.",
+    "problemText": "An invented continent has five regions described only by words, with no pictures or maps. Region 1: 'The land is flat and open, stretching for hundreds of miles with only gentle ups and downs.' Region 2: 'A strip of low ground runs north to south, with a tall rocky ridge on its west side and another tall ridge on its east side.' Region 3: 'The land rises gradually to rounded slopes that reach a height of a few thousand feet, then flattens out.' Region 4: 'Steep rocky walls climb thousands of feet straight up from the base, and at the top sits a narrow peak.' Region 5: 'High, level ground covers a large area, with cliffs dropping away at the edges.' A student must sort these five regions into the five landform types without seeing any pictures. Which region is a hill, and which two regions could never be confused because they have opposite answers to both sorting questions?",
     "choices": [
-      "North: plain, East: valley, West: plateau, Center: mountain. The center IS a mountain because it rises to a point, and mountains are defined by coming to a sharp peak like this one does.",
-      "North: plain, East: plateau, West: valley, Center: mountain. The east region forms a valley with steep ridge walls on both sides of the low corridor, making it match the valley description better than a plateau.",
-      "North: plain, East: valley, West: plateau, Center: hill. The center is not a mountain because mountains must be taller and steeper than a hill, and this region is in the center of the continent.",
-      "North: hill, East: valley, West: plateau, Center: mountain. The north region is broad and level with only small ups and downs, making it a plain rather than a hill which would have more pronounced elevation."
+      "Region 3 is the hill; Regions 1 and 2 have opposite answers because 1 is flat and not between higher land while 2 is low and between higher land",
+      "Region 2 is the hill; Regions 4 and 5 have opposite answers because 4 is high and pointed while 5 is high and flat",
+      "Region 3 is the hill; Regions 4 and 5 have opposite answers because 4 is high and pointed while 5 is high and flat",
+      "Region 1 is the hill; Regions 2 and 4 have opposite answers because 2 is a valley and 4 is a mountain"
     ],
     "answer": "C",
     "hints": [
-      "Apply the two questions to EACH region separately: Does it stand HIGH or stay LOW, and is its surface FLAT or does it come to a POINT? Do not let the word 'dramatic' or location trick you.",
-      "A mountain rises steeply to a narrow peak and is FAR higher than the land around it. Reread what is actually said about the center region's height compared to the land 'around' it."
+      "A hill rises above its surroundings but less far and more gently than a mountain does. Which description matches that pattern?",
+      "Two regions could never be confused if they give opposite answers to at least one of the two sorting questions. Region 4 is high and pointed. Which other region is high but NOT pointed?"
+    ]
+  },
+  {
+    "id": "m6geo-major-water-feature-vocabulary-001",
+    "loId": "m6geo.major-water-feature-vocabulary",
+    "cedCode": "M6GEO-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A body of water has land completely surrounding it on every side, and no part of its edge opens onto an ocean or a sea. Based on the defining property of this water feature, what is it called?",
+    "choices": [
+      "A river",
+      "A gulf",
+      "A strait",
+      "A lake"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about which water feature is enclosed on all sides with no opening to the ocean.",
+      "The defining property here is complete enclosure by land."
+    ]
+  },
+  {
+    "id": "m6geo-major-water-feature-vocabulary-002",
+    "loId": "m6geo.major-water-feature-vocabulary",
+    "cedCode": "M6GEO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Water moves downhill through a narrow channel cut into the ground, flowing from mountains toward lower elevation. Along the way, it passes through forests and meadows. At the end of its path, it empties into a large ocean. What water feature is this water, and why?",
+    "choices": [
+      "A river, because water that flows downhill through a channel across the land from higher to lower ground defines a river",
+      "A strait, because it is a narrow passage connecting two bodies of salt water that allows movement from one ocean region to another",
+      "A gulf, because it is enclosed by land on most sides with an opening to a larger body of water and receives freshwater input from streams",
+      "A lake, because it is a body of water surrounded by natural landscape features such as forests, meadows, and mountains on its shores"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask yourself: is the water flowing through a channel from high ground to low ground?",
+      "The defining property of a river is its movement, not where it ends up or what surrounds it."
+    ]
+  },
+  {
+    "id": "m6geo-major-water-feature-vocabulary-003",
+    "loId": "m6geo.major-water-feature-vocabulary",
+    "cedCode": "M6GEO-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A stretch of salt water connects to the ocean through one narrower opening. Land curves around three sides of this body of water, and a ship sailing in from the ocean must exit through that same narrow opening it entered. Which water feature fits this description?",
+    "choices": [
+      "A strait",
+      "A gulf",
+      "A river",
+      "A sea"
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice that a ship enters and exits through the same opening—not passing all the way through to a different body of water.",
+      "A gulf is a pocket of salt water with land mostly around it and one narrow opening back to the ocean."
+    ]
+  },
+  {
+    "id": "m6geo-major-water-feature-vocabulary-004",
+    "loId": "m6geo.major-water-feature-vocabulary",
+    "cedCode": "M6GEO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two invented water features are described below. Water Feature X: salt water with land on both sides, where a ship can enter from one ocean and sail straight through to come out into a different ocean on the opposite side. Water Feature Y: water completely enclosed by land with no opening to any ocean or sea. Explain why Water Feature X is not a gulf and why Water Feature Y is not a gulf.",
+    "choices": [
+      "Water Feature X is not a gulf because it is too narrow, and Water Feature Y is not a gulf because it is freshwater instead of salt water",
+      "Water Feature X is a sea because it touches two oceans, and Water Feature Y is a river because water is completely enclosed",
+      "Water Feature X is a strait because it connects two different bodies of water end to end, not a pocket entered and exited from the same side; Water Feature Y is a lake because it has no opening to the ocean at all, while a gulf always has exactly one",
+      "Water Feature X is a strait because it is salty, and Water Feature Y is a lake because it has no moving current"
+    ],
+    "answer": "C",
+    "hints": [
+      "For X, think about whether a ship enters and exits the same way or passes through to somewhere else entirely.",
+      "For Y, ask whether a gulf can be completely closed off from the ocean or whether it must have one opening."
+    ]
+  },
+  {
+    "id": "m6geo-major-water-feature-vocabulary-005",
+    "loId": "m6geo.major-water-feature-vocabulary",
+    "cedCode": "M6GEO-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that a certain body of salt water must be a sea because it is very large. Another student claims that a different body of salt water must be a gulf because land surrounds most of it. Which student's reasoning is correct according to the definitions taught, and why?",
+    "choices": [
+      "The first student is correct because size is the most important factor in distinguishing a sea from a gulf or other water features",
+      "The second student is correct because having land on all sides except one opening is the only reliable way to identify a gulf accurately",
+      "Both students are correct because their observations—large size and surrounding land—are the key ways to tell the difference between a sea and a gulf",
+      "Neither student is using correct reasoning, because size alone does not define a sea, and surrounding land alone does not define a gulf; the defining properties are how broadly or narrowly the water connects to the ocean"
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall that neither a sea nor a gulf is defined by how large it is.",
+      "A sea and a gulf are both distinguished by the width and openness of their connection to the ocean, not just by how much land is around them."
+    ]
+  },
+  {
+    "id": "m6geo-major-water-feature-vocabulary-006",
+    "loId": "m6geo.major-water-feature-vocabulary",
+    "cedCode": "M6GEO-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An explorer describes three water features in a newly mapped region. Feature A is completely surrounded by land with no ocean opening anywhere. Feature B flows continuously downhill through a channel and empties into Feature A. Feature C is salt water bordered by land on one side with a broad, open connection to the larger ocean on the other. Now imagine Feature B were to reverse direction and flow out of Feature A instead of into it. Would Feature A still be the same type of water feature, or would it have to be reclassified? Explain your reasoning using the definition that matters.",
+    "choices": [
+      "Feature A would still be the same type because its defining property—being completely enclosed by land with no ocean opening—would not change, regardless of which direction water flows in or out of it through Feature B",
+      "Feature A would become a gulf because water flowing out through Feature B would create a connection to the ocean on one side with land surrounding the other sides",
+      "Feature A would become a strait because the bidirectional flow of Feature B would allow water to pass between two separate bodies of water in either direction",
+      "Feature A would become a sea because reversing the flow would change the salinity and size of the enclosed water body significantly enough to meet sea classification standards"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what the defining property of Feature A's water type actually is—is it the direction of flow, or is it the enclosure itself?",
+      "Remember that a river flowing in or out of a lake does not change the lake into a river; the river is a separate channel, and the lake's enclosure is what matters."
     ]
   }
 ]

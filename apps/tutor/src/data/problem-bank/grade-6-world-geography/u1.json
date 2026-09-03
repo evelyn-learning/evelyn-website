@@ -5,17 +5,17 @@
     "cedCode": "M6GEO-1.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A geographer describes a library by saying 'The library is at 54 Main Street.' What kind of location is this?",
+    "problemText": "A friend tells you that a restaurant is located at 205 Main Street. What kind of location is this description?",
     "choices": [
       "An absolute location, because a street address points to one exact building no matter who reads it",
-      "A relative location, because the street name tells you where it is in relation to another landmark or place that you already know",
-      "An absolute location, because it uses a direction word to help people find it using a compass",
-      "A relative location, because the description depends on someone knowing what Main Street is and where it connects to other places"
+      "A relative location, because the restaurant is on Main Street instead of another street",
+      "An absolute location, because the restaurant has an exact position somewhere in the world",
+      "A relative location, because Main Street is the reference point being used"
     ],
     "answer": "A",
     "hints": [
-      "Does this description depend on knowing where another place is, or does it work by itself?",
-      "Would the same street address point to the same building whether you are reading it from across town or across the world?"
+      "Think about whether this description depends on already knowing where another place is.",
+      "Does this street address work the same way for everyone, or only for people who know Main Street?"
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6GEO-1.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wants to describe where the playground is. She says, 'The playground is three blocks north of the school.' Why can this description fail to work for some people?",
+    "problemText": "Two students are trying to locate the same playground in their town. One student says it is \"three blocks north of the library,\" and another student says it is \"at 450 Oak Avenue.\" Which student's description would work for someone who has just moved to town and does not yet know where the library is?",
     "choices": [
-      "Because three blocks is not an exact measurement that all mapmakers agree on",
-      "Because someone who has never heard of the school will not know where to find the playground",
-      "Because the playground's real location is fixed and should not depend on the school",
-      "Because a relative location can only be used if the playground is actually north of something"
+      "The first student, because giving a direction always helps someone find a place",
+      "The second student, because a street address does not depend on knowing another place first",
+      "Either student could help, because both descriptions point to the exact same spot",
+      "Neither student could help, because a playground cannot have both an absolute and relative location"
     ],
     "answer": "B",
     "hints": [
-      "What is the name for the already-known place that a relative location uses to describe another place?",
-      "What happens to a relative location if the person listening does not know where the reference point is?"
+      "Ask yourself: could you find the playground using the first description if you had never heard of the library?",
+      "Does the second description require you to already know where another place is located?"
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6GEO-1.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two people describe the same restaurant in two ways: Person A says it is at '217 Oak Avenue.' Person B says it is 'next to the hardware store.' Which statement does not depend on the listener already knowing something else?",
+    "problemText": "A geographer is writing a field guide and needs to describe a mountain cabin. Which sentence is a relative location for the cabin?",
     "choices": [
-      "Person B's statement, because 'next to' is a clear direction",
-      "Neither statement works without knowing something else first",
-      "Person A's statement, because a street address works the same way for everyone",
-      "Both statements work equally well because they both describe the restaurant's exact location"
+      "The cabin sits at 387 Forest Road, which is its exact street address and does not reference any other place",
+      "The cabin has one fixed position on Earth that stays the same regardless of how anyone describes it",
+      "The cabin is nestled in the pine trees two miles east of Miller Lake",
+      "The cabin belongs to a family that lives there year-round and is built from local materials"
     ],
     "answer": "C",
     "hints": [
-      "Does Person A's description change if you have never heard of Oak Avenue before?",
-      "What must a person already know in order to understand Person B's description?"
+      "Look for a description that mentions another place as a reference point.",
+      "Which choice gives both a distance and a direction from somewhere else?"
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6GEO-1.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A shop has the street address '93 Pine Road.' Three different customers describe its location three different ways: 'across from the bank,' 'one block south of the park,' and 'in the same building as the dentist.' How many of these four descriptions are absolute locations?",
+    "problemText": "A city library can be described as \"next to the post office\" or \"across from the city park.\" Both descriptions are correct for the same library building. Explain what this tells you about the relationship between absolute location and relative location.",
     "choices": [
-      "Four—they all describe the same shop, so they all point to one exact spot",
-      "Two—the street address and the description about the dentist's building",
-      "Three—all of them, because they are all precise",
-      "One—only the street address"
+      "The library must have two different absolute locations, one for each description",
+      "The post office and the city park must be located at the same spot, or the two descriptions would not both be correct",
+      "Relative locations are more accurate than absolute locations, so the library's true position must be the one that works for both descriptions",
+      "A single place has only one absolute location, but it can have many different relative locations depending on which reference point is chosen"
     ],
     "answer": "D",
     "hints": [
-      "Remember: a description that names another place as a reference point is relative, not absolute, no matter how precise it is.",
-      "How many of the customer descriptions depend on knowing where the bank, the park, or the dentist is?"
+      "Think about how many fixed addresses a building can have versus how many different ways it can be described using nearby places.",
+      "If you change the reference point you use, what happens to the relative location description? What stays the same?"
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6GEO-1.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student wrote: 'The park is an absolute location because I can describe exactly where it is—it's two miles east of downtown.' What error did the student make?",
+    "problemText": "A student writes: \"The baseball field is an absolute location because it is exactly halfway between the school and the community center.\" Identify the error in this reasoning and explain what kind of location this description actually is.",
     "choices": [
-      "The description uses downtown as a reference point, so it is a relative location, not absolute",
-      "Two miles is not precise enough to be absolute; true absolute locations require latitude and longitude coordinates or a specific street address instead",
-      "The student used a direction word and a distance measurement together, which means the location depends on knowing where downtown is as a starting reference point",
-      "An absolute location must always use a street address, and distances measured in miles can only be used when describing relative locations with a known reference point"
+      "The description is relative, because it names reference points (school and community center) and gives a distance relationship, so it depends on knowing where those places are",
+      "The description is actually absolute, because the word \"exactly\" indicates precision, and any precise measurement is independent of reference points and makes a location unique",
+      "The description is relative, because even though two known reference points are used, it depends on someone already understanding where both the school and the community center are located",
+      "The description is absolute only if both the school and the community center have their own street addresses that are written down and verified"
     ],
     "answer": "A",
     "hints": [
-      "Does the description 'two miles east of downtown' depend on knowing where downtown is?",
-      "What is the name for the place that a relative location depends on?"
+      "Does this description require you to already know where the school and community center are?",
+      "Does being very precise about a distance make a description independent of reference points, or does it still depend on them?"
     ]
   },
   {
@@ -100,131 +100,17 @@
     "cedCode": "M6GEO-1.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A map shows both a museum and a train station. The museum's absolute location is '145 Central Boulevard.' The train station's absolute location is '89 Riverside Drive.' A tour guide tells visitors, 'The museum is just two blocks south of here'—pointing to where they are standing at the train station. Why does the tour guide's description of the museum's location make sense to the visitors, even though she never told them the museum's street address?",
+    "problemText": "Three different people describe the location of the same museum using three different sentences: \"The museum is at 92 Renaissance Avenue,\" \"The museum is two blocks south of the train station,\" and \"The museum is in the historic district downtown.\" Which statement correctly classifies all three descriptions and explains why they work the way they do?",
     "choices": [
-      "Because a relative location describes a place by comparing it to a known reference point, and the visitors use that comparison to understand where to go instead of needing a street address",
-      "Because the visitors already know where they are standing, so the relative location gives them enough information to find the museum",
-      "Because a street address and a direction word describe the same type of location information, so 'south' is another way of stating what a street address would tell them",
-      "Because the tour guide's method of using nearby landmarks and distances to describe where something is located is identical to how an absolute location pinpoints a place on a map"
+      "All three are absolute locations, because they all point to the exact same building even though the words are different",
+      "The first is absolute because it is an address, the second is relative because it uses the train station as a reference point, and the third is also relative because it depends on knowing what the historic district is",
+      "The first two are absolute and the third is relative, because street addresses and block distances are more exact measurements than region names",
+      "All three are relative locations, because none of them use latitude and longitude coordinates from a professional map"
     ],
     "answer": "B",
     "hints": [
-      "What is the reference point in the guide's description? Do the visitors already know where that place is?",
-      "The guide does not use a street address. What does she use instead, and why does it work?"
-    ]
-  },
-  {
-    "id": "m6geo-what-is-geography-001",
-    "loId": "m6geo.what-is-geography",
-    "cedCode": "M6GEO-1.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following best describes what geography is the study of?",
-    "choices": [
-      "Only the mountains, rivers, and oceans on Earth, leaving out all human settlements, cultures, and activities",
-      "The names and capitals of every country in the world, focusing on memorizing political divisions and borders",
-      "Earth's physical and human features and how they relate to each other",
-      "Only the cities and countries where people live, excluding natural landforms and climate patterns"
-    ],
-    "answer": "C",
-    "hints": [
-      "Geography is about more than just learning names — it asks questions about places.",
-      "Think about whether geography studies only nature or only people, or both together."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-geography-002",
-    "loId": "m6geo.what-is-geography",
-    "cedCode": "M6GEO-1.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student learns that a desert has very little rainfall and hot daytime temperatures. Is this information an example of physical geography or human geography? Explain your reasoning using a single test question.",
-    "choices": [
-      "Human geography, because the desert's temperature and rainfall affect how humans behave there",
-      "Physical geography, because deserts are the most common place people study in geography class",
-      "Human geography, because people have to live in deserts and adapt to those conditions",
-      "Physical geography, because these conditions would exist even if no people lived in the desert"
-    ],
-    "answer": "D",
-    "hints": [
-      "The test question is: would this still be true if there were no people at all?",
-      "Does rainfall and temperature depend on people being there, or do they happen in nature on their own?"
-    ]
-  },
-  {
-    "id": "m6geo-what-is-geography-003",
-    "loId": "m6geo.what-is-geography",
-    "cedCode": "M6GEO-1.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A geographer is studying two coastal towns that both have fishing fleets and seafood restaurants. The towns are about 500 miles apart and sit on different coasts. Which organizing idea best explains why the geographer would want to study what makes each town different from the other, beyond the fact that both catch fish?",
-    "choices": [
-      "Place, because each town has its own mix of physical and human features that make it unique",
-      "Location, because knowing where each town is answers the main question the geographer wants to ask",
-      "Region, because both towns do the same kind of work and should be grouped together",
-      "Movement, because fish and seafood travel between the two towns"
-    ],
-    "answer": "A",
-    "hints": [
-      "Even though both towns fish, would they look and feel the same if you visited them?",
-      "Think about what makes one area different from every other area — that is the organizing idea you need."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-geography-004",
-    "loId": "m6geo.what-is-geography",
-    "cedCode": "M6GEO-1.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A rancher in a hilly region with sparse vegetation cannot easily raise cattle because the land cannot support large herds. Instead, the rancher raises goats, which can eat the low shrubs that grow there. Later, the region develops tourism, and hotels, restaurants, and roads are built across the hillsides. Which TWO organizing ideas are both at work in this scenario — one explaining why the rancher's choice fit the surroundings, and the other explaining how the new buildings changed what the region is like?",
-    "choices": [
-      "Location and movement, because the rancher needed to know where the shrubs were and goats had to travel to find food",
-      "Human-environment interaction and place, because the surroundings shaped the rancher's choice and the buildings changed the region's features",
-      "Region and movement, because the sparse vegetation grouped the hillsides with other marginal land, and tourism brought new people through",
-      "Place and location, because the rancher needed to know where the best shrubs were and each hill was a different location"
-    ],
-    "answer": "B",
-    "hints": [
-      "First, ask: did the environment shape what the rancher chose to do? Second, ask: did human building projects change what the area is like?",
-      "One organizing idea explains how people adapt to their surroundings; the other explains what makes an area different from other areas."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-geography-005",
-    "loId": "m6geo.what-is-geography",
-    "cedCode": "M6GEO-1.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A geographer studies banana plantations in Central America, tropical rainforests in Southeast Asia, and coconut palm groves in the Caribbean. The geographer notices that all three are located in warm regions near the equator and marks all three on a map with the same color. What organizing idea is the geographer using, and what is the geographer grouping these three areas together by?",
-    "choices": [
-      "Movement, grouping them by tracking the direction tropical fruits are exported and the shipping routes they travel along",
-      "Place, grouping them based on understanding that each individual plantation has unique characteristics that make it different from every other plantation on Earth",
-      "Region, grouping them because they share the common feature of warm climate and tropical crops even though they are far apart",
-      "Location, grouping them because the geographer has determined the exact latitude and longitude coordinates of each separate farm"
-    ],
-    "answer": "C",
-    "hints": [
-      "The three areas are scattered on different continents — they are not connected by travel or trade in this case.",
-      "Think about an organizing idea that groups separate areas together when they share something in common."
-    ]
-  },
-  {
-    "id": "m6geo-what-is-geography-006",
-    "loId": "m6geo.what-is-geography",
-    "cedCode": "M6GEO-1.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student writes four statements about a river valley: (1) The valley has deep stone walls and a river running through it. (2) Farmers plant crops on the flat land next to the river because the soil is rich there. (3) The village builds its homes on the higher ground away from the river to avoid floods. (4) Merchants from villages upstream and downstream travel by boat to trade goods at the market. Sort these four statements, and identify which organizing idea connects statements 2 and 3 together in a way that neither of them shares with statements 1 or 4.",
-    "choices": [
-      "Statement 1 is physical geography and statements 2, 3, and 4 are all human geography, so place connects 2 and 3 because both describe human choices about land use and settlement in the valley",
-      "Statements 1, 2, and 3 describe features of the landscape itself while statement 4 is only about movement of merchants, so statements 2 and 3 are connected by their focus on the environment rather than trade networks",
-      "Statements 2 and 3 both show how people adapt their activities based on natural features like soil quality and flood risk, whereas statement 1 only describes the physical landscape and statement 4 only describes trade routes between places",
-      "Statements 1 and 2 are about the environment and statements 3 and 4 are about people, so human-environment interaction connects 2 and 3 because both show people responding to their surroundings"
-    ],
-    "answer": "D",
-    "hints": [
-      "Ask yourself: in statements 2 and 3, did the environment shape what people chose to do?",
-      "Statement 1 is just nature; statement 4 is about traveling between places — neither shows surroundings and people affecting each other."
+      "For each description, ask: does it depend on already knowing where another place is, or does it work on its own?",
+      "Remember that a street address does not need any other place to point to the right spot, but a direction from another place does."
     ]
   },
   {
@@ -233,17 +119,17 @@
     "cedCode": "M6GEO-1.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A mental map is built when a person moves through a space many times. Which of the following best describes what a mental map IS?",
+    "problemText": "A mental map is the picture of a familiar place that a person carries in their head. Which of the following best describes what a mental map is built from?",
     "choices": [
-      "A shared document that all members of a neighborhood create together and update whenever someone discovers a new landmark or street",
-      "A drawing printed on paper with exact distances measured to a fixed scale and verified by a surveyor or mapping authority",
-      "A catalog of all the buildings and streets in a city written down in alphabetical order with their official addresses and coordinates",
-      "The personal picture of a place that a person carries in their head from actually moving through that place many times"
+      "Something a person copies from a photograph or digital image they have seen on a computer or phone screen",
+      "A printed map that shows a place drawn to a fixed scale with a clear key and compass directions marked",
+      "A set of written or spoken directions that another person has explained or given to the student to memorize",
+      "The landmarks a person passes and the routes a person actually travels between them"
     ],
     "answer": "D",
     "hints": [
-      "Think about whether a mental map is something a person builds themselves or something they receive from someone else.",
-      "Mental maps are personal and exist in a person's mind, not on paper."
+      "Think about how a person creates a mental map — do they copy it from somewhere, or do they build it themselves by moving through a space?",
+      "A mental map comes from a person's own experience of traveling through a place, not from something handed to them."
     ]
   },
   {
@@ -252,17 +138,17 @@
     "cedCode": "M6GEO-1.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A girl describes her mental map of the walk from her front porch to the mailbox like this: 'I go down the front steps, past the big pine tree, turn left at the fence gate, and walk to the mailbox.' She notices that her drawing stretches the distance between the fence gate and the mailbox to look twice as long as it really is. Does this stretched distance mean her mental map will not work?",
+    "problemText": "Maya walks the same route from her home to the bus stop every school day. She notices that the route passes the yellow mailbox, then the oak tree, and finally the corner store before she reaches the bus stop. One day, a visitor asks Maya to describe how to get from her home to the bus stop. Should Maya be concerned that her mental map is not drawn to a perfect scale?",
     "choices": [
-      "No, because a mental map only needs to show landmarks in the correct order with the correct turns between them",
-      "Yes, because a mental map must match the real world exactly in every detail, including all distance measurements and proportions",
-      "Yes, because the function of any map, including mental maps, is to represent distance and scale with the same accuracy as printed maps do",
-      "No, because the order of landmarks from the porch to the mailbox is correct even though the spacing between two of them is stretched"
+      "No, because Maya only needs the landmarks in the right order and the turns between them for someone to follow her route",
+      "Yes, because exact measurements are the only way a mental map can help someone reach their destination",
+      "Yes, because the distances on a mental map must match a ruler measurement or the directions will fail",
+      "No, because mental maps work best when they show only the most important landmarks regardless of true distance"
     ],
     "answer": "A",
     "hints": [
-      "What is a mental map actually supposed to do — help you find your way or tell you the exact measured distance?",
-      "A mental map works by following landmarks and turns in order, not by measuring distances accurately."
+      "What is a mental map actually supposed to do — help someone measure exact distances, or help them find their way through a familiar space?",
+      "Think about whether the order and direction of landmarks matter more than the exact distance between them."
     ]
   },
   {
@@ -271,17 +157,17 @@
     "cedCode": "M6GEO-1.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two students take different routes through their school every day. Student M always enters through the main entrance and walks past the office, then the gym, then the lockers. Student T always enters through the side door and walks past the library, then the lockers, then the gym. Both students have a mental map of the school. What does this situation show?",
+    "problemText": "Two students walk into the school library from opposite ends of the building. One enters through the north door and the other through the south door. Both students visit the library regularly and have built mental maps of how to get around inside it. What should be true about their mental maps?",
     "choices": [
-      "One of the students must have built an incorrect mental map because they saw the gym and lockers in a different order",
-      "Two people can carry different mental maps of the same place because they each follow their own route through it",
-      "Mental maps are not useful if two people who know the same building describe it differently",
-      "Student M's mental map is better than Student T's because the main entrance is the official way to enter"
+      "Both mental maps must show the exact same landmarks in the exact same positions relative to each other and to the building",
+      "The mental maps could be different from each other, yet both could still work perfectly well",
+      "Only one mental map can be correct because the library building itself has only one true layout and arrangement of rooms",
+      "Both mental maps must be drawn to the same scale and measured the same way, or neither will be accurate for navigation"
     ],
     "answer": "B",
     "hints": [
-      "Remember that a mental map is built from the routes a person actually travels, not from a shared document.",
-      "A route is the path a person takes between two places, based on landmarks and turns the person passes."
+      "Remember that a mental map is personal and built from one person's own trips through a space.",
+      "If two people start from different doors, they might pass different landmarks first, so their mental maps might look different — but could each one still guide that person through the library?"
     ]
   },
   {
@@ -290,17 +176,17 @@
     "cedCode": "M6GEO-1.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student can describe the route from his classroom to the library in order: 'Out the classroom door, down the hallway past three lockers, turn right at the water fountain, up the stairs, through the double doors, and into the library.' He is then asked to describe the exact same route going backward, starting at the library and ending at the classroom. How should he describe it to check that his mental map is complete?",
+    "problemText": "A student describes her mental map of walking from the classroom door to the water fountain like this: 'Out the door, past the lockers, turn left at the big window, then straight ahead to the fountain.' Another student says the description is wrong because he measured the distance with a tape measure and the actual hallway is longer than the student described. The first student says her mental map still works perfectly for finding the water fountain. Which student has the correct understanding of how mental maps are supposed to be evaluated?",
     "choices": [
-      "Out the library doors, down the hallway past three lockers, turn left at the water fountain, down the stairs, through the double doors, into the classroom",
-      "Out the library, up the hallway, turn left at the water fountain, down the stairs, past three lockers, into the classroom",
-      "Out the library doors, through the double doors, down the stairs, turn left at the water fountain, down the hallway past three lockers, out the classroom door",
-      "Out the library, backward down the double doors, backward at the water fountain, down the stairs, past three lockers backward, into the classroom door"
+      "The second student is correct because mental maps must show the true measured distance between each landmark in order to be reliable",
+      "Neither student is correct because mental maps should be written down and checked against an official floor plan rather than described out loud",
+      "The first student is correct because a mental map works if the landmarks and turns are in the right order, not because distances are exact",
+      "The second student is correct because if distances are wrong, the person will become confused and get lost before reaching the destination"
     ],
     "answer": "C",
     "hints": [
-      "When you reverse a route, you visit the landmarks in reverse order and reverse the turns (right becomes left, up becomes down).",
-      "The first landmark on the backward route should be the last place you passed on the forward route."
+      "Ask yourself: what is the real job of a mental map — to give exact measurements like a tape measure, or to help someone find their way?",
+      "Check whether the first student's description still names the landmarks in the right order with the right turns, even if distances are stretched."
     ]
   },
   {
@@ -309,17 +195,17 @@
     "cedCode": "M6GEO-1.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student has lived in the same house for two years. She can describe every landmark and turn on the walk from her bedroom to the kitchen, and she can walk it without thinking. Her family has just moved to a new house and her new bedroom is just down the hallway from the new kitchen. She cannot describe this new route yet. Why would this be?",
+    "problemText": "An eighth-grader volunteers to help a younger student find the way from the school office to the gymnasium. The eighth-grader has walked to the office many times and can describe that route perfectly — 'past the main hallway, turn at the bulletin board, then to the office.' However, when asked to describe the path to the gymnasium, the eighth-grader says 'I don't know; I've never been there.' What does this show about what a mental map can and cannot do?",
     "choices": [
-      "Because hallways in new houses require different cognitive skills than landmarks did, making them fundamentally harder for her brain to process and remember",
-      "Because she built a mental map at her old house through repetition, and the brain cannot simultaneously maintain two different mental maps of two separate houses at the same time",
-      "Because the new kitchen is too close to the new bedroom, which means the route is too short for her brain to encode it as a mental map even though she has walked it several times already",
-      "Because a mental map only covers space a person has actually moved through many times, and she has not traveled this new route enough yet"
+      "Mental maps are not useful in schools because buildings contain too many different possible routes and hallways to remember clearly",
+      "Mental maps work only for frequently visited places like offices, not for places a student has passed by only a few times like gymnasiums",
+      "The eighth-grader should be able to describe the gymnasium route from memory even though she has never actually walked there herself",
+      "A mental map only covers space a person has actually moved through, and it cannot reach into a place the person has never visited"
     ],
     "answer": "D",
     "hints": [
-      "Think about how a mental map is created — does it appear instantly or does it grow from actually using a space repeatedly?",
-      "What is the difference between a space a person has traveled through many times and a space they just started to use?"
+      "Think about how a mental map is built — does it come from a person studying a printed map, or from moving through a space?",
+      "If someone has never walked to a place, what landmarks or turns could they possibly have stored in a mental map of that place?"
     ]
   },
   {
@@ -328,17 +214,17 @@
     "cedCode": "M6GEO-1.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student describes his mental map of the walk to school: 'I leave my house, pass the red mailbox, turn right at the corner store, walk straight past two houses, turn left at the big oak tree, and I am at school.' A friend then asks him to describe the route to the park, which is located on the same street as the school but one block past it. The student says, 'I do not have a mental map for the route to the park because I have never walked there.' Is the student correct? Explain your reasoning using the concepts of landmarks, routes, and the limits of a mental map.",
+    "problemText": "A student describes her mental map of the walk from her bedroom to the kitchen by naming landmarks and turns in order: 'Out my door, past the bathroom, turn right at the stairs, down the hallway past the coat closet, turn left at the dining room table, then into the kitchen.' Later, she tries to describe the same walk backward, from the kitchen to the bedroom, reversing both the landmarks and the turns. Halfway through her backward description, she gets confused and says the route no longer makes sense. What does this tell you about her forward mental map?",
     "choices": [
-      "Yes, because a mental map can only cover space a person has already walked through many times, and he has never traveled to the park",
-      "No, because he can extend his mental map to the park by adding the park as a new landmark beyond the school",
-      "No, because landmarks like the mailbox and oak tree work as reference points that a person can use to find any location in the general neighborhood",
-      "Yes, because the park is on a different street than the school, so it would require a completely separate mental map to navigate there"
+      "The forward mental map must contain a missing landmark or a missing turn that she forgot to name when describing the forward route",
+      "The forward mental map is correct but mental maps are designed only to work in one direction and cannot be reliably reversed or traced backward",
+      "The forward mental map proves that reversing any route is impossible because human brains process directions only in a forward order naturally",
+      "The forward mental map is flawed because she simply lacks the personal ability to think about directions in backward order or reverse sequence"
     ],
     "answer": "A",
     "hints": [
-      "A mental map only includes landmarks on routes a person has actually traveled — does just knowing where something is count as having a mental map of it?",
-      "Think about whether simply hearing that the park is one block past school gives the student the landmarks and turns he needs to navigate there without looking at a map."
+      "If a mental map truly connects all the landmarks and turns correctly, what should happen when you try to follow it in reverse order?",
+      "A route that only makes sense one way is missing something — what could that missing piece be?"
     ]
   },
   {
@@ -347,17 +233,17 @@
     "cedCode": "M6GEO-1.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A geographer describes a valley location by saying: 'The ground here is narrow and steep-sided, with a river running through it.' Which part of this description tells you about the site of the location?",
+    "problemText": "A geographer is studying a small town nestled in a valley. She observes that the ground beneath the town is soft clay mixed with sand, and a river runs directly through the center of the town. Which of these two observations describes the site of this town?",
     "choices": [
-      "The ground being narrow and steep-sided",
-      "The river running through the valley",
-      "The fact that it is a valley",
-      "All of the above are site facts"
+      "The river running through town, because water is always part of a site",
+      "The soft clay and sand ground, because it describes the exact spot the town sits on",
+      "Both the ground and the river equally, because they are both at this location",
+      "Neither one, because site only describes where the town is compared to other places"
     ],
-    "answer": "A",
+    "answer": "B",
     "hints": [
-      "Site describes the exact ground itself—what you would find if you looked down at this one patch of earth.",
-      "Ask yourself: if you picked up this patch of ground and moved it somewhere else, which fact would come with it?"
+      "Site focuses on what is true about the ground itself at this one patch of earth.",
+      "Think about whether the fact describes the spot itself or describes what surrounds the spot."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6GEO-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A port city sits at the mouth of a river where it meets the ocean. The water is deep and sheltered from storms by offshore rocks. A merchant is trying to understand why this city became a major trading hub. Which fact best explains the situation of this port—the reason it connects usefully to surrounding places?",
+    "problemText": "A town called Riverside sits on flat, well-drained ground with a strong freshwater spring at its center. The town is surrounded by dense forests in all directions, and the nearest other settlement is a three-week journey away on foot. Use the move-it test: if you picked up this exact patch of ground and moved it to a different location on Earth, which of these facts would travel with the ground and which would stay behind?",
     "choices": [
-      "The water is deep enough for large ships to anchor safely",
-      "The offshore rocks shelter the harbor from storms",
-      "The river reaches far inland, connecting the port to distant regions upriver",
-      "The harbor floor is sandy rather than muddy"
+      "All four facts would travel with the ground to its new location",
+      "The forests and distant neighbors would travel; the flat ground and spring would stay behind",
+      "The flat ground and the spring would travel; the forests and distant neighbors would stay behind",
+      "None of the four facts would travel; they are all determined by the surrounding region"
     ],
     "answer": "C",
     "hints": [
-      "Situation describes what lies around a place and how it connects outward, not what is right at the spot itself.",
-      "Think about which fact would still be true if you moved this patch of water to a completely different location—and which fact would change."
+      "Ask yourself: if this patch of ground moved, would the properties of the ground itself move too, or only the neighboring features?",
+      "Ground properties like flatness and what resources lie in it are part of the spot itself."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6GEO-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is sorting facts about a settlement built on the bank of a major river. Fact A: 'The ground is flat and well-drained, with solid soil good for farming.' Fact B: 'The river connects this settlement to the ocean, which is three days' travel downstream.' The student says both facts help explain why the settlement grew. Use the move-it test to check which one is site and which one is situation.",
+    "problemText": "Two students are debating why settlements form where they do. Student A claims: \"A place needs a good situation — that is, it needs to be near other places or on a useful route.\" Student B claims: \"A place needs a good site — that is, it needs ground that is solid, flat, and has fresh water nearby.\" Which student's claim correctly captures only one part of why settlements tend to grow in a location?",
     "choices": [
-      "Both are site, because they both help the settlement grow",
-      "Both are situation, because they both involve the river",
-      "Fact A is situation and Fact B is site",
-      "Fact A is site and Fact B is situation"
+      "Neither student is correct; settlements never consider location when forming",
+      "Only Student A is correct; situation is the only thing that determines settlement location",
+      "Only Student B is correct; site is the only thing that determines settlement location",
+      "Both Student A and Student B are correct; each describes one separate part that matters"
     ],
     "answer": "D",
     "hints": [
-      "Picture picking up the patch of ground and moving it to another location. Which fact would travel with that ground, and which would be left behind?",
-      "One fact describes the ground itself. The other describes what lies around it and where it leads."
+      "Remember: a settlement tends to grow where a useful site MEETS a useful situation, not where just one is good.",
+      "Think about whether site and situation are separate questions about a place, or whether one of them can tell you everything."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6GEO-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two settlements are being compared. Settlement X sits on rocky, steep ground high in a mountain with a reliable freshwater spring. No road or trade route passes near it, and the nearest other settlement is a ten-day journey away. Settlement Y sits on low, marshy, waterlogged ground that floods in spring. However, it lies directly on a major route that connects two large cities, and boats can reach it from both directions. A planner argues that Settlement X must be the better place for a new town to grow because it has better ground. The term 'site' refers to the physical features of a location (ground, water, terrain), while 'situation' refers to the location's position relative to other places and trade routes. Evaluate this argument.",
+    "problemText": "A researcher studies three invented locations. Location X has excellent flat, dry, solid ground with fresh water, but sits in the middle of a vast empty plain with no routes or other settlements nearby. Location Y has muddy, swampy ground that floods often, but sits directly where a major trade route crosses between two prosperous regions. Location Z has good flat ground with fresh water and also sits on a trade route between two regions. The researcher concludes: \"Only Location Z will attract a growing settlement, because the other two are missing something.\" Evaluate this conclusion using what you know about site and situation.",
     "choices": [
-      "The argument is partly right; Settlement X has a strong site, but its poor situation may prevent it from becoming a large settlement despite the good ground",
-      "The argument is correct; a better site always guarantees that a settlement will grow larger and more prosperous than one with a poor site regardless of its connections",
-      "The argument is wrong; settlement growth depends only on situation and connections to other places, making site irrelevant to whether a town expands",
-      "The argument overlooks that Settlement Y's location on a major trade route gives it situation advantages that may outweigh Settlement X's superior site for long-term growth"
+      "The conclusion is wrong because Location Y could attract a settlement if traders value the route enough, even though the ground is poor",
+      "The conclusion is correct because both site and situation must be good, and only Location Z has both",
+      "The conclusion is wrong because Location X has excellent site conditions that could support a self-sufficient settlement independent of trade connections and routes",
+      "The conclusion is correct because situation is always the dominant factor, making Location Y more attractive than Location Z despite its marshy, flood-prone ground"
     ],
     "answer": "A",
     "hints": [
-      "Consider a mountain cabin with excellent ground and water but no roads nearby—would it grow into a large settlement?",
-      "Think about what makes a place useful: do people need both good ground AND good connections to other places, or is one enough by itself?"
+      "Remember the mountain cabin example: a place can have an excellent site and a poor situation, or a poor site and an excellent situation, at the same time.",
+      "Think about whether traders or travelers might use a location for the route alone, even if the ground itself is difficult to build on."
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6GEO-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A historian finds documents showing why a medieval town grew at a specific river crossing. The records describe: (1) a shallow, rocky ford that could be crossed on foot in low water; (2) flat meadows on both banks, safe from flooding and good for grazing; (3) the fact that this ford was the only place within fifty miles where caravans could cross the river during any season; (4) dense forests on both banks that provided timber and game. Which pair of facts—one site and one situation—best explains why this spot became a natural gathering place for trade and settlement?",
+    "problemText": "A geographer examines why New York City grew so large. She notes four facts: (1) the harbor at the mouth of the Hudson River is deep and sheltered, protecting ships; (2) the Hudson River extends far inland into the continent; (3) the land around the harbor is mostly solid, rocky ground good for building; (4) the Atlantic Ocean opens from the harbor, offering routes to distant places across the sea. The geographer must explain which of these facts are about site, which are about situation, and how both kinds of facts work together to explain why a city grew there.",
     "choices": [
-      "Facts 1 and 3: the shallow ford itself and the caravans needing to cross",
-      "Facts 2 and 3: flat meadows for grazing and the uniqueness of the crossing point",
-      "Facts 1 and 2: the rocky ford and the flat, non-flooding ground",
-      "Facts 2 and 4: grazing meadows and the availability of timber and game"
+      "Facts 2 and 4 describe the site because they identify the actual ground and water present at this location; facts 1 and 3 describe the situation because they name connections to distant places",
+      "Facts 1 and 3 describe the site; facts 2 and 4 describe the situation; the site provided solid, sheltered ground while the situation connected the harbor to inland and ocean routes",
+      "All four facts describe situation because they all involve water and routes that connect to places beyond this spot",
+      "Facts 1 and 2 describe the site by identifying the natural harbor and river present there; facts 3 and 4 describe the situation by showing how those features link to other regions and resources"
     ],
     "answer": "B",
     "hints": [
-      "One fact must describe the ground at this exact spot. The other must describe how this spot connects to what surrounds it and other places.",
-      "Caravans traveling between distant regions need both a place where they can actually cross safely AND ground where people can camp and rest—which is which?"
+      "Separate the facts into two groups: those that describe the ground and water at this exact spot, and those that describe connections to places beyond it.",
+      "Use the move-it test: which facts would travel with the patch of ground if you moved it, and which facts depend on what happens to be nearby?"
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6GEO-1.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An urban planner is evaluating where to recommend a new manufacturing center. She has identified three candidate locations and recorded the following facts for each: Location A has a firm, dry foundation suitable for large buildings and sits at sea level where flooding is unlikely. However, no major rail line or shipping route exists within two hundred miles. Location B sits on soft, boggy ground unsuitable for construction, but it lies where two major highways cross and is only thirty miles from a deep-water port. Location C sits on slightly sloping, well-drained ground and lies along a major river that has boat traffic to the region's largest city. A competing planner argues that Location A must be chosen because 'site determines whether a place can support industry, while situation only matters for decoration.' Site refers to the physical features of a location (ground, water, terrain), while situation refers to a location's position relative to other places and transportation routes. Use this framework to evaluate whether his reasoning is sound and which location the evidence actually supports.",
+    "problemText": "Two settlements, Alpha and Beta, face a puzzle about their own growth. Alpha sits on soft, marshy ground that floods seasonally, but it lies at the intersection of two major trade routes that connect four regions. Beta sits on high, dry, solid ground with a strong freshwater spring, but it is tucked into a remote mountain valley where no route passes nearby. Over the past century, Alpha has grown into a large, bustling city with many merchants and travelers, while Beta remains a small, quiet village. An observer claims: \"This proves that situation always matters more than site, so any place with a good situation will grow large.\" Is this claim fully supported by the evidence, or is something missing from the reasoning?",
     "choices": [
-      "His reasoning is sound; Location A has the best site, so it will definitely support industry better than the others regardless of situation",
-      "His reasoning is flawed; although site enables a location to function, situation determines whether a manufacturer can operate profitably, and the evidence suggests Location C or B has more value for this purpose",
-      "His reasoning is flawed; manufacturers require both good site for construction and good situation for receiving supplies and shipping goods, and Location A fails on the situation factor that is essential to profitability",
-      "His reasoning is partly sound; Location A is best because site and situation are equally important factors, and A surpasses the others in site quality despite its transportation disadvantages"
+      "The claim is not fully supported because Beta's remote location proves that site quality is always more important than situation, so the observer's ranking is backwards",
+      "The claim is fully supported because Alpha's growth clearly shows that a good situation drives settlement growth regardless of site quality, making it the dominant factor everywhere",
+      "The claim is not fully supported because Alpha's poor site does require constant effort to build and maintain on marshy ground, and while its situation is excellent, we cannot conclude that situation always outweighs site in every location",
+      "The claim is fully supported because Beta's small size and poor access to trade routes demonstrate that even the best local site cannot support growth when situation isolates a settlement from economic opportunities"
+    ],
+    "answer": "C",
+    "hints": [
+      "Consider what the evidence really shows: Alpha grew large even with a poor site, but does this mean situation always wins, or does it mean that an excellent situation can overcome site problems in this case?",
+      "Think about whether one example can prove a rule that applies to all places, or whether it only shows what happened in these two specific situations."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-geography-001",
+    "loId": "m6geo.what-is-geography",
+    "cedCode": "M6GEO-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Geography is the study of Earth's physical and human features and how they relate to each other. Which of the following is an example of a physical feature that geographers study?",
+    "choices": [
+      "Trade routes, festivals, and schools",
+      "Cities, governments, and languages",
+      "Mountains, rivers, and climate",
+      "Farms, factories, and transportation networks"
+    ],
+    "answer": "C",
+    "hints": [
+      "Physical features are natural parts of Earth that exist whether or not people are present.",
+      "Look for something that is not built or organized by humans."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-geography-002",
+    "loId": "m6geo.what-is-geography",
+    "cedCode": "M6GEO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geographer studies a desert region and notes several observations: the landscape has sand dunes covering most areas, rainfall occurs infrequently, people have constructed underground storage systems for water, and settlements are positioned near underground springs. Which observation describes a human feature rather than a physical feature?",
+    "choices": [
+      "Sand dunes cover most of the land",
+      "Rainfall is very sparse",
+      "The few settlements are located near underground springs",
+      "People have built underground storage systems to hold water"
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask yourself: would this exist if no people lived in the desert?",
+      "Human features are things people create or organize themselves."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-geography-003",
+    "loId": "m6geo.what-is-geography",
+    "cedCode": "M6GEO-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two towns, Riverside and Hillside, are both located in the same country and sit only 20 kilometers apart. Riverside sits in a flat valley where a river provides fresh water year-round, and it has grown into a busy port with boat traffic and many shops. Hillside sits on rocky, steep land with little water, and only a few hundred people live there in scattered homesteads. A geographer says these towns are different places. Which statement best explains what the geographer means?",
+    "choices": [
+      "They have different mixes of physical and human features that make each one unique",
+      "They are far enough apart that they do not share any features with each other",
+      "They have different names, so they are separate places",
+      "One is a town and the other is a village, which makes them different types of places"
+    ],
+    "answer": "A",
+    "hints": [
+      "Place means the physical and human features that make one area different from every other area.",
+      "Look for an answer that mentions what is actually different about each location — its land, water, people, and the way people have built it up."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-geography-004",
+    "loId": "m6geo.what-is-geography",
+    "cedCode": "M6GEO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reads about a coastal fishing village that has developed strong traditions of boat-building and net-making passed down through families for hundreds of years. The student also learns that the village sits on a rocky coast with cold, fish-rich ocean currents nearby, and that the steep mountains behind the village make overland farming difficult. The student wants to explain why this village became known for fishing and boat-building rather than farming. Which two organizing ideas must the student combine to give a complete answer?",
+    "choices": [
+      "Location and movement — the village is where it is, and fishing products move to other places",
+      "Human-environment interaction and place — the surroundings shaped what people chose to do, and this choice is part of what makes the village unique",
+      "Region and movement — the village is part of a region where fishing happens, and fish move to markets elsewhere",
+      "Place and location — the village's unique identity comes from its geography, and you can identify and find it on a map using its coordinates"
     ],
     "answer": "B",
     "hints": [
-      "Think about what a manufacturer actually needs: can they build a factory on soft ground, and can they operate profitably if they cannot receive raw materials or ship products anywhere?",
-      "Consider a mountain cabin scenario: it had excellent site but terrible situation, and no settlement grew there. Which type of location would a practical manufacturer actually choose, and why?"
+      "Think about what caused the village to specialize in fishing: was it the ocean currents and rocky coast (surroundings affecting people)?",
+      "Also think about what makes this village different from other villages — its traditions and skills are part of what makes it a unique place."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-geography-005",
+    "loId": "m6geo.what-is-geography",
+    "cedCode": "M6GEO-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geographer is preparing a lesson and creates a map that shades all the areas where coffee is grown as a major crop. On this map, the shaded areas include parts of Central America, South America, Africa, and Asia. These shaded areas are not connected to each other and do not form one continuous region on the map. The geographer labels the shaded areas on the map as \"the world's coffee-growing region.\" Which organizing idea best describes what the geographer is showing by grouping these scattered areas together?",
+    "choices": [
+      "Location, because each coffee-growing area occupies a specific latitude and longitude coordinate somewhere on Earth's surface",
+      "Movement, because coffee is produced in scattered places and transported across oceans and land routes to consumers worldwide",
+      "Region, because areas are grouped together because they share something in common even though they are not connected",
+      "Place, because each coffee-growing area has distinctive natural features and cultural practices that make it different from other agricultural zones"
+    ],
+    "answer": "C",
+    "hints": [
+      "A region does not have to be one solid piece of land — areas can be grouped by sharing a trait even if they are scattered far apart.",
+      "The key word in the definition is 'share something in common' — what do all these shaded areas have in common?"
+    ]
+  },
+  {
+    "id": "m6geo-what-is-geography-006",
+    "loId": "m6geo.what-is-geography",
+    "cedCode": "M6GEO-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geographer studies two different valleys. Valley A has rich soil, steady rainfall, and rivers that flow year-round, and it is home to intensive farms that feed a population of 50,000. Valley B has thin, rocky soil, very little rainfall, and rivers that dry up for months, yet people who live there have built terraced fields, water-collection systems, and canals to direct river water to crops, and it feeds a population of 30,000. The geographer says both valleys demonstrate human-environment interaction. Explain why each valley shows human-environment interaction, and identify what is different about how people interact with the surroundings in each case.",
+    "choices": [
+      "Both valleys show human-environment interaction because in Valley A farms adapt to rich soil and steady water, and in Valley B farms also adapt to conditions, so the interaction is fundamentally the same process applied to different natural resources",
+      "Valley A demonstrates human-environment interaction because people chose to build farms to take advantage of good conditions, while Valley B demonstrates it because people were forced by harsh conditions to modify the landscape with terraces and canals, making them two separate types of interaction",
+      "Valley A shows human-environment interaction because it is located in a region with favorable geography, while Valley B shows human-environment interaction because it is located in a different region with unfavorable geography, so location differences explain why people interact differently",
+      "In Valley A, the environment shaped people's choice to farm because the soil and water are naturally good; in Valley B, people are also shaped by the environment but they have also changed the landscape by building systems to survive"
+    ],
+    "answer": "D",
+    "hints": [
+      "Human-environment interaction means the surroundings shape choices people make AND people can also change their surroundings — look for an answer that recognizes both directions.",
+      "In Valley A, favorable conditions shaped people's choice to farm. In Valley B, harsh conditions also shaped choices, but people went further and actually modified the landscape — both are human-environment interaction, but look different."
     ]
   }
 ]

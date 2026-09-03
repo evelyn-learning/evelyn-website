@@ -228,136 +228,22 @@
     ]
   },
   {
-    "id": "m6math-word-problems-with-fraction-division-001",
-    "loId": "m6math.word-problems-with-fraction-division",
-    "cedCode": "M6MATH-3.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A word problem says: 'You have 12 cups of flour. One batch of cookies uses 2/3 cup of flour. How many batches can you make?' Before you do any math, which number is the dividend (the total amount you start with)?",
-    "choices": [
-      "2 (the numerator of 2/3)",
-      "2/3 cup",
-      "The number of batches",
-      "12 cups"
-    ],
-    "answer": "D",
-    "hints": [
-      "The dividend is the amount you start with, not the size of one group.",
-      "In this problem, you begin with flour. How much flour do you have in total?"
-    ]
-  },
-  {
-    "id": "m6math-word-problems-with-fraction-division-002",
-    "loId": "m6math.word-problems-with-fraction-division",
-    "cedCode": "M6MATH-3.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A rope is 10 feet long. Each jump rope uses 2 and 1/2 feet of rope. How many jump ropes can be made from the rope? Which division expression matches this question?",
-    "choices": [
-      "10 ÷ 2 and 1/2",
-      "2 and 1/2 ÷ 10",
-      "10 ÷ 2 + 1/2",
-      "2 and 1/2 ÷ 2"
-    ],
-    "answer": "A",
-    "hints": [
-      "The total comes first, the group size comes second in a division setup.",
-      "You're asking: how many groups of 2 and 1/2 feet fit inside 10 feet?"
-    ]
-  },
-  {
-    "id": "m6math-word-problems-with-fraction-division-003",
-    "loId": "m6math.word-problems-with-fraction-division",
-    "cedCode": "M6MATH-3.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student reads the following problem: 'You have 8 liters of juice. What is 1/4 of the juice?' The student says this is a division problem. Is the student correct, and why?",
-    "choices": [
-      "Yes, because any problem that contains a fraction symbol or fraction notation must involve division as its main operation.",
-      "No. The word 'of' signals multiplication, not division. The problem asks for a fraction OF an amount, not how many groups fit inside.",
-      "No, because the problem is asking to split the juice into 4 equal groups and then find how many groups there are in total, which uses addition.",
-      "Yes, because the problem involves a fractional amount and fractions are always used to show division results."
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what the problem is actually asking. Is it asking 'how many equal-sized pieces fit inside,' or is it asking for a part OF a whole amount?",
-      "Look at the signal words: 'of' means multiply; 'how many' or 'how much' means divide."
-    ]
-  },
-  {
-    "id": "m6math-word-problems-with-fraction-division-004",
-    "loId": "m6math.word-problems-with-fraction-division",
-    "cedCode": "M6MATH-3.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A baker has 7 and 1/2 cups of sugar. Each pie recipe uses 1 and 1/4 cups of sugar. How many complete pie recipes can the baker make? Set up the correct division expression first, then choose the answer that gives the number of complete recipes.",
-    "choices": [
-      "5 complete recipes",
-      "7 complete recipes",
-      "6 complete recipes",
-      "8 complete recipes"
-    ],
-    "answer": "C",
-    "hints": [
-      "Convert both mixed numbers to improper fractions before dividing: 7 and 1/2 = 15/2, and 1 and 1/4 = 5/4.",
-      "When you divide and get a mixed number result, the whole number part tells you how many complete recipes fit."
-    ]
-  },
-  {
-    "id": "m6math-word-problems-with-fraction-division-005",
-    "loId": "m6math.word-problems-with-fraction-division",
-    "cedCode": "M6MATH-3.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A seamstress has 9 and 3/4 yards of fabric. Each dress uses 1 and 1/2 yards. How many complete dresses can be made? After you find the number of complete dresses, how much fabric is left over?",
-    "choices": [
-      "5 complete dresses with 1 yard left over",
-      "6 complete dresses with 3/4 yard left over",
-      "7 complete dresses with 1/4 yard left over",
-      "6 complete dresses with 1/2 yard left over"
-    ],
-    "answer": "D",
-    "hints": [
-      "First, convert mixed numbers to improper fractions: 9 and 3/4 = 39/4, and 1 and 1/2 = 3/2. Then divide using keep-change-flip.",
-      "When you get a mixed number as your quotient, multiply the leftover fraction part by the divisor to find how much fabric remains."
-    ]
-  },
-  {
-    "id": "m6math-word-problems-with-fraction-division-006",
-    "loId": "m6math.word-problems-with-fraction-division",
-    "cedCode": "M6MATH-3.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A craft project requires 3/8 pound of beads per ornament. A crafter has 4 and 1/2 pounds of beads and wants to know two things: (1) how many complete ornaments can be made, and (2) whether the leftover beads are enough to start one more ornament. Set up the division using total divided by group size, find the quotient, and interpret your result.",
-    "choices": [
-      "12 complete ornaments can be made, and the leftover beads are not enough to start another ornament.",
-      "12 complete ornaments can be made, and the leftover beads are enough to start another ornament.",
-      "11 complete ornaments can be made, and the leftover beads are enough to start another ornament.",
-      "13 complete ornaments can be made with no beads left over."
-    ],
-    "answer": "A",
-    "hints": [
-      "Convert 4 and 1/2 to 9/2, then divide 9/2 ÷ 3/8 using keep-change-flip. Your result will be a whole number or mixed number.",
-      "If the quotient is a whole number, all beads are used exactly. If it is a mixed number, the fractional part tells you what fraction of one more ornament's worth of beads remains."
-    ]
-  },
-  {
     "id": "m6math-dividing-mixed-numbers-001",
     "loId": "m6math.dividing-mixed-numbers",
     "cedCode": "M6MATH-3.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "To divide mixed numbers, you must first convert them to improper fractions before using the keep-change-flip method. What is 2 and 1/3 written as an improper fraction?",
+    "problemText": "To divide mixed numbers using the keep-change-flip method, what is the first step you must always take?",
     "choices": [
-      "5/3",
-      "2/3",
-      "7/3",
-      "6/3"
+      "Simplify both numbers if they share common factors",
+      "Flip the divisor into its reciprocal immediately",
+      "Convert the mixed number (or numbers) to improper fractions",
+      "Multiply the whole number by the denominator"
     ],
     "answer": "C",
     "hints": [
-      "Multiply the whole number by the denominator, then add the numerator.",
-      "The denominator stays the same."
+      "Think about what form a fraction must be in before you can use the keep-change-flip method.",
+      "A fraction must be in improper form before any division step begins."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6MATH-3.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A recipe calls for 3 and 1/2 cups of flour. If you want to divide the recipe into portions of 1/2 cup each, how many portions will you have? Set up the division problem that finds the answer, but do not solve it yet.",
+    "problemText": "Convert 3 and 2/5 to an improper fraction. Show your work using the rule: multiply the whole number by the denominator, add the numerator, and keep the same denominator.",
     "choices": [
-      "7/2 ÷ 1/2",
-      "7/2 × 1/2",
-      "3 and 1/2 ÷ 1/2",
-      "7/2 × 2/1"
+      "32/5",
+      "15/5",
+      "3/5",
+      "17/5"
     ],
     "answer": "D",
     "hints": [
-      "First convert 3 and 1/2 to an improper fraction.",
-      "After converting, use keep-change-flip to set up the multiplication."
+      "Start by multiplying 3 by 5.",
+      "Then add the numerator to that result, and place it over 5."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6MATH-3.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Work out 2 and 2/5 ÷ 4/5. Which steps show the correct conversion and setup before multiplying?",
+    "problemText": "You need to divide 5/8 by 2 and 1/4. Which shows the correct conversion of 2 and 1/4 to an improper fraction?",
     "choices": [
-      "Convert 2 and 2/5 to 12/5, then compute 12/5 × 5/4",
-      "Convert 2 and 2/5 to 12/5, then compute 12/5 × 4/5",
-      "Convert 2 and 2/5 to 4/5, then compute 4/5 × 5/4",
-      "Flip 2 and 2/5 to 5/2, then compute 5/2 × 4/5"
+      "9/4",
+      "10/4",
+      "2/4",
+      "8/4"
     ],
     "answer": "A",
     "hints": [
-      "When you convert 2 and 2/5, multiply 2 × 5 and add 2.",
-      "The divisor 4/5 gets flipped to 5/4 when you apply keep-change-flip."
+      "Multiply the whole number (2) by the denominator (4), then add the numerator.",
+      "Keep the denominator the same; only the top changes."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6MATH-3.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Solve 1 and 1/2 ÷ 3/4. First convert the mixed number to an improper fraction, apply keep-change-flip, multiply, and then simplify your answer back to a mixed number.",
+    "problemText": "Work out 1 and 3/5 ÷ 2/3. First convert the mixed number to an improper fraction, then use keep-change-flip, and simplify your final answer.",
     "choices": [
-      "2",
-      "2 and 2/3",
-      "1 and 1/3",
-      "3/2"
+      "12/5",
+      "2 and 2/5",
+      "15/8",
+      "8/15"
     ],
     "answer": "B",
     "hints": [
-      "1 and 1/2 converts to 3/2.",
-      "After multiplying 3/2 × 4/3, simplify the result before converting back to mixed form."
+      "Convert 1 and 3/5 to an improper fraction first; then keep it, change ÷ to ×, and flip 2/3.",
+      "After you multiply straight across and simplify, convert your improper fraction back to a mixed number to match the answer choices."
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6MATH-3.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student solves 4 and 1/3 ÷ 2 and 1/6 and gets 2. Use the size test (comparing the divisor to 1) and a check by multiplication to decide if this answer is reasonable.",
+    "problemText": "Before solving 2 and 1/2 ÷ 1 and 1/3, use the size test: will the answer be larger or smaller than 2 and 1/2? Explain your reasoning in terms of what 1 and 1/3 is compared to 1.",
     "choices": [
-      "Yes, the answer is reasonable because 2 and 1/6 is greater than 1, so the answer should be smaller than 4 and 1/3, and 2 × 2 and 1/6 gives 4 and 1/3.",
-      "Yes, the answer is reasonable because when you divide by a number greater than 1, the quotient stays the same size as the dividend, and converting mixed numbers to improper fractions does not change the final result.",
-      "No, the answer is unreasonable because 2 and 1/6 is greater than 1, so the answer should be smaller than 4 and 1/3, and multiplying back does not give 4 and 1/3.",
-      "No, the answer is unreasonable because dividing by 2 and 1/6 requires you to multiply by its reciprocal, but the student multiplied by 2 and 1/6 instead of by 6/13, which would give a different quotient."
+      "The answer will be smaller because 2 and 1/2 is larger than 1 and 1/3.",
+      "The answer will be larger because 1 and 1/3 is greater than 1, and dividing by a number greater than 1 makes the answer larger.",
+      "The answer will be smaller because 1 and 1/3 is greater than 1, and dividing by a number greater than 1 makes the answer smaller.",
+      "The answer will be larger because we are dividing, not multiplying."
     ],
     "answer": "C",
     "hints": [
-      "Apply the size test: the divisor 2 and 1/6 is greater than 1.",
-      "Check by multiplying: does 2 × 2 and 1/6 really equal 4 and 1/3?"
+      "When you divide by something greater than 1, does your answer get bigger or smaller?",
+      "Compare 1 and 1/3 to the number 1 to decide whether the divisor is greater or less than 1."
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6MATH-3.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A carpenter has 5 and 1/4 yards of trim and needs to cut it into pieces that are each 1 and 3/8 yards long. After converting both numbers to improper fractions, setting up the division, and multiplying, the carpenter will have pieces left over as a fraction. What is the full answer (as a mixed number or improper fraction) and how many complete pieces can be cut?",
+    "problemText": "A student was asked to solve 3 and 1/4 ÷ 1 and 1/2. They wrote the following: 'I'll flip 1 and 1/2 to get 1 and 2/1, then multiply 13/4 by 1 and 2/1.' What is wrong with this approach, and what should the student do instead?",
     "choices": [
-      "3 and 4/11 complete pieces; cannot cut a partial piece into a usable fraction",
-      "4 complete pieces with 1/8 yard left over",
-      "3 and 6/11 complete pieces; the leftover is 6/11 of the original trim length",
-      "3 complete pieces with 9/8 yards left over"
+      "The student should have simplified before flipping; 3 and 1/4 and 1 and 1/2 share a common factor of 2 that must be removed from each mixed number first before converting and dividing.",
+      "The student flipped the dividend instead of the divisor; they should flip 3 and 1/4 to get the reciprocal 4/13, then multiply this result by the divisor 1 and 1/2 to find the answer.",
+      "The conversion of 3 and 1/4 to an improper fraction is incorrect; it should be 12/4, not 13/4. Once that error is corrected, flipping the mixed number 1 and 1/2 the way shown will produce the right reciprocal.",
+      "You cannot flip a mixed number before converting it to an improper fraction; the correct reciprocal is 2/3, not 1 and 2/1. Convert both mixed numbers to improper fractions first, then flip the divisor."
     ],
     "answer": "D",
     "hints": [
-      "Convert 5 and 1/4 to 21/4 and 1 and 3/8 to 11/8, then divide using keep-change-flip.",
-      "Simplify 21/4 × 8/11 and check: the whole number in your result is the number of complete pieces."
+      "Look at what 1 and 2/1 means: is that a real reciprocal? How do you find the reciprocal of an improper fraction?",
+      "Flipping a mixed number without first converting it to an improper fraction produces an invalid result. What is the correct order of steps?"
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-001",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A problem asks: 'You have 4 pounds of flour. Each recipe uses 1/2 pound of flour. How many recipes can you make?' Which number is the dividend (the total amount you start with)?",
+    "choices": [
+      "It cannot be determined from the problem",
+      "1/2 pound",
+      "The number of recipes",
+      "4 pounds"
+    ],
+    "answer": "D",
+    "hints": [
+      "The dividend is the total amount you have before you divide.",
+      "Look for the quantity described as what you 'have' or 'start with'."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-002",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A piece of fabric is 3 yards long. A quilt uses 3/4 yard of fabric. Which expression shows how many quilts can be made from the fabric?",
+    "choices": [
+      "3 ÷ 3/4",
+      "3/4 ÷ 3",
+      "3 × 3/4",
+      "3/4 - 3"
+    ],
+    "answer": "A",
+    "hints": [
+      "Identify which is the total amount (dividend) and which is the size of one group (divisor).",
+      "The setup always reads: total ÷ group size."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-003",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gardener has 6 liters of fertilizer. Each plant needs 2/5 liter of fertilizer. How many plants can be fertilized? Carry out the division 6 ÷ 2/5 using the keep-change-flip method to find the answer.",
+    "choices": [
+      "12/5 plants",
+      "15 plants",
+      "2/15 plants",
+      "1/2 plant"
+    ],
+    "answer": "B",
+    "hints": [
+      "Keep 6, change ÷ to ×, and flip 2/5 to get 5/2.",
+      "Simplify your result: what whole number does 30/2 equal?"
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-004",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A baker has 3 and 1/2 cups of sugar. Each batch of cookies uses 1/2 cup of sugar. After making as many full batches as possible, how much sugar is left over?",
+    "choices": [
+      "1/2 cup",
+      "1/4 cup",
+      "0 cups",
+      "2 cups"
+    ],
+    "answer": "C",
+    "hints": [
+      "First, divide the total sugar by the sugar per batch to find how many batches can be made.",
+      "Then multiply the number of batches by the sugar per batch and subtract from the total to find what is left."
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-005",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reads: 'A recipe calls for 2/3 cup of milk in each batch. I have 8 cups of milk. What is 2/3 of 8 cups?' The student solves this by computing 2/3 × 8 = 16/3 cups and gets an answer of 5 and 1/3 cups. What mistake, if any, does this represent?",
+    "choices": [
+      "The arithmetic is wrong; 2/3 times 8 does not equal 16/3.",
+      "The question asks for a fraction OF an amount, which is multiplication, so 2/3 × 8 is correct.",
+      "The final answer should be rounded to 5 cups instead of kept as 5 and 1/3 cups.",
+      "The question actually asks how many batches can be made, which requires division, not multiplication."
+    ],
+    "answer": "D",
+    "hints": [
+      "Decide whether the question is 'What is a fraction OF this amount?' or 'How many equal groups fit inside?'",
+      "The words 'What is 2/3 of 8 cups' signal multiplication, but 'How many batches' signals division. Which question does the problem actually ask?"
+    ]
+  },
+  {
+    "id": "m6math-word-problems-with-fraction-division-006",
+    "loId": "m6math.word-problems-with-fraction-division",
+    "cedCode": "M6MATH-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A crafting workshop has 12 and 1/2 yards of string. They want to cut the string into pieces, each measuring 2 and 1/2 yards long, for a group activity. After cutting as many full-length pieces as possible, they will have some leftover string. What is the length of the leftover string?",
+    "choices": [
+      "1/2 yard",
+      "2 and 1/2 yards",
+      "5 yards",
+      "12 and 1/2 yards"
+    ],
+    "answer": "A",
+    "hints": [
+      "Convert both mixed numbers to improper fractions: 12 and 1/2 = 25/2, and 2 and 1/2 = 5/2.",
+      "Divide the total by the piece size to get a mixed number. The whole number tells you how many full pieces; the fraction tells you what portion of one more piece is left. Multiply that fraction by the piece size to find the leftover length."
     ]
   }
 ]

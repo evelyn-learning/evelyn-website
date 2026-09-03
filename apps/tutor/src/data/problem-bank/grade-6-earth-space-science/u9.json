@@ -233,17 +233,17 @@
     "cedCode": "M6SCI-9.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A weather service issues a hurricane watch for a coastal region early in the morning. What does a watch tell people they should do?",
+    "problemText": "A tornado warning is issued for your county, meaning a tornado has been indicated nearby and is expected very soon. What should you do right away?",
     "choices": [
-      "Act immediately and evacuate right now, because the hazard is already happening",
-      "Get ready and prepare, because conditions are favorable for the hazard to develop",
-      "Stop paying attention to updates, because the storm has passed",
-      "Continue normal activities, because the watch means nothing will actually occur"
+      "Wait for news confirmation of tornado formation because warnings are sometimes issued as a precaution and the tornado may not actually develop in your immediate area",
+      "Act immediately to move to a safe location, such as a small interior room on the lowest floor away from windows",
+      "Gather your family and important documents together while staying in your current location so you are ready to move if the tornado gets closer to your home",
+      "Leave your home and drive to a shelter in the next town over to be extra safe from the tornado threat in your county"
     ],
     "answer": "B",
     "hints": [
-      "A watch gives time to prepare, while a warning means to act now.",
-      "Think about what 'favorable conditions' for a storm means—is it here yet, or could it develop?"
+      "A warning means the hazard is occurring or expected very soon, not just favorable conditions.",
+      "The key word in the question is 'right away' — what kind of action does that signal?"
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6SCI-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A forecast track shows a hurricane's path as a cone-shaped area that widens as it extends into the future. What does the width of this cone represent?",
+    "problemText": "A forecast track shows a hurricane's center moving directly toward a coastal city, but the shaded cone on the map is very wide. A resident asks, 'If my home is just outside the cone, am I safe?' A forecast cone shows possible locations of the storm's center based on the range of accuracy from past forecasts. Based on what a forecast track actually shows, what is the best answer?",
     "choices": [
-      "The size of the hurricane's wind field and storm surge",
-      "The area where heavy rain will definitely fall",
-      "The range of positions the storm's center is likely to occupy, based on how accurate past forecasts have been",
-      "The number of cities and towns the hurricane will pass directly over"
+      "Yes, because the cone shows the exact range of the storm's effects, so anything outside it is unaffected",
+      "Yes, because the width of the cone shows how much the forecast might be wrong, so homes just outside cannot be hit",
+      "No, because the cone shows only where the storm's center might be, and wind, rain, and storm surge can reach well beyond it",
+      "No, because the cone is not drawn to scale and the actual storm is much larger than it appears on the map"
     ],
     "answer": "C",
     "hints": [
-      "The cone width is about forecast accuracy and uncertainty, not the storm's actual size or guaranteed impacts.",
-      "Wider cone in the future means forecasters are less certain about the exact path further ahead."
+      "The cone marks possible paths of the storm's center — what about the storm's effects beyond that center line?",
+      "The cone's width is based on how accurate past forecasts have been — does that tell you the size of the storm or the range of possible paths?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6SCI-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A flooding plan for a river town includes 'Keep the low-lying bridge on Route 6 closed whenever the river reaches a known level with a history of overflow.' Is this a preparedness action or a mitigation action?",
+    "problemText": "A county has a history of flooding in the low-lying area near the river, but the neighborhood on the hill two kilometers away has never flooded. A river flood forecast is issued for the county. Why should the hill neighborhood still prepare for possible flooding, even though it has been dry during all past floods? Consider that past experience at a location tells you what has already happened there, but not necessarily what could happen under different conditions.",
     "choices": [
-      "Preparedness, because it gets done before each specific forecast arrives",
-      "Preparedness, because closing a road is a faster response than other measures",
-      "Mitigation, because only rivers can cause this kind of damage",
-      "Mitigation, because it is done ahead of time, independent of any one forecast, to reduce flood damage over the long term"
+      "Because the river's behavior changes over time due to climate patterns and the hill neighborhood may be in a new flood risk zone even if it was safe during the last twenty years of records",
+      "Because flooding patterns reverse every decade or two, and it is the hill neighborhood's turn to flood this year",
+      "Because the forecast data always overestimates danger at safe locations so residents do not become complacent",
+      "Because historical safety at a location is not the same as protection — the neighborhood simply has not yet experienced the exact conditions that could cause it to flood"
     ],
     "answer": "D",
     "hints": [
-      "Preparedness happens once a specific hazard is forecast; mitigation happens routinely, long before any storm appears.",
-      "The town closes this road whenever the river reaches a certain level—is that in response to today's forecast, or a standing rule?"
+      "Past safety at a location shows what has happened, but what does it not guarantee about the future?",
+      "What does historical data tell you about a specific place, and what does it not tell you?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6SCI-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A tornado warning is issued for a school building mid-afternoon. Historical damage records for tornadoes in the area show that flying debris and broken glass cause injuries even in buildings the tornado's path did not directly strike. The school's current shelter plan directs all students to the largest room—the library—which has a wall of windows and is on the second floor. Using both the historical damage pattern and official tornado-shelter guidance, explain why this plan fails to fit the evidence.",
+    "problemText": "A coastal town's forecast shows a hurricane making direct landfall within one day, with forecasters expecting it to remain a strong hurricane through arrival. The town's historical records show that the last three hurricanes on a similar track each caused major wind damage to buildings throughout the town, but storm surge flooding was severe only in the two-block-wide low-lying waterfront district. The town proposes a mitigation action: reinforcing all buildings across the entire town to withstand stronger winds. Evaluate whether this mitigation action fits the forecast and historical evidence.",
     "choices": [
-      "The plan puts students in the largest room, but tornado safety depends on being in an interior room on the lowest floor away from windows, which is what the damage record confirms",
-      "The plan directs students to an upper-floor room with windows, when the damage record shows flying debris and glass are the main injury hazard, and official guidance calls for sheltering in an interior room on the lowest floor",
-      "The plan shelters students indoors, but the historical record for this region shows that outdoor shelter behind a large solid object is safer from flying debris",
-      "The plan uses the library as a gathering point, but tornado safety protocol requires students to be distributed across multiple small interior rooms rather than concentrated in one large space"
+      "No, it does not fit the evidence, because the historical record shows storm surge as a major threat only in one specific area, yet the plan reinforces buildings everywhere instead of targeting flood mitigation in the waterfront district",
+      "Yes, it fits the evidence, because three previous hurricanes all caused wind damage across the town, so reinforcing all buildings prevents that documented risk from occurring again in the future",
+      "Yes, it fits the evidence, because the forecast predicts a strong hurricane making direct landfall, and wind-resistant buildings provide the most effective protection for coastal towns against the full range of hurricane hazards including surge and wind",
+      "No, it does not fit the evidence, because historical records indicate that a strong hurricane always generates widespread flooding throughout the entire landing area, so the town should prioritize evacuation and shelter over reinforcing individual structures"
     ],
     "answer": "A",
     "hints": [
-      "The damage record identifies what the real hazard is—flying debris and glass—not how many people the room can hold.",
-      "Match the plan's choice (largest room, upper floor, windows) against what the evidence says actually protects people (interior, lowest floor, no windows)."
+      "What does the historical pattern show about where the storm surge flooding occurred in past similar storms?",
+      "A mitigation action taken 'long before any specific storm is forecast' should address the long-term risks the data points to — where is this town's concentrated risk?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6SCI-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A coastal city receives a hurricane forecast: the track curves away from the city within one day, and wind strength is expected to weaken. However, historical records show that hurricanes following a similar curving track have, in the past, still brought heavy rain and rough surf to the coast as they passed by, even after wind speeds dropped. The city's current plan is to open an emergency shelter and board up windows—the same full-strength response used for a direct-landfall hurricane. According to the forecast and historical pattern, what is the main problem with this plan?",
+    "problemText": "A hurricane forecast shows a storm weakening from a powerful Category 4 to a weak tropical depression within 24 hours after landfall. Forecasters note that once the storm passes inland, it is expected to slow down and drop very heavy rain for several days in the same inland region. Historical records show that past hurricanes with similar landing tracks have also slowed and stalled, dumping intense rainfall and causing severe flooding in the same inland area for days. The city's preparedness plan is to stock emergency supplies, open the emergency shelter, and prepare evacuation routes for wind damage. When should residents also begin preparing specifically for inland flooding?",
     "choices": [
-      "The plan is too weak because the forecast expects the hurricane to weaken, which means no preparation is needed",
-      "The plan treats this curving-away track the same as a direct-landfall situation, when the evidence shows the wind threat is less, even though rain and surf remain concerns worth monitoring",
-      "The plan is correct and fits the evidence perfectly, so there is no problem",
-      "The plan fails because it relies on the forecast track, which is never accurate enough to use for making decisions"
+      "Only if another storm is forecast in the next few days, because a weakening hurricane forecast means overall threat levels are decreasing and rainfall intensity will remain too low to cause flooding problems",
+      "Now, before the storm arrives, because the forecast wind weakening does not mean the overall risk is lower — the historical pattern and forecast both show serious flooding is still coming inland",
+      "Not until after the storm passes inland, because the historical records describe only wind damage from past hurricanes and cannot provide reliable predictions about rainfall flooding in inland regions beyond the immediate coast",
+      "Only after the storm makes landfall and the wind damage phase is over, because rainfall flooding impacts cannot be forecast accurately until after forecasters observe actual storm intensity and track data from the landing itself"
     ],
     "answer": "B",
     "hints": [
-      "Look at what the historical pattern actually says about curving-away storms—does it say nothing will happen, or does it say something specific will change?",
-      "A weakening wind forecast does not mean all risks go away; check what the historical data shows about rain and surf on this type of track."
+      "A dropping wind category means what about the overall risk — is it automatically dropping too?",
+      "What two separate kinds of evidence both point toward the same inland flooding hazard?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6SCI-9.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A river town expects heavy rainfall over several days, and forecasters predict the river will rise well above its banks by tomorrow night. The town's flood records show that this river has overflowed the same low bridge on the south road every single time rainfall has reached this level—sometimes leaving water covering the roadway that looked too shallow to block a car's path from inside a vehicle. The town proposes a guidance: 'Road closed when river reaches flood stage—no exceptions.' However, a neighboring town with a similar river and similar past flooding patterns proposes instead: 'When the river reaches flood stage, post warning signs and leave the decision to each driver whether to cross.' Why does the first town's action fit the evidence better than the second town's action?",
+    "problemText": "A county experiences frequent flash flooding along a specific river, with historical records documenting that the river overflows a critical bridge whenever three-day rainfall totals exceed 8 inches. When that happens, floodwater moves fast across the roadway and is deeper than it appears from a car. The current forecast shows a storm system expected to deliver 6 inches of rain in the first two days, and meteorologists note uncertainty about whether additional rain will fall on the third day. The county proposes two possible actions: (1) Pre-close the bridge when the first 5 inches of rain has fallen, rerouting traffic immediately; (2) Wait until the actual rainfall total approaches 8 inches, then close the bridge if needed. Which action better fits the forecast data and historical evidence, and why?",
     "choices": [
-      "The first town's action fits because it prevents all people from driving anywhere, which is the safest general rule for any town with a river",
-      "The first town's action fits because floods are always more dangerous than warnings, so closing roads is always the right choice regardless of history",
-      "The first town's action fits because the historical record for that specific location shows repeated flooding at this river level, floodwater depth cannot be judged by looking at it, and the evidence supports a no-exceptions rule rather than trusting each driver's judgment",
-      "The first town's action does not fit better; both actions are equally good because both towns have experienced flooding in the past"
+      "Action 2 is better, because the forecast only guarantees 6 inches of rain over the first two days, and waiting to measure the actual total before closing ensures the county does not overreact to uncertain forecasts",
+      "Action 2 is better, because closing the bridge too early wastes money on traffic rerouting, and the forecast does not guarantee that the third day's rain will actually occur",
+      "Action 1 is better, because the historical pattern shows a specific rainfall threshold tied to flooding, and the forecast includes uncertainty about a third day that could push the total to or above that threshold",
+      "Action 1 is better, because any rainfall over 5 inches is dangerous, and forecasts are always wrong by at least several inches, so erring on the side of caution is the only safe choice"
     ],
     "answer": "C",
     "hints": [
-      "The key evidence is not just that flooding has happened; it is that it has happened the same way at the same location every time rainfall reaches a certain level.",
-      "If floodwater depth cannot be reliably judged from inside a car, and the historical record shows this bridge consistently floods at this rainfall level, what does that mean for leaving the decision to individual drivers?"
+      "The historical record ties the bridge flooding to a specific number — what does that tell you about when to act?",
+      "Forecast uncertainty about a third day of rain — does that make it safer to wait until the full total is measured, or safer to act before the forecast uncertainty resolves?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6SCI-9.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A geologist describes a location as having an 'elevated risk' of earthquakes. What does this term mean based on the historical record and plate boundary evidence?",
+    "problemText": "A geologist uses the term 'elevated risk' to describe a coastal region that sits on an active convergent boundary where an oceanic plate is being forced beneath a continental plate. According to the hazard record, this region has experienced many earthquakes and volcanic eruptions over the past two hundred years. What does 'elevated risk' mean in this context?",
     "choices": [
-      "That location has experienced repeated earthquakes in the past due to an active plate boundary there, making future earthquakes more likely than in places far from boundaries.",
-      "A major earthquake is certain to strike that location within the next few years based on historical patterns and current plate motion measurements because stress accumulates in predictable ways.",
-      "A single earthquake occurred there once, so another one is now overdue because plate stress builds up in predictable cycles at that boundary, making it statistically inevitable soon.",
-      "The location sits on a plate boundary where earthquakes have occurred before, but they are just as rare as anywhere else on Earth because plates move so slowly that stress releases infrequently."
+      "This region has a higher chance of earthquakes, eruptions, or tsunamis than a region with no active plate boundary nearby, but it does not predict when or whether a specific event will occur",
+      "A major earthquake or eruption is certain to happen in this region within the next few years based on the two-hundred-year pattern of activity, which guarantees the same sequence will repeat",
+      "The region's risk of future earthquakes decreases after each earthquake occurs because the collision process gradually slows down and stress relief reduces the likelihood of the next event",
+      "The past two hundred years of activity prove that this region will experience earthquakes at the exact same intervals in the next two hundred years with no variation in timing or magnitude"
     ],
     "answer": "A",
     "hints": [
-      "Think about what 'elevated' means — higher than something else, not certain or guaranteed.",
-      "Elevated risk is a chance based on what has repeatedly happened before, not a prediction of when an earthquake will strike."
+      "Recall that elevated risk is based on a repeated pattern over time, not on certainty or prediction of a specific date.",
+      "Think about what 'elevated risk' compared to other regions means — it raises the odds, but does not guarantee or rule out when an event occurs."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6SCI-9.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A region sits along a transform boundary where two plates slide past each other. The region has a two-hundred-year record of frequent earthquakes. Based on how transform boundaries work, what else should you expect the hazard record to show?",
+    "problemText": "A transform boundary, such as the San Andreas Fault in California, is characterized by two plates sliding past each other horizontally, with the distance between them staying roughly the same. The historical record for this region shows many earthquakes but no active volcanoes along the fault line itself. Based on what is known about different boundary types and their hazard patterns, which hazard should geologists expect to be most common at a transform boundary?",
     "choices": [
-      "Frequent volcanic eruptions occurring at the same locations as the earthquakes.",
-      "Little to no volcanic activity at the boundary itself, despite the frequent earthquakes.",
-      "A chain of active volcanoes running parallel to the fault line.",
-      "Tsunamis triggered by the earthquakes every few decades."
+      "Volcanic eruptions, because any plate boundary can generate enough heat to melt rock",
+      "Earthquakes, because the sliding motion of the two plates creates stress and sudden releases along the fault",
+      "Tsunamis, because transform boundaries always run along ocean coastlines where water can be displaced",
+      "Landslides, because the horizontal motion of the plates destabilizes all hillsides nearby"
     ],
     "answer": "B",
     "hints": [
-      "California's San Andreas Fault is a transform boundary — what kinds of hazards does it produce?",
-      "Not all plate boundaries produce volcanoes — the type of boundary and how the plates move matter."
+      "Think about what happens when two plates slide past each other — what kind of motion creates stress and sudden movement?",
+      "Recall that volcanoes form where rock is being forced down and melted, or where new material is rising — neither happens at a transform boundary."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6SCI-9.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A coastal city lies directly above a subduction zone where an oceanic plate is being forced beneath a continental plate. Over the last three hundred years, records show frequent earthquakes and an active volcanic arc in the mountains behind the city. The city council is debating whether to build a tsunami-warning system. Based on how tsunamis form at subduction zones, should they include a tsunami risk in their planning?",
+    "problemText": "Two regions both sit on convergent boundaries. Region P has a long historical record of frequent earthquakes and active volcanoes arranged in a chain running parallel to the coast. Region Q, inland and far from any ocean, has the same pattern of frequent earthquakes but no active volcanoes at all. Both regions have repeatedly experienced strong earthquakes over the past three hundred years. Based on the hazard patterns described, what is the most likely difference between these two boundaries?",
     "choices": [
-      "No, because subduction zones produce only earthquakes and volcanoes through friction and melting, but the vertical motion of plates does not disturb water.",
-      "No, because tsunamis only occur at transform boundaries where plates slide horizontally past each other, not at convergent boundaries where they collide.",
-      "Yes, because earthquakes on coastal subduction zones can suddenly shift the seafloor and displace the ocean water above it.",
-      "Yes, but only if the volcanic eruptions in the mountains happen to trigger the tsunami directly through ash fall into the ocean."
+      "Region P is at an oceanic-continental convergent boundary where magma is generated by subduction and rises to form a volcanic arc, while Region Q is at a continental-continental convergent boundary where the rocks are too thick and dense to melt easily",
+      "Region P experiences convergent motion while Region Q experiences divergent motion, even though both regions have strong earthquakes occurring",
+      "Region P's boundary involves an oceanic plate being subducted beneath a continental plate, while Region Q's boundary involves two continental plates colliding with each other",
+      "Region P's historical record is longer and more reliable than Region Q's record, which means volcanoes only appear in regions where scientists have kept detailed notes for centuries"
     ],
     "answer": "C",
     "hints": [
-      "Think about what happens to the ocean floor during a large earthquake on an underwater plate boundary.",
-      "When the seafloor suddenly moves at a subduction zone, what happens to the water sitting above it?"
+      "Recall that not every convergent boundary produces a volcanic arc — it depends on what type of plates are colliding.",
+      "Think about which combination of plates (oceanic and continental, or continental and continental) creates the conditions for a volcanic arc to form above a subduction zone."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6SCI-9.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two mountainous regions both sit on convergent boundaries where the distance between plates is shrinking. Region P has a historical record of intense, frequent earthquakes but no active volcanic arc. Region Q has a similar history of frequent earthquakes plus a well-established chain of active volcanoes. Both regions are hundreds of kilometers inland, far from any ocean. Explain why Region Q has volcanoes while Region P does not, and explain why neither region carries a tsunami risk.",
+    "problemText": "A coastal research team surveys an underwater boundary and finds that an oceanic plate has been moving toward a continental plate for millions of years, with the distance between them steadily shrinking. Historical records from the past three hundred years show many strong earthquakes in the region and several volcanic eruptions. A colleague proposes that because the historical record shows these events have occurred repeatedly, a major earthquake is 'due' and is very likely to occur in the next five years. Is the colleague's conclusion justified by the evidence? Explain your reasoning using what the term 'elevated risk' actually means.",
     "choices": [
-      "Region Q must be younger geologically, so its volcanoes have not cooled yet, while Region P is older and its volcanoes have stopped; neither has tsunami risk because both are far from the ocean where water cannot be displaced by land-based movement.",
-      "Region Q must have a more active boundary with stronger earthquakes that cause melting of rock, while Region P has weaker earthquakes that do not generate magma; neither would generate tsunamis because the ocean is not present at these inland locations to be displaced.",
-      "Region P's earthquakes are not strong enough to produce volcanoes through rock melting, while Region Q's stronger earthquakes create enough heat and pressure for magma formation; both regions have no tsunami risk because tsunamis require an ocean surface above the plate boundary that can be displaced.",
-      "Region Q sits on a subduction zone where an oceanic plate is being forced beneath a continental plate, while Region P sits where two continental plates collide; neither has tsunami risk because an inland earthquake cannot displace an ocean that is not there."
+      "Yes, because a pattern of repeated earthquakes over three hundred years means another one is statistically guaranteed to occur within exactly five years based on the average time between events",
+      "No, because convergent boundaries produce earthquakes so massive that they destroy all historical records, making it impossible to use past data to determine when the next earthquake is overdue",
+      "Yes, because earthquakes and volcanic eruptions follow predictable cycles that repeat on a fixed schedule, so the three-hundred-year record allows precise forecasting of when the next major event will strike",
+      "No, because elevated risk describes a higher-than-average chance based on the boundary type and past pattern, not a prediction of when the next event will happen; the boundary's presence makes future hazards more likely than in a stable region, but does not determine a specific year"
     ],
     "answer": "D",
     "hints": [
-      "When two continental plates collide, different things happen than when an oceanic plate slides beneath a continental plate.",
-      "An inland region, no matter how strong its earthquakes, cannot produce a tsunami because there is no ocean body present to be displaced."
+      "In science, elevated risk means a higher-than-average probability compared to other regions, not a guaranteed event in a specific timeframe — think about what information a plate boundary actually gives us.",
+      "Consider what the presence of a plate boundary tells us — it raises the probability compared to other regions, but what does it NOT tell us?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6SCI-9.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student reads that Japan and Indonesia both experience frequent earthquakes and tsunamis. The student incorrectly concludes that all regions with frequent earthquakes must also have tsunamis. Using what actually triggers a tsunami at a plate boundary, explain what mistake the student made and what additional condition must be present for an earthquake to produce a tsunami.",
+    "problemText": "A geologist studies two regions and gathers the following information: Region M sits on the coast, where an oceanic plate meets a continental plate at a convergent boundary, and has experienced many earthquakes and several volcanic eruptions over the past two hundred years. Region N sits hundreds of kilometers inland, also on a convergent boundary where two continental plates are colliding, and has experienced many earthquakes but no volcanic eruptions in the same time period. Based on the boundary types and geographic settings, which region carries an elevated risk of tsunami hazards, and why?",
     "choices": [
-      "The student did not consider that Japan and Indonesia are island nations; a tsunami can only form when an earthquake shifts the seafloor suddenly, which requires a coastal subduction zone where the ocean sits above the boundary.",
-      "The student ignored that earthquakes occur at many boundary types and not all have water above them; a tsunami requires the seafloor to suddenly shift underwater at a location where a large ocean body is present directly above the plate boundary.",
-      "The student assumed all earthquakes happen at coastlines; a tsunami requires the earthquake to occur specifically at a subduction zone located beneath an ocean, where the sudden movement of the seafloor displaces the water column above it.",
-      "The student forgot that transform boundaries also produce earthquakes but no volcanoes; a tsunami requires the earthquake to displace a large volume of ocean water at a coastal convergent boundary where oceanic plates meet continents."
+      "Region M, because a coastal boundary where an oceanic plate is subducted can produce earthquakes that suddenly shift the seafloor and displace the ocean water above it; Region N's inland location means there is no ocean above its boundary to be displaced",
+      "Region N, because inland convergent boundaries produce much stronger earthquakes than coastal boundaries and generate larger ocean waves that travel farther inland to affect populated areas",
+      "Both regions equally, because any convergent boundary with a history of strong earthquakes over two hundred years will eventually produce a tsunami regardless of coastal or inland location",
+      "Neither region, because tsunamis only form from volcanic eruptions beneath the ocean surface, and earthquakes occurring at plate boundaries cannot displace enough water to create hazardous waves"
     ],
     "answer": "A",
     "hints": [
-      "Both Japan and Indonesia sit on subduction zones at the edge of the Pacific — what do they have in common that the Himalayas do not?",
-      "A tsunami forms when the seafloor suddenly moves — the ocean has to be sitting directly above the plate boundary for the water to be displaced."
+      "Think about what is required for a tsunami to form — what must be displaced, and does every region have that?",
+      "Recall that location matters: a coastal boundary and an inland boundary are both convergent, but they carry different hazard mixes because of what sits above or below them."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6SCI-9.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geological survey maps four regions. Region 1: coastal, oceanic-continental subduction zone, two-hundred-year record of earthquakes and volcanoes. Region 2: inland, continent-to-continent convergent boundary, five-hundred-year record of earthquakes only. Region 3: coastal, oceanic-continental subduction zone, one-hundred-year record of earthquakes only, no eruptions yet. Region 4: coastal, transform boundary, three-hundred-year record of earthquakes only. A city planner is deciding which three of these regions most urgently need separate warning systems for both earthquakes AND tsunamis. Which three regions should receive both systems, and explain why the fourth region should not?",
+    "problemText": "A team of geologists discovers a region with the following characteristics: (1) The region sits on the coast. (2) Surveys using the Unit 4 method show that an oceanic plate has been steadily closing the distance with a continental plate for millions of years. (3) The historical record spanning five hundred years shows frequent earthquakes and many volcanic eruptions. (4) A large earthquake struck this region seventy years ago. A government official claims that because seventy years have passed since the last major earthquake, the region is now 'safer' and carries less elevated risk than it did before the last earthquake. Using your understanding of what causes elevated risk, explain whether the official's claim is correct.",
     "choices": [
-      "Regions 1, 2, and 3 should receive both systems because they all sit on convergent boundaries and have long historical records; Region 4 should not because its transform boundary does not produce the full range of hazards.",
-      "Regions 1, 3, and 4 should receive both systems because they are all coastal; Region 2 should not because it is inland and cannot produce tsunamis, even though it does sit on a convergent boundary.",
-      "Regions 1, 2, and 4 should receive both systems because they have the longest records overall; Region 3 should not because it has not produced eruptions yet, so it may not be as hazardous.",
-      "Regions 1 and 3 should receive both systems; Region 4 should only receive an earthquake system; Region 2 should only receive an earthquake system because the specific combination of coastal location and oceanic-continental subduction zone is needed for tsunami risk, and transform boundaries do not produce tsunamis."
+      "The official is correct — after a major earthquake releases stress at the plate boundary, the risk of future earthquakes drops significantly until stress builds back up over many decades",
+      "The official is incorrect — elevated risk is based on the plate boundary type and the long-term historical pattern, not on when the last event happened; the boundary itself has not changed or become inactive, so the risk remains elevated",
+      "The official is correct — geological patterns show that major earthquakes at the same boundary require at least one hundred years to rebuild enough stress for the next major event, making seventy years a safe period",
+      "The official is incorrect — regions that experience earthquakes become progressively more dangerous over time, so the passage of seventy years without an earthquake means stress has been building and the region is now more hazardous than it was immediately after the last earthquake"
     ],
     "answer": "B",
     "hints": [
-      "Coastal location is necessary for tsunami risk because the ocean above must be displaced — which regions are coastal?",
-      "Think about which of the coastal regions can actually produce large undersea earthquakes that shift the seafloor — what type of boundary does that, and which coastal region does not have it?"
+      "Think about what 'elevated risk' is based on — is it the timing of the last event, or is it something more permanent that characterizes the location?",
+      "Consider whether a plate boundary changes or 'goes away' after an earthquake occurs. If the boundary is still there, does the source of the hazard still exist?"
     ]
   }
 ]

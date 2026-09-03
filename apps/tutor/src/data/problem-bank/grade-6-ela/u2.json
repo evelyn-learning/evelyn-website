@@ -228,136 +228,22 @@
     ]
   },
   {
-    "id": "m6ela-point-of-view-of-the-narrator-001",
-    "loId": "m6ela.point-of-view-of-the-narrator",
-    "cedCode": "M6ELA-2.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A story is told this way: 'I pushed open the heavy door and stepped into the library. The smell of old paper made me smile.' What is the point of view of this narrator?",
-    "choices": [
-      "First person, because the narrator is a character inside the story telling it as I",
-      "Second person, because the narrator uses the pronoun you to speak directly to someone else in the narrative",
-      "Third person limited, because the narrator focuses on the thoughts and feelings of one character in the story",
-      "Third person omniscient, because the narrator knows and shares the inner thoughts of all the characters"
-    ],
-    "answer": "A",
-    "hints": [
-      "Use the whose-thoughts test: whose head are you inside when you read this?",
-      "Look at the pronouns the narrator uses to refer to themselves in the story"
-    ]
-  },
-  {
-    "id": "m6ela-point-of-view-of-the-narrator-002",
-    "loId": "m6ela.point-of-view-of-the-narrator",
-    "cedCode": "M6ELA-2.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this passage: 'Marcus stared at the test paper and felt his stomach drop. He knew he should have studied harder. Across the room, his best friend Nina was already halfway done.' Which one does the reader know the thoughts of?",
-    "choices": [
-      "Both Marcus and Nina, because both characters are mentioned in the passage",
-      "Only Marcus, because only his inner feeling and worry are reported directly",
-      "Only Nina, because she appears second in the passage",
-      "Neither character, because the narrator uses names instead of I"
-    ],
-    "answer": "B",
-    "hints": [
-      "Look for sentences that tell you what a character is thinking or feeling inside their own head",
-      "When the passage says 'Nina was already halfway done,' does that report what Nina was thinking, or just what she was doing?"
-    ]
-  },
-  {
-    "id": "m6ela-point-of-view-of-the-narrator-003",
-    "loId": "m6ela.point-of-view-of-the-narrator",
-    "cedCode": "M6ELA-2.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A story begins: 'You grab your backpack and hurry down the stairs before your mom notices you left your lunch on the table.' What point of view is this, and what does it do?",
-    "choices": [
-      "Third person limited, because it describes a person doing things",
-      "First person, because the narrator is part of the story",
-      "Second person, because the narrator speaks directly to the reader as you",
-      "Third person omniscient, because the narrator knows multiple characters' thoughts"
-    ],
-    "answer": "C",
-    "hints": [
-      "Does the narrator call the character 'I,' 'he/she,' or 'you'?",
-      "Which pronoun means the narrator is speaking straight to the reader instead of about someone else?"
-    ]
-  },
-  {
-    "id": "m6ela-point-of-view-of-the-narrator-004",
-    "loId": "m6ela.point-of-view-of-the-narrator",
-    "cedCode": "M6ELA-2.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this passage: 'Priya wanted to tell her father the truth about the broken lamp, but fear kept her frozen. Her father walked into the room, already worried about his job interview later.' The passage tells you one character's fear and another character's worry. Why does this passage have to be third person omniscient instead of third person limited?",
-    "choices": [
-      "Because it uses third person pronouns and character names instead of I",
-      "Because the narrator is not a character inside the story telling it",
-      "Because it describes two characters doing different things in different parts of the room",
-      "Because it opens the thoughts of two different characters in the same account, rather than just one"
-    ],
-    "answer": "D",
-    "hints": [
-      "The whose-thoughts test is the real test for point of view. How many heads are open in this passage?",
-      "Think about what separates third person limited from third person omniscient according to the definition"
-    ]
-  },
-  {
-    "id": "m6ela-point-of-view-of-the-narrator-005",
-    "loId": "m6ela.point-of-view-of-the-narrator",
-    "cedCode": "M6ELA-2.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A story is told entirely in third person with pronouns like he, she, and they. Inside the story, one character says out loud to another character: 'I can't believe I forgot my keys again!' Why does this character's I not change the point of view of the whole story to first person?",
-    "choices": [
-      "Because a character's own words inside quotation marks belong to that character's voice, not the narrator's voice",
-      "Because the narrator uses third person pronouns throughout the narration while the character's spoken words are separate from the narration itself",
-      "Because dialogue spoken by characters is written differently from narration and does not affect the narrator's point of view",
-      "Because the author decided to keep the main story told in third person even though characters are allowed to speak their own words"
-    ],
-    "answer": "A",
-    "hints": [
-      "Remember: only the narration decides the point of view, not what characters say out loud",
-      "What is the difference between an I inside quotation marks and an I in the narration itself?"
-    ]
-  },
-  {
-    "id": "m6ela-point-of-view-of-the-narrator-006",
-    "loId": "m6ela.point-of-view-of-the-narrator",
-    "cedCode": "M6ELA-2.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A story reads: 'I have perched on the windowsill of Room 203 for three years. I watch the students come and go, and I have noticed that hardly anyone looks up at me. Today, Marcus walked in and seemed troubled about something I could not know.' Who is the narrator, and how can you tell from the content that this narrator is not the author's real self?",
-    "choices": [
-      "The narrator is Marcus, because his name appears in the story and he is the main character",
-      "The narrator is an invented voice, something on the windowsill, because no human author could have been a windowsill object for three years",
-      "The narrator is a student in the classroom, because the story is set in a school",
-      "The narrator is the real author, because the use of I means the author is writing directly to the reader"
-    ],
-    "answer": "B",
-    "hints": [
-      "Look for a detail about the narrator that could not possibly be true of a real, living person writing the story",
-      "The narrator-is-not-the-author trap is avoided by finding proof that the narrator is an invented voice, not the writer speaking directly"
-    ]
-  },
-  {
     "id": "m6ela-theme-objective-summary-001",
     "loId": "m6ela.theme-and-objective-summary",
     "cedCode": "M6ELA-2.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A theme is different from a topic. Which of the following is a theme rather than a topic?",
+    "problemText": "Which of the following is a theme rather than a topic? Remember: a theme is a complete sentence that says something about people or life, while a topic is just a word or two naming what the story keeps circling.",
     "choices": [
-      "A single word that names the general subject of a story without making any statement or claim about it.",
-      "A one- or two-word label that identifies what a story is about but does not express a complete thought or message.",
-      "A general category like 'courage' or 'family' that appears in many stories and serves as the basic subject matter.",
-      "Lying can lead to bigger problems than the truth would have caused."
+      "A general topic or subject word that names what a story explores without making a statement about life or people.",
+      "A single word or short phrase that identifies the main subject of a story but does not express a complete idea or claim.",
+      "A word that describes the main focus of a story but does not say anything meaningful about what the story teaches us about people or life.",
+      "Keeping a secret for too long can make it harder to share, even when you want to."
     ],
     "answer": "D",
     "hints": [
-      "A theme is a complete sentence that makes a claim about people or life.",
-      "A topic is just one or two words and names the subject without claiming anything."
+      "A theme answers the question 'what does the story show about people?' not just 'what is this story about?'",
+      "Look for the choice that is a full sentence making a claim, not just a single word."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6ELA-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'Always stand up for your friends.' Why is this a rule instead of a theme?",
+    "problemText": "Read this story: 'Marco saved money for three months to buy a video game. The day he had enough, his best friend told him his own family could not afford to buy him anything for his birthday. Marco spent his game money on a gift for his friend instead. A week later, his friend gave Marco a handmade card that took him two days to make.' Which of the following is the topic of this story?",
     "choices": [
-      "It uses the word 'always' at the front, which signals a command rather than a message about what the story showed.",
-      "It tells the reader what they should do rather than what the story demonstrated through the character's experience and outcome.",
-      "It contains an imperative verb that makes it sound like advice someone is giving instead of a lesson the story itself revealed.",
-      "It focuses on actions the reader should take instead of showing what the character learned or what happened as a result."
+      "Generosity",
+      "Generosity can feel better than getting what you planned to buy.",
+      "Friendship and sacrifice",
+      "Giving gifts is always the right choice."
     ],
     "answer": "A",
     "hints": [
-      "Watch for words like 'always' and 'never' at the front of your sentence.",
-      "A theme reports what happened in the story, not what someone should do."
+      "The topic names what the story circles around, in just one or two words.",
+      "The topic does not make a claim or tell a rule—it only names the subject."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6ELA-2.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this summary of a story: 'The main character is so brave and decides to climb the mountain. The view is absolutely gorgeous. Then she reaches the top.' Which problem does this summary have?",
+    "problemText": "A student wrote this summary of a story about a girl named Sofia who trained for a swimming competition: 'Sofia is an amazing athlete who trains for a race. She practices every day, which is pretty cool. In the race she swims really fast.' Which sentences in this summary contain opinions or judgments that should be removed?",
     "choices": [
-      "It uses subjective language like 'so brave' and 'absolutely gorgeous' to describe events, adding the writer's opinions rather than reporting only what actually happened in the story.",
-      "It includes the words 'so brave' and 'absolutely gorgeous,' which are judgments that do not belong in an objective summary.",
-      "It contains opinion words that make it impossible to tell what the character's true motivation was for climbing or whether the view was actually worth describing.",
-      "It fails to include enough detail about why the character decided to climb and what she did after reaching the top of the mountain."
+      "'She practices every day' and 'In the race she swims really fast'",
+      "'Sofia is an amazing athlete' and 'which is pretty cool'",
+      "Only 'In the race she swims really fast'",
+      "Only 'She practices every day'"
     ],
     "answer": "B",
     "hints": [
-      "Objective summaries report what happened without grading whether something was good, bad, or interesting.",
-      "Words that tell the reader how the writer felt about the story do not belong in a summary."
+      "Judgments are words that grade or rate something, like saying whether it is good, bad, or interesting.",
+      "Ask: would a reader who disliked this story disagree with those words?"
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6ELA-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this story: 'Marcus spent all week building a treehouse in his backyard and told his best friend Leo he could not help. When the treehouse was done, Marcus invited Leo over to see it. Leo looked at it for one minute and left without saying anything.' A student wants to build a theme statement. The student asks three questions: What does the character want? What gets in the way? What is different by the end? Which of these correctly answers all three questions?",
+    "problemText": "Read this story: 'Jamal signed up to give a presentation in class but did not prepare. The night before, he asked his parents for help, and they showed him how to make a poster. The next morning he added a few of his own ideas. During the presentation, two kids asked him questions he could not answer, but when he admitted he did not know, they said they wanted to learn more anyway.' A student proposed this theme: 'You should always ask your parents for help when you are not ready.' Why is this not a good theme statement?",
     "choices": [
-      "Marcus wants to show Leo how good he is at building things. The treehouse itself gets in the way because it is so complicated to build. By the end, Marcus felt proud of his finished work and his hard work paid off.",
-      "Marcus wants Leo to admire the work he completed on his own. Leo's reaction is a problem because Leo does not seem interested or impressed by the treehouse. By the end, Marcus realized that finishing a project alone does not guarantee that others will care about it the way he hoped.",
-      "Marcus wants to build the treehouse alone and without help. He finishes it, but Leo does not seem to care about his work. By the end, Marcus learned that keeping people out can feel lonely even when the project succeeds.",
-      "Marcus wants his friendship with Leo to stay strong through the building process. The difficulty of building alone gets in the way of that goal. By the end, Marcus and Leo stopped being close friends because they did not spend time together on the project."
+      "The story does not mention school, so it cannot have a theme about school.",
+      "It is too short to be a real theme.",
+      "It starts with 'always,' which is a sign it is a rule or command, not a theme.",
+      "It only uses one detail from the story instead of two."
     ],
     "answer": "C",
     "hints": [
-      "The three questions help you find what the story actually shows, not what you wish happened or what makes logical sense.",
-      "Your answers to all three questions should lead to a theme about keeping people out or excluding others, not about pride or friendship as a general idea."
+      "Look at the key words at the start of the sentence. Words like 'always' and 'never' suggest you may have written a command instead of reporting what happened.",
+      "A good theme says what the story shows happening to people, not what people should do."
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6ELA-2.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student built this theme from a story: 'Hard work always pays off.' The student then tried to find two separate details from the text to prove the theme. The student could only find one detail about the character working hard. Why is this a problem, and what should the student do?",
+    "problemText": "Read this story: 'Leo promised his younger cousin he would teach her to ride a bike over the summer. In July he was busy with camp, so he skipped two lessons. When he finally came back in August, his cousin would not ride with him because she felt he had forgotten about her. Leo apologized and wrote her a note explaining why he missed the lessons. The next day she agreed to practice with him, and they spent the last two weeks of summer riding every afternoon.' Which statement best describes the complete objective summary of this story?",
     "choices": [
-      "The student chose a theme that uses the word 'always,' which makes it sound like a rule or command rather than a claim about what the story demonstrated, and should rewrite the theme and locate two separate supporting details from the text.",
-      "The student picked a topic that is too broad, so the student should choose a narrower topic like 'work' instead of 'hard work.'",
-      "A theme only needs one supporting detail to be true, so the student did not make a real error and may submit the work.",
-      "The theme itself is a rule, not a claim about what the story showed, and the student should also rewrite it to remove 'always' and find two details that support a revised theme."
+      "Leo taught his cousin to ride a bike over the summer because he made a promise, and by spending time with her in August and September they grew closer through their shared activity.",
+      "Leo missed some bike lessons in July because of camp and his cousin was hurt by this, but he wrote her a note apologizing and they eventually practiced riding together throughout the remainder of summer.",
+      "Leo promised his cousin he would teach her to ride a bike, went to camp in July, and came back in August to find that she was upset with him for missing lessons until he apologized to her.",
+      "Leo skips bike lessons in July because he is busy, but comes back in August. His cousin will not ride until he apologizes and explains why he missed the lessons. They then ride together for the rest of summer."
     ],
     "answer": "D",
     "hints": [
-      "A theme needs to fit the whole story, not just one part of it, which means you need proof in two separate places.",
-      "Sentences that begin with 'always' or 'never' are usually telling someone what to do, not reporting what the story showed."
+      "An objective summary reports events in order and reaches the ending—it includes both the problem and how it turns out.",
+      "Cross out any choice that judges the story (calling something 'wonderful' or 'unfair') or leaves out a key event the ending depends on."
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6ELA-2.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this story: 'Owen's family moved to a new town where he knew nobody. His old friends texted him every day at first, then three times a week, then once a month. By spring, Owen had made friends in his new school and stopped texting them back. His old friends texted him one last time in June, asking why he disappeared.' A student wrote this summary: 'Owen moves to a new town and forgets about his old friends, which is sad. He makes new friends and they text him less. At the end they ask him why he left them.' Now the student wants to identify and fix all the problems with this summary so it becomes fully objective and reaches the ending correctly.",
+    "problemText": "Read this story: 'Yuki painted a landscape for the school art show and hung it without a title. Three people asked her what it was supposed to be, and each time she said, \"Whatever you see.\" A visitor spent ten minutes looking at it and then told her it reminded him of his childhood home, even though Yuki had painted a made-up place. Another visitor said it was the most confusing piece in the show and complained it had no name. Yuki's painting sold to the first visitor.' A student proposed this theme: 'A painting without a title is better than a painting with one.' To test whether a theme is strong, you should be able to find at least two separate details in the story that both support it. Using this test, explain why this theme would NOT be strong, even though the story does show a painting selling.",
     "choices": [
-      "The summary includes the judgment 'which is sad' and rewrites the ending incorrectly, claiming his old friends asked why he 'left them' instead of asking why he stopped texting back. A corrected version would be: 'Owen's family moves to a new town where he knows nobody. His old friends text him less frequently as the months pass. Owen makes friends in his new school and stops texting his old friends back. In June his old friends text him asking why he disappeared.'",
-      "The summary adds an opinion by calling the situation sad, and it misrepresents the ending by reporting that the old friends asked why Owen 'left them' when the story actually shows they asked why he disappeared, which are two different questions that change the meaning.",
-      "The summary fails to explain Owen's motivations clearly and should add that Owen felt excited about his new friends, which caused him to forget about his old friends and stop responding to their messages over time.",
-      "The summary focuses too much on the friendship aspect of the story when the real point is about how people change after moving, and it should emphasize Owen's growth instead of describing what his old friends did."
+      "The theme makes a comparison using 'better than,' but the story shows that people disagreed about its value, so it is not supported by two separate details that both point the same way.",
+      "One visitor complained the painting had no name and found it confusing, while another visitor loved the title-less painting so much he bought it, which means the story gives contradictory evidence rather than two details supporting the same point.",
+      "The story shows a visitor saying the untitled painting was confusing and another saying it reminded him of his home, but these details support opposite conclusions about whether having no title was good or bad.",
+      "The theme depends on proving that untitled paintings are better in general, but the story only shows one painting, and one visitor's opinion that it was confusing contradicts the idea that no title is an advantage."
     ],
     "answer": "A",
     "hints": [
-      "Objective summaries remove judgments like 'sad' and report exactly what the text says, not what the reader thinks the characters meant.",
-      "The ending of a summary must show what actually happened in the story, using the text's own words and events to guide you."
+      "Apply the two-details test: say the theme sentence, then point to two different places in the text that both support it.",
+      "Look at what different people in the story believed about Yuki's painting. Did they all agree on whether no title was a good choice?"
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-001",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A story uses the pronouns he, she, and they throughout, and the narration goes inside the mind of exactly one character to show what that character thinks and feels. What is the point of view of this story?",
+    "choices": [
+      "Third person limited",
+      "Third person omniscient",
+      "First person",
+      "Second person"
+    ],
+    "answer": "A",
+    "hints": [
+      "The question tells you the narration uses he, she, and they — not I or you.",
+      "Exactly one character's thoughts are shown, not two or more characters' thoughts."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-002",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this excerpt: \"Maya pressed the doorbell and held her breath. She was sure Mrs. Chen would recognize the torn edge of the library book she was returning.\" Using the whose-thoughts test, determine what the narration allows the reader to know about this moment.",
+    "choices": [
+      "The reader knows what both Maya and Mrs. Chen are thinking at the same time",
+      "The reader knows what Maya is thinking but not what Mrs. Chen is thinking",
+      "The reader knows only what Mrs. Chen is thinking, not what Maya thinks",
+      "The reader cannot know anyone's thoughts because the narration is told from outside the story"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at the sentence structure: which character's mind does the narration actually open up to the reader?",
+      "Remember that actions done by a character without the narration saying what they think or feel do not count as opening that character's thoughts."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-003",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sentence in a story reads: \"You duck under the low branch and feel the rough bark scrape your shoulder as you run toward the creek.\" This sentence is spoken by the narration, not by a character in dialogue. What point of view is being used?",
+    "choices": [
+      "First person",
+      "Third person limited",
+      "Second person",
+      "Third person omniscient"
+    ],
+    "answer": "C",
+    "hints": [
+      "Pay attention to which pronoun the narration itself uses to speak to the reader.",
+      "The pronoun you in narration (not in quotation marks) is the signal for this point of view."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-004",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage: \"Kenji looked out the window and wondered if his best friend was also staring at the rain, thinking about the cancelled game. Down the block, his best friend Akira sat on his porch and thought about the same thing — but about Kenji. They were thinking the same thoughts at the exact same moment, though neither one knew it.\" Explain why this passage cannot be first person or second person, and name the point of view that fits.",
+    "choices": [
+      "This must be third person limited because it uses the names Kenji and Akira instead of pronouns like I or you throughout the narration",
+      "This must be first person because the narration reveals the private thoughts and feelings of one character wondering about what another character is thinking",
+      "This must be second person because the narration is written as a series of direct addresses to the reader about what both characters know and feel",
+      "This must be third person omniscient because the narration opens the thoughts of two different characters in the same passage"
+    ],
+    "answer": "D",
+    "hints": [
+      "Use the whose-thoughts test: count how many different characters' private thoughts or feelings the narration actually shows inside.",
+      "When the narration reveals something that two characters do not know about each other, it has gone inside both of their heads — that is the key mark of one particular point of view."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-005",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a story, a character named Rosa says out loud to her friend, \"I promise I saw a deer in the backyard this morning.\" The narration describing Rosa is in third person and goes: \"Rosa promised she had seen a deer, though she was not entirely sure.\" Explain what makes the narration voice different from the character's voice, and identify what the reader can know that Rosa does not admit.",
+    "choices": [
+      "The character Rosa speaks as I, but the narration speaks as she; the reader knows Rosa is uncertain even though she sounds certain out loud",
+      "The character Rosa speaks as I, but the narration speaks as she; the reader knows Rosa is deliberately choosing to lie to her friend about what she saw",
+      "The character Rosa speaks as I, but the narration speaks as she; the reader knows that Rosa's statement matches what actually happened in the backyard",
+      "The character Rosa speaks as I, but the narration speaks as she; the reader knows Rosa is hiding information that she will later share with someone else"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at what the narration privately reveals about Rosa's mind — what does it tell us that her spoken promise does not?",
+      "Remember that the narration's access to a character's thoughts can tell the reader something that character is hiding or not telling the truth about."
+    ]
+  },
+  {
+    "id": "m6ela-point-of-view-of-the-narrator-006",
+    "loId": "m6ela.point-of-view-of-the-narrator",
+    "cedCode": "M6ELA-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A story begins: \"I have been the same red bicycle leaning against the garage wall for three years. In that time, I have never been ridden, and I have watched four different children walk past me on their way to the bus stop. I wonder if any of them ever notice the rust forming on my chain.\" Explain why the narrator cannot be the author of this story, and identify one thing you know about the narrator that is not a thought or a feeling but is still only knowable from the narration's point of view.",
+    "choices": [
+      "The narrator is a bicycle because the text says 'red bicycle,' and an author is a person, so the author did not invent a person; something knowable only from the narrator's point of view is that the bicycle has been rusted",
+      "The narrator is a bicycle because it says I and refers to itself as a bicycle, and an author is a person; something knowable only from this narrator's view is that no one has ever ridden it for three years",
+      "The narrator is a bicycle because no real person could be a bicycle, so the author invented this voice as a made-up character; the narrator can see all the children walk by every day, something no bicycle in real life could do",
+      "The narrator must be a child because only a child could wonder about whether other children notice things, so the author pretended to be a child; something only the narrator could know is the feeling of being ignored"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for a detail in the narration that could never be true of the real, living author — that proves the narrator is invented.",
+      "After you prove the narrator is not the author, find something the narration reveals that goes beyond thoughts and feelings — something only someone in the bicycle's exact spot could observe or know."
     ]
   }
 ]

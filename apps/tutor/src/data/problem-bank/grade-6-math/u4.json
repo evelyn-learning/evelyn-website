@@ -114,136 +114,22 @@
     ]
   },
   {
-    "id": "m6math-gcf-lcm-the-distributive-property-001",
-    "loId": "m6math.gcf-lcm-and-the-distributive-property",
-    "cedCode": "M6MATH-4.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which number is a factor of 20?",
-    "choices": [
-      "5",
-      "7",
-      "10",
-      "40"
-    ],
-    "answer": "A",
-    "hints": [
-      "A factor divides the number evenly with nothing left over.",
-      "Try dividing 20 by each choice and see which one goes in evenly."
-    ]
-  },
-  {
-    "id": "m6math-gcf-lcm-the-distributive-property-002",
-    "loId": "m6math.gcf-lcm-and-the-distributive-property",
-    "cedCode": "M6MATH-4.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A teacher has 15 red pencils and 20 blue pencils. She wants to put all the pencils into identical bundles with no pencils left over, with the greatest number of bundles possible. How many bundles can she make?",
-    "choices": [
-      "3",
-      "5",
-      "15",
-      "20"
-    ],
-    "answer": "B",
-    "hints": [
-      "The number of bundles must be a common factor of both 15 and 20.",
-      "Find the greatest number that divides evenly into both 15 and 20."
-    ]
-  },
-  {
-    "id": "m6math-gcf-lcm-the-distributive-property-003",
-    "loId": "m6math.gcf-lcm-and-the-distributive-property",
-    "cedCode": "M6MATH-4.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "The multiples of 6 are 6, 12, 18, 24, 30, and so on. Which of the following is a multiple of 9?",
-    "choices": [
-      "18",
-      "32",
-      "27",
-      "36"
-    ],
-    "answer": "C",
-    "hints": [
-      "A multiple of 9 is the result of multiplying 9 by a whole number.",
-      "Check which choice can be divided evenly by 9 with no remainder."
-    ]
-  },
-  {
-    "id": "m6math-gcf-lcm-the-distributive-property-004",
-    "loId": "m6math.gcf-lcm-and-the-distributive-property",
-    "cedCode": "M6MATH-4.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Omar is rewriting the sum 32 + 48 using the distributive property. He pulls out the greatest common factor and writes 32 + 48 = ___ × (4 + 6). What number should replace the blank?",
-    "choices": [
-      "16",
-      "10",
-      "12",
-      "8"
-    ],
-    "answer": "D",
-    "hints": [
-      "The number in the blank is the GCF of 32 and 48.",
-      "When you pull out the GCF and divide each original number by it, you should get 4 and 6."
-    ]
-  },
-  {
-    "id": "m6math-gcf-lcm-the-distributive-property-005",
-    "loId": "m6math.gcf-lcm-and-the-distributive-property",
-    "cedCode": "M6MATH-4.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A coffee shop runs a special every 6 days and holds a raffle every 9 days. Today both events are happening. How many days from now will both the special and the raffle happen on the same day again?",
-    "choices": [
-      "18",
-      "15",
-      "3",
-      "54"
-    ],
-    "answer": "A",
-    "hints": [
-      "This question asks when two repeating events line up again, so you need the smallest common multiple, not the greatest common factor.",
-      "List the multiples of 6 and the multiples of 9, then find the smallest number on both lists."
-    ]
-  },
-  {
-    "id": "m6math-gcf-lcm-the-distributive-property-006",
-    "loId": "m6math.gcf-lcm-and-the-distributive-property",
-    "cedCode": "M6MATH-4.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Two numbers have a GCF of 7 and an LCM of 84. One of the numbers is 28. Using what you know about factors and multiples, which of the following could be the other number?",
-    "choices": [
-      "14",
-      "42",
-      "21",
-      "56"
-    ],
-    "answer": "B",
-    "hints": [
-      "The other number must be a factor of the LCM (84) and a multiple of the GCF (7).",
-      "Check that the GCF of your choice and 28 is really 7, and that the LCM of your choice and 28 is really 84."
-    ]
-  },
-  {
     "id": "m6math-adding-subtracting-decimals-001",
     "loId": "m6math.adding-and-subtracting-decimals",
     "cedCode": "M6MATH-4.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "In the number 7.34, what place value does the digit 3 hold?",
+    "problemText": "In the decimal 14.38, which digit is in the hundredths place?",
     "choices": [
-      "Ones place",
-      "Hundredths place",
-      "Tenths place",
-      "Tens place"
+      "3",
+      "4",
+      "8",
+      "1"
     ],
     "answer": "C",
     "hints": [
-      "The first digit after the decimal point is in the tenths place.",
-      "Count the position of the 3 starting from the decimal point moving right."
+      "The hundredths place is the second digit after the decimal point.",
+      "Count one place to the right of the decimal point, then one more."
     ]
   },
   {
@@ -252,17 +138,17 @@
     "cedCode": "M6MATH-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student lines up two decimals to add them but puts the last digits in the same column instead of putting the decimal points on top of each other. Why is this method incorrect?",
+    "problemText": "Two swimmers recorded their lap times. One swimmer completed a lap in 8.5 seconds. The other completed a lap in 8.47 seconds. To line up these decimals correctly before comparing them, what should you write as the first swimmer's time so both numbers have the same number of decimal places?",
     "choices": [
-      "It changes the place value of each digit, causing tenths to align with hundredths or other mismatched place values instead of matching digits with the same place value.",
-      "It makes the numbers too small to add together because aligning by the last digit shifts the decimal point position incorrectly.",
-      "It prevents the student from using the carrying method, which is the only way to add decimal numbers together correctly.",
-      "It causes tenths to line up with hundredths, so digits with different place values are added together."
+      "85.0",
+      "8.05",
+      "8.5",
+      "8.50"
     ],
     "answer": "D",
     "hints": [
-      "Think about what happens when digits do not line up by place value.",
-      "Review the key rule: decimal points must sit directly on top of each other, just like ones sit on top of ones in whole-number addition."
+      "Padding with zeros does not change the value of a decimal.",
+      "The second time has two digits after the decimal point, so the first time should too."
     ]
   },
   {
@@ -271,17 +157,17 @@
     "cedCode": "M6MATH-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "You need to compute 8.3 + 2.64 using the standard algorithm. Before you start adding, what should you do to make sure you do not skip any place values by accident?",
+    "problemText": "A florist has 6.2 meters of ribbon. She uses 2.4 meters to wrap a bouquet. Before calculating the exact amount of ribbon left, she rounds 6.2 to 6 and rounds 2.4 to 2, then subtracts. What estimate does she get?",
     "choices": [
-      "Pad 8.3 with a zero so it reads 8.30, making both numbers have two decimal places.",
-      "Round 8.3 to 8 and round 2.64 to 3 so that the numbers are easier to work with in your head.",
-      "Write 8.3 below 2.64 and align them by matching the last digits on the right side of each number.",
-      "Convert both decimals to fractions first, then add the fractions before converting back to decimal form."
+      "4 meters",
+      "8 meters",
+      "3.8 meters",
+      "2.8 meters"
     ],
     "answer": "A",
     "hints": [
-      "The goal is to make sure every column has a digit in it before you add.",
-      "Remember: 8.3 and 8.30 represent the same value, and padding does not change the number."
+      "Rounding to the nearest whole number means looking at the first digit after the decimal point.",
+      "Once you have the rounded values, subtract them like whole numbers."
     ]
   },
   {
@@ -290,17 +176,17 @@
     "cedCode": "M6MATH-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student adds 5.7 + 3.25 by lining up the decimal points and padding 5.7 to 5.70. They get 8.95. To check if this answer is correct, they should subtract one of the addends back out of the sum. Which subtraction should they do, and what result should they get?",
+    "problemText": "A student adds 7.6 + 3.24 and gets 10.84. To check whether this answer is correct, which calculation should the student perform?",
     "choices": [
-      "Compute 8.95 − 3.25 and expect to get 5.70.",
-      "Compute 8.95 − 5.70 and expect to get 3.25.",
-      "Compute 8.95 − 3 and expect to get 5.95.",
-      "Compute 8.95 − 8 and expect to get 0.95."
+      "7.6 + 10.84",
+      "10.84 − 3.24",
+      "3.24 − 7.6",
+      "10.84 + 7.6"
     ],
     "answer": "B",
     "hints": [
-      "The check works by subtracting one addend out of the sum to get back the other addend.",
-      "Either addend can be subtracted, but make sure the one you subtract from 8.95 has the same decimal places as the sum."
+      "When you add two numbers, you can check the result by subtracting one of the addends from the sum.",
+      "If the answer to the check is the other number you started with, the addition was correct."
     ]
   },
   {
@@ -309,17 +195,17 @@
     "cedCode": "M6MATH-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student estimates that 12.4 − 6.7 should be close to 5 (since 12 − 7 = 5). After computing the exact answer using the standard algorithm with decimal points aligned and padding where needed, the student gets 5.6. Should the student trust this answer?",
+    "problemText": "A student is subtracting 5.3 − 2.68. They line up the decimals correctly and pad 5.3 to 5.30, but after subtracting column by column they get 3.38 as their answer. Before doing the subtraction again, they round 5.3 to 5 and 2.68 to 3, then subtract to estimate. What should their estimate be, and does it match their answer?",
     "choices": [
-      "Yes, but only if the student used carrying to compute it.",
-      "No, because the exact answer should be exactly 5, not 5.6.",
-      "Yes, because 5.6 is close to the estimate of 5, so the answer is reasonable.",
-      "No, because 5.6 is greater than the estimate of 5."
+      "The estimate is 8, which is far from 3.38, so the answer is probably wrong.",
+      "The estimate is 2, which is close to 3.38, so the answer is probably correct.",
+      "The estimate is 2, which is far from 3.38, so the answer is probably wrong.",
+      "The estimate is 3, which is close to 3.38, so the answer is probably correct."
     ],
     "answer": "C",
     "hints": [
-      "An estimate does not have to match the exact answer exactly—it just needs to be close by.",
-      "If your exact answer lands far from your estimate, that is a sign something went wrong. If it lands close, that is a good sign you did it right."
+      "Round each number to the nearest whole number, then subtract those rounded values.",
+      "If the exact answer lands far from the estimate, a place value probably slipped."
     ]
   },
   {
@@ -328,17 +214,131 @@
     "cedCode": "M6MATH-4.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student is subtracting 4.8 from 10 and notices that 10 has no decimal point written. They first pad 4.8 to 4.80, then write 10 as 10.00 to give both numbers the same decimal places and line up the decimal points. After computing 10.00 − 4.80 using the standard algorithm, they get 5.20. They then check by adding: 4.80 + 5.20 = 10.00, which matches the starting number. What does this check tell you?",
+    "problemText": "A science student measures the mass of three samples. Sample A has a mass of 4.8 grams, Sample B has a mass of 6.25 grams, and Sample C has a mass of 2.4 grams. The student wants to add all three masses. Which steps should the student follow to avoid place-value mistakes? (Assume the student has already decided to estimate first to check reasonableness.)",
     "choices": [
-      "The answer 5.20 cannot be checked by addition, because the check only works when both numbers already have decimal places.",
-      "The answer 5.20 is wrong, because 10 and 10.00 are not the same number.",
-      "The answer 5.20 is correct only if the student also rounded 10 to 10 as an estimate.",
-      "The answer 5.20 is correct, and the check confirms that subtraction and addition undo each other when done with aligned decimal points and proper padding."
+      "Stack A and B together by lining up decimal points, add them to get a sum, then stack that result with C by decimal points, pad both to two decimal places, and add them again to find the total.",
+      "Estimate all three by rounding, add the rounded values to check later. Then stack all three numbers lining up decimal points, pad them all to two decimal places, and add column by column.",
+      "Add the whole-number parts (4 + 6 + 2 = 12) and the decimal parts (0.8 + 0.25 + 0.4 = 1.45) separately, then combine them by adding 12 + 1.45 to get the final sum.",
+      "Line up the three numbers by their rightmost digit without regard to decimal points, pad with zeros on the left if needed, then add from right to left using standard column addition."
+    ],
+    "answer": "B",
+    "hints": [
+      "When adding more than two numbers, you still need to line up decimal points and pad to the same number of decimal places.",
+      "Estimate first using rounded whole numbers, then perform the exact calculation and check that it is close to your estimate."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-001",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which list shows all the factors of 20?",
+    "choices": [
+      "1, 2, 4, 5, 10, 20",
+      "1, 2, 3, 4, 5, 20",
+      "20, 40, 60, 80",
+      "1, 2, 4, 20"
+    ],
+    "answer": "A",
+    "hints": [
+      "Factors are whole numbers that divide the original number evenly, with nothing left over.",
+      "Check each choice by dividing 20 by each number listed—if there is a remainder, that number is not a factor."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-002",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two friends are making friendship bracelets. One friend has 15 beads, and the other has 25 beads. They want to divide their beads so that each bracelet uses the same number of beads, and no beads are left over. What is the greatest number of identical bracelets they can make?",
+    "choices": [
+      "15",
+      "5",
+      "25",
+      "75"
+    ],
+    "answer": "B",
+    "hints": [
+      "This problem asks for the biggest number that divides evenly into both 15 and 25—that is the GCF.",
+      "List the factors of 15 and the factors of 25, then find the largest number that appears on both lists."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-003",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A video game saves your progress every 6 minutes. A backup copy is made every 9 minutes. The game just saved and backed up at the same time. How many minutes from now will the save and backup happen together again for the first time?",
+    "choices": [
+      "3",
+      "15",
+      "18",
+      "54"
+    ],
+    "answer": "C",
+    "hints": [
+      "This problem asks when two repeating events will line up again in the future—that is a question about multiples, not factors.",
+      "Find the smallest number that appears on both the list of multiples of 6 and the list of multiples of 9."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-004",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A baker has 32 sugar cookies and 48 chocolate cookies and wants to pack them into identical gift boxes with no cookies left over. For each box to hold the most cookies while keeping the types separated and equal, the baker decides to put 4 sugar cookies and 6 chocolate cookies in each box. Write this distribution using the distributive property in the form: 32 + 48 = ___ × (4 + 6). What number belongs in the blank, and how many boxes can the baker fill?",
+    "choices": [
+      "12 boxes, and the blank is 2",
+      "8 boxes, and the blank is 4",
+      "12 boxes, and the blank is 4",
+      "8 boxes, and the blank is 8"
     ],
     "answer": "D",
     "hints": [
-      "Recall that writing a whole number as a decimal (like 10 as 10.00) does not change its value, and padding works the same way.",
-      "If adding the difference back to the number you subtracted gives you the starting number, the subtraction was done correctly."
+      "Divide each original number (32 and 48) by the number of items of that type going into each box (4 and 6) to find how many boxes can be filled.",
+      "The number that goes in the blank is the GCF of 32 and 48. After you find it, check by multiplying: GCF × (4 + 6) should equal 32 + 48 = 80."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-005",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A restaurant receives a delivery of 20 pounds of chicken and 30 pounds of beef. The manager wants to wrap these meats into identical packages using the distributive property, such that 20 + 30 = GCF × (amount of chicken per package + amount of beef per package). Which of the following correctly shows the packages and the total after pulling out the GCF?",
+    "choices": [
+      "10 packages with 2 pounds of chicken and 3 pounds of beef per package, and 20 + 30 = 10 × (2 + 3)",
+      "5 packages with 4 pounds of chicken and 6 pounds of beef per package, and 20 + 30 = 5 × (4 + 6)",
+      "20 packages with 1 pound of chicken and 1.5 pounds of beef per package, and 20 + 30 = 20 × (1 + 1.5)",
+      "15 packages with 1 pound of chicken and 2 pounds of beef per package, and 20 + 30 = 15 × (1 + 2)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the GCF of 20 and 30, then divide each original amount by the GCF to find what goes in each package.",
+      "Check your answer by multiplying the GCF back through the parentheses; it should equal 50."
+    ]
+  },
+  {
+    "id": "m6math-gcf-lcm-the-distributive-property-006",
+    "loId": "m6math.gcf-lcm-and-the-distributive-property",
+    "cedCode": "M6MATH-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two events occur on a repeating schedule: Event X happens every 10 days, and Event Y happens every 15 days. Both events occurred on day 0. On day 45, only Event Y occurs. A student claims this means Event X does not have a common multiple with Event Y, because they do not meet on day 45. Explain why the student's reasoning is flawed and find the correct day when both events occur together again for the first time after day 0.",
+    "choices": [
+      "The student is wrong because the GCF is not the same as the LCM; both events occur together on day 25.",
+      "The student is wrong because events do not need to meet on every day; the LCM is 30, so both events occur together again on day 30.",
+      "The student is wrong because common multiples are only the multiples that two numbers share; both events occur on day 50.",
+      "The student is correct; the events never meet again because their LCM does not divide into 45."
+    ],
+    "answer": "B",
+    "hints": [
+      "Identify whether this problem needs the GCF or the LCM by asking: 'Am I looking for the biggest shared factor, or the smallest shared multiple?'",
+      "Make a list of multiples of 10 and a list of multiples of 15; find the smallest number that appears on both lists. Then check: does that day divide evenly by both 10 and 15?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-4.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "When you multiply two decimals using the standard algorithm, you first multiply the numbers as if there were no decimal points. Then you count the total number of decimal places in both factors and place the decimal point that many places from the right in your product. If you multiply 3.2 times 1.5, how many total decimal places should be in your product?",
+    "problemText": "When you multiply two decimals using the standard algorithm, what do you do with the decimal points first?",
     "choices": [
-      "0 decimal places",
-      "1 decimal place",
-      "3 decimal places",
-      "2 decimal places"
+      "Remove them permanently from both numbers",
+      "Line them up so they are directly above each other",
+      "Move both decimal points to the right by one place",
+      "Ignore them and multiply the digits as whole numbers"
     ],
     "answer": "D",
     "hints": [
-      "Count the decimal places in 3.2 and in 1.5 separately.",
-      "Add those two counts together to find the total."
+      "Think about the first step described in the multiply-then-count-places rule.",
+      "You will place the decimal point back in AFTER multiplying the whole numbers."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-4.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A notebook costs $2.50. You buy 3 notebooks for school supplies. Before you calculate the exact total, you round $2.50 to $2 and multiply: 2 times 3 equals 6. Why is estimating first a helpful step when multiplying decimals?",
+    "problemText": "A single notebook costs $3.25. You buy 2 notebooks for school. What is the total cost? Use the multiply-then-count-places rule to find the exact answer.",
     "choices": [
-      "It shows you roughly where the decimal point should land in the real answer, so you can catch if you placed it in the wrong spot.",
-      "It tells you the exact number of decimal places your product must have and removes the need to count them yourself.",
-      "It gives you a ballpark value to compare against your final answer, helping you spot if the decimal point ended up in a wrong location that makes the result unreasonably large or small.",
-      "It proves that your rounded numbers are correct and will always produce the same result as the exact calculation without any difference."
+      "$6.50",
+      "$65.0",
+      "$0.650",
+      "$5.25"
     ],
     "answer": "A",
     "hints": [
-      "Think about what happens if you calculate 2.50 times 3 and get the decimal in the wrong place—how would you notice?",
-      "Your estimate of 6 is a ballpark, not the exact answer. What would it catch?"
+      "Multiply 325 times 2 first, ignoring decimal points.",
+      "Count the total number of decimal places in both 3.25 and 2, then place the decimal point that many places from the right in your product."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-4.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "You divide 8.4 by 0.7. According to the standard algorithm for decimal division, which step should you do first?",
+    "problemText": "You need to divide 7.2 by 0.9 to find how many groups you can make. First, describe what you must do to the decimal point in 0.9 to turn it into a whole number.",
     "choices": [
-      "Multiply 8.4 by 0.7 to determine how many times the divisor fits into the dividend.",
-      "Shift the decimal point in 0.7 to the right until it is a whole number, and shift the decimal point in 8.4 by the same number of places.",
-      "Place the decimal point in the answer by counting decimal places in both the dividend and divisor, just as you do in multiplication.",
-      "Round 8.4 and 0.7 to whole numbers and divide those instead to find your final answer."
+      "Move it one place to the left to make it 0.09",
+      "Move it one place to the right to make it 9",
+      "Remove it and ignore it",
+      "Move it two places to the right to make it 90"
     ],
     "answer": "B",
     "hints": [
-      "In decimal division, you always shift first before dividing.",
-      "The divisor is 0.7—that is the number you move the decimal in first."
+      "The divisor is 0.9. How many places do you shift it right to become a whole number?",
+      "Remember: the divisor is the number you are dividing BY."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-4.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A rope is 7.5 meters long. You cut it into pieces that are each 1.5 meters long. How many pieces do you get? First estimate: since 1.5 is close to a whole number and the divisor is close to 1, your answer should be close to the dividend. Then solve using the standard algorithm for decimal division.",
+    "problemText": "A bottle of juice costs $2.50. Before you buy, you estimate the total cost by rounding $2.50 to $2 and multiplying by 5 to get about $10. Then you multiply exactly: 250 times 5 equals 1250. Where should you place the decimal point in 1250 to get the exact answer, and why?",
     "choices": [
-      "0.5 pieces",
-      "50 pieces",
-      "5 pieces",
-      "11.25 pieces"
+      "Place it to get 1.250, because 5 is a whole number",
+      "Place it to get 125.0, because 250 has two decimal places",
+      "Place it to get 12.50, because that is closest to the estimate of $10",
+      "Place it to get 1250.0, because the product has no decimal places"
     ],
     "answer": "C",
     "hints": [
-      "Shift the decimal point in the divisor 1.5 one place to the right to make it 15. Shift the decimal point in the dividend 7.5 one place to the right to make it 75.",
-      "After the shift, divide 75 by 15. Your answer should be close to your estimate of roughly 7.5."
+      "After multiplying whole numbers, you count decimal places: 2.50 has 2 decimal places, and 5 has 0.",
+      "Use your estimate to check whether your decimal-point placement makes sense."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-4.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "You multiply 4.2 times 2.3 using the standard algorithm. You ignore the decimal points and multiply 42 times 23 to get 966. You count the decimal places: 4.2 has 1 decimal place and 2.3 has 1 decimal place, for a total of 2. You place the decimal point 2 places from the right to get 9.66. How can you verify this answer is correct?",
+    "problemText": "You divide 8.4 by 0.6 and get a quotient of 14. To check your answer, what operation do you perform with the quotient and one of the original numbers?",
     "choices": [
-      "Divide 9.66 by 2.3 and check whether you get back to 4.2 as the quotient.",
-      "Round 4.2 to 4 and 2.3 to 2, then multiply those estimates to get 8. Since your exact answer 9.66 is reasonably close to your estimate of 8, your decimal placement is likely correct.",
-      "Count the digits in 966 and make sure there are exactly 3 digits before placing the decimal point anywhere in the number.",
-      "Check that 9.66 is close to your estimate. Round 4.2 to 4 and 2.3 to 2; multiply those: 4 times 2 is 8. Since 9.66 is close to 8, the decimal point is in the right place."
+      "Multiply 14 by the original dividend 8.4, and the result should equal 0.6",
+      "Add 14 to 0.6, and the result should equal 8.4",
+      "Divide 14 by 0.6, and the result should equal 8.4",
+      "Multiply 14 by the original divisor 0.6, and the result should equal 8.4"
     ],
     "answer": "D",
     "hints": [
-      "You estimated first. Now check: does your exact answer land close to that estimate?",
-      "If the decimal point were in the wrong place—say, you had written 96.6 instead—would your estimate of 8 catch that mistake?"
+      "A check by multiplying back means: quotient times divisor equals dividend.",
+      "The divisor is the number you divided BY, and the dividend is the number you divided INTO."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-4.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "You are dividing 12.6 by 0.6. Before you shift any decimal points, you estimate. You know that 0.6 is less than 1, so dividing by a number less than 1 gives you an answer that is larger than the dividend. Your estimate is that the answer should be more than 12.6, somewhere around 20 or so. Now you shift: move the decimal point in 0.6 one place to the right to get 6, and move the decimal point in 12.6 one place to the right to get 126. You divide 126 by 6 to get 21. Why was estimating first so important in this problem?",
+    "problemText": "A student divides 4.8 by 0.8 and gets an answer of 0.6. The student then checks by multiplying: 0.6 times 0.8 equals 0.48. The student concludes the answer is correct because the check multiplied back. Explain what went wrong with this student's work, and what the correct answer should be.",
     "choices": [
-      "It told you the answer should be bigger than 12.6, not smaller. If you had forgotten to shift the dividend and divided 12.6 by 6 instead, you would get 2.1, which is way too small. The estimate catches that mistake immediately.",
-      "It showed you that 0.6 and 12.6 are both less than 1, so the quotient must also be less than 1 and cannot exceed the original dividend by any amount.",
-      "It verified that shifting the decimal points in both the dividend and divisor by the same number of places will always produce a quotient that is exactly equal to your estimate with no further checking needed.",
-      "It guaranteed that dividing by any number less than 1 will always give you an answer of approximately 20, regardless of what number you are dividing or what the specific divisor actually is."
+      "The student shifted only one decimal point instead of both; the correct answer is 6",
+      "The student estimated first instead of shifting; the correct answer is 5.76",
+      "The student forgot to count decimal places; the correct answer is 3.84",
+      "The student placed the decimal point in the wrong place during multiplication; the correct answer is 48"
     ],
     "answer": "A",
     "hints": [
-      "Think about the common mistake: shifting only the divisor and forgetting to shift the dividend. What answer would you get? Would your estimate catch it?",
-      "Your estimate said the answer should be bigger than 12.6. Which wrong answer—2.1 or 21—matches the estimate, and which does not?"
+      "Before shifting anything, estimate: 0.8 is less than 1, so dividing by it should give a number BIGGER than 4.8, not smaller. Which answer matches that prediction?",
+      "To divide by 0.8, move the decimal point in both 0.8 and 4.8 the same number of places. Does 0.6 seem reasonable compared to the dividend 4.8?"
     ]
   }
 ]

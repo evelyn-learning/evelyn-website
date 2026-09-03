@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6math-plotting-points-in-all-four-quadrants-001",
-    "loId": "m6math.plotting-points-in-all-four-quadrants",
-    "cedCode": "M6MATH-6.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A point is plotted at the ordered pair (−2, 4). Which axis or region does this point lie on or in?",
-    "choices": [
-      "On the x-axis, because the x-coordinate comes first in the ordered pair and determines position on the horizontal axis",
-      "Quadrant III, because both coordinates are different signs and Quadrant III contains all points where both x and y are negative",
-      "On the y-axis, because the point has a negative number in the x-coordinate position, which means it lies on the vertical axis",
-      "Quadrant II, because the x-coordinate is negative and the y-coordinate is positive"
-    ],
-    "answer": "D",
-    "hints": [
-      "Remember that the sign pattern for Quadrant II is (negative, positive).",
-      "Check: does this point have both coordinates nonzero?"
-    ]
-  },
-  {
-    "id": "m6math-plotting-points-in-all-four-quadrants-002",
-    "loId": "m6math.plotting-points-in-all-four-quadrants",
-    "cedCode": "M6MATH-6.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "On a coordinate plane, you start at the origin and move 5 units to the left, then 3 units down. What ordered pair names the point where you land?",
-    "choices": [
-      "(−5, −3)",
-      "(5, 3)",
-      "(−3, −5)",
-      "(3, 5)"
-    ],
-    "answer": "A",
-    "hints": [
-      "Recall that moving left means the x-coordinate is negative.",
-      "The y-coordinate represents up or down; down is negative."
-    ]
-  },
-  {
-    "id": "m6math-plotting-points-in-all-four-quadrants-003",
-    "loId": "m6math.plotting-points-in-all-four-quadrants",
-    "cedCode": "M6MATH-6.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two points are plotted: point M at (2, −4) and point N at (−4, 2). Why are these two different points and not the same location on the plane?",
-    "choices": [
-      "They are the same distance from the origin but one is in a different quadrant, so they represent distinct locations despite sharing the same numbers",
-      "They have different x-coordinates and different y-coordinates, and the order of the numbers matters because the first number always goes with the x-axis and the second always goes with the y-axis",
-      "One point has a negative number in the y-position and the other has a negative number in the x-position, which changes which axis is affected and thus the location",
-      "The digits are swapped, but swapping the coordinates in an ordered pair produces a different point because position depends on which number comes first"
-    ],
-    "answer": "B",
-    "hints": [
-      "An ordered pair means the order is fixed: (x, y) always.",
-      "What happens when you swap the coordinates in an ordered pair?"
-    ]
-  },
-  {
-    "id": "m6math-plotting-points-in-all-four-quadrants-004",
-    "loId": "m6math.plotting-points-in-all-four-quadrants",
-    "cedCode": "M6MATH-6.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A ship's position is recorded as 6 units east of the starting harbor and 4 units north. If the harbor is at the origin, plot the ship's ordered pair, then identify which quadrant it is in and explain why using the sign pattern.",
-    "choices": [
-      "(4, 6) in Quadrant I because the point is 4 units to the right and 6 units up",
-      "(6, 4) in Quadrant IV because east and north refer to positive directions",
-      "(6, 4) in Quadrant I because both coordinates are positive, matching the (+, +) pattern",
-      "(−6, 4) in Quadrant II because the ship moved in two different directions"
-    ],
-    "answer": "C",
-    "hints": [
-      "East means moving right (positive x); north means moving up (positive y).",
-      "Write the ordered pair as (x, y), then check which quadrant's sign pattern matches."
-    ]
-  },
-  {
-    "id": "m6math-plotting-points-in-all-four-quadrants-005",
-    "loId": "m6math.plotting-points-in-all-four-quadrants",
-    "cedCode": "M6MATH-6.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A video game character starts at the origin. The character moves 3 units left and 5 units down to reach point P, then from point P moves 1 unit right and 2 units up to reach point Q. What is the ordered pair for point Q, and which quadrant does it land in?",
-    "choices": [
-      "(−3, −5) in Quadrant III",
-      "(−4, −7) in Quadrant III",
-      "(2, 3) in Quadrant I",
-      "(−2, −3) in Quadrant III"
-    ],
-    "answer": "D",
-    "hints": [
-      "First find point P by moving left 3 (negative x) and down 5 (negative y) from the origin.",
-      "Then from P, move right 1 unit and up 2 units to locate Q; the first coordinate is the final x-position, and the second is the final y-position."
-    ]
-  },
-  {
-    "id": "m6math-plotting-points-in-all-four-quadrants-006",
-    "loId": "m6math.plotting-points-in-all-four-quadrants",
-    "cedCode": "M6MATH-6.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Three corners of a rectangle are plotted at (3, 2), (−2, 2), and (−2, −1). Based on the coordinate plane and the structure of a rectangle (where sides align with the axes), which ordered pair is the fourth corner, and why does this choice work?",
-    "choices": [
-      "(3, −1), because it has the same x-coordinate as the first point and the same y-coordinate as the third point, which forms a rectangle with sides parallel to the axes",
-      "(2, −1), because the x-coordinate is found by taking the average of 3 and −2, and the y-coordinate −1 matches the third point to complete a quadrilateral",
-      "(3, 2), because the fourth corner of a rectangle must use coordinates that already appeared in at least two of the given corners",
-      "(−1, 3), because swapping the x and y values of the first point (3, 2) gives a related point that could serve as the missing fourth corner"
-    ],
-    "answer": "A",
-    "hints": [
-      "Plot the three given points on a coordinate plane and look at which x-coordinates and y-coordinates they share.",
-      "A rectangle aligned with the axes has corners whose coordinates pair the same x-values with the same two y-values, and vice versa."
-    ]
-  },
-  {
     "id": "m6math-reflecting-points-across-the-axes-001",
     "loId": "m6math.reflecting-points-across-the-axes",
     "cedCode": "M6MATH-6.2",
@@ -228,120 +114,6 @@
     ]
   },
   {
-    "id": "m6math-finding-distance-between-points-001",
-    "loId": "m6math.finding-distance-between-points",
-    "cedCode": "M6MATH-6.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Two points on a coordinate grid share the same first coordinate. What does this tell you about where they are located?",
-    "choices": [
-      "They sit on the same horizontal line.",
-      "They sit on the same vertical line.",
-      "They are the same distance from zero.",
-      "They must both be positive or both be negative."
-    ],
-    "answer": "B",
-    "hints": [
-      "The first coordinate is the x-coordinate, which tells you how far left or right the point is.",
-      "When x-coordinates match, the points line up in one direction only."
-    ]
-  },
-  {
-    "id": "m6math-finding-distance-between-points-002",
-    "loId": "m6math.finding-distance-between-points",
-    "cedCode": "M6MATH-6.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two stores sit at points (6, 3) and (6, 8) on a city map. Both points share the same first coordinate. Which coordinate tells you how far apart the stores are?",
-    "choices": [
-      "The first coordinate; the distance is 6.",
-      "The second coordinate; the distance between them is found by subtracting the differing coordinates, since they sit on the same side of zero.",
-      "The second coordinate; only the coordinates that differ decide the distance.",
-      "Both coordinates together; you must add them to find the total distance."
-    ],
-    "answer": "C",
-    "hints": [
-      "Remember that the matching coordinate just tells you which line the points sit on — it does not affect the distance.",
-      "Only look at the coordinate that changes between the two points."
-    ]
-  },
-  {
-    "id": "m6math-finding-distance-between-points-003",
-    "loId": "m6math.finding-distance-between-points",
-    "cedCode": "M6MATH-6.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A fire station is at (-7, 2) and a hospital is at (-7, 10) on a neighborhood map. What is the distance between them?",
-    "choices": [
-      "3 blocks",
-      "12 blocks",
-      "17 blocks",
-      "8 blocks"
-    ],
-    "answer": "D",
-    "hints": [
-      "The first coordinates are the same, so the points sit on one vertical line.",
-      "Find the distance of each point from zero along that line, then subtract the smaller from the larger."
-    ]
-  },
-  {
-    "id": "m6math-finding-distance-between-points-004",
-    "loId": "m6math.finding-distance-between-points",
-    "cedCode": "M6MATH-6.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two landmarks sit at (5, -3) and (5, 4) on a map. Explain which method you would use to find the distance between them and why. What is the distance?",
-    "choices": [
-      "Add because the zero line sits between the two points; the distance is 7 blocks.",
-      "Subtract because both coordinates are on the same side of zero; the distance is 1 block.",
-      "Subtract because the first coordinates match; the distance is 7 blocks.",
-      "Add because one coordinate is positive and one is negative; the distance is 1 block."
-    ],
-    "answer": "A",
-    "hints": [
-      "The second coordinates are 4 and -3 — one is positive and one is negative, so they are on opposite sides of the zero line.",
-      "When points are on opposite sides of zero, you add the absolute values of their distances from zero."
-    ]
-  },
-  {
-    "id": "m6math-finding-distance-between-points-005",
-    "loId": "m6math.finding-distance-between-points",
-    "cedCode": "M6MATH-6.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student finds the distance between points (9, -2) and (9, 5) by computing 9 - 5 = 4 blocks. Explain what error the student made and find the correct distance.",
-    "choices": [
-      "The student used the first coordinate instead of the second coordinate to find the distance; the correct distance is 7 blocks.",
-      "The student ignored that zero lies between the points and should have added instead; the correct distance is 7 blocks.",
-      "The student subtracted the coordinates in the wrong order, which gave a negative result that needs absolute value; the correct distance is 4 blocks.",
-      "The student used only one of the two differing coordinates in the calculation instead of considering both; the correct distance is 14 blocks."
-    ],
-    "answer": "B",
-    "hints": [
-      "The second coordinates are -2 and 5 — one is negative and one is positive, so they sit on opposite sides of zero.",
-      "When points sit on opposite sides of zero, the method changes: you add their distances from zero instead of subtracting."
-    ]
-  },
-  {
-    "id": "m6math-finding-distance-between-points-006",
-    "loId": "m6math.finding-distance-between-points",
-    "cedCode": "M6MATH-6.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Three buildings are marked on a map: a library at (-8, 3), a museum at (4, 3), and a post office at (4, -6). First, find the distance from the library to the museum. Then find the distance from the museum to the post office. Why does the method change between the first and second distance calculation?",
-    "choices": [
-      "The library and museum share a vertical line, while the museum and post office share a horizontal line, so the operations switch.",
-      "The library and museum are closer than the museum and post office, so you use different methods for close and far points.",
-      "The library and museum share the same second coordinate and sit on the same side of zero, so subtract. The museum and post office share the same first coordinate but sit on opposite sides of zero, so add. The method changes because the relative position of zero changes.",
-      "You always add first, then subtract; the order depends on which building you start from."
-    ],
-    "answer": "C",
-    "hints": [
-      "Identify which coordinate differs for each pair of points, then check whether zero lies between the differing coordinates or not.",
-      "The method depends on whether the two differing coordinates are on the same side of zero or on opposite sides of zero."
-    ]
-  },
-  {
     "id": "m6math-real-world-coordinate-plane-problems-001",
     "loId": "m6math.solving-real-world-coordinate-plane-problems",
     "cedCode": "M6MATH-6.4",
@@ -453,6 +225,215 @@
     "hints": [
       "Identify which coordinate is shared by Flags 1 and 2, and which is shared by Flags 2 and 3.",
       "Calculate the distance along each street separately, being careful about whether coordinates are on the same side or opposite sides of zero."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-001",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Two points sit on the same horizontal line on a coordinate grid. Point A is at (5, 3) and Point B is at (8, 3). Which coordinate tells you that these points are on the same horizontal line?",
+    "choices": [
+      "The first coordinate, 5",
+      "The second coordinate, 3",
+      "The first coordinate, 8",
+      "Both coordinates together"
+    ],
+    "answer": "B",
+    "hints": [
+      "A shared coordinate means one number is the same in both points.",
+      "Horizontal lines go left and right, which direction changes with the first coordinate?"
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-002",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The post office is at (6, 2) and the library is at (6, 9) on a neighborhood map, where each unit is one block. Both points share the same first coordinate. To find the distance between them, which two distances should you find first?",
+    "choices": [
+      "The distance of 6 from zero and the distance of 2 from zero",
+      "The distance of 6 from zero and the distance of 9 from zero",
+      "The distance of 2 from zero and the distance of 9 from zero",
+      "The distance of the first coordinate from the second coordinate"
+    ],
+    "answer": "C",
+    "hints": [
+      "The coordinates that differ between the two points are the ones that matter for distance.",
+      "Since the first coordinates match, look at only the second coordinates: 2 and 9."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-003",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A store is at (-5, 4) and a restaurant is at (-5, 4). What is the distance between the store and the restaurant on the map?",
+    "choices": [
+      "9 blocks",
+      "5 blocks",
+      "4 blocks",
+      "0 blocks"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at whether the two points have the same first coordinate and the same second coordinate.",
+      "If two points are at exactly the same location, how far apart are they?"
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-004",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A mailbox is at (-7, 2) and a tree is at (-2, 2) on a map. Both share the same second coordinate. Find the distance from the mailbox to the tree by first finding each point's distance from zero along the horizontal direction, then deciding whether to add or subtract.",
+    "choices": [
+      "Add |-7| and |-2| to get 9 blocks",
+      "Subtract |-2| from |-7| to get 5 blocks",
+      "Add 7 and 2 to get 9 blocks",
+      "Subtract 2 from 7 to get 5 blocks"
+    ],
+    "answer": "B",
+    "hints": [
+      "Both first coordinates are negative, so both points sit on the same side of zero.",
+      "When both points are on the same side of zero, subtract the smaller distance from the larger distance."
+    ]
+  },
+  {
+    "id": "m6math-finding-distance-between-points-005",
+    "loId": "m6math.finding-distance-between-points",
+    "cedCode": "M6MATH-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is told that two points on a coordinate grid are 6 blocks apart, and they share the same first coordinate of 4. One point is at (4, -1). The student reasons: 'The other point must be at (4, 5) because the distance from -1 to 5 is 6 blocks.' Evaluate this reasoning by checking whether the two points (4, -1) and (4, 5) are actually 6 blocks apart.",
+    "choices": [
+      "The reasoning is correct; the distance is 6 blocks",
+      "The reasoning is incorrect; the distance is 4 blocks because both coordinates are on the same side of zero",
+      "The reasoning is incorrect; the distance is 6 blocks but only because -1 and 5 are on opposite sides of zero",
+      "The reasoning is incorrect; we need to know both the first and second coordinates to find distance"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the absolute value of -1 and the absolute value of 5, then decide whether to add or subtract.",
+      "Since -1 is negative and 5 is positive, the zero line sits between these two points."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-001",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You start at the origin (0, 0) on a coordinate plane. You need to plot the ordered pair (2, -4). According to the rule for ordered pairs, which direction do you move first, and which number tells you to move that way?",
+    "choices": [
+      "Move down first, using the number -4",
+      "Move up first, using the number -4",
+      "Move left first, using the number 2",
+      "Move right first, using the number 2"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: the FIRST number in an ordered pair is the x-coordinate, and it tells you to move left or right.",
+      "A positive x-coordinate means move right; a negative x-coordinate means move left."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-002",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A point is located 3 units to the right of the origin and 5 units below the origin. Which ordered pair names this point?",
+    "choices": [
+      "(3, -5)",
+      "(-3, -5)",
+      "(3, 5)",
+      "(-3, 5)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Right of the origin means a positive x-coordinate; below the origin means a negative y-coordinate.",
+      "Write the x-coordinate first, then the y-coordinate in the ordered pair (x, y)."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-003",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You plot four points on a coordinate plane: M(-2, 3), N(4, 6), P(-1, -4), and Q(5, -2). Which of these points lies in Quadrant II?",
+    "choices": [
+      "N",
+      "M",
+      "P",
+      "Q"
+    ],
+    "answer": "B",
+    "hints": [
+      "Quadrant II has a sign pattern of negative x and positive y: (−, +).",
+      "Check each point's signs: a negative x-coordinate and a positive y-coordinate together mean Quadrant II."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-004",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two different points use the same two numbers: 7 and -2. One point is plotted as (7, -2) and the other as (-2, 7). Identify which quadrant each point lands in and explain why they are different locations.",
+    "choices": [
+      "(7, -2) is in Quadrant IV and (-2, 7) is in Quadrant IV because swapping the order of coordinates does not change the location of a point, only how we write it",
+      "(7, -2) is in Quadrant II and (-2, 7) is in Quadrant IV because the first coordinate tells us how far left or right to move and the second coordinate tells us how far up or down to move",
+      "(7, -2) is in Quadrant IV and (-2, 7) is in Quadrant II; the order of the numbers matters because the first number must always correspond to the x-axis and the second to the y-axis",
+      "(7, -2) is in Quadrant III and (-2, 7) is in Quadrant I because both coordinates in the first point are negative numbers and both coordinates in the second point are positive numbers"
+    ],
+    "answer": "C",
+    "hints": [
+      "Identify the sign pattern of each ordered pair: (7, −2) has (+, −) and (−2, 7) has (−, +).",
+      "Match each sign pattern to its quadrant: (+, −) is Quadrant IV and (−, +) is Quadrant II."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-005",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A treasure map shows a starting point at the origin. From there, you travel 4 units left and then 6 units up to reach the treasure. An explorer instead plots the point using only the final position (not the path). What ordered pair does the explorer write down, and in which quadrant is the treasure located?",
+    "choices": [
+      "(6, -4) in Quadrant IV",
+      "(4, 6) in Quadrant I",
+      "(-4, -6) in Quadrant III",
+      "(-4, 6) in Quadrant II"
+    ],
+    "answer": "D",
+    "hints": [
+      "Left means the x-coordinate is negative; up means the y-coordinate is positive.",
+      "Identify the sign pattern (−, +): this is the pattern for Quadrant II."
+    ]
+  },
+  {
+    "id": "m6math-plotting-points-in-all-four-quadrants-006",
+    "loId": "m6math.plotting-points-in-all-four-quadrants",
+    "cedCode": "M6MATH-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "On a coordinate plane, four points are marked: one in each quadrant. Quadrant I contains the point (6, 1). Quadrant III contains the point (-5, -3). A fifth point is plotted on the x-axis between these two quadrants. If this point's distance from the origin along the x-axis is 2 units and it is to the right of the origin, write the ordered pair for this fifth point and explain why it is not in any quadrant.",
+    "choices": [
+      "(2, 0) because it has a y-coordinate of 0, which means it sits on the x-axis, not inside a quadrant",
+      "(2, 1) because it is in Quadrant I, like the other point on the right side",
+      "(0, 2) because points on an axis must be listed with the nonzero coordinate last",
+      "(2, 2) because it must be equidistant from both axes in order to sit between two quadrants"
+    ],
+    "answer": "A",
+    "hints": [
+      "A point on an axis has one coordinate equal to zero; identify which coordinate is zero here and which is 2.",
+      "A quadrant only contains points where both coordinates are nonzero, so a point on an axis belongs to no quadrant."
     ]
   }
 ]

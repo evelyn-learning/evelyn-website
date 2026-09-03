@@ -228,120 +228,6 @@
     ]
   },
   {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-001",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A setup is a detail placed early in a text that a later moment depends on. A payoff is the later moment where that setup actually matters. Which pair shows a setup and its payoff?\n\nStory: Sentence 1: 'Marcus always kept his skateboard in the garage, locked to a hook so his younger cousin couldn't borrow it without asking.' Sentence 2: 'One afternoon, Marcus's cousin grabbed the skateboard anyway and rode it down the driveway.' Sentence 3: 'The skateboard was missing from the garage the next morning, and Marcus realized his cousin must have left it at the skate park.'",
-    "choices": [
-      "Sentence 2 is the setup (the cousin rides it), and Sentence 3 is the payoff (it is missing).",
-      "Sentence 1 is the setup (the locked skateboard), and Sentence 3 is the payoff (the skateboard goes missing).",
-      "Sentence 1 is the setup (the garage location), and Sentence 2 is the payoff (the cousin borrows it).",
-      "Sentence 3 is the setup (the missing skateboard), and Sentence 1 is the payoff (it was locked)."
-    ],
-    "answer": "B",
-    "hints": [
-      "The setup happens first and introduces a detail; the payoff comes later when that detail matters.",
-      "Look for which sentence establishes a fact about the skateboard, then find where that fact makes a difference to the ending."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-002",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this short story carefully from beginning to end, then answer the question that follows.\n\nSentence 1: 'Elena had a habit of writing every phone number she heard into the margins of whatever paper was nearby—a grocery list, a library receipt, even the back of a bus ticket.'\nSentence 2: 'One Tuesday, her friend Jada called and gave her the number for a pottery studio that was offering free classes for one week only.'\nSentence 3: 'Elena jotted the number down on the edge of an old envelope and stuck it in her backpack without looking at it again.'\nSentence 4: 'Three days later, Elena found the envelope while cleaning out her backpack and called the studio to sign up for the last two classes of the week.'\n\nWhich sentence is a setup that Sentence 4 depends on?",
-    "choices": [
-      "Sentence 3, because Elena writes the pottery studio number down on the envelope in that sentence and saves it in her backpack where she will find it later.",
-      "Sentence 2, because it introduces the pottery studio and explains that the classes are free and only last one week, giving Elena a reason to want the number.",
-      "Sentence 1, because it shows Elena's habit of writing down numbers, which is why she has the pottery studio's number when she needs it later.",
-      "Sentence 4, because that is when Elena actually calls the studio to sign up for classes and completes the action that the story has been building toward."
-    ],
-    "answer": "C",
-    "hints": [
-      "Ask yourself: what would stop making sense in Sentence 4 if Sentence 1 were cut out?",
-      "The setup is not the sentence that merely restates what happens in that moment; it is the earlier detail that explains why the later moment works."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-003",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student was asked to explain how a sentence fits into a story's overall structure and gave this answer: 'This sentence is in the middle of the story.' Explain what is wrong with this answer, then identify which of the following would be a correct answer instead.\n\nStory detail: Sentence 1 sets up that a dog has learned to open the fence gate. Sentence 2 shows the dog escaping through the open gate. Sentence 3 describes the dog getting lost and the family searching for it.",
-    "choices": [
-      "The student forgot to name which character the sentence is about and what role that character plays. A correct answer would be: This sentence is about a dog who learns to open the gate without help.",
-      "The student should have counted all the sentences in order to locate the middle one. A correct answer would be: There are three sentences total, so the middle position is Sentence 2.",
-      "The student did not explain whether the sentence belonged at the start, middle, or end of the story. A correct answer would be: This sentence is at the beginning of the story and introduces the problem.",
-      "The student only named where the sentence sits, not what it does. A correct answer would be: Sentence 1 sets up the escaped dog that Sentences 2 and 3 depend on."
-    ],
-    "answer": "D",
-    "hints": [
-      "Naming where a part sits (beginning, middle, end) is location, not job. What does a job actually name?",
-      "A job should point to a later moment that depends on the setup—look for an answer that connects Sentence 1 to what happens after it."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-004",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this story and then answer the question.\n\nSentence 1: 'Kenji's art class was assigned a project to paint a picture of something from their own lives, and Kenji painted the wooden pier where his grandfather used to take him fishing every summer before the family moved away.'\nSentence 2: 'A week later, Kenji's grandmother visited, and while looking at the painting hanging in his room, she asked Kenji why he had chosen such a sad subject.'\nSentence 3: 'Kenji told her it was not sad to him; it was the best place he had ever been, and he painted it to remember those mornings with his grandfather.'\nSentence 4: 'His grandmother smiled and said she had brought her old fishing tackle box from his grandfather's attic, and she handed it to Kenji.'\n\nSentence 1 serves more than one job in this story. Which two jobs does it do? (Select the pair that both require Sentence 1 to work.)",
-    "choices": [
-      "It sets up the fishing pier as the painting's subject and establishes that detail about the setting so Sentence 2's misunderstanding and Sentence 3's explanation make sense.",
-      "It establishes that Kenji loves his grandfather and creates the painting that leads to his grandmother's visit and her decision to give him the fishing tackle box.",
-      "It explains why Kenji's family moved away from the pier and reveals that Kenji has sad feelings about it, which his grandmother notices in Sentence 2.",
-      "It sets up the painting subject and tells the entire story's plot from the very beginning in one sentence."
-    ],
-    "answer": "A",
-    "hints": [
-      "Both jobs of Sentence 1 should point to different later moments where Sentence 1 actually pays off. Look for an answer that names two separate payoffs.",
-      "One job involves what is painted; the other involves a feeling about what is painted. Both of those details matter to why Sentence 2 and Sentence 3 happen as they do."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-005",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student was given this story and asked to find a setup and name its payoff.\n\nSentence 1: 'Every afternoon, Maya's neighbor Mr. Chen watered his plant collection in the front garden, starting with the ferns and ending with the roses, same order every day.'\nSentence 2: 'One Saturday morning, a water main broke on their street, and the water was shut off until Monday.'\nSentence 3: 'Mr. Chen carried buckets of water he had saved in his basement to keep all of his plants alive over the weekend.'\nSentence 4: 'On Monday when the water came back on, every plant in the garden was still green and healthy.'\n\nThe student answered: 'Sentence 2 is the setup because the water main breaks, and Sentence 4 is the payoff because the plants stay healthy.' Is the student correct? Why or why not?",
-    "choices": [
-      "No. Sentence 1 is the setup because it shows Mr. Chen has a routine of watering daily and implicitly that he has water available for this routine, and Sentence 3 is the payoff because he uses the water he already saved.",
-      "No. Sentence 2 is not the setup; Sentence 1 is. The setup is that Mr. Chen already has saved water in his basement (established by his daily watering routine), and Sentence 3 is the payoff because he uses that water.",
-      "Yes. The student correctly identified that Sentence 2 creates the immediate problem that needs solving and Sentence 4 shows the successful result of Mr. Chen's solution with the saved water.",
-      "Yes. Sentence 2 creates the problem that forces Mr. Chen to act, and Sentence 4 demonstrates the outcome that proves the plants survived the water shortage."
-    ],
-    "answer": "B",
-    "hints": [
-      "A true setup plants a detail that lets a later moment happen without seeming like luck or coincidence. What detail does Sentence 3 already assume exists before it happens?",
-      "Sentence 2 creates a problem, but it does not explain how Mr. Chen solves it. What earlier detail makes Sentence 3 possible?"
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-006",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read this story, paying close attention to what a setup must do to be a real structural job.\n\nSentence 1: 'The book sale at the library happened every spring, and this year Iris decided to volunteer at the donation table instead of just browsing.'\nSentence 2: 'While sorting books, Iris found a worn copy of a novel called 'The Starkeeper' with handwritten notes in the margins on almost every page.'\nSentence 3: 'She was so curious about the reader's notes that she bought the book instead of putting it back on the shelf.'\nSentence 4: 'Over the next month, Iris read the book slowly, reading each passage and then the note someone else had written about it, and she felt like she was having a conversation with a stranger across time.'\nSentence 5: 'When she finished, Iris wrote her own notes in a fresh copy of the same book and donated it back to the library the next spring.'\n\nWhich sentence is a setup whose payoff appears in a different sentence? Explain why it is a setup and identify the specific later moment it makes possible or meaningful.",
-    "choices": [
-      "Sentence 3 is the setup. It shows Iris deciding to buy the book with notes in it, and Sentence 5 is the payoff because that is when Iris writes her own notes in a fresh copy and donates it back to the library.",
-      "Sentence 1 is the setup. It establishes that Iris volunteers at the book sale instead of just browsing like she normally does, and Sentence 2 is the payoff because that is when her volunteer job allows her to discover the marked-up book.",
-      "Sentence 2 is the setup. It introduces the book with handwritten notes, and Sentence 4 is the payoff because without the notes, Iris would not have the experience of feeling like she was having a conversation with a stranger across time.",
-      "Sentence 4 is the setup. It shows Iris reading and responding deeply to the notes in the book, which changes her understanding of reading, and Sentence 5 is the payoff because that experience motivates her to write her own notes in response."
-    ],
-    "answer": "C",
-    "hints": [
-      "A setup plants a detail early; the payoff is where that setup actually matters to the story's meaning. Do not confuse cause-and-effect in the moment with structural setup-and-payoff across the whole story.",
-      "Ask: without Sentence 2, would Sentence 4 still make sense? Or does Sentence 4 depend on a specific detail from Sentence 2 to be true?"
-    ]
-  },
-  {
     "id": "m6ela-how-a-story-s-plot-unfolds-001",
     "loId": "m6ela.how-a-storys-plot-unfolds",
     "cedCode": "M6ELA-1.2",
@@ -453,6 +339,120 @@
     "hints": [
       "The resolution comes after the turning point, when the outcome is already decided and the story shows how things are now.",
       "Which sentences show us what happened because of the climax—the moment when the uncertainty ended?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-001",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A story opens by describing a rusty old bicycle locked to a fence in an abandoned warehouse. Three sentences later, a character uses that bicycle to escape from danger. What is the correct name for what the opening description does in the story's overall structure?",
+    "choices": [
+      "It is a location, because it tells you where the warehouse stands and describes the physical space in which the story unfolds.",
+      "It is a setup, because the bicycle detail introduced early is needed for the escape that happens later.",
+      "It is a summary, because it recaps and restates what a bicycle looks like without moving the plot forward.",
+      "It is rising action, because it comes before the escape scene and builds tension toward the main event."
+    ],
+    "answer": "B",
+    "hints": [
+      "A setup is a detail placed early that a later moment depends on, not where something sits in the story or what something looks like.",
+      "The key is: what does the early description do for the later escape? Can you point to the moment that needs it?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-002",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this three-sentence passage:\n\nSentence 1: 'Keisha's art teacher announced that the painting contest would be judged by how well students mixed their own colors from primary colors only—no pre-made color tubes allowed.'\nSentence 2: 'Keisha spent the next two weeks practicing color mixing on scrap paper.'\nSentence 3: 'On contest day, her painting won first place.'\n\nHow does Sentence 1 fit into the overall structure of this passage?",
+    "choices": [
+      "It describes the opening event by announcing the contest and its rules to establish when the story begins.",
+      "It tells you that a contest is happening, which is the main event that Keisha will participate in throughout the passage.",
+      "It sets up the rule about mixing colors that makes Sentence 2's practice and Sentence 3's first-place finish make sense as a result of preparation.",
+      "It explains why Keisha needs to buy more paint tubes before the competition starts, creating urgency for her shopping."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask: what comes after Sentence 1? Why does Keisha practice? Without Sentence 1, would the reader understand why her practice matters?",
+      "The correct answer points to a later moment that depends on the setup—not just what Sentence 1 says or where it sits."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-003",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this four-sentence passage:\n\nSentence 1: 'The library's front door had been sticking in its frame for months, and the librarian had to pull hard every time she opened it.'\nSentence 2: 'One afternoon, a custodian fixed the door by loosening the hinges and adjusting the frame.'\nSentence 3: 'The next morning, the librarian opened the door smoothly for the first time in months.'\nSentence 4: 'She smiled as she turned the lights on.'\n\nA student says that Sentence 2's structural job is 'to tell where the custodian came from.' Why is that not a correct description of Sentence 2's role?",
+    "choices": [
+      "Because the student's statement describes what Sentence 2 says rather than what work it performs—it names a detail about where the custodian came from, not how that sentence moves the story toward the smooth door opening in Sentence 3.",
+      "Because the custodian is not a character in the main plot and appears only once in the passage.",
+      "Because Sentence 2 is in the middle of the story, not at the end where locations matter most to readers.",
+      "Because the answer only restates what Sentence 2 says, not what Sentence 2 does for the rest of the story—it does not point to the smooth opening in Sentence 3 that the fix makes possible."
+    ],
+    "answer": "D",
+    "hints": [
+      "A description of a sentence's structural role names what the part does to move the story forward, not what it summarizes.",
+      "Look for an answer that explains why the sentence's connection to Sentence 3's smooth opening is what matters."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-004",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this five-sentence passage:\n\nSentence 1: 'In her bedroom, Amara kept a small notebook where she wrote down one goal every Sunday night.'\nSentence 2: 'The goals were always modest—learn to braid hair, finish a book, cook one new recipe.'\nSentence 3: 'Her older brother teased her for writing down such small things instead of dreaming big.'\nSentence 4: 'By the end of the year, Amara had completed every single goal and had learned skills she used almost every day.'\nSentence 5: 'Her brother apologized and started keeping a notebook of his own.'\n\nWhich sentence is a setup, and where does its payoff appear? Explain what job that setup does for the story as a whole.",
+    "choices": [
+      "Sentence 1 sets up the notebook habit; the payoff is Sentence 4's completion of all goals. This setup shows that small, consistent actions lead to real results, which is what the story is building toward about how to accomplish things.",
+      "Sentence 2 sets up the modest goals and their specific types; the payoff is Sentence 3's teasing, which shows the brother's reaction to the kinds of goals Amara writes down and establishes his skepticism about her approach.",
+      "Sentence 3 sets up the brother's doubt about Amara's methods; the payoff is Sentence 5's apology, which resolves his skepticism when he sees Sentence 4's evidence that her approach works.",
+      "Sentence 4 sets up Amara's success with all goals; the payoff is Sentence 5's apology, which demonstrates that achievement causes people to acknowledge their earlier misjudgment of someone's plan."
+    ],
+    "answer": "A",
+    "hints": [
+      "A setup-payoff pair should connect early detail to a later moment the story depends on. Ask: which early sentence plants something that a later sentence needs to make sense?",
+      "The story is about what happens when you stick to a habit. Which sentence introduces the habit, and which sentence shows what that habit creates by the end?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-005",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage about a character named Leo:\n\nSentence 1: 'Leo's favorite place was the oak tree at the edge of his neighborhood, where he could see the whole valley below and the mountains beyond it.'\nSentence 2: 'He had carved his initials into the bark years ago and visited almost every week.'\nSentence 3: 'One spring, a developer announced plans to cut down the tree to make room for an apartment building.'\nSentence 4: 'Leo started a petition to save the tree, and seventeen neighbors signed it.'\nSentence 5: 'The tree was saved, and Leo carved the date of the victory next to his old initials.'\n\nWhat does Sentence 1 do in the structure of this story, and how do you know? Name a later sentence that depends on it.",
+    "choices": [
+      "It introduces the oak tree as a character, making it the main subject that drives all the action in the story and its central focus.",
+      "It establishes the oak tree's location and importance to Leo, which makes Sentence 3's threat and Sentence 4's protest matter emotionally—the reader understands why Leo fights to save it because Sentence 1 showed what the tree means to him.",
+      "It describes the scenery and the view that Leo sees from the oak tree, providing important information about the setting and landscape that appears throughout the narrative.",
+      "It is at the beginning of the story, so it starts the plot moving forward toward the conflict and tension that will unfold in later sentences."
+    ],
+    "answer": "B",
+    "hints": [
+      "The correct answer names both what Sentence 1 does (sets up the tree's meaning) and where that setup pays off (the protest in Sentence 4 would not be as meaningful without it).",
+      "Ask yourself: if Sentence 1 were removed, would Sentence 4's petition still make sense to a reader? What would they be missing?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-006",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this six-sentence passage:\n\nSentence 1: 'Every morning before school, Marcus practiced free throws in his driveway because he had made only four out of ten in tryouts the week before.'\nSentence 2: 'His friend Jamal watched sometimes and said Marcus was wasting time—the team was already decided, and one week of practice would not change anything.'\nSentence 3: 'Marcus kept practicing anyway.'\nSentence 4: 'Two weeks into the season, during the regional tournament, Marcus made eight free throws in a row in the final game.'\nSentence 5: 'His team won by two points.'\nSentence 6: 'Jamal told Marcus he had been wrong to doubt him.'\n\nExplain why Sentence 2 is not simply a location or a summary, and name the structural job it actually does. Point to the later sentence where its job pays off.",
+    "choices": [
+      "Sentence 2 is a location because it tells you that Jamal is watching in the driveway, which is where most of the practice and early story takes place.",
+      "Sentence 2 is a summary because it repeats and restates what Jamal thinks about the team being decided, which is a minor detail that does not affect the main plot.",
+      "Sentence 2 sets up a doubt that stays unresolved through Marcus's practice in Sentence 3. The payoff is Sentence 4's eight free throws in a row, which proves the doubt wrong and gives the victory in Sentence 5 a fuller meaning—it is not just a win, it is a win that happened because Marcus refused to accept what Jamal said. Without Sentence 2's doubt planted early, Sentences 4 and 5 would read as accident rather than earned result.",
+      "Sentence 2 sets up Jamal's friendship with Marcus and his role as an observer; the payoff is Sentence 6's apology. Without the earlier doubt Jamal expressed, the reader would not understand why he apologizes at the story's end."
+    ],
+    "answer": "C",
+    "hints": [
+      "The correct answer explains two things: why Sentence 2 is structural (it plants something that shapes how later sentences mean), and where the payoff is (point to the specific sentence that would not feel as important without it).",
+      "Ask: if Jamal had never expressed doubt in Sentence 2, would Sentence 4's eight free throws in a row feel as significant? Would the victory feel like proof of something, or just a good game?"
     ]
   }
 ]

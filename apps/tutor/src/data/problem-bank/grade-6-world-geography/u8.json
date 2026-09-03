@@ -228,136 +228,22 @@
     ]
   },
   {
-    "id": "m6geo-what-makes-a-place-unique-001",
-    "loId": "m6geo.what-makes-a-place-unique",
-    "cedCode": "M6GEO-8.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A geographer is describing a coastal town. Which of the following is a physical characteristic of that town?",
-    "choices": [
-      "The town has a busy fishing port where boats dock every morning.",
-      "The town has a rocky coastline and cool, windy winters.",
-      "The town has a town square where people gather for markets.",
-      "The town has wooden houses built close together along the waterfront."
-    ],
-    "answer": "B",
-    "hints": [
-      "A physical characteristic is a feature of the land or weather that would be there even without people.",
-      "Look for something about the natural features or climate, not something people built or do."
-    ]
-  },
-  {
-    "id": "m6geo-what-makes-a-place-unique-002",
-    "loId": "m6geo.what-makes-a-place-unique",
-    "cedCode": "M6GEO-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this description of a village: 'The village sits on a wide, flat plain. Summers are hot and dry.' Is this description complete? Why or why not?",
-    "choices": [
-      "Yes, it is complete because it describes both the landform and the climate.",
-      "No, it is not complete because it fails to mention any human characteristics such as buildings, roads, or activities that people do there.",
-      "No, it is not complete because it names only physical characteristics and no human characteristics.",
-      "Yes, it is complete because the plain and the climate are two separate details that together satisfy the definition of a full description."
-    ],
-    "answer": "C",
-    "hints": [
-      "Remember that a complete description needs at least one of EACH kind: physical AND human.",
-      "Ask yourself: does this description tell you anything about what people built or what people do there?"
-    ]
-  },
-  {
-    "id": "m6geo-what-makes-a-place-unique-003",
-    "loId": "m6geo.what-makes-a-place-unique",
-    "cedCode": "M6GEO-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student writes: 'Mountain Town is surrounded by steep mountains. The area gets heavy snow in winter and cool rain in spring.' Does this description name a human characteristic? Explain your reasoning.",
-    "choices": [
-      "Yes, because the mountains are large and steep, which reflects human efforts to settle in challenging terrain.",
-      "Yes, because the snow and rain patterns show how people have adapted their homes and activities to cold, wet conditions.",
-      "No, because the description has only two details when it should have at least four to be considered complete.",
-      "No, because mountains are natural landforms and snow and rain are climate patterns, both physical characteristics."
-    ],
-    "answer": "D",
-    "hints": [
-      "A human characteristic is something people built or something people do, not something in nature.",
-      "Think about whether mountains, snow, and rain would exist whether or not any people lived there."
-    ]
-  },
-  {
-    "id": "m6geo-what-makes-a-place-unique-004",
-    "loId": "m6geo.what-makes-a-place-unique",
-    "cedCode": "M6GEO-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Here is an incomplete description of a place: 'Harbor Bay has a protected inlet surrounded by cliffs. Winters are cold and snowy.' Which single addition would make this description complete?",
-    "choices": [
-      "Add that the fishers who live in Harbor Bay repair their boats at a shipyard near the harbor.",
-      "Add that the inlet has very deep water suitable for large ships.",
-      "Add that Harbor Bay is located on the northern coast of a large continent.",
-      "Add that the cliffs are made of granite rock that was formed millions of years ago."
-    ],
-    "answer": "A",
-    "hints": [
-      "The description already has physical characteristics (inlet, cliffs, cold snowy winters). What kind is missing?",
-      "You need to add something that shows what people built or what people do there."
-    ]
-  },
-  {
-    "id": "m6geo-what-makes-a-place-unique-005",
-    "loId": "m6geo.what-makes-a-place-unique",
-    "cedCode": "M6GEO-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two students describe the same desert settlement. Student A says: 'The settlement has a well, a row of stone houses, and a camel market.' Student B says: 'The settlement sits between sand dunes and gets very little rain all year.' Which student's description is complete, and why?",
-    "choices": [
-      "Student A's is complete because it names human structures and activities that people have built and organized in the settlement.",
-      "Neither is complete individually because Student A has only human characteristics and Student B has only physical characteristics.",
-      "Neither description is complete on its own, but together they provide both kinds of characteristics.",
-      "Student B's is complete because it describes both the landforms of the sand dunes and the climate pattern of low annual rainfall."
-    ],
-    "answer": "B",
-    "hints": [
-      "Check Student A for any landforms or climate information. Check Student B for any buildings or activities.",
-      "Remember: even ten details of just one kind will not make a description complete—you need at least one of each kind."
-    ]
-  },
-  {
-    "id": "m6geo-what-makes-a-place-unique-006",
-    "loId": "m6geo.what-makes-a-place-unique",
-    "cedCode": "M6GEO-8.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A geographer is teaching about places. She shows four descriptions and asks her class which one could stand alone as a complete description of a village. However, she adds a rule: the description must include climate (not just any landform) as its physical characteristic, and must include an activity (not just a building) as its human characteristic. Which description meets both of her conditions?",
-    "choices": [
-      "Meadow Ridge sits in a grassy valley with a river running through it, and its people have built a mill to grind grain.",
-      "The settlement lies on flat ground between two forests, and traders come from miles away to buy and sell goods at its weekly market.",
-      "Sunriver Village has warm, dry summers and mild winters, and every spring the villagers gather to plant rice in flooded fields.",
-      "The town sits on a peninsula surrounded by water, and the stone buildings have been standing there for many generations."
-    ],
-    "answer": "C",
-    "hints": [
-      "A valley and a river are landforms, but you need to find a description where the physical characteristic is specifically about climate.",
-      "Look for an activity—something people do—rather than just a building. Activities include planting, trading, harvesting, gathering, fishing, and farming."
-    ]
-  },
-  {
     "id": "m6geo-mapping-your-own-community-001",
     "loId": "m6geo.mapping-your-own-community",
     "cedCode": "M6GEO-8.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A community map labels each landmark as either physical or human. Which of the following is a physical characteristic?",
+    "problemText": "A community map shows landmarks connected by routes. In addition to marking the landmarks and routes, what key feature must a community map include that helps identify whether each landmark is physical or human?",
     "choices": [
-      "A stream running through the landscape",
-      "A park bench installed by the city",
-      "A grocery store built by a business owner",
-      "A paved sidewalk along a street"
+      "A label for each landmark that identifies it as physical or human",
+      "The names of all the streets that connect the landmarks",
+      "A compass rose showing which direction is north",
+      "A scale bar to measure the exact distance between landmarks"
     ],
     "answer": "A",
     "hints": [
-      "Physical characteristics occur on their own without people building or adding them.",
-      "Think about which landmark would exist even if no people lived in the community."
+      "Every landmark on a community map needs to be sorted into one of two categories.",
+      "Physical landmarks are natural features. Human landmarks are built by people. What must the map include to show this distinction?"
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student creates a labeled map of Oakridge from this description: \"Starting at the town library, a path leads straight ahead to a thick stand of trees. From the trees, a turn leads to a community playground.\" The student labels the landmarks as: library (human), trees (physical), playground (human). Does this labeling correctly match the description?",
+    "problemText": "A student is sketching a labeled map of their neighborhood. The route goes: park → turn to playground → turn to a small pond. The student labels them park (human), playground (human), pond (human). Which landmark has been mislabeled, and why?",
     "choices": [
-      "No, because the library should be labeled physical, not human.",
-      "Yes, all labels correctly match what the description says about each landmark.",
-      "No, because the playground should be labeled physical, not human.",
-      "No, because the path between landmarks is not labeled in the description."
+      "The park is mislabeled because parks are natural areas that occur on their own.",
+      "The pond is mislabeled because ponds occur naturally and are not built by people.",
+      "The playground is mislabeled because playgrounds are built by people.",
+      "All three landmarks are labeled correctly because they are all places in a neighborhood."
     ],
     "answer": "B",
     "hints": [
-      "Check whether each landmark is something people built or something that occurs naturally.",
-      "A library and playground are both constructed by people, while trees grow on their own."
+      "A physical characteristic occurs on its own, without being built by people. A human characteristic is built or added by people.",
+      "Think about whether each landmark would be there without people building or adding it."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is checking a friend's labeled map of Riverside against this original description: \"Starting at the town hall, a path leads straight ahead to a small pond. From the pond, a turn leads to the fire station.\" The friend's map shows the landmarks in the correct order and with the correct turns. However, the friend labeled the pond as human. What should the correct label be, and why?",
+    "problemText": "A student describes a route through Millbrook: starting at the train station, going straight to a rocky hillside, then turning to the public library, then turning again to a small meadow. The student correctly labels the train station as human. What should the rocky hillside be labeled, and what should the meadow be labeled?",
     "choices": [
-      "Human, because a pond is always part of a community that people maintain.",
-      "Human, because the description mentions the path leading to the pond.",
-      "Physical, because a pond is a natural body of water that occurs on its own.",
-      "Physical, because ponds are always found at the edge of every town."
+      "Rocky hillside as human, meadow as human",
+      "Rocky hillside as physical, meadow as human",
+      "Rocky hillside as physical, meadow as physical",
+      "Rocky hillside as human, meadow as physical"
     ],
     "answer": "C",
     "hints": [
-      "Decide whether a pond is something people built or something that exists in nature.",
-      "The fact that a path leads to the pond does not change what kind of characteristic the pond itself is."
+      "Ask yourself whether each landmark would exist without people building it.",
+      "A hillside and a meadow are both natural features that occur on their own."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student sketches a labeled map of Millbrook from this description: \"Starting at a low hill, a path leads straight ahead to Millbrook Post Office. From the post office, a turn leads to a small stream. From the stream, another turn leads to a stone bridge.\" The student labels the landmarks in order as: hill (physical), post office (human), stream (physical), bridge (human). After checking this labeled map against the description by going through each landmark one at a time, is the map correctly labeled, and if not, what is wrong?",
+    "problemText": "A student sketches a labeled map of Ashwood from this description: 'Starting at the town hall, a path leads straight to a small river. From the river, turn to the community center. From the community center, turn to a wooded area.' The student's finished map shows the landmarks in the correct order with the correct turns, and labels them: town hall (human), river (physical), community center (human), wooded area (physical). A community map must show three things correctly: the landmark names in order, the turns between them, and whether each landmark is labeled as physical or human. Does this map match the description correctly on all three counts?",
     "choices": [
-      "Yes, the map is correctly labeled—the order, turns, and all labels match the description.",
-      "No, the stream is mislabeled as physical when it should be human.",
-      "No, the post office is mislabeled as human when it should be physical.",
-      "No, the bridge is mislabeled as human when it should be physical."
+      "No, because the order of the landmarks does not match the description.",
+      "No, because the turns between landmarks do not match the description.",
+      "No, because at least one landmark label does not match what kind of landmark it actually is.",
+      "Yes, the order, turns, and all labels match the description."
     ],
     "answer": "D",
     "hints": [
-      "Remember that a bridge is something people construct and place in a community.",
-      "Go through each landmark in order and ask: did people build this, or does it occur naturally?"
+      "Check the landmarks one by one in the order given: town hall, river, community center, wooded area.",
+      "For each landmark, ask: Is it labeled correctly as physical or human?"
     ]
   },
   {
@@ -423,36 +309,131 @@
     "cedCode": "M6GEO-8.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is asked to sketch and describe a labeled map of Greenfield using this description: \"Starting at Greenfield Hospital, a path leads straight ahead to a meadow. From the meadow, a turn leads to an old oak tree. From the oak tree, another turn leads to Greenfield High School.\" The student must name the landmarks in order, describe the turns between them, and label each landmark. Which response correctly applies all three parts of the task?",
+    "problemText": "A student is building a labeled map of Ridgemont and has already sketched the landmarks in the correct order with the correct turns: fire station → straight to a stream → turn to the museum → turn to a clearing. Before the student finishes labeling, the student should ask: which of these landmarks are physical characteristics and which are human characteristics?",
     "choices": [
-      "Hospital (human), meadow (physical), oak tree (physical), school (human); starting from hospital, straight to meadow, turn to oak tree, turn to school.",
-      "Hospital (human), meadow (human), oak tree (physical), school (human); starting from hospital, straight to meadow, turn to oak tree, turn to school.",
-      "Hospital (physical), meadow (physical), oak tree (physical), school (human); starting from hospital, straight to meadow, turn to oak tree, turn to school.",
-      "Hospital (human), meadow (physical), oak tree (human), school (human); starting from hospital, straight to meadow, turn to oak tree, turn to school."
+      "Fire station (human), stream (physical), museum (human), clearing (physical)",
+      "Fire station (physical), stream (physical), museum (physical), clearing (human)",
+      "Fire station (human), stream (human), museum (human), clearing (human)",
+      "Fire station (physical), stream (human), museum (physical), clearing (physical)"
     ],
     "answer": "A",
     "hints": [
-      "A meadow is an open, grassy area that occurs naturally, not something people construct.",
-      "An oak tree grows on its own without human construction, but a hospital and school are both buildings people built."
+      "Remember that a human characteristic is something built or added by people, while a physical characteristic occurs on its own.",
+      "Which landmarks in this list did people build, and which occurred naturally?"
     ]
   },
   {
-    "id": "m6geo-mapping-your-own-community-006",
-    "loId": "m6geo.mapping-your-own-community",
-    "cedCode": "M6GEO-8.4",
-    "difficulty": 4,
+    "id": "m6geo-what-makes-a-place-unique-001",
+    "loId": "m6geo.what-makes-a-place-unique",
+    "cedCode": "M6GEO-8.1",
+    "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A student creates a labeled community map of Sycamore Ridge from this description: \"Starting at the main gate of Sycamore Ridge Park, a path leads straight ahead to a rocky outcrop at the north end of the property. From the outcrop, a turn leads to the Park Ranger Station. From the ranger station, another turn leads to a small waterfall.\" The student sketches the map with the landmarks in the correct order and the correct turns. The student then labels them as: gate (human), outcrop (physical), ranger station (human), waterfall (physical). The student's friend reviews this and says that one label does not match the description. Which label is incorrect, and why does the error matter for the community map?",
+    "problemText": "Which of the following is a physical characteristic of a place? A physical characteristic is a feature of the land or weather that would exist even if no people lived there.",
     "choices": [
-      "The outcrop is labeled physical, but it should be human because people visit it often.",
-      "The gate is labeled human, but it should be physical because it marks the entry to a natural place.",
-      "The ranger station is labeled human, but it should be physical because it serves an outdoor function.",
-      "The waterfall is labeled physical, but it should be human because people use it as a landmark."
+      "A busy shopping mall where people trade goods",
+      "A steep mountain valley with a cold, snowy climate",
+      "A festival that people hold every summer",
+      "A bridge that connects two parts of town"
     ],
     "answer": "B",
     "hints": [
-      "A gate is something people install or construct at an entrance; it does not occur on its own in nature.",
-      "Recall that labeling a landmark correctly depends on whether people built it, not on where it is located or how it is used."
+      "Think about what would still be there if all the people left.",
+      "Landforms and climate are physical; buildings and activities are human."
+    ]
+  },
+  {
+    "id": "m6geo-what-makes-a-place-unique-002",
+    "loId": "m6geo.what-makes-a-place-unique",
+    "cedCode": "M6GEO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geography student describes a town by saying: 'This town has a sandy coastline and warm summers.' Does this description include both kinds of characteristics needed to fully describe a place?",
+    "choices": [
+      "Yes, because it mentions two different physical details.",
+      "Yes, because coastline and temperature are opposite types of features.",
+      "No, because it names only physical characteristics and no human characteristics.",
+      "No, because it does not mention enough physical details."
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember the two-question check: Does it name a physical characteristic? Does it name a human characteristic?",
+      "A complete description needs at least one of each kind, not just many details of one kind."
+    ]
+  },
+  {
+    "id": "m6geo-what-makes-a-place-unique-003",
+    "loId": "m6geo.what-makes-a-place-unique",
+    "cedCode": "M6GEO-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this description of a village: 'Millbrook sits beside a river in a wide valley where it rains most of the year.' Which piece of information would you need to add to make this description complete?",
+    "choices": [
+      "The date when the village was first settled and how many people chose to live there initially",
+      "An explanation of the scientific reasons why the river flows downhill through that particular valley system",
+      "Another landform nearby, such as a hill or forest, to show how varied the landscape is",
+      "A detail about a human characteristic, such as a building or activity people do there"
+    ],
+    "answer": "D",
+    "hints": [
+      "A complete description must pass both check questions: one physical AND one human.",
+      "This description already has landforms (river, valley) and climate (rainy). What is missing?"
+    ]
+  },
+  {
+    "id": "m6geo-what-makes-a-place-unique-004",
+    "loId": "m6geo.what-makes-a-place-unique",
+    "cedCode": "M6GEO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two students describe the same fishing port in different ways. Student A says: 'The port has a natural harbor protected by rocky cliffs, and winters are icy and windy.' Student B says: 'The port has wooden docks where fishing boats load their catch every morning, and the fishing families hold a market on the waterfront every week.' Which student's description is complete, and why?",
+    "choices": [
+      "Neither description is complete because each one is missing at least one kind of characteristic.",
+      "Student B's description is complete because it has two human characteristics.",
+      "Student A's description is complete because it mentions both the land and the weather.",
+      "Student A's description is complete because it has two physical characteristics."
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the two-question check on each description separately.",
+      "Look for at least one physical characteristic and at least one human characteristic in each."
+    ]
+  },
+  {
+    "id": "m6geo-what-makes-a-place-unique-005",
+    "loId": "m6geo.what-makes-a-place-unique",
+    "cedCode": "M6GEO-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geographer is writing about a mountain plateau where herders raise sheep. She writes: 'The plateau sits high above sea level, surrounded by steep rock walls, with cold, dry air year-round. For centuries, herders have driven their sheep across the plateau each spring and fall.' Why is this description complete?",
+    "choices": [
+      "It includes four separate details, which is always enough for any geographic description of a place.",
+      "It names at least one physical characteristic (landforms and climate) and at least one human characteristic (the herding activity).",
+      "It mentions the plateau itself as the main feature, since the dominant landform is what defines a location most.",
+      "It provides specific measurements and time periods, which ensures the description covers all necessary geographic information."
+    ],
+    "answer": "B",
+    "hints": [
+      "What counts as physical: landforms and climate.",
+      "Apply the two-question check: Does it name a landform or climate? Does it name a building or activity?"
+    ]
+  },
+  {
+    "id": "m6geo-what-makes-a-place-unique-006",
+    "loId": "m6geo.what-makes-a-place-unique",
+    "cedCode": "M6GEO-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student claims: 'A description of a place is complete if it includes at least three details about what people have built or do there, because that shows how people have shaped the place.' Using what you know about the two kinds of characteristics, explain why this claim is wrong, and then say which of the following descriptions IS complete: 'Oasis Town has a desert all around it with very little rainfall. Its traders set up stalls in the central square each morning, farmers irrigate their date palms by hand, and musicians perform in the evening market.'",
+    "choices": [
+      "The claim is wrong because human details alone cannot make a description complete; Oasis Town's description is complete because it has three activities.",
+      "The claim is wrong because people do not actually shape a place as much as the land does; Oasis Town's description is not complete because it needs more details about buildings.",
+      "The claim is wrong because the number of details does not matter—only the mix of kinds does; Oasis Town's description is complete because it has a physical characteristic and human characteristics.",
+      "The claim is wrong because a description needs both physical and human characteristics, not just many of one kind; Oasis Town's description is not complete because it names only activities and no buildings."
+    ],
+    "answer": "C",
+    "hints": [
+      "What makes a description complete? Does the number of details matter, or does the mix matter?",
+      "In Oasis Town's description, identify one physical detail and one human detail to test whether it passes both check questions."
     ]
   }
 ]

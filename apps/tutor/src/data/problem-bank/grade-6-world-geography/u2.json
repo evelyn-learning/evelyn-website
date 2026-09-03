@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-001",
-    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
-    "cedCode": "M6GEO-2.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "The Equator is an imaginary line that runs around Earth. What does the Equator separate?",
-    "choices": [
-      "The North Pole from the South Pole",
-      "The Eastern Hemisphere from the Western Hemisphere",
-      "The Northern Hemisphere from the Southern Hemisphere",
-      "The Prime Meridian into two equal parts"
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about which pair of hemispheres has 'north' and 'south' in their names.",
-      "The Equator runs east and west around the middle of Earth."
-    ]
-  },
-  {
-    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-002",
-    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
-    "cedCode": "M6GEO-2.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student marks a point on a globe that sits directly south of the Equator and directly east of the Prime Meridian. Use the two-question method to determine which two hemispheres contain this point. First ask whether it is north or south of the Equator, then ask whether it is east or west of the Prime Meridian.",
-    "choices": [
-      "Northern Hemisphere and Western Hemisphere",
-      "Southern Hemisphere and Western Hemisphere",
-      "Northern Hemisphere and Eastern Hemisphere",
-      "Southern Hemisphere and Eastern Hemisphere"
-    ],
-    "answer": "D",
-    "hints": [
-      "South of the Equator means Southern; east of the Prime Meridian means Eastern.",
-      "Always apply the north-south question first, then the east-west question."
-    ]
-  },
-  {
-    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-003",
-    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
-    "cedCode": "M6GEO-2.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A traveler flies east from Europe and crosses the Prime Meridian while heading in that direction. On which side of the Prime Meridian is the traveler now, and which hemisphere does that put them in?",
-    "choices": [
-      "East of the Prime Meridian, in the Eastern Hemisphere",
-      "West of the Prime Meridian, in the Western Hemisphere",
-      "East of the Prime Meridian, in the Western Hemisphere",
-      "West of the Prime Meridian, in the Eastern Hemisphere"
-    ],
-    "answer": "A",
-    "hints": [
-      "When you cross a line while heading in a direction, you end up on that side of the line.",
-      "The Eastern Hemisphere is on the east side of the Prime Meridian."
-    ]
-  },
-  {
-    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-004",
-    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
-    "cedCode": "M6GEO-2.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A mountain range lies entirely between the Equator and the North Pole, and it is entirely west of the Prime Meridian. Which hemispheres have no land from this mountain range in them?",
-    "choices": [
-      "Northern Hemisphere and Western Hemisphere",
-      "Southern Hemisphere and Eastern Hemisphere",
-      "Southern Hemisphere and Western Hemisphere",
-      "Eastern Hemisphere and Western Hemisphere"
-    ],
-    "answer": "B",
-    "hints": [
-      "If a place is north of the Equator, it cannot be in the Southern Hemisphere.",
-      "If a place is west of the Prime Meridian, it cannot be in the Eastern Hemisphere."
-    ]
-  },
-  {
-    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-005",
-    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
-    "cedCode": "M6GEO-2.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A continent has land both north and south of the Equator, but no land crosses the Prime Meridian. In how many of the four hemispheres does this continent have land?",
-    "choices": [
-      "One hemisphere only",
-      "Three hemispheres only",
-      "Two hemispheres only",
-      "All four hemispheres"
-    ],
-    "answer": "C",
-    "hints": [
-      "Since the continent does not cross the Prime Meridian, it is on only one side of that line.",
-      "Since it crosses the Equator, it is on both sides of that line. Remember that a place sits in one hemisphere from each pair."
-    ]
-  },
-  {
-    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-006",
-    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
-    "cedCode": "M6GEO-2.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Two geographers argue about South America. One says it must be in exactly two hemispheres because all places on Earth are in exactly two hemispheres. The other says South America is in three hemispheres. Use what you know about how many lines cross South America and where those lines run to explain which geographer is correct and why the other one made an error.",
-    "choices": [
-      "The second geographer is correct. South America straddles both the Equator and the Prime Meridian, and when both lines cross a continent, that continent must occupy all four hemispheres.",
-      "The second geographer is correct. The Prime Meridian crosses South America, dividing it into eastern and western parts, while the entire continent is south of the Equator, giving it land in three hemispheres total.",
-      "The first geographer is correct. Every place and every area on Earth is limited to exactly two hemispheres, one from the north-south pair and one from the east-west pair, and this rule has no exceptions.",
-      "The first geographer is correct. South America lies entirely south of the Equator and entirely west of the Prime Meridian, so only one line crosses it, leaving it in exactly two hemispheres."
-    ],
-    "answer": "D",
-    "hints": [
-      "Recall that a single point sits in exactly two hemispheres, but a large area can spread across a line.",
-      "For South America specifically, check whether the Equator crosses it or stays on only one side of it, and check whether the Prime Meridian crosses it or stays on only one side of it."
-    ]
-  },
-  {
-    "id": "m6geo-parts-of-a-map-001",
-    "loId": "m6geo.parts-of-a-map",
-    "cedCode": "M6GEO-2.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "You are looking at a map and you want to know what place or topic the entire map is about. Which of these four parts of the map should you look at to answer that question?",
-    "choices": [
-      "The scale bar",
-      "The legend",
-      "The compass rose",
-      "The title"
-    ],
-    "answer": "D",
-    "hints": [
-      "This part is made of words printed on the map, usually near the top.",
-      "This part names the exact place or subject the map shows."
-    ]
-  },
-  {
-    "id": "m6geo-parts-of-a-map-002",
-    "loId": "m6geo.parts-of-a-map",
-    "cedCode": "M6GEO-2.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student is holding a map titled 'Riverside Park Map.' She looks at the legend and sees that a small green square stands for a playground and a small blue diamond stands for a water fountain. Later, she finds a green square symbol on the map itself. What does that symbol represent on this particular map?",
-    "choices": [
-      "A playground, because the legend pairs a green square with that meaning",
-      "A water fountain, because water features are always shown in green on every map ever made",
-      "A park entrance, because symbols in titles and on maps always match the same category",
-      "A picnic area, because green squares are standard symbols for outdoor recreation spaces"
-    ],
-    "answer": "A",
-    "hints": [
-      "Each map makes its own choice about what each symbol means.",
-      "Check only the legend to find out what a symbol stands for on this map."
-    ]
-  },
-  {
-    "id": "m6geo-parts-of-a-map-003",
-    "loId": "m6geo.parts-of-a-map",
-    "cedCode": "M6GEO-2.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "You are measuring two points on a map using a ruler. The two points are 4 inches apart on the page. You want to know about how far apart those two places really are in the real world. Which part of the map gives you this information?",
-    "choices": [
-      "The title, which names the location shown and helps identify which map you are using",
-      "The scale bar, which connects distances on the map to real-world distances",
-      "The compass rose, which shows the directions on the map and helps with orientation",
-      "The legend, which lists what each symbol means and helps you decode the symbols"
-    ],
-    "answer": "B",
-    "hints": [
-      "This part is a marked bar that shows what a length on the page equals in the real world.",
-      "The answer is the only part that connects page measurements to actual distances."
-    ]
-  },
-  {
-    "id": "m6geo-parts-of-a-map-004",
-    "loId": "m6geo.parts-of-a-map",
-    "cedCode": "M6GEO-2.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student studying the Mountain Trail Map notices that the compass rose has an arrow labeled N pointing toward the right side of the page. On the map itself, a tent symbol sits directly to the left of a cabin symbol. Based on the compass rose shown on this map, in which direction does the cabin lie from the tent?",
-    "choices": [
-      "East, because the cabin is to the right on the page and this map shows north pointing to the right",
-      "West, because the cabin is to the left on the page and left always indicates a westward direction",
-      "East, because the compass rose shows north pointing right, so left is west",
-      "South, because the cabin appears lower on the page than the tent symbol"
-    ],
-    "answer": "C",
-    "hints": [
-      "Always use the compass rose printed on the map itself, not a compass rose you remember from another map.",
-      "If north points right on this map, then left on this map points in the opposite direction."
-    ]
-  },
-  {
-    "id": "m6geo-parts-of-a-map-005",
-    "loId": "m6geo.parts-of-a-map",
-    "cedCode": "M6GEO-2.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A map of Hickory Forest shows a legend with a brown dashed line labeled 'hiking trail,' a compass rose with N pointing upward, and a scale bar marked 0 at the left end and 2 miles at the right end. A hiker looks at the map and finds two hiking trails marked with the dashed lines. One trail appears to run northward along the top half of the map, and another runs southward along the bottom. The hiker measures the top trail with a ruler and finds it spans the entire length of the scale bar. Which statement is correct?",
-    "choices": [
-      "The top trail is about 2 miles long, and the bottom trail runs east because it is below the first trail",
-      "The top trail is about 2 miles long, and both trails must run in the same direction because they are the same symbol",
-      "The top trail is about 2 miles long, but the map does not tell you which direction the bottom trail runs",
-      "The top trail is about 2 miles long, and it runs north because the compass rose shows N pointing upward"
-    ],
-    "answer": "D",
-    "hints": [
-      "Use the scale bar to find the length and the compass rose to find the direction.",
-      "The compass rose tells you the direction a trail runs; the symbol alone does not."
-    ]
-  },
-  {
-    "id": "m6geo-parts-of-a-map-006",
-    "loId": "m6geo.parts-of-a-map",
-    "cedCode": "M6GEO-2.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student receives four different maps to study: Map 1 is titled 'Downtown Shopping District,' Map 2 is titled 'State Park Hiking Routes,' Map 3 is titled 'Bus Stop Locations,' and Map 4 is titled 'County Forest Trails.' The student has a question: 'What does the red circle symbol stand for on the map I am looking at right now?' The student does not know which map she is holding. Which of the following is the most accurate statement about how to answer this question?",
-    "choices": [
-      "Check the legend on the map in front of you, because each map chooses its own symbols and their meanings",
-      "Check the compass rose, because the direction a symbol points reveals its meaning",
-      "Check the title first, because it names what the map shows and that tells you what symbols will appear",
-      "Check the scale bar, because symbols are only meaningful if the map has accurate distance measurements"
-    ],
-    "answer": "A",
-    "hints": [
-      "What a symbol means depends on the legend of the specific map you are holding, not on the title or content.",
-      "A red circle might mean something different on each of these four different maps."
-    ]
-  },
-  {
     "id": "m6geo-types-of-maps-001",
     "loId": "m6geo.types-of-maps",
     "cedCode": "M6GEO-2.2",
@@ -342,22 +114,250 @@
     ]
   },
   {
+    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-001",
+    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
+    "cedCode": "M6GEO-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The Equator is an imaginary line that circles Earth. What is the purpose of the Equator on maps and globes?",
+    "choices": [
+      "To mark the location of the North Pole and the South Pole",
+      "To separate the Eastern Hemisphere from the Western Hemisphere",
+      "To separate the Northern Hemisphere from the Southern Hemisphere",
+      "To divide Earth into continents and oceans"
+    ],
+    "answer": "C",
+    "hints": [
+      "The Equator runs east and west, not from pole to pole.",
+      "Think about which pair of hemispheres uses north and south in their names."
+    ]
+  },
+  {
+    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-002",
+    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
+    "cedCode": "M6GEO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A town is located south of the Equator. Using the two-question method taught for finding hemispheres, which hemisphere is determined by this location alone?",
+    "choices": [
+      "Only the Eastern Hemisphere, because south of the Equator means you have crossed into the eastern half",
+      "The Western Hemisphere only; you cannot know the north-south position without more information",
+      "Both the Southern Hemisphere and the Western Hemisphere, because all places south of the Equator are also west of the Prime Meridian",
+      "The Southern Hemisphere only; the town's position east or west of the Prime Meridian still needs to be checked"
+    ],
+    "answer": "D",
+    "hints": [
+      "The two questions are always asked in the same order: north-south first, then east-west.",
+      "Knowing a place is south of the Equator answers one question completely, but you still need to ask the other question about the Prime Meridian."
+    ]
+  },
+  {
+    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-003",
+    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
+    "cedCode": "M6GEO-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hiker is trekking and crosses the Prime Meridian while walking east. Before crossing, the hiker was in the Western Hemisphere. After crossing, which hemisphere does the hiker enter?",
+    "choices": [
+      "The Eastern Hemisphere",
+      "The Northern Hemisphere",
+      "The Southern Hemisphere",
+      "The same hemisphere, because crossing the Prime Meridian does not change your location"
+    ],
+    "answer": "A",
+    "hints": [
+      "The Prime Meridian is the line that separates the Eastern Hemisphere from the Western Hemisphere.",
+      "Crossing a line while walking in one direction puts you on the opposite side of that line."
+    ]
+  },
+  {
+    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-004",
+    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
+    "cedCode": "M6GEO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An explorer makes this claim: 'North America is in the Northern Hemisphere, so it cannot be in the Western Hemisphere.' Identify what is wrong with this claim and correct it.",
+    "choices": [
+      "The claim is wrong because it confuses the role of the Prime Meridian with the role of the Equator; the Prime Meridian divides east from west, not north from south, so North America can be north of the Equator and still west of the Prime Meridian",
+      "The claim is incomplete because it answers only the north-south question; North America is in both the Northern Hemisphere and the Western Hemisphere",
+      "The claim is wrong because a place must be in exactly one hemisphere; since North America is north of the Equator, it cannot also be positioned relative to the Prime Meridian in a way that puts it in the Western Hemisphere",
+      "The claim is incomplete because the explorer checked only the location relative to the Equator but did not check the location relative to the Prime Meridian to determine the east-west hemisphere"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that the two questions must both be asked—one about the Equator and one about the Prime Meridian.",
+      "Every place on Earth is in two hemispheres, one from the north-south pair and one from the east-west pair."
+    ]
+  },
+  {
+    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-005",
+    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
+    "cedCode": "M6GEO-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two continents are described: Continent X lies entirely north of the Equator and entirely east of the Prime Meridian. Continent Y has land both north and south of the Equator, but all of it is east of the Prime Meridian. Which statement correctly compares how many hemispheres each continent occupies?",
+    "choices": [
+      "Continent X is in four hemispheres and Continent Y is in two hemispheres",
+      "Continent X is in two hemispheres and Continent Y is in two hemispheres",
+      "Continent X is in two hemispheres and Continent Y is in three hemispheres",
+      "Continent X is in three hemispheres and Continent Y is in four hemispheres"
+    ],
+    "answer": "C",
+    "hints": [
+      "For Continent X, check each line: is it on both sides of the Equator? Is it on both sides of the Prime Meridian?",
+      "For Continent Y, the Equator runs across it, so land exists on both sides of that line; the Prime Meridian does not divide it."
+    ]
+  },
+  {
+    "id": "m6geo-hemispheres-the-equator-the-prime-meridian-006",
+    "loId": "m6geo.hemispheres-equator-and-prime-meridian",
+    "cedCode": "M6GEO-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A captain records this ship's journey: 'We started west of the Prime Meridian and south of the Equator. We sailed north and crossed the Equator on Monday. We continued sailing north and west until Friday, when we crossed the Prime Meridian.' Use the two-question method to determine which two hemispheres the ship occupied after all crossings were complete. Then explain why the ship's final position is in exactly two hemispheres and not four.",
+    "choices": [
+      "Northern Hemisphere and Western Hemisphere; the ship crossed only one line (the Prime Meridian) in each direction, so it entered only two of the four hemisphere sections",
+      "All four hemispheres; the ship crossed both the Equator and the Prime Meridian, which means it passed through every hemisphere",
+      "Southern Hemisphere and Eastern Hemisphere; the ship's starting position determines its ending hemispheres regardless of direction of travel",
+      "Northern Hemisphere and Western Hemisphere; although the ship crossed two lines, each line separates only one pair of hemispheres, and the ship ended up on one side of each pair"
+    ],
+    "answer": "D",
+    "hints": [
+      "Apply the two-question method: After crossing the Equator while sailing north, is the ship north or south? After crossing the Prime Meridian while sailing west, is the ship east or west?",
+      "A place is in all four hemispheres only if it sits in all four sections created by the two lines—that happens only when a large area like a continent has the Equator running across it AND the Prime Meridian running across it. A single point cannot occupy all four."
+    ]
+  },
+  {
+    "id": "m6geo-parts-of-a-map-001",
+    "loId": "m6geo.parts-of-a-map",
+    "cedCode": "M6GEO-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "You are looking at a paper map for the first time. Near the top of the map, printed in large letters, you see the words \"Mountain Valley Nature Reserve.\" What part of the map is this, and what question does it answer?",
+    "choices": [
+      "It is the scale bar, and it answers the question of how big distances really are.",
+      "It is the legend, and it answers the question of what the symbols on this map mean.",
+      "It is the compass rose, and it answers the question of which way is north.",
+      "It is the title, and it answers the question of what this map is showing."
+    ],
+    "answer": "D",
+    "hints": [
+      "This printed text is located near the top of the map.",
+      "Words printed on a map that name the place or subject the map is about go by a specific name."
+    ]
+  },
+  {
+    "id": "m6geo-parts-of-a-map-002",
+    "loId": "m6geo.parts-of-a-map",
+    "cedCode": "M6GEO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is reading the Riverside Park Map and wants to know what a small star symbol stands for. The map has a compass rose pointing north at the top, a title reading \"Riverside Park Map\" near the top, and a small box in the corner listing symbols and their meanings. Where should the student look to find out what the star symbol means?",
+    "choices": [
+      "The legend, because it pairs symbols with what they stand for.",
+      "The compass rose, because it shows the direction from one symbol to another.",
+      "The title, because it names what the entire map shows.",
+      "The scale bar, because it measures distances between symbols on the map."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which part of a map is built to explain what symbols mean.",
+      "This part is sometimes called a key and usually sits inside a small box."
+    ]
+  },
+  {
+    "id": "m6geo-parts-of-a-map-003",
+    "loId": "m6geo.parts-of-a-map",
+    "cedCode": "M6GEO-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On the Pinewood Trail Map, a hiker sees a small straight bar printed near the bottom corner. The bar has a tick mark in the middle dividing it into two sections. The left end is labeled 0 and the right end is labeled 1 mile. The hiker wants to know roughly how far apart two campsites are on the real trail. Which part of the map answers this question?",
+    "choices": [
+      "The title, which identifies the specific trail, region, or area that the map represents to the reader.",
+      "The scale bar, which connects distances on the map to real-world distances.",
+      "The legend, which explains the meaning of each symbol, color, and marking used throughout the map.",
+      "The compass rose, which indicates the cardinal directions and helps orient the map to geographic north."
+    ],
+    "answer": "B",
+    "hints": [
+      "This part is printed as a bar with distance markings on it.",
+      "It is the only part of a map that connects a length on the page to a real distance in the world."
+    ]
+  },
+  {
+    "id": "m6geo-parts-of-a-map-004",
+    "loId": "m6geo.parts-of-a-map",
+    "cedCode": "M6GEO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student holds the Forest Lake Campground Map and sees that two cabins are marked by small square symbols. On the printed page, the cabin marked with a red square is directly to the right of the cabin marked with a blue square. The compass rose on the map shows an arrow labeled N pointing toward the top of the page. Based on this information, in which direction is the red cabin from the blue cabin in the real world?",
+    "choices": [
+      "South, because the compass rose points north at the top of the page and the red square is to the right of the blue square.",
+      "North, because the red square is higher on the page than the blue square.",
+      "East, because the arrow labeled N points to the top of the page, so the right side of the page points east.",
+      "West, because the compass rose shows all four directions and west is the opposite of east."
+    ],
+    "answer": "C",
+    "hints": [
+      "First, use the compass rose to determine what direction each side of the page represents.",
+      "Once you know that the top of the page is north, you can figure out which direction the right side represents."
+    ]
+  },
+  {
+    "id": "m6geo-parts-of-a-map-005",
+    "loId": "m6geo.parts-of-a-map",
+    "cedCode": "M6GEO-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student looking at the Hillside Park Map needs to answer two questions. Question 1: \"How far apart are the two parking areas?\" Question 2: \"What does the small triangle symbol on the map stand for?\" For each question, which map part should the student use to find the answer?",
+    "choices": [
+      "For question 1, use the legend; for question 2, use the scale bar.",
+      "For question 1, use the title; for question 2, use the compass rose.",
+      "For question 1, use the compass rose; for question 2, use the title.",
+      "For question 1, use the scale bar; for question 2, use the legend."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that each part of a map is built to answer exactly one type of question.",
+      "A 'how far apart' question needs a part that connects page distances to real distances; a 'what does this symbol mean' question needs a part that explains symbols."
+    ]
+  },
+  {
+    "id": "m6geo-parts-of-a-map-006",
+    "loId": "m6geo.parts-of-a-map",
+    "cedCode": "M6GEO-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is looking at two different maps side by side: the East Ridge Trail Map and the West Ridge Trail Map. On the East Ridge map, the compass rose shows the arrow labeled N pointing toward the top of the page. On the West Ridge map, the compass rose shows the arrow labeled N pointing toward the bottom of the page. On both maps, a lake symbol appears in the same position—directly above a stream symbol on the printed page. Based on the compass roses shown on each map, which statement correctly describes the real-world direction from the stream to the lake on each map?",
+    "choices": [
+      "On the East Ridge map, the lake is north of the stream; on the West Ridge map, the lake is south of the stream because each map has its own compass rose showing a different direction for the top of the page.",
+      "On the East Ridge map, the lake is east of the stream; on the West Ridge map, the lake is west of the stream because rotating the compass rose changes which real-world direction corresponds to each side of the printed page.",
+      "On both maps, the lake is north of the stream in the real world because the compass rose direction is the same on every map and symbols maintain their actual geographic positions.",
+      "On the East Ridge map, the lake is above the stream; on the West Ridge map, the lake is below the stream because the visual page positions of the symbols determine their real-world directions regardless of what the compass roses indicate."
+    ],
+    "answer": "A",
+    "hints": [
+      "Always check the compass rose printed on the specific map you are reading, not just the positions of symbols on the page.",
+      "Two maps can have the same symbols in the same page positions, but if their compass roses point different ways, the real-world directions will be different."
+    ]
+  },
+  {
     "id": "m6geo-continents-oceans-001",
     "loId": "m6geo.continents-and-oceans",
     "cedCode": "M6GEO-2.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A continent is defined as one of Earth's largest continuous areas of land. Using the seven-continent convention, how many continents are there on Earth?",
+    "problemText": "According to the seven-continent convention used in most United States geography classes, name the continent that sits at the far southern end of the globe, surrounded entirely by ocean with no land connection to any other continent.",
     "choices": [
-      "Six",
-      "Seven",
-      "Five",
-      "Four"
+      "Australia",
+      "Antarctica",
+      "South America",
+      "Africa"
     ],
     "answer": "B",
     "hints": [
-      "The seven-continent convention divides Earth into these landmasses: Africa, Antarctica, Asia, Australia, Europe, North America, and South America.",
-      "Count each continent in the list above."
+      "This continent is at the far southern end of the globe, the opposite end from the Arctic.",
+      "Think about which continents stand completely alone, surrounded on all sides by water."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is told that Australia is completely surrounded by ocean and has no land connection to any other continent. Which of the following best explains why Australia is still called a continent rather than just an island?",
+    "problemText": "The Indian Ocean has Africa along its western edge and Australia along its eastern edge. Using the two-question routine for describing locations, which of the following correctly identifies what lies along the Indian Ocean's northern edge?",
     "choices": [
-      "Because explorers who first arrived there decided to name it a continent, and that decision was recorded in early maps and voyage journals.",
-      "Because Australia covers more total area than any single island on Earth, and geographers needed a different term for landmasses above a certain size threshold.",
-      "Because it is one of Earth's largest continuous areas of land, which is the definition of a continent.",
-      "Because it is located in the Southern Hemisphere opposite to the Arctic Ocean, placing it in a geographic zone reserved for continents."
+      "South America sits along the Indian Ocean's northern edge",
+      "The Arctic Ocean sits along the Indian Ocean's northern edge",
+      "Asia sits along the Indian Ocean's northern edge",
+      "Antarctica sits along the Indian Ocean's northern edge"
     ],
     "answer": "C",
     "hints": [
-      "A continent is defined by size and being a continuous area of land, not by whether water surrounds it.",
-      "Size and continuous land area matter more than whether an ocean separates a landmass from others."
+      "The Indian Ocean is in the Southern Hemisphere. Think about which continents are north of it.",
+      "Africa and Australia are on opposite sides of this ocean, so what large continent must sit above them?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Europe and Asia sit on the same continuous landmass with no ocean or sea between them, yet geographers still count them as two separate continents instead of one. What does this situation demonstrate?",
+    "problemText": "Europe and Asia are counted as two separate continents, even though there is no ocean or sea between them and they sit on one continuous landmass. Which of the following best explains why geographers still count them as two continents?",
     "choices": [
-      "That two continents can only be separated when a body of water like an ocean or sea creates a physical barrier between them.",
-      "That Europe and Asia were historically considered one continent for thousands of years before being split into two for political reasons.",
-      "That continents must always be divided by narrow strips of land in order for them to be counted as separate geographic regions.",
-      "That the division of continents is a convention—a way people agreed to divide Earth—rather than a natural division marked by water."
+      "The landmass between Europe and Asia contains so much water that it functions as an ocean barrier between the two regions",
+      "Europe and Asia are separated by cultural and historical traditions that developed independently over time, making them distinct enough to count as separate continents",
+      "Every continent must have a unique neighbor that no other continent touches, which requires Europe and Asia to be divided into two separate continental regions",
+      "A convention is an agreed-upon way to divide something so people can talk about it clearly, even though it could reasonably have been divided a different way"
     ],
     "answer": "D",
     "hints": [
-      "A convention is an agreement people made that could have been done differently—not a rule of nature.",
-      "Some continents are separated by oceans or water, but Europe and Asia show that continents can be divided in other ways too."
+      "A convention is a way a group of people has agreed to do something.",
+      "Think about whether there is only one correct way to count continents, or whether different geographers could reasonably make different choices."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "To describe where a continent or ocean is located, geographers use a two-question method: First, identify what continents or landmasses touch the location's edges. Then, specify the direction (north, south, east, or west) in which each neighbor lies relative to that location. Apply this method to describe the location of the Arctic Ocean. What is the correct description?",
+    "problemText": "A student uses the two-question routine to describe South America's location by asking: what touches South America along its edges? The student finds that North America connects to it by a narrow strip of land to the north, the Atlantic Ocean lies to its east, and the Pacific Ocean lies to its west. The student concludes there is nothing to the south. Which of the following correctly explains what the student is missing?",
     "choices": [
-      "North America, Europe, and Asia all border the Arctic Ocean; they lie to the south of the Arctic Ocean.",
-      "The Arctic Ocean touches Australia to the east, Antarctica to the south, and Africa to the west.",
-      "The Atlantic and Pacific Oceans border the Arctic Ocean; the Atlantic lies to the east and the Pacific lies to the west.",
-      "The Arctic Ocean is surrounded on all sides by the southern edges of the four major oceans, with no continents nearby."
+      "The student forgot to check that Antarctica lies to the south of South America, separated entirely by ocean",
+      "The student made an error because every continent must have exactly four neighbors",
+      "The student is correct—South America is the only continent without anything along its southern edge",
+      "The student forgot to mention that a sea, not an ocean, lies to the south"
     ],
     "answer": "A",
     "hints": [
-      "The Arctic Ocean is located at the far northern end of Earth.",
-      "If continents border the Arctic Ocean to its north, then the Arctic Ocean is to their south—directions flip when reversed."
+      "When describing a location, you should check what touches a place along its edges—this includes other continents and oceans both.",
+      "Which continent sits at the far southern end of the globe? Could it border anything to the south of South America?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student claims that because Africa and Asia are joined by a continuous landmass with no water between them, they must be neighboring continents in the same way that North America and South America are neighboring continents. Is this claim correct? Explain why or why not based on how these pairs are actually connected.",
+    "problemText": "Two students describe the location of the Atlantic Ocean. Student A says: \"The Atlantic Ocean has North America and South America on its western edge, and Europe and Africa on its eastern edge.\" Student B says: \"The Atlantic Ocean has Europe and Africa on its western edge, and North America and South America on its eastern edge.\" One student has made a direction error. To check for this error, you can use a flip-check method: if a place is on one side of the ocean, that same ocean must appear on the opposite side when viewed from that place. Which student is wrong and why?",
     "choices": [
-      "Yes, the claim is correct. Both pairs of continents touch each other along their borders, so the type or width of the connection between them does not matter for determining if they are neighbors.",
-      "No, the claim is incorrect. Africa and Asia share a continuous landmass with no water between them, while North America and South America are connected by only a narrow strip of land, which is a different type of connection.",
-      "No, the claim is incorrect. The connection between Africa and Asia is narrower than the connection between North and South America, making them less closely related as neighboring continents despite both pairs being connected.",
-      "Yes, the claim is correct. Since both pairs of continents are physically attached to each other without water separating them, they share the same relationship as neighbors regardless of whether the landmass connecting them is wide or narrow."
+      "Student A is wrong because North America and South America are not actually located on opposite sides of the Atlantic Ocean from each other",
+      "Student B is wrong because when you flip the statement, Europe cannot be on the western edge of the Atlantic and also have the Atlantic on its eastern edge at the same time",
+      "Student B is wrong because the Atlantic Ocean is larger on the eastern side than the western side, so the direction labels must be reversed to match the actual size of each region",
+      "Student A is wrong because Europe and Africa are on different continents, so they cannot both be neighbors of the same ocean's eastern edge"
     ],
     "answer": "B",
     "hints": [
-      "Europe and Asia are joined by a large continuous landmass, while the Americas are connected by a narrow strip of land—these are two different types of connections.",
-      "Two continents can touch in different ways: sharing a large continuous landmass or being connected by a narrow strip of land."
+      "Use the flip-check: if Europe is on one side of the Atlantic, Europe must see the Atlantic on the opposite side when viewed from Europe's perspective.",
+      "Think about which direction Europe actually faces when looking toward the Atlantic Ocean."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-2.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student writes three location statements: (1) The Indian Ocean has Africa to its west and Asia to its north. (2) South America lies west of the Atlantic Ocean. (3) Antarctica is surrounded by the Atlantic, Pacific, and Indian Oceans. For each statement, apply the two-question method and use the direction-flip test to determine which statements are correct and which contain an error in direction or in naming neighbors.",
+    "problemText": "A geographer explains that Earth's continents and oceans are divided and named using the seven-continent and four-ocean convention. The geographer notes that some other geographers combine Europe and Asia into one continent (giving six continents) and that some name a fifth ocean, the Southern Ocean, circling Antarctica, instead of counting that water as parts of the Pacific, Atlantic, and Indian Oceans. A student asks: \"If different geographers divide the world differently, how can I know which division is correct?\" A convention is an agreed-upon way that a group has chosen to divide something so they can talk about it clearly. Based on this definition, which answer best addresses the student's question?",
     "choices": [
-      "Statements (1) and (2) are correct; statement (3) is incorrect because Antarctica is surrounded by all three oceans and also sits below the southern edges of the Pacific, Atlantic, and Indian, not just surrounded by them.",
-      "Statement (1) is incorrect because Asia lies to the east of the Indian Ocean; statements (2) and (3) are correct.",
-      "Statements (1) and (3) are correct; statement (2) is incorrect because South America lies east of the Atlantic Ocean, not west.",
-      "All three statements are correct when checked against the positions of the continents and oceans."
+      "The answer depends entirely on where you live, since each country teaches its own division in schools and that region's convention is considered correct only within its borders",
+      "The seven-continent division is the only correct one because it is used by most geographers in the United States and appears in the majority of American textbooks",
+      "There is no single correct answer because a convention is an agreed-upon way to divide something that could reasonably have been divided differently; the key is to know which convention your source is using, not to find the only true one",
+      "Both divisions must be equally accurate because geographers have equal authority, so you should memorize both equally well and use whichever feels right"
     ],
     "answer": "C",
     "hints": [
-      "For each statement, flip it to test if the reverse direction also makes sense: if X is west of Y, then Y must be east of X.",
-      "Check statement (2) carefully: if the Atlantic Ocean lies between the Americas and Europe/Africa, which side of that ocean is South America on?"
+      "A convention is simply the way a group of people has agreed to divide something so they can talk about it clearly.",
+      "Think about whether a convention is the only possible way to do something, or whether it is one reasonable choice among other possible choices."
     ]
   }
 ]
