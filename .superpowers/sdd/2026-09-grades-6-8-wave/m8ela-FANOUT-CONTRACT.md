@@ -510,3 +510,80 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
     phrase that appeared nowhere in its passage. Re-cut the quoted span so it ends where the
     source ends, or drop the quotation marks and paraphrase. Never adjust a word to fit the
     frame, and never let a quote frame change the source's grammar.
+
+## Addenda — CONTROLLER RULINGS 2026-09-04 (second Opus batch, rows 5.1-6.4)
+
+21. **Dual-code rows: cite once, at the end.** Some scope cells embed their standard
+    codes mid-sentence ("(L.8.2a)", "(L.8.2b)"). Copying part (i) verbatim AND appending
+    the citation would then cite twice or three times. Drop the inline codes while
+    copying and append one parenthesis at the end listing both: `(CCSS L.8.2a, L.8.2b)`.
+    Rows 1.1 and 6.4 reached this convention independently; it now also binds 7.1, 9.3,
+    9.4 and 10.3.
+
+22. **No specimen may be shared between a TEACHING segment and an ITEM.** Row 5.2's
+    author found its concept `keyIdeas` using the exact sentence and answer of its own
+    try_yourself 3, which made the file's hardest item answerable by recall rather than
+    by the skill, and a `WRONG:`/`CORRECT:` specimen identical to item 1's choice a,
+    which eliminated one distractor for free. Neither is visible to any gate.
+
+    **CORRECTED 2026-09-04 after row 7.1 flagged it too broad.** The mechanism is
+    leakage into an assessed item, so the rule binds only where a specimen crosses
+    that line: no `try_yourself` stem, choice or answer may also appear in the hook,
+    concept, worked examples, recap or misconception check. Two TEACHING segments
+    sharing a specimen is fine and is house style -- the procedure-led exemplar
+    `m8ela-u5-active-and-passive-voice.ts` shares one between concept keyIdea 3 and
+    recap line 3, and a recap restating an error the concept already labelled cannot
+    leak anything. Before you finish, list every specimen in your items and confirm
+    none of them appears in a teaching segment.
+
+23. **`WRONG:` where neither form is an error.** Rows whose subject is a CHOICE between
+    two correct forms (6.2 voice-and-mood-for-effect is the clear case; 6.1 is shifts-in-voice-and-mood) cannot label a
+    grammatical sentence a bare `WRONG:` without installing the very rule the contract
+    forbids inventing -- "the passive is always wrong". Use `WRONG FOR THIS EFFECT:`
+    beside its `CORRECT:`, which still matches a reviewer's grep for `WRONG:` because the
+    string is a prefix, and say so in the NOTE. Keep bare `WRONG:` for genuinely
+    non-standard forms.
+
+24. **The em dash in `los[0].description` is decided PER SUBJECT, and for ELA it stays
+    an em dash.** The 2026-09-03 addendum's " -- " conversion was measured on m6sci/m7sci
+    and then written into all four contracts. Re-measured across the shipped corpus:
+    ELA uses the em dash in 24 descriptions and " -- " in ZERO; science and math use
+    " -- " and no em dash. So in THIS contract, keep the em dash. (The general lesson is
+    the wave's own: re-run a precedent comparison inside the artifact type AND the
+    subject you are writing for; do not inherit a sibling course's measurement. Row 6.3
+    caught this by measuring instead of complying, and it mattered most there -- printing
+    "--" in the student-facing objective of the dash lesson shows the wrong glyph for the
+    thing being taught.)
+
+## Addenda — CONTROLLER RULINGS 2026-09-04 (third Opus batch, rows 7.1-8.4)
+
+25. **Unit 7 vocabulary rows DO write a claim ledger, even though every scenario is
+    invented.** Checklist item 14 exempts an all-fiction file and names only rows 2.3/2.4
+    as exceptions. Three Unit 7 authors independently judged that wrong for their rows and
+    wrote a full ledger anyway; they were right, and the exemption is hereby extended.
+    A vocabulary row necessarily asserts **word senses, registers and etymologies**, and a
+    student takes those as facts about English — "dough" for money, `-cred-` from *credere*,
+    firm < persistent < resolute. Several such claims sit in DISTRACTORS, which is the case
+    item 14 exists for: a false fact in a wrong answer reaches the student with no
+    correction. Ledger every root, sense and register claim with a real source, never
+    "widely stated". The invented people and settings stay STIPULATED as usual.
+
+26. **Generalising ruling 23: the label must name the criterion the specimen fails.**
+    Three rows in one batch hit cases a bare `WRONG:` would misrepresent, and each needed a
+    different label, so the rule is not a fixed vocabulary — it is: **bare `WRONG:` is
+    reserved for a form that is genuinely non-standard English.** Everything else names its
+    criterion. Observed and approved: `WRONG FOR THIS EFFECT:` (6.2, where neither voice is
+    an error), `WRONG FOR THESE FACTS:` / `WRONG FOR THIS PLACE:` / `WRONG FOR THIS
+    PURPOSE:` (7.4, near-synonyms), `WRONG FOR A FORMAL ARGUMENT:` (8.4, register — where a
+    bare label would teach "a contraction is always wrong in writing"), and `WEAK:`/
+    `STRONG:` (8.3, for a sentence that is grammatical AND true but stops short of the
+    move, which neither `WRONG:` nor `WRONG FOR THIS EFFECT:` fits). All of these still
+    match a reviewer's grep for `WRONG:` except the last, so a row using `WEAK:`/`STRONG:`
+    must say so in its NOTE. 8.4 also shows the strongest version of the move: it makes the
+    over-generalisation the subject of its own misconception check.
+
+27. **A curriculum cell containing U+2026 vs "copy verbatim".** Row 8.3's cell prints a real
+    ellipsis inside its example phrase, which checklist item 9 bans from the file. Convert
+    it to three ASCII periods while copying; "verbatim" governs the words, and item 9
+    governs the glyph. Same shape as ruling 24 for the em dash, opposite conclusion,
+    because the corpus and the ban point the same way here.
