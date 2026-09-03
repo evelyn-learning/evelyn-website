@@ -166,7 +166,7 @@ export const SEED_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT: Lesson
       id: 'm8ela.word-choice-and-analogy-in-informational-text',
       standard: 'M8ELA-3.3',
       description:
-        'Analyze how a specific word choice -- a connotative or figurative word, or an explanatory analogy -- shapes the meaning and TONE of a short informational excerpt (a newsletter notice, a field-guide entry), naming the tone with a precise adjective and the words that carry it (CCSS RI.8.4).',
+        'Analyze how a specific word choice — a connotative or figurative word, or an explanatory analogy — shapes the meaning and TONE of a short informational excerpt (a newsletter notice, a field-guide entry), naming the tone with a precise adjective and the words that carry it (CCSS RI.8.4).',
     },
   ],
   prerequisites: ['m8ela.connections-and-distinctions-among-ideas'],

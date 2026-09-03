@@ -124,7 +124,7 @@ export const SEED_M8ELA_U1_STRONGEST_TEXTUAL_EVIDENCE: LessonPlan = {
       id: 'm8ela.strongest-textual-evidence',
       standard: 'M8ELA-1.1',
       description:
-        'Given several true details from a short excerpt, rank them and choose the one that MOST STRONGLY supports an inference or analysis -- the escalation from "cite evidence that supports" to "cite the evidence that supports best" (CCSS RL.8.1, RI.8.1).',
+        'Given several true details from a short excerpt, rank them and choose the one that MOST STRONGLY supports an inference or analysis — the escalation from "cite evidence that supports" to "cite the evidence that supports best" (CCSS RL.8.1, RI.8.1).',
     },
   ],
   prerequisites: [],

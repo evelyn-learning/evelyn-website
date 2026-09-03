@@ -139,7 +139,7 @@ export const SEED_M8ELA_U4_HOW_AN_AUTHOR_RESPONDS_TO_OPPOSING_VIEWS: LessonPlan 
       id: 'm8ela.how-an-author-responds-to-opposing-views',
       standard: 'M8ELA-4.1',
       description:
-        'Determine an author\'s point of view in a short excerpt and analyze how the author ACKNOWLEDGES and RESPONDS to conflicting evidence or an opposing viewpoint -- concedes it, limits it, or refutes it (CCSS RI.8.6).',
+        'Determine an author\'s point of view in a short excerpt and analyze how the author ACKNOWLEDGES and RESPONDS to conflicting evidence or an opposing viewpoint — concedes it, limits it, or refutes it (CCSS RI.8.6).',
     },
   ],
   prerequisites: ['m8ela.the-role-of-a-sentence-in-a-paragraph'],

@@ -202,7 +202,7 @@ export const SEED_M8ELA_U4_WHERE_TWO_TEXTS_DISAGREE_FACT_OR_INTERPRETATION: Less
       id: 'm8ela.where-two-texts-disagree-fact-or-interpretation',
       standard: 'M8ELA-4.3',
       description:
-        'Given two short texts on the same topic that CONFLICT, identify exactly where they disagree and classify the disagreement as a matter of FACT (a number, a date, what happened -- checkable) or of INTERPRETATION (the same fact read two ways), and say what a reader should do next in each case (CCSS RI.8.9).',
+        'Given two short texts on the same topic that CONFLICT, identify exactly where they disagree and classify the disagreement as a matter of FACT (a number, a date, what happened — checkable) or of INTERPRETATION (the same fact read two ways), and say what a reader should do next in each case (CCSS RI.8.9).',
     },
   ],
   prerequisites: ['m8ela.is-the-reasoning-sound'],

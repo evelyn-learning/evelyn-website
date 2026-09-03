@@ -98,7 +98,7 @@ export const SEED_M8ELA_U2_HOW_A_THEME_DEVELOPS_THROUGH_CHARACTER_AND_SETTING: L
       id: 'm8ela.how-a-theme-develops-through-character-and-setting',
       standard: 'M8ELA-2.1',
       description:
-        'Analyze how a theme develops over a short excerpt by locating the moment a change in a character or in the setting turns the theme -- i.e., the theme\'s RELATIONSHIP to character, setting, and plot (CCSS RL.8.2).',
+        'Analyze how a theme develops over a short excerpt by locating the moment a change in a character or in the setting turns the theme — i.e., the theme\'s RELATIONSHIP to character, setting, and plot (CCSS RL.8.2).',
     },
   ],
   prerequisites: ['m8ela.comparing-the-structure-of-two-texts'],

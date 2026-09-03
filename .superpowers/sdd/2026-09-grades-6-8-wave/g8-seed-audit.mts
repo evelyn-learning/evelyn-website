@@ -47,7 +47,7 @@ if (!files.length) { console.error(`NO FILES MATCHED for ${course} in ${dir} (sl
  */
 function schoolYearLeaks(s: string): string[] {
   return s
-    .split(/(?<=[.!?])\s+/)
+    .split(/(?<=[.!?]["']?)\s+|\s+\/\s+/)
     .filter((sent) => /\b(last|next) year\b/i.test(sent) && /\b(you|your|we|our)\b/i.test(sent));
 }
 // Self-tests: a check that has never been shown to fire is not evidence of absence.
@@ -55,6 +55,9 @@ if (!schoolYearLeaks('Last year you learned that an opinion turns into an argume
 if (!schoolYearLeaks('Last year you found the volume of a box with V = Bh.').length) throw new Error('self-test: missed a real leak (found)');
 if (schoolYearLeaks('The pool stayed open two hours later than last year.').length) throw new Error('self-test: fired on a passage sentence');
 if (schoolYearLeaks('40 students signed up, and the club should keep the slot next year.').length) throw new Error('self-test: fired on the noun "students"');
+// A quoted pair separated by " / " must not fuse into one sentence: the splitter
+// needs the closing quote and the slash, or an unrelated "we" joins an unrelated "last year".
+if (schoolYearLeaks('PAIR A: "If the floor is wet, we will move." / "was" states something that happened last year.').length) throw new Error('self-test: fused a quoted pair into one sentence');
 
 const LETTERS = ['a', 'b', 'c', 'd'];
 let total = 0, longest = 0, mcqs = 0;

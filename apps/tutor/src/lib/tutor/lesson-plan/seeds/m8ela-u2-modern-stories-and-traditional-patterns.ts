@@ -166,7 +166,7 @@ export const SEED_M8ELA_U2_MODERN_STORIES_AND_TRADITIONAL_PATTERNS: LessonPlan =
       id: 'm8ela.modern-stories-and-traditional-patterns',
       standard: 'M8ELA-2.4',
       description:
-        'Recognize when a short modern excerpt draws on a pattern of events or a character type from myths and traditional stories -- the three trials, the trickster outwitted, the warning ignored, the humble helper who proves decisive -- and explain how the modern telling renders that pattern new (a changed setting, a reversed outcome, a swapped role) (CCSS RL.8.9).',
+        'Recognize when a short modern excerpt draws on a pattern of events or a character type from myths and traditional stories — the three trials, the trickster outwitted, the warning ignored, the humble helper who proves decisive — and explain how the modern telling renders that pattern new (a changed setting, a reversed outcome, a swapped role) (CCSS RL.8.9).',
     },
   ],
   prerequisites: ['m8ela.allusions-and-analogies-in-literature'],

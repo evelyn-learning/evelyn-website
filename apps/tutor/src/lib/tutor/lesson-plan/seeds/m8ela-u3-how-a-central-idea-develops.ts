@@ -207,7 +207,7 @@ export const SEED_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS: LessonPlan = {
       id: 'm8ela.how-a-central-idea-develops',
       standard: 'M8ELA-3.1',
       description:
-        'Trace how a central idea is introduced, then refined or extended, across the sentences of a short informational excerpt, and explain how each supporting idea relates to it (an example of it, a limit on it, a cause behind it) -- development and relationship (CCSS RI.8.2).',
+        'Trace how a central idea is introduced, then refined or extended, across the sentences of a short informational excerpt, and explain how each supporting idea relates to it (an example of it, a limit on it, a cause behind it) — development and relationship (CCSS RI.8.2).',
     },
   ],
   prerequisites: ['m8ela.modern-stories-and-traditional-patterns'],

@@ -108,7 +108,7 @@ export const SEED_M8ELA_U1_HOW_AN_INCIDENT_PROVOKES_A_DECISION: LessonPlan = {
       id: 'm8ela.how-an-incident-provokes-a-decision',
       standard: 'M8ELA-1.3',
       description:
-        'Analyze how one specific incident in a short excerpt provokes a character\'s decision and what that decision reveals about the character -- a cause-to-choice chain traced through a single event, not a map of the whole plot (CCSS RL.8.3).',
+        'Analyze how one specific incident in a short excerpt provokes a character\'s decision and what that decision reveals about the character — a cause-to-choice chain traced through a single event, not a map of the whole plot (CCSS RL.8.3).',
     },
   ],
   prerequisites: ['m8ela.how-dialogue-propels-action-and-reveals-character'],

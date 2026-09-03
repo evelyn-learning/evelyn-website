@@ -166,7 +166,7 @@ export const SEED_M8ELA_U4_IS_THE_REASONING_SOUND: LessonPlan = {
       id: 'm8ela.is-the-reasoning-sound',
       standard: 'M8ELA-4.2',
       description:
-        'Evaluate whether the REASONING in a short argument is sound -- whether the reason actually leads to the claim, and whether the evidence proves what is claimed rather than something nearby (a bigger claim, a different group, a different time) -- and recognize evidence introduced to distract from a weak link (CCSS RI.8.8).',
+        'Evaluate whether the REASONING in a short argument is sound — whether the reason actually leads to the claim, and whether the evidence proves what is claimed rather than something nearby (a bigger claim, a different group, a different time) — and recognize evidence introduced to distract from a weak link (CCSS RI.8.8).',
     },
   ],
   prerequisites: ['m8ela.how-an-author-responds-to-opposing-views'],

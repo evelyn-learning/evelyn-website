@@ -221,7 +221,7 @@ export const SEED_M8ELA_U3_CONNECTIONS_AND_DISTINCTIONS_AMONG_IDEAS: LessonPlan 
       id: 'm8ela.connections-and-distinctions-among-ideas',
       standard: 'M8ELA-3.2',
       description:
-        'Analyze how an informational excerpt connects or distinguishes two individuals, ideas, or events -- through a comparison, an analogy, or a category -- and say what the connection lets the reader understand that the two facts alone would not (CCSS RI.8.3).',
+        'Analyze how an informational excerpt connects or distinguishes two individuals, ideas, or events — through a comparison, an analogy, or a category — and say what the connection lets the reader understand that the two facts alone would not (CCSS RI.8.3).',
     },
   ],
   prerequisites: ['m8ela.how-a-central-idea-develops'],

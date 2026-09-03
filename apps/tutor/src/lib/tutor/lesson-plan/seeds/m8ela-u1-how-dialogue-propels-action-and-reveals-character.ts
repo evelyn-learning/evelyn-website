@@ -92,7 +92,7 @@ export const SEED_M8ELA_U1_HOW_DIALOGUE_PROPELS_ACTION_AND_REVEALS_CHARACTER: Le
       id: 'm8ela.how-dialogue-propels-action-and-reveals-character',
       standard: 'M8ELA-1.2',
       description:
-        'Analyze how a particular line of dialogue in a short excerpt does two jobs at once -- moves the plot forward (a decision made, a secret exposed, a plan changed) and reveals the speaker or listener -- and cite the line (CCSS RL.8.3).',
+        'Analyze how a particular line of dialogue in a short excerpt does two jobs at once — moves the plot forward (a decision made, a secret exposed, a plan changed) and reveals the speaker or listener — and cite the line (CCSS RL.8.3).',
     },
   ],
   prerequisites: ['m8ela.strongest-textual-evidence'],
