@@ -285,7 +285,7 @@ function buildSystem(subjectLabel: string): string {
 
 ANSWER-CUE DISCIPLINE. A test-wise student must not be able to find the answer from the SHAPE of the choices instead of the content. Two habits give the answer away and you must avoid both:
 1. Length. Write the four choices of an item to a SIMILAR LENGTH: no choice should be more than about a quarter longer than the shortest one. Count roughly as you write. If the correct answer needs to state a full reason, computation, or definition, then EVERY distractor states a full reason, computation, or definition too — a wrong one. Reach the match by making the distractors as substantive as the key, never by padding them with filler and never by trimming the key until it is vague. Before you emit an item, compare its four choices: if the correct one is clearly the longest, rewrite the other three to carry the same weight.
-2. Position. Place each item's correct answer at the letter you are told to use for that item. Distribute is not enough — obey the specified letter exactly.
+2. Position. Write the choices in whatever order makes the item clearest and the answer correct — do NOT try to place the correct answer at any particular letter. Position is rotated mechanically after you are done, so it costs you nothing and you must not spend any effort on it. What matters is that the letter in "answer" really is the correct choice.
 Every distractor must be a claim a student could actually believe, wrong for a nameable reason. No joke options, no throwaway near-duplicates, and no choice that refers to another choice by letter or position (no "both A and B", no "none of the above").`;
 }
 
@@ -301,15 +301,10 @@ function buildPrompt(
   subjectLabel: string,
   exactlyTwoHints: boolean,
   scopeNote?: string,
-  answerLetters?: string[],
 ): string {
   const itemsPerLo = difficulties.length;
   const spec = difficulties
-    .map((d, i) =>
-      answerLetters
-        ? `${i + 1}. difficulty ${d} — ${DIFFICULTY_LABEL[d]} — correct answer MUST be choice ${answerLetters[i]}`
-        : `${i + 1}. difficulty ${d} — ${DIFFICULTY_LABEL[d]}`,
-    )
+    .map((d, i) => `${i + 1}. difficulty ${d} — ${DIFFICULTY_LABEL[d]}`)
     .join('\n');
   const hintsInstruction = exactlyTwoHints ? 'exactly 2 short hints' : '1-2 short hints';
   // The course's boundary. This lives in each seed file's SCOPE GUARD doc
@@ -362,6 +357,36 @@ function validateGenItem(it: GenItem, loId: string): string[] {
   }
   if (/\$(\d)/.test(it.problemText || '')) errs.push(`WARN ${loId} problemText has $<digit> (currency/KaTeX trap)`);
   return errs;
+}
+
+/** Move each item's correct choice to a deterministic position by SWAPPING it
+ *  with whatever sits there, then restamping `answer`.
+ *
+ *  This replaces an earlier design that told the model which letter to use.
+ *  That instruction was measured, against the Sonnet verify gate, to be the
+ *  dominant cause of wrong answer keys: rejection rose monotonically with the
+ *  demanded letter — A 20% / B 20% / C 42% / D 67% in mathematics and
+ *  A 18% / B 16% / C 53% / D 73% in ELA. The model composes an item with the
+ *  answer where it naturally falls, and forcing a relabel corrupts the key.
+ *  A cosmetic position tell is not worth a wrong answer, and rotating after
+ *  the fact costs nothing and cannot change which choice is true.
+ *
+ *  Skipped for any item whose choices refer to each other by letter or
+ *  position ("both A and B", "none of the above") — reordering those changes
+ *  their meaning. The prompt forbids them; this is the belt to that braces. */
+function rotateAnswers(items: GenItem[], targetIdx: (i: number) => number): GenItem[] {
+  const REFERENTIAL = /\b(all|none|both|either|neither) of the (above|following)\b|\b(both|and|or) [A-D]\b|\banswers? [A-D]\b/i;
+  return items.map((it, i) => {
+    if (!Array.isArray(it.choices) || it.choices.length !== 4) return it;
+    if (it.choices.some((c) => REFERENTIAL.test(c))) return it;
+    const from = ['A', 'B', 'C', 'D'].indexOf(it.answer);
+    if (from < 0) return it;
+    const to = targetIdx(i);
+    if (from === to) return it;
+    const choices = it.choices.slice();
+    [choices[from], choices[to]] = [choices[to], choices[from]];
+    return { ...it, choices, answer: ['A', 'B', 'C', 'D'][to] };
+  });
 }
 
 /** Items whose correct choice is strictly longest by more than `slack`
@@ -528,9 +553,7 @@ async function main() {
     // the same rule the lesson seeds use for their in-lesson practice, so one
     // course does not carry two different answer-position conventions. Left
     // undefined without --ms-conventions to keep prior behavior byte-identical.
-    const answerLetters = opts.msConventions
-      ? difficulties.map((_, i) => ['A', 'B', 'C', 'D'][(lo.unit + cedIndex + i) % 4])
-      : undefined;
+    const targetIdx = (i: number) => (lo.unit + cedIndex + i) % 4;
     let items: GenItem[] = [];
     try {
       const params = {
@@ -540,7 +563,7 @@ async function main() {
         messages: [
           {
             role: 'user',
-            content: buildPrompt(lo, grounding, difficulties, opts.subjectLabel, opts.msConventions, opts.scopeNote, answerLetters),
+            content: buildPrompt(lo, grounding, difficulties, opts.subjectLabel, opts.msConventions, opts.scopeNote),
           },
         ],
       };
@@ -560,6 +583,7 @@ async function main() {
     }
 
     if (opts.msConventions && items.length) {
+      items = rotateAnswers(items, targetIdx);
       const offenders = answerCueOffenders(items);
       if (offenders.length) {
         try {

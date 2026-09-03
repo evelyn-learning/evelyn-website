@@ -1,363 +1,21 @@
 [
   {
-    "id": "m6math-representing-ratios-with-tables-diagrams-001",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "When you scale a ratio by multiplying both numbers by the same factor, what happens to the relationship between the two quantities?",
-    "choices": [
-      "The relationship changes because one number got bigger.",
-      "The relationship breaks because you should add instead of multiply.",
-      "The relationship stays the same because you multiplied both by the same amount.",
-      "The relationship becomes equivalent to the original ratio."
-    ],
-    "answer": "D",
-    "hints": [
-      "Think about what 'equivalent ratios' means from the lesson.",
-      "The key rule says both numbers get multiplied by the same factor — does that keep or change the mix?"
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-002",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A recipe uses a ratio of 3 cups of flour to 2 cups of sugar. If you scale this ratio by a factor of 4, what is the new amount of flour?",
-    "choices": [
-      "12 cups of flour",
-      "7 cups of flour",
-      "3 cups of flour",
-      "6 cups of flour"
-    ],
-    "answer": "A",
-    "hints": [
-      "Scale by multiplying, not by adding.",
-      "What do you get when you multiply 3 by the scale factor of 4?"
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-003",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A tape diagram shows a ratio of 2 parts red paint to 5 parts white paint. If each part represents 3 gallons, how many gallons of white paint are there?",
-    "choices": [
-      "6 gallons",
-      "15 gallons",
-      "10 gallons",
-      "8 gallons"
-    ],
-    "answer": "B",
-    "hints": [
-      "Count how many parts are white in the tape diagram.",
-      "Multiply the number of white parts by the amount each part represents."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-004",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A juice stand mixes orange juice and cranberry juice in the ratio 5:3. The stand manager builds a ratio table and finds that when there are 20 cups of orange juice, there are 12 cups of cranberry juice. What scale factor was used to get from the original ratio to this equivalent ratio?",
-    "choices": [
-      "2",
-      "3",
-      "4",
-      "5"
-    ],
-    "answer": "C",
-    "hints": [
-      "Look at what happened to the orange juice: it went from 5 to 20.",
-      "Divide 20 by 5 to find the scale factor that was multiplied by both numbers."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-005",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A double number line shows that 4 hours of work pairs with 32 dollars earned. If the same rate continues, what is the paired amount of money earned for 10 hours of work? Set up the ratio relationship and scale it appropriately.",
-    "choices": [
-      "36 dollars",
-      "40 dollars",
-      "72 dollars",
-      "80 dollars"
-    ],
-    "answer": "D",
-    "hints": [
-      "First identify the scale factor needed: what do you multiply 4 by to get 10?",
-      "Once you find the scale factor, multiply both numbers — the hours and the dollars — by that same factor."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-006",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student creates a tape diagram for a trail mix recipe with 3 parts nuts to 2 parts dried fruit. She then creates a ratio table with the same ratio. In the tape diagram, each part is 8 ounces. In the ratio table, the second column shows 6 parts nuts to 4 parts dried fruit. Which representation gives the greater total amount of trail mix (nuts plus dried fruit combined), and by how many ounces?",
-    "choices": [
-      "The tape diagram gives 40 ounces more.",
-      "The ratio table gives 30 ounces more.",
-      "Both give the same total because they represent the same ratio.",
-      "The tape diagram gives 20 ounces more."
-    ],
-    "answer": "A",
-    "hints": [
-      "Calculate the total in the tape diagram: multiply each part size by the total number of parts (3 + 2), then find the total ounces.",
-      "For the ratio table's second column, recognize that 6:4 is the same ratio scaled by 2; each quantity tells you parts, not ounces—you need more information to convert the table column to ounces. Contrast what you can find for each representation."
-    ]
-  },
-  {
-    "id": "m6math-solving-missing-value-ratio-problems-001",
-    "loId": "m6math.solving-missing-value-ratio-problems",
-    "cedCode": "M6MATH-1.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "In a ratio table, if the first column shows 2 red beads and 7 blue beads, what does every other column in that table represent? Choose the best description.",
-    "choices": [
-      "The same ratio of 2 red beads for every 7 blue beads, using different numbers",
-      "A different ratio than 2 to 7, because the numbers change in each column",
-      "The number of beads added or subtracted from the first column",
-      "Only whole numbers, never fractions or decimals"
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about what the word 'equivalent' means for ratios.",
-      "Does the relationship between red and blue beads stay the same when we scale both numbers?"
-    ]
-  },
-  {
-    "id": "m6math-solving-missing-value-ratio-problems-002",
-    "loId": "m6math.solving-missing-value-ratio-problems",
-    "cedCode": "M6MATH-1.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A recipe uses 5 cups of flour for every 3 cups of sugar. If you use 10 cups of flour, how many cups of sugar do you need to keep the same recipe?",
-    "choices": [
-      "8 cups",
-      "6 cups",
-      "13 cups",
-      "4 cups"
-    ],
-    "answer": "B",
-    "hints": [
-      "Find the scale factor: what number do you multiply 5 by to get 10?",
-      "Once you find the scale factor, apply it to the sugar amount the same way."
-    ]
-  },
-  {
-    "id": "m6math-solving-missing-value-ratio-problems-003",
-    "loId": "m6math.solving-missing-value-ratio-problems",
-    "cedCode": "M6MATH-1.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A pattern has 4 triangles for every 6 circles. In a smaller version of the pattern, there are 2 triangles. How many circles should the smaller pattern have to keep the same ratio?",
-    "choices": [
-      "4 circles",
-      "8 circles",
-      "3 circles",
-      "5 circles"
-    ],
-    "answer": "C",
-    "hints": [
-      "What scale factor turns 4 triangles into 2 triangles?",
-      "Use the same scale factor on the 6 circles to find the missing number."
-    ]
-  },
-  {
-    "id": "m6math-solving-missing-value-ratio-problems-004",
-    "loId": "m6math.solving-missing-value-ratio-problems",
-    "cedCode": "M6MATH-1.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A smoothie recipe uses 2 cups of yogurt for every 5 cups of fruit. Jamal makes a large batch using 8 cups of yogurt. He then plots both the original ratio and the large batch ratio on a coordinate plane, with yogurt on the x-axis and fruit on the y-axis. Which two ordered pairs does he plot?",
-    "choices": [
-      "(2, 5) and (5, 8)",
-      "(2, 5) and (8, 20)",
-      "(8, 20) and (5, 2)",
-      "(2, 8) and (5, 20)"
-    ],
-    "answer": "D",
-    "hints": [
-      "Find the scale factor that turns 2 cups of yogurt into 8 cups, then apply it to the fruit.",
-      "Remember: the x-coordinate is yogurt and the y-coordinate is fruit; the original pair is (2, 5)."
-    ]
-  },
-  {
-    "id": "m6math-solving-missing-value-ratio-problems-005",
-    "loId": "m6math.solving-missing-value-ratio-problems",
-    "cedCode": "M6MATH-1.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student claims that to find a missing value in a ratio, you should add the same number to both quantities instead of multiplying by the same scale factor. Use an example ratio to explain why this method does not work and what happens to the ratio when you do add instead of multiply.",
-    "choices": [
-      "Adding the same number works just as well as multiplying; both keep the ratio the same.",
-      "Adding the same number changes the ratio because the relationship between the two quantities is not preserved when you add instead of multiply.",
-      "Adding is faster, so the student's method is correct even though it uses a different operation.",
-      "Adding the same number works only when the numbers are whole numbers, not when they are fractions."
-    ],
-    "answer": "A",
-    "hints": [
-      "Try a simple example: start with the ratio 3 to 5. What happens if you add 2 to both numbers? What if you multiply both by 2?",
-      "Does 3:5 equal 5:7? Does 3:5 equal 6:10? Which operation keeps the same relationship?"
-    ]
-  },
-  {
-    "id": "m6math-solving-missing-value-ratio-problems-006",
-    "loId": "m6math.solving-missing-value-ratio-problems",
-    "cedCode": "M6MATH-1.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A rope is cut into two pieces with a ratio of 4 yards to 7 yards. After cutting, the longer piece is 21 yards. The student plots both the original ratio and the actual lengths as ordered pairs on a coordinate plane, using the first piece on the x-axis and the second piece on the y-axis. The student then checks the work by dividing the plotted point back down by the scale factor. Which ordered pair does the student plot for the actual lengths, and what should the result be after checking?",
-    "choices": [
-      "(12, 21); checking gives (4, 7)",
-      "(12, 21); checking gives (3, 6.5)",
-      "(4, 12); checking gives (4, 7)",
-      "(21, 12); checking gives (7, 4)"
-    ],
-    "answer": "B",
-    "hints": [
-      "First identify which piece is which: the longer piece is 21 yards, and the ratio is 4 to 7, so 7 is the longer number. What is the scale factor?",
-      "Apply the scale factor to both numbers. Then, to check, divide the new ordered pair by the scale factor and verify it returns to (4, 7)."
-    ]
-  },
-  {
-    "id": "m6math-unit-rates-unit-pricing-001",
-    "loId": "m6math.unit-rates-and-unit-pricing",
-    "cedCode": "M6MATH-1.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A ratio is 12:3. What is the unit rate for this ratio?",
-    "choices": [
-      "3",
-      "4",
-      "12",
-      "36"
-    ],
-    "answer": "B",
-    "hints": [
-      "The unit rate is found by dividing the first number by the second number.",
-      "You are dividing 12 by 3."
-    ]
-  },
-  {
-    "id": "m6math-unit-rates-unit-pricing-002",
-    "loId": "m6math.unit-rates-and-unit-pricing",
-    "cedCode": "M6MATH-1.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A 6-pack of pens costs $9.00. What is the price per pen?",
-    "choices": [
-      "$0.67 per pen",
-      "$1.33 per pen",
-      "$1.50 per pen",
-      "$2.25 per pen"
-    ],
-    "answer": "C",
-    "hints": [
-      "Read the per phrase first: price PER PEN means dollars divided by pens.",
-      "Divide the total price by the number of pens, then check your answer by multiplying back."
-    ]
-  },
-  {
-    "id": "m6math-unit-rates-unit-pricing-003",
-    "loId": "m6math.unit-rates-and-unit-pricing",
-    "cedCode": "M6MATH-1.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A delivery driver travels 84 miles in 3 hours at a steady speed. How many miles per hour is the driver traveling?",
-    "choices": [
-      "25 miles per hour",
-      "27 miles per hour",
-      "28 miles per hour",
-      "31 miles per hour"
-    ],
-    "answer": "D",
-    "hints": [
-      "The per phrase is miles PER HOUR, which tells you to divide miles by hours.",
-      "After you divide, multiply back to check: your answer times 3 should equal 84."
-    ]
-  },
-  {
-    "id": "m6math-unit-rates-unit-pricing-004",
-    "loId": "m6math.unit-rates-and-unit-pricing",
-    "cedCode": "M6MATH-1.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two coffee shops sell ground coffee in different sizes. Shop A sells 12 ounces for $8.40, and Shop B sells 15 ounces for $11.25. Which shop has the lower unit price, and what is that price?",
-    "choices": [
-      "Shop A, at $0.70 per ounce",
-      "Shop A, at $1.43 per ounce",
-      "Shop B, at $0.75 per ounce",
-      "Shop B, at $1.33 per ounce"
-    ],
-    "answer": "A",
-    "hints": [
-      "You must find the price per ounce for each shop before you can compare them fairly, because the bags hold different amounts.",
-      "After you divide to find each unit price, compare the two results—the smaller number is the better deal."
-    ]
-  },
-  {
-    "id": "m6math-unit-rates-unit-pricing-005",
-    "loId": "m6math.unit-rates-and-unit-pricing",
-    "cedCode": "M6MATH-1.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A recipe calls for 8 cups of flour to make 24 cookies. If you want to check your unit rate by multiplying back, which calculation should give you 8?",
-    "choices": [
-      "24 divided by 3",
-      "0.33 times 24",
-      "3 divided by 24",
-      "24 times 24"
-    ],
-    "answer": "B",
-    "hints": [
-      "First find the unit rate by dividing 8 by 24 to get the cups of flour per cookie.",
-      "To check, multiply that unit rate by the second number (24 cookies); the result should be the first number (8 cups)."
-    ]
-  },
-  {
-    "id": "m6math-unit-rates-unit-pricing-006",
-    "loId": "m6math.unit-rates-and-unit-pricing",
-    "cedCode": "M6MATH-1.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Three streaming services offer different monthly rates. Service X costs $18 for 3 months, Service Y costs $35 for 5 months, and Service Z costs $52 for 8 months. Devon wants to pay the least amount per month. After you calculate the unit rate for each service, which one costs the least per month, and by how much less than the second-cheapest option?",
-    "choices": [
-      "Service X at $6.00 per month, which is $0.50 less per month than Service Y",
-      "Service Y at $7.00 per month, which is $0.50 less per month than Service Z",
-      "Service Z at $6.50 per month, which is $0.50 less per month than Service X",
-      "Service X at $6.00 per month, which is $1.00 less per month than Service Z"
-    ],
-    "answer": "C",
-    "hints": [
-      "Find the price per month for each service by dividing total cost by number of months, then order them from least to greatest.",
-      "After ordering, subtract the smallest unit rate from the second-smallest to find the difference."
-    ]
-  },
-  {
     "id": "m6math-ratio-language-notation-001",
     "loId": "m6math.ratio-language-and-notation",
     "cedCode": "M6MATH-1.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A classroom has 6 desks and 9 chairs. What is the ratio of desks to chairs written in colon notation?",
+    "problemText": "A recipe calls for 3 cups of flour and 2 cups of sugar. What is the ratio of flour to sugar written using a colon?",
     "choices": [
-      "9:6",
-      "6 to 9",
-      "6:9",
-      "9 to 6"
+      "3 to 2",
+      "2:3",
+      "3:2",
+      "flour and sugar"
     ],
     "answer": "C",
     "hints": [
-      "The ratio names desks first and chairs second, so desks go in the first position.",
-      "Colon notation uses the format first quantity : second quantity."
+      "The first quantity named in the problem should be the first number in the ratio.",
+      "Flour is named first in the phrase 'flour to sugar.'"
     ]
   },
   {
@@ -366,17 +24,17 @@
     "cedCode": "M6MATH-1.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A pet store has 8 goldfish and 5 betta fish, with no other fish. Which sentence uses correct 'for every' language to describe the ratio of goldfish to betta fish?",
+    "problemText": "A classroom has 12 desks and 8 chairs. Write the ratio of chairs to desks using the fraction notation. What is that ratio?",
     "choices": [
-      "For every 5 betta fish, there are 8 goldfish.",
-      "For every 8 fish total, there are 5 goldfish.",
-      "For every 8 goldfish and 5 betta fish combined, the ratio is even.",
-      "For every 8 goldfish, there are 5 betta fish."
+      "20/8",
+      "12/8",
+      "8:12",
+      "8/12"
     ],
     "answer": "D",
     "hints": [
-      "The 'for every' sentence must name the quantities in the same order as the ratio asked for.",
-      "In 'for every' language, the first quantity after 'every' and the second quantity after 'there are' must match the two terms of your ratio."
+      "The quantity named first in the problem should be the numerator.",
+      "Chairs are named first in 'ratio of chairs to desks,' so chairs is the first number."
     ]
   },
   {
@@ -385,17 +43,17 @@
     "cedCode": "M6MATH-1.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A recipe uses 3 cups of flour and 2 cups of sugar. You need to identify which ratio is the part-to-whole ratio of flour to all ingredients in the recipe. What is the correct ratio?",
+    "problemText": "In a parking lot, there are 6 red cars and 9 blue cars. Which sentence correctly uses 'for every' language to describe the ratio of red cars to blue cars?",
     "choices": [
-      "3:5",
-      "3:2",
-      "5:3",
-      "2:5"
+      "For every 6 red cars, there are 9 blue cars.",
+      "For every 9 red cars, there are 6 blue cars.",
+      "For every 6 cars, there are 9 colors.",
+      "For every 15 cars, 6 are red and 9 are blue."
     ],
     "answer": "A",
     "hints": [
-      "Part-to-whole compares one part to the total of everything, so you must add flour and sugar to find the whole.",
-      "The first term is flour and the second term is the total amount of ingredients combined."
+      "The 'for every' sentence should match the order of the quantities in the problem.",
+      "Red cars are named first, so the number of red cars should come first in the 'for every' statement."
     ]
   },
   {
@@ -404,17 +62,17 @@
     "cedCode": "M6MATH-1.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A bookshelf holds 7 fiction books, 4 non-fiction books, and 5 reference books. Which statement about this bookshelf is true?",
+    "problemText": "A jewelry box contains 5 gold rings and 8 silver rings. First, identify whether the ratio of gold rings to all the rings in the box is a part-to-part ratio or a part-to-whole ratio. Then, write that ratio using colon notation.",
     "choices": [
-      "The part-to-whole ratio of fiction books to all books is 7:4.",
-      "The part-to-part ratio of fiction books to non-fiction books is 7:11.",
-      "The part-to-whole ratio of reference books to all books is 5:16.",
-      "The part-to-part ratio of fiction books to reference books is 12:7."
+      "Part-to-part ratio; 5:8",
+      "Part-to-whole ratio; 5:13",
+      "Part-to-whole ratio; 5:8",
+      "Part-to-part ratio; 8:13"
     ],
     "answer": "B",
     "hints": [
-      "For part-to-whole ratios, the second term must be the sum of all types of books.",
-      "For part-to-part ratios, check that you are comparing only two different parts, not a part to the whole."
+      "Decide first: are you comparing one part of the group to another part, or one part to the entire group?",
+      "To find the whole, you need to add the gold rings and silver rings together."
     ]
   },
   {
@@ -423,17 +81,17 @@
     "cedCode": "M6MATH-1.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A aquarium contains 6 guppies and 9 tetras. Someone writes the ratio 6/9 and claims this shows how many guppies are part of the whole aquarium. Explain why this interpretation is wrong, and write the correct part-to-whole ratio of guppies to all fish.",
+    "problemText": "A bakery sells 10 chocolate cookies and 7 vanilla cookies. A student writes the ratio 7/10 and claims this represents the ratio of vanilla cookies to chocolate cookies. Is the student correct? Explain which ratio the student actually wrote.",
     "choices": [
-      "The ratio 6/9 is wrong because you cannot use a fraction to write any ratio; the correct part-to-whole ratio is 6:9.",
-      "The ratio 6/9 describes guppies to tetras, not guppies to the whole aquarium; the correct part-to-whole ratio is 6:15.",
-      "The ratio 6/9 is correct for part-to-whole because 9 is the larger number in the aquarium.",
-      "The ratio 6/9 is a part-to-part ratio written as a fraction, but the whole aquarium contains 15 fish total, so the answer should use subtraction."
+      "No; the student wrote the ratio of vanilla cookies to all cookies.",
+      "Yes; the student correctly wrote vanilla to chocolate.",
+      "No; the student wrote the ratio of chocolate cookies to vanilla cookies.",
+      "Yes; because 7 and 10 are the only numbers in the problem."
     ],
     "answer": "C",
     "hints": [
-      "Remember that a fraction like 6/9 is a valid way to write a ratio, but it does not automatically mean the denominator is the whole.",
-      "Check what quantities are actually being compared: is the second number the count of one other part, or is it the total of all parts?"
+      "Check the order: what is the first number in the fraction, and what does it represent?",
+      "When a ratio is written as a fraction, the numerator is the first quantity being compared."
     ]
   },
   {
@@ -442,17 +100,359 @@
     "cedCode": "M6MATH-1.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A school cafeteria serves lunch to 12 fifth graders and 15 sixth graders on Monday. On Tuesday, it serves lunch to 8 fifth graders and 10 sixth graders. A student claims the ratio of fifth graders to sixth graders is the same both days. Determine whether the student is correct. If not, write both ratios to show why they are different.",
+    "problemText": "A bag contains 4 red marbles, 5 blue marbles, and 3 green marbles. A student needs to write two different ratios: the ratio of red marbles to blue marbles, and the ratio of red marbles to all the marbles in the bag. Write both ratios in colon notation, then determine which one is a part-to-part ratio and which one is a part-to-whole ratio.",
     "choices": [
-      "The student is correct; both days have the same two quantities of students, so the ratio is 12:15 and 8:10, which are the same comparison.",
-      "The student is incorrect; Monday's ratio of fifth graders to sixth graders is 12:15, and Tuesday's ratio is 8:10, which are different part-to-part ratios.",
-      "The student is correct because both ratios use the same order (fifth graders first, sixth graders second), even though the numbers are different.",
-      "The student is incorrect because the ratios describe different groups of students entirely; Monday's part-to-whole ratio is 12:27 and Tuesday's is 8:18."
+      "5:4 (part-to-part) and 12:4 (part-to-whole)",
+      "4:5 (part-to-whole) and 4:12 (part-to-part)",
+      "4:9 (part-to-part) and 4:12 (part-to-whole)",
+      "4:5 (part-to-part) and 4:12 (part-to-whole)"
     ],
     "answer": "D",
     "hints": [
-      "To compare two ratios, check both the order of the quantities and whether the problem is asking for part-to-part or part-to-whole.",
-      "Notice that the problem asks about the same comparison across two different days; reread carefully to identify what quantities are being compared on each day."
+      "For the first ratio, you are comparing two different parts of the bag to each other; for the second, you are comparing one part to the total.",
+      "To find the total marbles in the bag, add all three colors together: 4 + 5 + 3."
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-001",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A ratio of 3:5 is scaled by multiplying both numbers by 2. What is the resulting equivalent ratio?",
+    "choices": [
+      "6:5",
+      "5:7",
+      "3:7",
+      "6:10"
+    ],
+    "answer": "D",
+    "hints": [
+      "Multiply both the 3 and the 5 by the same number.",
+      "Remember that equivalent ratios come from multiplying both numbers by the same factor."
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-002",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A paint mixture uses a ratio of 2 parts red paint to 5 parts white paint. A painter wants to make a larger batch by scaling the recipe by a factor of 4. How much white paint is needed in the larger batch?",
+    "choices": [
+      "20 parts",
+      "9 parts",
+      "8 parts",
+      "5 parts"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find how much white paint is in the original ratio, then multiply by the scale factor of 4.",
+      "The original recipe has 5 parts white paint. What is 5 times 4?"
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-003",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A tape diagram for a smoothie recipe is split into 7 equal-size parts: 3 parts fruit and 4 parts yogurt. Each part represents 2 cups. How many cups of yogurt are in the recipe?",
+    "choices": [
+      "6 cups",
+      "8 cups",
+      "14 cups",
+      "4 cups"
+    ],
+    "answer": "B",
+    "hints": [
+      "The tape diagram shows that yogurt takes up 4 equal parts of the total.",
+      "If each part is 2 cups, what is 4 parts multiplied by 2 cups per part?"
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-004",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A recipe calls for a ratio of 4 cups of flour to 3 cups of sugar. A baker needs to find an equivalent ratio where the flour amount is 12 cups. Which of the following shows the complete equivalent ratio (flour:sugar) for this scaled recipe?",
+    "choices": [
+      "12:7",
+      "12:6",
+      "12:9",
+      "12:15"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the scale factor by determining what you multiply 4 by to get 12.",
+      "Once you know the scale factor, multiply the sugar amount (3) by that same factor."
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-005",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A double number line shows that 6 apples pair with 10 oranges. A student wants to find an equivalent ratio where there are 18 apples. The student first tries adding 12 to both numbers (getting 18:22), then realizes this is wrong and instead uses the correct scale factor. What is the correct number of oranges that pairs with 18 apples?",
+    "choices": [
+      "22 oranges",
+      "16 oranges",
+      "28 oranges",
+      "30 oranges"
+    ],
+    "answer": "D",
+    "hints": [
+      "Scaling by adding the same amount to both numbers breaks the ratio. You must multiply both numbers by the same factor instead.",
+      "What number do you multiply 6 by to get 18? Multiply 10 by that same number."
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-006",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student builds a ratio table for a recipe that uses 5 grams of salt for every 8 grams of sugar. The student correctly fills in three columns: the original 5:8, then scales by 2 to get 10:16, and scales by 3 to get 15:24. The student then claims that scaling by 2.5 would give 12.5:20. Without using decimals or fractions, explain why the student should verify this claim using a whole-number scale factor instead, and identify which whole-number scale factor from the table could be combined to reach a result close to 12.5 grams of salt.",
+    "choices": [
+      "Scales by 2 and then by 3 can be combined; scaling by 2 then by 3 gives 30:48, but the student should use scale factor 2 alone to get 10:16 and scale factor 3 alone to get 15:24, noting that 12.5 falls between them.",
+      "Using only whole-number scale factors from the table, scale factor 2 gives 10:16 and scale factor 3 gives 15:24, so 12.5 grams of salt lies between these two whole-number results rather than at an exact scaled value.",
+      "Multiplying the original ratio by scale factor 1.5 produces 7.5:12, which is smaller than the target amount of 12.5 grams of salt and does not match the decimals in the student's claim.",
+      "Since scale factor 2.5 is not a whole number, it cannot be used consistently with the lesson method of multiplying both ratio parts by the same whole-number factor to verify the claim."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what happens when you apply scale factors of 2 and 3 separately: you get 10:16 and 15:24. Where does 12.5 sit relative to these two results?",
+      "The lesson emphasizes scaling by multiplying both numbers by the same whole-number factor. Which scale factors in the table produce ratios with salt amounts you can compare to 12.5?"
+    ]
+  },
+  {
+    "id": "m6math-solving-missing-value-ratio-problems-001",
+    "loId": "m6math.solving-missing-value-ratio-problems",
+    "cedCode": "M6MATH-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A ratio table shows that 2 red beads pairs with 5 blue beads in the first column. If the scale factor is 3, what numbers should appear in the second column?",
+    "choices": [
+      "6 red beads and 15 blue beads",
+      "5 red beads and 8 blue beads",
+      "2 red beads and 15 blue beads",
+      "6 red beads and 5 blue beads"
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply both numbers in the first column by the scale factor.",
+      "The scale factor must be applied to both the red beads and the blue beads."
+    ]
+  },
+  {
+    "id": "m6math-solving-missing-value-ratio-problems-002",
+    "loId": "m6math.solving-missing-value-ratio-problems",
+    "cedCode": "M6MATH-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A recipe uses 8 cups of flour for every 3 cups of sugar. If a baker uses 16 cups of flour, how many cups of sugar are needed to keep the same ratio?",
+    "choices": [
+      "5 cups",
+      "6 cups",
+      "11 cups",
+      "19 cups"
+    ],
+    "answer": "B",
+    "hints": [
+      "Find the scale factor that turns 8 into 16.",
+      "Apply that same scale factor to the 3 cups of sugar."
+    ]
+  },
+  {
+    "id": "m6math-solving-missing-value-ratio-problems-003",
+    "loId": "m6math.solving-missing-value-ratio-problems",
+    "cedCode": "M6MATH-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A doubles tennis match uses 4 tennis balls for every 2 players. Keeping that same ratio, how many tennis balls are needed for 10 players?",
+    "choices": [
+      "16 tennis balls",
+      "14 tennis balls",
+      "20 tennis balls",
+      "6 tennis balls"
+    ],
+    "answer": "C",
+    "hints": [
+      "Determine what scale factor changes 2 players into 10 players.",
+      "Multiply the original number of tennis balls by that scale factor."
+    ]
+  },
+  {
+    "id": "m6math-solving-missing-value-ratio-problems-004",
+    "loId": "m6math.solving-missing-value-ratio-problems",
+    "cedCode": "M6MATH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A bird food mix uses 7 cups of seeds for every 2 cups of dried fruit. A store mixes 14 cups of seeds with dried fruit. What ordered pair would you plot on a coordinate plane if seeds are the x-axis and dried fruit is the y-axis?",
+    "choices": [
+      "(14, 28)",
+      "(14, 2)",
+      "(7, 14)",
+      "(14, 4)"
+    ],
+    "answer": "D",
+    "hints": [
+      "First find the scale factor that turns 7 into 14.",
+      "Apply that scale factor to find the cups of dried fruit, then write the ordered pair as (seeds, dried fruit)."
+    ]
+  },
+  {
+    "id": "m6math-solving-missing-value-ratio-problems-005",
+    "loId": "m6math.solving-missing-value-ratio-problems",
+    "cedCode": "M6MATH-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A painter mixes 5 gallons of white paint for every 3 gallons of blue paint to make a light blue color. The painter has only 1 gallon of blue paint available. To keep the same color, how many gallons of white paint are needed, and what ordered pair should be plotted on a coordinate plane with white paint on the x-axis and blue paint on the y-axis?",
+    "choices": [
+      "5/3 gallons of white paint; ordered pair is (5/3, 1)",
+      "1 gallon of white paint; ordered pair is (1, 1)",
+      "3 gallons of white paint; ordered pair is (3, 1)",
+      "2 gallons of white paint; ordered pair is (2, 1)"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the scale factor that turns 3 gallons of blue into 1 gallon.",
+      "Apply that same scale factor to 5 gallons of white, then form the ordered pair (white, blue)."
+    ]
+  },
+  {
+    "id": "m6math-solving-missing-value-ratio-problems-006",
+    "loId": "m6math.solving-missing-value-ratio-problems",
+    "cedCode": "M6MATH-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A craft project uses 6 beads of one color for every 4 beads of another color. A student has already plotted two equivalent ratio pairs on a coordinate plane: (6, 4) and (12, 8). The student then plots a third point at (15, 10). Which statement correctly explains whether this third point fits the original ratio?",
+    "choices": [
+      "The point fits the ratio because 15 and 10 are both larger numbers than 6 and 4.",
+      "The point does not fit the ratio because the scale factor from (6, 4) to (15, 10) is not the same for both quantities.",
+      "The point does not fit the ratio because the difference between 15 and 10 is less than the difference between 6 and 4.",
+      "The point fits the ratio because 15 and 10 can both be divided by 5."
+    ],
+    "answer": "B",
+    "hints": [
+      "Test whether there is a single scale factor that turns (6, 4) into (15, 10).",
+      "Check: Does 6 times some scale factor equal 15, and does 4 times the same scale factor equal 10?"
+    ]
+  },
+  {
+    "id": "m6math-unit-rates-unit-pricing-001",
+    "loId": "m6math.unit-rates-and-unit-pricing",
+    "cedCode": "M6MATH-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A ratio is 12:3. What is the unit rate?",
+    "choices": [
+      "12",
+      "4",
+      "3",
+      "12 divided by 3 equals 4"
+    ],
+    "answer": "B",
+    "hints": [
+      "The unit rate is found by dividing the first number by the second number.",
+      "12 divided by 3 equals what?"
+    ]
+  },
+  {
+    "id": "m6math-unit-rates-unit-pricing-002",
+    "loId": "m6math.unit-rates-and-unit-pricing",
+    "cedCode": "M6MATH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A restaurant uses 15 pounds of flour to bake 30 loaves of bread. What is the unit rate in pounds of flour per loaf?",
+    "choices": [
+      "30 pounds per loaf",
+      "2 pounds per loaf",
+      "0.5 pounds per loaf",
+      "15 pounds per loaf"
+    ],
+    "answer": "C",
+    "hints": [
+      "The per phrase tells you which quantity to divide by which: pounds divided by loaves.",
+      "How many pounds of flour go into ONE loaf?"
+    ]
+  },
+  {
+    "id": "m6math-unit-rates-unit-pricing-003",
+    "loId": "m6math.unit-rates-and-unit-pricing",
+    "cedCode": "M6MATH-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A package of 6 batteries costs $9.00. What is the unit price, or cost per battery?",
+    "choices": [
+      "$0.67 per battery",
+      "$1.33 per battery",
+      "$9.00 per battery",
+      "$1.50 per battery"
+    ],
+    "answer": "D",
+    "hints": [
+      "Unit price means the cost of exactly one item, found by dividing total price by number of items.",
+      "Divide $9.00 by 6 to find the cost for one battery."
+    ]
+  },
+  {
+    "id": "m6math-unit-rates-unit-pricing-004",
+    "loId": "m6math.unit-rates-and-unit-pricing",
+    "cedCode": "M6MATH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student finds that a 12-ounce can of soda costs $1.44, and an 18-ounce bottle of the same soda costs $1.98. Which size gives a lower price per ounce, and by how much?",
+    "choices": [
+      "The 18-ounce bottle is $0.02 cheaper per ounce.",
+      "The 12-ounce can is $0.02 cheaper per ounce.",
+      "The 18-ounce bottle is $0.12 cheaper per ounce.",
+      "The 12-ounce can is $0.12 cheaper per ounce."
+    ],
+    "answer": "A",
+    "hints": [
+      "First, find the unit price for each size by dividing price by ounces. Then compare the two unit prices.",
+      "For the 12-ounce can: $1.44 ÷ 12. For the 18-ounce bottle: $1.98 ÷ 18."
+    ]
+  },
+  {
+    "id": "m6math-unit-rates-unit-pricing-005",
+    "loId": "m6math.unit-rates-and-unit-pricing",
+    "cedCode": "M6MATH-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A farmer plants 24 rows of corn across 8 identical field plots. After computing the unit rate of rows per plot, she wants to check her work by multiplying back. Which multiplication should give her 24 if her unit rate is correct?",
+    "choices": [
+      "8 times 8 equals 24",
+      "3 times 8 equals 24",
+      "24 times 3 equals 24",
+      "24 times 8 equals 24"
+    ],
+    "answer": "B",
+    "hints": [
+      "The unit rate is 24 divided by 8. To check, multiply that unit rate by the second number (8).",
+      "If you divide to find 24 ÷ 8, multiplying the answer by 8 should give you back the 24."
+    ]
+  },
+  {
+    "id": "m6math-unit-rates-unit-pricing-006",
+    "loId": "m6math.unit-rates-and-unit-pricing",
+    "cedCode": "M6MATH-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three brands of granola are sold in different sizes. Brand X costs $4.20 for 7 ounces, Brand Y costs $2.88 for 4 ounces, and Brand Z costs $5.40 for 9 ounces. Which brand costs the least per ounce, and is its unit price a whole number, a decimal less than 1, or a decimal greater than 1?",
+    "choices": [
+      "Brand Z, and its unit price is a whole number.",
+      "Brand X, and its unit price is a decimal less than 1.",
+      "Brand Y, and its unit price is a decimal less than 1.",
+      "Brand Y, and its unit price is a whole number."
+    ],
+    "answer": "C",
+    "hints": [
+      "Calculate the price per ounce for all three brands by dividing total price by ounces, then compare the three unit prices.",
+      "When you divide Brand Y's price by its ounces, think about what kind of number the answer will be."
     ]
   }
 ]
