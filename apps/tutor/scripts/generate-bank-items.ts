@@ -333,6 +333,8 @@ ${spec}
 
 Each item needs exactly 4 choices (A-D), one clearly correct answer, and ${hintsInstruction} that nudge without giving away the answer. Choices must not have letter prefixes in the text itself.
 
+Every item must STAND ALONE. A student meets these in a practice set or a quiz, with no lesson around them, so never refer to "this lesson", "the lesson", what "we learned", what "you saw", or the teacher. State any fact the item depends on inside the item itself. Do not reuse a worked example or practice question from the lesson content above — that content is there to fix the SCOPE and the vocabulary, and an item that repeats it is answerable from memory instead of understanding.
+
 The problemText must NOT list, quote, or restate the choices. Put any shared material the item needs — a passage, an original sentence, a data set — in problemText, and put every option ONLY in the choices array. An item that writes out "A) ... B) ... C) ..." inside its problemText will be discarded, because the student would see the options twice and the letters would not match the buttons. No item's problemText may be shorter than 2 sentences (or, for a terse computational item, at least one full sentence that fully states what is being asked).
 
 ${scopeSection}Return ONLY a JSON array of ${itemsPerLo} objects, this exact shape, no markdown fences, no commentary, in the same order as the difficulty list above:
@@ -372,6 +374,14 @@ function validateGenItem(it: GenItem, loId: string, msConventions = false): stri
       return f.length > 15 && flatStem.includes(f);
     }).length;
     if (embedded >= 2) errs.push(`problemText reprints ${embedded} of its own choices`);
+    // Bank items are met in a practice set with no lesson around them, so a
+    // reference to "this lesson" points at nothing the student can see. The
+    // shipped Grade 7 banks sit at 0-2.5% on this; grounding the prompt in
+    // lesson content pushed Grade 6 to 8.8-32.5% before this check existed.
+    const ctx = [it.problemText, ...(it.choices || []), ...(it.hints || [])].join(' ');
+    if (/\bthis lesson\b|\bthe lesson\b|\byour teacher\b|\bwe (?:just )?learned\b|\bas (?:we|you) saw\b/i.test(ctx)) {
+      errs.push('refers to the lesson — bank items must stand alone');
+    }
   }
   if (/\$(\d)/.test(it.problemText || '')) errs.push(`WARN ${loId} problemText has $<digit> (currency/KaTeX trap)`);
   return errs;
@@ -435,6 +445,134 @@ function normalizeAnswer(it: GenItem): GenItem {
   const lead = /^\(?([A-E])[).:\s-]/.exec(raw);
   if (lead) return { ...it, answer: lead[1] };
   return it;
+}
+
+/** The lesson-reference check is right to fire, but dropping the whole item is
+ *  the wrong response to it: the offending phrase is almost always in a HINT
+ *  ("remember what the lesson said about the key"), while the stem, choices and
+ *  answer are perfectly good. Geography stalled on exactly this — five
+ *  regeneration rounds could not close the gap because each retry threw away a
+ *  sound item over one word. Repair the wording instead, and only fall back to
+ *  regeneration if the repair does not take. */
+async function repairLessonRefs(
+  anthropic: Anthropic,
+  model: string,
+  system: string,
+  items: GenItem[],
+  offenders: number[],
+): Promise<{ items: GenItem[]; usageIn: number; usageOut: number }> {
+  const payload = offenders.map((i) => ({ index: i, ...items[i] }));
+  const prompt = `Each item below mentions the lesson it came from — "this lesson", "the lesson", "what we learned", "as you saw", or the teacher. These items are shown in a practice set with no lesson around them, so those phrases point at nothing the student can see.
+
+Rewrite the offending wording so each item stands alone. Rules:
+- Keep the SAME question, the SAME four choices, and the SAME correct answer. Do not renumber or reorder anything.
+- Usually only a hint needs changing: replace "remember what the lesson said about X" with the substance — an actual nudge toward X.
+- If the stem or a choice refers to the lesson, restate the fact it depends on inside the item.
+- Change nothing else.
+
+${JSON.stringify(payload, null, 2)}
+
+Return ONLY a JSON array of the same objects with the same "index" fields, no markdown fences, no commentary.`;
+  const params = { model, max_tokens: 4000, system, messages: [{ role: 'user', content: prompt }] };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
+  const text = msg.content
+    .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+  const next = items.slice();
+  try {
+    const parsed = JSON.parse(stripFences(text));
+    if (!Array.isArray(parsed)) throw new Error('not an array');
+    for (const row of parsed as Array<GenItem & { index: number }>) {
+      const i = row.index;
+      if (!Number.isInteger(i) || i < 0 || i >= next.length) continue;
+      if (!Array.isArray(row.choices) || row.choices.length !== next[i].choices.length) continue;
+      // The repair must not change WHICH choice is correct.
+      if (row.answer !== next[i].answer) continue;
+      const oldIdx = ['A', 'B', 'C', 'D'].indexOf(next[i].answer);
+      if (oldIdx < 0 || row.choices[oldIdx] !== next[i].choices[oldIdx]) continue;
+      next[i] = { ...next[i], problemText: row.problemText, choices: row.choices, hints: row.hints };
+    }
+  } catch {
+    /* keep the originals — a failed repair must never lose items */
+  }
+  return { items: next, usageIn: msg.usage?.input_tokens ?? 0, usageOut: msg.usage?.output_tokens ?? 0 };
+}
+
+/** Indices whose stem reprints two or more of their own choices verbatim. */
+function stemReprintOffenders(items: GenItem[]): number[] {
+  const out: number[] = [];
+  items.forEach((it, i) => {
+    if (!Array.isArray(it.choices)) return;
+    const stem = (it.problemText || '').toLowerCase().replace(/\s+/g, ' ');
+    const n = it.choices.filter((c) => {
+      const f = c.toLowerCase().replace(/\s+/g, ' ').trim().replace(/[.]$/, '');
+      return f.length > 15 && stem.includes(f);
+    }).length;
+    if (n >= 2) out.push(i);
+  });
+  return out;
+}
+
+/** Rewrite a stem that has written its own options out.
+ *
+ *  This is concentrated in map- and passage-shaped lessons, where the item
+ *  legitimately has to DESCRIBE shared material and the model slides from
+ *  describing a map key into enumerating the candidate answers. The choices
+ *  and the answer are fine; only the stem overshares. Rewriting it is far
+ *  cheaper than regenerating, and regeneration does not converge here — the
+ *  next sample tends to make the same move for the same reason. */
+async function repairStemReprints(
+  anthropic: Anthropic,
+  model: string,
+  system: string,
+  items: GenItem[],
+  offenders: number[],
+): Promise<{ items: GenItem[]; usageIn: number; usageOut: number }> {
+  const payload = offenders.map((i) => ({ index: i, problemText: items[i].problemText, choices: items[i].choices }));
+  const prompt = `Each item below writes its own answer options into problemText, so the student would see them twice and the letters would not match the buttons.
+
+Rewrite ONLY problemText so it stops listing the options. Rules:
+- Keep every fact the question depends on. If the item describes a map key, a table or a passage, KEEP that description — describe what the material shows without enumerating the candidate answers.
+- Do not change the question being asked, and do not mention any option by letter.
+- Do not return the choices; they are unchanged.
+
+${JSON.stringify(payload, null, 2)}
+
+Return ONLY a JSON array of {"index": <n>, "problemText": "<rewritten>"}, no markdown fences, no commentary.`;
+  const params = { model, max_tokens: 3000, system, messages: [{ role: 'user', content: prompt }] };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
+  const text = msg.content
+    .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+    .map((b) => b.text)
+    .join('');
+  const next = items.slice();
+  try {
+    const parsed = JSON.parse(stripFences(text));
+    if (!Array.isArray(parsed)) throw new Error('not an array');
+    for (const row of parsed as Array<{ index: number; problemText: string }>) {
+      const i = row.index;
+      if (!Number.isInteger(i) || i < 0 || i >= next.length) continue;
+      if (typeof row.problemText !== 'string' || row.problemText.trim().length < 20) continue;
+      next[i] = { ...next[i], problemText: row.problemText };
+    }
+  } catch {
+    /* keep the originals */
+  }
+  return { items: next, usageIn: msg.usage?.input_tokens ?? 0, usageOut: msg.usage?.output_tokens ?? 0 };
+}
+
+/** Indices whose text mentions the lesson (same rule as validateGenItem). */
+function lessonRefOffenders(items: GenItem[]): number[] {
+  const re = /\bthis lesson\b|\bthe lesson\b|\byour teacher\b|\bwe (?:just )?learned\b|\bas (?:we|you) saw\b/i;
+  const out: number[] = [];
+  items.forEach((it, i) => {
+    const ctx = [it.problemText, ...(it.choices || []), ...(it.hints || [])].join(' ');
+    if (re.test(ctx)) out.push(i);
+  });
+  return out;
 }
 
 /** Items whose correct choice is strictly longest by more than `slack`
@@ -631,6 +769,33 @@ async function main() {
     }
 
     if (opts.msConventions && items.length) {
+      const refs = lessonRefOffenders(items);
+      if (refs.length) {
+        try {
+          const r = await repairLessonRefs(anthropic, model, SYSTEM, items, refs);
+          usageIn += r.usageIn;
+          usageOut += r.usageOut;
+          const after = lessonRefOffenders(r.items).length;
+          items = r.items;
+          console.log(`  ~ ${lo.loId}: lesson-reference repair ${refs.length} -> ${after} item(s)`);
+        } catch (e) {
+          console.log(`  ⚠️  ${lo.loId}: lesson-reference repair failed (${(e as Error).message}) — keeping originals`);
+        }
+      }
+      const reprints = stemReprintOffenders(items);
+      if (reprints.length) {
+        try {
+          const r = await repairStemReprints(anthropic, model, SYSTEM, items, reprints);
+          usageIn += r.usageIn;
+          usageOut += r.usageOut;
+          const after = stemReprintOffenders(r.items).length;
+          items = r.items;
+          console.log(`  ~ ${lo.loId}: stem-reprint repair ${reprints.length} -> ${after} item(s)`);
+        } catch (e) {
+          console.log(`  ⚠️  ${lo.loId}: stem-reprint repair failed (${(e as Error).message}) — keeping originals`);
+        }
+      }
+
       items = rotateAnswers(items, targetIdx);
       // Up to two repair rounds. One round left 28.3% of ELA items with a key
       // longer than every distractor by more than the slack, against 7.9% in
@@ -663,6 +828,10 @@ async function main() {
       const errs = validateGenItem(it, lo.loId, opts.msConventions).filter((e) => !e.startsWith('WARN'));
       if (errs.length) {
         console.log(`  [FAIL] ${lo.loId} d${it.difficulty}: ${errs.join('; ')}`);
+        if (process.env.BANK_DEBUG_FAILS === '1') {
+          console.log(`     stem: ${String(it.problemText || '').slice(0, 400)}`);
+          console.log(`     choices: ${JSON.stringify(it.choices)}`);
+        }
         continue;
       }
       const nDigits = opts.msConventions ? 3 : 2;
