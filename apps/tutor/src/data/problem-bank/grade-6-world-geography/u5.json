@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6geo-ecosystems-habitats-001",
-    "loId": "m6geo.ecosystems-and-habitats",
-    "cedCode": "M6GEO-5.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following is a complete definition of an ecosystem? Use the lesson definition to pick the correct answer.",
-    "choices": [
-      "Only the plants and animals that live in one location, excluding all nonliving components like soil and water",
-      "Every living and nonliving thing sharing one place, considered together",
-      "The largest animals that live in a particular area along with the vegetation they depend on for food",
-      "Only the water, soil, and rocks in one spot, separated from any organisms that might inhabit them"
-    ],
-    "answer": "B",
-    "hints": [
-      "Remember: an ecosystem includes BOTH living things AND nonliving things, not just one kind.",
-      "Think about whether the definition should mention everything in the place or just some parts."
-    ]
-  },
-  {
-    "id": "m6geo-ecosystems-habitats-002",
-    "loId": "m6geo.ecosystems-and-habitats",
-    "cedCode": "M6GEO-5.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student observes a small pond and lists these parts: lily pads, algae, fish, water, mud, sunlight, and insects. Which of the following correctly separates the biotic parts from the abiotic parts?",
-    "choices": [
-      "Biotic: water, mud, sunlight. Abiotic: lily pads, algae, fish, insects",
-      "Biotic: fish and insects. Abiotic: lily pads, algae, water, mud, sunlight",
-      "Biotic: lily pads, algae, fish, insects. Abiotic: water, mud, sunlight",
-      "Biotic: lily pads and algae. Abiotic: fish, insects, water, mud, sunlight"
-    ],
-    "answer": "C",
-    "hints": [
-      "Use the three-part test: does it grow, need energy to survive, and make more of its own kind?",
-      "Remember that plants pass all three tests, so they are biotic even though they do not move."
-    ]
-  },
-  {
-    "id": "m6geo-ecosystems-habitats-003",
-    "loId": "m6geo.ecosystems-and-habitats",
-    "cedCode": "M6GEO-5.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student watches a beetle moving quickly across a log and says: 'The beetle must be living because it moves on its own.' Based on the lesson test for living things, what is the problem with this reasoning?",
-    "choices": [
-      "The student only named one test instead of checking all three at once",
-      "Beetles do not actually move, so the student made a false observation",
-      "Something that moves is automatically nonliving, not living",
-      "Movement is not one of the three tests for determining if something is living"
-    ],
-    "answer": "D",
-    "hints": [
-      "The three tests are: does it grow, does it need energy to survive, and can it make more of its own kind.",
-      "Think about a plant—it can be living without moving at all."
-    ]
-  },
-  {
-    "id": "m6geo-ecosystems-habitats-004",
-    "loId": "m6geo.ecosystems-and-habitats",
-    "cedCode": "M6GEO-5.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "An apple tree in an orchard grows in soil, receives sunlight, and produces apples that birds eat. A student says: 'The orchard is the apple tree's habitat because that is where it lives.' Explain what is wrong with this statement and identify what the orchard actually is.",
-    "choices": [
-      "The statement is wrong because the habitat is a small, specific spot where one organism lives, not the entire place. The orchard is the ecosystem.",
-      "The statement is wrong because a habitat must be nonliving, and the orchard contains living things like birds. The orchard is the ecosystem.",
-      "The statement is wrong because an ecosystem cannot contain a habitat inside it. The apple tree itself is the habitat.",
-      "The statement is wrong because a habitat is larger than an ecosystem. The orchard is the habitat and the soil is the ecosystem."
-    ],
-    "answer": "A",
-    "hints": [
-      "A habitat is always smaller than the ecosystem—it is one spot inside it where one particular organism lives.",
-      "The entire orchard with all its living and nonliving parts together is the ecosystem."
-    ]
-  },
-  {
-    "id": "m6geo-ecosystems-habitats-005",
-    "loId": "m6geo.ecosystems-and-habitats",
-    "cedCode": "M6GEO-5.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student examines a forest ecosystem and identifies the following: oak trees, deer, soil, rain water, moss on tree trunks, air, insects living under bark, and fallen leaves. The student then claims: 'Since some living things are plants and some are animals, this forest must actually be two ecosystems, not one.' Why is this reasoning incorrect, and what term describes the smaller spots where individual organisms live?",
-    "choices": [
-      "The reasoning is wrong because an ecosystem must contain both living and nonliving things in balance, and different types of organisms do not create separate ecosystems. The spots where individual organisms live are called biomes.",
-      "The reasoning is wrong because an ecosystem includes all living and nonliving things in one place, even when there are many different kinds of organisms. The specific spots where individual organisms live are called habitats.",
-      "The reasoning is wrong because ecosystems are defined by their location and all the organisms and nonliving features within that location, regardless of how many different types of plants and animals are present. The spots where organisms live are called zones.",
-      "The reasoning is wrong because the diversity of living things in one area actually strengthens the ecosystem rather than dividing it into separate parts. The spots where organisms live are called niches."
-    ],
-    "answer": "B",
-    "hints": [
-      "An ecosystem is ONE place with BOTH living and nonliving parts together—even if there are many different types of living things.",
-      "The term for a small, specific spot inside an ecosystem where one particular organism lives comes directly from the vocabulary in the lesson."
-    ]
-  },
-  {
-    "id": "m6geo-ecosystems-habitats-006",
-    "loId": "m6geo.ecosystems-and-habitats",
-    "cedCode": "M6GEO-5.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A coastal tide pool contains sea stars, crabs, seaweed, salt water, smooth pebbles, and air above the water. A student creates a closed glass jar containing only seaweed, a small amount of water, and one pebble—a miniature copy of the tide pool. The student then claims: 'My jar is an ecosystem because it has some of the same living and nonliving parts as the tide pool.' Using the lesson definition of ecosystem and habitat, evaluate whether the jar meets the criteria to be called an ecosystem, and explain what would be missing.",
-    "choices": [
-      "The jar is not a complete ecosystem because it lacks the variety of living organisms and the complex interactions between multiple types of plants, animals, and nonliving parts that define a real ecosystem like the tide pool.",
-      "The jar is not a complete ecosystem because the seaweed cannot obtain enough sunlight inside a glass container to produce food through photosynthesis, which would prevent it from functioning as a true ecosystem.",
-      "The jar is not a complete ecosystem because a single organism living alone in a space does not represent the living and nonliving parts sharing one place the way a real ecosystem does. A true ecosystem needs multiple types of living things interacting with the nonliving environment together.",
-      "The jar is not a complete ecosystem because the small amount of water and limited pebbles cannot provide enough nonliving resources to support the living organisms for an extended period of time."
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about what 'sharing one place' means in the ecosystem definition—does a jar with only one type of plant living in it match that description?",
-      "Compare the jar to the worked example of the pond: the pond had different kinds of organisms (plants, insects, frogs) all living together with the nonliving parts. Does the jar have that same kind of variety?"
-    ]
-  },
-  {
     "id": "m6geo-weather-vs-climate-001",
     "loId": "m6geo.weather-vs-climate",
     "cedCode": "M6GEO-5.1",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6geo-ecosystems-habitats-001",
+    "loId": "m6geo.ecosystems-and-habitats",
+    "cedCode": "M6GEO-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is learning the definition of an ecosystem. Which statement best matches what an ecosystem is?",
+    "choices": [
+      "Only the plants and animals that live in a particular location",
+      "Every living and nonliving thing sharing one place, considered together",
+      "The specific spot where one animal makes its home",
+      "A collection of rocks, water, and soil with no living things in it"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember: an ecosystem includes BOTH living things AND nonliving things.",
+      "Think about whether an ecosystem can have rocks, water, and light even though those are not alive."
+    ]
+  },
+  {
+    "id": "m6geo-ecosystems-habitats-002",
+    "loId": "m6geo.ecosystems-and-habitats",
+    "cedCode": "M6GEO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student observes a backyard scene with a bird perched on a fence, a puddle of rainwater, grass growing in the soil, and air moving through the trees. The student needs to identify which of these parts are biotic (living). Which choice correctly lists only the biotic parts?",
+    "choices": [
+      "The puddle of rainwater and the air",
+      "The fence, the soil, and the puddle",
+      "The bird and the grass",
+      "The air, the fence, and the rainwater"
+    ],
+    "answer": "C",
+    "hints": [
+      "Apply the three-part test: does it grow, need energy to survive, and make more of its own kind?",
+      "A bird moves and eats (needs energy), and grass grows — both pass all three tests."
+    ]
+  },
+  {
+    "id": "m6geo-ecosystems-habitats-003",
+    "loId": "m6geo.ecosystems-and-habitats",
+    "cedCode": "M6GEO-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student finds a description of a forest: tall oak trees, wild mushrooms growing on the forest floor, a stream flowing through it, fallen logs, and sunlight filtering through the canopy. The student must sort this forest into its biotic and abiotic parts. Which choice correctly sorts the forest?",
+    "choices": [
+      "Biotic: fallen logs and stream. Abiotic: oak trees, mushrooms, and sunlight.",
+      "Biotic: oak trees, mushrooms, and sunlight. Abiotic: stream and fallen logs.",
+      "Biotic: sunlight and stream. Abiotic: oak trees, mushrooms, and fallen logs.",
+      "Biotic: oak trees and wild mushrooms. Abiotic: stream, fallen logs, and sunlight."
+    ],
+    "answer": "D",
+    "hints": [
+      "Fallen logs were once alive but are no longer growing or reproducing — so they are abiotic now.",
+      "Streams flow but do not grow, need energy, or reproduce, so they are abiotic."
+    ]
+  },
+  {
+    "id": "m6geo-ecosystems-habitats-004",
+    "loId": "m6geo.ecosystems-and-habitats",
+    "cedCode": "M6GEO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is shown a picture of a large lake. The student reads that a fish lives in the open water in the middle, a turtle basks on rocks at the shallow edge, and water plants root in the muddy bottom. The student writes: 'The lake ecosystem is the open water where the fish live.' Explain what is wrong with this statement and identify what the open water should actually be called instead.",
+    "choices": [
+      "The statement is wrong because the open water is too small to be an ecosystem; the lake ecosystem is the entire lake (fish, turtle, rocks, plants, water, and mud together), and the open water is the fish's habitat.",
+      "The statement is wrong because it leaves out nonliving parts; an ecosystem must include all living things and nonliving things together, so the lake ecosystem includes fish, plants, turtle, water, rocks, and mud, while the open water is only the fish's habitat.",
+      "The statement is wrong because it ignores the turtle and plants that also live in the lake; these organisms and their environments are parts of the lake ecosystem, whereas the open water alone is just one habitat within that larger ecosystem.",
+      "The statement is wrong because a habitat cannot be an ecosystem; the open water is where the fish lives and survives, making it the fish's habitat, but the lake ecosystem must include all the living and nonliving parts of the entire lake."
+    ],
+    "answer": "A",
+    "hints": [
+      "An ecosystem includes ALL the living and nonliving things in a place, not just one small part of it.",
+      "A habitat is the specific spot inside an ecosystem where ONE particular living thing lives — like the open water is for the fish."
+    ]
+  },
+  {
+    "id": "m6geo-ecosystems-habitats-005",
+    "loId": "m6geo.ecosystems-and-habitats",
+    "cedCode": "M6GEO-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student builds a glass terrarium with soil, live moss, a small snail, a piece of wood, and water. The student wants to describe both the ecosystem and the habitat in this terrarium. Which statement correctly describes both and explains why they are different?",
+    "choices": [
+      "The soil, moss, and snail together form the terrarium ecosystem because they are the only living and nonliving parts that interact closely; the snail's habitat is only the wood piece where it hides because that is the snail's specific shelter.",
+      "The entire terrarium — soil, moss, snail, wood, and water together — is the ecosystem; the snail's habitat is the specific area under or among the wood where the snail lives within the terrarium.",
+      "The moss and snail together make up the terrarium ecosystem because they exchange energy and nutrients through feeding; the habitat is the complete terrarium environment that surrounds and supports the snail.",
+      "The terrarium ecosystem includes all the living things and the soil where they grow because they form an interactive system; the snail's habitat is only the water portion because the snail spends most of its time feeding and resting in that zone."
+    ],
+    "answer": "B",
+    "hints": [
+      "An ecosystem is the WHOLE system of living and nonliving things together; a habitat is ONE smaller spot inside it.",
+      "The snail's habitat is the exact place where that snail lives, not the entire terrarium."
+    ]
+  },
+  {
+    "id": "m6geo-ecosystems-habitats-006",
+    "loId": "m6geo.ecosystems-and-habitats",
+    "cedCode": "M6GEO-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A scientist describes a rotting log on the forest floor: it contains wood fiber, moisture, beetles tunneling through it, fungi breaking down the material, air pockets, and the shade from trees above. A student claims that the rotting log is a separate ecosystem from the surrounding forest, because the log is in one small spot. Use the definitions of ecosystem and habitat to explain whether the student is right or wrong, and state what the log should actually be called.",
+    "choices": [
+      "The student is right; the rotting log is its own ecosystem because it has both living organisms like beetles and fungi and nonliving materials like wood and moisture, making it a complete and separate system from the forest around it.",
+      "The student is wrong; the rotting log is not a separate ecosystem because it does not have sunlight, which all ecosystems must have to function; it should be called a habitat instead.",
+      "The student is wrong; the rotting log and the surrounding forest are one larger forest ecosystem together, and the rotting log is a habitat within it where beetles and fungi live; a habitat is a smaller spot inside an ecosystem, not a separate ecosystem itself.",
+      "The student is right about the log being separate but uses the wrong term; the rotting log is a habitat because habitats are small locations with specific living and nonliving conditions, whereas the forest is the larger ecosystem that contains many different habitats."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about whether one place can be BOTH a habitat (a spot where something lives) AND at the same time be PART OF a larger ecosystem.",
+      "A habitat is always inside and smaller than the ecosystem that contains it — the log cannot be its own separate ecosystem if it sits within the forest."
+    ]
+  },
+  {
     "id": "m6geo-what-is-a-biome-001",
     "loId": "m6geo.what-is-a-biome",
     "cedCode": "M6GEO-5.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A biome is defined by three main characteristics. Which set of three characteristics do geographers use to identify and name a biome?",
+    "problemText": "A biome is defined by three main characteristics. Which three pieces of information together tell a geographer which biome a place belongs to?",
     "choices": [
       "Temperature, precipitation, and plant life",
-      "Elevation, wind speed, and animal species",
-      "Soil type, latitude, and hours of daylight",
-      "Humidity, rainfall patterns, and tree height"
+      "Temperature, elevation, and rainfall patterns",
+      "Plant life, soil type, and distance from the ocean",
+      "Precipitation, latitude, and the types of animals living there"
     ],
     "answer": "A",
     "hints": [
-      "Think about what the lesson said makes each biome unique and recognizable.",
-      "Two of the three characteristics are measurable quantities that describe water and heat."
+      "The lesson teaches that naming the correct biome uses three clues together.",
+      "Think about what makes each biome unique to describe to someone who has never been there."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geography class reads this short description: 'Very little water falls here in any month of the year, and the ground between widely spaced plants is mostly bare.' Which biome does this describe, and why is plant life an important clue here?",
+    "problemText": "A location receives very little rain in any month, and the ground is mostly bare with only a few plants spread far apart. Based on these two clues, which biome or biomes could this place be?",
     "choices": [
-      "Tundra, because plant life shows that low temperatures prevent trees from growing in this dry place",
-      "Desert, because plant life shows that very little water supports only scattered, spaced-out plants with bare ground between them",
-      "Grassland, because plant life shows that moderate rainfall allows grasses to grow across the ground, though they remain spread far apart with visible bare soil between them",
-      "Rainforest, because plant life shows that dense trees and shrubs cover nearly all the ground with very little bare space, indicating heavy year-round precipitation"
+      "Only a desert, because deserts always have very little rain",
+      "Either a desert or a tundra, because both have very low precipitation",
+      "Only a tundra, because tundras have bare ground",
+      "Either a grassland or a rainforest, because both can have sparse plants"
     ],
     "answer": "B",
     "hints": [
-      "Very low precipitation matches two biomes in the lesson; which plant-life pattern—bare ground or moss-and-shrub coverage—matches this description?",
-      "Notice the description says plants are 'spaced far apart' and the ground is 'mostly bare,' not covered by mosses or shrubs."
+      "Two of the five biomes in the lesson share the characteristic of very low precipitation.",
+      "Remember that one clue by itself can point to more than one biome; you need all three clues to decide."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student reads a description of a place where rain falls on most days all year long, with no dry season at all, and the temperature stays hot every month without much change. The student guesses 'forest' as the biome. What is wrong with this guess, and what should the student check before deciding?",
+    "problemText": "A biome description states: 'Rain falls on most days throughout the year, with no dry season. Tall trees grow so closely together in layers that sunlight barely reaches the ground.' Which biome does this clearly describe?",
     "choices": [
-      "The guess ignores the precipitation clue; forests do not receive rain every day all year long, only rainforests do, and daily year-round rain is the signature pattern of a rainforest",
-      "The guess ignores the temperature clue; forests can be hot and wet, but a rainforest is always colder than a forest",
-      "The guess ignores the plant-life clue; a forest must have a cold season, but this place is hot all year with heavy year-round rain, which points to rainforest instead",
-      "The guess ignores the plant-life clue; forests have scattered trees, but this place must have grassland because there is so much rain"
+      "Tundra",
+      "Grassland",
+      "Rainforest",
+      "Forest"
     ],
     "answer": "C",
     "hints": [
-      "A forest needs what temperature pattern that this place does NOT have?",
-      "Both forest and rainforest grow many trees; the temperature pattern is what sets them apart."
+      "Notice that the description mentions rain falling most days with no dry season—very high precipitation all year.",
+      "The layered trees blocking sunlight and the heat that never changes month to month narrow this down to one biome."
     ]
   },
   {
@@ -404,36 +404,55 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A nature preserve in central Africa has a warm season and a cooler season each year. Rainfall is heavy enough to support many trees growing close together throughout the year. Some of the trees lose their leaves during the cool season. A visiting student claims this must be a rainforest. Is the student correct? Explain using all three clues why or why not.",
+    "problemText": "A student reads two descriptions and needs to tell them apart. Description A: 'Low mosses and shrubs cover the ground; very little precipitation falls; it stays cold nearly all year.' Description B: 'Grasses cover almost all the ground; enough precipitation falls to keep it green; winters are cool but not freezing.' The student says both biomes have low plants instead of tall trees, so they must be the same biome. Explain why the student is wrong.",
     "choices": [
-      "No, the student is wrong. A rainforest is hot all year with no real cool season, but this place has a genuine cool season. A forest, not a rainforest, has both warm and cold seasons and enough rain for many trees, with some trees that lose leaves when cold arrives.",
-      "Yes, the student is correct. The presence of heavy rainfall and many trees growing close together are sufficient to classify any location as a rainforest, since these two characteristics define the rainforest biome and override other seasonal variations in temperature.",
-      "No, the student is wrong. This place experiences a cool season, and because it also has some trees losing their leaves, it cannot be a rainforest since rainforests maintain constant warm temperatures and trees that retain their leaves year-round.",
-      "Yes, the student is correct. While rainforests typically experience warm conditions, the combination of heavy rainfall throughout the year and dense tree growth in this location are the defining features that make it a rainforest despite the presence of a cooler season."
+      "The student did not understand that biomes are defined by latitude, not by what kinds of plants grow in them",
+      "The student focused on plant life instead of checking temperature and precipitation, which are the two clues that distinguish tundra from grassland",
+      "The student forgot that many different biomes can have low-growing plants, so using only that one clue cannot identify which specific biome a place belongs to",
+      "The student ignored the precipitation and temperature clues, which are different between the two descriptions and identify tundra and grassland as distinct biomes"
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
-      "What is the key temperature difference between rainforest (which stays ___ all year) and forest (which has both ___ and ___ seasons)?",
-      "Rainforest and forest both have enough rain for many trees; the temperature pattern is what separates them."
+      "Think about what separates tundra from grassland in the lesson content.",
+      "The lesson teaches that checking all three clues together is what narrows a description down to one biome."
     ]
   },
   {
     "id": "m6geo-what-is-a-biome-005",
     "loId": "m6geo.what-is-a-biome",
     "cedCode": "M6GEO-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A place experiences both a warm season and a cold season each year. Enough precipitation falls throughout the year to support many trees growing close together. However, some of those trees lose their leaves when the cold season arrives. Based on all three clues, which biome is this?",
+    "choices": [
+      "Forest, because it has a real cold season and enough precipitation for many trees that lose their leaves",
+      "Rainforest, because it has enough precipitation and trees close together, even though there is no cold season where leaves fall",
+      "Grassland, because it has a cold season, even though grassland does not have enough precipitation for many trees to grow close together",
+      "Tundra, because trees lose their leaves in cold seasons, even though tundra does not get enough precipitation to support many trees growing close together"
+    ],
+    "answer": "A",
+    "hints": [
+      "Both forest and rainforest grow many trees, so the plant-life clue alone is not enough.",
+      "The key difference is that this place has a genuinely cold season where trees lose their leaves—only one of these biomes does that."
+    ]
+  },
+  {
+    "id": "m6geo-what-is-a-biome-006",
+    "loId": "m6geo.what-is-a-biome",
+    "cedCode": "M6GEO-5.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student is given four short descriptions and asked to match each to the correct biome by checking all three clues. The student correctly matches three of them but makes one error. Description 1: 'Stays cold nearly all year with very little rain and a ground covered by mosses'—student says tundra (correct). Description 2: 'Hot all year, rains on most days, dense trees in layers'—student says rainforest (correct). Description 3: 'Warm part of year, cold part of year, enough rain for many trees, some trees lose leaves in cold'—student says rainforest (WRONG). Description 4: 'Warm season, cooler season, grasses cover most ground, only scattered trees'—student says grassland (correct). For Description 3, which single clue should the student have examined more carefully, and what is the correct biome?",
+    "problemText": "A geographer is describing two places to a student. Place 1 has very low precipitation, is cold for most of the year, and has mosses and shrubs covering the ground with no trees. Place 2 has very low precipitation, stays warm all year, and has a few scattered plants with most of the ground bare. The student says, 'Both places get very little rain, so they must be the same biome.' Identify which two biomes these actually are and explain why very low precipitation alone is not enough to group them together.",
     "choices": [
-      "The precipitation clue: rainforest gets year-round heavy rain, but this place gets rain only part of the year, so it is grassland, not rainforest",
-      "The temperature clue: rainforest stays hot all year with no cold season, but this place has a genuine cold season, so it is forest, not rainforest",
-      "The plant-life clue: rainforest has dense layered trees, but this place has trees that lose leaves, so it must be tundra, not rainforest",
-      "The temperature clue: rainforest is warm during one part of the year and cold during another, but this place stays warm all year, so it must be grassland, not rainforest"
+      "Place 1 is grassland and Place 2 is rainforest; the student forgot that biomes change location based on elevation and water availability near the ground",
+      "Place 1 is tundra and Place 2 is desert; the temperature and plant-life clues differ, showing that low precipitation alone can describe two different biomes",
+      "Place 1 is desert and Place 2 is tundra; both receive very little precipitation and have few trees, making them essentially the same biome with only minor differences in appearance",
+      "Place 1 is tundra and Place 2 is grassland; both have low precipitation, but Place 1 is too cold for most trees while Place 2 is warm enough to support grasses year-round"
     ],
     "answer": "B",
     "hints": [
-      "Rainforest and forest both have enough rain for many trees and both can have trees that lose leaves; what is the one temperature pattern that rainforest requires all year that this description does NOT have?",
-      "Re-read what the lesson says rainforest must be like for the whole year, and what forest needs to have happen during the year."
+      "Look closely at the temperature and plant-life descriptions for each place—they are quite different despite both having low precipitation.",
+      "The lesson teaches that precipitation alone can match more than one biome; the other two clues must be checked to tell them apart."
     ]
   }
 ]

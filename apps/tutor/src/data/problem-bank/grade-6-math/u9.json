@@ -1,347 +1,5 @@
 [
   {
-    "id": "m6math-volume-of-rectangular-prisms-001",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism has edge lengths of 2 inches, 3 inches, and 4 inches. What does the volume of this prism represent?",
-    "choices": [
-      "The number of unit cubes with edge length 1 inch needed to pack the prism completely with no gaps or leftover cubes",
-      "The total distance around all edges of the prism when measured and added together as a sum of lengths",
-      "The total area covered by multiplying the length and width of the base rectangular face",
-      "The distance you travel if you walk around the perimeter of the prism's bottom face one complete time"
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about what 'packing' the prism means — what are you actually counting?",
-      "Volume uses cubes, not flat shapes. Which choice talks about cubes?"
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-002",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism measures 2 inches long, 3 inches wide, and 1 inch tall. Using the formula V = l × w × h, what is its volume?",
-    "choices": [
-      "6 square inches",
-      "6 cubic inches",
-      "5 cubic inches",
-      "12 cubic inches"
-    ],
-    "answer": "B",
-    "hints": [
-      "Multiply the three edge lengths together: 2 × 3 × 1.",
-      "Volume is always measured in cubic units, not square units. Which choice uses the correct unit?"
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-003",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "You want to pack a small rectangular prism with side lengths of 1/2 inch, 1/2 inch, and 1 inch using small unit fraction cubes. What edge length should each small cube have so that it fits a whole number of times along every edge of the prism?",
-    "choices": [
-      "1/4 inch",
-      "1 inch",
-      "1/2 inch",
-      "2 inches"
-    ],
-    "answer": "C",
-    "hints": [
-      "Find a unit fraction that divides evenly into 1/2 inch and also into 1 inch.",
-      "A smaller cube fits better. Check: does 1/2 divide evenly into 1/2, and into 1?"
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-004",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular jewelry box measures 3/4 inch long, 1/2 inch wide, and 1/2 inch tall. To find its volume using the packing method, you choose small cubes with edge length 1/4 inch. How many small cubes will fit in the box, and what is the volume of one small cube?",
-    "choices": [
-      "12 small cubes; each small cube has volume 1/8 cubic inch",
-      "6 small cubes; each small cube has volume 1/8 cubic inch",
-      "24 small cubes; each small cube has volume 1/64 cubic inch",
-      "12 small cubes; each small cube has volume 1/64 cubic inch"
-    ],
-    "answer": "D",
-    "hints": [
-      "Count how many 1/4-inch cubes fit along each edge: divide 3/4 ÷ 1/4, then 1/2 ÷ 1/4, then 1/2 ÷ 1/4, and multiply those counts.",
-      "A cube with edge 1/4 inch has volume 1/4 × 1/4 × 1/4. Work out this multiplication carefully."
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-005",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two rectangular prisms are packed with unit cubes. Prism A measures 2 inches by 2 inches by 2 inches. Prism B measures 1/2 inch by 1/2 inch by 1/2 inch. Which statement correctly compares their volumes?",
-    "choices": [
-      "Prism A has a volume of 8 cubic inches and Prism B has a volume of 1/8 cubic inch, so Prism A holds 64 times as many unit cubes",
-      "Prism A has a volume of 4 cubic inches and Prism B has a volume of 1/4 cubic inch, so Prism A holds 16 times as many unit cubes",
-      "Both prisms hold the same volume because they are both cubes",
-      "Prism A holds 8 unit cubes and Prism B holds 1/2 unit cube, so they cannot be compared"
-    ],
-    "answer": "A",
-    "hints": [
-      "Calculate V = l × w × h for each prism separately. Remember that fractional edges give fractional volumes.",
-      "To compare volumes, divide the larger by the smaller: 8 ÷ (1/8) = ?"
-    ]
-  },
-  {
-    "id": "m6math-volume-of-rectangular-prisms-006",
-    "loId": "m6math.volume-of-rectangular-prisms",
-    "cedCode": "M6MATH-9.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism measures 5/4 inches long, 2/3 inch wide, and 3/2 inches tall. You want to pack it with small cubes. What is the smallest edge length a unit fraction cube can have so that it fits a whole number of times along every edge? Then calculate the volume of the prism using the formula V = l × w × h. Show that your chosen cube size works.",
-    "choices": [
-      "1/6 inch; the volume is 5/8 cubic inches; and 1/6 fits evenly into all three edges when written with denominator 6 because 5/4 = 7.5/6, 2/3 = 4/6, and 3/2 = 9/6",
-      "1/12 inch; the volume is 5/16 cubic inches; and 1/12 divides evenly into all three edges because they share a common denominator of 12",
-      "1/4 inch; the volume is 15/8 cubic inches; and 1/4 is smaller than all three edge lengths so it will divide into each one",
-      "1/2 inch; the volume is 5/4 cubic inches; and 1/2 divides all whole numbers because it is a unit fraction with a small denominator"
-    ],
-    "answer": "B",
-    "hints": [
-      "Rewrite each edge with a common denominator. What is the least common denominator of 4, 3, and 2? Once you find it, the unit fraction cube should have edge length equal to the denominator of that common form, written as a unit fraction.",
-      "After choosing your cube size, multiply the three edge lengths using the formula. Check that your cube choice divides evenly: 5/4 ÷ 1/12 = ?, 2/3 ÷ 1/12 = ?, 3/2 ÷ 1/12 = ? (all should be whole numbers)."
-    ]
-  },
-  {
-    "id": "m6math-area-of-triangles-quadrilaterals-001",
-    "loId": "m6math.area-of-triangles-and-quadrilaterals",
-    "cedCode": "M6MATH-9.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A rectangle has a base of 12 meters and a height of 8 meters. According to the area rule for rectangles taught in class, what is the area?",
-    "choices": [
-      "20 square meters",
-      "40 square meters",
-      "96 square meters",
-      "144 square meters"
-    ],
-    "answer": "C",
-    "hints": [
-      "Area of a rectangle is base times height.",
-      "Multiply the two measurements given."
-    ]
-  },
-  {
-    "id": "m6math-area-of-triangles-quadrilaterals-002",
-    "loId": "m6math.area-of-triangles-and-quadrilaterals",
-    "cedCode": "M6MATH-9.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A triangle has a base of 10 inches. When you measure straight up from the base to the opposite corner, perpendicular to the base, the distance is 6 inches. Using the triangle area rule from the lesson, what is the area of this triangle?",
-    "choices": [
-      "16 square inches",
-      "15 square inches",
-      "60 square inches",
-      "30 square inches"
-    ],
-    "answer": "D",
-    "hints": [
-      "The triangle area rule comes from cutting a rectangle in half with one diagonal.",
-      "Multiply base times height, then divide by 2."
-    ]
-  },
-  {
-    "id": "m6math-area-of-triangles-quadrilaterals-003",
-    "loId": "m6math.area-of-triangles-and-quadrilaterals",
-    "cedCode": "M6MATH-9.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A parallelogram has two parallel edges that are each 9 centimeters long. The slanted sides are 5 centimeters each. The perpendicular distance from the bottom edge straight up to the top edge is 4 centimeters. Which choice shows the correct area calculation?",
-    "choices": [
-      "9 times 4, which equals 36 square centimeters",
-      "9 times 5, which equals 45 square centimeters",
-      "5 times 4, which equals 20 square centimeters",
-      "9 plus 4, which equals 13 centimeters"
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson shows that height must always be perpendicular to the base, never a slanted side.",
-      "A parallelogram can be rearranged into a rectangle using the same base and height."
-    ]
-  },
-  {
-    "id": "m6math-area-of-triangles-quadrilaterals-004",
-    "loId": "m6math.area-of-triangles-and-quadrilaterals",
-    "cedCode": "M6MATH-9.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A trapezoid-shaped garden bed has a bottom edge of 12 feet, a top edge of 8 feet, and a perpendicular height of 5 feet. The lesson teaches decomposing shapes into rectangles and triangles. If you decompose this trapezoid by drawing a vertical line down from one end of the top edge to the bottom edge, creating a rectangle and a triangle, what is the total area of the garden bed?",
-    "choices": [
-      "50 square feet",
-      "70 square feet",
-      "80 square feet",
-      "100 square feet"
-    ],
-    "answer": "B",
-    "hints": [
-      "Decompose by drawing a vertical line from the end of the top edge down to the bottom edge.",
-      "Find the rectangle area (8 feet by 5 feet) and the triangle area (base 4 feet by height 5 feet) separately, then add them."
-    ]
-  },
-  {
-    "id": "m6math-area-of-triangles-quadrilaterals-005",
-    "loId": "m6math.area-of-triangles-and-quadrilaterals",
-    "cedCode": "M6MATH-9.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A composite figure is shaped like a house: a rectangle with a triangular roof on top. The rectangle is 7 meters wide and 6 meters tall. The triangle sits on the rectangle's top edge, sharing that 7-meter edge as its base, and the triangle's height measured perpendicular to that base is 3 meters. What is the total area of the entire figure?",
-    "choices": [
-      "52.5 square meters",
-      "42 square meters",
-      "73.5 square meters",
-      "63 square meters"
-    ],
-    "answer": "C",
-    "hints": [
-      "Use decomposition: find the area of the rectangle and the triangle separately.",
-      "Rectangle area is 7 times 6; triangle area is (7 times 3) divided by 2. Add them together."
-    ]
-  },
-  {
-    "id": "m6math-area-of-triangles-quadrilaterals-006",
-    "loId": "m6math.area-of-triangles-and-quadrilaterals",
-    "cedCode": "M6MATH-9.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A parallelogram-shaped banner leans to the right. Its base runs along the bottom and measures 15 inches. One slanted side is 9 inches long. When you measure the straight up-and-down distance from the base to the top parallel edge, it is 6 inches. A student multiplies 15 times 9 and gets 135 square inches, claiming that is the banner's area. Explain why this answer is wrong and calculate the correct area.",
-    "choices": [
-      "The student should have subtracted the slanted side from the base first; the correct area is 36 square inches.",
-      "The student forgot to divide by 2, which is needed for all quadrilaterals; the correct area is 67.5 square inches.",
-      "The student added instead of multiplied; the correct area is 24 square inches.",
-      "The student used the slanted side instead of the perpendicular height; the correct area is 90 square inches."
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson emphasizes that height is always perpendicular to the base, never the length of a slanted side.",
-      "When you compose a parallelogram into a rectangle using the same base and the perpendicular height, the formula is base times height, not base times slanted side."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-001",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A net is a flat pattern that can be folded into a three-dimensional solid. What does each piece in a net represent?",
-    "choices": [
-      "One edge of the solid",
-      "One face of the solid",
-      "One corner point of the solid",
-      "One vertex label of the solid"
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what happens when you unfold a box completely flat.",
-      "Each piece in the net becomes one flat surface when you fold it back up."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-002",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A rectangular prism has dimensions 5 cm long, 3 cm wide, and 2 cm tall. When its net is drawn, what are the dimensions of the top face of this prism?",
-    "choices": [
-      "5 cm by 2 cm",
-      "3 cm by 2 cm",
-      "5 cm by 3 cm",
-      "5 cm by 5 cm"
-    ],
-    "answer": "C",
-    "hints": [
-      "The top face of a rectangular prism lies opposite the bottom face and has the same dimensions.",
-      "The length and width of the prism form the length and width of the top and bottom faces."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-003",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student draws a net for a rectangular prism and labels all six rectangles with their dimensions. When folded up, two rectangles that share an edge in the net must have one matching dimension. Why is this requirement important?",
-    "choices": [
-      "So that the rectangles can fold along the edges without gaps or overlaps at the corners where the faces meet",
-      "So that the net takes up less space on the paper when you arrange all six rectangles",
-      "So that the rectangles can be drawn the same color to show which faces are adjacent",
-      "So that the two faces can fit together perfectly along that shared edge when folded"
-    ],
-    "answer": "D",
-    "hints": [
-      "Think about what happens at the fold line when you bring two faces together.",
-      "If two rectangles don't share the same edge length, they won't line up when you fold the net."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-004",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A triangular prism has two identical right triangular ends, each with legs of 6 inches and 8 inches and a hypotenuse of 10 inches. The prism is 12 inches long. To find the total surface area, a student first finds the area of both triangular faces. What is that combined area, and why must the student also find the area of three more faces?",
-    "choices": [
-      "Combined triangle area is 48 square inches; the three rectangular faces wrap around each of the three sides of the triangle",
-      "Combined triangle area is 96 square inches; each triangular face must be counted twice because there are two identical ends of the prism",
-      "Combined triangle area is 48 square inches; the student needs to count six total faces to match the standard formula for all three-dimensional shapes",
-      "Combined triangle area is 120 square inches; the three rectangular faces correspond to the three dimensions of the triangle's base, height, and hypotenuse"
-    ],
-    "answer": "A",
-    "hints": [
-      "Use the triangle-area formula: base times height divided by two.",
-      "A triangular prism's sides are covered by rectangles, one for each edge of the triangular face."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-005",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A gift box shaped like a rectangular prism is 8 inches long, 5 inches wide, and 3 inches tall. A student uses a net to find the surface area and identifies three pairs of matching faces: the top and bottom, the front and back, and the two ends. If the student correctly finds that one pair has area 40 square inches and another pair has area 24 square inches, what is the total surface area?",
-    "choices": [
-      "88 square inches",
-      "158 square inches",
-      "110 square inches",
-      "176 square inches"
-    ],
-    "answer": "B",
-    "hints": [
-      "Find the area of each pair of rectangles, then add all three pairs together.",
-      "The three pairs use dimensions: length × width, length × height, and width × height."
-    ]
-  },
-  {
-    "id": "m6math-nets-surface-area-006",
-    "loId": "m6math.nets-and-surface-area",
-    "cedCode": "M6MATH-9.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is building a net for a triangular prism and makes a sketch showing two triangular faces and three rectangular faces. The student labels the triangular faces with a base of 5 cm and a height of 12 cm. The three rectangles have widths of 5 cm, 12 cm, and 13 cm, all with a height of 9 cm (the length of the prism). However, when the teacher checks the work, she points out that one edge in the net does not match. Which dimension causes this mismatch, and what does it tell us?",
-    "choices": [
-      "The 5 cm and 12 cm dimensions are legs of the triangle, so they should each be the width of one rectangle, but the third rectangle width should equal the hypotenuse, which is √(5² + 12²) = √169 = 13, and this does match, so there is no mismatch in the net",
-      "The 9 cm height of all rectangles represents the length of the prism and is correct for all three rectangular faces, but the rectangle widths must correspond to the three side lengths of the triangular base, and since 5² + 12² = 169 ≠ 13², the triangle cannot be a right triangle with those dimensions",
-      "The 13 cm rectangle width should be the hypotenuse of the triangle, but using 12 and 5 as legs means the hypotenuse is not 13, so the triangle and net don't match",
-      "The three rectangle widths should all equal 9 cm because the length of the prism determines every rectangular face's width in a triangular prism, and since each rectangle height is 9 cm, all widths must also be 9 cm for the net to fold into a valid prism"
-    ],
-    "answer": "C",
-    "hints": [
-      "In a triangular prism, each side length of the triangle becomes the width of one of the three rectangular faces.",
-      "Check whether a right triangle with legs 5 and 12 actually has a hypotenuse of exactly 13."
-    ]
-  },
-  {
     "id": "m6math-polygons-in-the-coordinate-plane-001",
     "loId": "m6math.polygons-in-the-coordinate-plane",
     "cedCode": "M6MATH-9.2",
@@ -453,6 +111,348 @@
     "hints": [
       "Find which coordinate is shared by V and W, then which is shared by W and X.",
       "For VW, watch whether the second coordinates are on the same side of zero or opposite sides. Do the same for WX using first coordinates."
+    ]
+  },
+  {
+    "id": "m6math-area-of-triangles-quadrilaterals-001",
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "cedCode": "M6MATH-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A triangle has a base of 10 meters and a height of 8 meters, where the height is measured perpendicular to the base. What is the area of the triangle?",
+    "choices": [
+      "18 square meters",
+      "80 square meters",
+      "40 square meters",
+      "160 square meters"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that area of a triangle equals base times height divided by two.",
+      "Start by multiplying the base and height together, then divide that product in half."
+    ]
+  },
+  {
+    "id": "m6math-area-of-triangles-quadrilaterals-002",
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "cedCode": "M6MATH-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A parallelogram has a base of 12 inches. The straight up-and-down distance between the parallelogram's two parallel sides is 7 inches. One of the slanted sides of the parallelogram measures 9 inches. What is the area of the parallelogram?",
+    "choices": [
+      "126 square inches",
+      "108 square inches",
+      "63 square inches",
+      "84 square inches"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about which measurement tells you how tall the parallelogram is — perpendicular to the base.",
+      "The slanted side length is a distractor; you need the perpendicular distance, not the slant."
+    ]
+  },
+  {
+    "id": "m6math-area-of-triangles-quadrilaterals-003",
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "cedCode": "M6MATH-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marcus is drawing a triangle on grid paper. He chooses a base of the triangle that is 9 centimeters long. He measures the perpendicular distance from that base to the opposite corner and finds it is 6 centimeters. What is the area of Marcus's triangle, in square centimeters?",
+    "choices": [
+      "27 square centimeters",
+      "54 square centimeters",
+      "15 square centimeters",
+      "45 square centimeters"
+    ],
+    "answer": "A",
+    "hints": [
+      "Use the triangle area rule: base times height, then divide by two.",
+      "Make sure you divide by two after multiplying; that is the key step that makes it a triangle and not a rectangle."
+    ]
+  },
+  {
+    "id": "m6math-area-of-triangles-quadrilaterals-004",
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "cedCode": "M6MATH-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A composite shape is made of a rectangle and a triangle sitting on top of it. The rectangle has a width of 6 inches and a height of 5 inches. On top of the rectangle, a triangle has the same 6-inch width as the rectangle's top edge for its base, and the triangle's height, measured perpendicular to that base, is 4 inches. What is the total area of the entire composite shape?",
+    "choices": [
+      "30 square inches",
+      "42 square inches",
+      "12 square inches",
+      "72 square inches"
+    ],
+    "answer": "B",
+    "hints": [
+      "Decompose the shape into two pieces: find the area of the rectangle and the area of the triangle separately.",
+      "Add the areas of the two pieces together to get the total area of the whole shape."
+    ]
+  },
+  {
+    "id": "m6math-area-of-triangles-quadrilaterals-005",
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "cedCode": "M6MATH-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A trapezoid-shaped garden bed can be decomposed by drawing a vertical line from one corner of the shape to the opposite side. This creates a rectangle and a triangle. The rectangle part is 8 meters wide and 3 meters tall. The triangle part has a base of 2 meters and a height of 3 meters, measured perpendicular to its base. What is the total area of the garden bed?",
+    "choices": [
+      "24 square meters",
+      "48 square meters",
+      "27 square meters",
+      "30 square meters"
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the area of the rectangle using length times width.",
+      "Find the area of the triangle using base times height divided by two, then add the two areas together."
+    ]
+  },
+  {
+    "id": "m6math-area-of-triangles-quadrilaterals-006",
+    "loId": "m6math.area-of-triangles-and-quadrilaterals",
+    "cedCode": "M6MATH-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A large rectangle is 10 inches wide and 8 inches tall. From one corner of the rectangle, a right triangle is cut away. The triangle has a base of 4 inches and a height of 8 inches, measured perpendicular to that base. You can think of the remaining shape as the big rectangle with a triangular piece removed. What is the area of the shape that remains after the triangle is cut away?",
+    "choices": [
+      "96 square inches",
+      "80 square inches",
+      "16 square inches",
+      "64 square inches"
+    ],
+    "answer": "D",
+    "hints": [
+      "Start by finding the area of the whole large rectangle before anything is removed.",
+      "Then find the area of the triangle that was cut away, and subtract it from the rectangle's area."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-001",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A net is a flat pattern that can be folded into a three-dimensional solid. Which statement correctly describes what happens to the faces of a solid when it is unfolded into its net?",
+    "choices": [
+      "Each face of the solid is cut into smaller geometric pieces so that it can lay flat on paper, and these pieces are then scattered at random positions with no organized pattern.",
+      "Each face becomes a flat shape in the net, keeping its exact size and staying attached to at least one neighboring face along a shared edge.",
+      "Only the exterior surfaces of the solid become shapes in the net, while all interior faces remain hidden and do not appear in the unfolded pattern.",
+      "The faces are arranged in a circular formation around a central point in the net, positioned so that no edges of different faces touch or connect to one another."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what 'unfolding' a box means—do the faces get smaller or stay the same size?",
+      "Remember that in a net, neighboring faces stay connected because they shared an edge in the solid."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-002",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism has a net showing six rectangles. Two of the rectangles are 5 cm long and 3 cm wide. Two others are 5 cm long and 4 cm wide. The remaining two are 3 cm long and 4 cm wide. What is the total surface area of this rectangular prism?",
+    "choices": [
+      "47 square centimeters",
+      "60 square centimeters",
+      "94 square centimeters",
+      "120 square centimeters"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start by finding the area of each pair of matching rectangles, using length times width for each.",
+      "Surface area is the sum of all six faces, so add the area of all three pairs together."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-003",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Marcus drew a net for a triangular prism. The net shows two identical right triangles with legs 6 inches and 8 inches, plus three rectangles: one that is 6 inches by 10 inches, one that is 8 inches by 10 inches, and one that is 10 inches by 10 inches. Which statement is correct?",
+    "choices": [
+      "The net is drawn correctly in terms of shape and size, but the rectangles are placed in an order that prevents the faces from folding together properly into a solid.",
+      "The net is drawn wrong because the three rectangles do not all have the same height, which means they cannot wrap around the three different sides of the triangle correctly.",
+      "The net is drawn wrong because the two triangles should not be identical to each other; one must be larger than the other to form a valid triangular prism.",
+      "The net is drawn correctly because all three side lengths of the triangle (6, 8, and the third side) are matched to a rectangle of the correct width."
+    ],
+    "answer": "D",
+    "hints": [
+      "For a triangular prism, each side of the triangle must wrap around its own rectangle—check that each rectangle's width matches a triangle side.",
+      "Use the Pythagorean relationship to find the third side of a right triangle with legs 6 and 8."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-004",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A gift box shaped like a rectangular prism measures 12 cm long, 8 cm wide, and 5 cm tall. The box will be wrapped in paper. To find how much paper is needed, you must find the total surface area. A student began by finding the area of the top face (12 × 8 = 96 square cm) and the area of the front face (12 × 5 = 60 square cm). Explain what the student must do next to correctly find the total surface area, and state the final answer.",
+    "choices": [
+      "Find the area of the left end (8 × 5 = 40 square cm), then add all three different face areas and double the total: (96 + 60 + 40) × 2 = 392 square cm.",
+      "Add 96 and 60 to get 156 square cm, then multiply by the width to account for all faces that surround the box, since these two faces represent the only dimensions needed.",
+      "Find the area of the back face (12 × 5 = 60 square cm) and the bottom face (12 × 8 = 96 square cm), then add only the front and top: 96 + 60 + 60 + 96 = 312 square cm, because opposite faces don't need to be counted twice.",
+      "Find the area of the right end (8 × 5 = 40 square cm) and add it to the areas already found, then add the remaining side face area: 96 + 60 + 40 + 40 = 236 square cm."
+    ],
+    "answer": "A",
+    "hints": [
+      "A rectangular prism has six faces in three matching pairs—make sure you account for all of them.",
+      "After finding the area of three different faces (top, front, and one end), what do you do with those three numbers to get the total for all six faces?"
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-005",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A triangular prism pencil case has two identical triangular ends that are right triangles with legs 5 cm and 12 cm. The pencil case is 8 cm long between its two triangular ends. First, find the area of one triangular end using the formula base × height ÷ 2. Then, find the total surface area of the pencil case by adding the area of both triangular ends and all three rectangular faces.",
+    "choices": [
+      "The two triangular ends have a combined area of 30 square cm, plus the two rectangles (5 × 8) + (12 × 8) = 136 square cm, for a total of 166 square cm.",
+      "The two triangular ends have a combined area of 60 square cm, plus the three rectangles (5 × 8) + (12 × 8) + (13 × 8) = 240 square cm, for a total of 300 square cm.",
+      "The two triangular ends have a combined area of 120 square cm, plus the three rectangles (5 × 8) + (12 × 8) + (13 × 8) = 240 square cm, for a total of 360 square cm.",
+      "The two triangular ends have a combined area of 60 square cm, plus only the rectangle wrapping the longest side (13 × 8) = 104 square cm, for a total of 164 square cm."
+    ],
+    "answer": "B",
+    "hints": [
+      "Use the Pythagorean relationship to find the third side of the right triangle with legs 5 and 12.",
+      "Every side of the triangle—all three—must wrap around its own rectangle; do not skip any rectangle face."
+    ]
+  },
+  {
+    "id": "m6math-nets-surface-area-006",
+    "loId": "m6math.nets-and-surface-area",
+    "cedCode": "M6MATH-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A net for a rectangular prism is laid out as follows: a horizontal strip of four rectangles, each 3 cm tall, in widths of 2 cm, 6 cm, 2 cm, and 6 cm from left to right. Two additional rectangles, each 6 cm by 3 cm, are attached to the top and bottom edges of the second rectangle in the strip. Before calculating surface area, carefully count the faces and confirm which dimension appears twice in matching pairs. Then calculate the total surface area.",
+    "choices": [
+      "The six faces are arranged in two pairs of 2 × 3 rectangles and two pairs of 6 × 3 rectangles, with one pair appearing three times, for a total of 66 square cm.",
+      "The six faces form three pairs: two faces of 2 × 3, two of 6 × 3, and two of 6 × 3, for a total of 72 square cm.",
+      "The six faces are arranged in three pairs: 2 × 3 (area 6), 6 × 3 (area 18), and 6 × 3 (area 18), with each pair counted twice: (6 + 18 + 18) × 2 = 84 square cm.",
+      "The net contains only five faces total because the two attached rectangles overlap, so surface area cannot be calculated."
+    ],
+    "answer": "C",
+    "hints": [
+      "Count carefully: the horizontal strip has four rectangles, and two more are attached, so the net should show six faces total for a rectangular prism.",
+      "A rectangular prism's six faces form three matching pairs; identify which dimension repeats to find the pairs, then double each pair's area and add them."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-001",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A right rectangular prism has edge lengths of 2 inches, 3 inches, and 4 inches. Using the formula V = l × w × h, what is the volume of this prism?",
+    "choices": [
+      "24 cubic inches",
+      "18 cubic inches",
+      "12 cubic inches",
+      "9 cubic inches"
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply all three edge lengths together.",
+      "The volume formula uses all three dimensions, not just two of them."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-002",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A small box measures 1/2 inch long, 1/2 inch wide, and 1/2 inch tall. What is the volume of this box in cubic inches?",
+    "choices": [
+      "3/2 cubic inches",
+      "1/8 cubic inch",
+      "1/4 cubic inch",
+      "1/2 cubic inch"
+    ],
+    "answer": "B",
+    "hints": [
+      "Multiply 1/2 × 1/2 × 1/2 to find the volume.",
+      "When you multiply three fractions, multiply numerator by numerator and denominator by denominator."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-003",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A wooden block shaped like a rectangular prism measures 2 inches long, 1/2 inch wide, and 3 inches tall. What is the volume of the block in cubic inches?",
+    "choices": [
+      "5 1/2 cubic inches",
+      "2 1/2 cubic inches",
+      "3 cubic inches",
+      "6 cubic inches"
+    ],
+    "answer": "C",
+    "hints": [
+      "Use the formula V = l × w × h with the three given measurements.",
+      "When one edge is a fraction and the others are whole numbers, you can still multiply all three together."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-004",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism has edges of 3/4 inch, 2/3 inch, and 1 inch. To pack this prism with unit-fraction cubes that fit evenly along all three edges with no gaps or leftover space, what should the edge length of each small cube be?",
+    "choices": [
+      "1/2 inch",
+      "1/4 inch",
+      "1/3 inch",
+      "1/12 inch"
+    ],
+    "answer": "D",
+    "hints": [
+      "The small cube's edge length must divide evenly into 3/4, 2/3, and 1 inch.",
+      "Find the largest unit fraction that fits evenly into all three edge lengths."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-005",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A small gift box measures 2 inches long, 3/2 inches wide, and 1/2 inch tall. A student packs this box with unit-fraction cubes that are each 1/2 inch on every edge. After counting that 12 small cubes fit inside, the student multiplies 12 by the volume of one small cube to find the total volume. What volume does the student get?",
+    "choices": [
+      "3/2 cubic inches",
+      "12 cubic inches",
+      "1/4 cubic inch",
+      "6 cubic inches"
+    ],
+    "answer": "A",
+    "hints": [
+      "First find the volume of one small cube with edge length 1/2 inch.",
+      "Then multiply the number of small cubes (12) by the volume of each one."
+    ]
+  },
+  {
+    "id": "m6math-volume-of-rectangular-prisms-006",
+    "loId": "m6math.volume-of-rectangular-prisms",
+    "cedCode": "M6MATH-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A rectangular prism has a length of 5/4 inches and a width of 1/2 inch. When this prism is packed with small cubes of edge length 1/4 inch, exactly 20 small cubes fit inside. What is the height of the prism in inches?",
+    "choices": [
+      "2 inches",
+      "1 inch",
+      "1/2 inch",
+      "3/4 inch"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count how many small cubes fit along length and width, then use that to find how many must fit along the height.",
+      "The total count of small cubes along all three dimensions should multiply to give 20."
     ]
   }
 ]
