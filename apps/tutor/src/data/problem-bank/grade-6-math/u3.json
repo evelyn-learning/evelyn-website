@@ -228,120 +228,6 @@
     ]
   },
   {
-    "id": "m6math-dividing-mixed-numbers-001",
-    "loId": "m6math.dividing-mixed-numbers",
-    "cedCode": "M6MATH-3.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "To divide mixed numbers, what must you do before you use keep-change-flip? Write the first step clearly.",
-    "choices": [
-      "Simplify the mixed number by reducing its parts",
-      "Flip the mixed number over to make its reciprocal",
-      "Convert the mixed number into an improper fraction",
-      "Multiply the mixed number by the divisor first"
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about the rule that says a mixed number cannot go straight into keep-change-flip.",
-      "What form must both numbers be in before you can use keep-change-flip?"
-    ]
-  },
-  {
-    "id": "m6math-dividing-mixed-numbers-002",
-    "loId": "m6math.dividing-mixed-numbers",
-    "cedCode": "M6MATH-3.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Convert 3 and 2/5 into an improper fraction using the rule: multiply the whole number by the denominator, add the numerator, and keep the same denominator. Show your work or write what you get.",
-    "choices": [
-      "15/2",
-      "6/5",
-      "3/7",
-      "17/5"
-    ],
-    "answer": "D",
-    "hints": [
-      "Start by multiplying 3 × 5. Then add 2 to that result.",
-      "The denominator stays the same, which is 5."
-    ]
-  },
-  {
-    "id": "m6math-dividing-mixed-numbers-003",
-    "loId": "m6math.dividing-mixed-numbers",
-    "cedCode": "M6MATH-3.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following shows the correct setup for dividing 5/6 ÷ 2 and 1/3? Your answer should show what the problem looks like after converting and after applying keep-change-flip, but before multiplying.",
-    "choices": [
-      "5/6 × 7/3",
-      "6/5 × 7/3",
-      "5/6 × 3/7",
-      "5/6 ÷ 7/3"
-    ],
-    "answer": "A",
-    "hints": [
-      "First, convert 2 and 1/3 to an improper fraction. Then apply keep-change-flip to that improper fraction.",
-      "When you flip 7/3, what do you get? That flipped version is what multiplies the 5/6."
-    ]
-  },
-  {
-    "id": "m6math-dividing-mixed-numbers-004",
-    "loId": "m6math.dividing-mixed-numbers",
-    "cedCode": "M6MATH-3.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Work out 4 and 2/3 ÷ 7/9. Convert the mixed number first, then apply keep-change-flip, multiply, and simplify. What is your final answer?",
-    "choices": [
-      "28/27",
-      "6",
-      "9/2",
-      "4 and 2/3"
-    ],
-    "answer": "B",
-    "hints": [
-      "Convert 4 and 2/3 to an improper fraction by computing 4 × 3 + 2, keeping denominator 3.",
-      "After you multiply 14/3 × 9/7, check whether the result simplifies to a whole number."
-    ]
-  },
-  {
-    "id": "m6math-dividing-mixed-numbers-005",
-    "loId": "m6math.dividing-mixed-numbers",
-    "cedCode": "M6MATH-3.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student is dividing 2 and 1/4 by 1 and 1/2. They decide to flip the mixed number 1 and 1/2 directly into '1 and 2/1' without converting first. Use the lesson rule to explain why this will not give the correct answer.",
-    "choices": [
-      "Because you should flip the dividend, not the divisor",
-      "Because mixed numbers can never be divided by improper fractions",
-      "Because you must convert mixed numbers to improper fractions before flipping, and '1 and 2/1' is not a real reciprocal",
-      "Because multiplying with a mixed number never works correctly"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson says 'Only flip the converted form.' What must you convert before you flip?",
-      "A reciprocal is a flipped fraction, not a flipped mixed number. What does 1 and 1/2 equal as an improper fraction?"
-    ]
-  },
-  {
-    "id": "m6math-dividing-mixed-numbers-006",
-    "loId": "m6math.dividing-mixed-numbers",
-    "cedCode": "M6MATH-3.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "You are solving 5 and 1/3 ÷ 2 and 2/3. After converting both mixed numbers and applying keep-change-flip, you get 16/3 × 3/8. Multiply this out and simplify. Then multiply your answer by the original divisor, 2 and 2/3, to check whether you get back to the original dividend, 5 and 1/3. Does your answer pass the check?",
-    "choices": [
-      "No, the answer is 16/3, which cannot be checked by multiplying",
-      "No, the answer is 2, but multiplying by the divisor does not give back 5 and 1/3",
-      "Yes, the answer is 16/24, and this equals 5 and 1/3 when simplified",
-      "Yes, the answer is 2, and 2 × 2 and 2/3 = 5 and 1/3"
-    ],
-    "answer": "D",
-    "hints": [
-      "Multiply 16/3 × 3/8 by going across the top and bottom. Then simplify the result.",
-      "To check, multiply your simplified answer by 2 and 2/3 (or its improper-fraction form 8/3). You should land back on 5 and 1/3 (or 16/3)."
-    ]
-  },
-  {
     "id": "m6math-word-problems-with-fraction-division-001",
     "loId": "m6math.word-problems-with-fraction-division",
     "cedCode": "M6MATH-3.4",
@@ -453,6 +339,120 @@
     "hints": [
       "Convert 4 and 1/2 to 9/2, then divide 9/2 ÷ 3/8 using keep-change-flip. Your result will be a whole number or mixed number.",
       "If the quotient is a whole number, all beads are used exactly. If it is a mixed number, the fractional part tells you what fraction of one more ornament's worth of beads remains."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-001",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "To divide mixed numbers, you must first convert them to improper fractions before using the keep-change-flip method. What is 2 and 1/3 written as an improper fraction?",
+    "choices": [
+      "5/3",
+      "2/3",
+      "7/3",
+      "6/3"
+    ],
+    "answer": "C",
+    "hints": [
+      "Multiply the whole number by the denominator, then add the numerator.",
+      "The denominator stays the same."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-002",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A recipe calls for 3 and 1/2 cups of flour. If you want to divide the recipe into portions of 1/2 cup each, how many portions will you have? Set up the division problem that finds the answer, but do not solve it yet.",
+    "choices": [
+      "7/2 ÷ 1/2",
+      "7/2 × 1/2",
+      "3 and 1/2 ÷ 1/2",
+      "7/2 × 2/1"
+    ],
+    "answer": "D",
+    "hints": [
+      "First convert 3 and 1/2 to an improper fraction.",
+      "After converting, use keep-change-flip to set up the multiplication."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-003",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Work out 2 and 2/5 ÷ 4/5. Which steps show the correct conversion and setup before multiplying?",
+    "choices": [
+      "Convert 2 and 2/5 to 12/5, then compute 12/5 × 5/4",
+      "Convert 2 and 2/5 to 12/5, then compute 12/5 × 4/5",
+      "Convert 2 and 2/5 to 4/5, then compute 4/5 × 5/4",
+      "Flip 2 and 2/5 to 5/2, then compute 5/2 × 4/5"
+    ],
+    "answer": "A",
+    "hints": [
+      "When you convert 2 and 2/5, multiply 2 × 5 and add 2.",
+      "The divisor 4/5 gets flipped to 5/4 when you apply keep-change-flip."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-004",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Solve 1 and 1/2 ÷ 3/4. First convert the mixed number to an improper fraction, apply keep-change-flip, multiply, and then simplify your answer back to a mixed number.",
+    "choices": [
+      "2",
+      "2 and 2/3",
+      "1 and 1/3",
+      "3/2"
+    ],
+    "answer": "B",
+    "hints": [
+      "1 and 1/2 converts to 3/2.",
+      "After multiplying 3/2 × 4/3, simplify the result before converting back to mixed form."
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-005",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student solves 4 and 1/3 ÷ 2 and 1/6 and gets 2. Use the size test (comparing the divisor to 1) and a check by multiplication to decide if this answer is reasonable.",
+    "choices": [
+      "Yes, the answer is reasonable because 2 and 1/6 is greater than 1, so the answer should be smaller than 4 and 1/3, and 2 × 2 and 1/6 gives 4 and 1/3.",
+      "Yes, the answer is reasonable because when you divide by a number greater than 1, the quotient stays the same size as the dividend, and converting mixed numbers to improper fractions does not change the final result.",
+      "No, the answer is unreasonable because 2 and 1/6 is greater than 1, so the answer should be smaller than 4 and 1/3, and multiplying back does not give 4 and 1/3.",
+      "No, the answer is unreasonable because dividing by 2 and 1/6 requires you to multiply by its reciprocal, but the student multiplied by 2 and 1/6 instead of by 6/13, which would give a different quotient."
+    ],
+    "answer": "C",
+    "hints": [
+      "Apply the size test: the divisor 2 and 1/6 is greater than 1.",
+      "Check by multiplying: does 2 × 2 and 1/6 really equal 4 and 1/3?"
+    ]
+  },
+  {
+    "id": "m6math-dividing-mixed-numbers-006",
+    "loId": "m6math.dividing-mixed-numbers",
+    "cedCode": "M6MATH-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A carpenter has 5 and 1/4 yards of trim and needs to cut it into pieces that are each 1 and 3/8 yards long. After converting both numbers to improper fractions, setting up the division, and multiplying, the carpenter will have pieces left over as a fraction. What is the full answer (as a mixed number or improper fraction) and how many complete pieces can be cut?",
+    "choices": [
+      "3 and 4/11 complete pieces; cannot cut a partial piece into a usable fraction",
+      "4 complete pieces with 1/8 yard left over",
+      "3 and 6/11 complete pieces; the leftover is 6/11 of the original trim length",
+      "3 complete pieces with 9/8 yards left over"
+    ],
+    "answer": "D",
+    "hints": [
+      "Convert 5 and 1/4 to 21/4 and 1 and 3/8 to 11/8, then divide using keep-change-flip.",
+      "Simplify 21/4 × 8/11 and check: the whole number in your result is the number of complete pieces."
     ]
   }
 ]

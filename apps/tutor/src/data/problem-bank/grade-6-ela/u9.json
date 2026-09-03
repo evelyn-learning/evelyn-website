@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A writer is planning an informative paragraph about what a fire extinguisher is and how its parts work. Which organizing strategy is the best fit for this topic?",
+    "problemText": "A writer is planning an informative piece about the school's new tardy policy. She has gathered that the policy applies to students who arrive after 8:15 a.m., that the first tardy results in a warning, that a second tardy means staying after school for 15 minutes, and that a third tardy means a phone call home. Which organizing strategy fits this information best?",
     "choices": [
-      "Comparison/contrast strategy, because the writer could compare it to a similar safety tool",
-      "Classification strategy, because fire extinguishers come in several different types",
-      "Definition strategy, because the writer is explaining what something is and naming its key features",
-      "Cause/effect strategy, because fire extinguishers cause fires to stop"
+      "Comparison/contrast strategy, because it weighs the tardy policy against other school policies.",
+      "Classification strategy, because it sorts the policy into different types of consequences based on how many tardies a student has.",
+      "Definition strategy, because it explains what a tardy is and describes its key features one at a time.",
+      "Cause/effect strategy, because it explains why students arrive late to school."
     ],
     "answer": "C",
     "hints": [
-      "The lesson says definition strategy fits a topic the reader has probably never heard explained before. Does this writer need to name what a fire extinguisher is and describe its key features?",
-      "Rule out strategies that would fit if the writer wanted to sort types, weigh two things against each other, or explain why something happens."
+      "Think about what kind of information the writer gathered—is she explaining what something is, sorting it into groups, comparing two things, or explaining why something happens?",
+      "The notes describe the tardy policy's key features (what counts as a tardy, what the rule is) rather than splitting it into categories or comparing it to something else."
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student gathered these notes for an informative piece: the cafeteria added a salad bar last month; students can pick from five different vegetables; the salad bar is open during lunch periods; most sixth graders choose lettuce and tomato. The student wants to organize using the definition strategy. What should the opening sentence do to set up this strategy correctly?",
+    "problemText": "A student is drafting a paragraph about the school library's books using the classification strategy. Which opening sentence best signals that the paragraph will sort books into groups?",
     "choices": [
-      "Explain why the school decided to add a salad bar and what caused it to be popular",
-      "Weigh the salad bar against the old lunch line to show how they are different",
-      "Sort the salad bar into different parts, such as the dressing station and the vegetable section",
-      "Name what a salad bar is and signal that its key features will be described one at a time"
+      "The school library has many different types of books, and they are separated based on what subject matter and format each one contains.",
+      "The oldest book in the school library was published in 1998, while the newest book arrived last month and is very popular.",
+      "Books in the school library are important resources because they help students learn new information and develop their ideas.",
+      "The school library organizes its books into four main sections: fiction, nonfiction, graphic novels, and reference books."
     ],
     "answer": "D",
     "hints": [
-      "The definition strategy explains what something is by naming its key features. What does the opening sentence need to do to signal that this is the plan?",
-      "Read the lesson example about the Homework Pass. How does that opening sentence set up the definition strategy?"
+      "Look for an opening sentence that names the topic and announces that groups or kinds are coming next.",
+      "Classification sorts a topic into types or categories, so the opening should introduce those categories by name."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A writer is drafting a paragraph about three types of school clubs: sports clubs, arts clubs, and academic clubs. The first supporting sentence reads: \"Sports clubs include soccer, basketball, and volleyball, and they meet after school.\" Which supporting sentence best continues the classification strategy?",
+    "problemText": "A writer has gathered these notes about two lunch options: the hot lunch line serves warm food and has a wait of about 10 minutes; the cold lunch option offers sandwiches and fruit already on display and takes 2 minutes to grab. The writer wants to organize an informative piece using the comparison/contrast strategy. Which statement about how this piece should be organized is correct?",
     "choices": [
-      "Arts clubs include drama, visual art, and music, and they meet after school too",
-      "Sports clubs are more fun than academic clubs because students like to play games",
-      "Academic clubs help students improve their grades, which is why some students prefer them",
-      "All three types of clubs require students to sign up in the first week of school"
+      "The piece should describe both lunch options side by side, explaining how they are alike and different across the same categories.",
+      "The piece should explain why some students prefer hot lunches more than others prefer cold lunches based on taste and convenience factors.",
+      "The piece should describe only the hot lunch line in detail first, then briefly mention what makes the cold lunch option stand out as different.",
+      "The piece should sort all lunch options in the cafeteria into groups such as hot foods, cold foods, drinks, and desserts."
     ],
     "answer": "A",
     "hints": [
-      "The classification strategy names one group and stops there, describing what is in that group. It does not compare groups or explain why one is better.",
-      "The first sentence described sports clubs in a certain way. Which choice follows the same pattern by describing a different group?"
+      "Comparison/contrast strategy is built for exactly two named things, not one or more than two.",
+      "When using comparison/contrast, a writer describes both things using the same categories so the reader can see how they match up."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is organizing a paragraph about why recycling is important. The draft reads: (1) Recycling keeps plastic and paper out of landfills. (2) When less trash goes to landfills, the ground and water stay cleaner. (3) The recycling center downtown has more machines than the one across the river. (4) Because landfills pollute, recycling protects the environment. Which sentence breaks the one-strategy rule, and what strategy should replace it to keep the piece on track?",
+    "problemText": "A student drafted this paragraph about why recess ends early on rainy days, using the cause/effect strategy. Read the four sentences carefully.\n\n(1) When it rains, water makes the playground slippery and unsafe for running games. (2) The gym class that normally goes outside comes inside to the gymnasium instead. (3) Teachers worry that a student might slip and get hurt on wet grass or muddy areas. (4) The school's playground equipment is made of metal and plastic, while the gym equipment is made of rubber and foam.\n\nWhich sentence breaks the one-strategy rule for this paragraph, and why?",
     "choices": [
-      "Sentence 1 breaks the rule; it should be replaced with a sentence that compares recycling to throwing trash away",
-      "Sentence 3 breaks the rule; it should be replaced with a sentence that continues the cause/effect chain",
-      "Sentence 2 breaks the rule; it should be replaced with a sentence that sorts recycling into different types",
-      "Sentence 4 breaks the rule; it should be replaced with a sentence that defines what pollution is"
+      "Sentence 1, because it describes the playground instead of explaining a chain of cause and effect.",
+      "Sentence 4, because it compares two types of equipment instead of continuing the chain of cause and effect.",
+      "Sentence 3, because it explains a reason why something happens, which fits the cause/effect strategy.",
+      "Sentence 2, because it names what happens as a result, which continues the cause/effect chain correctly."
     ],
     "answer": "B",
     "hints": [
-      "The opening sentences explain why recycling happens and what results from it. What organizing strategy is that?",
-      "Sentence 3 does something different from sentences 1, 2, and 4. Does it explain a cause or effect, or does it do something else entirely?"
+      "Look for a sentence that switches from explaining why or what happens as a result (cause/effect) to a different organizing idea.",
+      "Cause/effect is about chains of why and what-happens-next, not about weighing one thing against another thing."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer has gathered notes about two smartphones: the Model A has a 5-inch screen, costs $300, and lasts two days on one charge; the Model B has a 6-inch screen, costs $450, and lasts three days on one charge. The writer decides to use comparison/contrast strategy. Which opening sentence best sets up this strategy and commits to it?",
+    "problemText": "A student has gathered information about after-school clubs: the Art Club meets on Mondays and teaches drawing and painting; the Science Club meets on Wednesdays and does experiments; the Art Club costs $20 for the whole year; the Science Club costs $15 for the whole year. The student wants to write an informative paragraph but is unsure which strategy to use. Which strategy would work better for this information, and why?",
     "choices": [
-      "Model A is cheaper because it has a smaller screen and less battery capacity than Model B",
-      "The Model A costs less money, which makes it popular with students, while Model B appeals to workers",
-      "Both Model A and Model B are smartphones, but they differ in screen size, price, and battery life",
-      "Model A and Model B are two phones that have screens and batteries, and they are both useful devices"
+      "Definition strategy, because the student needs to explain what after-school clubs are and then describe how each one operates throughout the academic year.",
+      "Classification strategy, because the student needs to sort multiple clubs into groups based on whether they focus on arts or sciences and their price ranges.",
+      "Comparison/contrast strategy, because the information describes two named clubs across the same categories, so they can be weighed side by side.",
+      "Cause/effect strategy, because the information shows why the Art Club and Science Club meet on different days and have different costs."
     ],
     "answer": "C",
     "hints": [
-      "The comparison/contrast strategy sets two specific things side by side and shows how they are alike and different. Does the opening sentence signal that two named things will be weighed across the same categories?",
-      "Rule out sentences that explain why one phone is better, or that just name both phones without signaling a side-by-side comparison."
+      "The student has gathered information about exactly two clubs, not three or more, and described them using the same categories.",
+      "Notice which strategy is built for setting two specific named things alongside each other to show how they are alike and different."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-9.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student is writing an informative paragraph about the school library's borrowing rules. These notes have been gathered: students can borrow up to eight books at a time; books must be returned within three weeks; an overdue book costs five cents per day; a student who loses a book must pay the replacement cost; students can renew a book twice online. The student's opening sentence is: \"The school library sorts its borrowing rules into three categories: how many books you can take, how long you can keep them, and what happens if you break the rules.\" The student has now written two supporting sentences using classification strategy correctly. Before writing the fourth sentence, the student realizes the opening sentence idea will not work well for all the gathered notes. Which statement best explains the problem and suggests a fix?",
+    "problemText": "A student wrote this paragraph about the types of homework assignments students receive:\n\n\"Homework assignments fall into three types: worksheets, which students complete at home and turn in the next day; projects, which students work on over several days and present to the class; and reading, which students finish before class starts. Worksheets help students practice skills they learned in class. Projects take more time than worksheets, so teachers give fewer of them. Reading assignments build vocabulary and understanding.\"\n\nIdentify which sentence breaks the one-strategy rule, explain why it breaks the rule, and describe what the strategy should be to fix the paragraph.",
     "choices": [
-      "The opening sorts the rules into three groups, but one group will contain two rules while another contains only one rule, making the organization unbalanced and confusing for readers who expect equal weight across categories",
-      "The opening sentence uses classification correctly, but the student needs to gather more notes about borrowing rules so that exactly three rules fit into each of the three categories the opening sentence promises",
-      "The opening sentence commits to classification as the organizing strategy, but the renewal rule does not fit neatly into any of the three promised groups without forcing it or creating gaps, so the student should try definition strategy to explain what borrowing rules cover",
-      "The opening sentence has committed to classification, but classification cannot fit all five rules into three clear groups without making some groups too small or strange, so the student should reconsider and choose definition strategy instead"
+      "The sentence 'Homework assignments fall into three types' breaks the rule because it names the strategy and should be replaced with a sentence that introduces the first type of homework without announcing the overall framework.",
+      "The sentence 'Worksheets help students practice skills they learned in class' breaks the rule because it explains the purpose of worksheets rather than simply describing what they are and when they are due.",
+      "The sentence 'Reading assignments build vocabulary and understanding' breaks the rule because it states a benefit instead of describing what reading assignments are and how long students have to complete them.",
+      "The sentence 'Projects take more time than worksheets, so teachers give fewer of them' breaks the rule because it compares two types instead of naming a group; remove it and replace it with a sentence that describes projects as a group."
     ],
     "answer": "D",
     "hints": [
-      "Look at the rule that one organizing strategy must carry the whole piece. The five notes do not split neatly into the three groups the opening promised. Can classification still work?",
-      "If the five rules do not fit the three-group plan, what other strategy might work better for a set of rules that describe what something is and how it works?"
+      "The paragraph opens with classification, naming three types of homework, so every sentence after that should describe one type or say something true about each type.",
+      "Look for a sentence that suddenly switches to a different job—comparing, explaining why, or weighing one group against another—instead of staying inside the classification strategy."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which three pieces of information must be present before the first event of a narrative finishes in order to orient a reader? Consider what the lesson calls the three-job checklist for an oriented opening.",
+    "problemText": "A narrative opening needs to answer three questions before the first event finishes. Which of the following is one of those three questions an opening must answer to orient a reader?",
     "choices": [
-      "The character's full history, the reason the story matters, and what happens at the very end",
-      "The place and time, the name and action of a character, and the first event that starts the story moving",
-      "A description of the weather, a list of all characters who will appear, and a summary of the main problem",
-      "The character's feelings about what is about to happen, the location described in great detail, and several events leading up to the real beginning"
+      "What will happen at the very end of the story?",
+      "Where and when is this happening?",
+      "How does the main character feel about everything that occurs?",
+      "What did the characters do before this story began?"
     ],
     "answer": "B",
     "hints": [
-      "Remember the three jobs: context (where and when), character (who and doing what), and first event (what starts the story moving).",
-      "The lesson says skip one of these three and a reader starts confused."
+      "Think about what a reader needs to picture right away to understand where they are standing.",
+      "The three jobs of an opening are about context, a character or narrator, and the first event—not about the ending or distant past."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A writer is drafting an opening: 'The gymnasium was filled with rows of folded chairs, and Jamal sat in the front row holding a small card with his name on it.' What does this opening successfully establish to orient the reader?",
+    "problemText": "A writer wants to open a story about a soccer player who discovers her uniform is missing on game day. The writer drafts this opening: \"Keisha had been playing soccer since she was five years old. Her family always came to her games. She loved being on the team.\" Why does this opening fail to orient a reader properly, even though it introduces a character?",
     "choices": [
-      "A series of events and their outcomes that will occur throughout the remainder of the day",
-      "Specific details about the character's personal history, family background, and the reasons he chose to attend this particular event",
-      "The place and time where the scene happens, and the name and action of the character in that moment",
-      "The central conflict of the narrative and the sequence of steps that will resolve it before the story ends"
+      "It does not tell the reader how the story will end or what problem the character will face.",
+      "It mentions Keisha's family and her past experiences rather than showing her facing a challenge in a specific moment and place.",
+      "It lists facts about Keisha instead of showing her doing something right then, and it does not establish where or when the story is happening.",
+      "It focuses on Keisha's history and feelings over time rather than grounding the reader in a specific setting and showing what Keisha is doing at the moment the story begins."
     ],
     "answer": "C",
     "hints": [
-      "Look for the concrete details that tell a reader where to picture the action and when, and for the character's name plus what that person is doing right then.",
-      "Orienting means answering three questions before the first event finishes—this opening shows the first two. Check what information is actually present in the sentence."
+      "Look at what the writer tells us about Keisha—is it information about her past, or something she is doing right now in a place we can picture?",
+      "Remember that orienting means naming a character AND giving a reason that person is there right then, not describing their history."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A writer submits this draft: 'For three years, Chen had wanted to learn skateboarding, and he had watched videos online and talked to his friends about it, and he read reviews of different boards, and finally today he went to the skate park for the first time.' Why does this opening fail to orient the reader properly, even though it introduces Chen and mentions a location?",
+    "problemText": "A writer opens a story this way: \"It was Tuesday morning in the art studio when Devon noticed the pottery wheel was broken. He reached for the clay jar but stopped when he saw the crack running across the wheel's base.\" Does this opening orient the reader properly? Why or why not?",
     "choices": [
-      "It presents too many characters at once and fails to give them all distinct names and roles that readers can keep track of",
-      "It does not reveal what the outcome of the skateboarding attempt will be, leaving readers uncertain about whether Chen will succeed or fail",
-      "It does not specify the exact street location or official name of the skate park, making it impossible for readers to know the geographic setting",
-      "It stalls by piling up background facts about Chen instead of showing him doing something in the moment, and it does not establish a specific time or place for the reader to picture"
+      "No. It describes Devon noticing something instead of showing him making a decision or taking action.",
+      "Yes. It names the art studio and mentions clay, so a reader knows exactly what kind of art Devon does.",
+      "No. It only tells the day of the week and time of day without describing what the studio looks like or why Devon is there.",
+      "Yes. It tells the reader where and when the story is taking place, introduces Devon by name, and stops at the first event that starts the story moving."
     ],
     "answer": "D",
     "hints": [
-      "The lesson says introducing a character means giving a name and what that person is doing right then, not a list of facts about them. Does this opening do that, or does it stall with history?",
-      "Orienting takes one or two concrete details for context—a place, a season, a time of day—not a paragraph of background before anything happens."
+      "Check whether the opening answers the three questions: where and when, who is there, and what happens first.",
+      "The first event is the moment that gets the story moving—does this opening stop there, or does it race ahead to later events?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this attempted opening: 'The volleyball tournament lasted three hours, and players from six schools showed up, and the final match was super close, and Yuki's team won by two points and everyone celebrated.' Now read this revision: 'It was Saturday morning at Lincoln High's gymnasium, and Yuki stood at the net with her teammates gathered behind her, waiting for the first match to begin.' Compare the two versions. Which statement correctly explains why the revision better orients the reader by establishing a natural sequence?",
+    "problemText": "A writer starts a story with this sentence: \"Ramon was sitting on the curb outside the grocery store on a Saturday morning when the delivery truck pulled up and hit a stack of watermelons, and watermelons rolled everywhere, and customers stopped to pick them up, and the manager came out and apologized to the driver.\" This opening has both context and a character, but why does it fail as an orienting opening?",
     "choices": [
-      "The revision stops at the first event instead of racing through the whole tournament, and it gives concrete details of place and moment that help a reader picture where the action is happening",
-      "The revision introduces multiple teammates by name and describes each person's role on the volleyball team before any action takes place",
-      "The revision provides the exact time of day and reveals the winner of the match before the story actually begins unfolding",
-      "The revision tells the reader what emotions Yuki and her teammates will feel throughout the entire three-hour tournament"
+      "It races through too many events instead of stopping at the first event, making it sound like a summary rather than an opening.",
+      "It does not include any concrete details about what the grocery store looks like or describe the size and color of the watermelons.",
+      "It does not name the character by his first name clearly enough or explain his full background.",
+      "It does not explain why Ramon was sitting on the curb or what he was planning to do there."
     ],
     "answer": "A",
     "hints": [
-      "Remember: a natural sequence begins where the story actually begins—the first event that gets the story moving. The original draft reports the middle and ending. Does the revision stop earlier?",
-      "Orienting is not the same job as summarizing a whole story. The revision sets up a beginning; it does not report the middle or ending in advance. Look at what each version tells the reader about what happens."
+      "An orienting opening should stop once the first event happens—the moment that starts the story moving. Does this sentence stop there, or does it keep going?",
+      "Think about the difference between starting a story and summarizing what happens in it. This sentence does which one?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A writer is planning a narrative about a student discovering that her science project has gone missing from the classroom before the fair. The writer has drafted two possible openings. Opening 1: 'Ms. Reeves had asked students to leave their projects on the back table overnight, and they all did, and some were good and some were not very good, and then in the morning they were supposed to come early to set up for the fair.' Opening 2: 'When Dex arrived at Ms. Reeves's classroom on Saturday morning and walked to the back table where she had left her biodome project the night before, her stomach dropped. The table was empty.' Which opening better orients the reader, and why?",
+    "problemText": "Two writers are opening stories. Writer A writes: \"Lily was at her grandmother's house in the kitchen on a sunny afternoon when the timer on the oven went off, and she opened the door, and the cookies had burned, and she felt terrible about it.\" Writer B writes: \"Lily was at her grandmother's kitchen on a sunny afternoon when the oven timer suddenly went off. She pulled open the door and froze.\" Which opening better orients a reader without giving away what happens, and what makes it better?",
     "choices": [
-      "Opening 1 better orients the reader because it fully explains the teacher's instructions and evaluates the quality of every single project before the fair begins",
-      "Opening 2 better orients the reader because it establishes a specific time and place, introduces a named character and her action in the moment, and stops at the first event instead of reporting background facts and later setup",
-      "Opening 1 is better because it provides all the necessary background information about how the projects ended up on the table overnight and what students were supposed to do the next morning",
-      "Opening 2 is worse because it begins with a dramatic discovery rather than first explaining everything that happened to the project during the previous night and early morning"
+      "Writer A's opening is better because it tells the reader everything that happens in the story so nothing is left unanswered or confusing.",
+      "Writer B's opening is better because it establishes the context and introduces Lily, but stops right when the first event begins, letting the reader wonder what she sees when she opens the door.",
+      "Writer A's opening is better because it connects all the events together in one long sentence, which shows how they are related to each other.",
+      "Writer B's opening is better because it uses simpler words and shorter sentences than Writer A, making it easier for readers to follow."
     ],
     "answer": "B",
     "hints": [
-      "Orienting means answering three questions before the first event finishes: where and when, who is telling or in the scene, and what is the first event that gets the story moving. Which opening actually stops at the first event?",
-      "The lesson warns that stalling means giving a paragraph of background before anything happens. Opening 1 piles up explanation; Opening 2 names the character, place, and moment, then shows her discovery. Which one moves into the story?"
+      "An orienting opening should not give away the ending or the middle of the story. Which opening tells too much already?",
+      "A natural sequence starts at the first event and lets readers experience what happens next—which opening does that?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-9.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A writer has started a narrative this way: 'One afternoon in the parking lot behind the grocery store, Leo heard shouting coming from the loading dock.' The writer wants to add one more sentence that will finish the job of orienting the reader. Which sentence best completes the opening by introducing a character doing something concrete in the moment, without jumping ahead to later events in the story?",
+    "problemText": "A writer has three possible opening sentences for a story about a student who loses an important library book. Sentence 1: \"Jamal had checked out the book three weeks earlier, and he had read half of it, and then he could not find it anywhere, and he had to pay a replacement fee, and he was upset about it for weeks.\" Sentence 2: \"Jamal was searching through his backpack in the library parking lot on Thursday afternoon when he realized the book he needed to return before fifth period was no longer in any of the pockets.\" Sentence 3: \"A student named Jamal once lost a book from the library.\" Which opening best orients the reader, and why? Consider what the three jobs of an opening are and which sentence accomplishes all three without rushing ahead or stalling.",
     "choices": [
-      "Leo would later find out that the store owner and a delivery driver had been arguing about a shipment",
-      "The argument went on for several minutes before the managers showed up and broke it up",
-      "Leo ran toward the noise because he recognized his older brother's voice yelling at someone",
-      "This was the moment that would change everything for Leo over the next few weeks"
+      "Sentence 3, because it is the shortest and clearest introduction of the character without any extra details that might confuse the reader.",
+      "Sentence 1, because it gives the reader all of the details about what will happen in the story and how long the conflict lasts, so there are no surprises.",
+      "Sentence 2, because it establishes a specific time and place, introduces Jamal by name and tells what he is doing right then, and stops at the first moment of trouble instead of reporting the whole chain of events or just stating a fact.",
+      "Sentence 3, if written with more details about why Jamal lost the book and when he discovered it was gone."
     ],
     "answer": "C",
     "hints": [
-      "Remember that introducing a character means giving a name and what that person is doing right then. The first sentence already has the place and time. Which choice introduces or adds to a character's action in this moment?",
-      "Avoid choices that jump ahead to 'later,' 'would,' or 'this would change'—those are summaries and endings, not first events. Which option keeps the action happening now?"
+      "Check each sentence against the three orienting jobs: Does it say where and when? Does it name a character and show what that person is doing right then? Does it stop at the true first event?",
+      "Which sentence gives away too much of the story before a reader has anything to care about, and which one just tells a fact without any context or action at all?"
     ]
   }
 ]

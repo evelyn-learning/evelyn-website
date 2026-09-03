@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6ela-asking-a-research-question-001",
-    "loId": "m6ela.asking-a-research-question",
-    "cedCode": "M6ELA-10.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following is a research question rather than a topic?",
-    "choices": [
-      "A broad subject area that covers many different aspects of footwear and physical performance.",
-      "A specific type of athletic shoe worn by soccer players on the field.",
-      "An examination of how sports equipment has changed throughout the years.",
-      "How do different types of soccer cleats affect a player's running speed on wet grass?"
-    ],
-    "answer": "D",
-    "hints": [
-      "A research question is a complete sentence that ends with a question mark.",
-      "A topic is just a word or phrase with no way to know when you are finished."
-    ]
-  },
-  {
-    "id": "m6ela-asking-a-research-question-002",
-    "loId": "m6ela.asking-a-research-question",
-    "cedCode": "M6ELA-10.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Jamal is writing a short research report about butterflies. He starts with the question, 'How many species of butterflies exist in the world?' His teacher asks him to test his question against the three standards for a good research question. Which standard does Jamal's question fail?",
-    "choices": [
-      "Broad enough — the question has only one true answer sitting in one place, not needing multiple sources.",
-      "Narrow enough — the question covers so many different butterfly species and geographic regions that it would require research across numerous unrelated topics.",
-      "Answerable by evidence — the question requires readers to make personal judgments about what counts as beautiful or important in nature.",
-      "All three standards — the question lacks a question mark and is written as a statement rather than an inquiry."
-    ],
-    "answer": "A",
-    "hints": [
-      "A single fact in one location is not a research project; it is just a lookup.",
-      "Think about whether this question would need you to gather pieces from several different sources or just find one number."
-    ]
-  },
-  {
-    "id": "m6ela-asking-a-research-question-003",
-    "loId": "m6ela.asking-a-research-question",
-    "cedCode": "M6ELA-10.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Sofia wants to research whether peanut butter is a healthy food. She writes the question, 'Is peanut butter a healthy food?' What is the main problem with Sofia's research question?",
-    "choices": [
-      "It is too narrow in scope because it limits her research to only one specific food item rather than examining an entire food group.",
-      "It asks for a judgment rather than asking what evidence can show — different people could read the same facts and disagree.",
-      "It is answerable by evidence in a measurable way because sources provide clear nutritional data that settles the question completely.",
-      "It is too broad because the term peanut butter includes many varieties and preparations that would each require separate research."
-    ],
-    "answer": "B",
-    "hints": [
-      "Some questions have a question mark but still cannot be settled by sources because they ask what someone prefers or judges to be good.",
-      "Think about whether 'healthy' can be measured by evidence or whether different people might have different opinions about it."
-    ]
-  },
-  {
-    "id": "m6ela-asking-a-research-question-004",
-    "loId": "m6ela.asking-a-research-question",
-    "cedCode": "M6ELA-10.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Hassan is researching skateboarding and starts with the topic 'Skateboard Tricks.' He then narrows his topic by asking, 'Why do some skateboard tricks require more balance than others?' After searching, he finds that several websites and instructional videos each address different reasons balance matters in tricks. However, he realizes that most of his sources answer the entire question in just one or two pages. What should Hassan do to his research question?",
-    "choices": [
-      "Stop researching immediately because he has already found sufficient information to complete his entire project.",
-      "Make his question more specific by asking only about the balance requirements of a single skateboard trick and eliminating comparisons.",
-      "Widen his question by adding another layer of complexity, such as asking how balance training methods differ for different tricks.",
-      "Reformulate his question to ask for his own personal opinion about which tricks are the most difficult to perform."
-    ],
-    "answer": "C",
-    "hints": [
-      "If one or two sources already answer your whole question, the question was too narrow and needs to be widened back out.",
-      "Refocusing means adjusting your question as you search — if it is too small, add another limit or layer to make it need more sources."
-    ]
-  },
-  {
-    "id": "m6ela-asking-a-research-question-005",
-    "loId": "m6ela.asking-a-research-question",
-    "cedCode": "M6ELA-10.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Maya is writing a three-page report about rain forests. She develops the question, 'How do the types of plants found in tropical rain forests compare to the types of plants found in temperate forests in terms of the way they receive sunlight?' After finding five detailed sources that each discuss sunlight and plant adaptation in different forest types, Maya realizes her sources contain enough information to answer this question fully. According to the lesson, what does this tell Maya about her research question?",
-    "choices": [
-      "Her question is too narrow because it can be answered using evidence from multiple reliable sources without going beyond what she needs.",
-      "Her question is still too broad because it should focus on only one specific forest ecosystem rather than comparing two different types.",
-      "Her question is too vague because it uses the word 'compare' instead of asking whether something is true or false in a yes-or-no format.",
-      "Her question is likely at the right level — it needed multiple sources to answer and is not so large that it could fill an entire book."
-    ],
-    "answer": "D",
-    "hints": [
-      "A good research question needs more than one source but is small enough to actually finish in the space you have.",
-      "The fact that her five sources together provide enough information to answer the question suggests it was sized right for this project."
-    ]
-  },
-  {
-    "id": "m6ela-asking-a-research-question-006",
-    "loId": "m6ela.asking-a-research-question",
-    "cedCode": "M6ELA-10.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Carlos is researching social media and starts with a broad question: 'How does social media affect teenagers?' He narrows it by asking, 'How do social media platforms affect teenagers' sleep patterns?' He finds six sources on this topic, and together they provide enough material for a five-page report. However, as he reads more carefully, Carlos notices that his sources discuss sleep patterns in teenagers aged thirteen to nineteen, but also mention that sleep effects differ significantly for younger children aged eight to twelve. Carlos realizes his original narrowed question did not specify an age group. What does this situation demonstrate about the research process?",
-    "choices": [
-      "Carlos's question was actually too broad, and he should refocus it by adding an age limit based on what his sources revealed.",
-      "Carlos made a mistake in his original question and should have predicted the age-difference issue before he started searching.",
-      "Carlos should ignore the information about younger children and pretend his sources only discuss teenagers.",
-      "Carlos needs to start over completely because his original question is now ruined by the discovery of age differences."
-    ],
-    "answer": "A",
-    "hints": [
-      "Refocusing your question as you search, and even narrowing it further after you find what sources actually contain, is part of doing the research, not a sign of failure.",
-      "When your sources show you that your question needs another limit to be truly clear, adding that limit is the normal way research questions improve."
-    ]
-  },
-  {
     "id": "m6ela-evaluating-source-credibility-001",
     "loId": "m6ela.evaluating-source-credibility",
     "cedCode": "M6ELA-10.2",
@@ -228,136 +114,22 @@
     ]
   },
   {
-    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-001",
-    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
-    "cedCode": "M6ELA-10.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of these is the main difference between a quote and a paraphrase? A quote uses a source's exact words and a paraphrase does not. But what else separates them?",
-    "choices": [
-      "A paraphrase is shorter than a quote because it leaves out less important details.",
-      "A paraphrase rebuilds the idea in new words and a new sentence structure, while a quote copies the exact wording letter for letter.",
-      "A paraphrase always requires a source name, but a quote does not need one.",
-      "A paraphrase is used when the wording itself is the point, and a quote is used when only the general idea matters."
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what 'rebuild' means — does the sentence structure stay the same or change completely?",
-      "The lesson says a paraphrase covers about as much ground as the original sentence, so length is not what makes them different."
-    ]
-  },
-  {
-    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-002",
-    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
-    "cedCode": "M6ELA-10.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "You are writing about how plants grow, and your science textbook states: 'Plants need sunlight, water, and nutrients from soil to grow strong.' You want to use this information but not copy the exact words. Which sentence is a real paraphrase, not a word swap?",
-    "choices": [
-      "Plants require sunshine, moisture, and minerals from earth to grow strong.",
-      "Plants need sunlight, water, and nutrients from soil to grow strong, according to the science textbook.",
-      "For a plant to become strong and healthy, it must receive sunlight and water and also draw nutrients from the soil.",
-      "Soil nutrients, water, and sunlight are what plants need for strong growth."
-    ],
-    "answer": "C",
-    "hints": [
-      "A real paraphrase rearranges the whole idea and lets it take a new shape — which choice does not keep the original sentence order?",
-      "Look for the choice where the main parts of the sentence sit in different slots than they do in the original."
-    ]
-  },
-  {
-    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-003",
-    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
-    "cedCode": "M6ELA-10.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A website about ocean animals says: 'Dolphins use echolocation to find food in the water.' You write the sentence below in your report. Is this a correct quote, a correct paraphrase, or a plagiarism mistake? 'Dolphins use echolocation to find food in the water.' (Your report gives no quotation marks and does not name the website.)",
-    "choices": [
-      "It is a correct quote because you copied the words exactly and they are from a reliable source.",
-      "It is a correct paraphrase because the wording is different enough that the website does not need to be named.",
-      "It is plagiarism because you named the idea but failed to copy it word for word enough to count as a real quote.",
-      "It is plagiarism because the exact words belong to the website, and removing the quotation marks does not make them yours."
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson says that taking off quotation marks does not turn a borrowed idea into the student's own — what rule does that break?",
-      "When words are the source's exact words, what signal must a reader see to know they are not the student's own?"
-    ]
-  },
-  {
-    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-004",
-    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
-    "cedCode": "M6ELA-10.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A nutrition guide for kids says: 'Eating vegetables that are different colors gives your body a wider range of vitamins and minerals.' You decide the exact wording is not important for your health project — the general idea is enough. You write: 'Different colored vegetables give the body a wider range of vitamins and minerals.' Is this a correct paraphrase of the source? Explain why or why not.",
-    "choices": [
-      "No, because the sentence order and structure are identical to the source, with only a few words swapped — that is a word swap, not a real paraphrase.",
-      "Yes, because you changed some of the words like 'eating' to 'different colored' and 'your body' to 'the body,' so it counts as a real paraphrase.",
-      "Yes, because you included the source's main idea about vitamins and minerals and explained it in a way your reader will understand clearly.",
-      "No, because you forgot to use quotation marks around the part about the vitamins and minerals that came from the guide."
-    ],
-    "answer": "A",
-    "hints": [
-      "Look at where the main parts sit in both sentences — do they stay in the same slots or move to new ones?",
-      "The lesson calls this mistake 'a copy in a costume' — what is the trap that catches most students?"
-    ]
-  },
-  {
-    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-005",
-    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
-    "cedCode": "M6ELA-10.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "You are writing a report about tornadoes and you find this sentence: 'Tornadoes spin so fast that their winds can tear trees out of the ground and demolish buildings.' You use the look-away method to paraphrase it. You read the sentence, look away, and say out loud: 'When a tornado spins, the wind moves so hard that it can destroy trees and knock down houses.' You write this down. Then you look back to check accuracy. Did the look-away method work correctly? What is your next step?",
-    "choices": [
-      "No, the look-away method failed because your paraphrase is shorter than the original sentence, so you left out important details.",
-      "Yes, the look-away method worked — your paraphrase got the idea right and changed the sentence structure, so you should now name the source when you use this sentence in your report.",
-      "No, the look-away method did not work because you still used some of the source's exact words, like 'tornado,' 'wind,' and 'buildings.'",
-      "Yes, the look-away method worked, but you need to go back and make your paraphrase longer to match the original exactly."
-    ],
-    "answer": "B",
-    "hints": [
-      "The look-away method checks that you got the idea right and rebuilt the sentence shape — did you do both of those things?",
-      "What is the final reason the lesson gives for looking back at the source — to check accuracy or to borrow its sentence shape?"
-    ]
-  },
-  {
-    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-006",
-    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
-    "cedCode": "M6ELA-10.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A bird encyclopedia states: 'Hummingbirds have the fastest heartbeats of any bird, which can reach 1,200 beats per minute.' In your report, you write: 'A hummingbird's heart beats at speeds of up to 1,200 times per minute, making it the fastest of all birds.' You also write: 'According to the bird encyclopedia, hummingbirds have the fastest heartbeats of any bird, which can reach 1,200 beats per minute.' Both sentences are now in your report, and you have named the encyclopedia twice. Is this correct? Why or why not?",
-    "choices": [
-      "Yes, it is correct because you named the source twice, so the reader will know both ideas came from the encyclopedia and you did not steal them.",
-      "No, because the first paraphrase needs quotation marks around the part about the 1,200 beats per minute since that exact number came from the source.",
-      "No, because the second sentence copies the source's exact words and needs quotation marks around the copied part, while the first sentence is a real paraphrase and does not.",
-      "Yes, it is correct because one sentence is a paraphrase and one is a quote, and naming the source twice makes it clear you did not plagiarize anything."
-    ],
-    "answer": "C",
-    "hints": [
-      "Look at the second sentence word by word — are those the encyclopedia's exact words or words you rebuilt?",
-      "The lesson says quotation marks are the only signal a reader has that exact wording is not the student's own — which sentence is missing them?"
-    ]
-  },
-  {
     "id": "m6ela-giving-basic-source-information-001",
     "loId": "m6ela.giving-basic-source-information",
     "cedCode": "M6ELA-10.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What are the three pieces of information that must go into a basic source record? Name them in order.",
+    "problemText": "A source record has three pieces of information that must be recorded whenever you use a source in your research. Which of the following is one of those three pieces?",
     "choices": [
-      "AUTHOR (person quoted), SUBJECT (main idea), SOURCE (the website or book)",
-      "TOPIC (what the source is about), TITLE (the exact name), LOCATION (the place name)",
-      "WHO (who made it), WHAT (what it is called), WHERE (where it was found)",
-      "NAME (of the writer), DESCRIPTION (of the content), LINK (to find it online)"
+      "How long the source is",
+      "The year the source was published",
+      "Who made the source",
+      "What grade you are in"
     ],
     "answer": "C",
     "hints": [
-      "The lesson uses WHO, WHAT, and WHERE as the three labels for the pieces.",
-      "WHO refers to the person or group who made the source, not someone quoted inside it."
+      "Think about the three labeled pieces: WHO, WHAT, and WHERE.",
+      "You need to be able to find the source again later, so one of these pieces helps identify who created it."
     ]
   },
   {
@@ -366,17 +138,17 @@
     "cedCode": "M6ELA-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student finds a book titled 'Dinosaurs of the Jurassic Period' written by Maria Santos. She writes down: 'WHAT: dinosaurs.' Why is this incomplete or incorrect for the source record?",
+    "problemText": "A student found a book titled 'The Secret Lives of Bees' written by Maria Santos. She wrote in her notes: 'bees and their behavior.' This is a problem with her note. Which piece of the source record did she write incorrectly?",
     "choices": [
-      "She used the word 'dinosaurs' instead of 'Jurassic Period' in her notes.",
-      "She did not include the author's name anywhere in the record.",
-      "She forgot to write down where the book can be found.",
-      "She wrote the topic of the book instead of its exact title printed on the cover."
+      "The date—she should have included the year the book was published in her source record",
+      "The author—she should have written down Maria Santos's name as the person who wrote the book",
+      "The location—she should have noted which publisher or library the book came from",
+      "The title—she wrote the topic instead of the exact name printed on the book"
     ],
     "answer": "D",
     "hints": [
-      "The lesson warns about mixing up the topic (what a source is about) with the title (what it is called).",
-      "The exact title 'Dinosaurs of the Jurassic Period' is printed on the source itself."
+      "Look at what she wrote: 'bees and their behavior.' Compare that to the actual title of the book.",
+      "The WHAT piece of a source record must be the exact words printed on the source itself, not a description of what it is about."
     ]
   },
   {
@@ -385,17 +157,17 @@
     "cedCode": "M6ELA-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student watches a documentary video called 'Life in the Ocean Deep' posted on a channel named National Geographic Kids. In the video, a marine biologist named Dr. James Wu describes different deep-sea creatures. If the student is writing the WHO piece of the source record, which should go there?",
+    "problemText": "A student watched a documentary video called 'Building Tomorrow's Cities' on a YouTube channel named Urban Design Lab. Inside the video, a city planner named Dr. Jacob Torres explains how modern buildings are designed. The student's note reads: WHO: Dr. Jacob Torres. WHAT: 'Building Tomorrow's Cities.' WHERE: YouTube. Which piece of this source record is incorrect?",
     "choices": [
-      "National Geographic Kids, because that is the channel that made and posted the video.",
-      "Dr. James Wu, because he is the expert speaking in the video and appears as the main source of information.",
-      "Life in the Ocean Deep, because that is the title of the video and describes what the source is about.",
-      "A marine biologist, because that is the professional role and job description of the person featured in it."
+      "The WHO piece—Dr. Torres is interviewed in the video, but the channel Urban Design Lab made and posted it",
+      "The WHAT piece—the title should describe what the video is about rather than use the exact printed title",
+      "The WHERE piece—YouTube is too vague; the student should have written the exact video URL",
+      "The WHERE piece—the student should have written 'Urban Design Lab' instead of 'YouTube'"
     ],
     "answer": "A",
     "hints": [
-      "WHO is not the person who is quoted or featured inside the source.",
-      "The lesson notes that a video can feature a guest speaking, but the maker of the source is the channel that posted it."
+      "Remember: the person whose name you hear or see inside a source is not always the person who made it.",
+      "Who actually created and posted the video—Dr. Torres or the channel that owns it?"
     ]
   },
   {
@@ -404,17 +176,17 @@
     "cedCode": "M6ELA-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student's incomplete source record reads: WHAT: 'How Maple Trees Make Syrup.' FOUND: National Geographic Kids. The article was written by Patricia Lin and appeared in that online magazine. Write out what the complete basic source record should look like, with all three pieces labeled and correct.",
+    "problemText": "A student is taking notes on a website article about coral reefs. The website is called Ocean Watch, and she can see the byline 'By Carmen Liu' under the headline 'How Coral Reefs Protect Coastal Communities.' Her current note says only: 'coral article from Ocean Watch.' She wants to make this into a complete basic source record. Which of the following shows what her finished note should include?",
     "choices": [
-      "WHO: National Geographic Kids. WHAT: How maple syrup is made. WHERE: Patricia Lin's article.",
-      "WHO: Patricia Lin. WHAT: 'How Maple Trees Make Syrup.' WHERE: National Geographic Kids.",
-      "WHO: How Maple Trees Make Syrup. WHAT: Patricia Lin. WHERE: National Geographic Kids.",
-      "WHO: Patricia Lin and National Geographic Kids. WHAT: 'Maple Trees.' WHERE: National Geographic Kids website."
+      "WHO: coral reefs, WHAT: 'How Coral Reefs Protect Coastal Communities,' WHERE: Ocean Watch",
+      "WHO: Carmen Liu, WHAT: 'How Coral Reefs Protect Coastal Communities,' WHERE: Ocean Watch website",
+      "WHO: Ocean Watch, WHAT: 'coastal communities,' WHERE: Carmen Liu's website",
+      "WHO: Carmen Liu, WHAT: 'coral article,' WHERE: Ocean Watch.com"
     ],
     "answer": "B",
     "hints": [
-      "The WHO piece should list the person or group responsible for making the source, not what the source is about.",
-      "The exact title from the source goes in the WHAT piece, and the place holding the source goes in the WHERE piece."
+      "Check each of the three pieces: Who wrote it? What is the exact title? Where can someone find it?",
+      "The byline tells you the author; the headline gives you the exact title; the website name is where it was found."
     ]
   },
   {
@@ -423,17 +195,17 @@
     "cedCode": "M6ELA-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student takes notes while reading a magazine article titled 'Why Bees Are Important' by Soren Kim in Scientific American magazine. She writes: WHO: the scientist interviewed. WHAT: bees. WHERE: Scientific American. Which two pieces of her record are wrong, and why?",
+    "problemText": "Two students each made a source record for the same magazine article. The article is called 'Why Dogs Bark' by Professor Antonio Riggs, published in Pet Science Today magazine. Read both records below. Student A's record: WHO: Professor Antonio Riggs, WHAT: 'Why Dogs Bark,' WHERE: Pet Science Today magazine. Student B's record: WHO: Pet Science Today, WHAT: Why Dogs Bark, WHERE: Riggs.com. Which student created a correct source record, and why?",
     "choices": [
-      "WHERE is wrong because the magazine name itself should go there rather than just the publication type; WHO is wrong because the author Soren Kim wrote the article, not an interviewed scientist.",
-      "WHO is wrong because the magazine name should go there instead; WHAT is wrong because the magazine is more important than the bees.",
-      "WHAT is wrong because 'bees' is the topic, not the title; WHO is wrong because 'the scientist interviewed' is not the same as who made the source.",
-      "WHAT is wrong because she needs to name the magazine instead of the topic; WHERE is wrong because she should list the page number."
+      "Both students are correct because they both identified the article's author, title, and magazine, just organized differently in their records",
+      "Student B is correct because the magazine name belongs in WHO since it is the organization responsible for publishing the article online",
+      "Student A is correct because the author's name goes in WHO, the exact title with quotation marks goes in WHAT, and the magazine name goes in WHERE",
+      "Neither student is correct because they both failed to include additional details such as the publication date or page number of the article"
     ],
     "answer": "C",
     "hints": [
-      "The lesson teaches that the topic (what a source is about) is not the same as the title (what it is called).",
-      "The person who wrote the article is not the same as a scientist the article may have interviewed."
+      "Check Student A's record piece by piece: Does the author go in WHO? Is the title written exactly as printed? Is the place clear?",
+      "Check Student B: Did the student confuse who made the article with where it was published? Is the title missing proper punctuation?"
     ]
   },
   {
@@ -442,17 +214,245 @@
     "cedCode": "M6ELA-10.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student watches a YouTube video called 'The History of Basketball' posted by a sports education channel named Court Vision Academy. Inside the video, a retired basketball coach named Frank Rodriguez talks about how the game started. The student writes down her source record right away and correctly includes all three pieces. Later, she realizes she also wants to note that Frank Rodriguez is the coach who speaks in the video. Where in her source record should this detail go, and why?",
+    "problemText": "A student found three different sources and wrote them down quickly without thinking about completeness. Source 1: 'National Geographic—animals sleeping.' Source 2: AUTHOR: Kenji Honda, TITLE: 'How Plants Grow,' FOUND: textbook. Source 3: WHO: WKID News Station, WHAT: 'Five-Day Weather Report,' WHERE: WKID's local TV channel. The student must submit one source record that is complete and correct. Which source would need the most work to fix into a proper source record, and what is the main problem?",
     "choices": [
-      "In the WHO piece, replacing 'Court Vision Academy' with Frank Rodriguez's name, because he is the main person in the video.",
-      "In the WHAT piece, adding 'with Frank Rodriguez' to the title, because he is part of what the video shows.",
-      "Separate from the three main pieces, as extra information about who is quoted, because Frank Rodriguez made the video but is not the person who posted it.",
-      "Separate from the three main pieces, as extra information about who is quoted, because Frank Rodriguez is featured but did not make or post the source."
+      "All three sources have equal amounts of missing information so the student cannot fix any of them",
+      "Source 2 needs the most work because the author's name is missing the first initial and the textbook page number is not included",
+      "Source 3 needs the most work because TV channels cannot be considered sources for a school research project",
+      "Source 1 needs the most work because it has no author, writes the topic instead of the title, and lacks a clear place"
     ],
     "answer": "D",
     "hints": [
-      "A source record has three pieces: WHO (maker), WHAT (title), and WHERE (location). Any detail that does not fit those three pieces goes elsewhere.",
-      "The lesson teaches that a person quoted or featured inside a source is not the same as the person or group who made it."
+      "Look at Source 1 carefully: How many of the three pieces (WHO, WHAT, WHERE) are actually there? What did the student write instead of the real title?",
+      "Sources 2 and 3 both have all three pieces labeled and in roughly the right place—Source 1 is missing an author entirely."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-001",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student writes down the word 'dinosaurs' on a piece of paper for a short research project. The teacher asks, 'Do you have a research question yet?' Why would the teacher ask this question?",
+    "choices": [
+      "Because 'dinosaurs' needs to be combined with other words to form a complete sentence structure",
+      "Because 'dinosaurs' is a topic, not a research question, and it does not tell the student what specific information they actually want to find out",
+      "Because the student must decide on a narrower subject area within dinosaurs before they can begin any kind of research work",
+      "Because 'dinosaurs' is a topic, not a research question, and it does not tell the student when the project will be finished"
+    ],
+    "answer": "D",
+    "hints": [
+      "A topic is something you could read about forever without finishing.",
+      "A research question must end with a question mark and name exactly what you want to find out."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-002",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jordan is researching mountains for a two-page report. He narrows his topic to 'How do mountains form?' and writes it down as his research question. When Jordan searches for this question, he finds that almost every source gives him the same basic answer: plate tectonics cause mountains to form over millions of years. What does this tell Jordan about his research question?",
+    "choices": [
+      "His question is too narrow because one main idea from sources answers it almost completely, leaving little for a two-page report",
+      "His question is perfect because every source he finds happens to discuss the same answer in a straightforward way",
+      "His question is too broad because it would require him to read about every single mountain range that exists on Earth and how each one formed",
+      "His question fails because it asks about events that happened millions of years ago and cannot be studied using modern scientific methods"
+    ],
+    "answer": "A",
+    "hints": [
+      "A research question should need several sources that you gather pieces from and put together.",
+      "If your first source already answers the whole question, you may need to add more limits to make it deeper."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-003",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about the history of soccer. She is deciding between two questions: 'When was soccer first played?' and 'How has the way players pass a soccer ball changed over the last fifty years?' Which question would work better as a real research question for a short project, and why?",
+    "choices": [
+      "'When was soccer first played?' because it is easier to find the answer in a single reliable source and does not require pulling together information from different places",
+      "'How has the way players pass a soccer ball changed over the last fifty years?' because it asks about a change that requires comparing information from multiple sources instead of looking up one fact",
+      "'How has the way players pass a soccer ball changed over the last fifty years?' because it focuses on a specific sport skill rather than the sport in general and can be answered by looking at historical video or coaching documents",
+      "'When was soccer first played?' because questions about dates are more important and more valued in research projects than questions about techniques and are considered factual"
+    ],
+    "answer": "B",
+    "hints": [
+      "A question that has only one fact behind it is a lookup, not a real research project.",
+      "A research question needs you to gather pieces from several sources and put them together."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-004",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Kenji wants to research artificial intelligence for his project. He starts with the question 'Is artificial intelligence good or bad?' but then realizes there is a problem with it. Kenji decides to change his question to 'What are the differences in how fast humans and computers solve math problems?' Explain what was wrong with Kenji's first question and why his new question is better, using the three tests for a strong research question.",
+    "choices": [
+      "The first question asks about too many types of artificial intelligence and lacks focus, while the new question fixes this by asking only about math problems and solving speed. However, the new question may still be too broad because it could take a whole book to answer it completely.",
+      "The first question has too many words, and the new question is shorter. The new question is better because shorter questions are always easier to research and require less time to complete.",
+      "The first question asks for a judgment that people could disagree about even after reading the same sources, while the new question asks what evidence can measure and compare. The new question is also narrow enough (one type of task) and broad enough (needs sources on human and computer abilities).",
+      "The first question cannot be answered by any source at all because it is too vague, while the new question can be answered with concrete data. The new question is also better because it uses simpler words than the first question."
+    ],
+    "answer": "C",
+    "hints": [
+      "A research question must be answerable by evidence, not by what someone prefers or believes should happen.",
+      "A strong question is narrow enough for your project size, broad enough to need several sources, and settled by facts rather than opinions."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-005",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Lucia is researching sleep for a three-page project. Her first question is 'Why do teenagers need more sleep than adults?' She searches for sources and finds many articles from sleep scientists about the differences in teen and adult sleep needs. However, after reading three sources, Lucia realizes they all point to the same basic answer: teenage brains are still developing and require more rest. Lucia decides to refocus her question to 'How does the amount of sleep a teenager gets affect their performance in school the next day?' What is Lucia doing by making this change, and what test was her original question failing?",
+    "choices": [
+      "Lucia is refocusing because her first question failed the evidence test—it was asking for an opinion instead of a fact that could be proven with research.",
+      "Lucia is narrowing her question to make it harder to answer, which will force her to use more sources and do more work than she originally planned.",
+      "Lucia is making her question worse because she is no longer asking about sleep itself, which was her original topic, and has shifted to asking about school performance instead.",
+      "Lucia is widening her question because her first question was too narrow—it had one clear answer sitting in sources, not enough to fill three pages. Her new question asks about a cause and effect that requires pulling together pieces from different sources."
+    ],
+    "answer": "D",
+    "hints": [
+      "If your first source already answers the whole question, it was too narrow, a single fact after all, and you can widen it back out.",
+      "Refocusing means adjusting your question after you start searching, either by narrowing it further or by loosening a limit that made it too small."
+    ]
+  },
+  {
+    "id": "m6ela-asking-a-research-question-006",
+    "loId": "m6ela.asking-a-research-question",
+    "cedCode": "M6ELA-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is researching the history of medicine for a four-page project. She writes three possible questions: (1) 'What are the main ways antibiotics have changed since they were discovered?' (2) 'Should doctors prescribe antibiotics when patients ask for them?' (3) 'In what year were antibiotics invented?' She wants to pick one question that will pass all three tests. For each question, identify which test or tests it fails, and explain why it fails that test. Which question, if any, would actually work for her project?",
+    "choices": [
+      "Question 1 is the only one that works because it asks about changes (which requires multiple sources), limits the topic (antibiotics, not all medicine), and asks about facts evidence can show. Question 2 fails the evidence test (asks what should happen, a judgment). Question 3 fails the broad-enough test (one fact in one place).",
+      "Question 2 is the only one that works because it requires a student to think deeply about ethics and different viewpoints from multiple research sources and allows for personal interpretation of the evidence.",
+      "Question 3 is the only one that works because it can be answered quickly from an encyclopedia or history of science article without needing multiple sources and provides a simple, factual answer.",
+      "All three questions work equally well because they are all written as complete questions with question marks and could potentially be researched using books or websites on medical history."
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember the three tests: narrow enough for the space, broad enough to need more than one source, and answerable by evidence not personal preference.",
+      "A question that asks what should happen or what is best is a judgment, not a fact, and no source can prove one person right when others disagree."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-001",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A quote copies a source's exact words and sets them off in quotation marks. A paraphrase rebuilds an idea from a source in your own words and sentence structure while keeping the meaning the same. Which statement correctly describes what makes these two moves different?",
+    "choices": [
+      "A quote is shorter than a paraphrase and works better in most reports.",
+      "A quote keeps the exact wording and uses quotation marks; a paraphrase changes the wording but rebuilds the sentence shape too.",
+      "A paraphrase uses quotation marks to show it came from a source; a quote does not need them.",
+      "A quote is used when you want to summarize the main idea; a paraphrase is used when the exact words matter."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what quotation marks signal to a reader.",
+      "Remember: a paraphrase does not just swap in synonyms — it rebuilds the whole sentence."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-002",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are writing a report on how plants grow, and you find this sentence in a gardening book: 'Sunlight helps plants make their own food through a process called photosynthesis.' You want to use the general idea that sunlight helps plants make food, but you do not need the exact wording or the word 'photosynthesis.' Which choice is a fair paraphrase of this sentence?",
+    "choices": [
+      "Sunlight assists plants in making their own food by means of photosynthesis.",
+      "Sunlight helps plants make their own food through a process called photosynthesis.",
+      "Plants rely on sunlight to produce the energy and nutrients they need to grow.",
+      "Sunlight helps plants make their own food, which is called photosynthesis."
+    ],
+    "answer": "C",
+    "hints": [
+      "A real paraphrase does not just swap a few words into the same sentence order.",
+      "Look for an answer that rebuilds the idea in a completely new sentence shape."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-003",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are writing a report and want to include this exact sentence from a wildlife magazine: 'Wolves live and hunt in packs because the group makes them stronger hunters.' You decide the exact wording matters and you want to quote it. Which choice correctly includes this quote inside your report?",
+    "choices": [
+      "The wildlife magazine states: Wolves live and hunt in packs because the group makes them stronger hunters.",
+      "According to the wildlife magazine, wolves live and hunt in packs because the group makes them stronger hunters.",
+      "Wolves live and hunt in packs because the group makes them stronger hunters, as the wildlife magazine says.",
+      "The wildlife magazine explains that 'wolves live and hunt in packs because the group makes them stronger hunters.'"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: quotation marks must wrap around the source's exact words so a reader can see they are not yours.",
+      "Check which choice puts the exact words inside quotation marks and names the source."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-004",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a report on honey production and finds this sentence in a book about bees: 'A single bee colony can produce up to sixty pounds of honey in one year.' The student writes: 'A lone bee colony is able to generate up to sixty pounds of honey within one year.' The student did not use quotation marks and did not name the source. Why is this a problem, and what should the student do to fix it?",
+    "choices": [
+      "The student swapped in a few different words but kept the source's exact sentence order and meaning, so this is a word-swap copy, not a real paraphrase. The student must either put quotation marks around the exact words and credit the source, or rebuild the sentence completely in new words and new structure, then credit the source.",
+      "The student paraphrased correctly but forgot to add quotation marks and the source name, so the student should simply add both of those elements without changing the sentence itself to fix the problem.",
+      "The student did not copy enough of the original words to show where the idea came from, so the student should copy more of the exact wording and then put quotation marks around it to properly credit the source.",
+      "The student changed the word order too much and made the meaning confusing, so the student should keep the original sentence order while adding quotation marks and a source credit to make it clear."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at what the student actually did: did they rebuild the idea from scratch, or did they just trade in a few synonyms?",
+      "A word-swap copy needs fixing whether or not quotation marks are added — the real problem is the sentence structure stayed the same."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-005",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You are writing a report about ocean life and find two sentences in a marine biology guide: 'Most fish use gills to breathe underwater. Gills take oxygen from the water so the fish can use it.' You want to use both ideas but you do not need the exact wording. You plan to paraphrase both sentences together into one new sentence. Which choice correctly paraphrases both ideas without word-swapping and also credits the source?",
+    "choices": [
+      "The marine biology guide says that most fish use gills to breathe underwater, and gills take oxygen from the water so the fish can use it.",
+      "According to the marine biology guide, fish rely on gills as the body part that pulls oxygen from water and allows them to breathe beneath the surface.",
+      "Fish use gills to breathe underwater because gills take oxygen from water, as the marine biology guide explains.",
+      "Most fish use gills to take oxygen from water so they can breathe, according to the guide."
+    ],
+    "answer": "B",
+    "hints": [
+      "A real paraphrase combines the two ideas into a new sentence shape, not the source's original order.",
+      "Watch for choices that keep the source's sentences or sentence order almost exactly — those are word-swaps, not paraphrases."
+    ]
+  },
+  {
+    "id": "m6ela-quoting-paraphrasing-without-plagiarizing-006",
+    "loId": "m6ela.quoting-and-paraphrasing-without-plagiarizing",
+    "cedCode": "M6ELA-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student found this sentence in a history book about medieval castles: 'Castle walls were built thick and tall to protect the people inside from enemy attacks.' The student wrote three different versions. Version 1: 'Castle walls were built thick and tall to protect the people inside from enemy attacks.' Version 2: 'Castle walls were constructed thick and tall to shield the people within from enemy assaults.' Version 3: 'To defend the people who lived inside, medieval castles had thick, tall walls.' Only Version 3 has quotation marks and credits the source. Which statement correctly explains which version or versions need fixing and why?",
+    "choices": [
+      "Version 2 is correct because it changes enough words to make it the student's own work. Versions 1 and 3 need quotation marks.",
+      "Only Version 1 needs fixing because it copies the source word for word. Versions 2 and 3 are both acceptable paraphrases.",
+      "Versions 1 and 2 both need fixing because they use the source's exact words or sentence order without quotation marks. Version 3 is correct because it rebuilds the idea in new words and structure, then credits the source.",
+      "All three versions need quotation marks because they all came from a source, whether the student changed the words or not."
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember: a word-swap (keeping the same sentence structure but trading in synonyms) is not a real paraphrase and is still a problem even without quotation marks.",
+      "A real paraphrase must rebuild the sentence from scratch in both words and structure. Which version actually does that?"
     ]
   }
 ]

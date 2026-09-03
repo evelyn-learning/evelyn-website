@@ -228,120 +228,6 @@
     ]
   },
   {
-    "id": "m6sci-evidence-for-rising-global-temperatures-001",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What is the difference between a single warm year and a temperature trend? Explain why one is evidence of climate change and the other is not.",
-    "choices": [
-      "A single warm year is just one reading, while a trend is a sustained direction across many decades with no reversal; only the trend shows genuine warming, not a single year.",
-      "A single warm year happens because of weather patterns, while a trend happens because of climate patterns; both provide equally strong evidence of warming because they both involve temperature change.",
-      "A single warm year tells you about that year's weather conditions, while a trend tells you about that year's climate conditions; both are types of climate change because both involve years.",
-      "A single warm year must be caused by human activity, while a trend might be natural; only human causes count as real climate change because natural variation does not matter."
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about the lesson's emphasis on 'one reading versus many readings across time.'",
-      "A genuine trend requires the direction to hold steady across multiple decades, not flip or stay flat."
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-002",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A simplified temperature index for five consecutive decades reads: 100, 101, 103, 108, 115. Does this data show a genuine warming trend, and if so, is the warming happening at a steady pace or speeding up?",
-    "choices": [
-      "Yes, it shows a genuine trend, but the pace is steady because the total rise from 100 to 115 is the same size as it would be in any other five-decade span, so the rate never changes.",
-      "Yes, it shows a genuine trend because the index rises in every decade with no reversal; the pace is speeding up because the decade-to-decade increases grow from 1 to 1 to 2 to 5 to 7.",
-      "No, it does not show a genuine trend because the numbers do not repeat exactly from decade to decade, which means the pattern is not reliable enough to count as a real trend.",
-      "Yes, it shows a genuine trend because the final number is much larger than the starting number, and the pace is slowing because recent decades matter less than older ones when you look at the total change."
-    ],
-    "answer": "B",
-    "hints": [
-      "Check whether the direction ever reverses; if it does not, it is a genuine multi-decade trend.",
-      "To find the pace, subtract each decade's reading from the next and look at whether those differences grow, shrink, or stay the same."
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-003",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two scientists examine a century of data showing that both atmospheric CO2 and global temperature have risen. Scientist A says, 'The two records both go up, so rising CO2 must be the only cause of rising temperature.' Scientist B says, 'The two records both go up, but that alone does not prove one causes the other.' Which scientist's reasoning is more careful, and why?",
-    "choices": [
-      "Scientist B is more careful; two records rising together always indicates pure coincidence, so the CO2 and temperature trends should be rejected as evidence unless they are completely unrelated.",
-      "Scientist A is more careful; if two things rise together for long enough, one must be the direct cause of the other, no debate needed, because correlation always means causation.",
-      "Scientist B is more careful; two records rising at the same time can be a coincidence unless you also check whether the timing of their fastest rises matches and whether there is a known mechanism connecting them.",
-      "Scientist A is more careful; any association that shows up in data must mean one variable is the sole cause of the other because data never lies about causation."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson says that two records rising together is NOT enough by itself; what else does strong evidence need?",
-      "Think about the three-part check for a strong association: sustained trend, matching timing, and mechanism."
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-004",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A CO2 index and a temperature index are reported for six decades (oldest to most recent): CO2 index: 100, 100, 102, 105, 112, 125; Temperature index: 100, 100, 101, 103, 109, 118. In which decades do both indexes show their largest single-decade jumps, and what does that pattern suggest about the relationship between the two records?",
-    "choices": [
-      "The temperature index shows its largest jump in the fourth decade while CO2 shows its largest jump in the sixth decade; this mismatch proves that rising CO2 has nothing to do with rising temperature because the timing does not match.",
-      "The CO2 index shows its largest jump in the sixth decade, while temperature shows its largest jump in the fifth decade; since the timing does not match perfectly, the records cannot be associated with each other in any way.",
-      "Both show steady, uniform growth across all six decades; the jumps are the same size in every period, so there is no timing pattern to examine or compare between the two indexes.",
-      "Both show their largest jumps in the fifth and sixth decades, the same later decades; this timing match, combined with the known heat-trapping property of CO2, supports linking the two trends rather than treating them as separate coincidences."
-    ],
-    "answer": "D",
-    "hints": [
-      "Find the decade-to-decade increases for each index and look for when the biggest single jump occurs in each record.",
-      "The lesson says that matching timing — when both records accelerate in the same decades — is one of the three parts of strong evidence."
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-005",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Suppose a new data set showed that atmospheric CO2 rose sharply over the past century while global temperature remained perfectly flat — neither warming nor cooling. According to the lesson's framework for evaluating associations, would this observation weaken the case that rising CO2 is associated with the rising temperature trend? Explain your reasoning.",
-    "choices": [
-      "Yes, it would severely weaken the case because the timing match between the two trends would be gone; without matching timing, you cannot link the trends even though the mechanism is still valid.",
-      "No, it would not weaken the case at all because a single rising trend in CO2 is proof of causation on its own, regardless of what happens to temperature in the same period.",
-      "Yes, but only slightly, because matching timing is less important than the length of the time period and whether both variables were actually measured with modern instruments.",
-      "No, because the existence of a known mechanism connecting CO2 to warming is sufficient to establish association without needing both records to show matching changes in the same direction."
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson identifies three separate parts needed for strong evidence of an association; if one part is missing, does the whole case stay equally strong?",
-      "What would happen if the timing of the fastest changes in the two records no longer matched?"
-    ]
-  },
-  {
-    "id": "m6sci-evidence-for-rising-global-temperatures-006",
-    "loId": "m6sci.evidence-for-rising-global-temperatures",
-    "cedCode": "M6SCI-10.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student encounters three statements about Earth's temperature and CO2 records: (1) 'The temperature rose from 1950 to 1980, so 1950 to 1980 proves warming is real.' (2) 'Both CO2 and temperature rose during 1950 to 1980, so CO2 caused that warming.' (3) 'Both CO2 and temperature show multi-decade trends that accelerated in the same recent decades, fossil-fuel use scaled up in those same decades, and CO2 traps heat — so the evidence supports an association.' Rank these statements from weakest to strongest evidence according to the lesson's framework, and explain what makes statement (3) stronger than statement (2).",
-    "choices": [
-      "Weakest to strongest: (2), (1), (3). Statement (1) is weak because it describes warming without explaining what causes it; (2) is stronger because it names both CO2 and temperature as variables; (3) is strongest because it includes the most recent data points.",
-      "Weakest to strongest: (1), (2), (3). Statement (1) uses a single period that is too short; (2) shows two trends rising together but lacks both matching timing and the timing history of fossil fuels; (3) has all three parts—sustained multi-decade trends, timing match with fossil-fuel scale-up, and the known heat-trapping mechanism.",
-      "Weakest to strongest: (1), (3), (2). Statement (1) is the weakest because it describes only one variable; (3) is stronger than (2) because it includes more historical information going back further in time; (2) is strongest because it directly claims causation between two variables.",
-      "Weakest to strongest: (3), (2), (1). Statement (3) would be strongest if fossil fuels were removed and only CO2 were mentioned; (2) is second because naming both variables in the same sentence proves their connection; (1) is weakest because it covers fewer decades than the other statements."
-    ],
-    "answer": "B",
-    "hints": [
-      "Review the lesson's three-part test for strong evidence: Does each need a multi-decade sustained trend? Do the fastest changes need to line up in time? Is there a known physical mechanism?",
-      "Statement (2) shows two records rising together; what is missing that (3) adds to make the case much stronger?"
-    ]
-  },
-  {
     "id": "m6sci-the-carbon-cycle-in-rocks-ocean-air-001",
     "loId": "m6sci.the-carbon-cycle-in-rocks-ocean-and-air",
     "cedCode": "M6SCI-10.1",
@@ -453,6 +339,120 @@
     "hints": [
       "The limestone formed on an ocean floor and is now buried under 300 million years of additional rock layers—it must have gone underground; think about what happens to rock at depth.",
       "The volcanic ash layer appeared about 100 million years ago; if carbon were freed from the deep rock, through which pathway would it reach the air?"
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-001",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A trend in a temperature or CO2 record is different from a single reading. Which statement correctly describes what a trend is?",
+    "choices": [
+      "A sustained direction shown by many readings across several decades, with the overall pattern holding even if individual years go up or down",
+      "A year-to-year change in temperature or CO2 where one year differs from the previous year, regardless of whether the pattern continues or reverses in following years",
+      "The range of temperature or CO2 values in a dataset, calculated by subtracting the lowest recorded value from the highest recorded value across all time periods",
+      "A direct measurement between only the first and last data points in a time series, without examining any of the readings collected in the middle decades"
+    ],
+    "answer": "A",
+    "hints": [
+      "A trend requires looking at multiple readings over time, not a single observation.",
+      "Think about the difference between one day's weather and a region's long-term climate pattern."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-002",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A temperature record for five decades shows these values, from oldest to most recent: 100, 99, 103, 101, 105. A student claims this record shows a clear warming trend. Is the student correct?",
+    "choices": [
+      "Yes, because the final value (105) is higher than the first value (100), showing an overall increase",
+      "No, because the record goes up and down instead of rising consistently across all the decades",
+      "Yes, because three of the five readings are above 100, indicating that most of the data points are warm",
+      "No, because the record does not show any consistent direction at all and reverses direction multiple times"
+    ],
+    "answer": "B",
+    "hints": [
+      "For a genuine trend, the overall direction must hold across all or nearly all the decades, not reverse.",
+      "Look at the decade-by-decade sequence: does it always go up, always go down, or does it change direction?"
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-003",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "The greenhouse effect is the process by which carbon dioxide warms Earth's surface. Which statement correctly describes the physical mechanism of the greenhouse effect as taught?",
+    "choices": [
+      "Carbon dioxide molecules collide with each other in the upper atmosphere, creating friction that generates heat and warms the surface",
+      "Carbon dioxide in the atmosphere reflects sunlight back into space before it reaches Earth, which prevents the surface from absorbing solar energy",
+      "Sunlight passes through the atmosphere, warms Earth's surface, Earth radiates heat back outward, and carbon dioxide absorbs some of that outgoing heat and traps it near the surface",
+      "Fossil fuels release carbon dioxide that travels to the upper atmosphere and creates a protective shield that blocks harmful rays and warms the surface"
+    ],
+    "answer": "C",
+    "hints": [
+      "The mechanism involves what happens to heat that Earth radiates outward, not what happens to incoming sunlight.",
+      "Carbon dioxide's role is to trap or hold heat, not to reflect it or create it directly."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-004",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A temperature index and a CO2 index are both reported for the same six decades, oldest to most recent. Temperature index: 100, 100, 101, 105, 115, 128. CO2 index: 100, 100, 101, 103, 110, 122. The decade-to-decade increases for temperature are: 0, 1, 4, 10, 13. The decade-to-decade increases for CO2 are: 0, 1, 2, 7, 12. Which of these observations is the strongest evidence that the two trends are associated rather than being coincidental?",
+    "choices": [
+      "Both the temperature and CO2 indexes start at 100 in the first decade and end with values above 100 in the last decade, proving they represent the same underlying physical process and must be causally linked",
+      "Both records show decade-to-decade increases that are sometimes identical (both have a 0 and both have a 1 at different points), indicating their sources of change must originate from the same event or phenomenon",
+      "The temperature index rises a total of 28 units while the CO2 index rises 22 units, and since the temperature increase is larger, it demonstrates that temperature changes are proportional to and caused by CO2 changes",
+      "Both indexes rise across all six decades without reversal, and both show their biggest increases in the same later decades, matching when fossil-fuel use scaled up sharply"
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for a pattern where both records accelerate at the same time, not just where they both go up.",
+      "The timing match—both accelerating in the same later decades—is what connects them to the historical period of rapid fossil-fuel combustion."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-005",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student examines temperature and CO2 records that both show genuine sustained upward trends over many decades. However, the student notices that the CO2 record begins its sharpest rise in the third decade, while the temperature record's sharpest rise does not begin until the fifth decade. What does this timing mismatch suggest about the strength of evidence for an association between rising CO2 and rising temperature?",
+    "choices": [
+      "The evidence for an association is weakened because the timing match—one of the three required pieces—is missing, even though both trends are real",
+      "The timing mismatch proves that CO2 does not cause warming and that the two variables are completely unrelated",
+      "The timing mismatch proves that temperature caused the CO2 rise instead of the other way around, because temperature changed first",
+      "The evidence for an association is actually strengthened because the delay between the two trends shows they follow a natural time-lag pattern in Earth's climate system"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember the three things that together support a strong association: sustained trend, matching timing, and a known mechanism.",
+      "If one of those three pieces is missing or weak, the overall case for the association becomes less strong."
+    ]
+  },
+  {
+    "id": "m6sci-evidence-for-rising-global-temperatures-006",
+    "loId": "m6sci.evidence-for-rising-global-temperatures",
+    "cedCode": "M6SCI-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two different scenarios are presented. Scenario A: A temperature index rises from 100 to 115 over six decades in a steady, consistent way (1 unit per decade), and a CO2 index rises from 100 to 116 over the same six decades, also steadily (about 2.7 units per decade). Scenario B: A temperature index stays flat at 100 for the first four decades, then jumps to 108 and then 116 in the last two decades. A CO2 index stays flat at 100 for the first four decades, then jumps to 109 and then 117 in the last two decades. Both scenarios show similar overall temperature and CO2 changes from first to last decade. In terms of evidence for an association between rising CO2 and rising temperature, which scenario provides stronger evidence and why?",
+    "choices": [
+      "Scenario A provides stronger evidence because the steady rate of increase in both records means the changes are more gradual and measurable than the sudden jumps seen in Scenario B",
+      "Scenario B provides stronger evidence because the timing match is clearer—both records show their acceleration in the same final decades, which aligns with the historical period of rapid fossil-fuel combustion",
+      "Scenario A provides stronger evidence because the temperature and CO2 changes occur at consistent rates throughout all six decades, making the relationship between them easier to predict and verify mathematically",
+      "Scenario B provides stronger evidence because the total rise from first to last decade is nearly identical in both records, with temperature rising 16 units and CO2 rising 17 units, showing they track each other proportionally"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about which scenario shows a clearer alignment between the timing of acceleration in both records and the known historical period of rapid fossil-fuel use.",
+      "The shape and timing of the changes matter more than the total amount of change or perfect year-by-year overlap."
     ]
   }
 ]

@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6ela-maintaining-consistent-style-tone-001",
-    "loId": "m6ela.maintaining-consistent-style-and-tone",
-    "cedCode": "M6ELA-6.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What does register mean in writing? Choose the definition that matches what you learned in class.",
-    "choices": [
-      "The specific pitch and volume a speaker produces when delivering words out loud to an audience",
-      "The official record or log that documents the names and contact details of attendees at a particular gathering or event",
-      "How formal or informal a piece of writing needs to be for its audience and purpose",
-      "The method by which a writer structures and arranges the sequence of paragraphs to guide readers from start to finish"
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about the difference between writing a school report and texting a friend.",
-      "Register is about the level of formality you choose at the start and keep throughout."
-    ]
-  },
-  {
-    "id": "m6ela-maintaining-consistent-style-tone-002",
-    "loId": "m6ela.maintaining-consistent-style-and-tone",
-    "cedCode": "M6ELA-6.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this sentence from a thank-you letter to your grandmother: 'The gift was absolutely fire, no cap.' The rest of the letter uses warm, everyday words like 'so happy' and 'loved spending time with you.' Why is this sentence a problem in the letter?",
-    "choices": [
-      "It is a sentence fragment and needs to be fixed with standard grammar",
-      "It does not tell the reader what gift you received from your grandmother",
-      "It is too short compared to the other sentences in the letter",
-      "It uses slang and casual filler words that do not match the warm but respectful register of the rest of the letter"
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson says a lapse can be a perfectly correct sentence — the problem is not grammar but register.",
-      "Look at what signals a casual register: slang, casual filler words, and exaggeration."
-    ]
-  },
-  {
-    "id": "m6ela-maintaining-consistent-style-tone-003",
-    "loId": "m6ela.maintaining-consistent-style-and-tone",
-    "cedCode": "M6ELA-6.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student is writing a formal announcement about a field trip for the school website. Most sentences use careful, precise wording like 'Students will depart from the main entrance at 8:30 a.m.' and 'All participants must bring a packed lunch.' Which sentence would break the formal register of this announcement?",
-    "choices": [
-      "Honestly, the aquarium is literally the coolest place ever, and you should totally go if you can.",
-      "Chaperones will monitor and assist students during the entire scheduled visit to the aquarium facility.",
-      "All permission slips must be completed, signed by a parent or guardian, and delivered by the deadline of Wednesday.",
-      "The transportation bus will arrive back at school by 3:00 p.m., ensuring students meet the afternoon dismissal schedule."
-    ],
-    "answer": "A",
-    "hints": [
-      "Formal register uses precise vocabulary and no slang — look for casual filler words in the choices.",
-      "Which sentence uses words like 'honestly,' 'literally,' and 'totally' that do not fit a school announcement?"
-    ]
-  },
-  {
-    "id": "m6ela-maintaining-consistent-style-tone-004",
-    "loId": "m6ela.maintaining-consistent-style-and-tone",
-    "cedCode": "M6ELA-6.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this short book review for a school assignment: 'The novel follows a young hero on a dangerous quest to save her village. The author builds tension throughout the story with sharp, suspenseful dialogue. We were literally so hyped while reading the last chapter because the ending was insane. The book teaches important lessons about courage and loyalty.' Identify the sentence that breaks the formal, informative tone and explain why it is the lapse.",
-    "choices": [
-      "The first sentence is the lapse because it uses the word 'hero,' which is too casual for a formal review.",
-      "The third sentence is the lapse because it uses slang and casual filler words that do not match the careful, precise wording of the other sentences.",
-      "The second sentence is the lapse because it uses the word 'author,' which does not belong in a book review.",
-      "The fourth sentence is the lapse because it mentions lessons, which is not appropriate for a school assignment."
-    ],
-    "answer": "B",
-    "hints": [
-      "First, read the other three sentences and decide what register most of the review is using.",
-      "Look for casual filler words and slang signals, then compare the sentence with the register that the rest of the piece established."
-    ]
-  },
-  {
-    "id": "m6ela-maintaining-consistent-style-tone-005",
-    "loId": "m6ela.maintaining-consistent-style-and-tone",
-    "cedCode": "M6ELA-6.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote this informal text to a friend about a weekend project: 'I finally finished painting my bedroom this weekend and it looks so awesome. We went to the store twice because we did not have enough paint for the first coat. Upon reflection, the acquisition of appropriate materials in advance would have facilitated the completion of said endeavor. I cannot wait to show you the finished room when you visit next month.' Which sentence is the lapse, and what should the student do to fix it?",
-    "choices": [
-      "The first sentence is the lapse; rewrite it to use casual, everyday wording like the rest of the text.",
-      "The second sentence is the lapse; rewrite it to use slang and exaggeration to match the informal tone.",
-      "The third sentence is the lapse; rewrite it in casual, friendly wording that keeps the same information.",
-      "The fourth sentence is the lapse; rewrite it to match the formal vocabulary of the other sentences."
-    ],
-    "answer": "C",
-    "hints": [
-      "Identify which register most of the text uses by reading the first, second, and fourth sentences together.",
-      "The lapse will have formal, stiff vocabulary that does not match the warm, casual wording the rest of the piece already established."
-    ]
-  },
-  {
-    "id": "m6ela-maintaining-consistent-style-tone-006",
-    "loId": "m6ela.maintaining-consistent-style-and-tone",
-    "cedCode": "M6ELA-6.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is revising a formal email to a museum director requesting a group visit. The student has identified this sentence as breaking the register: 'The field trip would be educational for our students and help them learn about art history, which would be sick.' Which of the following revisions best fixes the lapse by keeping the same information in the established formal register?",
-    "choices": [
-      "The field trip would be educational for our students and help them learn about art history, and that sounds pretty good.",
-      "The field trip would help our sixth-grade students gain knowledge about art history because it is literally the best way to learn.",
-      "The field trip would teach our students about art history, and honestly, it would be really awesome for everyone.",
-      "The field trip would be an excellent educational opportunity that allows our students to deepen their understanding of art history."
-    ],
-    "answer": "D",
-    "hints": [
-      "A proper fix replaces the slang word 'sick' with formal, precise vocabulary while preserving the core information about the field trip's educational value.",
-      "Check each choice: Does it remove the casual register completely and use careful word choice that matches a formal email to an official?"
-    ]
-  },
-  {
     "id": "m6ela-commas-for-extra-information-001",
     "loId": "m6ela.commas-for-nonrestrictive-and-parenthetical-elements",
     "cedCode": "M6ELA-6.3",
@@ -345,19 +231,19 @@
     "id": "m6ela-varying-sentence-patterns-for-style-001",
     "loId": "m6ela.varying-sentence-patterns-for-style",
     "cedCode": "M6ELA-6.2",
-    "difficulty": 2,
+    "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Read this paragraph from a sports blog: 'Maya hit the ball. Maya ran to first base. Maya slid into second base.' What repeated pattern makes this paragraph sound choppy?",
+    "problemText": "What does it mean when a paragraph has sentence variety? Choose the best answer.",
     "choices": [
-      "The word 'base' appears twice in a row.",
-      "Every sentence starts with the exact same word, Maya.",
-      "All three sentences are exactly the same length.",
-      "The sentences use too many action verbs."
+      "The sentences mix different lengths and starting words instead of repeating the same pattern over and over.",
+      "The sentences rely on using fancy words and complicated vocabulary throughout the paragraph to make each sentence sound more interesting and engaging to readers.",
+      "The sentences are deliberately written to be consistently long in structure so that the reader has adequate time to fully understand and process each individual idea presented.",
+      "The sentences alter the original facts and details presented in order to keep the reader guessing about what the actual message or point of the paragraph truly is."
     ],
-    "answer": "B",
+    "answer": "A",
     "hints": [
-      "Look at the first word of each sentence in the paragraph.",
-      "The lesson says the repeated pattern a reader notices first is what comes at the start of the sentences."
+      "Look for the answer that describes how sentences are shaped and organized.",
+      "Remember: sentence variety changes shape, not meaning or content."
     ]
   },
   {
@@ -366,36 +252,36 @@
     "cedCode": "M6ELA-6.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Here are two correct sentences from a recipe: 'The timer went off. Everyone grabbed a plate.' What is left unstated between these two sentences?",
+    "problemText": "Read these two sentences from a class newsletter: \"The soccer team won the championship. Everyone cheered at the final whistle.\" These sentences are correct, but the reader has to guess the connection between them. Which revision states the relationship without changing what happened?",
     "choices": [
-      "Whether the timer was mechanical, digital, or electronic and which brand was purchased.",
-      "The specific emotions or motivations that caused each person individually to want to grab a plate at that moment.",
-      "The reason or timing that connects one event to the other.",
-      "The exact number of minutes the timer had been set for before it began to ring."
+      "The soccer team won the championship, and everyone cheered at the final whistle because it was exciting.",
+      "When the soccer team won the championship, everyone cheered at the final whistle.",
+      "The soccer team won and everyone cheered, which was the championship at the final whistle.",
+      "The soccer team won the championship; everyone cheered very loudly at the final whistle."
     ],
-    "answer": "C",
+    "answer": "B",
     "hints": [
-      "Two separate sentences side by side make the reader guess how they connect.",
-      "A connector word like 'when' or 'so' would state this relationship."
+      "Look for a revision that adds a connector word that explains how the two events relate in time.",
+      "The connector should show that the cheering happened as a result of the winning."
     ]
   },
   {
     "id": "m6ela-varying-sentence-patterns-for-style-003",
     "loId": "m6ela.varying-sentence-patterns-for-style",
     "cedCode": "M6ELA-6.2",
-    "difficulty": 3,
+    "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this paragraph for the school newspaper: 'The lights went out. The crowd gasped. The spotlight came on. Everyone cheered.' The student wants to fix the choppy rhythm without changing any facts or adding words that do not belong. Which revision fixes this problem?",
+    "problemText": "Look at this paragraph from a student's journal entry: \"Max uploaded his essay. Max submitted it to the teacher. Max waited for feedback.\" The reader hears a choppy rhythm because of repeated openers. Which revision fixes the repeated pattern without dropping any facts?",
     "choices": [
-      "The lights went out and the crowd gasped loudly. The spotlight came on and everyone cheered with excitement.",
-      "The lights went out because the crowd gasped. The spotlight came on so everyone cheered.",
-      "The lights suddenly went out. The crowd gasped dramatically. The spotlight came on brightly. Everyone cheered wildly.",
-      "When the lights went out, the crowd gasped. After the spotlight came on, everyone cheered."
+      "Max uploaded a very long essay and submitted it very carefully to the teacher who waited.",
+      "Max uploaded his essay. His essay was submitted. Feedback was waited for by Max.",
+      "Max uploaded his essay and submitted it to the teacher, then waited for feedback.",
+      "Max uploaded his essay, submitted his essay, and waited for feedback from his teacher."
     ],
-    "answer": "D",
+    "answer": "C",
     "hints": [
-      "The original has 'The' opening four sentences in a row — that is the choppy pattern.",
-      "A real fix either removes a repeated opener or adds a connector that states a relationship."
+      "Find the version that combines the first two sentences so the repeated 'Max' opener disappears.",
+      "All three facts should still be there—uploading, submitting, and waiting."
     ]
   },
   {
@@ -404,36 +290,169 @@
     "cedCode": "M6ELA-6.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is revising these two sentences for the class website: 'The storm rolled in quickly. The soccer game was cancelled.' The student adds a connector to show how these events relate: 'Because the storm rolled in quickly, the soccer game was cancelled.' Is this a real fix according to the rules of sentence variety, and why?",
+    "problemText": "Read this paragraph for a school website: \"The rain started at noon. The field became too muddy. The game was postponed until Saturday. The team was disappointed.\" Every sentence opens with a different word, but the paragraph still sounds choppy. Which revision best improves the rhythm while keeping all facts intact?",
     "choices": [
-      "Yes, because the connector 'because' states the relationship between the two events without changing what happened.",
-      "No, because combining sentences always removes important detail and loses the impact of having two separate statements.",
-      "No, because the word 'because' is too casual for a website and should be replaced with a more formal connector instead.",
-      "Yes, because it removes a repeated opening word that appeared three times in a row."
+      "The rain started at noon because the field became muddy, the game was postponed until Saturday, and the team was disappointed.",
+      "At noon the rain started, and it created muddy conditions so the game moved to Saturday, which made the team feel upset.",
+      "The rain started. The field became muddy. The game postponed. The team disappointed.",
+      "The rain started at noon, making the field too muddy. The game was postponed until Saturday, and the team was disappointed."
     ],
-    "answer": "A",
+    "answer": "D",
     "hints": [
-      "A real fix does one of two things: it removes a repeated opener, or it adds a connector that states a relationship.",
-      "Check whether the facts of what happened changed — they should not."
+      "Look for a revision that combines sentences that are closely related and adds a connector to state a relationship.",
+      "The best fix will create a mix of shorter and longer sentences instead of four sentences of similar length."
     ]
   },
   {
     "id": "m6ela-varying-sentence-patterns-for-style-005",
     "loId": "m6ela.varying-sentence-patterns-for-style",
     "cedCode": "M6ELA-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this for a class blog: \"The art supplies arrived. We opened the boxes. The brushes were high quality. The paint colors were vivid.\" The repeated opener 'The' appears in three sentences in a row, and some relationships are left unstated. Which revision removes the repeated opener AND adds a connector that states a relationship?",
+    "choices": [
+      "The art supplies arrived, so we opened the boxes and discovered the high-quality brushes and vivid paint colors.",
+      "The art supplies arrived and we opened the boxes. The brushes were high quality and the paint colors were vivid.",
+      "When the art supplies arrived, we opened the boxes. The brushes were high quality, and the paint colors were vivid.",
+      "The art supplies arrived. We opened the boxes. The brushes were high quality. The paint colors were vivid."
+    ],
+    "answer": "A",
+    "hints": [
+      "The best fix should eliminate the repeated 'The' opener at the start of multiple sentences in a row.",
+      "Look for a version that adds a connector like 'so' to show how one action led to a discovery."
+    ]
+  },
+  {
+    "id": "m6ela-varying-sentence-patterns-for-style-006",
+    "loId": "m6ela.varying-sentence-patterns-for-style",
+    "cedCode": "M6ELA-6.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this paragraph for a class essay: 'I organized my notes. I sorted them by topic. I made flashcards. I studied for thirty minutes. I felt ready for the test.' The student wants to fix the choppy rhythm. The student tries two different revisions. Revision A: 'I organized my notes, sorted them by topic, and made flashcards. I studied for thirty minutes and felt ready for the test.' Revision B: 'After organizing my notes and sorting them by topic, I made flashcards. Then I studied for thirty minutes. Finally, I felt ready for the test.' Both revisions keep all the original facts. Which revision is the better fix, and what is the main reason?",
+    "problemText": "A student is revising this paragraph for a class magazine: \"Emma researched her topic for three hours. Emma took detailed notes. Emma organized her information by topic. Emma created an outline before she wrote her draft.\" The student tries two fixes. Fix 1 changes it to: \"Emma researched her topic for three hours and took detailed notes. She organized her information by topic and created an outline before she wrote her draft.\" Fix 2 changes it to: \"Emma spent a lot of time researching her topic carefully. She took some detailed notes. She organized her information by topic. She created an outline before she wrote her draft.\" Which fix actually solves a real problem you can point at in the words, and why?",
     "choices": [
-      "Revision B is better because it adds more connectors like 'after' and 'then' that state relationships.",
-      "Revision A is better because it removes more repeated 'I' openers at the start of sentences.",
-      "They are equally good fixes because both change the rhythm without adding or removing any facts.",
-      "Revision A is better because it makes the sentences longer, which always improves sentence variety."
+      "Fix 2, because it uses longer, fancier words like 'spent' and 'carefully' to sound more interesting.",
+      "Fix 1, because it removes the repeated 'Emma' opener from the beginning of sentences in a row.",
+      "Neither fix solves a real problem; both just rearrange the same four facts without changing the rhythm.",
+      "Fix 2, because it changes the subject from Emma to 'She,' which makes the paragraph sound less repetitive."
     ],
     "answer": "B",
     "hints": [
-      "Count how many times 'I' opens a sentence in each revision.",
-      "The lesson says that removing a word repeated three or more times in a row is a testable reason a revision counts as a real fix."
+      "Remember: a real fix either removes a repeated opening word or adds a connector that states a relationship.",
+      "Changing words to sound ancier is not the same as fixing the repetitive pattern."
+    ]
+  },
+  {
+    "id": "m6ela-maintaining-consistent-style-tone-001",
+    "loId": "m6ela.maintaining-consistent-style-and-tone",
+    "cedCode": "M6ELA-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A piece of writing establishes one register—either formal or informal—and should keep it consistent throughout. Which of the following is a signal that a sentence is written in a formal register?",
+    "choices": [
+      "It contains a personal opinion stated with exaggeration, such as 'basically the best ever.'",
+      "It includes an exclamation point and everyday language that sounds like a friend talking.",
+      "It uses precise vocabulary and formal transitions rather than slang or casual filler words.",
+      "It uses casual asides and filler words like 'anyway' or 'you know' to connect ideas."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the choice that describes careful, professional word choice.",
+      "Formal register uses precise wording, not slang or casual filler."
+    ]
+  },
+  {
+    "id": "m6ela-maintaining-consistent-style-tone-002",
+    "loId": "m6ela.maintaining-consistent-style-and-tone",
+    "cedCode": "M6ELA-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this school announcement: 'The district is implementing a new lunch schedule starting next month. All students will receive a menu one week before the change takes effect. Tbh the new schedule is gonna be pretty lit and everyone will love it. Food service will post updates on the school website.' Which sentence breaks the formal, informative tone of the rest of the announcement, and why?",
+    "choices": [
+      "The sentence about the menu breaks it because it uses formal language like 'receive' rather than the casual tone established in the rest of the announcement.",
+      "The sentence about implementing a new lunch schedule breaks it because it states the district's main policy at the beginning instead of saving it for the conclusion of the announcement.",
+      "The sentence about food service updates breaks it because it uses 'school website' to communicate information rather than employing other methods such as printed notices or parent emails.",
+      "The sentence with 'Tbh the new schedule is gonna be pretty lit' breaks it because it uses slang, casual abbreviations, and personal opinion instead of formal wording."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look for the choice that identifies exactly what makes one sentence different from the others in word choice and tone.",
+      "Compare the wording in each sentence—which one uses slang and casual filler that the others do not?"
+    ]
+  },
+  {
+    "id": "m6ela-maintaining-consistent-style-tone-003",
+    "loId": "m6ela.maintaining-consistent-style-and-tone",
+    "cedCode": "M6ELA-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this personal email to a friend: 'I got my test score back today and I was so pumped because I actually passed. The studying we did together really paid off, and honestly it felt amazing. The academic rigor of the assessment instrument necessitated extensive preparation and cognitive engagement. We should definitely study together again before the next one.' Which sentence does not match the warm, casual tone the writer establishes in the other sentences?",
+    "choices": [
+      "The sentence with 'The academic rigor of the assessment instrument...' because it uses stiff, formal vocabulary instead of everyday words.",
+      "The sentence about studying together, because it uses the phrase 'study together' when the writer should have used a more casual expression like 'team up' or 'work it out.'",
+      "The sentence about getting the test score back, because it fails to specify whether the test was administered during class time or as a take-home assignment.",
+      "The sentence about the score paying off, because it employs a metaphor rather than stating plainly that the preparation directly improved the test result."
+    ],
+    "answer": "A",
+    "hints": [
+      "The lapse might be a grammatically correct sentence, but its register does not match.",
+      "Which sentence uses formal, precise vocabulary that sounds completely different from the friendly, excited tone of the rest?"
+    ]
+  },
+  {
+    "id": "m6ela-maintaining-consistent-style-tone-004",
+    "loId": "m6ela.maintaining-consistent-style-and-tone",
+    "cedCode": "M6ELA-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote this paragraph for a history class report: 'The invention of the printing press in the fifteenth century transformed how information spread throughout Europe. Scholars could now reproduce texts quickly instead of copying them by hand, which saved enormous amounts of time. Ngl, it was literally the coolest thing that ever happened to books and learning, I'm not gonna lie. This innovation allowed ideas to reach wider audiences and fueled the growth of the scientific revolution.' To fix the register inconsistency, which of the following rewrites best replaces the sentence that breaks the formal tone while keeping the same basic information?",
+    "choices": [
+      "Books were super important back then, and people really cared about spreading ideas around because the printing press made it easier to do so.",
+      "The widespread distribution of printed texts accelerated the exchange of knowledge and contributed significantly to intellectual advancement.",
+      "It was really cool how books changed and everyone thought the printing press was awesome for learning and sharing information.",
+      "People used the printing press a lot because they thought it was better than writing things out by hand and it helped spread their ideas."
+    ],
+    "answer": "B",
+    "hints": [
+      "The replacement must use formal, precise wording that matches the rest of the report.",
+      "Look for a choice that conveys the importance and impact of the printing press without slang, exaggeration, or casual filler."
+    ]
+  },
+  {
+    "id": "m6ela-maintaining-consistent-style-tone-005",
+    "loId": "m6ela.maintaining-consistent-style-and-tone",
+    "cedCode": "M6ELA-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing a thank-you note to their grandmother for a birthday gift. The note includes these sentences: 'Thank you so much for the amazing sweater you sent me. I wore it to school on Monday and all my friends were asking where I got it. Furthermore, the aforementioned garment is manufactured from premium textile materials of exceptional durability. I really appreciate how thoughtful you always are.' The student wants to maintain a warm, grateful tone throughout. Which statement correctly identifies the problem sentence and explains why it needs to be changed?",
+    "choices": [
+      "The sentence about wearing it to school is the problem because personal anecdotes are inappropriate in thank-you notes and the focus should remain entirely on expressing gratitude without describing specific occasions.",
+      "The sentence about friends asking is the problem because it shifts attention away from the grandmother's generosity and makes the letter seem more interested in peer validation than in genuine thanks.",
+      "The sentence about manufacturing and textiles is the problem because its stiff, formal vocabulary breaks the warm, personal tone established by the other sentences.",
+      "The sentence about appreciation is the problem because it appears after sentences that already convey gratitude and therefore becomes redundant and weakens the overall message."
+    ],
+    "answer": "C",
+    "hints": [
+      "The lapse is a sentence that has no grammar errors but does not sound like a warm, personal conversation.",
+      "Which sentence uses technical, formal language that clashes with the friendly, grateful tone of the rest of the note?"
+    ]
+  },
+  {
+    "id": "m6ela-maintaining-consistent-style-tone-006",
+    "loId": "m6ela.maintaining-consistent-style-and-tone",
+    "cedCode": "M6ELA-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is revising an article for the school newspaper about an upcoming sports event. The draft reads: 'The girls' soccer team is competing in the district tournament next Saturday. Fans are invited to attend and cheer on our athletes. The squad demonstrated exceptional athletic prowess and tactical proficiency during their preliminary matches. Tickets cost five dollars and may be purchased at the door. The team's hard work will definitely make them a strong competitor.' The student knows one sentence breaks the established register but is unsure whether to rewrite it in formal language or informal language. Based on the register of the surrounding sentences, which revision strategy should the student use, and which sentence needs fixing?",
+    "choices": [
+      "Rewrite the sentence about ticket cost in formal language, because practical information should always sound professional.",
+      "Rewrite the sentence about the team's hard work in formal language, because that sentence sounds too casual compared to the others.",
+      "Rewrite the sentence about athletic prowess in informal language, because formal vocabulary is never appropriate for a school newspaper.",
+      "Rewrite the sentence about athletic prowess in informal language, because the rest of the article uses casual, conversational wording."
+    ],
+    "answer": "D",
+    "hints": [
+      "First, identify which register most of the sentences in the article use by comparing them to each other.",
+      "Notice that the majority of sentences use straightforward, accessible wording—then find the one sentence that stands out with formal jargon."
     ]
   }
 ]

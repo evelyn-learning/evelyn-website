@@ -5,17 +5,17 @@
     "cedCode": "M6GEO-3.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Starting from Earth's surface and moving straight down toward the center, what is the correct order of Earth's three layers?",
+    "problemText": "Earth is built in three main layers. Starting at the surface and moving down toward the center of the planet, which layer comes first?",
     "choices": [
-      "Crust, mantle, core",
-      "Mantle, crust, core",
-      "Core, mantle, crust",
-      "Crust, core, mantle"
+      "The crust",
+      "The mantle",
+      "The core",
+      "The metal layer"
     ],
     "answer": "A",
     "hints": [
-      "The crust is the outermost layer, closest to the surface where you stand.",
-      "Each layer sits closer to Earth's center than the one before it."
+      "Think about which layer is closest to the ground where people live.",
+      "The crust is described as the outermost layer, right under the ground and ocean floor."
     ]
   },
   {
@@ -24,17 +24,17 @@
     "cedCode": "M6GEO-3.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geologist finds solid rock material during a drilling project. She knows she is still in Earth's outermost layer, and she also knows that no one has ever drilled deeper than this layer in most places on Earth. Which layer is she drilling through?",
+    "problemText": "A geologist is studying a rock sample taken from a deep mine shaft. The sample is solid rock and was obtained by drilling down from Earth's surface. Based on these two facts alone, which layer must this sample come from?",
     "choices": [
-      "The mantle, because it is made of solid rock and people have drilled deep enough to reach it in many locations around the world",
-      "The crust, because it is solid rock and is the only layer people have actually reached by drilling",
-      "The core, because it is the deepest layer people try to drill toward and contains solid rock material",
-      "The mantle, because it fills more of Earth's inside than the crust does and lies just below the surface"
+      "The mantle, because it is solid rock that sits between the surface and the center",
+      "The crust, because it is the only layer people have ever drilled into directly",
+      "The core, because it is solid and sits deeper than any mine can reach",
+      "Either the mantle or the core, since both are deeper than the crust"
     ],
     "answer": "B",
     "hints": [
-      "The lesson explains which layer people have been able to actually drill into directly.",
-      "Think about which layer sits right under the ground and the ocean floor."
+      "Nobody has ever drilled anywhere close to the mantle or core through any drilling project.",
+      "The crust is the thinnest layer and the only one people have reached directly by digging or drilling."
     ]
   },
   {
@@ -43,17 +43,17 @@
     "cedCode": "M6GEO-3.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A scientist describes a layer of Earth as extremely hot and made of solid rock, and explains that it sits between two other layers. Based on the lesson, which layer is being described?",
+    "problemText": "Earth's three layers can be identified by where they sit or by what they are made of. The mantle is solid rock, but the core is made mostly of metal instead. If you learn that a particular layer inside Earth is made of metal, which layer have you identified?",
     "choices": [
-      "The crust, which is solid rock and sits between the mantle and the core",
-      "The core, which is made of metal and sits at the very center of Earth",
-      "The mantle, which is solid rock and sits between the crust and the core",
-      "The crust, which is the hottest of the three layers and made entirely of solid rock"
+      "The crust",
+      "The mantle",
+      "The core",
+      "The layer closest to the surface"
     ],
     "answer": "C",
     "hints": [
-      "Remember that the mantle is in the middle position, between two other layers.",
-      "The mantle is solid rock, but it is not the hottest layer — the core is."
+      "The crust and mantle are both made of rock, not metal.",
+      "Only one layer in Earth's three-layer model has a different composition from the other two."
     ]
   },
   {
@@ -62,17 +62,17 @@
     "cedCode": "M6GEO-3.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student compares two samples. Sample A is thin, solid rock, and is the only layer people have ever reached by drilling. Sample B is made mostly of metal and sits at Earth's very center, farther from the surface than any other point inside the planet. Which of the following correctly identifies both samples and explains why they are different layers?",
+    "problemText": "A scientist describes a layer of Earth as follows: it sits between the surface and the very center of the planet, it is made of solid rock, and it fills more space inside Earth than the other two layers combined. Which layer matches all three of these descriptions, and why does this description rule out the other two layers?",
     "choices": [
-      "Sample A is the mantle and Sample B is the core; they are different because the mantle is solid rock while the core is metal",
-      "Sample A is the mantle and Sample B is the crust; the mantle is solid rock while the crust is made of metal",
-      "Sample A is the crust and Sample B is the mantle; they differ because the crust is thin while the mantle fills most of Earth's inside",
-      "Sample A is the crust and Sample B is the core; the crust is thin and reachable by drilling, while the core is metal and at the very center"
+      "The crust, because it sits at the surface and is the thinnest layer, so it fails both the position test and the size test",
+      "Both the crust and the mantle, since both are made of solid rock and would satisfy the material requirement",
+      "The core, because it is made of metal and sits at Earth's very center, which fails the position requirement of being between the surface and center",
+      "The mantle, because it is the only layer that sits in the middle and fills most of Earth's inside"
     ],
     "answer": "D",
     "hints": [
-      "The crust is the only layer that people have actually drilled into directly.",
-      "The core is the layer at Earth's very center, and it is made of metal, not rock."
+      "The description says the layer sits between the surface and center — which position rules out both the crust and the core?",
+      "The mantle is the only layer described as filling most of the space inside Earth."
     ]
   },
   {
@@ -81,17 +81,17 @@
     "cedCode": "M6GEO-3.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A geophysicist describes a layer by combining two kinds of clues: it fills more of Earth's inside space than the other two layers do, and it is solid rock. Based on the lesson, why is this description enough to identify the layer correctly, even though two layers are made of rock?",
+    "problemText": "Two clues are given about a layer inside Earth: it is the thinnest of the three layers, and nobody has ever drilled into it from the surface during any drilling project. Explain why these two clues together must point to the crust and cannot point to either the mantle or the core.",
     "choices": [
-      "Because the description rules out the core, which is metal, and the crust, which is thin; only the mantle fills most of Earth's inside and is solid rock",
-      "Because the crust is not actually made of solid rock but of loose material, so the rock clue immediately points to the mantle as the only solid rock layer",
-      "Because the core is made of rock and fills space inside Earth, making it the only layer that matches both descriptions given",
-      "Because size is the primary way to identify layers, and only the mantle is large enough to account for most of Earth's interior volume"
+      "The crust is thinnest and sits closest to the surface, while the mantle and core sit below it where drills cannot reach",
+      "The mantle and core are both made of different materials, so they are easier to drill through than rock",
+      "The mantle fills most of Earth's inside, and the core is hotter, so both are too large to be the thinnest layer",
+      "The crust is the only layer made of rock, while the mantle and core are made of materials that block drilling"
     ],
     "answer": "A",
     "hints": [
-      "The core is made of metal, not rock, so it can be ruled out immediately.",
-      "Of the two rock layers, which one is thin and which one fills most of the space inside Earth?"
+      "If a layer sits deeper inside Earth, would it be easier or harder for people to reach it by drilling from the surface?",
+      "The crust is the only layer that sits right under the ground and ocean floor, making it reachable by drilling."
     ]
   },
   {
@@ -100,245 +100,17 @@
     "cedCode": "M6GEO-3.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student reads that scientists know the mantle is extremely hot and made of solid rock, even though no one has ever drilled anywhere close to it. Explain why the lesson suggests that scientists could use a combination of clues — position and composition — to identify a layer correctly without reaching it, and describe which clues would rule out a layer being the crust instead of the mantle.",
+    "problemText": "A student reads this description of an unknown layer: 'This layer sits farther from Earth's surface than the crust does, but not as far as the very center. It is solid rock and extremely hot.' The student then reasons: 'Since this layer is solid rock, it could be either the crust or the mantle. I need one more clue to decide between them.' Is the student's reasoning correct, and why or why not? Which layer is actually being described?",
     "choices": [
-      "Scientists can identify the mantle by its extreme heat and metal composition, which are opposite to the crust's cool temperature and rock makeup",
-      "A layer can be identified by where it sits or by what it is made of; the mantle sits in the middle between two other layers and is solid rock, unlike the crust which is solid rock but sits closest to the surface and is much thinner",
-      "The mantle must be extremely hot because it sits deeper inside Earth than the crust, and heat increases with depth in Earth's interior, so any layer that occupies the middle region must be hotter than the layer nearest the surface",
-      "Scientists identify the mantle by determining that the crust cannot extend all the way through Earth's interior, which means some other solid rock layer must occupy the space between the crust and the core"
+      "Yes, the student is correct; the description points to the crust because it mentions being extremely hot, which is a property unique to the outermost layer",
+      "No, the student is wrong; the description of position — farther from the surface than the crust but not at the center — already rules out the crust and points only to the mantle",
+      "Yes, the student is correct; being solid rock narrows it to two layers, and being extremely hot is the clue that settles it between the crust and mantle",
+      "No, the student is wrong; because only the core is extremely hot, so the description cannot apply to either the crust or the mantle at all"
     ],
     "answer": "B",
     "hints": [
-      "Both the crust and mantle are solid rock, so composition alone does not separate them; you need position clues too.",
-      "Think about the thinness of the crust compared to how much space the mantle fills inside Earth."
-    ]
-  },
-  {
-    "id": "m6geo-earth-s-moving-plates-001",
-    "loId": "m6geo.earths-moving-plates",
-    "cedCode": "M6GEO-3.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What is a tectonic plate? Choose the best definition.",
-    "choices": [
-      "A continent that is surrounded by water on all sides",
-      "One of the large slabs that Earth's rocky outer shell is broken into",
-      "A layer of melted rock underneath Earth's crust that plates float on",
-      "A single piece of ocean floor that does not move"
-    ],
-    "answer": "B",
-    "hints": [
-      "Remember that Earth's outer shell is not one unbroken piece.",
-      "The lesson uses the word 'slabs' to describe these rocky pieces."
-    ]
-  },
-  {
-    "id": "m6geo-earth-s-moving-plates-002",
-    "loId": "m6geo.earths-moving-plates",
-    "cedCode": "M6GEO-3.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student measures that a tectonic plate moves 4 centimeters in one year. At this rate, how far will the plate move in 1,000 years?",
-    "choices": [
-      "4 centimeters total, because plates move at a constant speed that never changes",
-      "4 kilometers, which would definitely shift continents noticeably",
-      "40 meters, which is still too small to see on a world map",
-      "40 centimeters, which would push continents into new positions within a century"
-    ],
-    "answer": "C",
-    "hints": [
-      "Multiply the movement per year by the number of years.",
-      "Think about whether the result would be big enough to redraw a world map."
-    ]
-  },
-  {
-    "id": "m6geo-earth-s-moving-plates-003",
-    "loId": "m6geo.earths-moving-plates",
-    "cedCode": "M6GEO-3.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student says that continents are boats floating on an underground ocean of melted rock. According to the lesson, what is wrong with this idea?",
-    "choices": [
-      "Continents are not boats because they are made of solid rock instead of wood and cannot float on water like a boat does",
-      "Melted rock underground is called magma or lava, not an ocean, and the layer beneath plates is not actually liquid but extremely hot solid rock that moves very slowly",
-      "Continents move too slowly to be boats, and boats move on water while the rock below plates is solid material that creeps rather than flows like water does",
-      "The rock below the plates is solid, not liquid, even though it is extremely hot and can creep slowly over long time periods"
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson specifically corrects the idea that plates float on liquid.",
-      "Think about what the rock below the plates actually is, and how it can still move even if it is not liquid."
-    ]
-  },
-  {
-    "id": "m6geo-earth-s-moving-plates-004",
-    "loId": "m6geo.earths-moving-plates",
-    "cedCode": "M6GEO-3.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Geographers found that the same type of ancient rock forms a band along the west coast of Africa and another band along the east coast of South America, with the same age and the same pattern on both sides. When combined with the fact that these two coasts have matching shapes, what can geographers conclude? Explain why one piece of evidence alone would not be enough.",
-    "choices": [
-      "The two coasts were once joined together, because matching rocks and matching shapes are two different kinds of evidence that both point to the same conclusion",
-      "The two coasts have never been joined because similar rocks can form in different places by coincidence, and coastline shapes alone are not enough proof of continental movement",
-      "The two coasts were briefly connected by a land bridge that later sank underwater, which would explain the rock patterns but not necessarily the matching coast shapes",
-      "The two coasts could be separate by chance because one type of evidence, whether rocks or shapes, is not strong enough on its own to prove continents were once connected"
-    ],
-    "answer": "A",
-    "hints": [
-      "One clue is a hunch, but three clues of different kinds are evidence.",
-      "Rock patterns are a completely different type of evidence from coastline shapes, so together they are stronger than one alone."
-    ]
-  },
-  {
-    "id": "m6geo-earth-s-moving-plates-005",
-    "loId": "m6geo.earths-moving-plates",
-    "cedCode": "M6GEO-3.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A scientist marks every earthquake and every volcano on a globe using data from the past year. Instead of spreading evenly across Earth's surface, the marks create a pattern. What does this pattern reveal about where tectonic plates are, and why?",
-    "choices": [
-      "The marks show where continents are located, and they demonstrate that earthquakes and volcanoes occur primarily where land masses meet because plates only move where ground exists above them",
-      "The marks show where plate edges meet, because the middle of a plate is quiet but the rim is where plates push and grind against each other",
-      "The marks show where the hottest parts of Earth are located, since intense heat deep underground causes rocks to break and magma to rise, producing earthquakes and volcanoes wherever temperature reaches a certain level",
-      "The marks show the location of Pangaea, because ancient supercontinents experience more tectonic activity than modern continental arrangements do"
-    ],
-    "answer": "B",
-    "hints": [
-      "The lesson states that earthquakes and volcanoes crowd along long bands that trace the edges where one plate meets another.",
-      "Think about the difference between what happens at the edge of a plate and what happens in the middle of one."
-    ]
-  },
-  {
-    "id": "m6geo-earth-s-moving-plates-006",
-    "loId": "m6geo.earths-moving-plates",
-    "cedCode": "M6GEO-3.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student reads that a tectonic plate moved 3 centimeters per year for the past 100 million years. She calculates the total distance and gets 3,000 kilometers. She then says: 'This proves that plates move fast, not slow, so the lesson must be wrong about the speed.' Identify the flaw in her reasoning and explain why the lesson's description of plate speed as very slow is still correct.",
-    "choices": [
-      "Her reasoning is sound; the lesson should be updated to describe plate movement as fast rather than slow because the total distance traveled is very large",
-      "Her math contains an error because multiplying 3 centimeters per year by 100 million years should yield only 3 kilometers total, not 3,000 kilometers",
-      "Her math is correct, but 3,000 kilometers over 100 million years is still a very slow speed because the time period is enormous, and it took that entire span for the plates to move that far",
-      "Her conclusion is reasonable because continental drift clearly proves that plates travel thousands of kilometers in relatively short time periods, which would support her claim that movement is rapid"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson emphasizes that plates move a few centimeters per year, which is about the speed fingernails grow—and asks you to think about whether that is fast or slow.",
-      "Consider whether something can move far if given enough time, yet still be described as moving very slowly."
-    ]
-  },
-  {
-    "id": "m6geo-the-rock-cycle-001",
-    "loId": "m6geo.the-rock-cycle",
-    "cedCode": "M6GEO-3.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following describes how igneous rock forms? Choose the statement that matches the definition taught in class.",
-    "choices": [
-      "When an existing rock is changed by heat and pressure without melting",
-      "When loose pieces of rock and sand are pressed together over time",
-      "When melted rock cools and hardens into a solid",
-      "When sediment settles in layers at the bottom of a river or ocean"
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about what the word 'igneous' refers to — melted rock that has hardened.",
-      "The definition must include the word 'melt' or 'melted' to be correct."
-    ]
-  },
-  {
-    "id": "m6geo-the-rock-cycle-002",
-    "loId": "m6geo.the-rock-cycle",
-    "cedCode": "M6GEO-3.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A geologist finds a rock that is made of tiny grains of mud and sand that have been squeezed tightly together into solid rock. She knows these grains settled into a layer at the bottom of an ancient lake over millions of years. What type of rock is this, and why?",
-    "choices": [
-      "Igneous rock, because the grains came from a water environment",
-      "Igneous rock, because the pressure from overlying layers eventually hardened it",
-      "Metamorphic rock, because the rock has been buried deep underground",
-      "Sedimentary rock, because loose pieces settled into a layer and were pressed together"
-    ],
-    "answer": "D",
-    "hints": [
-      "Look for the words that tell you how the rock formed — did loose pieces settle and get pressed together?",
-      "Metamorphic rock requires heat and pressure to change an *existing* rock, but this rock formed from loose pieces, not from an existing rock being squeezed."
-    ]
-  },
-  {
-    "id": "m6geo-the-rock-cycle-003",
-    "loId": "m6geo.the-rock-cycle",
-    "cedCode": "M6GEO-3.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A rock formed when magma erupted from a volcano and cooled quickly at Earth's surface into solid rock. Which rock type is this, and what rule or definition tells you so?",
-    "choices": [
-      "Igneous rock, because melted rock cooled and hardened into a solid",
-      "Metamorphic rock, because intense heat was involved in the process",
-      "Sedimentary rock, because the cooling happened in layers",
-      "Metamorphic rock, because the rock changed form without melting completely"
-    ],
-    "answer": "A",
-    "hints": [
-      "The word 'magma' means melted rock — so melted rock cooled. Which rock type forms that way?",
-      "Even though the rock got very hot, the key process here is cooling and hardening of melted rock, not being changed by heat and pressure."
-    ]
-  },
-  {
-    "id": "m6geo-the-rock-cycle-004",
-    "loId": "m6geo.the-rock-cycle",
-    "cedCode": "M6GEO-3.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "An existing metamorphic rock is heated so intensely underground that it fully melts into magma. Later, this magma cools and hardens into a new solid rock. The rock started as metamorphic but is now a different type. Explain what type of rock it is now and why the rock cycle changed it into that type instead of back into metamorphic rock.",
-    "choices": [
-      "It is metamorphic rock again, because heat and pressure underground always transform rock back into the same type it was before",
-      "It is igneous rock, because full melting followed by cooling defines how igneous rock forms, not metamorphic rock",
-      "It is sedimentary rock, because melting represents an extreme weathering process that breaks the rock into fragments that later harden",
-      "It is sedimentary rock, because any rock that has been underground must cool and compress into sedimentary layers before forming new rock"
-    ],
-    "answer": "B",
-    "hints": [
-      "The key difference is whether the rock fully melted or was just squeezed by heat and pressure. What happened here?",
-      "Metamorphic rock forms when an existing rock is changed WITHOUT fully melting. If it fully melts, it becomes a different type."
-    ]
-  },
-  {
-    "id": "m6geo-the-rock-cycle-005",
-    "loId": "m6geo.the-rock-cycle",
-    "cedCode": "M6GEO-3.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two students disagree about the rock cycle. Student A says, 'A sedimentary rock always becomes a metamorphic rock when it goes deep underground.' Student B says, 'A sedimentary rock might become metamorphic rock, or it might become igneous rock instead, depending on what happens to it underground.' Which student is correct, and what determines which type the sedimentary rock becomes?",
-    "choices": [
-      "Student A is correct, because going deep underground always applies enough pressure to cause metamorphic change in any rock type",
-      "Student A is correct, because metamorphic rock is the middle stage that all rocks must pass through in the rock cycle",
-      "Student B is correct, because whether the rock fully melts or only gets squeezed by heat and pressure decides what it becomes",
-      "Student B is correct, because sedimentary rock left underground begins to dissolve and reform into different minerals that create igneous texture"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson says the rock cycle has no single path every rock must follow. What decides what happens to a rock?",
-      "Think about the difference between a rock that fully melts versus a rock that is squeezed by heat and pressure — which process leads to which type?"
-    ]
-  },
-  {
-    "id": "m6geo-the-rock-cycle-006",
-    "loId": "m6geo.the-rock-cycle",
-    "cedCode": "M6GEO-3.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A sedimentary rock is buried so deep underground that intense heat and pressure squeeze and change it, but it never fully melts. Years later, the rock is pushed back to the surface by geological forces. At the surface, this rock breaks into small loose pieces. These loose pieces settle into layers at the bottom of a new ocean, get pressed and glued together over millions of years, and form a new solid rock. Trace this journey through the rock cycle: Name the types of rock at each stage (after the first squeeze, and after the new pressing), and explain why the rock became each type.",
-    "choices": [
-      "First metamorphic (squeezed without melting), then igneous (broken and pressed into new layers)",
-      "First igneous (extreme pressure causes partial melting), then sedimentary (pressed and cooled at the surface)",
-      "First sedimentary (broken into loose pieces at the surface), then metamorphic (pressed deep underground again)",
-      "First metamorphic (squeezed without melting), then sedimentary (loose pieces pressed together into new layers)"
-    ],
-    "answer": "D",
-    "hints": [
-      "After the first stage of squeezing without melting, what is the rock called? Then, after loose pieces are pressed together, what is the second type?",
-      "When loose pieces of rock settle and are pressed together, that is always sedimentary rock, no matter what the loose pieces came from."
+      "The position described is 'farther from the surface than the crust but not at the center.' Does this position match the crust, the mantle, or the core?",
+      "The crust is the layer closest to the surface; if something sits farther from the surface than the crust, it cannot be the crust."
     ]
   },
   {
@@ -347,17 +119,17 @@
     "cedCode": "M6GEO-3.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A solid rock sits on a mountainside. Over many years, freezing water inside tiny cracks slowly breaks the rock into smaller pieces. These pieces stay in the exact same spot where the rock originally sat. What is this process called?",
+    "problemText": "A solid rock sits on a mountainside for decades. Freezing water gets into a crack in the rock, expands, and pushes the crack wider. The small pieces that break free stay right there in the same crack. What is the name of the process that breaks the rock apart in the place where it already sits?",
     "choices": [
-      "Sediment formation",
+      "Sediment",
       "Erosion",
       "Deposition",
       "Weathering"
     ],
     "answer": "D",
     "hints": [
-      "Look for the key phrase: does the material break apart, or does it move to a new location?",
-      "The lesson says weathering breaks material apart 'right where it already sits.'"
+      "The key word in the question is 'stays right there' — nothing moves anywhere.",
+      "Look for the process that breaks something apart without carrying it away."
     ]
   },
   {
@@ -366,17 +138,17 @@
     "cedCode": "M6GEO-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A loose piece of sand is sitting on a desert floor. A strong wind picks it up and carries it rolling across the sand for several hundred meters. At the moment the description ends, the wind is still blowing and the sand is still rolling and has not stopped moving. Which process is happening right now?",
+    "problemText": "A river is flowing fast after heavy rain. Loose pebbles that sat on the riverbed have been picked up by the flowing water. The pebbles are tumbling along the river bottom right now, moving downstream with the current. The river is still flowing hard and the pebbles are still moving. Which process is happening at this moment?",
     "choices": [
-      "Erosion, because the wind is carrying an already-loose piece from one place toward another",
-      "Weathering, because the wind is breaking down the solid rock structure into smaller separate grains through physical force",
-      "Deposition, because the wind has moved the sand to a new location where it will remain permanently settled",
-      "Sediment, because the sand grains are now loose particles that can be transported by moving wind and water"
+      "Erosion, because the loose pebbles are being carried from one place toward another",
+      "Weathering, because water is breaking the pebbles into smaller pieces as they tumble",
+      "Deposition, because the pebbles are being transported by the flowing water downstream",
+      "Weathering, because the pebbles are loose and being moved by the river current"
     ],
     "answer": "A",
     "hints": [
-      "The sand was already loose before the wind picked it up, so weathering did not break it apart.",
-      "Deposition only happens when a carried piece comes to rest and stops moving. Is the sand still moving?"
+      "The question says the pebbles are 'still moving' right now — so focus on what is happening at this exact moment, not what might happen later.",
+      "Erosion is the process of carrying something that is already loose. Ask yourself: are the pebbles being carried?"
     ]
   },
   {
@@ -385,17 +157,17 @@
     "cedCode": "M6GEO-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A river flows over smooth stones on the streambed. After heavy rain, the fast-moving water carries loose gravel and silt downstream. The current keeps the sediment tumbling and floating along, moving it farther from where it started. The description ends while the sediment is still suspended in the moving water. What name best fits what is happening to the sediment?",
+    "problemText": "A patch of bare soil sits on a hillside. For months, the sun beats down on it, drying it out, and wind carries away tiny grains of dried soil. The dried grains blow off the patch and scatter across a neighboring yard. The original patch stays in the same location on the hillside the whole time. Which process describes what the wind is doing to the soil grains as it carries them away?",
     "choices": [
-      "Weathering is breaking the gravel into finer pieces as the fast water tumbles them along the riverbed",
-      "Erosion is carrying the already-loose sediment away from where it was",
-      "Deposition is laying the sediment down on the streambed where it comes to rest and stops moving",
-      "Sediment is being created by the moving water as it physically breaks apart the solid rock material"
+      "Weathering, because the sun and wind are breaking the soil grains into smaller particles",
+      "Erosion, because wind is carrying loose soil grains from one place to another",
+      "Deposition, because the wind is transporting the soil grains to the neighboring yard",
+      "Weathering, because the soil grains are being broken apart by the drying process"
     ],
     "answer": "B",
     "hints": [
-      "The gravel and silt were already loose — nothing is breaking apart right now.",
-      "For deposition to happen, the carrying force must slow down or stop. Is the river still flowing fast?"
+      "The test for erosion is: is an already-loose piece on the move? The soil grains were already loose before the wind picked them up.",
+      "Pay attention to the fact that the grains are being 'carried away' from the patch to a different location."
     ]
   },
   {
@@ -404,17 +176,17 @@
     "cedCode": "M6GEO-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A coastal cliff made of soft sandstone has a deep crack running down it. Waves crash at the base of the cliff, and salty spray mists the crack every day. Over months, the salt and sun-drying cause the edges of the crack to crumble slightly, making it wider, always in that same spot on the cliff face. Later, a big storm sends a huge wave up the cliff that smashes into the loosened chunks and washes them out to sea, where they tumble along the ocean floor for miles before getting stuck in a sandy bay. How many of the three processes—weathering, erosion, and deposition—are shown in this story, and in what order do they happen?",
+    "problemText": "A marble statue stands in a park. Rain seeps into a small crack in the marble and freezes each winter, making the crack spread a tiny bit wider. After many winters, loose marble chips finally break free from around the crack. A hard rainstorm washes these chips down the path and deposits them in a drainage ditch fifty meters away. Which two of the three processes happen in this story, and in what order?",
     "choices": [
-      "Only weathering, because salt and sun-drying are breaking down the crack in the sandstone over months",
-      "Weathering and then erosion, because the salt and sun widen the crack in place and then the wave carries loose chunks away",
-      "Weathering, erosion, and deposition, because the chunks break free, get carried across the ocean, and finally stop in the sandy bay",
-      "Erosion and deposition only, because the wave is the only force that moves material from place to place"
+      "Deposition first, then erosion, because the chips start in the ditch and end in the crack",
+      "Erosion first, then weathering, because the rain moves things before the frost breaks them apart",
+      "Weathering first, then erosion, because the frost widens the crack and then rain washes the chips away",
+      "Weathering only, because the chips never leave the statue"
     ],
     "answer": "C",
     "hints": [
-      "Track what happens step-by-step: first the crack widens in place, then the wave carries chunks away, then chunks come to rest somewhere new. Which process matches each step?",
-      "Remember that deposition happens when a carried piece 'comes to rest in a new place.' The chunks end up in a sandy bay far from where they broke free."
+      "Remember the rule: weathering must happen before erosion, because nothing can be carried away until it has been broken loose first.",
+      "Look for the moment when something breaks apart in place (that is weathering), and then find when a loose piece is carried somewhere else (that is erosion)."
     ]
   },
   {
@@ -423,17 +195,17 @@
     "cedCode": "M6GEO-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A sidewalk has a small bump where the concrete is starting to crack. Rain seeps into the crack and freezes during a cold night, pushing the crack slightly wider. The next day, it thaws. This freeze-thaw cycle repeats many times. Meanwhile, loose dust and tiny concrete chips sit right in and around the crack—they never blow away or wash off anywhere. Now imagine that at some point, a street-cleaning truck comes by and its spray washes a pile of those loose concrete chips into the storm drain, carrying them away downhill. Which statement correctly describes when and why deposition has NOT yet occurred in this scenario?",
+    "problemText": "A student is trying to identify a process but makes an error. She sees a strong ocean wave crashing against a cliff. Sand and rock debris are swirling in the foam and churning water right against the cliff face. She says, 'The wave is weathering the cliff because it is breaking up the sand and rock.' Explain why her reasoning is wrong, and identify which process is actually happening.",
     "choices": [
-      "Deposition has not occurred because the chunks have broken free from the sidewalk, which means they are only being weathered",
-      "Deposition has not occurred because concrete cannot be deposited in a storm drain, only natural rock can be",
-      "Deposition has not occurred because the freeze-thaw cycle only weathers the concrete without moving it, and the carried chunks are still traveling toward the storm drain",
-      "Deposition has not occurred because the carrying water has not yet slowed down or stopped, so the chunks are being eroded but have not come to rest anywhere"
+      "She is wrong because the sand and rock are not actually being moved anywhere, so nothing but weathering is occurring at the cliff",
+      "She is wrong because waves cannot weather anything; only freezing water trapped in cracks can weather rock through ice expansion",
+      "She is right about weathering happening, but she missed that erosion is also occurring when the wave carries loose material away from the cliff",
+      "She is wrong because weathering only happens when material breaks apart while staying in the same place; the wave is actually causing erosion, since it is carrying loose material away from the cliff"
     ],
     "answer": "D",
     "hints": [
-      "Deposition requires two things: a piece that was already carried AND that piece must now come to rest. Is the water still moving the chunks, or have they stopped?",
-      "The test for deposition is: has a carried piece come to rest in a new spot? If it is still being washed along, it is still being eroded."
+      "The key to weathering is that nothing moves. But the sand and rock are 'swirling' and 'churning' — so are they staying in one place?",
+      "Erosion is the carrying of material that is already loose. The wave is carrying loose sand and rock, so that fits the test for erosion, not weathering."
     ]
   },
   {
@@ -442,17 +214,245 @@
     "cedCode": "M6GEO-3.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student reads the following description and makes a claim: 'Wind blows across a rocky hilltop. It picks up tiny grains of rock dust that were already loose on the surface. The wind carries the dust downwind for a long distance. When the wind hits a dense forest on the far side of a valley, the trees slow the wind dramatically. The dust falls out of the air and lands on the ground and leaves at the forest edge.' The student says, 'This shows weathering, because the wind is breaking the rock into dust.' Identify what is wrong with the student's reasoning, and state which process or processes the description actually shows.",
+    "problemText": "A boulder has sat on a mountainside for years. Frost, wind, and rain gradually break it into smaller and smaller chunks over time, but all the chunks stay piled in roughly the same spot. Then, during a heavy storm, a landslide pushes the chunks down the slope and scatters them across a flat valley floor below. Years later, a slow stream moves some of those chunks a short distance downstream and leaves them in a new pile when the stream gets shallow and slows down. Describe which processes happen in this story and explain why you can identify each one, but also note which process does NOT happen anywhere in the story.",
     "choices": [
-      "The student is wrong because the rock dust was already loose before the wind arrived, so nothing was broken apart by the wind. The description shows only erosion and deposition, not weathering.",
-      "The student is wrong because weathering requires chemical breakdown or freezing cycles, not just the physical movement of wind carrying particles. The description shows erosion as the wind picks up loose dust and deposition as it settles in the forest.",
-      "The student is wrong because the dust actually does deposit in the forest when the wind slows down, and the original rock was already weathered before the wind arrived. The description shows erosion and deposition happening in sequence.",
-      "The student is wrong because rock dust that is already loose on the surface means weathering happened in the past, not during the wind event itself. The description shows erosion carrying the dust and deposition when it falls in the forest."
+      "Weathering breaks the boulder into chunks on the mountainside; erosion scatters them in the landslide and moves them in the stream; deposition drops them in the valley and in the new pile. All three processes happen.",
+      "Only erosion and deposition happen. The boulder breaks into chunks due to frost and rain, but that is natural breakdown, not weathering, because weathering only occurs near water.",
+      "Weathering, erosion, and deposition all occur, but deposition happens twice — first when the landslide stops the chunks in the valley, and second when the stream stops them in the new pile.",
+      "Erosion happens twice (in the landslide and the stream) and deposition happens once (in the new stream pile), but weathering does not happen because breaking rocks into chunks is not weathering if the chunks stay in roughly the same place."
     ],
     "answer": "A",
     "hints": [
-      "The description says the dust was 'already loose on the surface' before the wind picked it up. If it was already loose, did the wind break it apart?",
-      "Weathering breaks solid material apart in one place. Erosion carries already-loose material to a new place. Deposition drops carried material when the carrying force slows. Which two of these three match this story?"
+      "Apply the test for each process separately. Ask: (1) Does something break apart in place? (2) Is something already loose and being carried? (3) Does something that was moving come to rest in a new spot?",
+      "Notice that all three processes can involve the same material in sequence: weathering breaks it apart, erosion carries it, and deposition drops it. The landslide and the stream are both forces that carry loose material, so they both cause erosion."
+    ]
+  },
+  {
+    "id": "m6geo-the-rock-cycle-001",
+    "loId": "m6geo.the-rock-cycle",
+    "cedCode": "M6GEO-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A rock formed when magma cooled and hardened into solid rock deep underground. Which rock type is this?",
+    "choices": [
+      "Metamorphic rock",
+      "Sedimentary rock",
+      "Igneous rock",
+      "Magma rock"
+    ],
+    "answer": "C",
+    "hints": [
+      "The definition of igneous rock starts with melted rock cooling and hardening.",
+      "Magma is the name for melted rock, so cooling magma makes a specific rock type."
+    ]
+  },
+  {
+    "id": "m6geo-the-rock-cycle-002",
+    "loId": "m6geo.the-rock-cycle",
+    "cedCode": "M6GEO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two rocks are found in the same mountain. One rock looks pink and has large crystals. The other rock is gray and has tiny crystals. A geologist says both are igneous rocks. How is this possible if they look so different?",
+    "choices": [
+      "They look different because they formed in different ways, so one must be sedimentary rock instead of igneous.",
+      "The geologist made a mistake because rocks that are the same type must always look identical in color and crystal size.",
+      "They are the same rock type only if they both have crystals, and the crystal size difference does not matter to the rock classification.",
+      "They can be the same type because rock type is decided by how it formed, not by color or crystal size."
+    ],
+    "answer": "D",
+    "hints": [
+      "Rock type depends on the process that made it, not on appearance.",
+      "Igneous rocks can cool at different speeds, making crystals of different sizes."
+    ]
+  },
+  {
+    "id": "m6geo-the-rock-cycle-003",
+    "loId": "m6geo.the-rock-cycle",
+    "cedCode": "M6GEO-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student finds a rock made of sand grains that have been pressed tightly together. The rock is hard and solid. Which rock type is this, and what must have happened over a very long time to make it solid?",
+    "choices": [
+      "Sedimentary rock, because loose sand grains settled into layers and were pressed together.",
+      "Igneous rock, because sand grains were melted and then cooled.",
+      "Metamorphic rock, because sand grains were changed by intense heat and pressure.",
+      "Sedimentary rock, because the sand grains were melted deep underground."
+    ],
+    "answer": "A",
+    "hints": [
+      "Sand grains that are pressed together fit the definition of sedimentary rock formation.",
+      "Sedimentary rock comes from loose pieces, not from melting or squeezing an existing rock."
+    ]
+  },
+  {
+    "id": "m6geo-the-rock-cycle-004",
+    "loId": "m6geo.the-rock-cycle",
+    "cedCode": "M6GEO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An igneous rock is pushed deep underground where it is squeezed by intense heat and pressure for millions of years. The rock never fully melts, but it changes into a new type of rock. What type is the new rock, and why did it not become igneous rock again?",
+    "choices": [
+      "Sedimentary rock, because the loose pieces of the old rock settled into a new layer and were compacted together over time.",
+      "Metamorphic rock, because an existing rock was changed by heat and pressure without melting.",
+      "Igneous rock, because intense heat always causes rock to melt and then harden again into a new igneous form.",
+      "Metamorphic rock, but it would become igneous rock instead if the temperature were raised high enough to cause complete melting."
+    ],
+    "answer": "B",
+    "hints": [
+      "The key difference is whether the rock fully melts: full melting makes igneous, but no melting makes metamorphic.",
+      "An existing rock changed by heat and pressure without melting fits the metamorphic definition exactly."
+    ]
+  },
+  {
+    "id": "m6geo-the-rock-cycle-005",
+    "loId": "m6geo.the-rock-cycle",
+    "cedCode": "M6GEO-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sedimentary rock and an igneous rock are both buried deep underground in the same location and exposed to the same intense heat and pressure for a very long time. Neither rock fully melts. What will happen to each rock, and why might the outcome be the same for both?",
+    "choices": [
+      "Both will become sedimentary rock because they are buried in the same place and experience the same conditions.",
+      "The sedimentary rock will become metamorphic, but the igneous rock will stay igneous because its starting type determines its fate.",
+      "Both will become metamorphic rock because heat and pressure without full melting defines that type.",
+      "Both will become igneous rock because being buried underground causes the rocks to melt and recrystallize as new igneous material."
+    ],
+    "answer": "C",
+    "hints": [
+      "Rock type is determined by how it was made, not what type it started as.",
+      "If an existing rock is changed by heat and pressure without melting, it becomes metamorphic no matter what type it was before."
+    ]
+  },
+  {
+    "id": "m6geo-the-rock-cycle-006",
+    "loId": "m6geo.the-rock-cycle",
+    "cedCode": "M6GEO-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geologist studies a piece of metamorphic rock and predicts what might happen to it next in the rock cycle. She suggests two possible futures: Future A, where the rock is buried even deeper and melts completely, then cools and hardens; or Future B, where the rock is pushed upward and broken into loose grains that settle into a new layer and are pressed together. According to the rock cycle, which future would produce which rock type, and why does the rock cycle have no single required path that every rock must follow?",
+    "choices": [
+      "Future A makes igneous rock and Future B makes metamorphic rock because what happens to rock deep underground always results in metamorphic changes rather than other transformations.",
+      "Future A makes sedimentary rock and Future B makes igneous rock because the rock must cycle through each type in the same order every time it changes forms.",
+      "Both futures make metamorphic rock because the starting material was already metamorphic and metamorphic rocks cannot be transformed into sedimentary or igneous varieties through any process.",
+      "Future A makes igneous rock and Future B makes sedimentary rock; different things happening to a rock make different types, not the rock's starting type."
+    ],
+    "answer": "D",
+    "hints": [
+      "Trace each future: full melting plus cooling defines igneous; loose pieces settling and being pressed together defines sedimentary.",
+      "The same starting rock can become different types because what actually happens to it decides its fate, not what it used to be."
+    ]
+  },
+  {
+    "id": "m6geo-earth-s-moving-plates-001",
+    "loId": "m6geo.earths-moving-plates",
+    "cedCode": "M6GEO-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Earth's outer rocky shell is not one solid, unbroken skin. What does geology call the large slabs that make up this broken shell?",
+    "choices": [
+      "Continental crusts",
+      "Tectonic plates",
+      "Plate boundaries",
+      "Rock layers"
+    ],
+    "answer": "B",
+    "hints": [
+      "The word 'tectonic' relates to the structure and movement of Earth's outer layers.",
+      "Think of the shell as broken into separate pieces, not a single piece."
+    ]
+  },
+  {
+    "id": "m6geo-earth-s-moving-plates-002",
+    "loId": "m6geo.earths-moving-plates",
+    "cedCode": "M6GEO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student measures that a tectonic plate moves 4 centimeters in one year. At this rate, how far would that same plate move in 1 million years?",
+    "choices": [
+      "400 kilometers",
+      "4 kilometers",
+      "40 kilometers",
+      "4,000 kilometers"
+    ],
+    "answer": "C",
+    "hints": [
+      "Convert centimeters to kilometers: there are 100,000 centimeters in 1 kilometer.",
+      "Multiply the annual movement by the number of years to find the total distance."
+    ]
+  },
+  {
+    "id": "m6geo-earth-s-moving-plates-003",
+    "loId": "m6geo.earths-moving-plates",
+    "cedCode": "M6GEO-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A geographer explains that the rock far below Earth's tectonic plates is extremely hot and can slowly change shape over millions of years, even though it remains solid. Which material does this solid rock most resemble in how it behaves?",
+    "choices": [
+      "Loose sand that shifts with every vibration",
+      "Liquid lava that flows freely like water",
+      "A frozen block of ice that never bends",
+      "Very stiff putty that creeps slowly under pressure"
+    ],
+    "answer": "D",
+    "hints": [
+      "The rock is solid, not melted or liquid, so rules out options with flowing or liquid behavior.",
+      "Over enormous time spans, the solid rock can move and deform gradually, like thick paste."
+    ]
+  },
+  {
+    "id": "m6geo-earth-s-moving-plates-004",
+    "loId": "m6geo.earths-moving-plates",
+    "cedCode": "M6GEO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Scientists found fossils of an ancient animal species only in South America and southern Africa. The same animal could not have swum across the Atlantic Ocean. Additionally, bands of rock of the same age and type were found on the east coast of South America and the west coast of Africa. What can geographers conclude from both of these pieces of evidence together?",
+    "choices": [
+      "The two continents were once joined in a single landmass that later split apart",
+      "The ancient animals evolved separately on each continent in the same way",
+      "Ocean currents must have carried the animal eggs across the water long ago",
+      "The rock bands were formed at the same time but in different oceans"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for the explanation that accounts for BOTH the matching fossils AND the matching rock layers at the same time.",
+      "If the continents were separate, how would identical ancient animals and rock types end up on opposite sides of an ocean?"
+    ]
+  },
+  {
+    "id": "m6geo-earth-s-moving-plates-005",
+    "loId": "m6geo.earths-moving-plates",
+    "cedCode": "M6GEO-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geologist marks every recorded earthquake and volcano on a globe using small dots. After plotting data from around the world, the geologist notices the dots do not spread evenly across Earth's surface. Instead, they form long bands in certain regions, while vast areas in the middle of continents and oceans have almost no marks. What does this pattern tell us about the relationship between earthquakes, volcanoes, and tectonic plates?",
+    "choices": [
+      "Earthquakes and volcanoes are more common in the Southern Hemisphere than the Northern Hemisphere",
+      "Earthquakes and volcanoes occur mostly where tectonic plates meet each other",
+      "The center of each continent is geologically unstable and prone to sudden eruptions",
+      "Volcanoes and earthquakes happen randomly and cannot be predicted by plate location"
+    ],
+    "answer": "B",
+    "hints": [
+      "The bands of marks trace the edges and boundaries where different plates join.",
+      "The middle of a plate is described as a quiet place, while the rim is where things happen."
+    ]
+  },
+  {
+    "id": "m6geo-earth-s-moving-plates-006",
+    "loId": "m6geo.earths-moving-plates",
+    "cedCode": "M6GEO-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student reads in an old newspaper article from 1924 that the continents are floating on a boiling ocean of liquid rock beneath Earth's surface, and that because the continents move so quickly, maps would need to be redrawn every few years to stay accurate. The student then reviews what modern geologists know about plate tectonics. How many separate scientific errors does the old article contain, and what is correct in modern understanding?",
+    "choices": [
+      "Two errors: continents do not move at all, and there is no liquid rock layer anywhere beneath Earth's crust",
+      "One error: the rock is liquid, but the plates do move fast enough to require map updates every decade",
+      "Two errors: the rock below is solid (not liquid), and plates move only centimeters per year (far too slowly to redraw maps in years)",
+      "Three errors: the ocean beneath is made of magma not lava, the continents move too slowly, and earthquakes prove the plates are frozen in place"
+    ],
+    "answer": "C",
+    "hints": [
+      "Check each claim: Is the rock beneath the plates liquid or solid? Do maps need to be redrawn because of plate movement over a century?",
+      "A few centimeters per year over 100 years adds up to only a few meters — too small to see on a world map, but over millions of years it reaches hundreds of kilometers."
     ]
   }
 ]

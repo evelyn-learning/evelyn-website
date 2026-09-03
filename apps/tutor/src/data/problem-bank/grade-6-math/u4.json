@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6math-multiplying-dividing-decimals-001",
-    "loId": "m6math.multiplying-and-dividing-decimals",
-    "cedCode": "M6MATH-4.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "When you multiply two decimals using the standard algorithm, what do you do with the decimal points before you multiply? Which statement describes the correct first step?",
-    "choices": [
-      "Count the total number of decimal places in both numbers combined, then use that count to place the decimal point in your final answer",
-      "Line up the decimal points vertically so they are in the same column, then add the number of decimal places together",
-      "Move each decimal point to the right until both numbers become whole numbers, shifting the same number of places in each",
-      "Ignore the decimal points and multiply the digits as whole numbers"
-    ],
-    "answer": "D",
-    "hints": [
-      "Think about what the lesson calls the 'multiply-then-count-places' rule.",
-      "The decimal point placement comes AFTER you finish multiplying the whole numbers."
-    ]
-  },
-  {
-    "id": "m6math-multiplying-dividing-decimals-002",
-    "loId": "m6math.multiplying-and-dividing-decimals",
-    "cedCode": "M6MATH-4.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A notebook costs $3.25. You buy 2 of them. Before you calculate the exact answer, estimate what the total cost should be close to. Which estimate is most reasonable?",
-    "choices": [
-      "Close to $6",
-      "Close to $3",
-      "Close to $30",
-      "Close to $60"
-    ],
-    "answer": "A",
-    "hints": [
-      "Round $3.25 to a friendly number near it, then multiply by 2.",
-      "$3.25 is close to which whole dollar amount?"
-    ]
-  },
-  {
-    "id": "m6math-multiplying-dividing-decimals-003",
-    "loId": "m6math.multiplying-and-dividing-decimals",
-    "cedCode": "M6MATH-4.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "You are dividing 5.6 by 0.7 and need to shift the decimal points. By how many places should you shift the decimal point in the dividend (5.6)?",
-    "choices": [
-      "2 places",
-      "1 place",
-      "7 places",
-      "0 places — you should not shift the dividend"
-    ],
-    "answer": "B",
-    "hints": [
-      "First, shift the divisor (0.7) to make it a whole number. How many places does that take?",
-      "Remember: shift the dividend by the EXACT SAME number of places you shift the divisor."
-    ]
-  },
-  {
-    "id": "m6math-multiplying-dividing-decimals-004",
-    "loId": "m6math.multiplying-and-dividing-decimals",
-    "cedCode": "M6MATH-4.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "You multiply 2.4 times 1.5 using the standard algorithm. After multiplying 24 times 15 and getting 360, you need to place the decimal point. How many decimal places should the final product have, and where should the decimal go?",
-    "choices": [
-      "1 decimal place; the answer is 36.0",
-      "3 decimal places; the answer is 0.360",
-      "2 decimal places; the answer is 3.60",
-      "2 decimal places; the answer is 36.0"
-    ],
-    "answer": "C",
-    "hints": [
-      "Count the total number of decimal places in both factors: 2.4 has 1, and 1.5 has 1.",
-      "Once you know the total number of decimal places needed, count from the right side of 360."
-    ]
-  },
-  {
-    "id": "m6math-multiplying-dividing-decimals-005",
-    "loId": "m6math.multiplying-and-dividing-decimals",
-    "cedCode": "M6MATH-4.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "You divide 7.2 by 0.6 and get a quotient of 12. Which check proves your answer is correct?",
-    "choices": [
-      "Estimate 7.2 ÷ 0.6 as 7 ÷ 1 and see if it is close to 12",
-      "Add 12 and 0.6 and see if you get 7.2",
-      "Subtract 0.6 from 12 and see if you get 7.2",
-      "Multiply 12 times 0.6 and see if you get 7.2"
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson teaches that you check a division by multiplying the quotient times the ORIGINAL divisor.",
-      "Does that product equal the ORIGINAL dividend?"
-    ]
-  },
-  {
-    "id": "m6math-multiplying-dividing-decimals-006",
-    "loId": "m6math.multiplying-and-dividing-decimals",
-    "cedCode": "M6MATH-4.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student divides 8.4 by 0.7 and writes the answer as 1.2. Before checking any arithmetic, explain why you know this answer is wrong. Then identify which of the following is the correct quotient.",
-    "choices": [
-      "The answer is wrong because 0.7 is less than 1, so the quotient must be bigger than 8.4. The correct quotient is 12.",
-      "The answer is wrong because when you divide by a number smaller than 1, you must multiply both the dividend and divisor by 10 to make the divisor whole. The correct quotient is 120.",
-      "The answer is wrong because the decimal point was not moved to the correct position after dividing the whole numbers that result from shifting decimal places. The correct quotient is 8.4.",
-      "The answer is wrong because you can divide by a decimal if you first convert it to a whole number by shifting decimal points in both numbers equally. The correct quotient is 0.12."
-    ],
-    "answer": "A",
-    "hints": [
-      "When you divide by a number less than 1, does the answer get bigger or smaller than the dividend?",
-      "Shift both decimal points the same number of places to turn 8.4 ÷ 0.7 into a whole-number division, then solve."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-001",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "In the decimal 7.49, which digit is in the hundredths place?",
-    "choices": [
-      "7",
-      "4",
-      "9",
-      "49"
-    ],
-    "answer": "C",
-    "hints": [
-      "The hundredths place is the second digit after the decimal point.",
-      "Count the positions after the decimal: first is tenths, second is hundredths."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-002",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Maria is adding 3.2 + 5.18 using the standard algorithm. Before she adds, she pads 3.2 to make both numbers have the same number of decimal places. What should 3.2 become?",
-    "choices": [
-      "3.02",
-      "3.18",
-      "32.0",
-      "3.20"
-    ],
-    "answer": "D",
-    "hints": [
-      "Padding means adding zeros to the right after the decimal point without changing the value.",
-      "5.18 has two digits after the decimal point, so 3.2 needs to have two as well."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-003",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "You are subtracting 6.8 − 2.35. After you line up the decimal points and pad 6.8 to 6.80, which column do you subtract from first using the standard algorithm?",
-    "choices": [
-      "The hundredths column",
-      "The ones column",
-      "The tenths column",
-      "The tens column"
-    ],
-    "answer": "A",
-    "hints": [
-      "In the standard algorithm for subtraction, you always start from the rightmost column.",
-      "The rightmost column is the one with the smallest place value."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-004",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student adds 4.7 + 2.35 by first rounding each number to the nearest whole number to estimate the answer. Then the student performs the exact addition using the standard algorithm. Which two of these numbers should be closest to each other?",
-    "choices": [
-      "The two rounded numbers",
-      "The estimate and the exact answer",
-      "4.7 and 2.35",
-      "The estimate and the first addend"
-    ],
-    "answer": "B",
-    "hints": [
-      "Estimation is taught in the lesson as a check to catch misaligned answers.",
-      "If your exact answer is far from your estimate, something probably went wrong with place value."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-005",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student subtracts 8.6 − 3.24 and gets 5.36 as the answer. To check this result using the method taught in the lesson, what operation should the student perform and what should the result be?",
-    "choices": [
-      "Add 3.24 + 8.6 and should get 11.84",
-      "Subtract 5.36 − 3.24 and should get 2.12",
-      "Add 3.24 + 5.36 and should get 8.60",
-      "Add 8.6 + 5.36 and should get 13.96"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson teaches checking subtraction by adding a number back.",
-      "Adding the number you subtracted back to the answer should return the original number."
-    ]
-  },
-  {
-    "id": "m6math-adding-subtracting-decimals-006",
-    "loId": "m6math.adding-and-subtracting-decimals",
-    "cedCode": "M6MATH-4.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is solving this problem: A bakery has 12.4 pounds of flour. They use 7.65 pounds for a batch of bread. How much flour is left? The student writes the numbers like this without aligning the decimal points:\n\n  12.4\n−  765\n\nExplain why this setup is wrong, and then determine the correct answer.",
-    "choices": [
-      "The setup is wrong because 765 is not a decimal; the correct answer is 4.75 pounds.",
-      "The setup is wrong because the numbers need to be rounded first; the correct answer is 5 pounds.",
-      "The setup is wrong because 7.65 should be written above 12.4; the correct answer is 4.40 pounds.",
-      "The setup is wrong because the decimal points are not lined up; the correct answer is 4.75 pounds."
-    ],
-    "answer": "D",
-    "hints": [
-      "Review the lesson's key idea about what 'lining up' means when you stack decimals.",
-      "When decimal points are not directly on top of each other, place values get mixed up."
-    ]
-  },
-  {
     "id": "m6math-dividing-multi-digit-whole-numbers-001",
     "loId": "m6math.dividing-multi-digit-whole-numbers",
     "cedCode": "M6MATH-4.1",
@@ -453,6 +225,234 @@
     "hints": [
       "The other number must be a factor of the LCM (84) and a multiple of the GCF (7).",
       "Check that the GCF of your choice and 28 is really 7, and that the LCM of your choice and 28 is really 84."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-001",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the number 7.34, what place value does the digit 3 hold?",
+    "choices": [
+      "Ones place",
+      "Hundredths place",
+      "Tenths place",
+      "Tens place"
+    ],
+    "answer": "C",
+    "hints": [
+      "The first digit after the decimal point is in the tenths place.",
+      "Count the position of the 3 starting from the decimal point moving right."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-002",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student lines up two decimals to add them but puts the last digits in the same column instead of putting the decimal points on top of each other. Why is this method incorrect?",
+    "choices": [
+      "It changes the place value of each digit, causing tenths to align with hundredths or other mismatched place values instead of matching digits with the same place value.",
+      "It makes the numbers too small to add together because aligning by the last digit shifts the decimal point position incorrectly.",
+      "It prevents the student from using the carrying method, which is the only way to add decimal numbers together correctly.",
+      "It causes tenths to line up with hundredths, so digits with different place values are added together."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what happens when digits do not line up by place value.",
+      "Review the key rule: decimal points must sit directly on top of each other, just like ones sit on top of ones in whole-number addition."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-003",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You need to compute 8.3 + 2.64 using the standard algorithm. Before you start adding, what should you do to make sure you do not skip any place values by accident?",
+    "choices": [
+      "Pad 8.3 with a zero so it reads 8.30, making both numbers have two decimal places.",
+      "Round 8.3 to 8 and round 2.64 to 3 so that the numbers are easier to work with in your head.",
+      "Write 8.3 below 2.64 and align them by matching the last digits on the right side of each number.",
+      "Convert both decimals to fractions first, then add the fractions before converting back to decimal form."
+    ],
+    "answer": "A",
+    "hints": [
+      "The goal is to make sure every column has a digit in it before you add.",
+      "Remember: 8.3 and 8.30 represent the same value, and padding does not change the number."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-004",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student adds 5.7 + 3.25 by lining up the decimal points and padding 5.7 to 5.70. They get 8.95. To check if this answer is correct, they should subtract one of the addends back out of the sum. Which subtraction should they do, and what result should they get?",
+    "choices": [
+      "Compute 8.95 − 3.25 and expect to get 5.70.",
+      "Compute 8.95 − 5.70 and expect to get 3.25.",
+      "Compute 8.95 − 3 and expect to get 5.95.",
+      "Compute 8.95 − 8 and expect to get 0.95."
+    ],
+    "answer": "B",
+    "hints": [
+      "The check works by subtracting one addend out of the sum to get back the other addend.",
+      "Either addend can be subtracted, but make sure the one you subtract from 8.95 has the same decimal places as the sum."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-005",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student estimates that 12.4 − 6.7 should be close to 5 (since 12 − 7 = 5). After computing the exact answer using the standard algorithm with decimal points aligned and padding where needed, the student gets 5.6. Should the student trust this answer?",
+    "choices": [
+      "Yes, but only if the student used carrying to compute it.",
+      "No, because the exact answer should be exactly 5, not 5.6.",
+      "Yes, because 5.6 is close to the estimate of 5, so the answer is reasonable.",
+      "No, because 5.6 is greater than the estimate of 5."
+    ],
+    "answer": "C",
+    "hints": [
+      "An estimate does not have to match the exact answer exactly—it just needs to be close by.",
+      "If your exact answer lands far from your estimate, that is a sign something went wrong. If it lands close, that is a good sign you did it right."
+    ]
+  },
+  {
+    "id": "m6math-adding-subtracting-decimals-006",
+    "loId": "m6math.adding-and-subtracting-decimals",
+    "cedCode": "M6MATH-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is subtracting 4.8 from 10 and notices that 10 has no decimal point written. They first pad 4.8 to 4.80, then write 10 as 10.00 to give both numbers the same decimal places and line up the decimal points. After computing 10.00 − 4.80 using the standard algorithm, they get 5.20. They then check by adding: 4.80 + 5.20 = 10.00, which matches the starting number. What does this check tell you?",
+    "choices": [
+      "The answer 5.20 cannot be checked by addition, because the check only works when both numbers already have decimal places.",
+      "The answer 5.20 is wrong, because 10 and 10.00 are not the same number.",
+      "The answer 5.20 is correct only if the student also rounded 10 to 10 as an estimate.",
+      "The answer 5.20 is correct, and the check confirms that subtraction and addition undo each other when done with aligned decimal points and proper padding."
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall that writing a whole number as a decimal (like 10 as 10.00) does not change its value, and padding works the same way.",
+      "If adding the difference back to the number you subtracted gives you the starting number, the subtraction was done correctly."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-001",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "When you multiply two decimals using the standard algorithm, you first multiply the numbers as if there were no decimal points. Then you count the total number of decimal places in both factors and place the decimal point that many places from the right in your product. If you multiply 3.2 times 1.5, how many total decimal places should be in your product?",
+    "choices": [
+      "0 decimal places",
+      "1 decimal place",
+      "3 decimal places",
+      "2 decimal places"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count the decimal places in 3.2 and in 1.5 separately.",
+      "Add those two counts together to find the total."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-002",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A notebook costs $2.50. You buy 3 notebooks for school supplies. Before you calculate the exact total, you round $2.50 to $2 and multiply: 2 times 3 equals 6. Why is estimating first a helpful step when multiplying decimals?",
+    "choices": [
+      "It shows you roughly where the decimal point should land in the real answer, so you can catch if you placed it in the wrong spot.",
+      "It tells you the exact number of decimal places your product must have and removes the need to count them yourself.",
+      "It gives you a ballpark value to compare against your final answer, helping you spot if the decimal point ended up in a wrong location that makes the result unreasonably large or small.",
+      "It proves that your rounded numbers are correct and will always produce the same result as the exact calculation without any difference."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what happens if you calculate 2.50 times 3 and get the decimal in the wrong place—how would you notice?",
+      "Your estimate of 6 is a ballpark, not the exact answer. What would it catch?"
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-003",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You divide 8.4 by 0.7. According to the standard algorithm for decimal division, which step should you do first?",
+    "choices": [
+      "Multiply 8.4 by 0.7 to determine how many times the divisor fits into the dividend.",
+      "Shift the decimal point in 0.7 to the right until it is a whole number, and shift the decimal point in 8.4 by the same number of places.",
+      "Place the decimal point in the answer by counting decimal places in both the dividend and divisor, just as you do in multiplication.",
+      "Round 8.4 and 0.7 to whole numbers and divide those instead to find your final answer."
+    ],
+    "answer": "B",
+    "hints": [
+      "In decimal division, you always shift first before dividing.",
+      "The divisor is 0.7—that is the number you move the decimal in first."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-004",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rope is 7.5 meters long. You cut it into pieces that are each 1.5 meters long. How many pieces do you get? First estimate: since 1.5 is close to a whole number and the divisor is close to 1, your answer should be close to the dividend. Then solve using the standard algorithm for decimal division.",
+    "choices": [
+      "0.5 pieces",
+      "50 pieces",
+      "5 pieces",
+      "11.25 pieces"
+    ],
+    "answer": "C",
+    "hints": [
+      "Shift the decimal point in the divisor 1.5 one place to the right to make it 15. Shift the decimal point in the dividend 7.5 one place to the right to make it 75.",
+      "After the shift, divide 75 by 15. Your answer should be close to your estimate of roughly 7.5."
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-005",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You multiply 4.2 times 2.3 using the standard algorithm. You ignore the decimal points and multiply 42 times 23 to get 966. You count the decimal places: 4.2 has 1 decimal place and 2.3 has 1 decimal place, for a total of 2. You place the decimal point 2 places from the right to get 9.66. How can you verify this answer is correct?",
+    "choices": [
+      "Divide 9.66 by 2.3 and check whether you get back to 4.2 as the quotient.",
+      "Round 4.2 to 4 and 2.3 to 2, then multiply those estimates to get 8. Since your exact answer 9.66 is reasonably close to your estimate of 8, your decimal placement is likely correct.",
+      "Count the digits in 966 and make sure there are exactly 3 digits before placing the decimal point anywhere in the number.",
+      "Check that 9.66 is close to your estimate. Round 4.2 to 4 and 2.3 to 2; multiply those: 4 times 2 is 8. Since 9.66 is close to 8, the decimal point is in the right place."
+    ],
+    "answer": "D",
+    "hints": [
+      "You estimated first. Now check: does your exact answer land close to that estimate?",
+      "If the decimal point were in the wrong place—say, you had written 96.6 instead—would your estimate of 8 catch that mistake?"
+    ]
+  },
+  {
+    "id": "m6math-multiplying-dividing-decimals-006",
+    "loId": "m6math.multiplying-and-dividing-decimals",
+    "cedCode": "M6MATH-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "You are dividing 12.6 by 0.6. Before you shift any decimal points, you estimate. You know that 0.6 is less than 1, so dividing by a number less than 1 gives you an answer that is larger than the dividend. Your estimate is that the answer should be more than 12.6, somewhere around 20 or so. Now you shift: move the decimal point in 0.6 one place to the right to get 6, and move the decimal point in 12.6 one place to the right to get 126. You divide 126 by 6 to get 21. Why was estimating first so important in this problem?",
+    "choices": [
+      "It told you the answer should be bigger than 12.6, not smaller. If you had forgotten to shift the dividend and divided 12.6 by 6 instead, you would get 2.1, which is way too small. The estimate catches that mistake immediately.",
+      "It showed you that 0.6 and 12.6 are both less than 1, so the quotient must also be less than 1 and cannot exceed the original dividend by any amount.",
+      "It verified that shifting the decimal points in both the dividend and divisor by the same number of places will always produce a quotient that is exactly equal to your estimate with no further checking needed.",
+      "It guaranteed that dividing by any number less than 1 will always give you an answer of approximately 20, regardless of what number you are dividing or what the specific divisor actually is."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the common mistake: shifting only the divisor and forgetting to shift the dividend. What answer would you get? Would your estimate catch it?",
+      "Your estimate said the answer should be bigger than 12.6. Which wrong answer—2.1 or 21—matches the estimate, and which does not?"
     ]
   }
 ]

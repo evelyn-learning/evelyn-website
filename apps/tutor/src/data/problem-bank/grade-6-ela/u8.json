@@ -114,234 +114,6 @@
     ]
   },
   {
-    "id": "m6ela-introducing-a-claim-001",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following is a claim rather than a fact, question, or topic?",
-    "choices": [
-      "The school cafeteria serves lunch from 11:30 to 1:00 every day, which is a checkable piece of information.",
-      "Students should be allowed to eat lunch outside on nice days instead of only in the cafeteria.",
-      "Does the cafeteria serve healthy food, and if so, what kinds of meals are available?",
-      "School lunch options and the different types of food offered in the cafeteria."
-    ],
-    "answer": "B",
-    "hints": [
-      "A claim takes a side on something reasonable people could disagree about.",
-      "A fact is checkable and nobody argues with it; a question asks but does not answer; a topic only names a subject."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-002",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student has written, 'Homework is assigned every night.' She wants to turn this into a claim for an argument. Which revision best turns her fact into a claim?",
-    "choices": [
-      "Homework is assigned every night, and some students do not like it because they feel tired and stressed.",
-      "Why is homework assigned every night, and who decides how much homework students receive?",
-      "Teachers should limit homework to three nights a week so students have more free time.",
-      "The amount of homework that is assigned each night and how it affects student schedules."
-    ],
-    "answer": "C",
-    "hints": [
-      "A claim must take a clear side and say what should happen, not just state what is true.",
-      "Look for the choice that picks a position and answers a question, rather than just naming a topic or asking."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-003",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student is writing an argument about adding a water fountain near the gym. He has already decided on this claim: 'The school should install a water fountain near the gym.' Before he writes the rest of his argument, what should he do next?",
-    "choices": [
-      "Write all the reasons and evidence together in one long paragraph so readers see everything at once.",
-      "Count how many pieces of evidence he will need to make sure he has enough.",
-      "Check whether there are any opposing views to the claim that he should mention in his opening.",
-      "Decide which reasons will support the claim and in what order each reason and its evidence will appear."
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson says that organizing means deciding before writing the rest which reason comes first, which comes next, and which evidence belongs with which reason.",
-      "Think about what comes after introducing a claim—what does a writer need to plan for?"
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-004",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student has written the opening below for an argument about recess. Read it and identify the problem.\n\n'Recess should be thirty minutes instead of twenty minutes. Students would have more time to play games and make friends. Every day at least three or four students do not get to play because everyone pairs up quickly. In the wintertime, students also spend the first five minutes putting on coats, so they have even less time outside.'\n\nWhich statement correctly describes why this opening is not organized in a clear order?",
-    "choices": [
-      "One reason does not have its own evidence placed right beside it; the evidence about wintertime coats and limited outdoor time is separated from the reason it supports.",
-      "The claim appears in the middle of the paragraph instead of at the beginning, making it hard for readers to know what the argument is about before they read further.",
-      "The paragraph mixes two different claims about recess length, which confuses readers about whether the argument supports twenty or thirty minutes.",
-      "The evidence about students pairing up and not getting to play is presented before the evidence about wintertime coats, which means the stronger evidence comes first."
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson teaches that a clear order keeps each reason next to its own evidence, not piled together at the end.",
-      "Look for where each reason is stated, then trace whether its evidence appears right after it or gets separated."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-005",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Four students each wrote an opening for an argument that the school lunch period should be forty minutes instead of thirty minutes. Which opening is organized in a clear order, with the claim first and each reason paired with its own matching evidence?",
-    "choices": [
-      "The lunch period should be forty minutes instead of thirty. Many students rush through eating and do not finish because they feel pressured by time, and they also stand in long lines that consume most of their lunch period, which causes them stress and frustration when the bell rings.",
-      "The lunch period should be forty minutes instead of thirty. Many students rush through eating and do not finish: last week, three students threw away half-full trays because the bell rang. Students also have more time to sit with friends: with only thirty minutes, many students eat alone because they do not know where to sit by the time they reach a table.",
-      "Many students rush through eating and do not finish, and students do not have enough time to stand in line and eat before the bell rings because the lunch period is too short. The lunch period should be forty minutes instead of thirty so everyone can eat at a comfortable pace and socialize without feeling rushed.",
-      "Students rush through lunch because thirty minutes is not enough time to reach the cafeteria and eat their food, and the lunch line is long which makes it worse. With only thirty minutes, students cannot finish eating or talk with friends, so the school should make the lunch period forty minutes."
-    ],
-    "answer": "B",
-    "hints": [
-      "The claim should come first, followed by each reason paired with its own evidence right beside it.",
-      "Check whether each reason is explained with a specific fact or detail that actually supports that reason, not mixed in with other evidence."
-    ]
-  },
-  {
-    "id": "m6ela-introducing-a-claim-006",
-    "loId": "m6ela.introducing-a-claim",
-    "cedCode": "M6ELA-8.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student has collected the following pieces of information for an argument about starting school later:\n— Students who sleep more do better in math and reading.\n— The school currently starts at 7:45 a.m.\n— Students need at least eight hours of sleep, but many get only six or seven.\n— Starting school at 8:30 a.m. instead of 7:45 a.m. would help most students get more sleep.\n— Teenagers' bodies naturally wake up later in the morning.\n\nThe student wants to write the claim: 'The school should start at 8:30 a.m. instead of 7:45 a.m.' She plans to organize her reasons in a clear order. Which pair of reason-and-evidence combinations would work best for this argument?",
-    "choices": [
-      "Reason 1: Students need at least eight hours of sleep. Evidence: The school currently starts at 7:45 a.m. Reason 2: Starting school at 8:30 would help students get more sleep. Evidence: Teenagers' bodies naturally wake up later in the morning.",
-      "Reason 1: A later start would let students sleep more, since teenagers' bodies naturally wake up later. Evidence: Students who sleep more do better in math and reading. Reason 2: Many students currently do not get enough sleep. Evidence: The school currently starts at 7:45 a.m.",
-      "Reason 1: Starting school at 8:30 a.m. would help students get more sleep. Evidence: Many students need at least eight hours of sleep but get only six or seven. Reason 2: Students who sleep more do better in school. Evidence: Teenagers' bodies naturally wake up later in the morning.",
-      "Reason 1: The school currently starts too early. Evidence: Students need eight hours of sleep and do not get it. Reason 2: A later start would help students. Evidence: Teenagers' bodies naturally wake up later."
-    ],
-    "answer": "C",
-    "hints": [
-      "Each reason must be supported by evidence that actually explains why that reason is true, not evidence that supports a different reason.",
-      "Look for the pairing where the specific facts and details clearly back up the reason they are supposed to support."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-001",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A linking word names the relationship between a claim and a reason. Which of the following is the main job of a linking word from the 'because' family?",
-    "choices": [
-      "To signal that the next sentence will disagree with the claim",
-      "To show that something follows as a result of a reason already given",
-      "To introduce one specific case that proves a general reason",
-      "To attach a reason directly to the claim it explains in one sentence"
-    ],
-    "answer": "D",
-    "hints": [
-      "Think about how 'because' works in a sentence: does it join two ideas in one sentence or start a new sentence?",
-      "Remember the lesson: 'because and since attach a reason directly to the claim it explains, in one sentence.'"
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-002",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the two sentences below. The first is a complete reason. The second should introduce a claim that follows from that reason. Which sentence correctly completes the pair with the right linking word?\n\nOur school cafeteria throws away about forty pounds of food every lunch period, even though a composting program could turn it into soil for the garden.",
-    "choices": [
-      "Therefore, the school should start a composting program in the cafeteria.",
-      "Because the school should start a composting program in the cafeteria.",
-      "For example, the school should start a composting program in the cafeteria.",
-      "Since the school should start a composting program in the cafeteria."
-    ],
-    "answer": "A",
-    "hints": [
-      "The first sentence stands on its own as a complete reason. The second sentence should state what comes next because of that reason — that is a result relationship.",
-      "Result words like 'therefore' and 'consequently' start a new sentence and introduce the claim that follows."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-003",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the general reason below. Which sentence correctly adds one specific case that proves the pattern actually happens?\n\nOur school should extend lunch to forty minutes instead of thirty, because many students do not have time to eat a full meal before the bell rings.",
-    "choices": [
-      "In fact, the general rule is that students need at least thirty-five minutes to finish eating a meal without rushing through it.",
-      "For instance, yesterday Maria finished only half her sandwich before she had to go to her next class.",
-      "This shows that the amount of time available during lunch needs to increase so that all students can complete their meals.",
-      "A specific student named James reported that he never has enough time to eat vegetables during the current lunch period."
-    ],
-    "answer": "B",
-    "hints": [
-      "An example gives one specific moment that shows a general pattern is real. What does that specific moment do — does it prove the pattern or does it start a new point?",
-      "The general reason talks about 'many students' and a pattern. An example needs to show one particular student or one particular moment."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-004",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote the following argument and read it aloud. It sounds serious and careful, but is the linking word doing the right job? Read it and decide.\n\nClaim: Our school should buy new sports equipment for the gym.\nSentence with linking word: However, broken equipment gets replaced less often because the school uses its budget to fix other buildings first.\n\nDoes 'however' name the correct relationship?",
-    "choices": [
-      "No, because the second sentence introduces a result that follows from the first sentence, not a turn against it.",
-      "Yes, because 'however' is a formal word that sounds careful and serious, which matches the tone of the argument.",
-      "No, because 'however' signals a turn against the claim, but the second sentence actually explains a reason why the claim should be accepted.",
-      "Yes, because the second sentence offers an objection that directly contradicts the idea that the school should purchase new sports equipment for the gym."
-    ],
-    "answer": "C",
-    "hints": [
-      "Do not trust how smooth or serious a word sounds. Ask instead: what relationship does 'however' announce, and what relationship is actually there?",
-      "The lesson warns that a linking word can be spelled correctly and still be wrong if it names a relationship that is not actually there."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-005",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read the following pair of sentences. The first gives a general reason. The second tries to add a specific example. Look at both the relationship and the linking word choice. Which statement correctly identifies what is wrong?\n\nGeneral reason: Students who walk to school get more daily exercise than students who ride the bus or get driven, for example, students become healthier and have more energy in class.\n\nProblem: The linking word 'for example' is incorrectly placed and does not name the right relationship.",
-    "choices": [
-      "'For example' should introduce a specific case that supports the general reason, but instead it introduces a new claim about what happens as a result of the general reason.",
-      "The specific example is not detailed enough to prove the general reason is real.",
-      "The word 'for example' is spelled correctly, so it belongs in an argument even if the relationship is not quite right.",
-      "The general reason was not yet stated before 'for example' was used, and 'for example' should introduce one specific case, not a result that follows from the reason."
-    ],
-    "answer": "D",
-    "hints": [
-      "Look at what comes after 'for example.' Is that a specific moment or case, or is it a new claim about what happens?",
-      "Remember: a general reason comes first and describes a pattern. An example is one specific case that proves the pattern, not a result that follows from it."
-    ]
-  },
-  {
-    "id": "m6ela-linking-words-for-claims-reasons-006",
-    "loId": "m6ela.linking-words-for-claims-and-reasons",
-    "cedCode": "M6ELA-8.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is revising an argument about starting a morning homework club. She has written the claim, the reason, and a specific example. Now she needs to insert two linking words into a draft paragraph to show all three relationships. Read the paragraph with blanks, and decide which pair of linking words creates the correct relationships.\n\nClaim: Our school should start a morning homework club that meets from 7:45 to 8:15 on Tuesdays and Thursdays.\nParagraph: Our school should start a morning homework club that meets from 7:45 to 8:15 on Tuesdays and Thursdays, __(1)__ many students arrive at school early but currently have nowhere quiet to work on unfinished assignments. __(2)__, on Thursday last week, four students sat in the hallway trying to finish a math worksheet before homeroom began. That showed there is real demand for such a space.",
-    "choices": [
-      "because; For example",
-      "therefore; For instance",
-      "as a result; Because",
-      "consequently; However"
-    ],
-    "answer": "A",
-    "hints": [
-      "Work through each blank one at a time. Ask: does this sentence explain the claim, does it follow as a result, or does it give one specific case?",
-      "Blank (1) must join the claim and reason in one sentence. Blank (2) must introduce one specific moment from Thursday that proves the general reason is real."
-    ]
-  },
-  {
     "id": "m6ela-supporting-a-claim-with-reasons-evidence-001",
     "loId": "m6ela.supporting-a-claim-with-reasons-and-evidence",
     "cedCode": "M6ELA-8.2",
@@ -453,6 +225,234 @@
     "hints": [
       "Run the relevance test: The reason is about students missing first period because of traffic. Does the evidence show that traffic is causing tardiness? Or does it only mention a general feeling about mornings?",
       "What specific, checkable detail would prove that heavy traffic is keeping students from getting to first period on time?"
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-001",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing an argument about whether the school should have a dress code. Which sentence is a claim rather than a fact, a question, or a bare topic?",
+    "choices": [
+      "Does the school have a dress code right now, and if so, how long has it been in place at our campus?",
+      "The school should have a dress code because it reduces distractions and helps students focus on learning.",
+      "A topic about school dress codes is one that many people feel strongly about and that someone could explore through different viewpoints.",
+      "Many schools across the country have adopted dress codes in recent years, with some starting as early as the 1990s."
+    ],
+    "answer": "B",
+    "hints": [
+      "A claim takes a side and states a position the writer wants you to accept, not just ask about it or name it.",
+      "A claim can be disagreed with by a reasonable reader, unlike something that is simply true and checkable."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-002",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A classmate is writing an argument that the school cafeteria should serve breakfast before school starts. Which of these is the best claim to open that argument?",
+    "choices": [
+      "What time should breakfast be served at the school each morning, and how would students know when it starts?",
+      "The school cafeteria serves lunch at noon every school day and also offers snacks during afternoon periods.",
+      "Some students skip breakfast because they wake up too late to eat at home before arriving at school, so the cafeteria should serve breakfast before the first class begins.",
+      "The cafeteria building has a kitchen facility with stoves, ovens, and other cooking equipment that could be used to prepare meals."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the option that states plainly what should happen—a position someone could disagree with—rather than just asking a question or stating a fact no one could argue about.",
+      "The correct claim will take one side of the issue, not ask about it or name the subject without picking a position."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-003",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is planning to argue that the school should extend the lunch period from twenty minutes to twenty-five minutes. The student has identified two reasons: (1) students have more time to eat, and (2) the lunch line moves too slowly. Which sentence does NOT serve as a fact that could support a reason, and should be replaced with actual evidence?",
+    "choices": [
+      "Many students throw away half-eaten trays because twenty minutes is not enough time.",
+      "When the lunch period ends, the trash cans are often full of barely touched meals.",
+      "Three students told me they did not finish their food yesterday.",
+      "The lunch line is long."
+    ],
+    "answer": "D",
+    "hints": [
+      "Evidence means a specific fact, count, or detail—not a general statement that could mean almost anything.",
+      "The correct answer is so vague that a reader would not know exactly what it means or how to believe it."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-004",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the following draft of an argument opening. The claim is that the school should plant flowers in the front courtyard. Identify what is organized incorrectly so that a reader cannot easily tell which evidence belongs with which reason.\n\nThe school should plant flowers in the front courtyard. Flowers make a space beautiful and welcoming. The courtyard looks dull right now. Visitors would get a better first impression of our school. Every year, spring brings color to the neighborhood and brightens people's mood.",
+    "choices": [
+      "The evidence about visitors and first impressions is placed after both reasons instead of right next to the reason about making the space welcoming and beautiful.",
+      "The claim is stated at the beginning when it should come after the reasons are introduced, so readers do not know why the evidence matters until after they have read it.",
+      "The evidence about spring and neighborhood color is mentioned in a separate sentence instead of being connected clearly to the reason about beauty and welcoming feeling.",
+      "The courtyard-looks-dull statement should be removed because it is a fact rather than a reason and facts do not belong in arguments."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look for where the claim sits first—it is actually at the beginning here, so that is not the problem.",
+      "A clear order means each piece of evidence is placed right after the reason it actually supports, not lumped together with other evidence away from its matching reason."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-005",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote four versions of an opening paragraph arguing that the school should add a recycling bin to each classroom. All four contain the same two reasons: (1) students would recycle more if bins are right there, and (2) it would teach environmental responsibility. Which version organizes the claim, reasons, and evidence so a reader can clearly follow which evidence goes with which reason?",
+    "choices": [
+      "Each classroom should have a recycling bin. Students would recycle more if bins are right there. Students at other schools who have classroom bins recycle twice as much as we do. It would teach environmental responsibility. Most science teachers say learning happens when students practice good habits.",
+      "The school should put recycling bins in every classroom. Students would recycle more if bins are right there, since a student survey showed that 85% of students forget to recycle because the nearest bin is in the hallway. It would also teach environmental responsibility, because teachers report that students develop habits from daily practice.",
+      "Recycling is an important environmental practice that affects communities. Classroom bins would help students recycle more often and would also teach environmental responsibility. A student survey showed that 85% of students forget to recycle because the nearest bin is located far away. Teachers report that students develop habits from daily practice in the classroom.",
+      "Students forget to recycle when bins are not nearby. Classroom bins would help students recycle more because bins are convenient, and it would also teach environmental responsibility through repeated daily practice of sorting waste."
+    ],
+    "answer": "B",
+    "hints": [
+      "The correct version has the claim first, then each reason followed immediately by its own evidence, not evidence lumped together at the end.",
+      "Notice which version does NOT bury the claim, does NOT split a reason from its evidence, and does NOT pile evidence after multiple reasons."
+    ]
+  },
+  {
+    "id": "m6ela-introducing-a-claim-006",
+    "loId": "m6ela.introducing-a-claim",
+    "cedCode": "M6ELA-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is drafting an argument but struggles to tell whether an opening sentence is a claim or just a topic dressed up as a sentence. The student wrote: 'Shorter school days would be better for student health.' When the student checks this against the definition of a claim, which two questions should the student ask to decide whether it is a real claim or just disguised topic?",
+    "choices": [
+      "Is the sentence about school and does it use the word 'should' or similar language? Would a reasonable reader actually have a way to disagree with it, or is it stating something nobody could possibly argue against no matter what evidence exists?",
+      "Does the sentence name a specific subject and announce a position on it that matters to the argument? Is the sentence one complete statement of opinion, or does it hide behind a fact that no one can dispute even if they disagree with the conclusion?",
+      "Does the sentence say what should happen rather than just asking a question? Does it state one clear position that a reasonable reader could reasonably reject, or does it hide behind a fact no one can dispute?",
+      "Could a fact-checker prove this sentence true by researching student health data and school schedules? Is there already a piece of supporting evidence included within the sentence itself to explain why the claim might be true?"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember: a claim must be something a reasonable reader could take either side on—not a hidden fact that pretends to be debatable.",
+      "Ask yourself: could someone who is reasonable and informed actually disagree with this, or does it state something undeniable disguised as an opinion?"
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-001",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A linking word shows how a reason connects to a claim. Which sentence correctly uses a linking word from the reason family to join a claim and a reason into one sentence?",
+    "choices": [
+      "The school should buy new microscopes for the science lab. For example, the old ones have cracked lenses and weak magnification.",
+      "The school should buy new microscopes for the science lab. However, the old ones have cracked lenses and weak magnification.",
+      "The school should buy new microscopes for the science lab. Therefore, the old ones have cracked lenses and weak magnification.",
+      "The school should buy new microscopes for the science lab, because the old ones have cracked lenses and weak magnification."
+    ],
+    "answer": "D",
+    "hints": [
+      "Ask yourself: does the second part explain WHY the claim should be accepted?",
+      "A reason family word joins the claim and reason in the same sentence; a result or example word starts a new sentence."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-002",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the claim and the sentence that follows it. Does the linking word name the correct relationship? Explain why or why not.\n\nClaim: The cafeteria should serve pizza twice a week instead of once a week.\nSentence: Many students skip lunch when pizza is not on the menu because they do not like the other entrées.",
+    "choices": [
+      "Yes, because the sentence explains why the claim should be accepted, and \"because\" introduces a reason.",
+      "No, because the sentence gives one specific example, but \"because\" introduces a reason that explains the claim.",
+      "No, because the sentence turns against the claim, but \"because\" introduces a reason that supports it.",
+      "Yes, because the sentence states what happens as a result of the claim, and \"because\" shows that connection."
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask: does the sentence after the linking word explain why the claim is true, or does it do something else?",
+      "\"Because\" is a reason word. The sentence must explain the claim—not turn against it, not give an example of it, and not state a result of it."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-003",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student is writing about homework policies and has written the reason below. Which sentence correctly adds a result that follows from this reason?\n\nReason: Students in sixth grade have six or seven different teachers, and homework assignments from all of them pile up on the same nights.",
+    "choices": [
+      "For example, last Tuesday night, Marcus had math homework, an English essay, and a science project all due the next day.",
+      "As a result, many students end up staying up very late trying to finish everything, which hurts their sleep and focus in class.",
+      "Because of this, teachers should ask students for more time to work on projects during class periods.",
+      "For instance, students who have sports practice after school are especially likely to fall behind on their homework."
+    ],
+    "answer": "B",
+    "hints": [
+      "A result word introduces something that happens or follows because the reason came first. What logically follows from having too much homework pile up at once?",
+      "Look for a sentence that describes what actually happens to students when homework piles up on the same nights."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-004",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has written two sentences about a school policy but uses the wrong linking word. Read the sentences and choose the revision that fixes the problem by using the correct linking word and, if needed, rearranging the sentences.\n\nOriginal: The school blocked most video sites on the student WiFi network. However, many students waste entire study halls watching videos instead of doing work.\n\nWhich revision corrects the linking word to match the true relationship?",
+    "choices": [
+      "The school blocked most video sites on the student WiFi network, because many students waste entire study halls watching videos instead of doing work.",
+      "The school blocked most video sites on the student WiFi network. For example, many students waste entire study halls watching videos instead of doing work.",
+      "Many students waste entire study halls watching videos instead of doing work. As a result, the school blocked most video sites on the student WiFi network.",
+      "The school blocked most video sites on the student WiFi network; therefore, many students waste entire study halls watching videos instead of doing work."
+    ],
+    "answer": "C",
+    "hints": [
+      "The linking word must match the true relationship. Ask: which fact came first, and which one happened because of it?",
+      "\"However\" signals a turn against what was said before, but these two sentences do not turn against each other. One sentence explains why the other happened."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-005",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the general reason written below. Then choose which sentence correctly adds one specific case that illustrates it.\n\nGeneral reason: The school should require students to eat lunch in the cafeteria instead of outside, because outdoor trash attracts raccoons and other animals that cause problems on campus.\n\nWhich sentence best works as an example that proves this pattern actually happens?",
+    "choices": [
+      "For example, last Tuesday a family of raccoons tore open garbage bags near the picnic tables and destroyed several student lunches that were sitting out.",
+      "Because of this, students should be taught how to dispose of trash properly when they do eat outside in warm weather.",
+      "As a result, if the school requires eating indoors, fewer animals will be attracted to campus and the area will stay cleaner.",
+      "For instance, three nights last week, raccoons knocked over the large trash bins near the outdoor seating area and scattered garbage across the field."
+    ],
+    "answer": "D",
+    "hints": [
+      "An example sentence must show one specific moment or case where the general reason is actually happening in real life.",
+      "Look for a sentence that gives a concrete detail—a specific night, a specific animal, a specific thing that happened—rather than a new claim or instruction."
+    ]
+  },
+  {
+    "id": "m6ela-linking-words-for-claims-reasons-006",
+    "loId": "m6ela.linking-words-for-claims-and-reasons",
+    "cedCode": "M6ELA-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is revising this argument and reads it aloud. It sounds serious and well-written, but read carefully and decide whether the linking words are doing the right job. Identify any linking word that names the wrong relationship and explain why.\n\nSentence 1: Our school should create a quiet study hall in the library for students who need to focus.\nSentence 2: For example, open study halls with lots of talking and phone use do not help students concentrate.\nSentence 3: Therefore, a dedicated quiet space would give students a place to work without distractions.\n\nWhich statement correctly identifies a problem with a linking word?",
+    "choices": [
+      "Sentence 2 is wrong because \"For example\" introduces a reason that explains the claim, not one specific case that proves a general reason.",
+      "Sentence 3 is wrong because \"Therefore\" introduces another reason, but the link between Sentence 1 and Sentence 3 is one of cause and effect.",
+      "Both sentences are wrong: Sentence 2 needs a reason word, and Sentence 3 needs a result word.",
+      "Neither linking word is wrong, because both correctly signal the relationship between the sentences that come before them."
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at what comes before each linking word. Sentence 2 does not state a general reason first, and the sentence after it does not give one specific case of something already said.",
+      "Ask: has a general reason been stated yet? If not, a \"for example\" word does not fit, no matter how well the sentence is written."
     ]
   }
 ]

@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6math-representing-ratios-with-tables-diagrams-001",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which operation do you use to scale a ratio and create an equivalent ratio? For example, to go from the ratio 3:5 to 6:10, what do you do to both numbers?",
-    "choices": [
-      "Divide the first number and multiply the second number",
-      "Add the same amount to both numbers",
-      "Subtract the same amount from both numbers",
-      "Multiply both numbers by the same factor"
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson emphasizes that equivalent ratios come from multiplying both numbers by the same factor.",
-      "Adding the same amount breaks the mix, so that cannot be the rule for equivalent ratios."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-002",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A recipe uses 5 cups of rice for every 8 cups of water. If you multiply both numbers by 2, what is the equivalent ratio?",
-    "choices": [
-      "10 cups rice to 16 cups water",
-      "7 cups rice to 10 cups water",
-      "5 cups rice to 16 cups water",
-      "13 cups rice to 8 cups water"
-    ],
-    "answer": "A",
-    "hints": [
-      "Remember to multiply BOTH the rice and the water by the same scale factor of 2.",
-      "5 × 2 = 10 and 8 × 2 = 16."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-003",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A tape diagram shows a ratio of 4 parts red to 3 parts yellow. If each part represents 2 inches, how many inches of red material are there in total?",
-    "choices": [
-      "6 inches",
-      "8 inches",
-      "10 inches",
-      "12 inches"
-    ],
-    "answer": "B",
-    "hints": [
-      "A tape diagram splits a bar into equal-size parts; count how many red parts there are.",
-      "Multiply the number of red parts by the size of each part."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-004",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A paint mixture uses a ratio of 2 parts blue paint to 5 parts white paint. Complete a ratio table with columns scaled by 1, 2, and 3, then identify which column shows the ratio for 6 parts blue paint.",
-    "choices": [
-      "The ratio table shows 2 and 5, then 4 and 10, then 6 and 15, so the third column should have 8 blue and 20 white",
-      "Column scaled by 1 has 2 blue and 5 white; column scaled by 2 has 4 blue and 10 white; column scaled by 3 has 6 blue and 15 white, so the answer is the column scaled by 2",
-      "Column scaled by 1 has 2 blue and 5 white; column scaled by 2 has 4 blue and 10 white; column scaled by 3 has 6 blue and 15 white, so the answer is the column scaled by 3",
-      "Adding 4 to the blue side of the original ratio gives 6 blue, and adding 4 to the white side gives 9 white, so the equivalent ratio is 6:9"
-    ],
-    "answer": "C",
-    "hints": [
-      "To find which column has 6 blue, ask: 2 times what number equals 6?",
-      "Once you find the scale factor, apply it to both the blue and white columns to get the matching pair."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-005",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A double number line shows that 3 cups of orange juice lines up with 4 cups of cranberry juice. If you want to find how many cups of cranberry juice match 9 cups of orange juice, what scale factor do you need, and what is the answer?",
-    "choices": [
-      "Scale factor is 3, so 9 cups orange juice pairs with 13 cups cranberry juice",
-      "Scale factor is 3, so 9 cups orange juice pairs with 7 cups cranberry juice",
-      "Scale factor is 6, so 9 cups orange juice pairs with 10 cups cranberry juice",
-      "Scale factor is 3, so 9 cups orange juice pairs with 12 cups cranberry juice"
-    ],
-    "answer": "D",
-    "hints": [
-      "Find the scale factor by asking: 3 times what equals 9?",
-      "Once you have the scale factor, multiply it by the cranberry juice amount from the original pair."
-    ]
-  },
-  {
-    "id": "m6math-representing-ratios-with-tables-diagrams-006",
-    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
-    "cedCode": "M6MATH-1.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student is building both a ratio table and a tape diagram to represent a recipe with 3 cups flour to 7 cups sugar. The tape diagram shows 3 parts flour and 7 parts sugar, with each part representing 2 cups. The ratio table's second column is scaled by 4 from the first. Which statement is correct?",
-    "choices": [
-      "The tape diagram shows 6 cups flour and 14 cups sugar total, and the ratio table's second column shows 12 cups flour and 28 cups sugar; both scale the original 3:7 ratio, so they represent the same relationship using different tools",
-      "The tape diagram shows 6 cups flour and 14 cups sugar total because 3 parts × 2 = 6 and 7 parts × 2 = 14, but the ratio table's second column shows 12 cups flour and 28 cups sugar because 3 × 4 = 12 and 7 × 4 = 28, so they represent different relationships and cannot describe the same recipe",
-      "The tape diagram shows 3 cups flour and 7 cups sugar total because each part counts as one cup rather than two, and the ratio table's second column shows 12 cups flour and 28 cups sugar, which means the two tools are measuring different amounts",
-      "The tape diagram and ratio table cannot both be used for the same recipe because one represents parts that need to be multiplied and the other represents actual cups without multiplication, so they follow different mathematical rules"
-    ],
-    "answer": "A",
-    "hints": [
-      "Calculate the tape diagram total: 3 parts × 2 cups per part = ? cups flour, and 7 parts × 2 cups per part = ? cups sugar.",
-      "Calculate the ratio table's second column: 3 × 4 = ? and 7 × 4 = ?, then check whether both representations show equivalent ratios to the original 3:7."
-    ]
-  },
-  {
     "id": "m6math-solving-missing-value-ratio-problems-001",
     "loId": "m6math.solving-missing-value-ratio-problems",
     "cedCode": "M6MATH-1.3",
@@ -453,6 +339,120 @@
     "hints": [
       "Divide miles by gallons for each vehicle: 210 ÷ 7 for the car, and 180 ÷ 6 for the truck. Then multiply each unit rate back by the number of gallons to check.",
       "Compare the two unit rates to see which is larger—that vehicle travels farther on one gallon."
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-001",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A ratio is 5:7. To create an equivalent ratio using a scale factor of 2, what two numbers should you multiply by 2?",
+    "choices": [
+      "The 5 and add 2 to the 7",
+      "Only the 5",
+      "Only the 7",
+      "Both the 5 and the 7"
+    ],
+    "answer": "D",
+    "hints": [
+      "Equivalent ratios come from multiplying both numbers by the same factor.",
+      "Think about what 'the same factor' means — does it apply to just one number or both?"
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-002",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A gardener plants flowers in a ratio of 3 red flowers for every 2 yellow flowers. If she scales this ratio by a factor of 4, how many red flowers and how many yellow flowers will be in the scaled ratio?",
+    "choices": [
+      "12 red and 8 yellow",
+      "12 red and 6 yellow",
+      "7 red and 6 yellow",
+      "15 red and 8 yellow"
+    ],
+    "answer": "A",
+    "hints": [
+      "Multiply both numbers in the original ratio by the same scale factor.",
+      "What is 3 times 4, and what is 2 times 4?"
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-003",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A tape diagram for a paint mixture is divided into 7 equal parts: 3 parts red paint and 4 parts white paint. Each part holds 2 liters. How many liters of white paint are in the mixture?",
+    "choices": [
+      "6 liters",
+      "8 liters",
+      "14 liters",
+      "4 liters"
+    ],
+    "answer": "B",
+    "hints": [
+      "Count how many parts represent white paint, then multiply by the amount each part holds.",
+      "The tape diagram shows that white paint takes up 4 of the 7 equal parts."
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-004",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A recipe uses 6 cups of flour for every 4 cups of sugar. A baker starts with 18 cups of flour and needs to find how much sugar to use. First find the scale factor, then multiply to find the sugar amount.",
+    "choices": [
+      "9 cups of sugar",
+      "22 cups of sugar",
+      "12 cups of sugar",
+      "24 cups of sugar"
+    ],
+    "answer": "C",
+    "hints": [
+      "Divide the new flour amount (18) by the original flour amount (6) to find the scale factor.",
+      "Once you have the scale factor, multiply the original sugar amount (4) by it."
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-005",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two students are building equivalent ratios from 5:8. Student A multiplies both numbers by 3 to get 15:24. Student B adds 5 to both numbers to get 10:13. Which student created an equivalent ratio, and why?",
+    "choices": [
+      "Neither student, because equivalent ratios must have larger numbers",
+      "Student B, because adding to both numbers keeps the relationship the same",
+      "Both students, because both methods create equivalent ratios",
+      "Student A, because multiplying both numbers by the same factor preserves the ratio"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember the key rule: equivalent ratios come from multiplying both numbers by the same factor, not by adding the same amount.",
+      "Check each answer: Does 5:8 simplify to the same ratio as 15:24? Does 5:8 simplify to the same ratio as 10:13?"
+    ]
+  },
+  {
+    "id": "m6math-representing-ratios-with-tables-diagrams-006",
+    "loId": "m6math.representing-ratios-with-tables-and-diagrams",
+    "cedCode": "M6MATH-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A double number line shows a recipe ratio where 3 ounces of salt pairs with 12 ounces of seasoning mix. A cook wants to make a batch with 27 ounces of salt. Using a ratio table or double number line strategy, find the amount of seasoning mix needed, and explain which scale factor you used to get there.",
+    "choices": [
+      "108 ounces of seasoning mix; scale factor is 9 because 27 ÷ 3 = 9",
+      "36 ounces of seasoning mix; scale factor is 3 because 3 ounces needs 3 times more",
+      "108 ounces of seasoning mix; scale factor is 24 because 27 − 3 = 24",
+      "39 ounces of seasoning mix; scale factor is 12 because the recipe uses 12 ounces of seasoning"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the scale factor by dividing the new amount of salt by the original amount of salt.",
+      "Once you know the scale factor, multiply the original seasoning mix amount (12) by that same factor."
     ]
   }
 ]

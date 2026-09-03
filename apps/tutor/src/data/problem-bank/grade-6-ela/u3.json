@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A page about desert animals has four section headings: \"Snakes of the Desert,\" \"Desert Birds,\" \"Small Mammals,\" and \"Lizards and Other Reptiles.\" What is the main job of these headings?",
+    "problemText": "A textbook page about the water cycle has four sections, each with its own heading: 'Evaporation', 'Condensation', 'Precipitation', and 'Collection'. What is the main job of these headings?",
     "choices": [
-      "They prove that desert animals are more interesting than animals in other climates by ranking each group by appeal.",
-      "They explain in detail how each animal survives in the hot, dry climate through biological adaptation.",
-      "They organize the page into separate topics so a reader can find information about a specific animal group quickly.",
-      "They divide the page into separate topics so a reader can locate information about a specific animal group without reading the entire page."
+      "They establish that evaporation is the most critical stage and must be studied before learning about condensation, precipitation, and collection.",
+      "They give detailed explanations of how water moves from the ocean through clouds and returns to the ground in a continuous cycle.",
+      "They tell the reader which stages of the water cycle occur simultaneously and depend on each other at the same moment in time.",
+      "They divide the page into separate topics so a reader can see which section covers which part of the water cycle and find the one they need."
     ],
     "answer": "D",
     "hints": [
-      "Think about what a heading does before a reader reads the paragraph's sentences.",
-      "A heading names the topic of a section, not the details or proof inside it."
+      "Think about what a heading does before you read the paragraph — does it tell you the answer, or does it tell you where to look?",
+      "A heading is a short label. What does a reader learn from seeing all four headings together, before reading any paragraph?"
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A section about rainforest plants includes a photograph of tall trees packed closely together, their leaves forming a thick green canopy high above the ground. The caption reads: \"A rainforest canopy in Peru, where over 80 percent of the light is blocked by the upper leaves.\" The paragraph states that rainforest plants have adapted to live in shade and low light. What does the caption add that the photograph alone cannot show?",
+    "problemText": "An article about desert plants has a paragraph that reads: 'A saguaro cactus stores water in its thick, waxy skin so it can survive months without rain. The plant grows very slowly, adding only a few inches per year.' Below this paragraph is a photograph of a large saguaro cactus. The caption under the photograph reads: 'This saguaro cactus in Arizona is over 150 years old.' Which piece of information does the caption add that is not already in the paragraph?",
     "choices": [
-      "The exact location of this rainforest and a concrete fact about how much light actually reaches below the canopy.",
-      "A description of the scientific term that botanists use when discussing the dense leaf layer found at the top of tropical forests.",
-      "A visual comparison showing how the thickness of leaves changes at each different height throughout the forest structure.",
-      "An explanation of why the plants living in rainforests are generally considered more valuable than plants found in other types of environments."
+      "A specific location and age for one particular saguaro cactus",
+      "That saguaro cacti have thick, waxy skin to store water",
+      "That saguaro cacti grow very slowly",
+      "That saguaro cacti can survive for a long time without rain"
     ],
     "answer": "A",
     "hints": [
-      "A photograph shows what a camera sees, but what can it not show about a place?",
-      "Look for what number or location appears in the caption but nowhere else on the page."
+      "Cover the caption with your thumb. Is the paragraph missing a location or an age?",
+      "The paragraph talks about saguaro cacti in general. What does the caption pin down that the paragraph left vague?"
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A section explains how a tornado forms. The paragraph describes wind moving in a circular pattern, pressure dropping, and a funnel forming downward from a cloud. Next to the paragraph is a labeled diagram showing wind arrows swirling around the sides of a funnel and a label marking the center as \"low pressure.\" If you covered the diagram with your thumb and reread only the paragraph, what would be harder to picture all at once?",
+    "problemText": "A magazine section on coral reefs includes a main paragraph and a boxed sidebar titled 'Did You Know?' The paragraph explains that coral reefs are built by tiny animals called polyps and that reefs are home to thousands of fish and plant species. The sidebar reads: 'The world's largest coral reef, the Great Barrier Reef, stretches for over 1,400 miles along the coast of Australia.' If a reader skipped the sidebar and read only the main paragraph, what would they still understand about coral reefs?",
     "choices": [
-      "The fact that a tornado is formed by wind rotating in a circular pattern as described in the text.",
-      "Where the wind is moving and where the low pressure sits in relation to each other as the funnel forms.",
-      "The specific scientific terminology that meteorologists use to describe the low-pressure zone at the center of a tornado.",
-      "The dangers that tornadoes create for communities and buildings located in their path on the ground."
+      "That the Great Barrier Reef is in Australia and is over 1,400 miles long",
+      "That coral reefs are made of tiny animals and support many kinds of sea life",
+      "How large individual coral polyps are and how they attach to the ocean floor",
+      "That coral reefs are the most important ecosystems on Earth"
     ],
     "answer": "B",
     "hints": [
-      "The thumb test asks what information you lose when you hide the feature.",
-      "A graphic shows relationships and positions; a paragraph describes them one at a time."
+      "The sidebar is boxed off to the side. A reader who skips it misses one thing — what is that one thing?",
+      "The paragraph covers the basic facts about what coral reefs are and what lives in them. Is that enough for the reader to understand the main point without the sidebar?"
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A magazine section on penguins has the heading \"How Penguins Catch Fish.\" The paragraph explains that penguins dive deep into the water and use their flipper-like wings to chase fish at high speed. Below the paragraph is a sidebar titled \"Did You Know?\" that states: \"Emperor penguins can dive deeper than 1,500 feet and stay underwater for over 20 minutes.\" A reader who skips the sidebar will still understand how penguins catch fish from the paragraph alone. Why does the sidebar belong in this particular section instead of appearing in a different section about penguin records?",
+    "problemText": "A science article about the human skeleton has a section titled 'How Bones Heal'. The paragraph reads: 'When a bone breaks, the body immediately begins to mend it. New bone tissue forms in and around the break within days. Over weeks and months, the new tissue hardens and grows stronger until it is as tough as the original bone.' Below the paragraph is a labeled diagram showing a broken bone at different stages: Day 1 (the break), Day 10 (new tissue forming), and Month 3 (the bone healed). The caption under the diagram reads: 'The healing process happens in stages over time.' Why does this diagram contribute something important to understanding this section that the paragraph alone does not make equally clear?",
     "choices": [
-      "Because it proves that the paragraph's explanation of how penguins catch fish is correct and supported by scientific measurement.",
-      "Because it describes the exact technique and muscle movements that penguins use to move their flippers through water at high speed.",
-      "Because it adds a related detail about the depth and duration of penguin dives, which connects to the paragraph's main point about how penguins chase fish underwater without interrupting that main explanation.",
-      "Because it introduces all the different penguin species and provides rankings showing which ones can dive to the greatest depths."
+      "The diagram shows the visual appearance of new tissue forming at each stage, which helps readers see what happens at Day 1, Day 10, and Month 3 all together in one view",
+      "The diagram proves the paragraph's information is accurate by providing evidence from scientific research studies",
+      "The diagram shows exactly how much time passes between each stage of healing and displays all the stages side by side in one view, whereas the paragraph describes the stages one after another in words",
+      "The diagram explains exactly how bone cells multiply during healing, whereas the paragraph only describes the general process of hardening and strengthening"
     ],
     "answer": "C",
     "hints": [
-      "A sidebar adds extra information that helps you understand the topic more fully, but it is not the main point of the section.",
-      "Think about what connects the sidebar to the paragraph's topic and what the reader already knows without it."
+      "Ask what the diagram lets a reader see in one glance that the paragraph's sentences would need several sentences to show.",
+      "The paragraph describes the healing steps in order, one at a time. How is seeing them all at once in a picture different from reading about them in sentences?"
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "An article about the water cycle includes a section headed \"How Water Moves Through the Atmosphere.\" The paragraph describes evaporation, condensation, and precipitation using only words. Below it is a diagram with arrows showing water rising from the ground, cooling and forming clouds, and then falling as rain. The diagram has no new facts that the paragraph does not already mention—it shows the same three steps in the same order. Based on the lesson's thumb test, what is this diagram's actual contribution to understanding this section?",
+    "problemText": "An article about rainforests has a section titled 'The Canopy Layer' with this paragraph: 'The canopy is the thick layer of leaves and branches formed by the tallest trees in the rainforest. It sits so high and is so dense that very little sunlight reaches the plants below it. Many animals, including monkeys, jaguars, and birds, live their entire lives in the canopy without ever touching the forest floor.' Beside the paragraph is a sidebar labeled 'Canopy Facts' that says: 'The canopy layer can be over 100 feet above the ground. Some scientists estimate that half of all rainforest animal species live in the canopy.' Using the thumb test, identify what the sidebar contributes to this section.",
     "choices": [
-      "It shows the specific geographic regions where water evaporates most quickly and where precipitation falls most frequently.",
-      "It proves that the paragraph's explanation of the water cycle is scientifically accurate and supported by research.",
-      "It provides the Latin and scientific names for each stage of the water cycle that the paragraph describes only in everyday language.",
-      "It shows all three steps of the water cycle at the same time so a reader can see the entire cycle in one glance instead of following each step one at a time through the paragraph's sentences."
+      "It explains the reasons why monkeys, jaguars, and birds prefer to live in the canopy rather than spending time on the forest floor below",
+      "It provides specific measurements of height and population percentages that support and expand on the paragraph's description of the canopy",
+      "It describes what the canopy looks like by explaining the colors and shapes of the leaves and branches that form this layer",
+      "It adds specific details about the canopy's height and how many animal species depend on it, which the main paragraph does not provide"
     ],
     "answer": "D",
     "hints": [
-      "What would be missing from your understanding if you read only the paragraph and skipped the diagram?",
-      "Think about how a graphic lets a reader hold a relationship in their head all at once, versus reading about it step by step."
+      "Cover the sidebar with your thumb and reread the paragraph. What fact or number does the paragraph not include?",
+      "The paragraph tells you what the canopy is and that animals live there. What numbers or specific comparisons does only the sidebar give?"
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-3.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A section titled \"How Volcanoes Form\" includes three text features: a labeled diagram of Earth's layers, a caption under a photograph that reads \"Mount Kilimanjaro in Tanzania, formed when magma cooled above the surface,\" and a sidebar stating \"Underwater volcanoes erupt on the ocean floor where plates meet.\" The main paragraph explains that volcanoes form where molten rock rises through cracks in Earth's crust. A reader wants to know the following four things: (1) what Earth's layers look like and where magma comes from, (2) a real-world example of a volcano and where it is located, (3) the main explanation of how volcanoes form, and (4) an additional fact about volcanoes that extends the topic beyond the main explanation. Which feature or combination of features provides answer (1)?",
+    "problemText": "A page about bees has two sections. The first section, titled 'How Bees Make Honey', includes a paragraph and a flow-chart graphic showing the steps: flower visits → pollen collected → pollen brought to hive → nectar processed → honey stored. The second section, titled 'Why Bees Need Nectar', has a paragraph explaining that nectar contains natural sugars that give bees the energy they need to fly and work, and a caption under a photograph that reads: 'Worker bees can fly up to 55 miles per day to find flowers.' A student is trying to decide which text feature in the first section — the heading or the graphic — contributes the most new information that the paragraph alone does not clearly show. What is the strongest reason for choosing the graphic over the heading?",
     "choices": [
-      "The diagram alone.",
-      "The paragraph alone.",
-      "The caption alone.",
-      "The sidebar and the paragraph together."
+      "The heading only names the topic, but the graphic shows the actual sequence of steps and how they connect to each other, which a paragraph listing the steps one at a time would be harder to hold in your mind all at once",
+      "The graphic displays each step in a visual format using arrows and boxes, which takes up less space on the page than writing out all the steps in sentence form would",
+      "The graphic reveals additional facts about how long each step takes and the temperature needed for nectar to turn into honey, details that the paragraph does not include",
+      "The heading tells readers only what the section is about, but the graphic shows the exact relationship between steps and demonstrates how one step leads to the next in a clear sequence"
     ],
     "answer": "A",
     "hints": [
-      "What does the diagram show that words in a paragraph would have to describe one layer at a time?",
-      "A labeled diagram can display spatial relationships and positions all at once, which the paragraph's sentences cannot."
+      "What is the difference between a heading's job and a graphic's job? What does each one do that the other does not?",
+      "A heading names what the section covers. A graphic shows what would take multiple sentences to describe. Which one shows the relationship between steps?"
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What is the main difference between summarizing an informational text and retelling it? A summary and a retelling both present facts from the passage, but they handle those facts differently.",
+    "problemText": "A student is writing an objective summary of an informational passage about how plants grow roots. Which of the following should the student include in the summary?",
     "choices": [
-      "A summary structures sentences differently than a retelling does, organizing facts by importance rather than by sequence.",
-      "A summary drops facts that don't support the central idea, while a retelling includes all facts in the order they appeared.",
-      "A summary focuses on selected key points, while a retelling treats every fact mentioned in the passage as equally important.",
-      "A summary condenses information strategically, while a retelling repeats the passage's details in their original form."
+      "Every fact from the passage in the exact order it appeared",
+      "The central idea of the passage and only the details that support it",
+      "The central idea plus the student's own opinion about how interesting roots are",
+      "A retelling of the passage that treats all facts as equally important"
     ],
     "answer": "B",
     "hints": [
-      "Think about which facts belong in a summary — only the ones connected to the central idea, or every fact the passage mentioned?",
-      "The lesson explains that a retelling treats every fact as equally important. What does a summary do instead?"
+      "Think about what 'objective' means and what an objective summary leaves out.",
+      "Remember that a summary is shorter than a retelling because it drops facts that don't connect to the main idea."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage and its central idea. Then identify which sentence should be kept in an objective summary of this passage.\n\nPassage: \"Bees visit flowers to collect nectar and pollen for food. As a bee moves from flower to flower, pollen sticks to its body. When the bee visits the next flower, some of that pollen rubs off and lands on the flower's female part. This transfer of pollen allows flowers to make seeds. Bees are incredible creatures that we should admire for their hard work.\"\n\nCentral idea: Bees pollinate flowers by moving pollen from one flower to another as they collect nectar and pollen.",
+    "problemText": "Read this sentence from a student's summary: 'This shows that bees are incredibly intelligent at organizing their hives.' The student is trying to write an objective summary about how bees organize their hives. What is the problem with this sentence, and how should the student fix it?",
     "choices": [
-      "Bees are incredible creatures that we should admire for their hard work.",
-      "Bees visit flowers because they need to collect nectar and pollen for food, and this is a very important job.",
-      "When a bee moves from flower to flower, pollen sticks to its body and rubs off on the next flower's female part.",
-      "The pollen that bees collect is bright yellow and easy to see with a magnifying glass."
+      "The sentence presents facts in a different order than they appeared in the passage, mixing up the sequence of events that describe how bees actually build and maintain their hives",
+      "The sentence skips important details from the passage and omits specific information about the methods bees use to organize their living spaces and perform their tasks",
+      "The sentence uses a judgment word, 'incredibly,' and announces a conclusion with 'this shows that' instead of reporting what the passage actually says about how bees organize",
+      "The sentence fails to identify what aspect of bee behavior is most important and does not explain the central point that the passage is trying to communicate about hives"
     ],
     "answer": "C",
     "hints": [
-      "Which sentence explains or supports how bees pollinate flowers — the central idea you were given?",
-      "Watch out for judgment words like 'incredible' and 'should admire,' and for sentences that announce conclusions rather than report facts."
+      "Look for the quiet kind of judgment—words that hand over the summarizer's own opinion, not just obvious words like 'amazing.'",
+      "An objective summary reports facts from the passage, not what the summarizer thinks about those facts."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student wrote this summary of an informational passage about how termites eat wood. Read the summary and decide which problem it has.\n\nStudent summary: \"Termites have a special pouch in their stomach where tiny organisms live. These organisms break down the wood fibers so the termite can digest them. Without these organisms, termites could not eat wood at all. This proves that nature has designed a perfect system.\"\n\nWhat is wrong with this summary?",
+    "problemText": "A passage explains that butterflies taste with their feet to find food plants. A student writes this summary: 'Butterflies have feet. Butterflies can taste. Butterflies use their sense of taste to find food plants. Butterflies live in many places.' Which supporting detail should be removed from this summary?",
     "choices": [
-      "It leaves out important details about how the organisms actually function inside the termite's digestive system, making the explanation incomplete.",
-      "It reports each fact from the passage as a separate sentence rather than combining related ideas, and it adds a judgment that the system is 'perfect' which the passage does not support.",
-      "It focuses too much on the organisms and not enough on the termite itself, shifting attention away from what the passage intended to emphasize.",
-      "It retells the passage sentence by sentence instead of stating the central idea first, and it adds a judgment about how 'perfect' nature is."
+      "The detail 'Butterflies have feet' is background information that doesn't directly connect to the main idea about how butterflies locate the specific plants they need to eat",
+      "The detail 'Butterflies can taste' restates information already included in the next sentence and therefore adds no new understanding about how butterflies find food plants",
+      "The detail 'Butterflies use their sense of taste to find food plants' should not be removed since it directly supports and explains the central idea of the entire summary",
+      "'Butterflies live in many places' does not connect to how butterflies taste with their feet to find food"
     ],
     "answer": "D",
     "hints": [
-      "Does the summary start by stating the central idea as one sentence, or does it list separate facts one at a time?",
-      "Look for words or phrases that announce what the summarizer thinks, not what the passage says. What phrase appears at the end?"
+      "A supporting detail must explain or prove the central idea, not just be any true fact about the topic.",
+      "Ask yourself: does this detail help explain why or how butterflies taste with their feet to find food?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage and its central idea. Then choose the best objective summary.\n\nPassage: \"Butterflies taste with their feet. When a butterfly lands on a leaf, special taste cells on its feet tell it whether the leaf is the right kind of food for its caterpillars. If the taste cells detect the right plant, the butterfly lays eggs on that leaf. If the leaf is not the right plant, the butterfly flies away to find a better one. Some butterflies can taste the difference between plants so well that they refuse to lay eggs on any plant except their favorite one.\"\n\nCentral idea: Butterflies use taste cells in their feet to identify the right plants for laying eggs.",
+    "problemText": "A student is summarizing a passage about how deserts stay dry. The passage explains that mountains block rain clouds, that air in deserts is warm and holds less moisture, and that deserts rarely get visitors. The central idea has already been identified: deserts form where mountains block rain or where warm air cannot hold moisture. Which fact from the passage should the student keep, and which should be dropped?",
     "choices": [
-      "Butterflies have special taste cells in their feet that tell them whether a leaf is the right plant for laying eggs. If the plant is right, the butterfly lays eggs; if not, it flies away.",
-      "Butterflies taste with their feet, and they have special taste cells that tell them if a leaf is the right food. If it is the right plant, they lay eggs. If not, they fly away to find a better one. Some butterflies are very choosy.",
-      "When a butterfly lands on a leaf, taste cells on its feet detect whether the leaf is right. Butterflies sometimes refuse to lay eggs on the wrong plant.",
-      "Butterflies use their feet to taste leaves and identify plants. They can taste the difference between different plants. Some butterflies are better at this than others."
+      "Keep both the mountain detail and the warm air detail because both support the central idea; drop the detail about visitors because it does not explain why deserts stay dry",
+      "Keep only the mountain detail and drop the warm air detail since the mountain blocking rain is the primary reason that all deserts in the world receive such little precipitation and moisture",
+      "Drop both the mountain detail and the warm air detail, and keep the visitor detail instead because it emphasizes how extreme desert conditions are and shows that deserts are inhabitable places",
+      "Keep the visitor detail because it appears at the end of the passage and the warm air detail since it is mentioned second, dropping only the mountain detail as less relevant"
     ],
     "answer": "A",
     "hints": [
-      "A good summary should be noticeably shorter than the passage and should not repeat sentence by sentence. Which choice combines related facts into fewer sentences?",
-      "Look for a choice that states the central idea clearly and adds only the supporting detail about what happens if the plant is right or wrong, without extra sentences."
+      "Every supporting detail in your summary must connect back to the central idea you are building, not just be true or interesting.",
+      "Think about what the passage is really trying to explain—why deserts are dry—and keep only the details that answer that question."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student was asked to write an objective summary of a passage about how plants make energy from sunlight. The student wrote this:\n\n\"Plants are amazing because they use photosynthesis to turn sunlight into energy. This process shows that plants are the foundation of all life on Earth. First, chlorophyll in the leaves captures sunlight. Then, that light energy turns water and carbon dioxide into sugar. Finally, the plant uses that sugar for food and growth.\"\n\nWhich two problems make this summary not objective?",
+    "problemText": "A passage describes how tornadoes form: warm, moist air rises, cool air pushes down, the air layers spin, and a tornado funnel appears. A student writes this summary: 'Warm, moist air is present. Cool air moves downward. When these air layers spin together, a tornado funnel forms. This proves that nature's power is frightening.' The central idea is: tornadoes form when warm, moist air and cool air create spinning layers that become a funnel. Identify two problems with the student's summary and explain how to fix both.",
     "choices": [
-      "It organizes facts in the order they appear in the passage rather than grouping related information together, and it relies on scientific vocabulary that makes it harder to understand.",
-      "It uses the phrase 'This process shows that' to announce a conclusion, and it calls plants 'amazing,' which are both judgments instead of facts from the passage.",
-      "It begins with a judgment statement, and it fails to distinguish between photosynthesis and the respiration process that plants also perform.",
-      "It uses the phrase 'because they use photosynthesis' which assumes readers understand the term, and it states opinions about plants' importance rather than just describing what happens."
+      "The summary is unnecessarily long and repetitive because it lists every single detail from the passage separately instead of combining them into shorter and more efficient sentences without losing meaning",
+      "The summary repeats facts as separate sentences instead of combining them into one, and it ends with a judgment using 'proves' that states the summarizer's own reaction instead of reporting the passage",
+      "The summary fails to mention that the passage discusses rising and sinking air movements and it incorrectly changes the order of tornado formation steps from what the passage describes in sequence",
+      "The summary omits the explanation that warm air must rise higher than cool air and it includes personal feelings about nature that contradict the factual information the passage provides about meteorology"
     ],
     "answer": "B",
     "hints": [
-      "An objective summary reports what the text says, not what the summarizer thinks about it. Which words or phrases in the student's summary announce an opinion?",
-      "Look for both the obvious judgment word and the quiet kind — the phrase that uses words like 'shows that' or 'proves' to hand over the summarizer's conclusion."
+      "Look for two separate mistakes: one about how a summary is written (how many sentences, how details are combined) and one about staying objective.",
+      "Remember that the last sentence of the student's summary announces what the summarizer thinks about tornadoes, not what the passage says."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6ELA-3.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this passage. A student has identified the central idea and written a first draft of a summary. Then read the student's work and decide what revision is needed.\n\nPassage: \"Frogs start their lives in water as eggs, then hatch into tadpoles with tails and gills. As tadpoles grow, their bodies change: front legs develop, then back legs. As legs grow in, the tail gets shorter and shorter. Gills disappear and lungs develop so the tadpole can breathe air. Eventually the tadpole leaves the water as a young frog. This transformation takes several weeks or even months, depending on the species and temperature.\"\n\nCentral idea: Frogs change from water-dwelling tadpoles with tails and gills into air-breathing frogs with legs as their bodies develop over weeks or months.\n\nStudent's first draft: \"Frogs undergo an amazing transformation from tadpoles to adult frogs. Eggs hatch into tadpoles with tails and gills. Front legs develop, then back legs grow in. The tail shrinks. Gills disappear and lungs develop. Eventually the tadpole becomes a frog and leaves the water. This transformation is truly remarkable and shows how incredible nature is.\"\n\nWhat revisions does this draft need?",
+    "problemText": "A passage explains that salt dissolves in water because water molecules pull the salt apart, that dissolving salt is useful for melting ice on roads, that salt has been mined for thousands of years, and that dissolved salt can be separated from water by heating. A student is writing an objective summary. The central idea is: salt dissolves in water because water molecules pull the salt crystal apart into separate pieces. The student has written three possible summaries below. Which one correctly includes only details that support the central idea, stays objective, and is noticeably shorter than the original passage without retelling it sentence by sentence?",
     "choices": [
-      "Add quotations from the passage to support the claims made in the summary and demonstrate accurate understanding of the source material.",
-      "Delete the subjective language like 'amazing' and 'remarkable' and combine related sentences to reduce wordiness, making the summary more objective and concise.",
-      "Remove the judgment words 'amazing,' 'remarkable,' and the phrase 'shows how incredible nature is.' Combine some of the short sentences so the summary is shorter and less repetitive.",
-      "Change the order of the sentences so that the information about how long the transformation takes comes first, followed by the physical changes that occur during the process."
+      "Salt dissolves in water because water molecules pull the salt crystal apart. This process is useful in many ways.",
+      "Water molecules pull salt crystals apart, which causes salt to dissolve. People have mined salt for thousands of years.",
+      "Salt dissolves when water molecules pull the crystal apart into separate pieces. Separated salt can be recovered by heating the water.",
+      "Salt dissolves in water as water molecules pull the crystal apart. Salt has been used for thousands of years because it dissolves."
     ],
     "answer": "C",
     "hints": [
-      "Scan the student's draft for judgment words — both obvious ones and quiet phrases that announce conclusions instead of reporting facts.",
-      "Notice that the draft lists short sentences one at a time, each as its own idea. A good summary should combine related facts and be noticeably shorter than the original passage. Which revision choice fixes both problems?"
+      "Check each choice: does it state the central idea, include only details that explain WHY salt dissolves, stay objective (no judgment words or conclusion-announcing phrases), and avoid retelling?",
+      "The detail about heating water to separate dissolved salt supports the central idea by showing what happens after dissolution, but facts about usefulness or ancient mining do not explain the dissolving process itself."
     ]
   }
 ]

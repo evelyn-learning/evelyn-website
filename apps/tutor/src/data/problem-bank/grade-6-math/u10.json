@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A statistical question is one that anticipates variability in the answers. Which of the following best describes what variability means in this context?",
+    "problemText": "A statistical question is one that anticipates variability in the data. Which of these is a statistical question?",
     "choices": [
-      "The question asks about information that stays the same when collected from different sources, such as a fact that would be the same in every reference book or online database.",
-      "The question requires surveying a large group of people and counting them up to produce one final total number for comparison.",
-      "The question uses certain action words like 'how many' or 'how much' rather than request words like 'what' or 'which' in its phrasing.",
-      "The answers to the question are expected to differ from one person to another, object to object, or time to time."
+      "How many students are in the eighth grade at Central Middle School?",
+      "How tall is the principal of our school?",
+      "What is the capital of France?",
+      "How many hours of television does each student in our class watch per day?"
     ],
     "answer": "D",
     "hints": [
-      "Think about what happens when you collect answers from different members of a group. Do the answers stay the same or do they differ?",
-      "Variability is about expecting different answers before you ever collect the data."
+      "Remember: a statistical question expects different answers from different people or objects.",
+      "Which choice asks about a group where each member could give a different answer?"
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student is deciding between two questions. Question 1: 'How many minutes did it take the school bus to arrive at school this morning?' Question 2: 'How many minutes did it take the school bus to arrive at school on each of the last ten school days?' Use the variability test to identify which one is a statistical question.",
+    "problemText": "A student asks: 'How many cans of soup does our school cafeteria have right now?' Apply the variability test to decide whether this is a statistical question. Would you expect this question to produce one fixed number, or many different numbers depending on when or who you ask?",
     "choices": [
-      "Question 2 is a statistical question because different days may have different travel times.",
-      "Question 1 is a statistical question because it is asking about the school bus.",
-      "Neither question is a statistical question because they both are about the same bus.",
-      "Both questions are statistical questions because they both ask about time measurements."
+      "It is not statistical because the cafeteria's soup count is one fixed number at any given moment.",
+      "It is statistical because asking different people or checking at different times would produce different counts due to soup being used and restocked throughout the day.",
+      "It is statistical because the number of cans is large enough that counting them all would take a long time and require effort from multiple people.",
+      "It is not statistical because soup is purchased in bulk quantities and stored in the same location, so there is only one way to count it."
     ],
     "answer": "A",
     "hints": [
-      "Ask yourself: for Question 1, how many different answers would you expect to collect? For Question 2, how many different answers would you expect?",
-      "One bus ride on one morning gives one time, but ten different days could have ten different times due to traffic, weather, or other changes."
+      "Think about whether this question has one correct answer or many different correct answers.",
+      "Even though many items are involved, does asking about all of them together produce variability?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A teacher wants to know about the reading habits of the fifth graders in the school. The teacher is trying to decide which question to ask. Read the two options carefully and decide which one is a statistical question.",
+    "problemText": "Two students each write a question about pets. Student A writes: 'How many pets does the average household on Oak Street have?' Student B writes: 'How many pets does each household on Oak Street have?' Which student wrote a statistical question, and why?",
     "choices": [
-      "How many pages did the fifth-grade class read in total last week?",
-      "How many pages did each student in the fifth grade read last week?",
-      "How many fifth graders attend this school?",
-      "What was the title of the book that the fifth-grade class read together last month?"
+      "Student A, because the question mentions an entire street.",
+      "Student B, because each household can give a separate, possibly different answer about its own pets.",
+      "Both students wrote statistical questions because they both talk about Oak Street.",
+      "Neither student wrote a statistical question because you cannot know the answer without surveying."
     ],
     "answer": "B",
     "hints": [
-      "A statistical question reaches each member of a group separately so that each person can give a different answer.",
-      "Even though option A mentions the whole fifth-grade class, it asks for only one total number. That is not the same as asking each student separately."
+      "The key difference is whether each unit (each household) gives its own separate answer.",
+      "Does mentioning a group by itself make a question statistical, or does the way the question is asked matter more?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Marcus wrote a question: 'How much did the class lunch cost?' He wants to turn this into a statistical question by changing who the question is about. Using the lesson strategy, rewrite Marcus's question so it becomes statistical. Which of the following rewrites correctly applies the variability test?",
+    "problemText": "A coach writes the question: 'How long did our team's game last yesterday?' The coach then decides to change the question to make it statistical by keeping the topic the same and changing who the question reaches. Which rewritten question would correctly turn it into a statistical question?",
     "choices": [
-      "How much did lunches cost in the school cafeteria over the last year?",
-      "What kind of food did the class eat for lunch?",
-      "How much did each student in the class spend on lunch today?",
-      "How much money does the school spend on food for all student lunches?"
+      "How long do basketball games usually last when played by different teams and leagues?",
+      "How many total minutes did all players on our team play combined during yesterday's game?",
+      "How long did each player on our team play during yesterday's game?",
+      "What time did yesterday's game start and what time did it end?"
     ],
     "answer": "C",
     "hints": [
-      "To fix Marcus's question, keep the topic (lunch cost) the same and change WHO is being asked—from one event to every member of a group.",
-      "Each student is likely to have spent a different amount on lunch, so their answers would vary. The question should ask each student separately."
+      "Keep the topic (time duration related to yesterday's game) the same, but ask about each person separately instead of the whole game.",
+      "Which choice asks each team member for their own separate answer, creating expected variability?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student claims that 'How many students attend Lincoln Middle School?' is a statistical question because it mentions many students. Evaluate this claim using the variability test taught in the lesson.",
+    "problemText": "Four questions are being tested with the variability test. (1) 'How much does a new bicycle cost at the bike shop downtown?' (2) 'How much does each bicycle in the rental fleet cost?' (3) 'How many weeks did our class practice for the concert?' (4) 'How many weeks did each band student practice for the concert?' Which two of these four questions are statistical questions?",
     "choices": [
-      "The claim is correct because asking about a large group of students automatically qualifies as a statistical question by definition, since mentioning multiple people makes any question statistical in nature.",
-      "The claim is correct because any question that refers to multiple people or objects in a school setting is considered a statistical question, regardless of what answer the question produces.",
-      "The claim is incorrect because the definition of a statistical question requires that different people can give different answers, but asking about total enrollment yields only one fixed number with no variability.",
-      "The claim is incorrect because even though the question mentions many students, it produces only one answer: the total enrollment number, and no variability is expected."
+      "Questions 1 and 3",
+      "Questions 1 and 4",
+      "Questions 2 and 3",
+      "Questions 2 and 4"
     ],
     "answer": "D",
     "hints": [
-      "Remember: mentioning a group is not enough by itself to make a question statistical. What matters is whether each member of the group can give a separate, different answer.",
-      "The school's total enrollment is one fixed number. There is only one correct answer to this question, so no variability is expected."
+      "For each question, ask yourself: does it have one fixed answer, or does it expect each member of a group to give a possibly different answer?",
+      "Questions that name a group but ask about only one total (like 'the class') are not statistical. Questions that ask each member separately are."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-10.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A coach wrote three questions to learn about her soccer team: (1) 'What is the height of our team captain?' (2) 'How tall is each player on our team?' (3) 'What was the total combined height of our team members?' For each question, the coach should apply the variability test. How many of these three questions are statistical questions that would produce variability in the answers collected?",
+    "problemText": "A teacher writes: 'What is the favorite color of students in my school?' and then thinks this question might not be statistical. She considers three possible rewrites: (1) 'What is the favorite color?' (2) 'What is the favorite color of each student in my school?' (3) 'What are the favorite colors of students in my school?' Explain why at least one of these would turn the original into a true statistical question, and which one(s) would work. Which statement correctly describes the result?",
     "choices": [
-      "Only Question 2 is statistical because different players have different heights and can give separate answers.",
-      "All three questions are statistical because they all mention the soccer team and involve measurement.",
-      "Questions 1 and 2 are statistical, but Question 3 is not, because Question 3 asks for a single combined total rather than separate responses.",
-      "Only Questions 2 and 3 are statistical because they both reference multiple team members rather than singling out one individual."
+      "Only rewrite 2 works, because it explicitly asks each student to give their own separate answer, creating expected variability.",
+      "Only rewrite 1 works, because it is shorter and more general, allowing anyone to answer without specifying individual students.",
+      "Rewrites 2 and 3 both work, because they both make clear that the answers will differ from student to student based on individual preferences.",
+      "None of the rewrites work, because asking about favorite colors requires students to guess what others like instead of reporting their own preferences."
     ],
     "answer": "A",
     "hints": [
-      "Apply the variability test to each one: does it ask one specific person or object (one answer), or does it ask each member of a group separately (many possibly different answers)?",
-      "Question 1 names one specific person so it has one answer. Question 3 asks for one total number for the whole group. Only Question 2 asks each player separately."
+      "Which rewrite makes it absolutely clear that each individual student will answer for themselves, not just the group overall?",
+      "A statistical question must show that each member of the group can give a separate, possibly different answer. Which phrasing makes that expectation most explicit?"
     ]
   }
 ]

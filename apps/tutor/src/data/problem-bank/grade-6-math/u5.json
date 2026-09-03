@@ -228,120 +228,6 @@
     ]
   },
   {
-    "id": "m6math-negative-numbers-in-context-001",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A scuba diver is 50 meters below sea level. Which signed number represents this position?",
-    "choices": [
-      "50 meters below",
-      "+50 meters",
-      "-50 meters",
-      "-50 below meters"
-    ],
-    "answer": "C",
-    "hints": [
-      "Remember: the minus sign is a label that tells you which side of zero the diver is on. It means below, not subtract.",
-      "Sea level is zero. Below sea level is the negative direction."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-002",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "On a number line, the number -7 is marked. What do the minus sign and the digit 7 each tell you about where -7 sits?",
-    "choices": [
-      "Both the minus sign and the 7 together tell you only the direction, not the distance.",
-      "The 7 tells you the direction from zero, and the minus sign tells you how far from zero.",
-      "The minus sign tells you to subtract 7 from zero.",
-      "The minus sign tells you the direction from zero, and the 7 tells you how far from zero."
-    ],
-    "answer": "D",
-    "hints": [
-      "Review the lesson: 'The digits tell you how far. The sign tells you which side.'",
-      "The minus sign is a label for direction, not an instruction to subtract."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-003",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A bank account starts empty (zero dollars). A customer withdraws $25. Then the customer deposits $25. What are the signed numbers for these two transactions, and why are they opposites?",
-    "choices": [
-      "Withdraw $25 is -25 dollars; deposit $25 is +25 dollars. They are opposites because they go in opposite directions from zero.",
-      "Withdraw $25 is -25 dollars; deposit $25 is -25 dollars. They are opposites because both represent removing money from the account balance, making them equal in magnitude and direction.",
-      "Withdraw $25 is +25 dollars; deposit $25 is -25 dollars. They are opposites because withdrawing adds funds while depositing removes funds from the account.",
-      "Withdraw $25 is -25 dollars; deposit $25 is +25 dollars. They are opposites because one is a subtraction problem and the other is an addition problem, making their operations different."
-    ],
-    "answer": "A",
-    "hints": [
-      "Opposites sit the same distance from zero but on opposite sides. What are the two directions for money in an account?",
-      "One transaction removes money (negative direction); the other adds money (positive direction)."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-004",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A temperature reading is -15 degrees Celsius. Another temperature is the opposite of this reading. What is the second temperature, and what does zero mean in this situation?",
-    "choices": [
-      "+15 degrees Celsius; zero means the temperature at which water boils.",
-      "+15 degrees Celsius; zero means the temperature at which water freezes.",
-      "-15 degrees Celsius; zero means the temperature at which water freezes.",
-      "+30 degrees Celsius; zero means the temperature at which water freezes."
-    ],
-    "answer": "B",
-    "hints": [
-      "Opposites are the same distance from zero but on opposite sides. If one is -15, what is the other?",
-      "In Celsius, zero has a specific meaning related to water. Review the worked examples in the lesson."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-005",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A cave map marks the entrance at 0 feet. A guide descends 80 feet into the cave to reach a chamber. Write this position as a signed number. Then explain why writing '-80 feet below the entrance' would be incorrect.",
-    "choices": [
-      "-80 feet; because 80 is negative when measured from the entrance.",
-      "+80 feet; because the guide went down, which is the positive direction underground.",
-      "-80 feet; because the minus sign already means below, so saying below twice is redundant.",
-      "80 feet; because underground measurements never use negative signs."
-    ],
-    "answer": "C",
-    "hints": [
-      "Review the lesson rule: 'Use the sign or use the word, never both at once.'",
-      "The minus sign is a label for the direction. Choose to use either the sign (-80 feet) or the word (80 feet below), but not both."
-    ]
-  },
-  {
-    "id": "m6math-negative-numbers-in-context-006",
-    "loId": "m6math.negative-numbers-in-context",
-    "cedCode": "M6MATH-5.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Two hikers are on different elevation maps. Hiker A uses a map where sea level is 0 feet and is at an elevation of -250 feet. Hiker B uses a different map where the base camp is 0 feet and is at an elevation of -250 feet. Both negative numbers have the same digits and sign. Explain why zero means something different in each situation, and why this affects what their signed numbers represent.",
-    "choices": [
-      "On Hiker A's map, zero is base camp, so -250 means below base camp. On Hiker B's map, zero is sea level, so -250 means below sea level. The two hikers are definitely at different real locations because they used different maps.",
-      "Both hikers are at the same location because -250 means 250 feet down on every map no matter what. Zero always refers to sea level in all elevation situations, so the context and reference point do not change what the signed number represents in reality.",
-      "On Hiker A's map, zero represents sea level and -250 means 250 feet below sea level. On Hiker B's map, zero represents base camp and -250 means 250 feet below base camp. Since both negative numbers have the same digits, they must represent the same distance and direction from their respective zero points, making the hikers at equivalent locations.",
-      "On Hiker A's map, zero is sea level (the ocean surface), so -250 means 250 feet below the ocean. On Hiker B's map, zero is base camp (a location on land), so -250 means 250 feet below base camp. Zero is the agreed line chosen for each map, so the same signed number describes different real locations."
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson states: 'Zero means something different every time' and 'whoever writes the numbers chooses it.' What zero means depends on the specific context.",
-      "Think about the worked examples: on a Celsius thermometer, zero is freezing point; for sea level, zero is the ocean surface; for a bank account, zero is an empty account. The same signed number can mean different things in different situations."
-    ]
-  },
-  {
     "id": "m6math-ordering-rational-numbers-001",
     "loId": "m6math.ordering-rational-numbers",
     "cedCode": "M6MATH-5.4",
@@ -453,6 +339,120 @@
     "hints": [
       "For each consecutive pair in the ordered list, the one on the left should be less than the one on the right.",
       "Read the order from left to right and write < between consecutive numbers to show that relationship."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-001",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A diver is 25 meters below the surface of the ocean. Which signed number represents this position, if the surface of the ocean is 0 meters?",
+    "choices": [
+      "25 meters (no sign needed)",
+      "+25 meters",
+      "-25 meters",
+      "-0 meters"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that the minus sign is a label telling you which direction from zero.",
+      "Below the surface is the negative direction."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-002",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On a bank statement, zero represents an empty account. Maya has a balance of -$40. What does this signed number tell you about Maya's account?",
+    "choices": [
+      "She has $40 in her account.",
+      "She deposited money 40 times.",
+      "Her account is frozen at $40.",
+      "She owes $40, or has withdrawn $40 more than she deposited."
+    ],
+    "answer": "D",
+    "hints": [
+      "The minus sign shows direction. Which direction from an empty account does it point?",
+      "Zero is empty, so negative means the opposite of depositing money."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-003",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A weather station records the temperature at noon on two different days. Monday: 5 degrees Celsius. Wednesday: -5 degrees Celsius. On the Celsius scale, zero is the temperature at which water freezes. Which statement correctly compares these two temperatures?",
+    "choices": [
+      "Wednesday was colder because -5 is on the colder side of the freezing point.",
+      "Monday was colder because 5 is a bigger number than -5, and bigger numbers always mean warmer temperatures.",
+      "Both days had the same temperature because 5 and -5 are the same distance from zero on the number line.",
+      "Monday was colder because positive numbers represent temperatures below freezing while negative numbers are above it."
+    ],
+    "answer": "A",
+    "hints": [
+      "The sign tells you which side of zero you are on, not which is farther.",
+      "Think about what zero means here and which direction each sign points."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-004",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A city uses sea level as zero elevation on its maps. Point A on the map shows an elevation of +120 feet. Point B is at the exact opposite location on the elevation scale—the same distance from sea level but in the opposite direction. You need to mark Point B on a map and also write it as a signed number. What is the signed number for Point B, and what does zero mean in this situation?",
+    "choices": [
+      "-120 feet; zero is the top of the tallest mountain",
+      "-120 feet; zero is sea level",
+      "+120 feet; zero is sea level",
+      "-240 feet; zero is sea level"
+    ],
+    "answer": "B",
+    "hints": [
+      "Opposites are the same distance from zero but on opposite sides.",
+      "Identify what zero represents before you write the signed number."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-005",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A cave explorer's map marks the cave entrance as 0 feet and measures depth downward from that point. The explorer descends to a chamber 80 feet below the entrance, then climbs back up 30 feet to reach a resting point. The resting point is still below the entrance. Write the position of the resting point as a signed number relative to the entrance.",
+    "choices": [
+      "-110 feet",
+      "+50 feet",
+      "-50 feet",
+      "+30 feet"
+    ],
+    "answer": "C",
+    "hints": [
+      "First, write the chamber position as a signed number. Then figure out where the resting point is.",
+      "The minus sign means below the entrance; the digits tell you how far."
+    ]
+  },
+  {
+    "id": "m6math-negative-numbers-in-context-006",
+    "loId": "m6math.negative-numbers-in-context",
+    "cedCode": "M6MATH-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student is working with three different situations: (1) a thermometer showing temperature in Celsius, (2) a bank account balance, and (3) a hiking trail elevation measured from sea level. In each situation, zero means something different. The student writes '-15' for all three contexts and claims it means the same thing in each. Explain why this claim is wrong and give the correct meaning of -15 in each situation.",
+    "choices": [
+      "The claim is wrong because -15 is a negative number and negative numbers cannot be used to describe bank accounts.",
+      "The claim is wrong because the minus sign only works for money, not for temperature or elevation.",
+      "The claim is correct; -15 means the same thing in all three situations because the minus sign always means subtract.",
+      "The claim is wrong because -15 always means 15 units below something, but what it is below changes: 15 degrees colder than freezing, 15 dollars owed or withdrawn, and 15 feet below sea level."
+    ],
+    "answer": "D",
+    "hints": [
+      "Start by naming what zero means in each of the three situations.",
+      "The minus sign's direction is the same in all three, but what sits at zero is different in each context."
     ]
   }
 ]

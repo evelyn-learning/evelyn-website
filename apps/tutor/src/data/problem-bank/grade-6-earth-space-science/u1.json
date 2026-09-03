@@ -1,233 +1,5 @@
 [
   {
-    "id": "m6sci-scale-of-the-solar-system-001",
-    "loId": "m6sci.scale-of-the-solar-system",
-    "cedCode": "M6SCI-1.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "The sun's real diameter is about 1,392,000 kilometers, and Earth's real diameter is about 12,742 kilometers. About how many times larger is the sun's diameter than Earth's diameter?",
-    "choices": [
-      "About 390 times larger",
-      "About 11 times larger",
-      "About 109 times larger",
-      "About 1.5 times larger"
-    ],
-    "answer": "C",
-    "hints": [
-      "You need to divide the larger diameter by the smaller one.",
-      "The lesson specifically calculates this ratio early on."
-    ]
-  },
-  {
-    "id": "m6sci-scale-of-the-solar-system-002",
-    "loId": "m6sci.scale-of-the-solar-system",
-    "cedCode": "M6SCI-1.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "In a scale model, you decide to use a grapefruit about 20 centimeters across to represent the sun. The sun's real diameter is about 1,392,000 kilometers. What scale factor (in real kilometers per model centimeter) would you use for this model?",
-    "choices": [
-      "About 20,000 real kilometers per model centimeter",
-      "About 46,400 real kilometers per model centimeter",
-      "About 139,200 real kilometers per model centimeter",
-      "About 69,600 real kilometers per model centimeter"
-    ],
-    "answer": "D",
-    "hints": [
-      "Divide the sun's real diameter by the diameter of the object you chose.",
-      "The lesson shows this same calculation with a 30-centimeter beach ball and gets 46,400; a smaller object would give a larger scale factor."
-    ]
-  },
-  {
-    "id": "m6sci-scale-of-the-solar-system-003",
-    "loId": "m6sci.scale-of-the-solar-system",
-    "cedCode": "M6SCI-1.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Mars's real distance from the sun is about 228,000,000 kilometers. In a scale model where Earth's model distance from the sun is about 32 meters, and Earth's real distance is about 150,000,000 kilometers, about how far should Mars sit from the model sun?",
-    "choices": [
-      "About 49 meters",
-      "About 32 meters",
-      "About 228 meters",
-      "About 150 meters"
-    ],
-    "answer": "A",
-    "hints": [
-      "Mars's real distance is about 1.5 times Earth's real distance.",
-      "If Mars is 1.5 times as far in real life, its model distance should also be 1.5 times as far."
-    ]
-  },
-  {
-    "id": "m6sci-scale-of-the-solar-system-004",
-    "loId": "m6sci.scale-of-the-solar-system",
-    "cedCode": "M6SCI-1.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "In a scale model using a 30-centimeter beach ball for the sun, Earth's model size works out to about 3 millimeters (like a sesame seed) and Earth's model distance from the ball is about 32 meters. Why does a single drawing that shows both the sun and Earth accurately sized AND accurately distanced from each other at this scale not exist?",
-    "choices": [
-      "Because planets and the sun are not actually round; they are different shapes, so applying a single scale factor to both size and distance would distort their true forms differently.",
-      "Because applying one scale factor shrinks sizes so tiny that they become invisible on a page, while stretching distances so large that they extend far beyond a page.",
-      "Because the sun stays in the same place while planets move around it, so the distance scale factor changes over time but the size scale factor remains constant throughout the year.",
-      "Because the scale factor used for sizes must be much larger than the scale factor used for distances in order to show both measurements on the same drawing without one dominating the other."
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what happens when you apply the same scale factor (46,400 kilometers per centimeter) to both tiny planet diameters and huge distances from the sun.",
-      "The lesson explains that one scale factor makes sizes vanish while making distances stretch impossibly far — that mismatch is why the two models are always shown separately."
-    ]
-  },
-  {
-    "id": "m6sci-scale-of-the-solar-system-005",
-    "loId": "m6sci.scale-of-the-solar-system",
-    "cedCode": "M6SCI-1.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "You build a relative-size model where the sun is represented by a 30-centimeter beach ball. A friend suggests you could just make the beach ball twice as big (60 centimeters) to represent the sun in the same model. How would this change affect Earth's model size in your model?",
-    "choices": [
-      "Earth's model size would shrink to about 1.5 millimeters, because using a bigger object for the sun makes everything else look smaller by comparison.",
-      "Earth's model size would stay the same, about 3 millimeters, because Earth's real size never changes.",
-      "Earth's model size would also double, to about 6 millimeters, because the same scale factor applies to all objects in a scale model.",
-      "Earth's model size would become impossible to calculate without knowing what the new scale factor is."
-    ],
-    "answer": "C",
-    "hints": [
-      "In a scale model, does the ratio between the sun and Earth in your model stay the same as their real ratio?",
-      "The lesson shows that changing from a 30-centimeter beach ball to a 3-meter weather balloon (ten times bigger) also makes Earth's model size ten times bigger, from about 2.7 millimeters to about 2.7 centimeters."
-    ]
-  },
-  {
-    "id": "m6sci-scale-of-the-solar-system-006",
-    "loId": "m6sci.scale-of-the-solar-system",
-    "cedCode": "M6SCI-1.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "In a scale model, the sun is a 30-centimeter beach ball and Earth's model distance is 32 meters. Jupiter's real distance from the sun is about 5.2 AU (astronomical units), and one AU equals about 150,000,000 kilometers. About how far from the model sun should Jupiter sit, and how does this distance compare to Earth's model distance?",
-    "choices": [
-      "About 320 meters, which is about 10 times Earth's model distance of 32 meters.",
-      "About 52 meters, which is about 1.6 times Earth's model distance of 32 meters.",
-      "About 16 meters, which is half of Earth's model distance of 32 meters.",
-      "About 166 meters, which is about 5.2 times Earth's model distance of 32 meters."
-    ],
-    "answer": "D",
-    "hints": [
-      "First figure out Jupiter's real distance in kilometers: if 1 AU is 150,000,000 kilometers, what is 5.2 AU?",
-      "Then use the same reasoning as the Mars example: if Jupiter is 5.2 times as far from the sun in real life, its model distance should be 5.2 times Earth's model distance of 32 meters."
-    ]
-  },
-  {
-    "id": "m6sci-classifying-the-planets-001",
-    "loId": "m6sci.classifying-the-planets",
-    "cedCode": "M6SCI-1.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which four planets are terrestrial planets? Select the group that lists all of them correctly.",
-    "choices": [
-      "Venus, Mars, Jupiter, and Saturn",
-      "Mercury, Venus, Earth, and Jupiter",
-      "Earth, Mars, Jupiter, and Saturn",
-      "Mercury, Venus, Earth, and Mars"
-    ],
-    "answer": "D",
-    "hints": [
-      "Terrestrial planets are small and made mostly of rock and metal.",
-      "All terrestrial planets orbit closer to the sun than the asteroid belt."
-    ]
-  },
-  {
-    "id": "m6sci-classifying-the-planets-002",
-    "loId": "m6sci.classifying-the-planets",
-    "cedCode": "M6SCI-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A newly discovered planet is described as having no solid ground anywhere, even deep inside it, and as being much larger than Earth. Based on these properties, which group does this planet most likely belong to?",
-    "choices": [
-      "Gas/ice giant, because it has no solid surface and is much larger than Earth",
-      "Terrestrial, because it is larger than Earth",
-      "Terrestrial, because we have not yet measured its exact distance from the sun",
-      "Gas/ice giant, because it must orbit beyond the asteroid belt"
-    ],
-    "answer": "A",
-    "hints": [
-      "Look for clues about composition and surface, not just size alone.",
-      "Remember: being large is part of the giant pattern, but composition and surface are what actually decide the group."
-    ]
-  },
-  {
-    "id": "m6sci-classifying-the-planets-003",
-    "loId": "m6sci.classifying-the-planets",
-    "cedCode": "M6SCI-1.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Venus is reported to orbit closer to the sun than the asteroid belt, to have a solid rocky surface, and to be small compared to Jupiter. Which statement correctly classifies Venus?",
-    "choices": [
-      "Venus is a gas/ice giant because it orbits closer to the sun than Earth and has an atmosphere",
-      "Venus is a terrestrial planet because it is small, rocky, and orbits before the asteroid belt",
-      "Venus is a gas/ice giant because it has a solid surface and is smaller than Jupiter",
-      "Venus is a terrestrial planet because it does not have a ring system like Saturn does"
-    ],
-    "answer": "B",
-    "hints": [
-      "Check the position relative to the asteroid belt first.",
-      "Composition and solid surface both point to the same group that position suggests."
-    ]
-  },
-  {
-    "id": "m6sci-classifying-the-planets-004",
-    "loId": "m6sci.classifying-the-planets",
-    "cedCode": "M6SCI-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student observes that Saturn has a bright, easy-to-see ring system, and concludes that any planet with a ring system must be Saturn. Explain why this conclusion is incorrect, using what you know about ring systems across all eight planets.",
-    "choices": [
-      "The conclusion is wrong because Jupiter, Uranus, and Neptune also have ring systems, though theirs are much fainter and harder to observe than Saturn's bright, distinctive rings",
-      "The conclusion is wrong because terrestrial planets including Earth and Mars have faint rings that can only be detected with powerful ground-based telescopes and space probes",
-      "The conclusion is wrong because all four giant planets have ring systems, so a ring system alone does not identify Saturn specifically, and Saturn's rings happen to be the brightest",
-      "The conclusion is wrong because Mercury, Venus, Earth and Mars all have ring systems that are much brighter and easier to see than Saturn's rings when viewed from space"
-    ],
-    "answer": "C",
-    "hints": [
-      "Recall which planets definitely have ring systems and compare their brightness.",
-      "A ring alone tells you it is a giant, but only Saturn's rings are the brightest and easiest to see of the four."
-    ]
-  },
-  {
-    "id": "m6sci-classifying-the-planets-005",
-    "loId": "m6sci.classifying-the-planets",
-    "cedCode": "M6SCI-1.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two planets are being studied. Planet A is small, made of rock and metal, has no ring system, and orbits before the asteroid belt. Planet B is much larger than Planet A, made mostly of gas, has no solid surface, and orbits beyond the asteroid belt. Both planets have moons. Which statement correctly describes both planets?",
-    "choices": [
-      "Both are terrestrial planets because they both have moons orbiting them and follow stable paths around the sun",
-      "Both are gas/ice giants because they both orbit the sun and possess natural satellites that can be observed from Earth",
-      "Planet A is a gas/ice giant and Planet B is terrestrial because Planet B is located farther from the sun and has a larger mass than Planet A",
-      "Planet A is terrestrial and Planet B is a gas/ice giant because they differ in composition, size, and position relative to the asteroid belt"
-    ],
-    "answer": "D",
-    "hints": [
-      "Look at the pattern of composition, size, and position — do they all point to the same group or different groups?",
-      "Remember that the number of moons is not the property that determines which group a planet belongs to."
-    ]
-  },
-  {
-    "id": "m6sci-classifying-the-planets-006",
-    "loId": "m6sci.classifying-the-planets",
-    "cedCode": "M6SCI-1.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A space probe sends back data on four planets in a distant solar system. Planet 1 is small, rocky, with a solid surface and no rings, orbiting close to its star. Planet 2 is small, icy, with a solid surface and no rings, orbiting close to its star. Planet 3 is huge, made of gas, with no solid surface and faint rings, orbiting far from its star. Planet 4 is huge, made of gas, with no solid surface and very bright rings, orbiting far from its star. Using the classification scheme taught in this lesson, which planets would you group together with Earth and Mars, and which would you group together with Jupiter and Saturn?",
-    "choices": [
-      "Planets 1 and 2 are terrestrial-like; Planets 3 and 4 are giant-like, and Planet 4 most closely resembles Saturn because of its bright rings",
-      "Planets 1 and 2 are terrestrial-like; Planets 3 and 4 are giant-like, although we cannot tell which specific giant each resembles without knowing distances in kilometers",
-      "Only Planet 1 is terrestrial-like; Planets 2, 3, and 4 are all giant-like because they are icy or gaseous",
-      "Planets 1 and 3 are terrestrial-like; Planets 2 and 4 are giant-like based on whether they are made of rock or ice"
-    ],
-    "answer": "A",
-    "hints": [
-      "Group by the pattern of size, composition, surface, and position — terrestrial planets are small and rocky with solid surfaces, while giants are huge with no solid surface and all have rings.",
-      "Within the giant group, Saturn is uniquely recognized by its bright, easy-to-see rings, while the other three giants have fainter ring systems."
-    ]
-  },
-  {
     "id": "m6sci-gravity-orbital-motion-001",
     "loId": "m6sci.gravity-and-orbital-motion",
     "cedCode": "M6SCI-1.3",
@@ -342,22 +114,136 @@
     ]
   },
   {
+    "id": "m6sci-scale-of-the-solar-system-001",
+    "loId": "m6sci.scale-of-the-solar-system",
+    "cedCode": "M6SCI-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "The sun's real diameter is about 1,392,000 kilometers, and Earth's real diameter is about 12,742 kilometers. Which statement correctly describes the size relationship between these two objects?",
+    "choices": [
+      "Earth's diameter is about 109 times larger than the sun's diameter",
+      "About 109 suns lined up edge to edge would stretch across Earth's diameter",
+      "About 109 Earths lined up edge to edge would stretch across the sun's diameter",
+      "The sun and Earth are almost the same size, just a few kilometers apart"
+    ],
+    "answer": "C",
+    "hints": [
+      "Try dividing the sun's diameter by Earth's diameter to find how many times larger the sun is.",
+      "Remember that when one number is much bigger than another, it takes many copies of the smaller one to equal the larger one."
+    ]
+  },
+  {
+    "id": "m6sci-scale-of-the-solar-system-002",
+    "loId": "m6sci.scale-of-the-solar-system",
+    "cedCode": "M6SCI-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student builds a scale model of the solar system using a 30-centimeter beach ball to represent the sun. The sun's real diameter is about 1,392,000 kilometers. If every centimeter in this model stands for about 46,400 real kilometers, what real distance does a model distance of 2 centimeters represent?",
+    "choices": [
+      "About 46,400 kilometers",
+      "About 23,200 kilometers",
+      "About 184,000 kilometers",
+      "About 92,800 kilometers"
+    ],
+    "answer": "D",
+    "hints": [
+      "Multiply the model distance by the scale factor to find the real distance.",
+      "The scale factor tells you how many real kilometers are represented by each model centimeter."
+    ]
+  },
+  {
+    "id": "m6sci-scale-of-the-solar-system-003",
+    "loId": "m6sci.scale-of-the-solar-system",
+    "cedCode": "M6SCI-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Jupiter's real diameter is about 139,820 kilometers, and Earth's real diameter is about 12,742 kilometers. In a scale model where Earth is represented by a small marble about 1 centimeter across, about how big should Jupiter be in this same model?",
+    "choices": [
+      "About 11 centimeters across",
+      "About 1 centimeter across",
+      "About 0.1 centimeters across",
+      "About 100 centimeters across"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the ratio by dividing Jupiter's real diameter by Earth's real diameter.",
+      "If Earth is 1 centimeter in the model, multiply that by the ratio you just found to get Jupiter's model size."
+    ]
+  },
+  {
+    "id": "m6sci-scale-of-the-solar-system-004",
+    "loId": "m6sci.scale-of-the-solar-system",
+    "cedCode": "M6SCI-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a scale model with a 30-centimeter beach ball representing the sun, Earth's model size works out to about 2.7 millimeters (like a sesame seed) and Earth's model distance from the ball is about 32 meters. If you were to include Mars in the same model, and Mars's real distance from the sun is about 1.5 times Earth's real distance, why would Mars sit much farther from the ball than it is from the beach ball in terms of size, even though Mars itself is only slightly more distant than Earth?",
+    "choices": [
+      "Mars is actually smaller than Earth, so its model representation must be even tinier than Earth's, making it appear insignificant relative to the beach ball sun despite being farther away",
+      "The same scale factor applies to both size and distance, but distances are so much larger in reality that even small ratio differences create huge model differences, while planetary sizes are so small that they all appear tiny in the model",
+      "The scale factor used for planetary diameters is much smaller than the scale factor used for orbital distances, which causes Mars to appear much farther from the sun than its actual size would suggest in a single unified model",
+      "The sun's enormous size in the model forces all planets to be placed at distances proportional to their real distances, but since planetary sizes shrink when divided by the scale factor, Mars ends up looking far from the sun even though it is only slightly larger than Earth"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about whether Earth's model distance (32 meters) or Earth's model size (2.7 millimeters) is the bigger number.",
+      "Real distances in the solar system are much, much larger than real planetary diameters, even though they use the same scale factor."
+    ]
+  },
+  {
+    "id": "m6sci-scale-of-the-solar-system-005",
+    "loId": "m6sci.scale-of-the-solar-system",
+    "cedCode": "M6SCI-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student knows that Mars sits at about 1.5 AU (astronomical units) from the sun, and Jupiter sits at about 5.2 AU from the sun. Earth sits at 1 AU. In a scale model where Earth's distance from the model sun is marked at 10 meters, where should the student mark Mars and Jupiter's positions if they use the same scale factor for all distances?",
+    "choices": [
+      "Mars at about 52 meters and Jupiter at about 15 meters from the model sun",
+      "Mars at about 5 meters and Jupiter at about 2 meters from the model sun",
+      "Mars at about 15 meters and Jupiter at about 52 meters from the model sun",
+      "Mars at about 1.5 meters and Jupiter at about 5.2 meters from the model sun"
+    ],
+    "answer": "C",
+    "hints": [
+      "Each planet's distance from the sun in the model should be multiplied by the same factor used for Earth's distance.",
+      "If Earth at 1 AU is 10 meters in the model, then a distance of 1.5 AU should be 1.5 times as far as Earth, and 5.2 AU should be 5.2 times as far."
+    ]
+  },
+  {
+    "id": "m6sci-scale-of-the-solar-system-006",
+    "loId": "m6sci.scale-of-the-solar-system",
+    "cedCode": "M6SCI-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student creates a scale model with a basketball (about 24 centimeters across) representing the sun. Another student creates a scale model with a 30-centimeter beach ball representing the sun. Both students want Earth to be shown at the correct relative size in their models. Will Earth be the same size in both models, smaller in the basketball model, or larger in the basketball model? Explain your reasoning using what you know about how scale factors work.",
+    "choices": [
+      "Earth will be larger in the basketball model because the basketball is smaller than the beach ball, so the scale factor is larger, and when Earth's real diameter is divided by a smaller scale factor, the result is a larger model size",
+      "Earth will be the same size in both models because Earth's real diameter never changes, no matter which object represents the sun",
+      "Earth will be larger in the basketball model because a smaller object representing the sun means planets must be larger to maintain the correct ratio of planetary size to sun size in the visual representation",
+      "Earth will be smaller in the basketball model because the basketball is smaller than the beach ball, so the scale factor is larger, making everything smaller when divided by it"
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember that the scale factor is the real size of the sun divided by the model size of the sun (the ball).",
+      "A smaller ball chosen to represent the sun creates a larger scale factor, which means when you divide Earth's real diameter by that larger number, you get a smaller result."
+    ]
+  },
+  {
     "id": "m6sci-asteroids-comets-other-solar-system-objects-001",
     "loId": "m6sci.asteroids-comets-and-other-solar-system-objects",
     "cedCode": "M6SCI-1.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of the following best describes the composition of a comet?",
+    "problemText": "A small rock fragment is currently traveling through space, far from Earth and not inside any planet's atmosphere. What is this object called?",
     "choices": [
-      "Rock and metal only",
-      "Ice, frozen gases, and dust",
-      "A hard rocky core surrounded by liquid water",
-      "Gas and dust with no solid material at all"
+      "Meteor",
+      "Meteoroid",
+      "Meteorite",
+      "Asteroid"
     ],
     "answer": "B",
     "hints": [
-      "Comets are often described using a specific nickname that hints at their makeup.",
-      "Think about what happens to a comet when it gets close to the sun—what must be melting?"
+      "Think about what location the object is in right now.",
+      "The name changes based on where the object is, not what it is made of."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student observes an object orbiting the sun in a nearly circular path that stays in the region between Mars and Jupiter. The object does not develop a glowing tail. Based on these observations, what kind of solar system object is it most likely to be?",
+    "problemText": "An object in the solar system is made of rock and metal. It orbits the sun in a path that stays roughly the same distance from the sun all the way around. Where would you expect to find most objects like this one?",
     "choices": [
-      "A comet, because it orbits between Mars and Jupiter",
-      "A meteor, because it does not have a tail",
-      "An asteroid, because its steady orbit and location match the asteroid belt",
-      "A dwarf planet, because any object between Mars and Jupiter must be round"
+      "In the Kuiper Belt, far beyond Neptune",
+      "In a long, stretched-out orbit that swings far from the sun and close to it",
+      "In the asteroid belt between Mars and Jupiter",
+      "Orbiting as a moon around one of the outer planets"
     ],
     "answer": "C",
     "hints": [
-      "Two features are described: the shape of the orbit and the location. Which one is especially linked to the asteroid belt?",
-      "Comets are known for developing tails when they approach the sun. What does the lack of a tail tell you?"
+      "Rocky, metallic composition is a clue to which type of object this is.",
+      "The asteroid belt is located between which two planets?"
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A fragment of rock has been traveling through space for thousands of years without entering any planet's atmosphere. What is this fragment called at this stage, and why?",
+    "problemText": "A glowing streak of light flashes across Earth's night sky. A person watching calls it a shooting star. What is this streak of light actually called in scientific terms?",
     "choices": [
-      "A meteorite, because it has already landed on a planet's surface after passing through the atmosphere",
-      "An asteroid, because any rock fragment in space between Mars and Jupiter must belong to the asteroid belt",
-      "A meteor, because it is the visible streak of light produced when a rock burns up in a planet's atmosphere",
-      "A meteoroid, because it is a small rock fragment drifting through space before entering an atmosphere"
+      "A meteorite that has already landed on Earth's surface after passing through the atmosphere",
+      "A comet's tail pointing away from the sun due to solar wind and radiation pressure",
+      "A meteoroid still traveling through space before it enters Earth's atmosphere and begins to burn",
+      "A meteor produced by a burning fragment in the atmosphere"
     ],
     "answer": "D",
     "hints": [
-      "The three names—meteoroid, meteor, and meteorite—depend on where the object is, not what it is made of. Where is this fragment right now?",
-      "Remember that a meteor is specifically the streak of light you see. If there is no light yet, what stage comes before that?"
+      "The term changes based on where the object is — this one is in Earth's atmosphere.",
+      "Which stage happens when friction heats a fragment until it glows in the sky?"
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "An object orbits far beyond Neptune in the Kuiper Belt. Its own gravity has pulled it into a round, sphere-like shape, similar to how planets are round. However, many other icy objects of similar size orbit very close to it and share its orbital neighborhood. Explain why this object is a dwarf planet and not a full planet.",
+    "problemText": "A scientist observes a solar system object that is round in shape because its own gravity pulled it into that round form. The object orbits the sun in the region between Mars and Jupiter. However, many other rocky objects of similar size orbit in the same region, and this object has not pushed them out or cleared them away. Is this object a dwarf planet, an asteroid, or a comet? Explain your reasoning using at least two facts about the object.",
     "choices": [
-      "It is a dwarf planet because, although it is round from its own gravity, it has not cleared other objects out of its orbital neighborhood the way a full planet does",
-      "It is a dwarf planet because it orbits in the Kuiper Belt, where objects must remain surrounded by other icy bodies in order to avoid gaining enough orbital dominance to become full planets",
-      "It is a dwarf planet because its icy composition means it forms in regions where gravity is insufficient to clear the surrounding neighborhood of other similarly sized objects that share its orbital space",
-      "It is a dwarf planet because it lacks the mass required to generate gravitational pull strong enough to remove competing objects from its orbital zone, keeping it smaller and less dominant than true planets"
+      "A dwarf planet, because it is round from its own gravity but has not cleared other objects out of its orbital neighborhood",
+      "An asteroid, because it orbits between Mars and Jupiter in the asteroid belt region where large rocky bodies are always found together",
+      "A comet, because it is round in shape and orbits the sun like all other bodies in the solar system do",
+      "A dwarf planet, because it has strong enough gravity to pull itself into a round shape, which is the defining feature of any dwarf planet"
     ],
     "answer": "A",
     "hints": [
-      "What is the one key difference in the lesson between what makes a dwarf planet and what makes a full planet? It has to do with the neighborhood around the object.",
-      "Being round and orbiting the sun are things both full planets and dwarf planets can do. What is the thing that sets them apart?"
+      "What is the key difference between a dwarf planet and a full planet — or between a dwarf planet and an asteroid?",
+      "Two clues point to the answer: the object is round, AND it shares its orbital neighborhood with similar-sized debris."
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A small icy object orbits the sun in a long, stretched-out path that carries it from far beyond Neptune almost to the orbit of Mars, then back out again. As it moves toward the sun, a glowing tail forms and streams away from the sun. When the object moves back away from the sun, the tail still points away from the sun, so the tail actually extends in front of the object's direction of travel. What kind of solar system object is this, and what explains why the tail behaves this way?",
+    "problemText": "A comet travels through space on a long, stretched-out orbit. Right now it is far from the sun, moving outward into the cold reaches of the outer solar system. As it moves, a glowing tail streams behind it. In which direction is this tail actually pointing, and why?",
     "choices": [
-      "It is an asteroid because its long, stretched orbit and position in the inner solar system combined with its ability to generate heat show it is a piece of rocky debris from a collision",
-      "It is a comet because the sun's heat turns some of its surface ice into gas, and that gas and dust stream away from the sun rather than trailing behind the object like a kite's tail would",
-      "It is a meteoroid because it is small and icy and moving through space toward the inner solar system, and the glowing tail forms when atmospheric friction burns away its frozen surface layers",
-      "It is a dwarf planet because its long orbital path and the presence of a visible tail indicate that it maintains enough gravitational stability and mass to sustain a permanent presence in the solar system"
+      "Backward along the direction the comet is moving, because material naturally trails behind any object as it travels through space",
+      "Away from the sun, even though the comet is moving away from the sun, so the tail actually points in front of the comet",
+      "Toward the sun, pulled by the sun's strong gravitational force on the comet's ices and gases",
+      "In a curved path that follows the comet's orbit around the sun, staying aligned with its trajectory"
     ],
     "answer": "B",
     "hints": [
-      "Three pieces of evidence point to the type of object: composition (icy), orbit shape (long and stretched), and tail behavior. Do all three point the same way?",
-      "The tail does not behave like a wake behind a moving object. What force is pushing the tail away from the object instead?"
+      "What causes a comet's tail to form — is it the comet's motion or the sun's heat?",
+      "When the comet is moving away from the sun, where does the sun lie in relation to the comet?"
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6SCI-1.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A scientist discovers a new round object orbiting the sun in the Kuiper Belt, far beyond Neptune. The object's gravity is strong enough to have pulled it into a sphere shape. To determine whether it is a dwarf planet or something else, the scientist must investigate whether other similar-sized objects share its orbital path. Explain what the scientist would find that would prove the object is a dwarf planet, and explain what would prove it is not a dwarf planet despite being round and orbiting the sun.",
+    "problemText": "A pea-sized rock fragment has been drifting through space for millions of years. One night it enters Earth's atmosphere at high speed, and friction heats it until it produces a bright streak across the sky. An observer on the ground sees this streak and exclaims, 'Look, a shooting star!' About half of the fragment burns up as it falls through the atmosphere, but the remaining pieces hit the ground in a field. A geologist collects one of these pieces the next morning. Name what this object was called at each of the three stages — while it drifted in space, while it burned in the atmosphere producing the streak of light, and after it landed on the ground. Then explain why the same piece of rock has three different names.",
     "choices": [
-      "The object is a dwarf planet if it orbits the sun and is round; it is not a dwarf planet if it has an irregular shape or does not orbit the sun",
-      "The object is a dwarf planet if it is made of ice and frozen materials; it is not a dwarf planet if it is composed primarily of rock and metal like asteroids",
-      "The object is a dwarf planet if plenty of other icy objects of similar size orbit nearby and have not been cleared away; it is not a dwarf planet if its gravity has swept its orbital neighborhood clear of other large objects",
-      "The object is a dwarf planet if it was formed in the Kuiper Belt; it is not a dwarf planet if it originated in the asteroid belt or migrated from elsewhere in the solar system"
+      "Asteroid, then meteor, then meteorite; the three names describe different objects formed as the rock breaks apart",
+      "Meteoroid, then comet, then asteroid; the names change based on how much of the object survives each stage",
+      "Meteoroid, then meteor, then meteorite; the three names describe the same object at different locations, not three different objects",
+      "Space rock, then falling rock, then ground rock; the names are informal ways of describing the object's speed and position"
     ],
     "answer": "C",
     "hints": [
-      "Reread the lesson definition of a dwarf planet carefully. What is the one criterion that separates a dwarf planet from a full planet?",
-      "The scientist needs to look at the orbital neighborhood. Is it crowded with similar objects, or has the object cleared it out? Which result proves it is a dwarf planet?"
+      "Is the object the same piece throughout, or does it turn into a different kind of thing at each stage?",
+      "What is the rule for when names change — is it based on what the object is made of, or where it is located?"
+    ]
+  },
+  {
+    "id": "m6sci-classifying-the-planets-001",
+    "loId": "m6sci.classifying-the-planets",
+    "cedCode": "M6SCI-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which of these four planets is a terrestrial planet?",
+    "choices": [
+      "Neptune",
+      "Jupiter",
+      "Saturn",
+      "Venus"
+    ],
+    "answer": "D",
+    "hints": [
+      "Terrestrial planets are small and rocky.",
+      "Think about which planets orbit close to the sun, before the asteroid belt."
+    ]
+  },
+  {
+    "id": "m6sci-classifying-the-planets-002",
+    "loId": "m6sci.classifying-the-planets",
+    "cedCode": "M6SCI-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A scientist discovers a planet that is very large, made mostly of gases, and has no solid surface anywhere. Where in the solar system would you expect this planet to orbit?",
+    "choices": [
+      "Beyond the asteroid belt",
+      "Between Earth and Mars",
+      "Between Mercury and Venus",
+      "Closer to the sun than Mercury"
+    ],
+    "answer": "A",
+    "hints": [
+      "Gas and ice giants share a location pattern in the solar system.",
+      "The asteroid belt marks where a major group boundary occurs."
+    ]
+  },
+  {
+    "id": "m6sci-classifying-the-planets-003",
+    "loId": "m6sci.classifying-the-planets",
+    "cedCode": "M6SCI-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Saturn is famous for its bright, easy-to-see ring system. Which statement correctly explains what this tells you about Saturn's classification?",
+    "choices": [
+      "Saturn is a terrestrial planet because it has rings that distinguish it from all other planets in the solar system.",
+      "Saturn is a giant planet because all giant planets have ring systems, even though only Saturn's rings are easy to see.",
+      "Saturn is a terrestrial planet because its rings prove it orbits close to the sun like Earth and Venus do.",
+      "Saturn is a dwarf planet because its visible rings indicate it is smaller than the other giant planets."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that all four giant planets have rings, not just Saturn.",
+      "The brightness of Saturn's rings tells you something different than the fact that it has rings."
+    ]
+  },
+  {
+    "id": "m6sci-classifying-the-planets-004",
+    "loId": "m6sci.classifying-the-planets",
+    "cedCode": "M6SCI-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A newly observed planet has these properties: it is small, it has a solid rocky surface, and it has no ring system. A student claims this is not enough information to sort it into a group because the planet's exact distance from the sun in kilometers is unknown. What is the best response to this claim?",
+    "choices": [
+      "The student is correct; without knowing the exact distance in kilometers, you cannot determine whether the planet is terrestrial or giant.",
+      "The student is correct; both terrestrial and giant planets can have small sizes and rocky surfaces, so distance from the sun must be measured precisely to classify any planet correctly.",
+      "The student is wrong; the small size, rocky composition, and lack of rings already match the terrestrial pattern, and those properties together are enough to sort it.",
+      "The student is wrong; distance from the sun matters less than checking whether a planet has a solid surface, and this one does, which proves it must be terrestrial."
+    ],
+    "answer": "C",
+    "hints": [
+      "Multiple different types of clues about composition, structure, and features can agree on one answer.",
+      "Knowing which side of the asteroid belt a planet orbits is helpful, but is that the only information you have here?"
+    ]
+  },
+  {
+    "id": "m6sci-classifying-the-planets-005",
+    "loId": "m6sci.classifying-the-planets",
+    "cedCode": "M6SCI-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two planets are being classified. Planet A is much larger than Earth, made mostly of gas, has no solid surface, and orbits far beyond the asteroid belt. Planet B is small, rocky, has a solid surface, and orbits close to the sun. A student says both planets should be classified the same way because both are planets. Why is this student's reasoning incorrect?",
+    "choices": [
+      "Planets are only classified into groups if they are larger than Jupiter, and Planet B does not meet this size requirement.",
+      "Planet classification depends on whether a planet is visible from Earth without a telescope, and this information is not provided for either world.",
+      "Only planets with ring systems can be placed into classification groups, and one of these planets has no rings.",
+      "The two planets have opposite properties in composition, size, surface, and location, so they belong in different groups."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at the properties listed for each planet and compare them to the patterns of terrestrial and giant planets.",
+      "One planet fits every property of the gas/ice giant group while the other fits every property of the terrestrial group."
+    ]
+  },
+  {
+    "id": "m6sci-classifying-the-planets-006",
+    "loId": "m6sci.classifying-the-planets",
+    "cedCode": "M6SCI-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student reads that Jupiter, Saturn, Uranus, and Neptune all have ring systems and all orbit beyond the asteroid belt. The student then argues, 'Size is what really decides whether a planet is a giant, because Jupiter and Saturn are bigger than Uranus and Neptune, yet all four are classified the same way.' Identify what is wrong with this reasoning and explain what actually determines the classification.",
+    "choices": [
+      "The student mistook a supporting detail for the real reason; all four planets are giants because they are much larger than any terrestrial planet, are made mostly of gas and ice, and have no solid surface—not because of size differences among themselves.",
+      "The student's comparison is invalid because it ignores that all four planets share the same composition of gases and liquids with no solid ground, which is the actual feature that defines the giant planet group.",
+      "The student is correct; the four giant planets have no other properties in common besides their location beyond the asteroid belt, so size differences are the only way to tell them apart.",
+      "The student's reasoning is flawed because it focuses on differences between giant planets; instead, the classification is based on how all giant planets differ together from terrestrial planets in composition, structure, and atmosphere."
+    ],
+    "answer": "A",
+    "hints": [
+      "A property that every planet in a group shares is what matters for the classification, not differences within the group.",
+      "What are all four of those planets made of, and what would happen if you tried to land a spacecraft on one?"
     ]
   }
 ]

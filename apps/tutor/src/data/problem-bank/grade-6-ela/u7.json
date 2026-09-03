@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6ela-greek-latin-roots-affixes-001",
-    "loId": "m6ela.greek-and-latin-roots-and-affixes",
-    "cedCode": "M6ELA-7.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which word family below all share the root port-, meaning 'carry'?",
-    "choices": [
-      "transport, support, important",
-      "transport, export, portable",
-      "portable, partition, porter",
-      "export, expert, expose"
-    ],
-    "answer": "B",
-    "hints": [
-      "Look for three words where the root port- appears and all connect to carrying something.",
-      "Remember: support has port- but means something different; important does not have the root port- at all."
-    ]
-  },
-  {
-    "id": "m6ela-greek-latin-roots-affixes-002",
-    "loId": "m6ela.greek-and-latin-roots-and-affixes",
-    "cedCode": "M6ELA-7.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the sentence below. Which meaning of the word audition is supported by both the root aud- and the sentence itself?\n\nDuring the audition, the singer performed three songs while the judges listened carefully and took notes.",
-    "choices": [
-      "The range of sound frequencies that a person's ear can detect and process at different volumes",
-      "A gathering of people assembled in a location to hear and enjoy a musical or theatrical performance",
-      "A formal hearing or listening session where a performer demonstrates their skill",
-      "A mechanical or electronic device designed to record and preserve voice and musical sounds"
-    ],
-    "answer": "C",
-    "hints": [
-      "The root aud- means 'hear.' What does the sentence tell you the judges do?",
-      "An audience listens, but this sentence is about judging a performer—what is the performer doing for the judges?"
-    ]
-  },
-  {
-    "id": "m6ela-greek-latin-roots-affixes-003",
-    "loId": "m6ela.greek-and-latin-roots-and-affixes",
-    "cedCode": "M6ELA-7.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read the sentence below. Which meaning of the word dictation is supported by both the root dict- and the sentence itself?\n\nThe teacher spoke slowly during dictation so the students had time to write down every word she said.",
-    "choices": [
-      "A message that is spoken into a recording device and played back to a listener at a different time",
-      "A reference book containing words arranged in order with explanations of what each word means",
-      "An order or command issued by someone in authority that must be followed without any discussion or delay",
-      "The act of a speaker saying words aloud for someone else to write down"
-    ],
-    "answer": "D",
-    "hints": [
-      "The root dict- means 'say.' What is the teacher doing while the students write?",
-      "Notice that the sentence emphasizes the teacher speaking and students writing—which choice matches that action?"
-    ]
-  },
-  {
-    "id": "m6ela-greek-latin-roots-affixes-004",
-    "loId": "m6ela.greek-and-latin-roots-and-affixes",
-    "cedCode": "M6ELA-7.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read the sentence below. The word prescription appears in it. You know that the root scrib- appears in describe and subscribe, both of which relate to writing. However, a doctor's prescription is not typically handwritten instructions anymore. Using the four-step test, what is the most accurate meaning of prescription that both the root scrib- and the sentence support?\n\nThe doctor wrote a prescription for antibiotics and handed it to the pharmacist, who prepared the exact dosage and quantity the doctor specified.",
-    "choices": [
-      "A written or recorded order from a doctor stating what medicine a patient should take, including the amount and how often",
-      "Any document or form that a medical professional creates and signs in the course of their daily medical practice",
-      "A handwritten note that must be copied exactly by hand at the pharmacy before the patient can receive their medicine",
-      "A set of instructions given by a healthcare provider that tells a patient which steps to follow to prevent illness or cure a disease"
-    ],
-    "answer": "A",
-    "hints": [
-      "The root scrib- means 'write,' but remember the lesson: a root gives you a starting point, not a finished definition. What does the sentence say the doctor is specifying?",
-      "Build the bridge: the prescription is written or recorded information that tells the pharmacist what to do—it 'says' what medicine and how much, just as the sentence describes."
-    ]
-  },
-  {
-    "id": "m6ela-greek-latin-roots-affixes-005",
-    "loId": "m6ela.greek-and-latin-roots-and-affixes",
-    "cedCode": "M6ELA-7.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read the sentence below. You notice the word subscriber contains the root scrib- (meaning 'write') that also appears in manuscript and inscription. However, when you check the sentence, it does not mention writing at all. What does this tell you about finding the meaning of subscriber?\n\nWhen my grandmother became a subscriber to the magazine, she received a copy in her mailbox every month for a year.",
-    "choices": [
-      "The root scrib- is the only clue you need, and you should ignore the sentence when you already know what the root means in other words",
-      "The root scrib- does not fit the sentence, so you must trust what the sentence tells you about the meaning instead of stopping at the root alone.",
-      "The root scrib- must mean something entirely different in subscriber than it does in manuscript and inscription because the words are used in different contexts",
-      "The sentence proves that certain words ending in -er cannot be analyzed using roots, so roots should never be used for words with that suffix"
-    ],
-    "answer": "B",
-    "hints": [
-      "The lesson teaches: when the root and the sentence disagree, which one do you trust?",
-      "Think about the bridge: someone who subscribes to a magazine is signing up or 'writing' their name on a list to receive it. The root gives the starting point, but the sentence completes the meaning."
-    ]
-  },
-  {
-    "id": "m6ela-greek-latin-roots-affixes-006",
-    "loId": "m6ela.greek-and-latin-roots-and-affixes",
-    "cedCode": "M6ELA-7.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read the two sentences below. In sentence one, the word audible appears. In sentence two, the word audacious appears. Both words start with the letters 'aud.' You also know that aud- means 'hear' in audience, audible, and audio. Should you use that root to figure out the meaning of audacious? Explain your reasoning using the cautions from the lesson.\n\nSentence 1: The siren was so audible that everyone in the building covered their ears.\nSentence 2: It was audacious of the young skater to attempt a triple jump that even professional athletes avoid.",
-    "choices": [
-      "Yes, because audacious starts with the exact letters 'aud,' and words that share those letters at the beginning must come from the same root and have related meanings",
-      "Yes, because when two words begin with the same three letters and one is from Latin, the other must be from Latin too, so they share the same root",
-      "No, because the root aud- ('hear') does not make sense in the sentence about the skater, and the lesson warns that matching letters is not proof of a shared root.",
-      "No, because audible is used to describe sound while audacious describes behavior, so they are completely different and words that describe different subjects cannot be related"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson specifically teaches about audacious as an example of a word that looks like it belongs to the aud- family but does not. What caution does the lesson give about matching letters?",
-      "Check the sentence around audacious: does it make sense to say the skater is 'hear-ing' something? What does the sentence actually suggest the word means?"
-    ]
-  },
-  {
     "id": "m6ela-connotation-denotation-001",
     "loId": "m6ela.connotation-and-denotation",
     "cedCode": "M6ELA-7.3",
@@ -453,6 +339,120 @@
     "hints": [
       "Look for two emotions described at different strengths, and one event that created a strong reaction — which relationship type fits each?",
       "Use the degree relationship to compare concerned and terrified: both name feelings, but which one describes a much stronger amount of fear? What does this tell you about what mattered most to the driver?"
+    ]
+  },
+  {
+    "id": "m6ela-greek-latin-roots-affixes-001",
+    "loId": "m6ela.greek-and-latin-roots-and-affixes",
+    "cedCode": "M6ELA-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Which word below contains the root port-, which means 'carry'?",
+    "choices": [
+      "fortunate",
+      "portable",
+      "portrait",
+      "portion"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for the exact letters p-o-r-t inside each word.",
+      "Recall that export and transport both contain port- and both involve carrying something."
+    ]
+  },
+  {
+    "id": "m6ela-greek-latin-roots-affixes-002",
+    "loId": "m6ela.greek-and-latin-roots-and-affixes",
+    "cedCode": "M6ELA-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence below, then use the root dict- (which means 'say') to help figure out what contradict means.\n\nWhen the witness contradict the police officer's report in court, the judge ordered an investigation to find out who was telling the truth.",
+    "choices": [
+      "to predict what will happen next by speaking with authority",
+      "to speak loudly in front of an audience so everyone can hear",
+      "to speak against or state the opposite of what someone else said",
+      "to write down a rule that must be followed by all people"
+    ],
+    "answer": "C",
+    "hints": [
+      "The prefix contra- means 'against.' What does it mean to say something against what someone else said?",
+      "The sentence shows the witness going against the police officer's report. Does that fit the root's meaning?"
+    ]
+  },
+  {
+    "id": "m6ela-greek-latin-roots-affixes-003",
+    "loId": "m6ela.greek-and-latin-roots-and-affixes",
+    "cedCode": "M6ELA-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence below, then use the root tele- (which means 'far away') to help figure out what telescope means.\n\nDuring the astronomy club's field trip, students used a telescope to look at the craters on the moon, which they could never see clearly with their eyes alone.",
+    "choices": [
+      "a photograph taken from very high in the air using aircraft technology",
+      "a building where scientists study rocks and minerals found in caves",
+      "a device that sends sounds across long distances like a telephone does",
+      "a tool that makes distant objects look closer so they can be seen clearly"
+    ],
+    "answer": "D",
+    "hints": [
+      "The root tele- shows up in telephone and television. What do those words have to do with distance?",
+      "The sentence says students used this tool to see the moon clearly. What would a tool do if it connects 'far away' with seeing?"
+    ]
+  },
+  {
+    "id": "m6ela-greek-latin-roots-affixes-004",
+    "loId": "m6ela.greek-and-latin-roots-and-affixes",
+    "cedCode": "M6ELA-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence, then answer the question that follows.\n\nThe athlete's auditory nerve had been damaged in the accident, so the doctor prescribed physical therapy to help improve her body's ability to receive and process sound signals.\n\nWhich meaning of auditory is supported by both the root aud- (meaning 'hear') and the sentence itself?",
+    "choices": [
+      "related to hearing and how the body processes sound",
+      "related to watching performances or live events",
+      "related to balance and staying upright",
+      "related to speaking and producing voice"
+    ],
+    "answer": "A",
+    "hints": [
+      "The root aud- appears in audience, audible, and audio—all connected to hearing. What does the root tell you here?",
+      "The sentence mentions the nerve's connection to 'receive and process sound signals.' Does that match what the root suggests?"
+    ]
+  },
+  {
+    "id": "m6ela-greek-latin-roots-affixes-005",
+    "loId": "m6ela.greek-and-latin-roots-and-affixes",
+    "cedCode": "M6ELA-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read the sentence, then answer the question.\n\nThe chef's handwriting was so bad that the restaurant's new cook could not read the recipe transcript she had written, so she asked the head chef to explain what each step meant.\n\nBased on the root scrib/script- (meaning 'write') and the clues in the sentence, why does transcript not make sense in this sentence?",
+    "choices": [
+      "The word transcript comes from a different Latin root that means 'to carry' rather than 'to write,' so it has no connection to the scrib root and does not describe written material.",
+      "A transcript is a written copy of something, but the sentence shows the cook having trouble reading what was already written, not needing a copy of something spoken.",
+      "The root scrib- appears in the word transcript, but a transcript specifically records words that were spoken aloud and then written down, not instructions that were handwritten initially as a recipe.",
+      "A transcript is a written record made after someone speaks words aloud, but the sentence describes a recipe that was handwritten directly without being spoken first for someone to transcribe."
+    ],
+    "answer": "B",
+    "hints": [
+      "Transcript comes from scrib- ('write') plus a prefix. A transcript is usually a written record of something that was spoken. Does that match what the sentence describes?",
+      "The cook cannot read what is written. Is the cook asking for a copy of something that was already spoken, or is the cook dealing with something that is already written?"
+    ]
+  },
+  {
+    "id": "m6ela-greek-latin-roots-affixes-006",
+    "loId": "m6ela.greek-and-latin-roots-and-affixes",
+    "cedCode": "M6ELA-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read both sentences, then answer the question.\n\nSentence 1: The audible hum of the air conditioner kept the baby awake all night.\nSentence 2: The doctor said my sense of smell is audible, but I should still see a specialist about the congestion.\n\nIn Sentence 1, audible (from the root aud-, meaning 'hear') is used correctly. In Sentence 2, using audible does not make sense. Explain why the root aud- works as a clue in Sentence 1 but misleads the writer in Sentence 2.",
+    "choices": [
+      "In Sentence 1, the air conditioner is a machine that produces sound waves, so audible applies perfectly. In Sentence 2, the sense of smell is produced by the nose, which has nothing to do with hearing or sound.",
+      "In Sentence 1, audible is a noun that names a type of sound that can be heard. In Sentence 2, audible is an adjective describing a sense, and the word changes both meaning and grammar based on context.",
+      "In Sentence 1, the sound of the air conditioner can be heard, which matches the root's meaning. In Sentence 2, smell cannot be heard, so the root's meaning does not fit the sentence, even though the letters match.",
+      "In Sentence 1, audible means the sound is loud enough to hear clearly through obstacles. In Sentence 2, the word should mean 'invisible to the eye' instead, which is what the sentence needs to describe smell."
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember: matching letters is not proof of a shared root. The root gives you a starting point, but the sentence must support it too.",
+      "In Sentence 1, does a hum connect to hearing? In Sentence 2, does the sense of smell connect to hearing? Which sentence passes the test?"
     ]
   }
 ]

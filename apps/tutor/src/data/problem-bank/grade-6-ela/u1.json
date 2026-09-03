@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-001",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A story includes a sentence early on that says, 'The old bridge had a loose board near its middle that creaked loudly whenever anyone stepped on it.' Later, the main character runs across that bridge while being chased and the loose board gives way beneath them. What is the name of the job that the early sentence does in the story's overall structure?",
-    "choices": [
-      "It is the rising action of the story.",
-      "It is a setup that the later moment depends on.",
-      "It is a summary of what happens at the bridge.",
-      "It is a location where the action takes place."
-    ],
-    "answer": "B",
-    "hints": [
-      "Remember that a 'job' names what a part does for the rest of the story, not where it sits or what it says.",
-      "Think about whether the later chase scene would make sense without knowing about the loose board first."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-002",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this two-sentence passage: 'Kenji's art teacher assigned the class to paint something from nature, and Kenji chose the single dead oak tree that stood in his grandmother's yard. He spent three afternoons mixing shades of gray and brown until the tree looked exactly as bare and twisted as he remembered it.' How does the first sentence fit into the overall structure of these two sentences? Which of the following best describes its job?",
-    "choices": [
-      "It provides factual information about where Kenji's teacher works and what subject she instructs.",
-      "It describes the assignment that the teacher gave and reveals which specific subject Kenji decided to paint for the class.",
-      "It sets up the dead oak tree as Kenji's subject, which the second sentence then shows him painting carefully.",
-      "It introduces Kenji as a character who attends art class and participates in classroom assignments."
-    ],
-    "answer": "C",
-    "hints": [
-      "Look at what the second sentence does—what detail from the first sentence does it depend on?",
-      "A job in structure points to a later moment that needs it. The second sentence only makes sense if you already know Kenji chose which tree?"
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-003",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A story states: 'The community garden's tool shed had a broken padlock that hung open on the door.' Three sentences later, the story describes a teenager named Olivia taking a shovel from that shed without asking. How does the first sentence contribute to the overall structure of the story?",
-    "choices": [
-      "It tells the reader about the physical appearance of the community garden and the condition of all its buildings and structures.",
-      "It provides information about why the community garden was created and what types of tools are usually stored in sheds.",
-      "It introduces a point in time before the story's main action where certain conditions exist in a specific location.",
-      "It establishes a detail about the setting—the broken padlock—that allows a later action to happen without a locked door stopping it."
-    ],
-    "answer": "D",
-    "hints": [
-      "Think about what would have to change in the later sentence if the padlock were not broken.",
-      "A setting job establishes a place detail that matters again later. What detail about the shed becomes important when Olivia acts?"
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-004",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student read a four-sentence story and was asked how a middle sentence fits the overall structure. The student answered: 'That sentence is where the conflict gets worse.' Explain what is wrong with that answer using the lesson vocabulary, then identify which of the following is a better answer.",
-    "choices": [
-      "The student named a plot stage, not a job. A better answer would point to a specific later sentence and say what detail from the middle sentence that later sentence depends on.",
-      "The student identified a plot stage but neglected to trace how that stage creates a setup that a later sentence must pay off or resolve in order to show the sentence's actual function.",
-      "The student described the sentence's position in the story's sequence but failed to explain what detail or problem the sentence introduces that a later moment in the story then addresses or uses.",
-      "The student recognized what happens in the middle sentence but did not demonstrate how that content serves as a necessary setup for a payoff that appears afterward in the story."
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson teaches the difference between a location (where a part sits) and a job (what it does). What did the student describe?",
-      "A job always requires you to point at the later moment that needs the part you are analyzing. Did the student do that?"
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-005",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this four-sentence story: 'Lena's violin had a loud squeak whenever she played a high note. Her orchestra teacher told her the instrument needed a professional repair. At the winter concert, Lena was supposed to play the opening solo. During her solo, a squeak rang out and the audience gasped.' Based on the lesson's definition of how a sentence fits the overall structure, which two sentences are connected by a setup-and-payoff relationship?",
-    "choices": [
-      "Sentences 2 and 3: Sentence 2 establishes that the instrument requires professional care, and Sentence 3 puts Lena in a position where she must perform with that unrepaired instrument.",
-      "Sentences 1 and 4: Sentence 1 sets up the squeak problem, and Sentence 4 is where that problem causes the moment that matters in the story.",
-      "Sentences 1 and 2: Sentence 1 introduces a technical flaw in the violin, and Sentence 2 explains how a professional would address that flaw.",
-      "Sentences 3 and 4: Sentence 3 establishes that Lena will perform a solo piece, and Sentence 4 shows the audience's reaction to what happens during that solo."
-    ],
-    "answer": "B",
-    "hints": [
-      "Remember that a payoff is the later moment where a setup actually matters to the story. Which sentence shows the consequence of the problem introduced earlier?",
-      "Ask yourself: if you removed one sentence, would the connection between setup and payoff still make sense? Test each pair."
-    ]
-  },
-  {
-    "id": "m6ela-how-a-scene-fits-the-whole-story-006",
-    "loId": "m6ela.how-a-scene-fits-the-whole-story",
-    "cedCode": "M6ELA-1.4",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A story includes these moments: (1) Early on, a character notices their neighbor has a vegetable garden but never invites anyone to visit it. (2) Much later, a character finds vegetable seeds in an old box and plants them secretly in the neighborhood's neglected shared garden. (3) At the very end, the neighbor discovers the new garden and begins tending it alongside the main character. The story is building toward a theme about people breaking down the walls between themselves. How do sentences 1 and 2 together fit into the overall structure, and why is sentence 3 the payoff for both?",
-    "choices": [
-      "Sentence 1 presents a character's observation about gardening habits, Sentence 2 shows another character's independent gardening action, and Sentence 3 describes how two characters interact with plants together.",
-      "Sentences 1 and 2 each introduce a person involved with gardening in the neighborhood, and Sentence 3 resolves the gardening conflict by having both characters work in the same location.",
-      "Sentence 1 sets up the neighbor's isolation with their own garden, and Sentence 2 sets up the main character's action of planting seeds for sharing. Sentence 3 pays off both setups by showing them finally connecting through a shared garden instead of staying separate.",
-      "Sentence 1 identifies a location where gardening occurs and describes one person's approach to that activity, while Sentences 2 and 3 depict a series of gardening-related events that unfold in that same neighborhood setting."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson says a part can contribute to plot, setting, or theme. This story is building toward a theme—look at how the two early sentences each plant a piece of that theme idea.",
-      "Think about what readers learn from Sentence 1 (isolation) and what they learn from Sentence 2 (a gesture toward connection). How does Sentence 3 bring those two pieces together?"
-    ]
-  },
-  {
     "id": "m6ela-how-characters-respond-change-001",
     "loId": "m6ela.how-characters-respond-and-change",
     "cedCode": "M6ELA-1.3",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-001",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A setup is a detail placed early in a text that a later moment depends on. A payoff is the later moment where that setup actually matters. Which pair shows a setup and its payoff?\n\nStory: Sentence 1: 'Marcus always kept his skateboard in the garage, locked to a hook so his younger cousin couldn't borrow it without asking.' Sentence 2: 'One afternoon, Marcus's cousin grabbed the skateboard anyway and rode it down the driveway.' Sentence 3: 'The skateboard was missing from the garage the next morning, and Marcus realized his cousin must have left it at the skate park.'",
+    "choices": [
+      "Sentence 2 is the setup (the cousin rides it), and Sentence 3 is the payoff (it is missing).",
+      "Sentence 1 is the setup (the locked skateboard), and Sentence 3 is the payoff (the skateboard goes missing).",
+      "Sentence 1 is the setup (the garage location), and Sentence 2 is the payoff (the cousin borrows it).",
+      "Sentence 3 is the setup (the missing skateboard), and Sentence 1 is the payoff (it was locked)."
+    ],
+    "answer": "B",
+    "hints": [
+      "The setup happens first and introduces a detail; the payoff comes later when that detail matters.",
+      "Look for which sentence establishes a fact about the skateboard, then find where that fact makes a difference to the ending."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-002",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this short story carefully from beginning to end, then answer the question that follows.\n\nSentence 1: 'Elena had a habit of writing every phone number she heard into the margins of whatever paper was nearby—a grocery list, a library receipt, even the back of a bus ticket.'\nSentence 2: 'One Tuesday, her friend Jada called and gave her the number for a pottery studio that was offering free classes for one week only.'\nSentence 3: 'Elena jotted the number down on the edge of an old envelope and stuck it in her backpack without looking at it again.'\nSentence 4: 'Three days later, Elena found the envelope while cleaning out her backpack and called the studio to sign up for the last two classes of the week.'\n\nWhich sentence is a setup that Sentence 4 depends on?",
+    "choices": [
+      "Sentence 3, because Elena writes the pottery studio number down on the envelope in that sentence and saves it in her backpack where she will find it later.",
+      "Sentence 2, because it introduces the pottery studio and explains that the classes are free and only last one week, giving Elena a reason to want the number.",
+      "Sentence 1, because it shows Elena's habit of writing down numbers, which is why she has the pottery studio's number when she needs it later.",
+      "Sentence 4, because that is when Elena actually calls the studio to sign up for classes and completes the action that the story has been building toward."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask yourself: what would stop making sense in Sentence 4 if Sentence 1 were cut out?",
+      "The setup is not the sentence that merely restates what happens in that moment; it is the earlier detail that explains why the later moment works."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-003",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student was asked to explain how a sentence fits into a story's overall structure and gave this answer: 'This sentence is in the middle of the story.' Explain what is wrong with this answer, then identify which of the following would be a correct answer instead.\n\nStory detail: Sentence 1 sets up that a dog has learned to open the fence gate. Sentence 2 shows the dog escaping through the open gate. Sentence 3 describes the dog getting lost and the family searching for it.",
+    "choices": [
+      "The student forgot to name which character the sentence is about and what role that character plays. A correct answer would be: This sentence is about a dog who learns to open the gate without help.",
+      "The student should have counted all the sentences in order to locate the middle one. A correct answer would be: There are three sentences total, so the middle position is Sentence 2.",
+      "The student did not explain whether the sentence belonged at the start, middle, or end of the story. A correct answer would be: This sentence is at the beginning of the story and introduces the problem.",
+      "The student only named where the sentence sits, not what it does. A correct answer would be: Sentence 1 sets up the escaped dog that Sentences 2 and 3 depend on."
+    ],
+    "answer": "D",
+    "hints": [
+      "Naming where a part sits (beginning, middle, end) is location, not job. What does a job actually name?",
+      "A job should point to a later moment that depends on the setup—look for an answer that connects Sentence 1 to what happens after it."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-004",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this story and then answer the question.\n\nSentence 1: 'Kenji's art class was assigned a project to paint a picture of something from their own lives, and Kenji painted the wooden pier where his grandfather used to take him fishing every summer before the family moved away.'\nSentence 2: 'A week later, Kenji's grandmother visited, and while looking at the painting hanging in his room, she asked Kenji why he had chosen such a sad subject.'\nSentence 3: 'Kenji told her it was not sad to him; it was the best place he had ever been, and he painted it to remember those mornings with his grandfather.'\nSentence 4: 'His grandmother smiled and said she had brought her old fishing tackle box from his grandfather's attic, and she handed it to Kenji.'\n\nSentence 1 serves more than one job in this story. Which two jobs does it do? (Select the pair that both require Sentence 1 to work.)",
+    "choices": [
+      "It sets up the fishing pier as the painting's subject and establishes that detail about the setting so Sentence 2's misunderstanding and Sentence 3's explanation make sense.",
+      "It establishes that Kenji loves his grandfather and creates the painting that leads to his grandmother's visit and her decision to give him the fishing tackle box.",
+      "It explains why Kenji's family moved away from the pier and reveals that Kenji has sad feelings about it, which his grandmother notices in Sentence 2.",
+      "It sets up the painting subject and tells the entire story's plot from the very beginning in one sentence."
+    ],
+    "answer": "A",
+    "hints": [
+      "Both jobs of Sentence 1 should point to different later moments where Sentence 1 actually pays off. Look for an answer that names two separate payoffs.",
+      "One job involves what is painted; the other involves a feeling about what is painted. Both of those details matter to why Sentence 2 and Sentence 3 happen as they do."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-005",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student was given this story and asked to find a setup and name its payoff.\n\nSentence 1: 'Every afternoon, Maya's neighbor Mr. Chen watered his plant collection in the front garden, starting with the ferns and ending with the roses, same order every day.'\nSentence 2: 'One Saturday morning, a water main broke on their street, and the water was shut off until Monday.'\nSentence 3: 'Mr. Chen carried buckets of water he had saved in his basement to keep all of his plants alive over the weekend.'\nSentence 4: 'On Monday when the water came back on, every plant in the garden was still green and healthy.'\n\nThe student answered: 'Sentence 2 is the setup because the water main breaks, and Sentence 4 is the payoff because the plants stay healthy.' Is the student correct? Why or why not?",
+    "choices": [
+      "No. Sentence 1 is the setup because it shows Mr. Chen has a routine of watering daily and implicitly that he has water available for this routine, and Sentence 3 is the payoff because he uses the water he already saved.",
+      "No. Sentence 2 is not the setup; Sentence 1 is. The setup is that Mr. Chen already has saved water in his basement (established by his daily watering routine), and Sentence 3 is the payoff because he uses that water.",
+      "Yes. The student correctly identified that Sentence 2 creates the immediate problem that needs solving and Sentence 4 shows the successful result of Mr. Chen's solution with the saved water.",
+      "Yes. Sentence 2 creates the problem that forces Mr. Chen to act, and Sentence 4 demonstrates the outcome that proves the plants survived the water shortage."
+    ],
+    "answer": "B",
+    "hints": [
+      "A true setup plants a detail that lets a later moment happen without seeming like luck or coincidence. What detail does Sentence 3 already assume exists before it happens?",
+      "Sentence 2 creates a problem, but it does not explain how Mr. Chen solves it. What earlier detail makes Sentence 3 possible?"
+    ]
+  },
+  {
+    "id": "m6ela-how-a-scene-fits-the-whole-story-006",
+    "loId": "m6ela.how-a-scene-fits-the-whole-story",
+    "cedCode": "M6ELA-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this story, paying close attention to what a setup must do to be a real structural job.\n\nSentence 1: 'The book sale at the library happened every spring, and this year Iris decided to volunteer at the donation table instead of just browsing.'\nSentence 2: 'While sorting books, Iris found a worn copy of a novel called 'The Starkeeper' with handwritten notes in the margins on almost every page.'\nSentence 3: 'She was so curious about the reader's notes that she bought the book instead of putting it back on the shelf.'\nSentence 4: 'Over the next month, Iris read the book slowly, reading each passage and then the note someone else had written about it, and she felt like she was having a conversation with a stranger across time.'\nSentence 5: 'When she finished, Iris wrote her own notes in a fresh copy of the same book and donated it back to the library the next spring.'\n\nWhich sentence is a setup whose payoff appears in a different sentence? Explain why it is a setup and identify the specific later moment it makes possible or meaningful.",
+    "choices": [
+      "Sentence 3 is the setup. It shows Iris deciding to buy the book with notes in it, and Sentence 5 is the payoff because that is when Iris writes her own notes in a fresh copy and donates it back to the library.",
+      "Sentence 1 is the setup. It establishes that Iris volunteers at the book sale instead of just browsing like she normally does, and Sentence 2 is the payoff because that is when her volunteer job allows her to discover the marked-up book.",
+      "Sentence 2 is the setup. It introduces the book with handwritten notes, and Sentence 4 is the payoff because without the notes, Iris would not have the experience of feeling like she was having a conversation with a stranger across time.",
+      "Sentence 4 is the setup. It shows Iris reading and responding deeply to the notes in the book, which changes her understanding of reading, and Sentence 5 is the payoff because that experience motivates her to write her own notes in response."
+    ],
+    "answer": "C",
+    "hints": [
+      "A setup plants a detail early; the payoff is where that setup actually matters to the story's meaning. Do not confuse cause-and-effect in the moment with structural setup-and-payoff across the whole story.",
+      "Ask: without Sentence 2, would Sentence 4 still make sense? Or does Sentence 4 depend on a specific detail from Sentence 2 to be true?"
+    ]
+  },
+  {
     "id": "m6ela-how-a-story-s-plot-unfolds-001",
     "loId": "m6ela.how-a-storys-plot-unfolds",
     "cedCode": "M6ELA-1.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which of the following best describes what the exposition stage of a plot does?",
+    "problemText": "Which of the following is the main job of the exposition stage in a story's plot?",
     "choices": [
-      "It builds tension through a series of complications that keep the outcome uncertain.",
-      "It shows the moment when the outcome of the story finally becomes decided.",
-      "It settles the conflict and shows what things look like after the turning point.",
-      "It introduces the characters, setting, and situation before any conflict appears."
+      "Presents a series of problems that keep building tension",
+      "Describes the moment when the outcome of the conflict becomes decided",
+      "Shows what things look like after the conflict has been resolved",
+      "Introduces the characters, setting, and situation before any trouble begins"
     ],
     "answer": "D",
     "hints": [
-      "Exposition comes first, before any trouble starts.",
-      "Look for the stage that sets up the ordinary situation."
+      "The exposition happens first, before a conflict appears.",
+      "Look for the stage that sets up the ordinary situation, not the one that changes it."
     ]
   },
   {
@@ -366,36 +366,36 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read the story below. Which sentence belongs in the rising action stage?\n\n\"For months, Elena practiced her presentation on the history of her neighborhood. On presentation day, the projector would not turn on, and the slides she had prepared disappeared from view. Elena took a deep breath and delivered the entire presentation from memory without the screen. The teacher gave her full credit and asked her to present again at the school assembly.\"\n\nWhich sentence is rising action?",
+    "problemText": "Read this sentence from a story: 'Maya had always wanted to learn guitar, and today was finally her first lesson with Ms. Chen.' Which plot stage does this sentence belong to, and why?",
     "choices": [
-      "On presentation day, the projector would not turn on, and the slides she had prepared disappeared from view.",
-      "For months, Elena practiced her presentation on the history of her neighborhood, which is part of the exposition that sets up what Elena will do.",
-      "Elena took a deep breath and delivered the entire presentation from memory without the screen, which shows her solving the problem that was introduced.",
-      "The teacher gave her full credit and asked her to present again at the school assembly, which is the resolution that wraps up the story."
+      "Exposition, because it introduces a character and her situation before any conflict appears",
+      "Rising action, because it describes Maya working toward her goal and facing new challenges",
+      "Climax, because learning guitar is the most important event that will happen in the story",
+      "Resolution, because Maya has overcome her doubts and is now getting what she wanted"
     ],
     "answer": "A",
     "hints": [
-      "Rising action introduces a complication that creates tension.",
-      "The outcome is not yet decided; something has gone wrong but Elena has not acted to fix it."
+      "Ask yourself: has any trouble or complication appeared yet in this sentence?",
+      "The exposition sets up what is ordinary before anything goes wrong."
     ]
   },
   {
     "id": "m6ela-how-a-story-s-plot-unfolds-003",
     "loId": "m6ela.how-a-storys-plot-unfolds",
     "cedCode": "M6ELA-1.2",
-    "difficulty": 3,
+    "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read the story below, then answer the question.\n\n\"Every weekend, Coach Torres ran a soccer clinic, and dozens of kids signed up because he always taught new tricks. This season, the clinic was cancelled three weeks in a row because of rain, and the kids grew frustrated with the empty field. When the fourth week arrived with clear skies, over a hundred kids showed up instead of the usual thirty, all eager to learn after the long wait. Coach Torres taught the best clinic of the year, and all the new kids asked to come back the next week.\"\n\nWhich pair correctly identifies both the climax and the resolution?",
+    "problemText": "A student is reading this story and needs to find the climax. Which sentence should the student choose? 'Karim entered the poster contest at school with a design about climate change. The night before judging, a file corrupted and Karim lost most of his artwork. He worked through the night redrawing the poster by hand. At the assembly, the judges announced that Karim's poster won first prize, and he walked on stage to accept the award.'",
     "choices": [
-      "Climax: 'Coach Torres taught the best clinic of the year.' Resolution: 'All the new kids asked to come back the next week.'",
-      "Climax: 'This season, the clinic was cancelled three weeks in a row because of rain, and the kids grew frustrated with the empty field.' Resolution: 'When the fourth week arrived with clear skies, over a hundred kids showed up instead of the usual thirty.'",
-      "Climax: 'When the fourth week arrived with clear skies, over a hundred kids showed up instead of the usual thirty.' Resolution: 'Coach Torres taught the best clinic of the year, and all the new kids asked to come back the next week.'",
-      "Climax: 'Over a hundred kids showed up instead of the usual thirty.' Resolution: 'Coach Torres taught the best clinic of the year, and all the new kids asked to come back the next week.'"
+      "Karim entered the poster contest at school with a design about climate change, which started his whole journey toward competing.",
+      "At the assembly, the judges announced that Karim's poster won first prize, and he walked on stage to accept the award.",
+      "He worked through the night redrawing the poster by hand, which showed his commitment to completing his artwork despite losing the file.",
+      "The night before judging, a file corrupted and Karim lost most of his artwork, which forced him to find a solution to his problem."
     ],
-    "answer": "C",
+    "answer": "B",
     "hints": [
-      "The climax is the turning point where the outcome becomes decided, not where the problem is most tense.",
-      "The resolution shows what happens after the turning point—the results of what became decided."
+      "The climax is the turning point where the outcome finally becomes decided.",
+      "Look for the sentence where you find out what actually happens—not the struggle before it."
     ]
   },
   {
@@ -404,36 +404,55 @@
     "cedCode": "M6ELA-1.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read the story below. A student labeled the plot stages but made one mistake in the order or assignment. Identify what is wrong.\n\n\"Jamal and his friend Kenji started a dog-walking business to earn money for a gaming system. On their first day, they arrived at a house where the owners did not answer the door, so they waited outside for twenty minutes. As they sat on the porch, one of the dogs got loose from the yard and ran down the street. Jamal chased the dog and caught it two blocks away, bringing it safely back to the owners who finally arrived home. The owners paid them extra and gave them five more dogs to walk every week.\"\n\nStudent's labels:\n- Exposition: Jamal and his friend Kenji started a dog-walking business.\n- Rising action: On their first day, they arrived at a house where the owners did not answer the door. / As they sat on the porch, one of the dogs got loose and ran down the street.\n- Climax: Jamal chased the dog and caught it two blocks away.\n- Resolution: The owners paid them extra and gave them five more dogs to walk.\n\nWhich plot stage was mislabeled?",
+    "problemText": "Read this partial story: 'Sasha promised to help her neighbor's garden grow before the county fair. Aphids began eating the plants, and Sasha sprayed them with soap. Then the heat wave made the soil dry out, and Sasha watered every morning. Finally, Sasha's careful watering and treatment worked, and on fair day the garden looked healthier than ever.' Which two sentences together make up the rising action, and how do you know?",
     "choices": [
-      "The exposition is too narrow; it should include the reason they started the business.",
-      "The rising action incorrectly includes the moment Jamal caught the dog, which is the turning point.",
-      "The resolution is mislabeled; it should begin after the owners arrive home and should include what happens next.",
-      "The climax should include 'bringing it safely back to the owners' because that is when the outcome becomes truly decided."
+      "Only the sentence about the heat wave, because that is when tension reaches its highest point in the story",
+      "The sentences about watering and the county fair, because they show the final result and conclusion of Sasha's efforts",
+      "The sentences about aphids and heat wave, because they each describe one complication that makes the situation worse",
+      "The sentences about soap spray treatment and checking soil moisture, because those are the specific actions Sasha took to fix problems"
     ],
-    "answer": "D",
+    "answer": "C",
     "hints": [
-      "The climax is one sentence where a decisive action turns the outcome—not just the beginning of that action.",
-      "Ask: at what exact moment does it become clear the problem is solved?"
+      "Rising action is a series of complications—more than one problem—that build tension.",
+      "The outcome is still uncertain through these sentences; the winner has not been decided yet."
     ]
   },
   {
     "id": "m6ela-how-a-story-s-plot-unfolds-005",
     "loId": "m6ela.how-a-storys-plot-unfolds",
     "cedCode": "M6ELA-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student sorted a plot incorrectly. The student labeled this sentence as the climax: 'The robot that Amir built started smoking during the school demonstration, and everyone in the audience gasped in fear.' But then the student labeled this sentence as the resolution: 'Amir quickly unplugged the robot, checked the circuit board, and found a loose wire he had missed.' Why is this sorting wrong? What should the correct labels be?",
+    "choices": [
+      "The first sentence is the climax because it is the most stressful moment. The second sentence is the resolution because it solves the problem.",
+      "The first sentence should stay the climax. The second sentence is not part of the plot because it describes something too technical to matter.",
+      "The first sentence belongs in the exposition. The second sentence should be labeled rising action because it describes Amir's action of troubleshooting.",
+      "The first sentence is still rising action because the outcome has not yet been decided. The second sentence is the climax because that is when the outcome actually turns."
+    ],
+    "answer": "D",
+    "hints": [
+      "The climax is not simply the most stressful or tense moment—it is the turning point where the outcome becomes decided.",
+      "Ask which sentence is where something decisive actually happens or is discovered that changes what will happen next."
+    ]
+  },
+  {
+    "id": "m6ela-how-a-story-s-plot-unfolds-006",
+    "loId": "m6ela.how-a-storys-plot-unfolds",
+    "cedCode": "M6ELA-1.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read the story below, then sort it into all four plot stages by identifying which sentences belong where.\n\n\"For three years, Amara had wanted to join the school debate team, but she was too nervous to try. The day before sign-ups closed, her best friend dared her to show up at the meeting. At the meeting, the team coach asked everyone to give a one-minute speech about any topic, and Amara's hands shook as she stood up. Amara spoke about why her neighborhood needed a community garden, and the coach clapped louder than anyone else. Amara signed up for the team that day and gave her first official speech at a tournament two weeks later.\"\n\nWhich answer correctly places all four stages in order?",
+    "problemText": "Read this story and answer the question that follows. 'Juno and Marcus made a pact to climb the tallest hill in the park together. On hiking day, Marcus woke up sick with the flu and called Juno to say he could not go. Juno stood in her driveway, disappointed, knowing she had promised herself and Marcus she would reach the top. She decided to hike alone, and halfway up the trail she spotted Marcus sitting on a rock, his backpack next to him. Marcus explained that he felt terrible but terrible about breaking their pact more, so he came anyway even though he was still weak. The two of them made it to the top together, moving slowly, and both of them knew this hike would be different from any they had planned.' Which sentence or sentences make up the resolution, and how do you know?",
     "choices": [
-      "Exposition: For three years, Amara had wanted to join / Rising action: her friend dared her and the coach asked for speeches / Climax: Amara spoke about the community garden and the coach clapped / Resolution: she signed up and gave her first tournament speech",
-      "Exposition: wanting to join for three years / Rising action: the dare and the meeting / Climax: Amara stood up / Resolution: the coach clapped and she signed up",
-      "Exposition: For three years, Amara had wanted to join, but she was too nervous / Rising action: The day before sign-ups closed, her best friend dared her / Climax: Amara's hands shook as she stood up / Resolution: The coach clapped and Amara signed up",
-      "Exposition: Amara wanted to join the debate team / Rising action: she was nervous and her friend dared her / Climax: the coach asked for a one-minute speech / Resolution: Amara spoke and signed up for the team"
+      "The sentences starting with 'Marcus explained' through the end, because by this point the outcome of the pact is already decided and the story shows what changed",
+      "Just the sentence about Marcus feeling terrible and coming anyway, because at that exact moment he makes the decision that directly solves their conflict about the pact.",
+      "The sentence about Juno standing in her driveway, because she makes the important decision to hike alone despite her disappointment and sadness.",
+      "Just the final sentence about reaching the top, because that is where they accomplish the goal they set for themselves at the very beginning."
     ],
     "answer": "A",
     "hints": [
-      "Remember: the climax is where something decisive HAPPENS—an action or choice that changes the outcome—not where the character feels most nervous or uncertain.",
-      "The resolution comes after the turning point and shows the results of what changed."
+      "The resolution comes after the turning point, when the outcome is already decided and the story shows how things are now.",
+      "Which sentences show us what happened because of the climax—the moment when the uncertainty ended?"
     ]
   }
 ]

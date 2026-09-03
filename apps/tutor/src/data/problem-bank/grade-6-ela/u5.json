@@ -114,234 +114,6 @@
     ]
   },
   {
-    "id": "m6ela-intensive-pronouns-001",
-    "loId": "m6ela.intensive-pronouns",
-    "cedCode": "M6ELA-5.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which sentence uses an intensive pronoun correctly? Remember: an intensive pronoun adds emphasis to a subject or object that is already named in the same sentence.",
-    "choices": [
-      "Myself and my sister baked cookies together.",
-      "Myself baked the cookies.",
-      "The cookies and myself were delicious.",
-      "I baked the cookies myself."
-    ],
-    "answer": "D",
-    "hints": [
-      "Look for a sentence where the -self word is emphasizing a subject or object that is already there, not filling a slot on its own.",
-      "Try the deletion test: remove the -self word and see if the sentence still makes complete sense with the same subject."
-    ]
-  },
-  {
-    "id": "m6ela-intensive-pronouns-002",
-    "loId": "m6ela.intensive-pronouns",
-    "cedCode": "M6ELA-5.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this sentence: 'The coach himself gave us feedback on our performance.' Use the deletion test to determine whether 'himself' is used correctly. What happens when you remove it?",
-    "choices": [
-      "The sentence still reads 'The coach gave us feedback on our performance' with the same meaning, so 'himself' is correctly emphasizing the subject.",
-      "The sentence remains complete and makes sense without it, proving 'himself' is not needed to fill a grammatical role and is therefore serving as a reflexive pronoun incorrectly.",
-      "The sentence loses all its meaning and cannot function without 'himself' because 'himself' is the only subject performing the action of giving feedback.",
-      "The sentence becomes ungrammatical without 'himself' because it is being used as a reflexive pronoun to show that the coach gave feedback to himself rather than to someone else."
-    ],
-    "answer": "A",
-    "hints": [
-      "An intensive pronoun passes the deletion test—the sentence remains complete and means the same thing without it.",
-      "Ask yourself: after you delete the word, is 'the coach' still clearly the subject doing the action?"
-    ]
-  },
-  {
-    "id": "m6ela-intensive-pronouns-003",
-    "loId": "m6ela.intensive-pronouns",
-    "cedCode": "M6ELA-5.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Which sentence contains an error in the use of a -self word? Read each one carefully and ask whether the -self word is emphasizing a subject or object that is already there, or whether it is filling a slot on its own.",
-    "choices": [
-      "Maya solved the math problem herself without using a calculator.",
-      "My brother and myself went to the store after school.",
-      "The two of us ourselves completed the entire project by Friday.",
-      "The principal herself cut the ribbon at the grand opening of the new wing."
-    ],
-    "answer": "B",
-    "hints": [
-      "In a compound subject or object, look to see if a plain pronoun like 'I' or 'me' is also present in that pair.",
-      "Try covering up the other name in the pair and reading the -self word alone—does it need to fill the slot by itself?"
-    ]
-  },
-  {
-    "id": "m6ela-intensive-pronouns-004",
-    "loId": "m6ela.intensive-pronouns",
-    "cedCode": "M6ELA-5.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read the sentence: 'The coach and myself watched the game from the sidelines.' This sentence has an error. Use what you learned about the drop test and the deletion test to identify the problem and state the correction.",
-    "choices": [
-      "The error is that 'myself' needs another -self word to pair with it; the sentence should be 'The coach and himself watched the game from the sidelines.'",
-      "The error is that 'myself' is being used as a reflexive pronoun instead of an intensive pronoun; the sentence should be 'The coach watched myself from the sidelines.'",
-      "The error is that 'myself' is filling the subject slot on its own with no other 'I' present to be emphasized, so the correct subject pronoun is 'I': 'The coach and I watched the game from the sidelines.'",
-      "The error is that 'myself' makes the sentence too informal; use 'me' instead: 'The coach and me watched the game from the sidelines.'"
-    ],
-    "answer": "C",
-    "hints": [
-      "Run the deletion test: what happens if you remove 'myself'? Does the sentence fall apart, or does it stay complete?",
-      "Use the drop test: cover 'the coach and' and read the pronoun alone—does it work as a subject by itself, and if not, what subject pronoun does belong there?"
-    ]
-  },
-  {
-    "id": "m6ela-intensive-pronouns-005",
-    "loId": "m6ela.intensive-pronouns",
-    "cedCode": "M6ELA-5.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote: 'The teacher gave the assignment to my friend and myself.' Identify the error and explain why it is wrong using one of the two tests from the lesson.",
-    "choices": [
-      "The error is that 'myself' is too formal; the sentence should use 'me' but only when standing alone, not in a compound.",
-      "The error is that 'myself' is correctly used because it emphasizes the object; the sentence should stay exactly as written.",
-      "The error is that 'myself' cannot follow a preposition; the sentence should use 'I' instead: 'gave the assignment to my friend and I.'",
-      "The error is that 'myself' is filling the object slot after the preposition 'to' on its own, with no other 'me' in the sentence for it to emphasize; when you remove 'myself' and read 'gave the assignment to,' the sentence is incomplete because an object pronoun is needed."
-    ],
-    "answer": "D",
-    "hints": [
-      "An intensive pronoun repeats a subject or object that is already in the sentence; look for another 'I' or 'me' somewhere else for 'myself' to be emphasizing.",
-      "The deletion test shows that the sentence breaks without the -self word, which proves it was never adding emphasis—it was standing in the slot by itself."
-    ]
-  },
-  {
-    "id": "m6ela-intensive-pronouns-006",
-    "loId": "m6ela.intensive-pronouns",
-    "cedCode": "M6ELA-5.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A classmate wrote two sentences in a story: 'Sarah and myself went to the beach. We built a sandcastle, and I decorated it myself.' Which sentence has an error, which is correct, and what is the one key difference that makes one right and one wrong?",
-    "choices": [
-      "The first sentence is wrong because 'myself' is filling the subject slot in the compound with no other 'I' present, but the second sentence is correct because 'myself' emphasizes 'I,' which is already named as the subject earlier in the sentence.",
-      "The first sentence is correct because 'myself' adds emphasis to the entire compound subject 'Sarah and myself,' but the second sentence is wrong because using -self words in the middle of a sentence makes writing unclear and confusing.",
-      "Both sentences are wrong because -self words should never appear in stories or narrative writing, and they only belong in formal academic papers and business documents.",
-      "Both sentences are correct because 'myself' is an acceptable pronoun choice in both compound subjects and object positions when writers want to add emphasis and formality."
-    ],
-    "answer": "A",
-    "hints": [
-      "In the second sentence, ask yourself: is there another 'I' named somewhere else in that sentence that 'myself' could be emphasizing?",
-      "For the first sentence, run the deletion test mentally: if you removed 'myself' from 'Sarah and __ went to the beach,' what subject pronoun would you need to fill that blank?"
-    ]
-  },
-  {
-    "id": "m6ela-keeping-pronoun-number-person-consistent-001",
-    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
-    "cedCode": "M6ELA-5.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What does it mean for pronouns to be consistent in a piece of writing? Explain using the two parts that have to match throughout.",
-    "choices": [
-      "The pronoun's person and number must stay the same from the beginning of the piece to the end, unless the writing gives a real reason for them to change.",
-      "The pronouns must be spelled correctly and refer back to the same person each time they are used, with no switches between singular and plural forms allowed.",
-      "A pronoun is consistent when it stays in the same grammatical tense as the verb it describes and does not shift between past and present action.",
-      "Pronouns are consistent if the piece maintains one voice throughout, meaning all pronouns must follow the rules of formal writing by avoiding contractions and informal speech patterns."
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about the two vocabulary words from the lesson: person and number. Both of these have to stay steady.",
-      "The lesson said 'EVERY PIECE OF WRITING SETS A PERSON AND A NUMBER FOR ITS STORY, AND BOTH HAVE TO HOLD FOR THE WHOLE PIECE.' What has to hold steady?"
-    ]
-  },
-  {
-    "id": "m6ela-keeping-pronoun-number-person-consistent-002",
-    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
-    "cedCode": "M6ELA-5.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Read this passage: 'I made a smoothie for breakfast this morning. You blend the frozen berries with yogurt until it is thick and creamy. Then I added a handful of granola on top.' Which sentence contains the pronoun that does not match the rest of the passage, and what should it be changed to?",
-    "choices": [
-      "The second sentence should change 'You' to 'we' because the passage talks about making something together.",
-      "The second sentence should change 'You' to 'I' because the passage is about only one person making a smoothie.",
-      "The third sentence should change 'I' to 'you' because the passage is giving instructions to the reader.",
-      "The first sentence should change 'I' to 'you' because breakfast is something everyone eats."
-    ],
-    "answer": "B",
-    "hints": [
-      "Hold the pronoun from the first sentence in your mind. Is it first person or second person? Now check the second sentence. Does it match?",
-      "The passage opens with 'I' and nobody new is introduced. The passage is not speaking to a reader. So what pronoun should the second sentence use?"
-    ]
-  },
-  {
-    "id": "m6ela-keeping-pronoun-number-person-consistent-003",
-    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
-    "cedCode": "M6ELA-5.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student wrote: 'My best friend and I entered the talent show together. We practiced our dance routine for three weeks straight. I added special lighting effects that made the stage glow during our performance.' Is there a pronoun shift in this passage? Why or why not?",
-    "choices": [
-      "Yes, there is a shift from plural to singular, which is always wrong in a piece of writing.",
-      "Yes, there is a shift. The passage should say 'we added special lighting effects' because the same people did everything together.",
-      "No, there is no shift. The passage opens with 'I' and 'my friend' together (we), and 'I' later marks a solo task the passage explains.",
-      "No, because all three sentences use the same pronouns and nothing changes."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson said a shift is only a mistake if the writing did NOT give a real reason for the pronoun to change. Did this passage explain why one person was doing something alone?",
-      "Look for what changed in the story, not just what changed in the pronouns. Did the task change? Did the group get smaller?"
-    ]
-  },
-  {
-    "id": "m6ela-keeping-pronoun-number-person-consistent-004",
-    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
-    "cedCode": "M6ELA-5.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Read this passage: 'My brother and I painted the fence in the backyard on Saturday. We mixed the paint and poured it into the roller tray. I painted the left side while my brother painted the right side. By the end of the day, we high-fived because it was finished.' The passage uses both 'I' and 'we.' Explain whether this is a pronoun shift that needs fixing, and tell what rule from the lesson you used to decide.",
-    "choices": [
-      "This is a shift that needs fixing because the passage switches between 'I' and 'we' too many times, violating the lesson's rule that you must pick one pronoun at the start and never change it under any circumstance.",
-      "This is a shift that needs fixing because a piece of writing should never switch between 'I' and 'we' no matter what happens in the story or how the tasks are divided.",
-      "This is a shift that needs fixing because the passage should stay in 'I' the whole time since one person is the main narrator telling the story.",
-      "This is not a shift that needs fixing because the passage explains real reasons for the pronouns to change. The 'I' marks one person's solo task (painting one side), and 'we' returns when both were working together again (high-fiving about the finished job)."
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson said: 'NOT EVERY CHANGE IS A MISTAKE — CHECK WHETHER SOMETHING REAL CHANGED FIRST.' Did something real change in this passage? Did the group doing the task change?",
-      "The rule says to ask: 'Did the writing introduce a reason for this pronoun to be different, or did it just slide?' What reason does this passage give for the pronouns to change?"
-    ]
-  },
-  {
-    "id": "m6ela-keeping-pronoun-number-person-consistent-005",
-    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
-    "cedCode": "M6ELA-5.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student is fixing this passage: 'I saved money all summer by walking dogs in the neighborhood. By August, I had enough to buy a used skateboard. You can customize it with new grip tape and wheels, which I did right away. Now I show it off at the skate park every day.' The student sees a problem in the third sentence and must decide what to change. What is the correct fix, and why does it work?",
-    "choices": [
-      "Change 'You' to 'I' in the third sentence because the passage is about one person's experience, not instructions for a reader.",
-      "Change 'I' to 'you' in the fourth sentence so the whole passage speaks to the reader instead of mixing up who is talking.",
-      "Delete the word 'You' from the third sentence and rewrite the whole passage in third person to avoid confusion.",
-      "Change 'skateboard' to 'skateboards' in the second sentence so that 'you' and 'I' both refer to plural objects."
-    ],
-    "answer": "A",
-    "hints": [
-      "The passage opens in first person singular ('I'). When you find a pronoun that does not match, change only THAT pronoun, not the whole passage.",
-      "Who is the passage actually about? Is it giving instructions to a reader, or telling about one person's summer? What pronoun should fit from start to finish?"
-    ]
-  },
-  {
-    "id": "m6ela-keeping-pronoun-number-person-consistent-006",
-    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
-    "cedCode": "M6ELA-5.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "Read this passage: 'My cousin and I decided to build a treehouse together last spring. We gathered wood and nails from the garage. We climbed into the oak tree with our supplies. Once we were up there, I hammered the boards while you held them steady. By sunset, we had built a frame that would hold our weight.' Find all the pronouns that do not match the person and number set at the opening of the passage. Which pronouns need to be fixed, and what should they be changed to? Explain your reasoning.",
-    "choices": [
-      "Change 'we' in the last sentence to 'I' because the passage should stick to singular pronouns once any task is split between people doing different parts of the work.",
-      "Change 'you' to 'my cousin' because the passage opens about two people working together, but no reader is present. The passage never introduces a second person to address, so 'you' has nobody real to point at.",
-      "Change only 'I' to 'we' in the fourth sentence because the passage is telling a story from the perspective of two builders, and that sentence breaks the shared perspective even though the work continued to involve both people.",
-      "Change both 'I' and 'we' to 'my cousin and I' because mixing pronouns in different numbers makes the passage unclear and confusing to readers who are trying to follow the story."
-    ],
-    "answer": "B",
-    "hints": [
-      "Read the whole passage and list who is actually in it. Are there two people building together, or is a reader present too? What does the passage tell you?",
-      "The lesson said that if a pronoun like 'you' or 'we' has no real person to point at in the passage, it is a shift with no reason. Does this passage ever speak directly to a reader or introduce a third person?"
-    ]
-  },
-  {
     "id": "m6ela-standard-nonstandard-english-001",
     "loId": "m6ela.standard-and-nonstandard-english",
     "cedCode": "M6ELA-5.4",
@@ -453,6 +225,234 @@
     "hints": [
       "For each sentence, identify whether the error is 'ain't,' a subject-verb mismatch, a double negative, or a combination.",
       "After you revise, reread all three sentences together—does the letter still say the same thing it did before, or did the meaning change?"
+    ]
+  },
+  {
+    "id": "m6ela-intensive-pronouns-001",
+    "loId": "m6ela.intensive-pronouns",
+    "cedCode": "M6ELA-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An intensive pronoun is a word that adds emphasis to a subject or object that is already named in the same sentence. Which of the following is an intensive pronoun?",
+    "choices": [
+      "hers",
+      "her",
+      "she",
+      "herself"
+    ],
+    "answer": "D",
+    "hints": [
+      "Intensive pronouns all end in -self or -selves.",
+      "The other choices are regular pronouns that do different jobs, not emphasis."
+    ]
+  },
+  {
+    "id": "m6ela-intensive-pronouns-002",
+    "loId": "m6ela.intensive-pronouns",
+    "cedCode": "M6ELA-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: \"Maya designed the entire poster herself.\" To check whether \"herself\" is used correctly, you can apply the deletion test. What happens when you remove \"herself\" and read the sentence that is left?",
+    "choices": [
+      "The sentence stays complete with the same subject and meaning, just without the extra emphasis.",
+      "The sentence becomes incomplete and breaks, proving herself was filling a subject slot.",
+      "The sentence still needs another pronoun to make sense, so herself was necessary.",
+      "The sentence changes to mean that someone else designed the poster, not Maya."
+    ],
+    "answer": "A",
+    "hints": [
+      "When an intensive pronoun is correct, the sentence left behind after deleting it should still be a complete thought.",
+      "Try reading it aloud: \"Maya designed the entire poster.\" Does it still make sense with the same subject doing the same thing?"
+    ]
+  },
+  {
+    "id": "m6ela-intensive-pronouns-003",
+    "loId": "m6ela.intensive-pronouns",
+    "cedCode": "M6ELA-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Which sentence uses the -self word incorrectly? For the wrong sentence, explain why the deletion test proves it is not an intensive pronoun.",
+    "choices": [
+      "The coach herself taught us the new drill at practice.",
+      "Between you and myself, I think this game will be close.",
+      "We built the bookshelves ourselves, without hiring anyone.",
+      "The captain himself made the final decision about the team's strategy."
+    ],
+    "answer": "B",
+    "hints": [
+      "Try the deletion test on the wrong choice: remove the -self word and see if the sentence still works and still says the same thing.",
+      "In the wrong sentence, there is no other 'me' for 'myself' to be repeating or emphasizing—it is standing alone in an object slot."
+    ]
+  },
+  {
+    "id": "m6ela-intensive-pronouns-004",
+    "loId": "m6ela.intensive-pronouns",
+    "cedCode": "M6ELA-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this sentence: \"Mr. Patel and myself graded all the homework assignments after school.\" This sentence uses \"myself\" incorrectly. First, explain why the deletion test shows this is wrong. Then, identify the correct pronoun to use instead and say what job it needs to fill.",
+    "choices": [
+      "Deleting myself leaves \"Mr. Patel graded,\" which is complete, showing myself is truly emphasizing the subject and no change is needed.",
+      "Deleting myself leaves \"Mr. Patel and graded,\" which is broken because the sentence needs an object pronoun to follow the verb graded, so me is correct.",
+      "Deleting myself leaves \"Mr. Patel and graded,\" which is broken. The sentence needs a subject pronoun because \"Mr. Patel and ___\" is the complete subject. The correct pronoun is I.",
+      "Deleting myself leaves \"Mr. Patel and graded,\" which is broken because a subject pronoun is required to complete the prepositional phrase that comes before the verb, so we is correct."
+    ],
+    "answer": "C",
+    "hints": [
+      "Cover Mr. Patel and read just the pronoun slot: \"___ graded the homework.\" What type of pronoun slot is that?",
+      "Remember: the deletion test breaks the sentence when a -self word is wrongly filling a slot on its own, because there is no other pronoun for it to be emphasizing."
+    ]
+  },
+  {
+    "id": "m6ela-intensive-pronouns-005",
+    "loId": "m6ela.intensive-pronouns",
+    "cedCode": "M6ELA-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two sentences below use -self words. In one, the -self word is correct; in the other, it is incorrect. For the incorrect sentence, apply both the deletion test and the drop test from pronoun case to show why it is wrong and what the correct pronoun should be.\n\nSentence A: \"I decorated the cake myself before the party started.\"\nSentence B: \"The director gave the scripts to Samuel and himself before rehearsal.\"",
+    "choices": [
+      "Sentence A is correct; deleting myself leaves a complete sentence. Sentence B is wrong; deleting himself breaks it (leaves \"gave the scripts to Samuel and\"), so the object slot needs him. The correction is \"to Samuel and him.\"",
+      "Both sentences are correct; both -self words add emphasis to subjects or objects already named elsewhere.",
+      "Sentence A is wrong; the word before makes it unnecessary. Sentence B is correct; himself adds emphasis to the object after the preposition.",
+      "Sentence A is correct; deleting myself leaves a complete sentence. Sentence B is wrong; deleting himself breaks it (leaves \"gave the scripts to Samuel and\"), so the object slot needs me. The correction is \"to Samuel and me.\""
+    ],
+    "answer": "D",
+    "hints": [
+      "For Sentence B, cover Samuel and read the pronoun in the object slot after 'to': \"gave the scripts to ___. \" What pronoun belongs there?",
+      "The deletion test on Sentence B breaks the sentence, proving himself is not repeating an object that is already present—it is trying to fill the object slot by itself."
+    ]
+  },
+  {
+    "id": "m6ela-intensive-pronouns-006",
+    "loId": "m6ela.intensive-pronouns",
+    "cedCode": "M6ELA-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student wrote: \"Between Keisha and myself, we completed the science project three days early.\" The student thought using \"myself\" sounded more formal and polite than \"me.\" Explain why this sentence is incorrect by running two tests: the deletion test and the pronoun-case drop test. Then write the corrected sentence.",
+    "choices": [
+      "The deletion test breaks it (deletes to \"Between Keisha and, we completed...\"), proving myself is filling an object slot by itself, not repeating an object already present. The drop test confirms this: \"Between myself\" alone has no other me to repeat, so the object pronoun needed is me. Corrected: \"Between Keisha and me, we completed the science project three days early.\"",
+      "The deletion test keeps it complete (deletes to \"Between Keisha, we completed...\"), and the drop test shows myself is correctly repeating another object pronoun elsewhere in the sentence, so no change is needed and the sentence is correct as written.",
+      "The deletion test breaks it (deletes to \"Between Keisha and, we completed...\"), but the drop test shows myself works here because it is repeating the object pronoun we that appears later in the sentence, so the corrected sentence is \"Between Keisha and myself, I completed the science project three days early.\"",
+      "The deletion test breaks it (deletes to \"Between Keisha and, we completed...\"), but the drop test confirms myself is correct because the -self words must be used in prepositional phrases like \"between,\" making \"Between Keisha and myself\" the only acceptable form and no change is needed."
+    ],
+    "answer": "A",
+    "hints": [
+      "Apply the drop test: cover Keisha and and read just the pronoun after 'Between.' Is there another me anywhere else in the sentence for myself to be repeating?",
+      "Intensive pronouns are never used because they sound more formal—they are used only when there is already another subject or object for them to emphasize in the same sentence."
+    ]
+  },
+  {
+    "id": "m6ela-keeping-pronoun-number-person-consistent-001",
+    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
+    "cedCode": "M6ELA-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A pronoun's person refers to the role it plays in writing. Which of the following is an example of a second-person pronoun?\n\nHint 1: Second person means the pronoun speaks directly to a reader.\nHint 2: Look for the pronoun that addresses someone as the person being spoken to.",
+    "choices": [
+      "you",
+      "I",
+      "he",
+      "they"
+    ],
+    "answer": "A",
+    "hints": [
+      "Second person means the pronoun speaks directly to a reader.",
+      "Look for the pronoun that addresses someone as the person being spoken to."
+    ]
+  },
+  {
+    "id": "m6ela-keeping-pronoun-number-person-consistent-002",
+    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
+    "cedCode": "M6ELA-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage:\n\n\"My best friend and I played soccer after school yesterday. I scored two goals in the first half. You were playing on defense the whole game and made some great saves.\"\n\nWhich pronoun is the shift?\n\nHint 1: The passage starts by naming who is playing, and stays with first person at first.\nHint 2: Look for where the writing suddenly speaks to a reader instead of talking about the story.",
+    "choices": [
+      "I in the second sentence",
+      "You in the third sentence",
+      "My in the first sentence",
+      "I in the first sentence"
+    ],
+    "answer": "B",
+    "hints": [
+      "The passage starts by naming who is playing, and stays with first person at first.",
+      "Look for where the writing suddenly speaks to a reader instead of talking about the story."
+    ]
+  },
+  {
+    "id": "m6ela-keeping-pronoun-number-person-consistent-003",
+    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
+    "cedCode": "M6ELA-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage:\n\n\"Every morning I mix breakfast for my little sister before school. I pour the cereal and milk into her bowl. We stir it so nothing gets soggy on the bottom.\"\n\nWhich sentence contains a pronoun that does not match the person established at the start?\n\nHint 1: Only one person is doing the work through the whole passage — check who.\nHint 2: Look for a pronoun that suddenly includes more than one person when the passage never introduced anyone new.",
+    "choices": [
+      "The first sentence, because it uses I",
+      "The second sentence, because it uses I",
+      "The third sentence, because it uses we",
+      "All three sentences are consistent"
+    ],
+    "answer": "C",
+    "hints": [
+      "Only one person is doing the work through the whole passage — check who.",
+      "Look for a pronoun that suddenly includes more than one person when the passage never introduced anyone new."
+    ]
+  },
+  {
+    "id": "m6ela-keeping-pronoun-number-person-consistent-004",
+    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
+    "cedCode": "M6ELA-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage:\n\n\"My mom and I made cookies for the bake sale on Friday. We mixed the dough and shaped each cookie by hand. Mom went to the store to buy chocolate chips while I decorated the ones we had already baked. By the time she came home, I had finished the whole batch.\"\n\nDoes every pronoun in this passage match the person and number it sets at the start? If not, which pronoun breaks the pattern and why?\n\nHint 1: Notice that the passage opens with two people doing something together, then something changes partway through.\nHint 2: Check whether the writing gave a real reason for the change before calling it a shift.",
+    "choices": [
+      "Yes, there is a shift — the pronoun we in the second sentence should be I because only the narrator continues the work after Mom leaves for the store.",
+      "Yes, there is a shift — the pronoun I in the third sentence should be we because both the narrator and Mom were originally working together on the task from the beginning.",
+      "Yes, there is a shift — the pronoun she in the fourth sentence should be we because the passage began by introducing two people who started the project as a team.",
+      "No shift — the passage gives a real reason for the pronouns to change when Mom leaves to go to the store, so I is correct when only the narrator is baking."
+    ],
+    "answer": "D",
+    "hints": [
+      "Notice that the passage opens with two people doing something together, then something changes partway through.",
+      "Check whether the writing gave a real reason for the change before calling it a shift."
+    ]
+  },
+  {
+    "id": "m6ela-keeping-pronoun-number-person-consistent-005",
+    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
+    "cedCode": "M6ELA-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage:\n\n\"My cousins and I spent the afternoon at the community pool. We cannonballed off the diving board at least twenty times. I won a race across the shallow end while my cousins cheered from the sidelines. We dried off and grabbed ice cream cones before heading home.\"\n\nWhich sentence contains a pronoun that needs to be fixed to match the passage's overall person and number?\n\nHint 1: Look at what the passage says is happening in each sentence and who is actually doing it.\nHint 2: One sentence describes only the narrator doing something alone, but uses a pronoun that suggests multiple people are doing it together.",
+    "choices": [
+      "The third sentence — it should use we instead of I",
+      "The second sentence — it should use I instead of we",
+      "The first sentence — it should use I instead of my",
+      "The fourth sentence — it should use I instead of we"
+    ],
+    "answer": "A",
+    "hints": [
+      "Look at what the passage says is happening in each sentence and who is actually doing it.",
+      "One sentence describes only the narrator doing something alone, but uses a pronoun that suggests multiple people are doing it together."
+    ]
+  },
+  {
+    "id": "m6ela-keeping-pronoun-number-person-consistent-006",
+    "loId": "m6ela.keeping-pronoun-number-and-person-consistent",
+    "cedCode": "M6ELA-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Read this passage:\n\n\"Sarah and I volunteered at the animal shelter on Saturday. We walked the dogs in the morning and fed the cats in the afternoon. Sarah was assigned to wash the shelter's van while I restocked the supply closet. We finished our tasks by four o'clock and left together. I was exhausted but happy about the day.\"\n\nHow many shifts in pronoun person or number occur in this passage, and which pronouns should be fixed? Explain your reasoning by checking whether the writing gives a real reason for each pronoun change.\n\nHint 1: Read through the whole passage and note every pronoun that refers to the narrator or the work being done.\nHint 2: For each pronoun, ask whether it matches what the passage established at the start, or whether the writing gave a reason for it to change.",
+    "choices": [
+      "One shift — the pronoun I in the last sentence should be we because the passage opened with two people and they finished together.",
+      "No shifts — every pronoun is correct because the passage gives real reasons for pronouns to change when tasks shift between people and back to the group.",
+      "Two shifts — the pronoun I in the fourth sentence should be we, and the pronoun I in the last sentence should be we, because the passage should stay plural.",
+      "Three shifts — all the pronouns need to be fixed to stay in first person singular throughout."
+    ],
+    "answer": "B",
+    "hints": [
+      "Read through the whole passage and note every pronoun that refers to the narrator or the work being done.",
+      "For each pronoun, ask whether it matches what the passage established at the start, or whether the writing gave a reason for it to change."
     ]
   }
 ]

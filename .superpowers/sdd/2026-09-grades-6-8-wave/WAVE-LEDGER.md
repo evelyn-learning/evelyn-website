@@ -6,10 +6,10 @@ Plan: docs/superpowers/plans/2026-09-02-grades-6-8-ms-course-wave.md (main e78c0
 
 | Course | Curriculum | Sign-off | Exemplars | Plans /40 | Lint+reg | Items | Notes | Guides | Reviewed | Cost actuals |
 |---|---|---|---|---|---|---|---|---|---|---|
-| m6math | ✓ (m6math-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (reviewed) | 40/40 | ✓ 200 OK | – | – | – | – | – |
-| m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | – | – | – | – | – |
-| m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | – | – | – | – | – |
-| m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 33/40 | – | – | – | – | – | – |
+| m6math | ✓ (m6math-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (reviewed) | 40/40 | ✓ 200 OK | ✓ 240 (94.6%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
+| m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | ✓ 237 (97.5%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
+| m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (96.7%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
+| m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 240 (96.2%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m8math | – | – | – | 0 | – | – | – | – | – | – |
 | m8ela | – | – | – | 0 | – | – | – | – | – | – |
 | m8sci | – | – | – | 0 | – | – | – | – | – | – |
@@ -26,11 +26,11 @@ Per-course instantiation: clone the nearest subject contract, substitute grade/a
 ```
 # items (after plans registered + LOS file built)
 TUTOR_MODEL_CONTENT_GEN=claude-haiku-4-5 npx tsx scripts/generate-bank-items.ts \
-  --los-file <wave-dir>/<course>-los.json --ms-conventions --difficulty-spread 1,2,2,3,3,4 \
+  --los-file <wave-dir>/<course>-los.json --scope-note-file <wave-dir>/scope-notes/<course>-scope-note.md --ms-conventions --difficulty-spread 1,2,2,3,3,4 \
   --items-per-lo 6 --ced-prefix <M6MATH…> --subject-label "<Grade 6 Mathematics…>" \
-  --grounding-from-seeds --out-dir src/data/problem-bank/<bank-dir>/
+  --grounding-from-seeds --out-dir src/data/problem-bank/<bank-dir>/   # bank-dir = TAXONOMY id (grade-6-math), not plan prefix (m6math)
 # verify (sequential — --batch is UNPROVEN, do not use)
-npx tsx scripts/seed-problem-bank.ts --course <bank-dir> --dry-run
+npx tsx scripts/seed-problem-bank.ts --course=<bank-dir> --dry-run   # EQUALS FORM ONLY: the space form silently falls back to ap-statistics
 # notes
 npx tsx scripts/extract-topic-notes-baselines.ts <planId>   # ×40, then ONE controller store.ts edit
 TUTOR_MODEL_NOTES_POINTERS=claude-haiku-4-5 npx tsx scripts/gen-topic-notes-pointers.ts …
@@ -48,3 +48,17 @@ GUIDES_MODEL=claude-haiku-4-5 npx tsx tools/generate-guides.ts --course <KEY>
 - 2026-09-02: `extract-topic-notes-baselines.ts` holds a THIRD `MS_COURSE_NAMES` registry beyond the plan's trap-#1 pair — now carries all 8 grade-6/8 rows (commit 21a5c321). Add it to the trap list for the Grade 8 drop.
 - 2026-09-02: the `\$` currency-escape rule applies to GUIDES ONLY, never to lesson seeds — shipped `m7math-u4-percent-increase-decrease.ts` uses bare `$12` in prod. Struck from the m6math fan-out contract.
 
+
+## Grade 6 drop — BUILT 2026-09-03, awaiting Praveen's ship gate
+
+Engine (worktree-demo-gate): plans 160/160 `lint-ms-plans: 320 plans OK`; banks ~960 at
+96.2% verified (no unit <90%, no LO <4); notes 160 baselines + 1,132 pointers; TTS
+double-hyphen fix; new scripts build-los-file / emit-portal-course-nodes.
+Academy (ms-grade6-guides): 4 courses in seed/mappings.json, 160 guides, catalog-nav
+test moved from the uncapped to the capped band, tests/unit 1152 pass.
+NOTHING pushed or deployed. Phase 2 is Praveen's call.
+
+⚠️ Open product question for Praveen: m6geo and m6sci duplicate five topics (Earth's
+layers, rock cycle, weathering/erosion/deposition, water cycle, weather vs climate).
+The wave's overlap apparatus only points vertically between grades and cannot see a
+sibling course in the same grade.

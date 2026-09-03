@@ -114,234 +114,6 @@
     ]
   },
   {
-    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-001",
-    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
-    "cedCode": "M6SCI-7.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following is the correct definition of evaporation?",
-    "choices": [
-      "A change of state that occurs only when water reaches boiling point and undergoes a rapid phase transition to steam",
-      "Liquid water changing into invisible water vapor when energy from the sun warms it",
-      "The process by which tiny water droplets combine together inside clouds through collision and fusion to eventually form precipitation",
-      "The movement of water from Earth's surface upward into the atmosphere in the form of liquid precipitation"
-    ],
-    "answer": "B",
-    "hints": [
-      "Evaporation is a change of state from liquid to gas, not a boiling process.",
-      "Look for the choice that mentions energy from the sun and water vapor specifically."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-002",
-    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
-    "cedCode": "M6SCI-7.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A wet towel hanging on a clothesline on a warm, sunny day becomes completely dry by evening, even though it never rained and nobody wrung it out. What process caused the water to leave the towel and enter the air?",
-    "choices": [
-      "Condensation, because water vapor in the air cooled down and changed back into liquid droplets that soaked into the towel fibers",
-      "Precipitation, because moisture was released from clouds in the sky and fell as rain or mist onto the towel throughout the day",
-      "Evaporation, because energy from the sun warmed the liquid water on the towel until it changed into invisible water vapor",
-      "Freezing, because the towel was exposed to cold nighttime temperatures that turned the water molecules into solid ice crystals"
-    ],
-    "answer": "C",
-    "hints": [
-      "What happens first when liquid water on a surface is warmed by sunlight?",
-      "A wet object drying in the sun involves water leaving the surface as an invisible gas, not joining droplets or falling from the sky."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-003",
-    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
-    "cedCode": "M6SCI-7.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A weather balloon carrying instruments rises high into the atmosphere on a summer morning. As it climbs higher and higher, the air around it becomes colder. If water vapor is present in that air, what will happen to the water vapor as the temperature drops?",
-    "choices": [
-      "The water vapor will evaporate even more rapidly as temperatures decrease, which causes the air to hold more moisture and prevents any visible clouds from forming",
-      "The water vapor will remain invisible and gaseous because condensation only occurs when air is heated by direct sunlight rather than cooled by altitude",
-      "The water vapor will transform into ice crystals that fall as precipitation before the air temperature drops low enough to cause any condensation to occur",
-      "The water vapor will condense into tiny liquid droplets because cooling causes the gas to change back into a liquid"
-    ],
-    "answer": "D",
-    "hints": [
-      "Condensation is the reverse of evaporation—it is what happens when a gas cools.",
-      "Tiny liquid droplets floating in air are what form a cloud; think about what causes them to appear."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-004",
-    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
-    "cedCode": "M6SCI-7.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Over the course of a day, the following sequence of events occurs at the ocean: first, bright sunlight heats the surface of the water all morning; next, by afternoon, a thick, dark cloud forms above the same area of ocean; finally, by evening, heavy rain falls from the cloud onto the ocean surface. Which of the following correctly matches each event to the water-cycle process that caused it?",
-    "choices": [
-      "Sunlight causes evaporation; the cloud forms because of condensation; rain is precipitation",
-      "Sunlight causes condensation; the cloud forms because of evaporation; rain is precipitation",
-      "Sunlight causes precipitation; the cloud forms because of evaporation; rain is condensation",
-      "Sunlight causes evaporation; the cloud forms because of precipitation; rain is condensation"
-    ],
-    "answer": "A",
-    "hints": [
-      "Remember the order: energy warms water first, then vapor rises and cools, then droplets fall.",
-      "A cloud is made of tiny droplets, so what process turns invisible vapor into visible droplets?"
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-005",
-    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
-    "cedCode": "M6SCI-7.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student claims that a puddle disappears on a cool, cloudy afternoon because the water evaporated and then immediately fell back down as very light precipitation that she could not see. Using what you know about the water cycle, explain why this claim does not match what the lesson taught about how evaporation, condensation, and precipitation actually work.",
-    "choices": [
-      "Evaporation requires temperatures above 80 degrees Fahrenheit, so it cannot happen during cool afternoons or cloudy weather",
-      "The water vapor would need to cool and condense into droplets first before precipitation could fall, and those visible droplets would form a cloud that she could see",
-      "Precipitation can only take the form of large raindrops or snowflakes, never as a fine mist or drizzle, so any water falling would be obvious to an observer",
-      "A puddle loses water only through freezing and sublimation on cool days, not through evaporation, so the student's observation does not match the water cycle process"
-    ],
-    "answer": "B",
-    "hints": [
-      "Condensation and precipitation are separate steps—vapor must become liquid droplets in a visible cloud before they can fall.",
-      "Think about what a cloud actually is and whether invisible precipitation makes sense given the definition of the water cycle."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-006",
-    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
-    "cedCode": "M6SCI-7.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A river running through a desert region receives no rain for an entire summer, yet the river continues to flow and does not dry up completely. Scientists observe that water is evaporating from the river's surface throughout the day. Using your understanding of the water cycle and the lesson's definition of the pathway, construct an explanation for how the river can continue to have water available for evaporation even though no local rain is falling on it.",
-    "choices": [
-      "The river water evaporates continuously but immediately recondenses into liquid form and returns to the river as a localized cycle that does not rely on external water sources",
-      "The river has an underground spring beneath it that continuously pumps fresh water into the riverbed to replace any water lost to evaporation during the summer months",
-      "Water that evaporated from the river during previous seasons condensed and fell as precipitation in the mountains upstream, where it eventually flowed back to the river as surface runoff",
-      "The desert plants surrounding the river absorb water from the ground through their root systems and then release it back into the river through transpiration during daylight hours"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson stops at the surface—what happens to water after precipitation reaches the ground is outside this lesson's scope, but you can use that idea to think about where the river's supply comes from.",
-      "Evaporation can happen from any exposed water surface, including rivers, and the water cycle repeats—consider where precipitation that fell months ago could have ended up."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-groundwater-runoff-001",
-    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
-    "cedCode": "M6SCI-7.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "When rain falls on a sloped parking lot, the water cannot soak into the sealed pavement. What term describes the water that flows downhill across the surface of the parking lot?",
-    "choices": [
-      "Transpiration",
-      "Infiltration",
-      "Runoff",
-      "Recharge"
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about water moving across the surface rather than soaking in.",
-      "This is the water that parking lots have to direct toward storm drains."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-groundwater-runoff-002",
-    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
-    "cedCode": "M6SCI-7.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two identical patches of ground receive the same gentle rainfall. One patch is made of loose, dug-up soil; the other is hard-packed clay. Which patch will have more water soaking down into the ground, and why?",
-    "choices": [
-      "The clay patch, because packed ground stops water from running off.",
-      "The clay patch, because impermeable ground forces all water to stay near the surface.",
-      "Both patches will absorb the same amount, because rainfall is identical.",
-      "The loose soil patch, because loose ground is permeable and lets water soak in more easily."
-    ],
-    "answer": "D",
-    "hints": [
-      "Recall what 'permeable' means and how the material itself affects water's path.",
-      "Think about what happens when you pour water on sand versus on hard clay."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-groundwater-runoff-003",
-    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
-    "cedCode": "M6SCI-7.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A gardener digs a hole and observes that in the upper portion, soil feels damp but has air pockets mixed in with the water. Deeper down, all the spaces between soil particles are completely filled with water. Where is the water table located relative to the gardener's observation?",
-    "choices": [
-      "The water table is somewhere between the upper damp zone and the lower completely wet zone, marking the boundary between them.",
-      "The water table is at the surface of the ground, since water is already present in the upper soil layer where the gardener is digging.",
-      "The water table is far below the gardener's hole, because water only exists deeper underground and not in the upper portions of soil.",
-      "The water table is above the surface of the ground, because underground water pressure forces it to rise higher than the surrounding soil and rock layers."
-    ],
-    "answer": "A",
-    "hints": [
-      "The water table is a boundary, not just a place where water exists.",
-      "Above the table, air and water mix; below it, only water fills the spaces."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-groundwater-runoff-004",
-    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
-    "cedCode": "M6SCI-7.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A town's well is drilled to a depth of 35 meters. The local water table is currently at 20 meters below the surface. A prolonged dry period causes the water table to drop by 8 meters. After the water table drops, will the well still reach water, and by how much less margin than before?",
-    "choices": [
-      "No, the well is now too shallow; the water table at 28 meters is deeper than the 35-meter well.",
-      "Yes, the well reaches water at a margin of 7 meters below the new water table depth.",
-      "Yes, the well reaches water at a margin of 15 meters below the new water table, compared to 15 meters before.",
-      "No, because any drop in the water table means all wells in the area run dry."
-    ],
-    "answer": "B",
-    "hints": [
-      "Calculate the new water table depth (20 − 8), then subtract it from the well's fixed depth.",
-      "A well stays wet as long as its depth exceeds the water table depth."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-groundwater-runoff-005",
-    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
-    "cedCode": "M6SCI-7.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "During a rainstorm, some water falling on a field infiltrates into the soil. Of that infiltrated water, some reaches the saturated zone below the water table and enters an aquifer, but some water stops in the upper soil layer and is absorbed by plant roots. Describe what happens to the water taken up by plant roots and explain how it stays part of the water cycle.",
-    "choices": [
-      "It is locked into the soil particles permanently and never escapes from underground or returns to the water cycle after being absorbed.",
-      "The plant absorbs it into its cells and keeps it stored there indefinitely, so the water no longer participates in any part of the water cycle.",
-      "The plant releases much of it back into the atmosphere as water vapor through a process called transpiration, continuing the water cycle.",
-      "It percolates slowly downward through the soil layers and eventually replenishes the aquifer below the water table through underground recharge."
-    ],
-    "answer": "C",
-    "hints": [
-      "Consider what 'transpiration' means and when the lesson mentions it.",
-      "This path keeps water in the cycle even though it did not reach the saturated zone."
-    ]
-  },
-  {
-    "id": "m6sci-the-water-cycle-groundwater-runoff-006",
-    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
-    "cedCode": "M6SCI-7.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A region experiences a very heavy, sudden rainstorm. One area receives water on compacted, nearly impermeable soil; a second area has the same soil but with visible cracks running through the underlying rock. Explain why the second area will have less runoff than the first, and trace one pathway that the infiltrated water might take in the second area after it enters the ground.",
-    "choices": [
-      "The cracks in rock have no meaningful effect on how water moves through soil, so both areas will experience identical runoff and the same amount of infiltration.",
-      "The cracks in rock collect water at the surface and trap it there, allowing more evaporation to occur while infiltrated water accumulates in the unsaturated zone just below the surface.",
-      "The cracks in rock compress the soil material around them, making the second area more compacted and actually causing it to produce more runoff than the first area.",
-      "The cracks in rock allow infiltration into the ground, reducing runoff. The infiltrated water soaks downward and may reach the water table, entering the saturated zone of an aquifer."
-    ],
-    "answer": "D",
-    "hints": [
-      "Cracks make the ground more permeable, creating pathways for water to enter rather than flow across the surface.",
-      "Trace what 'infiltrate' means and what happens to water once it enters the ground through cracks."
-    ]
-  },
-  {
     "id": "m6sci-weathering-erosion-deposition-by-water-001",
     "loId": "m6sci.weathering-erosion-and-deposition-by-water",
     "cedCode": "M6SCI-7.4",
@@ -453,6 +225,234 @@
     "hints": [
       "Think about where the sediment ends up in each case—does it stay nearby or get carried far away?",
       "A canyon forms where erosion carries sediment away; a floodplain forms where that sediment is dropped. What is different about where deposition happens in each setting?"
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-001",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A glass of cold water sits outside on a sunny day. Over several hours, the water level in the glass gets lower even though it did not spill and nothing drank from it. What is the name of the process that changed the liquid water in the glass into an invisible gas that rose into the air?",
+    "choices": [
+      "Condensation",
+      "Evaporation",
+      "Precipitation",
+      "Freezing"
+    ],
+    "answer": "B",
+    "hints": [
+      "This process happens when energy from the sun warms liquid water and it changes into water vapor.",
+      "The water disappeared as an invisible gas, not as a liquid."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-002",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "On Monday, it was cool and cloudy all day. On Tuesday, it was hot and sunny. Both days, identical puddles of water formed on a sidewalk at sunrise. Which day would you expect the puddle to disappear completely first, and why?",
+    "choices": [
+      "Tuesday, because the hot air will freeze the puddle solid so it takes up less space",
+      "Monday, because cool air causes water to evaporate without needing any sunlight and clouds speed up the return of water vapor to puddles",
+      "Tuesday, because more energy from the sun on the hot, sunny day makes evaporation happen faster",
+      "Monday, because the lack of direct sunlight prevents the water molecules from gaining enough energy to evaporate into the air"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that evaporation is driven by energy from the sun heating the water.",
+      "Think about whether a puddle disappears faster or slower when there is less sunlight."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-003",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "High in the sky, water vapor that rose from the ocean is cooling as it moves upward. As it cools, it stops being an invisible gas and changes back into tiny liquid droplets. Billions of these droplets clustering together in one place create what you see in the sky?",
+    "choices": [
+      "A puddle",
+      "Rain",
+      "Water vapor",
+      "A cloud"
+    ],
+    "answer": "D",
+    "hints": [
+      "This is the result of condensation — a gas turning into a liquid.",
+      "Tiny liquid droplets, far too small to fall by themselves, gather together to make something visible."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-004",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A large puddle forms in a parking lot after a rainstorm. The next day is hot and sunny with no rain expected. By the end of that day, the puddle has shrunk to half its size. The day after that is cool and cloudy. By the end of the second day, the remaining puddle is still there and has barely shrunk any more. Explain why the puddle shrank much more on the first day than on the second day, using the water cycle.",
+    "choices": [
+      "On the first day, strong sunlight provided more energy to evaporate the puddle water into vapor; on the second day, clouds blocked most of the sunlight, so evaporation slowed down greatly",
+      "On the first day, the hot air caused the water to boil away rapidly through condensation; on the second day, cool air stopped condensation from occurring and preserved the puddle",
+      "On the first day, rain fell on the puddle again during the afternoon, which made it appear smaller; on the second day, no additional rain fell so the puddle remained at the same level",
+      "On the first day, the puddle water soaked deep into the ground through infiltration before the sun could evaporate it; on the second day, the cooler temperature caused capillary action to push water back up to the surface"
+    ],
+    "answer": "A",
+    "hints": [
+      "Evaporation depends on how much energy from the sun reaches the water.",
+      "Compare what happens to evaporation on a sunny day versus a cloudy day."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-005",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student observes water vapor rising off a hot lake and notices that the rising vapor is invisible. Higher up, the same student can see a thick cloud forming above the lake. The student knows that water cycle processes are turning the invisible vapor into something visible. Which two processes are happening in order, and what causes the second one to begin?",
+    "choices": [
+      "Evaporation is happening right now; condensation will start once the water vapor gets hot enough to turn white",
+      "Evaporation has already happened; now condensation is occurring because the rising water vapor is cooling",
+      "Condensation has already happened; now precipitation is occurring because the droplets are freezing solid",
+      "Evaporation has already happened; now precipitation is forming because sunlight is pushing the vapor downward"
+    ],
+    "answer": "B",
+    "hints": [
+      "The invisible vapor came from evaporation. What process turns vapor back into a liquid you can see?",
+      "Remember that condensation happens when water vapor cools, not when it heats up."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-evaporation-condensation-precipi-006",
+    "loId": "m6sci.the-water-cycle-evaporation-condensation-precipitation",
+    "cedCode": "M6SCI-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A weather forecaster tracks a system moving across the region over three days. On Day 1, strong sun heats the ocean surface and water evaporates off it rapidly. On Day 2, a thick cloud bank appears above the ocean, but no rain falls yet. On Day 3, heavy rain falls from the cloud and reaches the coast. A student says, 'The water that rained on Day 3 must be the same water that evaporated on Day 1, because that makes the water cycle repeat.' Using the water cycle, explain whether the student is correct and why, using the order of the three main processes.",
+    "choices": [
+      "The student is incorrect. Evaporation on Day 1 produced water vapor, but that vapor cannot become part of precipitation because it would need to undergo freezing in the cloud rather than condensation, which breaks the cycle",
+      "The student is incorrect. Evaporation and condensation are not connected; evaporation just makes water disappear, while condensation makes a separate cloud out of new water vapor",
+      "The student is correct. The evaporation on Day 1 sent water vapor into the air; condensation on Day 2 turned that vapor into droplets forming the cloud; precipitation on Day 3 brought those same droplets down as rain—these three processes in order complete one loop of the cycle",
+      "The student is correct that the three processes happen in order, but the water evaporated on Day 1 could not have reached the coast by Day 3 because clouds form in different locations than where evaporation starts"
+    ],
+    "answer": "C",
+    "hints": [
+      "Trace the water through all three days and the three processes in order: evaporation → condensation → precipitation. Does the water change form each time?",
+      "Remember that the water cycle is called a cycle because the same water can go through the chain of processes over and over again."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-001",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Water that falls as rain can take three different paths once it reaches the ground. Which of the following is NOT one of those three paths?",
+    "choices": [
+      "Water flows across the surface of the land as runoff.",
+      "Water soaks into the ground through infiltration.",
+      "Water is absorbed directly into the clouds above the ground.",
+      "Water is taken up by plant roots and later released through transpiration."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what happens after rain lands on the surface.",
+      "The three paths all involve water either on the ground or underground, not in the air."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-002",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A light rain falls on a sandy beach. Most of the rainwater soaks quickly into the sand and disappears from the surface. Based on what you know about permeable and impermeable materials, explain why this happens.",
+    "choices": [
+      "Sand is impermeable, so it blocks water from flowing downhill and forces it to evaporate instead.",
+      "Sand is impermeable but has holes punched in it by the rain, which lets water drain through those holes.",
+      "Sand is saturated, meaning it has already reached the water table and cannot hold any more water.",
+      "Sand is permeable, so its loose grains have open spaces that allow water to soak in quickly."
+    ],
+    "answer": "D",
+    "hints": [
+      "Permeable materials let water soak through; impermeable materials block it.",
+      "Think about the structure of sand compared to something like solid rock or pavement."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-003",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A construction crew paves over a meadow with concrete to create a large parking lot. Two months later, the same heavy rainstorm that once soaked into the meadow now falls on the new parking lot. What change should you expect to see in how the rainwater behaves?",
+    "choices": [
+      "Less of the rain will infiltrate, and more will flow across the surface as runoff because concrete is impermeable.",
+      "More of the rain will infiltrate into the ground because concrete is porous and allows water to seep through the material itself rather than running off.",
+      "The same amount will infiltrate as before because the water table depth has not changed and infiltration rates depend only on how deep the water table is located.",
+      "More of the rain will be taken up by plant roots because plants will grow in cracks and gaps in the concrete and use the water that collects there."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about the difference between the material that was there (meadow soil) and the material that is there now (concrete).",
+      "Permeable soil allows infiltration, while an impermeable sealed surface does not."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-004",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A town's well is drilled to a depth of 35 meters. At the time the well is drilled, the water table sits at 15 meters below the surface. Two years later, after a long drought with heavy pumping and little recharge, the water table has dropped to 28 meters below the surface. Explain whether the well still reaches water after the drought, and if so, how much of a margin it has below the water table.",
+    "choices": [
+      "No, the well is now dry because the water table at 28 meters is deeper than the well at 35 meters and there is no water below the water table.",
+      "Yes, the well still reaches water because 35 meters is greater than 28 meters, but it now extends only 7 meters below the water table instead of 20 meters.",
+      "Yes, the well reaches water at the same depth as before because wells are permanent structures drilled to a fixed depth and do not change even when the water table rises and falls.",
+      "No, the well would run dry because recharge was too slow to keep the water table from dropping below the well's depth of 35 meters."
+    ],
+    "answer": "B",
+    "hints": [
+      "A well reaches water only when it goes past the water table into the saturated zone.",
+      "Compare the well's depth (35 meters) to each water table depth, and find how far below each one it reaches."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-005",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two nearby locations receive the same rainfall during a storm, but they end up with very different amounts of runoff. Location A is a hillside with loose, rocky soil and sparse vegetation. Location B is a flat, tightly packed clay plain with no plants. Which location will have more runoff, and why does the difference depend on both the ground material and the shape of the land?",
+    "choices": [
+      "Location A will have more runoff because rocky soil is impermeable and mountains always redirect water downhill much faster than flat plains can.",
+      "Location A will have more runoff because hills naturally allow water to flow away more quickly due to gravity pulling it downward along the slope.",
+      "Location B will have more runoff because packed clay is impermeable, so water cannot infiltrate, and the flat shape means runoff cannot flow away as quickly as on a hillside.",
+      "Location B will have more runoff because flat land holds water in place longer, which prevents infiltration and forces the water to accumulate and run off across the surface."
+    ],
+    "answer": "C",
+    "hints": [
+      "Permeable soil absorbs water; impermeable soil forces it to stay on the surface.",
+      "The shape of land affects how fast runoff can flow away, but it does not change whether water can infiltrate in the first place."
+    ]
+  },
+  {
+    "id": "m6sci-the-water-cycle-groundwater-runoff-006",
+    "loId": "m6sci.the-water-cycle-groundwater-and-runoff",
+    "cedCode": "M6SCI-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A farmer has a field with sandy, permeable soil. During most years, heavy spring rains soak deeply into the ground and refill the aquifer below, raising the water table. This year, however, the same heavy spring rains fell, but the water table did not rise as much as usual. A nearby city has just begun pumping water from the same aquifer. Explain why the water table rose less than expected this year, and identify which process—recharge or the removal of groundwater—is most responsible for the difference.",
+    "choices": [
+      "Recharge failed because the sandy soil suddenly became impermeable, so the spring rains could not soak in; the city's pumping made this worse.",
+      "The water table rose less because sandy soil drains water out through underground passages; recharge and pumping are equally responsible for the lack of rise.",
+      "The city's pumping had no effect because groundwater and surface water are separate; the spring rains infiltrated normally but evaporated before reaching the water table.",
+      "Recharge still occurred at the same rate, but the city's pumping removed water faster than recharge could replace it, so the net effect was a smaller rise in the water table."
+    ],
+    "answer": "D",
+    "hints": [
+      "Recharge adds water to the aquifer from above; pumping removes it from below.",
+      "If recharge and removal are both happening, the water table's net change depends on which process is faster."
     ]
   }
 ]

@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6math-what-it-means-to-solve-an-equation-001",
-    "loId": "m6math.what-it-means-to-solve-an-equation",
-    "cedCode": "M6MATH-8.1",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What does it mean for a number to be a solution to an equation?",
-    "choices": [
-      "A number that appears in the equation as part of the original problem",
-      "A number that, when substituted for the letter, makes the equation true",
-      "Any number that is larger than the numbers already written in the equation",
-      "A number that you must simplify the equation to find"
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what happens when you replace the letter with a candidate number.",
-      "The lesson says a solution is a value that makes a statement true or false—which one do we want?"
-    ]
-  },
-  {
-    "id": "m6math-what-it-means-to-solve-an-equation-002",
-    "loId": "m6math.what-it-means-to-solve-an-equation",
-    "cedCode": "M6MATH-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Is w = 5 a solution to the equation w + 9 = 14? Show your work by substituting w = 5 into the equation and explain your answer.",
-    "choices": [
-      "Yes, because 5 is a small number and 14 is larger than 5",
-      "No, because when you substitute w = 5, you get 5 + 9 = 14, which is false",
-      "Yes, because when you substitute w = 5, you get 5 + 9 = 14, which is true",
-      "No, because 5 + 9 = 15, not 14, so the statement is false"
-    ],
-    "answer": "C",
-    "hints": [
-      "Replace w with 5 and compute what the left side equals.",
-      "Does that result equal the right side of the equation?"
-    ]
-  },
-  {
-    "id": "m6math-what-it-means-to-solve-an-equation-003",
-    "loId": "m6math.what-it-means-to-solve-an-equation",
-    "cedCode": "M6MATH-8.1",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Which candidate value is NOT a solution to the inequality m × 2 < 10? Check 2, 3, 4, and 5 by substitution.",
-    "choices": [
-      "m = 2 is not a solution because 2 × 2 = 4, which is less than 10",
-      "m = 3 is not a solution because 3 × 2 = 6, which is less than 10",
-      "m = 4 is not a solution because 4 × 2 = 8, which is less than 10",
-      "m = 5 is not a solution because 5 × 2 = 10, and 10 is not less than 10"
-    ],
-    "answer": "D",
-    "hints": [
-      "For each candidate, substitute it and check whether the result is truly less than 10.",
-      "Remember: a solution must make the comparison itself come out true."
-    ]
-  },
-  {
-    "id": "m6math-what-it-means-to-solve-an-equation-004",
-    "loId": "m6math.what-it-means-to-solve-an-equation",
-    "cedCode": "M6MATH-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "The equation x + 6 = 18 has been given to four different students. Each student tests a different candidate: 10, 11, 12, and 13. Three of them will find that their candidate does not work. Substitute each value and identify which candidate makes the equation true, and explain why the other three do not work.",
-    "choices": [
-      "x = 12 works because 12 + 6 = 18; the others fail because they produce sums that do not equal 18",
-      "x = 10 works because 10 is less than 18; the others fail because they are closer to 18",
-      "x = 11 works because it is in the middle of the candidates and 18 is in the middle of the range",
-      "x = 13 works because 13 is the largest candidate and produces a sum larger than 18"
-    ],
-    "answer": "A",
-    "hints": [
-      "Test each candidate by adding 6 to it and see which sum equals 18.",
-      "For the candidates that don't work, what sums did you get? Why didn't they equal 18?"
-    ]
-  },
-  {
-    "id": "m6math-what-it-means-to-solve-an-equation-005",
-    "loId": "m6math.what-it-means-to-solve-an-equation",
-    "cedCode": "M6MATH-8.1",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Compare solving an equation to solving an inequality. Why might an equation like n = 7 have exactly one solution from a set of candidates, while an inequality like n < 7 could have several solutions from the same set?",
-    "choices": [
-      "Equations always have one solution and inequalities always have many, because that is a rule in mathematics",
-      "An equation asks for the one value that makes a statement exactly true, but an inequality asks for all values that satisfy a comparison, and many numbers can satisfy the same comparison",
-      "Inequalities are harder to solve, so mathematicians allow them to have multiple solutions to make up for the difficulty",
-      "Equations use equal signs and have one answer, while inequalities use less-than or greater-than signs and those symbols mean more answers are allowed"
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what each type of statement is asking: What does n = 7 demand versus what does n < 7 allow?",
-      "How many numbers can be equal to 7? How many numbers can be less than 7?"
-    ]
-  },
-  {
-    "id": "m6math-what-it-means-to-solve-an-equation-006",
-    "loId": "m6math.what-it-means-to-solve-an-equation",
-    "cedCode": "M6MATH-8.1",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A student claims that testing a candidate that turns out to be false is wasted effort because it did not lead to the solution. Explain why this claim is wrong and describe what useful information a failed candidate actually provides. Support your explanation by referencing what the lesson teaches about solving.",
-    "choices": [
-      "A failed candidate gives no useful information because if it is not the solution, it is simply wrong and there is nothing to learn from it",
-      "A failed candidate is useful only if it is close to the correct answer, because then you know to try nearby numbers next",
-      "A failed candidate shows that value does not work and rules it out from being the solution, which narrows the remaining candidates and proves the method is working correctly",
-      "A failed candidate becomes useful later on in algebra when you work with negative numbers and more complex equations"
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson says: 'A candidate that fails is still useful.' What does it say that candidate does? What does it tell you?",
-      "When you test a candidate that makes the equation false, what have you learned about that number and about which values you still need to test?"
-    ]
-  },
-  {
     "id": "m6math-writing-graphing-inequalities-001",
     "loId": "m6math.writing-and-graphing-inequalities",
     "cedCode": "M6MATH-8.3",
@@ -347,17 +233,17 @@
     "cedCode": "M6MATH-8.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Which operation is hidden on x in the equation x + 8 = 15?",
+    "problemText": "Look at the equation x + 8 = 15. Which operation is performed on x in this equation?",
     "choices": [
-      "8 is multiplying x",
-      "8 is subtracted from x",
-      "8 is added to x",
-      "8 is dividing x"
+      "Multiplication",
+      "Subtraction",
+      "Addition",
+      "Division"
     ],
     "answer": "C",
     "hints": [
-      "Look at the symbol right next to x.",
-      "A one-step equation hides one operation on x — identify which one before solving."
+      "Look at the symbol directly next to x.",
+      "The number 8 is combined with x using which basic operation?"
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6MATH-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Solve for x: x + 7 = 23. What value of x makes this equation true?",
+    "problemText": "Solve the equation x + 6.5 = 13.2 for x. What is the value of x?",
     "choices": [
-      "7",
-      "30",
-      "3",
-      "16"
+      "13.2",
+      "19.7",
+      "6.5",
+      "6.7"
     ],
     "answer": "D",
     "hints": [
-      "The operation on x is addition, so undo it by subtracting 7 from both sides.",
-      "After you find x, check your answer by putting it back into the original equation."
+      "Since 6.5 is added to x, use the inverse operation to undo it.",
+      "Subtract 6.5 from both sides of the equation."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6MATH-8.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Marcus bought 5 identical notebooks that cost $3.50 each. The total cost was $17.50. Write an equation where x represents the cost of one notebook, then solve for x.",
+    "problemText": "A baker buys 5 bags of flour. All 5 bags together weigh 22.5 pounds. Let x be the weight of one bag. If the equation 5x = 22.5 represents this situation, what is the weight of one bag of flour?",
     "choices": [
-      "5x = 17.50; x = 3.50",
-      "x + 5 = 17.50; x = 12.50",
-      "5 + x = 17.50; x = 12.50",
-      "x ÷ 5 = 17.50; x = 87.50"
+      "4.5 pounds",
+      "27.5 pounds",
+      "17.5 pounds",
+      "5 pounds"
     ],
     "answer": "A",
     "hints": [
-      "When items are identical and you find a total cost, multiplication is the hidden operation.",
-      "Once you write the equation, divide both sides by 5 to isolate x."
+      "The number 5 is multiplying x, so you need to use the inverse of multiplication.",
+      "Divide both sides by 5 to isolate x."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6MATH-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Sofia solved the equation 6x = 24 and got x = 18. She then checked her answer by substituting 18 back into the original equation. Which statement correctly describes what she should find?",
+    "problemText": "Elena solved the equation 7x = 35 and found x = 5. She then wants to check her solution by substituting it back into the original equation. What should both sides of the equation equal after she substitutes x = 5?",
     "choices": [
-      "Both sides equal 24, so her answer is wrong because 6 times 18 does not equal 24",
-      "The left side equals 108 and the right side equals 24, so her answer is wrong",
-      "Both sides equal 24, so her answer is correct",
-      "The left side equals 18 and the right side equals 6, so her answer is correct"
+      "7",
+      "35",
+      "5",
+      "12"
     ],
     "answer": "B",
     "hints": [
-      "Substitute x = 18 into the original equation 6x = 24 and compute both sides.",
-      "If the two sides do not match, the solution is incorrect, which means an error occurred in the solving steps."
+      "Replace x with 5 in the original equation 7x = 35.",
+      "Compute 7 times 5 and see if it matches the right side of the original equation."
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6MATH-8.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Tyrell had some money saved. He received a $12.50 birthday gift, which brought his total savings to $40.00. Write an equation for his savings before the gift, solve it, and identify which step is the correct inverse operation.",
+    "problemText": "Marco has x dollars saved. His aunt gives him $12.50, bringing his total to $28.75. Write an equation to represent this situation, then solve it. What was the amount Marco had saved before the gift?",
     "choices": [
-      "Equation: 12.50x = 40.00; subtract 12.50 from both sides; x = 27.50",
-      "Equation: x + 12.50 = 40.00; divide both sides by 12.50; x = 3.20",
-      "Equation: x + 12.50 = 40.00; subtract 12.50 from both sides; x = 27.50",
-      "Equation: 12.50x = 40.00; divide both sides by 12.50; x = 3.20"
+      "$12.50",
+      "$41.25",
+      "$16.25",
+      "$28.75"
     ],
     "answer": "C",
     "hints": [
-      "A gift is an amount added to what he had, so the equation involves addition, not multiplication.",
-      "The inverse of addition is subtraction — apply it to both sides to isolate x."
+      "The gift amount is added to what Marco already had, so the operation on x is addition.",
+      "Set up the equation x + 12.50 = 28.75, then subtract 12.50 from both sides."
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6MATH-8.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A student was solving x + 3.75 = 9.25 and wrote the steps shown below. After solving, she substituted x = 5.50 back into the original equation and found that both sides equal 9.25. However, she made an error in her solving steps. Identify the incorrect step and explain why it breaks the two-move method taught in the lesson.",
+    "problemText": "Two students solve the equation 6x = 24 but use different approaches. Student A subtracts 6 from both sides to get 6x - 6 = 24 - 6, which simplifies to 6x = 18. Student B divides both sides by 6 to get x = 4. Then each student substitutes their answer back into the original equation 6x = 24 to check. Which student's solution is correct, and why?",
     "choices": [
-      "Step 1 is incorrect: she should have named the operation as multiplication instead of addition, which would change how to undo it",
-      "Step 2 is incorrect: she should have subtracted 3.75 from only one side, not both sides, because the equal sign does not require balance",
-      "Step 4 is incorrect: the answer x = 5.50 is correct, but she should have substituted it back into a different equation, not the original one",
-      "Step 3 is incorrect: she should have added 3.75 to both sides instead of subtracting, because addition is the inverse of subtraction"
+      "Student A is correct because subtracting the same number from both sides keeps the equation balanced, following the fundamental rule of solving equations.",
+      "Student A is correct because subtracting 6 removes the coefficient from the equation and gets the variable by itself on one side.",
+      "Both students are correct because they both followed the order of operations and subtraction and division are equivalent ways to solve multiplication equations.",
+      "Student B is correct because 6 is multiplying x, so division is the true inverse operation that isolates x."
     ],
     "answer": "D",
     "hints": [
-      "Recall which operation undoes addition and which undoes multiplication — they are the true inverses taught in the lesson.",
-      "A mistake in the solving steps would cause the check substitution to show unequal sides; the fact that her check passed tells you she solved correctly even though the problem says an error was made."
+      "Recall that the inverse of multiplication is division, not subtraction.",
+      "Check which answer works: substitute each student's x value back into 6x = 24 and see if both sides are equal."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-001",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A solution to an equation is a value that, when substituted for the letter, makes the equation true. Based on this definition, which statement correctly describes what it means to solve an equation?",
+    "choices": [
+      "Rewriting the equation so it looks simpler and easier to read by combining like terms or rearranging",
+      "Finding the one value that makes the equation true when you replace the letter with it",
+      "Identifying all the letters and numbers used in the equation and listing them in order",
+      "Adding or subtracting the same number from both sides of the equation to balance it"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what a solution actually does to an equation.",
+      "Does solving mean changing how the equation looks, or finding a specific value?"
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-002",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "You are testing whether m = 9 is a solution to the equation m + 6 = 15. Perform the substitution and determine whether this candidate makes the equation true or false.",
+    "choices": [
+      "True, because 9 is a reasonable number for m",
+      "False, because 9 + 6 = 15 and the two sides do not match",
+      "True, because 9 + 6 = 15 and the two sides match exactly",
+      "False, because the numbers in the equation are too large"
+    ],
+    "answer": "C",
+    "hints": [
+      "Replace m with 9 everywhere it appears and compute what you get on the left side.",
+      "For an equation, both sides must be equal after substitution."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-003",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Four students are testing candidates for the equation p × 5 = 35. Their work is shown below. Which student correctly checked their candidate and drew the right conclusion?",
+    "choices": [
+      "Anna tested p = 6: 6 × 5 = 30, and concluded that p = 6 is a solution",
+      "Zoe tested p = 5: 5 × 5 = 25, and concluded that p = 5 is a solution",
+      "Marcus tested p = 8: 8 × 5 = 40, and concluded that p = 8 is a solution",
+      "Kai tested p = 7: 7 × 5 = 35, and concluded that p = 7 is a solution"
+    ],
+    "answer": "D",
+    "hints": [
+      "Substitute the candidate into the equation and see if both sides are equal.",
+      "A solution must make the statement true, not just look close to the answer."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-004",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is solving the inequality x × 2 < 18 using the candidate set 6, 7, 8, and 9. After testing all four candidates, the student claims that exactly one value is a solution, just like most equations have exactly one solution. Test each candidate and explain whether this claim is correct.",
+    "choices": [
+      "The claim is incorrect; x = 6, x = 7, and x = 8 all make the inequality true",
+      "The claim is incorrect; both x = 8 and x = 9 make the inequality true",
+      "The claim is correct; only x = 8 makes the inequality true",
+      "The claim is incorrect; x = 9 is the only value that makes the inequality true"
+    ],
+    "answer": "A",
+    "hints": [
+      "Compute the result for each candidate and check if it satisfies 'less than 18.'",
+      "Remember that inequalities can have multiple solutions from a candidate set, unlike most equations."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-005",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student tested four candidates for the equation 24 ÷ d = 6 and got these results: d = 3 gives 24 ÷ 3 = 8 (false), d = 4 gives 24 ÷ 4 = 6 (true), d = 5 gives 24 ÷ 5 ≈ 4.8 (false), and d = 6 gives 24 ÷ 6 = 4 (false). Which candidate is the solution, and how many solutions does this equation have from the given set?",
+    "choices": [
+      "d = 5 is the solution; this equation has exactly one solution from this set",
+      "d = 4 is the solution; this equation has exactly one solution from this set",
+      "Both d = 3 and d = 4 are solutions; this equation has two solutions from this set",
+      "No candidate is a solution; none of them make the equation true"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look for which substitution made the two sides equal.",
+      "Even though there were four candidates tested, an equation usually has only one solution."
+    ]
+  },
+  {
+    "id": "m6math-what-it-means-to-solve-an-equation-006",
+    "loId": "m6math.what-it-means-to-solve-an-equation",
+    "cedCode": "M6MATH-8.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A teacher gives students the inequality t + 5 > 12 and asks them to identify all solutions from the set 6, 7, 8, and 9. One student decides to test only t = 6 and t = 9, skipping the other two. The student finds that t = 6 gives 6 + 5 = 11, which is not greater than 12 (false), and t = 9 gives 9 + 5 = 14, which is greater than 12 (true). Based on only these two tests, the student concludes that some, but not all, candidates satisfy the inequality. Without testing the remaining candidates, can you determine whether the student's conclusion is definitely correct, possibly correct, or definitely wrong? Explain your reasoning based on what substitution reveals.",
+    "choices": [
+      "Definitely correct, because testing t = 6 and t = 9 proves that the answer includes multiple solutions",
+      "Definitely wrong, because the student did not test every candidate and might have missed a pattern",
+      "Possibly correct, but only after testing t = 7 and t = 8 to see if either or both make the inequality true",
+      "Definitely correct, because once you find any true candidate and any false candidate, you know the inequality has multiple solutions"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what partial testing can and cannot tell you about the full solution set.",
+      "Does finding one true candidate and one false candidate guarantee you have found all solutions, or do you need to check the rest?"
     ]
   }
 ]

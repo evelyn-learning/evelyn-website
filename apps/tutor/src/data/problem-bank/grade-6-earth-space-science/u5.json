@@ -347,17 +347,17 @@
     "cedCode": "M6SCI-5.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A mass-extinction boundary is a sudden change in the rock record where certain fossil types stop appearing and different fossil types take their place. Which of the following best describes what makes this boundary a useful time marker for geologists?",
+    "problemText": "A mass-extinction boundary is a sudden, worldwide change in the fossil record where certain fossil types stop appearing and different ones take their place. What makes this change useful as a time marker for matching rock layers from different parts of the world?",
     "choices": [
-      "The boundary layer contains rare minerals that can be dated using advanced laboratory equipment.",
-      "The same abrupt fossil change is found at the same relative position in rock layers from different places around the world.",
-      "The fossils found below the boundary are always larger and more complex than those found above it.",
-      "The boundary marks the point where scientists can measure the exact number of years that have passed since the rock formed."
+      "The fossil types that disappear are always the oldest fossils in the rock record, so any boundary that removes them must mark the same moment everywhere.",
+      "The same abrupt change shows up at the same relative position in rock layers thousands of kilometers apart, so geologists can match layers formed at the same time without needing a direct age in years.",
+      "The new fossil types that appear after the boundary are always larger and more diverse than the ones that came before, making them easy to spot.",
+      "Geologists can measure the exact age in years of any boundary by counting the layers between it and the surface of the rock."
     ],
     "answer": "B",
     "hints": [
-      "Think about why geologists can match rock layers from places thousands of kilometers apart without knowing the exact age in years.",
-      "The key is that the same distinctive change appears everywhere at once in the rock record."
+      "Think about why the same change in different places thousands of kilometers apart would be useful for matching time.",
+      "Does the boundary have to be dated in years for it to be a useful time marker?"
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6SCI-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A geologist finds a rock layer containing the last fossils of large ocean-dwelling reptiles and ammonites in an undisturbed sequence. Just above this layer, both groups are completely absent from all higher layers. What is the approximate age of this boundary, and what eon is it part of?",
+    "problemText": "A geologist finds a rock layer where a large share of the shell fossils that were common in lower layers suddenly stop appearing, and different shell types become common in layers above it. The geologist observes this same sudden change at a second location thousands of kilometers away, at the same relative position in the rock sequence. Based only on the pattern described, what has the geologist found?",
     "choices": [
-      "About 360 million years ago; Paleozoic Eon",
-      "About 250 million years ago; Mesozoic Eon",
-      "About 66 million years ago; Phanerozoic Eon",
-      "About 440 million years ago; Cenozoic Eon"
+      "Proof that the shell fossils moved from one location to the other over time.",
+      "Two different boundaries that happen to look similar because the two locations had the same climate in the past.",
+      "A mass-extinction boundary that marks the same moment in time at both locations.",
+      "Evidence that the rock layers at the second location are younger than those at the first location."
     ],
     "answer": "C",
     "hints": [
-      "Large ocean-dwelling reptiles disappearing is a key fossil clue for one specific boundary.",
-      "Remember that the Phanerozoic Eon is the entire time span in which abundant fossils appear—all five boundaries are part of it."
+      "What does it mean when the same sudden change in fossils appears at the same relative position in two distant places?",
+      "Does finding the same pattern in two places tell you about the age in years, or about whether they happened at the same time?"
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6SCI-5.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Two rock outcrops lie thousands of kilometers apart. At one location, a geologist finds a thin layer where ammonites disappear from the fossil record. At the other location, a different geologist also finds a thin layer at the same relative position in the rock sequence where ammonites disappear. Neither geologist can directly date their layer in years. What does this observation allow them to conclude?",
+    "problemText": "The five major mass-extinction boundaries, listed from oldest to youngest, are end-Ordovician (about 440 million years ago), end-Devonian (about 360 million years ago), end-Permian (about 250 million years ago), end-Triassic (about 200 million years ago), and end-Cretaceous (about 66 million years ago). In an undisturbed rock sequence, which of these boundaries would you expect to find lowest (deepest) in the stack of layers?",
     "choices": [
-      "The ammonites at both locations went extinct for the same environmental reason.",
-      "The rock layers at both locations must be the same thickness and contain identical mineral compositions.",
-      "A major volcanic eruption occurred at both locations at the exact moment the ammonites disappeared.",
-      "The two ammonite-free layers formed at approximately the same time, even without knowing the exact age in years."
+      "End-Devonian, because it is roughly in the middle of the time range and middle-aged layers settle at the bottom.",
+      "End-Permian, because it is the most severe and severe boundaries sink deeper into the rock over time.",
+      "End-Cretaceous, because it is the youngest and therefore the most recently buried layer in the sequence.",
+      "End-Ordovician, because it is the oldest of the five and superposition places older layers below younger ones."
     ],
     "answer": "D",
     "hints": [
-      "The lesson emphasizes how the same worldwide change in fossils lets geologists match boundaries across distances.",
-      "Remember that matching time markers does not require knowing the age in years or the cause of the change."
+      "What rule from earlier lets you predict the order of rock layers in an undisturbed stack?",
+      "Does severity (how many fossils disappeared) set the position of a boundary, or does age (how long ago it happened) set it?"
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6SCI-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "In an undisturbed rock sequence, a geologist identifies a mass-extinction boundary below which many small shelly creatures and trilobites are the dominant fossils, and above which trilobites vanish completely while fish fossils become much more common. This boundary is known to be less severe than the end-Permian boundary and sits within the Paleozoic Era. Approximately how many million years after this boundary did the Paleozoic Era end?",
+    "problemText": "A single, undisturbed rock sequence shows two mass-extinction boundaries, both below the layer that marks the end of the Paleozoic Era. A student claims that the lower of the two boundaries must be end-Permian because end-Permian is the most severe of all five boundaries, so it must be the first one to appear at the bottom. Identify the error in the student's reasoning and state which two boundaries actually sit below the end of the Paleozoic Era.",
     "choices": [
-      "About 190 million years",
-      "About 110 million years",
-      "About 80 million years",
-      "About 250 million years"
+      "The error is confusing severity with age. End-Ordovician and end-Devonian sit below the end of the Paleozoic Era; both are less severe than end-Permian but older than it.",
+      "The error is confusing location with boundary type. End-Permian and end-Triassic sit below the end of the Paleozoic Era; they are period boundaries, not era boundaries.",
+      "The error is assuming that older layers always contain the largest fossils. End-Cretaceous and end-Triassic sit below the end of the Paleozoic Era because they preserve smaller fossil types.",
+      "The error is not recognizing that end-Permian is an era boundary. End-Ordovician and end-Triassic sit below the end of the Paleozoic Era because era boundaries always come in pairs."
     ],
     "answer": "A",
     "hints": [
-      "The disappearance of trilobites as dominant organisms points to a specific boundary. Recall which boundary that is and its approximate age.",
-      "The Paleozoic Era ends at the end-Permian boundary. Subtract the age of your identified boundary from 250 million years."
+      "Severity and age are two separate facts. Does knowing a boundary is the most severe tell you whether it is old or young?",
+      "Which two of the five boundaries are actually older than end-Permian and sit inside the Paleozoic Era?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6SCI-5.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A single rock exposure contains three mass-extinction boundaries stacked vertically in an undisturbed sequence. The lowest boundary marks the end of one period within the Paleozoic Era. The middle boundary also lies within the Paleozoic Era. The highest boundary marks the end of the Mesozoic Era. Which three boundaries are these, listed from lowest to highest?",
+    "problemText": "The end-Cretaceous boundary, about 66 million years ago, separates the Mesozoic Era from the Cenozoic Era. The end-Permian boundary, about 250 million years ago, separates the Paleozoic Era from the Mesozoic Era. Using the order of the five boundaries, which of the following statements about the Mesozoic Era must be true?",
     "choices": [
-      "End-Devonian, end-Triassic, end-Permian",
-      "End-Ordovician, end-Devonian, end-Cretaceous",
-      "End-Ordovician, end-Permian, end-Triassic",
-      "End-Permian, end-Triassic, end-Cretaceous"
+      "The Mesozoic Era contains all five boundaries within it because the boundaries mark divisions at multiple levels of geologic time.",
+      "The Mesozoic Era began at the end-Permian boundary and ended at the end-Cretaceous boundary, so it includes the end-Triassic boundary but not the end-Devonian boundary.",
+      "The Mesozoic Era spans from the end-Ordovician boundary to the end-Cretaceous boundary because those are the first and last extinction events.",
+      "The Mesozoic Era is longer than the Paleozoic Era because it includes more boundaries and therefore more divisions into periods."
     ],
     "answer": "B",
     "hints": [
-      "Two of these boundaries must be inside the Paleozoic Era and listed in their correct order. The third must be the boundary between the Mesozoic and Cenozoic Eras.",
-      "Remember: end-Ordovician and end-Devonian are the only two boundaries that sit inside the Paleozoic; end-Cretaceous is the boundary that marks the end of the Mesozoic Era."
+      "An era boundary marks the start and end of an era. What are the era boundaries for the Mesozoic?",
+      "Of the five boundaries, which ones fall between the end-Permian and end-Cretaceous boundaries?"
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6SCI-5.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geologist studies two rock sequences from different continents. Sequence A shows four mass-extinction boundaries, all less severe than the end-Permian boundary. Sequence B shows two mass-extinction boundaries, both of which sit below the layer marking the end of the Paleozoic Era, and both of which are less severe than the end-Permian boundary. The geologist needs to identify which boundaries from Sequence A are also present in Sequence B. How many of the five major boundaries must be present in Sequence B, and which boundary is the youngest (most recent) one in Sequence B?",
+    "problemText": "Two geologists study rock outcrops in different countries. Outcrop A contains three mass-extinction boundaries; the oldest sits about 200 meters below the layer marking the end of the Paleozoic Era, the middle one sits about 100 meters below it, and the youngest sits about 10 meters below it. Outcrop B contains only two of the five major boundaries, both below the end-Paleozoic-Era layer. Outcrop B's lower boundary is older than 400 million years ago, and its upper boundary is younger than 350 million years ago. Which boundary is missing from Outcrop B, and why can you determine this without knowing the exact meter-depths in Outcrop B?",
     "choices": [
-      "Four boundaries are in Sequence B; the youngest is end-Cretaceous.",
-      "Two boundaries are in Sequence B; the youngest is end-Triassic.",
-      "Two boundaries are in Sequence B; the youngest is end-Devonian.",
-      "Three boundaries are in Sequence B; the youngest is end-Permian."
+      "End-Triassic is missing from Outcrop B. Outcrop B's age range of 400 to 350 million years ago falls entirely within the Mesozoic Era, so no Paleozoic boundaries can exist there; end-Triassic is the only Mesozoic boundary that could be missing.",
+      "End-Ordovician is missing from Outcrop B. The Paleozoic Era contains three boundaries below its end, so the three deepest boundaries overall must be end-Ordovician, end-Devonian, and end-Permian; if Outcrop B only has two, the missing one must be end-Ordovician because it is the least severe.",
+      "End-Devonian is missing from Outcrop B. End-Ordovician (about 440 mya) and end-Devonian (about 360 mya) are the two boundaries in the Paleozoic Era below the end-Paleozoic-Era layer; end-Devonian must be the younger boundary in Outcrop B's range, but the age range given (older than 400 mya, younger than 350 mya) does not include 360 mya.",
+      "End-Permian is missing from Outcrop B. The end-Paleozoic-Era layer is another name for the end-Permian boundary, so Outcrop B cannot contain any boundary younger than end-Permian; since Outcrop B has two boundaries below that layer, end-Permian itself is the missing one."
     ],
     "answer": "C",
     "hints": [
-      "Sequence B is explicitly described as containing two boundaries below the end-Paleozoic layer. Focus on that description rather than Sequence A.",
-      "Only end-Ordovician and end-Devonian sit below the end-Paleozoic boundary. Since both are less severe than end-Permian, these must be the two boundaries in Sequence B."
+      "Which two of the five boundaries are older than the end of the Paleozoic Era and sit below it?",
+      "Does the age range 400 to 350 million years ago include both 440 mya and 360 mya, or is one of them outside the range?"
     ]
   }
 ]

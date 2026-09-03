@@ -119,17 +119,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What is the difference between an author's purpose and an author's topic? Give your answer in one sentence.",
+    "problemText": "An author's purpose is the reason a text was written. Which of the following is a purpose that an author might have for writing an informational text?",
     "choices": [
-      "An author's purpose and topic are the same thing because both refer to the main idea that the author wants to communicate to readers.",
-      "An author's topic is always more important than the author's purpose because readers care more about what a text is about than why it was written.",
-      "An author's purpose is the reason the text was written, while the topic is what the text is about.",
-      "An author's purpose is about facts and information, while the topic is about the author's personal opinions and beliefs."
+      "To describe what the author had for breakfast",
+      "To make the reader laugh at a joke",
+      "To explain facts and give information about a topic",
+      "To tell a made-up story about imaginary characters"
     ],
     "answer": "C",
     "hints": [
-      "Think about what the lesson said: 'Author's purpose is the reason a text was written, not its subject.'",
-      "The lesson showed that two texts about the same event can have different reasons for being written."
+      "Remember the three main purposes: to inform, to persuade, or to entertain.",
+      "Informing means sharing facts and explanations without pushing the reader to believe or do anything."
     ]
   },
   {
@@ -138,17 +138,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this sentence from a sports newsletter: 'The track team finished third in the district championships last Saturday.' Does this sentence use neutral or persuasive language, and why?",
+    "problemText": "Read these two sentences about a new library rule. Sentence 1: 'The library now closes at 6 p.m. instead of 8 p.m. on weeknights.' Sentence 2: 'Students should visit the library right after school, before the new closing time ruins your study plans.' Which sentence contains word choice that signals the author is trying to persuade rather than just inform?",
     "choices": [
-      "Persuasive language, because it uses the word 'finished' instead of a different verb that would sound more neutral or objective.",
-      "Persuasive language, because it tells readers that they should care about the track team's performance and should support them.",
-      "Neutral language, because it is a short sentence.",
-      "Neutral language, because it reports what happened without judging the outcome or asking the reader to do anything."
+      "Sentence 1, because it uses the word 'now' to signal that a change has happened and readers need to know about it",
+      "Sentence 2, because it mentions the library and students who need to access it during school hours",
+      "Sentence 1, because it gives a specific time of day when the library will close to the public",
+      "Sentence 2, because it includes the word 'should' and describes the closing time negatively as something that 'ruins' plans"
     ],
     "answer": "D",
     "hints": [
-      "Look for judgment words or calls to action. Does this sentence tell you how to feel, or just what happened?",
-      "The lesson says neutral words 'report information without pushing the reader anywhere.'"
+      "Look for words that judge something or tell the reader what to do.",
+      "Neutral words like 'closes at' just report what happens, but words like 'should' and 'ruins' ask the reader to feel or act a certain way."
     ]
   },
   {
@@ -157,17 +157,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this announcement: 'The school library will add ten new computers in the study area starting next month.' Which sentence below would change the purpose of this announcement from informing to persuading?",
+    "problemText": "A local newspaper published two articles about the same community garden project. Article A lists the garden's location, watering schedule, and types of vegetables that will grow there. Article B describes only the beautiful flowers the garden will produce and ends with 'Join us this Saturday to help make our neighborhood bloom.' Which article's purpose is to persuade, and what word choice proves it?",
     "choices": [
-      "Every student who wants to improve their grades should take advantage of these new computers as soon as they arrive.",
-      "The library will purchase the computers from a company that sells educational equipment and has a strong reputation in schools.",
-      "The computers will be available during all hours that the library is open to students and staff.",
-      "The library is conveniently located on the second floor of the main building next to the media center."
+      "Article B persuades, proven by the call to action 'Join us this Saturday' and the word 'bloom' used to make the garden sound appealing",
+      "Article A persuades, proven by listing the specific vegetables that grow in the garden and providing a detailed watering schedule",
+      "Article A persuades, proven by telling readers the exact location of the garden so they know where to find it",
+      "Article B persuades, proven by describing flowers instead of focusing on the vegetables that the garden will produce"
     ],
     "answer": "A",
     "hints": [
-      "Persuasive language tells readers what they should do or what they should believe. Which choice contains a command or a judgment?",
-      "Look for words that urge the reader to act or words that tell the reader what is worthwhile."
+      "Persuading means pushing the reader toward an action or belief—look for judgment words or commands.",
+      "A sentence that asks readers to actually do something is a clear signal of persuasion."
     ]
   },
   {
@@ -176,17 +176,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read the two passages below about a new community garden. Both describe the same project, but which one is written to persuade, and what specific proof shows this?\n\nPassage 1: 'The community garden opened on Maple Street this spring. Volunteers spent four weekends preparing the soil and building raised beds. Forty families signed up to grow vegetables in the garden, and fifteen families are currently on a waiting list to join.'\n\nPassage 2: 'The community garden finally opened on Maple Street, and it is going to change our neighborhood. Volunteers generously gave their time to prepare the soil and build raised beds for this worthy project. Forty families are already growing vegetables, and even more are waiting to get in. You should sign up today and become part of this thriving community effort.'",
+    "problemText": "A student wrote a passage about adopting shelter dogs. The passage includes: the number of dogs at the local shelter, details about how friendly and healthy the shelter dogs are, statements that 'every family deserves the joy of a pet,' and it ends with 'Please contact the shelter this week.' Which statement best explains why the selected details and word choice reveal the author's purpose?",
     "choices": [
-      "Passage 1 is written to persuade, proven by the fact that it describes a community garden and mentions that volunteers helped build it.",
-      "Passage 2 is written to persuade, proven by the command 'You should sign up today and become part of this thriving community effort.'",
-      "Passage 1 is written to persuade, proven by the word 'currently' and the mention of a waiting list showing that many people want to join.",
-      "Passage 2 is written to persuade, proven by mentioning that families signed up to grow vegetables and that the garden is located on Maple Street."
+      "The passage informs because it includes a specific number of dogs at the shelter, which is a factual detail that provides readers with objective information without judgment",
+      "The passage persuades because it selects details that make shelter dogs sound worthy of adoption and uses the judgment word 'deserves' plus a call to action, pushing the reader toward a choice",
+      "The passage informs because it selects only positive details about shelter dogs, which helps readers understand the shelter's mission in a factual and straightforward way",
+      "The passage persuades because it mentions that the local shelter exists and includes contact information that allows readers to take immediate action on behalf of the shelter"
     ],
     "answer": "B",
     "hints": [
-      "Remember: naming a purpose is only half the job. You must also point at the exact word or detail that proves it.",
-      "Look for sentences that tell the reader what to do or that use judgment words like 'worthy' or 'finally.'"
+      "An informing passage would report outcomes or details from more than one side; a persuading passage lines up details that all point toward one side.",
+      "Look at both the selected details AND the word choice together—'deserves' is a judgment, and 'Please contact' is a direct call to action."
     ]
   },
   {
@@ -195,17 +195,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read this passage about a school's new homework policy:\n\n'The school raised the homework limit to ninety minutes per night this semester. Students in math classes report that the extra practice helps them understand challenging concepts better. However, students in science classes say the increased workload makes them feel stressed, and some say they have less time to play sports. The policy has benefits and drawbacks that affect different students in different ways.'\n\nWhat does the author's choice of selected details—which benefits and drawbacks to include—tell you about the author's purpose?",
+    "problemText": "Two texts describe the school's new homework policy. Text X states only the facts: homework is due by Friday, it counts toward the semester grade, and late homework receives half credit. Text Y states that homework deadlines have been set at Friday and late homework gets half credit, but then adds, 'Students who turn work in late are cheating themselves out of learning time.' Which best explains the difference in the authors' purposes?",
     "choices": [
-      "The author is trying to persuade readers to support the new homework policy by showing only the positive effects it has on math students.",
-      "The author is trying to persuade readers that homework should be banned because it makes most students feel stressed and prevents them from playing sports.",
-      "The author is trying to inform readers by reporting outcomes on both sides of the issue, not just favoring one side.",
-      "The author is trying to inform readers that the policy is bad by listing more drawbacks than benefits in the passage."
+      "Text X persuades and Text Y informs because Text Y provides more facts about the late homework credit policy and explains the reasoning behind it",
+      "Text X persuades and Text Y informs because Text X includes information about how homework affects the semester grade, which is a factual detail most readers need",
+      "Text X informs and Text Y persuades because Text X reports plain facts while Text Y adds a judgment that late work is a form of self-harm, pushing readers to meet the deadline",
+      "Text X informs and Text Y informs because both texts describe the same homework deadline and credit system using similar language and tone"
     ],
     "answer": "C",
     "hints": [
-      "The lesson says: 'A passage that reports outcomes on more than one side is informing about those outcomes; a passage that lines up only the details that favor one side is persuading.'",
-      "Notice what the author chose to include: benefits from math and drawbacks from science. Does this pick only one side, or both?"
+      "The same topic can have different purposes depending on word choice and selected details.",
+      "A judgment statement like 'cheating themselves out of learning time' signals persuasion, while plain facts without judgment signal informing."
     ]
   },
   {
@@ -214,17 +214,17 @@
     "cedCode": "M6ELA-4.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read these two excerpts about the same city park renovation project:\n\nExcerpt A: 'The city will invest $2 million in the park renovation. The project will include new walking paths, updated playground equipment, and improved lighting. The renovation is expected to take fourteen months and is scheduled to begin in September.'\n\nExcerpt B: 'The city is investing $2 million to transform our neglected park into a safe gathering place. New walking paths and updated playground equipment will finally give families a reason to visit. The improved lighting will protect everyone who uses the park after dark. This project deserves community support, and residents should volunteer for the work and attend the planning meetings starting in July.'\n\nWhich excerpt is written to persuade, and what combination of word choice and selected details (or calls to action) proves this?",
+    "problemText": "A school newsletter includes a section titled 'Parking Lot Safety Update.' It reports: 'Three vehicles backed into parked cars in the lot this month. Two drivers did not see the parked cars because they were not paying attention. One accident involved a student who was standing nearby.' The section ends with 'All drivers should slow down and check mirrors before backing up.' Explain what the author's purpose is and point to the exact proof from both word choice AND selected details.",
     "choices": [
-      "Excerpt A is written to persuade, because it mentions that the project will cost $2 million and will take fourteen months to complete.",
-      "Excerpt B is written to persuade, because it mentions walking paths and playground equipment that will be built in the park.",
-      "Excerpt A is written to persuade, because it lists specific details about what will be renovated and provides a timeline for the work.",
-      "Excerpt B is written to persuade, because it uses judgment words like 'neglected' and 'safe,' includes a call to action ('residents should volunteer'), and selects only benefits while leaving out any drawbacks."
+      "The author informs because the section includes facts about how many accidents happened this month and describes specific incidents with exact numbers and causes",
+      "The author persuades because the section mentions a student standing in the parking lot during one of the accidents, which makes readers worry about safety",
+      "The author informs because the section lists the number of vehicles involved in the accidents and explains in detail that drivers were not paying attention to their surroundings",
+      "The author persuades because the section selects only examples of problems caused by careless driving and ends with 'should slow down,' a command asking drivers to change their behavior"
     ],
     "answer": "D",
     "hints": [
-      "Look for more than one signal of persuasion: judgment words, calls to action, and one-sided selected details all point in the same direction.",
-      "The lesson teaches that purpose must be proven by multiple clues—word choice AND selected details AND what the passage leaves out. Which excerpt shows all three?"
+      "An informing passage about an event would describe both good and bad outcomes, or explain why something happened without taking a stance; a persuading passage picks details that all point toward one view and ends with what readers should do.",
+      "Look at both what details were selected AND what words were chosen—'should' is a command, and all three examples make careless driving look bad."
     ]
   },
   {
@@ -233,17 +233,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "Two accounts describe the same field trip to a museum. Before you can compare what each account includes and leaves out, what must you check first?",
+    "problemText": "Two accounts describe a school assembly held on Tuesday afternoon. Both accounts state that the assembly lasted one hour and was held in the gymnasium. Account A also mentions that the principal gave a speech about good citizenship. Account B mentions that student council members helped set up chairs before the event. Which statement best explains what a shared fact is?",
     "choices": [
-      "You must confirm that both accounts describe the same event—the same day, the same place, the same trip.",
-      "You must count how many sentences each account has to see which one is longer.",
-      "You must decide which account sounds more like a personal letter and which sounds more like an official report.",
-      "You must identify which account includes numbers and which one includes feelings."
+      "A detail that appears in both accounts and describes part of the event itself, not one writer's special addition",
+      "A detail that one writer noticed but the other writer missed by accident because they were not paying close attention during the event",
+      "A detail that makes one account more interesting or longer than the other account by including extra information one person observed",
+      "A detail that both writers must have learned from the same source or document before they each wrote their own separate account"
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches a step-by-step method for comparing accounts. What comes first?",
-      "Look back at the worked examples—what do they do before making any lists of what each account adds?"
+      "Look back at the definition: shared facts are on BOTH lists and are part of the event itself.",
+      "Think about the assembly example: what did both accounts say exactly the same way?"
     ]
   },
   {
@@ -252,17 +252,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read both accounts of the same soccer game.\n\nSource A (a player's text to a friend): \"Our team won 3–2 against Lincoln Middle School on Wednesday afternoon, and I scored two of our goals. I was so nervous before the game that I almost threw up in the locker room.\"\n\nSource B (the school's sports newsletter): \"The girls' soccer team defeated Lincoln Middle School 3–2 on Wednesday afternoon in a competitive match that came down to the final minutes.\"\n\nWhich fact appears in BOTH accounts?",
+    "problemText": "Two accounts describe the same baseball game on Friday evening. Source A (a fan's social media post) says: 'Our team won 7-4, and watching my best friend hit a home run in the third inning made the whole night perfect.' Source B (the local sports section) says: 'The home team defeated the visiting team 7-4 in front of 340 fans. The winning pitcher struck out eight batters.' Both accounts describe the same game. Which detail appears only in Source B and not in Source A?",
     "choices": [
-      "The player's nervousness before the game in the locker room.",
-      "The team won 3–2 against Lincoln Middle School on Wednesday afternoon.",
-      "The match came down to the final minutes.",
-      "The player scored two of the team's three goals."
+      "The game ended with a score of 7-4",
+      "The winning pitcher struck out eight batters",
+      "The home team won the game",
+      "A player hit a home run in the third inning"
     ],
     "answer": "B",
     "hints": [
-      "Shared facts appear in both sources using the same or very similar language. Look for the sentence that repeats across both accounts.",
-      "A detail that only one account mentions—like feelings or nervousness—is not a shared fact."
+      "Review both sources carefully and list what facts appear in only one of them.",
+      "The correct answer is a fact about pitching statistics that appears in one source but is completely absent from the other."
     ]
   },
   {
@@ -271,17 +271,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read both accounts of the same science project fair.\n\nSource A (a student's journal entry): \"Today was our school's science fair, and I set up my water filtration project on table seven. I spent three hours there answering questions about my experiment, and my little sister came to watch and brought me a juice box when I was thirsty.\"\n\nSource B (the science teacher's report): \"Our school held its annual science fair today. Forty-two students displayed projects covering topics from robotics to plant biology. The fair ran from 1 p.m. to 4 p.m. in the gymnasium.\"\n\nWhat detail appears in Source A but NOT in Source B?",
+    "problemText": "Two accounts describe the same science fair held on Saturday at a community center. Source A (a teacher's message to families) includes: 'Our students presented projects on weather, plants, and the water cycle. Many projects used colorful posters, and I was proud to see how hard our class had worked.' Source B (the community center's event announcement) includes: 'The science fair ran from 10 a.m. to 2 p.m. Judging ended at 1:30 p.m., and three students won blue ribbons for outstanding projects.' Do these two accounts describe the same event? Explain how you know.",
     "choices": [
-      "The fair ran from 1 p.m. to 4 p.m.",
-      "The projects covered robotics and plant biology topics.",
-      "The student's sister brought juice during the fair.",
-      "The science fair took place at the school today."
+      "No, because Source A talks about projects while Source B talks about prizes, so they are not about the same fair",
+      "No, because Source A describes feelings and Source B describes only facts, so they cannot be the same event",
+      "Yes, because both accounts mention a science fair with student projects, though they describe different details about it",
+      "Yes, but only if you assume the fair at the community center is the only one that happened that week"
     ],
     "answer": "C",
     "hints": [
-      "Look at what Source A includes that Source B does not mention at all.",
-      "A personal account like a journal entry often includes details about feelings and people close to the writer. An official report often leaves those details out."
+      "Before comparing anything, check: do both accounts describe the same place, day, and type of event?",
+      "Remember, different details and different stance do not mean the accounts describe different events."
     ]
   },
   {
@@ -290,17 +290,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Read both accounts of a community garden volunteer day.\n\nSource A (a volunteer's blog post): \"Twenty-five neighbors worked together on Saturday morning to plant spring vegetables in our community garden beds. Everyone was smiling and chatting as we dug in the soil, and by lunchtime we had already planted tomatoes, peppers, squash, and lettuce. It felt like we were doing something that really mattered to our neighborhood.\"\n\nSource B (the parks department's monthly report): \"On Saturday morning, twenty-five volunteers planted spring vegetables in the community garden on Maple Street. The team completed planting in all six raised beds and worked for three hours, starting at 9 a.m. The parks department provided all tools and seed stock.\"\n\nBoth accounts describe the same volunteer day. Which statement BEST explains how they differ in what they include?",
+    "problemText": "Read the two accounts of a community garden planting day.\n\nSource A (a volunteer's email): 'We planted thirty seedlings in the community garden on Saturday morning, working side by side with people from three different neighborhoods. Seeing everyone dig in the soil together and chat about their gardens made me feel hopeful that our community could really come together.'\n\nSource B (the city parks department's report): 'The community garden planting event took place Saturday morning. Volunteers planted thirty seedlings in prepared beds. The department provided tools, soil, and water access. An estimated 45 people attended the event.'\n\nBoth accounts describe the same planting day. What is one shared fact that both sources state?",
     "choices": [
-      "Source A emphasizes the emotional experience and sense of community purpose, while Source B emphasizes the location, the number of beds planted, the duration of work, and the source of equipment.",
-      "Source A names the specific vegetables that were planted but Source B does not mention them at all, suggesting Source B was written by someone who did not attend the event.",
-      "Source A reports only positive observations about the volunteers' mood and accomplishment, while Source B includes only factual measurements of time and resources that make the day sound less meaningful.",
-      "Source A focuses on how the volunteers felt and what they accomplished together, while Source B focuses on details like the number of beds, the time worked, and who provided the supplies."
+      "The volunteers felt hopeful about community cooperation",
+      "Forty-five people attended the event",
+      "The city parks department provided tools and water",
+      "Thirty seedlings were planted on Saturday morning"
     ],
     "answer": "D",
     "hints": [
-      "Both accounts report the same event. Neither contradicts the other. The difference is in selection and emphasis—what each writer chose to spend words describing.",
-      "What does Source A emphasize through repeated words and sentences? What does Source B emphasize through numbers and logistics?"
+      "Look for a fact that appears in BOTH accounts stated in nearly the same way.",
+      "Shared facts describe what actually happened at the event, not how it felt or who organized it."
     ]
   },
   {
@@ -309,17 +309,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two accounts describe the same book club meeting.\n\nSource A (a member's email to a friend): \"The Riverside Book Club met on Tuesday evening to discuss our latest read. Everyone had finished the book except Marcus, and the group spent two hours talking about how much they loved the main character's journey. We laughed so hard at one scene that someone spilled coffee on the carpet.\"\n\nSource B (the club's official meeting notes): \"Tuesday evening book club meeting. Attendance: 8 members. Book discussed: The Wanderer's Path. Meeting ran 7 p.m. to 9 p.m. The club voted to read The Mountain House next month.\"\n\nWhich of the following correctly identifies a shared fact and explains why it is shared?",
+    "problemText": "Read the two accounts of a middle school talent show.\n\nSource A (a student's journal entry): 'The talent show was tonight, and I sat in the audience watching my classmates perform. Three students did comedy sketches that made the whole gym laugh so hard people were crying. My friend sang a solo that gave me chills.'\n\nSource B (the school's monthly bulletin): 'The sixth-grade talent show was held Tuesday evening in the gymnasium. Thirty-two students performed, and the show lasted ninety minutes. Five performances were comedy acts.'\n\nBoth accounts describe the same talent show. Which statement best describes how these two accounts differ in what they choose to include?",
     "choices": [
-      "The group spent two hours talking is shared because Source B shows the meeting was 7 p.m. to 9 p.m.",
-      "The Riverside Book Club met on Tuesday evening to discuss their latest read is shared because both accounts use these same words.",
-      "Everyone had finished the book except Marcus is shared because both accounts mention Marcus.",
-      "Someone spilled coffee is shared because both accounts describe events that happened during the meeting."
+      "Source A focuses on feelings and reactions, while Source B focuses on numbers and facts about the event",
+      "Source A is accurate because it mentions specific performers, while Source B is incomplete because it only uses numbers",
+      "Source A leaves out information on purpose to make the talent show sound better, while Source B reports only what really happened",
+      "Source A and Source B disagree because one says comedy sketches happened and the other says five comedy acts happened"
     ],
     "answer": "A",
     "hints": [
-      "A shared fact must be a detail that both accounts state or clearly confirm. Look for what both sources agree on, even if they use different words to say it.",
-      "Source B gives the meeting time as 7 p.m. to 9 p.m., which is two hours. Does Source A's claim about two hours match that information?"
+      "Notice what each source spent the most words describing—feelings and moments, or counts and logistics?",
+      "Differences in emphasis and stance are not disagreements; look for what each writer chose to include and why."
     ]
   },
   {
@@ -328,17 +328,17 @@
     "cedCode": "M6ELA-4.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read these two accounts of a school assembly.\n\nSource A (student council president's speech, printed in the school newspaper): \"Last Friday's assembly brought our entire school together for our annual awards ceremony. I felt proud watching sixth graders, seventh graders, and eighth graders stand on stage to receive certificates for art, music, sports, and academic achievement. The auditorium was packed, and you could hear the crowd cheering every time someone's name was called.\"\n\nSource B (a substitute teacher's note in the classroom log): \"Attended mandatory assembly on Friday. Approximately 500 students and staff present. Program lasted 45 minutes. Awards were presented in four categories. Two students had technical difficulties with their microphones during the program.\"\n\nBased on both accounts, which statement is true?",
+    "problemText": "Read two accounts of a school fundraiser book fair.\n\nSource A (a parent volunteer's note to other parents): 'The book fair ran all week in the library, and students could buy books during lunch and after school. My child spent an hour on Thursday picking through the mystery and fantasy shelves, and she came home with four books she had been wanting. It was wonderful to see her so excited about reading.'\n\nSource B (the librarian's fact sheet): 'The book fair ran Monday through Friday in the school library. Vendors brought a total of 2,400 books. Students were allowed to shop during lunch, after school, and during study hall. The fair earned $840 in school fund revenue.'\n\nBoth accounts describe the same book fair. Identify one fact both accounts state and one detail that appears in only one account. Then explain whether the two accounts actually disagree or simply include different details.",
     "choices": [
-      "The accounts disagree about whether awards were given in multiple categories, so they cannot be describing the same assembly because Source A names specific categories while Source B does not.",
-      "Both accounts describe the same assembly with the same awards ceremony, but Source A emphasizes the feeling of pride and unity while Source B emphasizes the size of the crowd and the length and technical details of the program.",
-      "Source B reports a technical problem during the assembly, while Source A reports only positive feelings about the awards, which means Source A deliberately left out negative information to make the assembly sound better than it was.",
-      "Source A is more accurate because it focuses on students' emotional experiences and accomplishments, whereas Source B only records factual data like attendance numbers and duration without capturing the meaningful purpose of the event."
+      "Shared fact: students shopped during lunch and after school. Source A adds the student bought four books; Source B adds vendors brought 2,400 books. They disagree because Source B's total number contradicts Source A's small purchase.",
+      "Shared fact: the fair ran all week in the library. Source A adds how excited the student felt; Source B adds total book count and money earned. They do not disagree because both can be true of the same fair.",
+      "Shared fact: it was a book fair in the school. Source A emphasizes one child's happiness; Source B emphasizes the total revenue. They disagree because Source A focuses on reading while Source B focuses on money.",
+      "Shared fact: the fair lasted one week. Source A adds that children picked books; Source B adds the revenue amount. They disagree because one account is personal and the other is official."
     ],
     "answer": "B",
     "hints": [
-      "Remember: different details and different emphasis are not the same as disagreement. Check whether both accounts state the core event the same way.",
-      "Notice what each writer chose to include: one focuses on emotion and pride, the other on numbers and logistics. What does the lesson call this difference?"
+      "First, identify the detail both accounts definitely state the same way—same day, same place, same timeframe.",
+      "Second, check whether the additions on each account's special list contradict each other or sit side by side without touching."
     ]
   },
   {
@@ -347,17 +347,17 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "According to the lesson, what two things must be attached to a specific claim in order for it to count as supported?",
+    "problemText": "A reason is part of an argument. Which of these is a reason? Remember: a reason explains why a claim should be believed.",
     "choices": [
-      "A fact and the writer's opinion",
-      "A reason and confident wording",
-      "Evidence and a main claim",
-      "A reason and evidence"
+      "Three out of four teachers voted to extend lunch by ten minutes, which shows that most staff members support the change.",
+      "The cafeteria should serve healthier lunches instead of the current menu options.",
+      "Students enjoy playing basketball at recess because it is fun and keeps them active during the break.",
+      "Walking to school every day is good exercise because it strengthens your heart and legs."
     ],
     "answer": "D",
     "hints": [
-      "Think about what the lesson calls the two building blocks that back up a claim.",
-      "Evidence is the specific fact or example, and a reason explains why the claim should be believed."
+      "A reason comes after 'because' or 'since' — it answers the 'why' question.",
+      "Look for a sentence that explains a cause or consequence, not just a fact standing alone."
     ]
   },
   {
@@ -366,36 +366,36 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this short argument: 'Our school should start a lunch exchange program. Students who bring lunch from home could trade items they do not want with other students. This would reduce food waste because students are more likely to eat food they actually chose instead of throwing it away.' Which specific claim in this argument is supported by a reason and evidence?",
+    "problemText": "Read this claim and the sentence right after it: 'Our town needs more public parks. Parks give people a safe place to exercise and spend time with their families.' Does the text support this claim with a reason and evidence, or does it just state the claim and move on?",
     "choices": [
-      "This would reduce food waste because students are more likely to eat food they actually chose instead of throwing it away",
-      "Our school should start a lunch exchange program because it would be simple to organize and manage during lunch periods",
-      "Students who bring lunch from home could trade items they do not want with other students since many students pack extra snacks",
-      "A lunch exchange program would improve student happiness because students get to interact with their classmates during the lunch period"
+      "The claim is supported because the next sentence gives a reason why parks matter.",
+      "The claim is not supported because it does not say which specific park should be built.",
+      "The claim is supported only if most people in town already agree with it.",
+      "The claim is not supported because no number or count is provided."
     ],
     "answer": "A",
     "hints": [
-      "Look for a sentence that has both a reason (why) and evidence (a fact or explanation) right next to it.",
-      "The word 'because' in the sentence signals that a reason is being given."
+      "To be supported, a claim needs a reason attached to it — check the sentence right after the claim.",
+      "You do not need a specific plan or a vote count for support; you just need to find a reason the text gives."
     ]
   },
   {
     "id": "m6ela-tracing-an-argument-003",
     "loId": "m6ela.tracing-an-argument",
     "cedCode": "M6ELA-4.3",
-    "difficulty": 3,
+    "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Read this passage: 'The school should require all students to bring reusable water bottles instead of buying plastic ones. Plastic bottles take hundreds of years to break down in the environment. Students who use the same bottle every day create far less trash than students who buy a new bottle each week. Reusable bottles are also obviously the coolest thing anyone could carry.' A student claims that the specific claim about plastic bottles breaking down slowly is supported, while the specific claim about reusable bottles being 'the coolest thing' is not. Explain which one is correct and why, based on the definition of a supported claim.",
+    "problemText": "Read this sentence from an argument: 'Breakfast is obviously the most important meal of the day.' The sentence uses the word 'obviously.' Does this word count as evidence that supports the claim?",
     "choices": [
-      "The student is wrong about both claims; neither one has evidence attached to it",
-      "The student is correct; both claims are actually supported, so the student made an error",
-      "The student is correct; the plastic breakdown claim has a reason and fact, but the 'coolest' claim does not",
-      "The student is wrong about the first claim; confident words like 'obviously' always mean a claim is supported"
+      "Yes, because 'obviously' is a confident word that shows the writer believes the claim.",
+      "No, because 'obviously' is just confident wording, not a reason or a fact.",
+      "Yes, because when a word is printed in the text, it serves as evidence.",
+      "No, because the word 'obviously' is only three syllables long."
     ],
-    "answer": "C",
+    "answer": "B",
     "hints": [
-      "Check whether each claim has a real reason and fact next to it, or whether it just stands alone.",
-      "Remember that confident words like 'obviously' or 'coolest' are tone, not evidence."
+      "Confident words and tone are not the same thing as reasons and facts.",
+      "Ask yourself: does 'obviously' explain why breakfast is important, or does it just sound sure of itself?"
     ]
   },
   {
@@ -404,36 +404,55 @@
     "cedCode": "M6ELA-4.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is tracing this argument: 'The school cafeteria should add a salad bar with fresh vegetables. Fresh vegetables are healthier for students than the fried foods the cafeteria serves most days. Students who eat more vegetables have better energy and focus in their afternoon classes, and research shows that diets high in vegetables lower the risk of heart disease later in life. Adding a salad bar would definitely be popular with everyone.' The student identifies three specific claims and must sort each as supported or not supported. What is the correct sort for all three?",
+    "problemText": "An argument states: 'The school library should stay open after 4 PM on Wednesdays. Most students have sports or clubs right after school, so they cannot use the library until later. Three students surveyed last month said they would use the library if it stayed open until 6 PM.' The argument also includes: 'An after-school library would bring our school into the modern world.' Sort these two specific claims: the one about students having sports or clubs, and the one about bringing the school into the modern world. Which is supported and which is not?",
     "choices": [
-      "All three claims are supported because they all sound important",
-      "The first and third claims are supported; the second claim is not supported",
-      "Only the second claim is supported because it mentions research",
-      "The first and second claims are supported; the third claim is not supported"
+      "Both claims are supported because they both appear in the same argument.",
+      "The modern-world claim is supported; the sports-and-clubs claim is not supported.",
+      "The sports-and-clubs claim is supported; the modern-world claim is not supported.",
+      "Both claims are not supported because no poll of the entire school was taken."
     ],
-    "answer": "D",
+    "answer": "C",
     "hints": [
-      "Go through each claim one by one and check whether reason and evidence actually appear in the text right around it.",
-      "The last claim has words like 'definitely' and 'popular,' but do those same words come with a real fact or reason?"
+      "For each claim, look at the sentences right around it and ask: is there a reason and a fact printed in the text?",
+      "One claim has an explanation and an actual count; the other uses confident wording with nothing backing it up."
     ]
   },
   {
     "id": "m6ela-tracing-an-argument-005",
     "loId": "m6ela.tracing-an-argument",
     "cedCode": "M6ELA-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reads this argument: 'The school should ban phones during lunch. When students have phones at the table, they text their friends instead of talking to the people sitting next to them. A study found that students who eat lunch without phones reported feeling more connected to their classmates.' Later, the argument says: 'Phones at lunch are just bad for you.' The student wants to sort each claim. Which statement correctly identifies whether each of these two claims is supported or not?",
+    "choices": [
+      "Both claims are supported because they each relate to the main topic of phones affecting student behavior and social interaction.",
+      "Neither claim is supported because the argument does not include enough specific details about when and where the study was conducted.",
+      "The claim about phones being 'just bad' is supported by common sense; the texting claim is not supported by any real evidence.",
+      "The claim about texting instead of talking is supported by a reason; the claim that phones are 'just bad' is not supported."
+    ],
+    "answer": "D",
+    "hints": [
+      "One claim has an explanation of cause and effect plus a research result; the other uses vague language with nothing concrete beside it.",
+      "You do not need to know whether the study is strong — just whether a reason and evidence are printed in the text."
+    ]
+  },
+  {
+    "id": "m6ela-tracing-an-argument-006",
+    "loId": "m6ela.tracing-an-argument",
+    "cedCode": "M6ELA-4.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Read this argument: 'The school should invest in solar panels on the roof of the main building. Solar panels would lower the school's electricity costs because they convert sunlight into power and reduce how much energy the school has to buy from the power company. Installing solar panels is also a way to teach students about renewable energy. Solar energy is the future of electricity generation, and solar panels would definitely inspire every single student in the building to care about science.' A student must trace this argument and sort each claim. The student notices that one claim uses confident language like 'definitely' and 'every single student,' and wonders if that confident wording means the claim is supported. Using the lesson's definition, explain whether confident wording makes a claim supported or not supported, and identify which claim in this passage demonstrates that principle.",
+    "problemText": "An argument reads: 'Students should be allowed to eat lunch outside on nice days. Eating outside would give students fresh air and sunshine. Fresh air and sunshine help people feel less stressed and more alert. Being less stressed also makes it easier for students to focus on learning in their afternoon classes. Eating outside is an exciting option.' The student sorting this argument finds four specific claims: (1) eating outside would give students fresh air and sunshine, (2) fresh air and sunshine help people feel less stressed and more alert, (3) being less stressed makes it easier to focus on learning, and (4) eating outside is an exciting option. Which of these specific claims are supported by a reason and evidence found in the text, and which are not?",
     "choices": [
-      "Confident wording is not evidence; the solar-panels-inspire-students claim is not supported because no reason or fact backs it up",
-      "Confident wording makes a claim supported because words like 'definitely' are a form of evidence; the solar-panels-inspire-students claim is supported",
-      "Confident wording makes a claim supported only if the claim is also about money, like the electricity-cost claim",
-      "Confident wording makes a claim not supported; the electricity-cost claim is therefore not supported even though it has real evidence"
+      "Claims 1, 2, and 3 are supported; claim 4 is not supported.",
+      "Claims 1 and 4 are supported; claims 2 and 3 are not supported.",
+      "All four claims are supported because they are all mentioned in the same paragraph.",
+      "Only claim 1 is supported; claims 2, 3, and 4 are not supported."
     ],
     "answer": "A",
     "hints": [
-      "The lesson warns against mistaking confident words like 'obviously' or 'definitely' for actual reasons and evidence.",
-      "Look at what comes right before and after the claim about inspiring students—is there a real reason and fact, or only strong-sounding words?"
+      "Trace from each claim through the next sentence or two: does the text give a reason why the claim is true, or does it just move to a new idea?",
+      "Notice that some claims receive their support from earlier claims in the chain — if a sentence in the text explains why something is true, that counts as support."
     ]
   }
 ]

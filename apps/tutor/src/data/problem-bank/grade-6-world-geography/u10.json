@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6geo-how-physical-geography-changes-over-time-001",
-    "loId": "m6geo.how-physical-geography-changes-over-time",
-    "cedCode": "M6GEO-10.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A river's course is the path that a river follows as it flows across the land. Which statement correctly describes whether a river's course is fixed in place forever?",
-    "choices": [
-      "A river's course is permanently locked in one location and does not shift or move at any point in time.",
-      "A river's course can shift over a long stretch of time, even though it may look the same for a person's entire life.",
-      "A river's course changes suddenly every few years due to seasonal rainfall and weather patterns.",
-      "A river's course only changes following a major flood or dramatic event that physically reshapes the land."
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about the key idea that physical geography is not fixed.",
-      "The lesson says the change happens gradually, so it is too slow to notice from moment to moment."
-    ]
-  },
-  {
-    "id": "m6geo-how-physical-geography-changes-over-time-002",
-    "loId": "m6geo.how-physical-geography-changes-over-time",
-    "cedCode": "M6GEO-10.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Two maps of the same valley were drawn 50 years apart. The old map shows a coastline at a particular spot on the edge of the valley, and the new map shows the same coastline now sitting noticeably farther back from the ocean. No sudden storms or dramatic events are mentioned in either map. What does the difference between the two maps most likely show?",
-    "choices": [
-      "The coastline moved suddenly during a single large storm that happened between the two maps.",
-      "One of the two maps must contain an error, because a coastline cannot change without a dramatic event.",
-      "The coastline wore back gradually over the 50 years, a small amount at a time, adding up to a noticeable difference.",
-      "The coastline did not actually change; the two maps just measured the water's edge at different times of year."
-    ],
-    "answer": "C",
-    "hints": [
-      "The lesson teaches that gradual change happens in small amounts over a long stretch of time, too slow to notice moment to moment.",
-      "Look for clues about whether a sudden event is described — the problem states no dramatic events are mentioned."
-    ]
-  },
-  {
-    "id": "m6geo-how-physical-geography-changes-over-time-003",
-    "loId": "m6geo.how-physical-geography-changes-over-time",
-    "cedCode": "M6GEO-10.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student reads a 40-year-old description of where a river bends as it passes through a wide plain. When the student visits that same river today, she finds the bend sitting in a different location than the old description places it. The student wonders whether the old description was wrong. Based on what you know about gradual change, why might both descriptions actually be correct?",
-    "choices": [
-      "The two descriptions cannot both be correct because rivers remain permanently fixed once they establish their channel, so any difference between the old and new positions proves one account is inaccurate.",
-      "The old description was definitely wrong because once a river settles into a channel and follows a path, the water always flows through that same location and cannot shift over time.",
-      "Both descriptions are correct only if a major flood event occurred between the two time periods and moved the entire river channel suddenly in one dramatic shift rather than gradually.",
-      "The old description was correct for its time, and the new location is correct for today, because the river's course shifted gradually over 40 years."
-    ],
-    "answer": "D",
-    "hints": [
-      "The lesson explains that a place described long ago can be measurably different from the very same place described today, with no mistake involved.",
-      "Think about how small changes, happening many times across a long stretch of time, add up to a noticeable difference."
-    ]
-  },
-  {
-    "id": "m6geo-how-physical-geography-changes-over-time-004",
-    "loId": "m6geo.how-physical-geography-changes-over-time",
-    "cedCode": "M6GEO-10.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A photography club takes a picture of a rocky coastline every spring for 12 years. When they compare the first photo with the last photo, they notice the rocky edge has worn back about 6 feet from the ocean. The photos show no signs of broken rock, collapsed cliffs, or damage from storms in any single year. The club wonders what caused this change. Which explanation best fits the evidence, and why is the alternative explanation weaker?",
-    "choices": [
-      "The coastline wore back gradually through small amounts of erosion each year, and those tiny changes added up over 12 years; a single storm would have left visible damage in one of the photos, which the club did not find.",
-      "A single powerful storm must have caused all 6 feet of erosion in one event, because coastal environments change only through sudden, dramatic occurrences rather than slow, steady processes happening across many years.",
-      "The water level of the ocean rose significantly during the final year, making the rocky edge appear farther back when it actually remained in the same physical location relative to the land itself.",
-      "The club repositioned their camera location or angle between photo sessions, creating the illusion that the coastline moved when the actual landscape stayed exactly where it was in all 12 years."
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson contrasts gradual change (small amounts over a long time, no visible damage from a single event) with sudden change (a large difference right after a dramatic event).",
-      "Notice what the problem does NOT describe — no mention of storms, broken rock, or any single dramatic moment appears in the 12 years of photos."
-    ]
-  },
-  {
-    "id": "m6geo-how-physical-geography-changes-over-time-005",
-    "loId": "m6geo.how-physical-geography-changes-over-time",
-    "cedCode": "M6GEO-10.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two aerial maps of a river valley are compared. Map A, made 30 years ago, shows the river running along the base of a hill on the western side of the valley. Map B, made last year, shows the river flowing through the center of the valley, much farther east than Map A shows. A local historian's written record mentions normal rainfall and weather throughout those 30 years, with no unusual floods or storms recorded. Based on the lesson about how physical geography changes, which statement best explains the evidence?",
-    "choices": [
-      "The river's course must have shifted suddenly during a major flood that occurred between the two maps but was overlooked or not recorded by the historian in the written records from that 30-year period.",
-      "The river's course most likely shifted gradually over 30 years, moving a little bit at a time; the historian's record of normal weather fits gradual change better than it fits a sudden, dramatic shift.",
-      "Map A must be inaccurate because a river cannot move that far eastward unless a large-scale geological event like an earthquake or plate movement reshaped the entire valley structure.",
-      "The river itself did not move; instead, the western side of the valley floor gradually sank downward, which would make the river's position appear to shift eastward on the newer map even though the water stayed in place."
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what you would expect the evidence to show if the change were gradual versus sudden — does the historian's mention of 'normal' weather throughout the 30 years fit one type of change better?",
-      "The lesson teaches that gradual change adds up over a long stretch of time with no single dramatic event needed, while sudden change always involves a single event that is describable."
-    ]
-  },
-  {
-    "id": "m6geo-how-physical-geography-changes-over-time-006",
-    "loId": "m6geo.how-physical-geography-changes-over-time",
-    "cedCode": "M6GEO-10.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A geography class studies three pairs of maps. Pair 1: Two maps of a river made 5 years apart show the river's bend moved only 2 feet, with no dramatic events mentioned between the maps. Pair 2: Two maps made 80 years apart show the same river's bend moved 50 feet, also with no dramatic events mentioned in that time span. Pair 3: Two maps made 3 months apart show a river channel that shifted 30 feet and now has a large new gap with scattered boulders, right after a month of extreme rain and flooding. Which pair of maps shows evidence that matches the definition of gradual change best, and why do the other pairs fit differently?",
-    "choices": [
-      "Pair 1 is too short a time period to show a clear pattern of gradual change; Pair 2 best shows gradual change because it covers a long time with consistent small shifts and no dramatic events, while Pair 3 shows sudden change because the large shift happened in only 3 months right after an extreme flood.",
-      "Pair 3 best shows gradual change because the maps were made after a specific weather event that caused measurable erosion; Pair 1 does not show enough change over time, and Pair 2 shows too much change to be gradual.",
-      "Pair 2 best shows gradual change because 80 years is a long time and the change is not tiny; a small change (Pair 1) does not prove gradual change yet, and Pair 3 shows sudden change because the large change happened in only 3 months after an extreme flood.",
-      "All three pairs show gradual change because none of them mention a sudden earthquake or volcanic eruption, and gradual change is any change that takes longer than one day."
-    ],
-    "answer": "C",
-    "hints": [
-      "Gradual change is defined as small amounts of change, happening over and over across a long stretch of time — consider which pair best fits 'long stretch of time' and shows no single dramatic event.",
-      "Sudden change produces a large difference quickly (in days or months) right after a specific dramatic event; think about which pair matches that pattern instead."
-    ]
-  },
-  {
     "id": "m6geo-map-based-problem-solving-001",
     "loId": "m6geo.map-based-problem-solving",
     "cedCode": "M6GEO-10.2",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6geo-how-physical-geography-changes-over-time-001",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A river's course is the path the river follows as it flows across the land. Which statement best describes whether a river's course is fixed in place permanently or can change over time?",
+    "choices": [
+      "A river's course is permanently fixed in place and can never shift to a different location no matter how much time passes.",
+      "A river's course can shift to different locations over a long stretch of time, even though it may look the same from one day to the next.",
+      "A river's course changes suddenly and dramatically whenever heavy rain or flooding occurs in a valley, moving noticeably in just a few hours.",
+      "A river's course only changes if a person digs a new channel and deliberately forces the water to follow it instead of its natural path."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that physical geography is not fixed, even when a place looks the same for a long time.",
+      "Think about whether a river must jump suddenly to a new location, or whether it can move gradually."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-002",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two different maps of a coastline exist. The first map, made 50 years ago, marks the ocean's edge at a certain location. The second map, made today of the exact same stretch of coast, shows the water's edge sitting noticeably farther back from that original position. No storms, earthquakes, or other sudden events are recorded between the two maps. What most likely caused the change shown between these two maps?",
+    "choices": [
+      "The coastline suddenly wore away in a single dramatic event that nobody recorded or noticed at the time.",
+      "The ocean level rose suddenly one time between the two map dates, pushing the water's edge back across the land in a single shift.",
+      "The coastline wore back gradually, a small amount at a time over the 50 years, too slowly to notice from day to day.",
+      "The second map must be incorrect because the coastline cannot change its position without a recorded sudden event or natural disaster."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look at what the maps do NOT tell you—there is no sudden event mentioned between them.",
+      "Gradual change adds up over many years without showing a jump from one day to the next."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-003",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student observes a river flowing past a certain location on Tuesday. She returns to the exact same spot on Wednesday and sees the river running in exactly the same path. She repeats her observation every single day for two years, and each day the river looks the same as the day before. However, when she compares a detailed map of the river from two years ago with a map made today, the river's course is measurably different—it now follows a path several hundred meters away from where it was marked two years earlier. How is it possible for the river to look the same every day yet end up in a different location on the map?",
+    "choices": [
+      "One of the two maps must be wrong, since the river cannot change its location without the student noticing it on one of her daily visits.",
+      "The river must have jumped to its new location on a day when the student did not visit, shifting position in a single sudden movement that occurred between two consecutive days she observed it.",
+      "The river's course did not actually change at all; the maps simply show it at different water levels during different seasons, so the apparent shift is only a result of seasonal variation in flow.",
+      "The river shifted gradually over the two years, a small amount at a time each day, so no single day looked different from the day before, but the tiny shifts added up to a measurable change."
+    ],
+    "answer": "D",
+    "hints": [
+      "Gradual change means many small shifts that are too small to notice one at a time.",
+      "When small changes keep happening and adding up, even imperceptible daily changes can create a measurable difference over years."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-004",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A geography class compares two aerial photographs of a river taken exactly one year apart. In the first photograph, the river flows in a broad, looping bend across a flat plain. In the second photograph, taken a year later during an ordinary dry season with no unusual weather mentioned, the bend has shifted noticeably downstream. The class also finds an old written description of the same river from a surveyor's field notes taken 100 years ago, which describes the bend in yet another location, even farther downstream. Which explanation best fits all three pieces of evidence, and why does a sudden-change explanation not work well?",
+    "choices": [
+      "The bend has been shifting gradually over the entire 100-year period, with small changes each year adding up to the measurable differences between all three observations, which fits the pattern of 'no sudden events mentioned' across the whole span.",
+      "The bend shifted gradually over most of the 100 years, but the one-year shift between the photographs had to be sudden and caused by an unrecorded flood, because large visible changes cannot happen gradually in just one year without a major weather event to drive them.",
+      "The bend must have jumped suddenly 100 years ago when the surveyor first measured it, then remained fixed in place for decades, then jumped suddenly again between the two recent photographs to explain why the written notes and current photographs show such different positions.",
+      "The surveyor's notes must be incorrect or fake because a bend cannot move more than a few dozen meters without a recorded major disaster, so a 100-year shift of several hundred meters contradicts the lack of any documented catastrophic event in that time period."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether a sudden-change explanation requires an event that is not mentioned in any of the evidence.",
+      "If the bend shifted the same small amount every year for 100 years, small yearly changes would add up to a large visible shift between the surveyor's notes and today."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-005",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two photographs of the same rocky coastline are taken 10 years apart. The first photograph shows a rocky cliff face with a certain shape. The second photograph shows the cliff face now sitting about two meters farther back from the ocean than it was in the first photograph. The second photograph shows small cracks in the exposed rock face and a few loose rocks near the base, but no evidence of a recent collapse or debris pile. How do these clues point to gradual change rather than sudden change, and what would the clues look like if sudden change had caused the difference instead?",
+    "choices": [
+      "Gradual change is shown because loose rocks appear and cracks form over time through weathering, while sudden change would show a fresh debris pile at the base from a single collapse event with recently broken rock still in place.",
+      "Gradual change is shown because the change happened over a long time span (10 years) and no single dramatic event is described; sudden change would mean a large difference appeared in a much shorter time, likely with fresh broken rock and debris piled at the cliff base from one specific event.",
+      "Gradual change is shown because the cliff moved exactly two meters, which is too small a distance to be caused by sudden change; sudden change only produces shifts larger than five meters and would show different physical evidence patterns.",
+      "Gradual change is shown because the cliff moved backward rather than downward, indicating erosion rather than collapse; sudden change would cause the cliff to collapse downward into a pile of rubble at its base instead."
+    ],
+    "answer": "B",
+    "hints": [
+      "Compare the TIME SPAN and what physical EVIDENCE would be left by each type of change.",
+      "Sudden change from a single event would show fresh damage concentrated in one area; gradual wear leaves small cracks and loose rocks scattered over time."
+    ]
+  },
+  {
+    "id": "m6geo-how-physical-geography-changes-over-time-006",
+    "loId": "m6geo.how-physical-geography-changes-over-time",
+    "cedCode": "M6GEO-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A river maintenance crew has records of the river's path for the past 40 years. They observe the following pattern: between year 1 and year 20, the river's course shifted about 100 meters downstream. Between year 20 and year 40, it shifted another 120 meters downstream. Over those same 40 years, only two major floods are recorded—one in year 8 (when no visible change was noted) and one in year 35 (when surveyors reported the river in the same location as before the flood, just with higher water levels). The crew also discovers historical records from before year 1 showing the river 500 meters farther downstream than where it was in year 1. Using what you know about gradual and sudden change, which conclusion best explains the entire pattern and what it tells you about the river?",
+    "choices": [
+      "The river must have shifted suddenly long before year 1 to reach its early position, then stayed mostly fixed in place until year 20, then shifted gradually across the remaining 20 years—a pattern suggesting that rivers in flat plains typically follow cycles of sudden displacement followed by long periods of stability.",
+      "The two recent floods must have caused the 220-meter shift across the 40 years, even though surveyors did not notice it immediately after each flood, which proves that sudden events can produce measurable changes that accumulate over months or years before becoming fully visible.",
+      "The river has been shifting gradually throughout the entire time span, so the 500-meter shift before year 1 and the 220-meter shift across the 40 years all fit a pattern of continuous small changes adding up; the recorded floods did not cause visible shifts because sudden events do not necessarily cause the large changes that gradual change does over long periods.",
+      "The 500-meter shift before year 1 proves that rivers can only change suddenly, so the gradual pattern seen in the past 40 years must be caused by many small unrecorded floods happening every few months throughout that time period, each contributing a tiny shift."
+    ],
+    "answer": "C",
+    "hints": [
+      "Notice that the floods in the records did NOT produce measurable shifts, which tells you something about whether sudden events must cause visible changes.",
+      "Over 40 years, small yearly shifts adding up match the observed change, and 500 meters over a longer earlier period also fits a slow, steady pattern—no sudden jumping required."
+    ]
+  },
+  {
     "id": "m6geo-using-geography-to-plan-a-community-001",
     "loId": "m6geo.using-geography-to-plan-a-community",
     "cedCode": "M6GEO-10.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A community planner is gathering information about a piece of land before deciding what to build on it. Which of the following is one of the three kinds of facts a planner must learn about the land?",
+    "problemText": "A community planner is gathering information before deciding how to use a piece of land. What are the three kinds of facts a planner must collect about a piece of land?",
     "choices": [
-      "What the residents think about the land and which land use they prefer",
-      "How much money the project will cost and when it can be finished",
-      "The shape of the land, the water nearby, and what resources the land offers",
-      "The names of the roads that border the land and how old they are"
+      "The distance to the nearest town, the temperature in summer, and the type of animals living there",
+      "How many people live near the land, what color the soil is, and whether trees grow there",
+      "The shape of the land, the water nearby and flood risk, and what resources the land offers",
+      "The price of the land, the names of the current owners, and how long it has been empty"
     ],
     "answer": "C",
     "hints": [
-      "The lesson names three facts a planner gathers before making any decision.",
-      "These three facts describe the physical or natural qualities of the land itself, not people's opinions or costs."
+      "Think about the land itself, not about people or money.",
+      "The planner needs to know about flatness or steepness, flooding risk, and natural resources."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A planner is looking at a flat piece of land with very fertile soil next to a stream that flows all year long. No one has built on this land yet. What land use would match this land's qualities best?",
+    "problemText": "A planner must choose where to place a farm in a new community. One parcel is flat and has soil known to grow good crops, but it sits on a floodplain that floods every spring. Another parcel is steep and rocky with almost no soil, but it sits on high ground that never floods. Based on what a farm actually needs, which parcel is the better choice for the farm?",
     "choices": [
-      "A park, because flat land provides good space and is often used for recreation in communities",
-      "A road, because roads need solid ground and must connect different areas to allow travel",
-      "Housing, because flat land allows builders to construct stable foundations for buildings",
-      "A farm, because the land is flat, has fertile soil, and has a reliable water source"
+      "The steep, rocky parcel, because high ground keeps crops dry and prevents water damage",
+      "The flat parcel, because the flooding will help water the crops and reduce irrigation costs",
+      "Neither parcel works for a farm, so the planner should buy a third piece of land elsewhere with better conditions",
+      "The flat parcel with good soil, because farms need flat land and fertile soil more than they need steep, rocky ground"
     ],
     "answer": "D",
     "hints": [
-      "Think about what each land use actually needs. A farm's three main needs are listed in the lesson.",
-      "The land has all three things a farm requires. Check whether the other uses fit as well."
+      "Remember the three things a farm needs: flat land, fertile soil, and a water source.",
+      "Flooding is a problem for some land uses, but not for farms—farms can get water elsewhere."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A community has a steep, rocky hillside with almost no soil but a beautiful view over a river. The hillside is too uneven to build a house foundation on, and the ground cannot grow crops. What would be the most sensible land use for this hillside?",
+    "problemText": "A town planner is deciding where to build new housing. Two parcels are available. Parcel X is flat, sits far from any stream, and has never flooded. Parcel Y is also flat, sits right next to a river, and has flooded three times in the past ten years. Which parcel should the planner choose for housing, and why?",
     "choices": [
-      "A park, since the land does not suit farming or building but can still be used and enjoyed",
-      "Housing, since steep rocky ground can be leveled and residents value the scenic view",
-      "A farm, since the river provides water and farms can be built on uneven ground",
-      "A road, since roads need flat surfaces and can transport goods from the hillside"
+      "Parcel X, because housing needs to stay dry and never flood, and Parcel Y floods regularly",
+      "Parcel Y, because housing needs to be near water for drinking and daily use by residents",
+      "Parcel X, because it is farther away from roads and therefore quieter for residents living there",
+      "Parcel Y, because flat land is the most important fact for housing and Parcel Y is also flat"
     ],
     "answer": "A",
     "hints": [
-      "A park does not need flat, fertile, or dry ground the way other uses do. What does a park actually need?",
-      "The steep, rocky ground rules out farming and housing. Does that land have to sit unused?"
+      "Housing must be on land that stays dry and does not sit on a floodplain.",
+      "Being flat is necessary for housing, but so is staying dry—Parcel Y fails one of those needs."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A town planner is reviewing two parcels of land. Parcel X is flat with good soil, but it sits right on the edge of a river that floods every spring. Parcel Y is flat with thin, sandy soil that rarely grows crops, but it sits on high ground that has never flooded and already has a road running beside it. The town needs one new farm and one new home. Which parcel should become the home, and which should become the farm? Explain your reasoning using land, water, or resource facts.",
+    "problemText": "A community planner is working with three pieces of land: Parcel 1 is flat, has fertile soil, and sits next to a year-round stream; Parcel 2 is steep and rocky with poor soil but sits on high ground next to a lake with a scenic view; Parcel 3 is flat but has sandy, poor soil and sits on a floodplain. The town needs to place a farm and a park. Parcel 1 is already spoken for as a farm. Which of the remaining two parcels should become the park, and what is the planning reason?",
     "choices": [
-      "Parcel X should be the home because living next to water provides natural resources, and Parcel Y should be the farm because it has a road connection for selling crops and transporting goods",
-      "Parcel Y should be the home because it sits on high ground that does not flood and already has a road, but Parcel X cannot be the farm because its flooding makes it unsuitable for crops.",
-      "Parcel X should be the farm because the river water is always available for irrigation, and Parcel Y should be the home because roads make it easier for people to access services and travel",
-      "Parcel Y should be the farm because sandy soil drains well and prevents water from sitting, and Parcel X should be the home because it has good soil for a stable foundation and strong base"
+      "Parcel 3, because flat land is easier for people to walk around in parks and reduces construction costs",
+      "Parcel 2, because steep, rocky land that does not suit farming or building can still become a park, and the view over the lake adds to its value",
+      "Parcel 2, because the scenic lake view attracts visitors who prefer mountains over farmland, making it more profitable for the town than other options",
+      "Parcel 3, because sandy, poor soil that cannot grow crops will still work fine for parks since parks do not need fertile land to function"
     ],
     "answer": "B",
     "hints": [
-      "Housing must stay dry and not sit on a floodplain. Which parcel meets this need?",
-      "A farm needs fertile soil. The sandy soil on Parcel Y is the opposite of fertile, so what does that mean for making it a farm?"
+      "Parks can use land that farms and housing cannot—steep, rocky ground is fine for a park.",
+      "A planning reason points to a land, water, or resource fact about the parcel itself, not just what people might prefer."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A resident suggests that the town should place a new park on a flat, dry piece of land with very fertile soil, because the park would have plenty of space and people would enjoy it. A planner disagrees and wants to save that same land for a farm instead. Using the land, water, and resource facts from the lesson, explain which person is thinking about the land use correctly and why.",
+    "problemText": "A planner is reviewing a resident's proposal for the town's remaining land. The resident says: 'We should put housing on the rocky hillside because it would have a beautiful mountain view, and put the farm on the flat land near the road even though the soil is very poor.' The flat land is sandy and has never grown crops well. The rocky hillside sits high above any floodplain and has never flooded. What is wrong with this proposal, based on the land, water, and resource facts?",
     "choices": [
-      "The resident is correct because parks improve quality of life and communities value recreation and open space for enjoyment",
-      "Both are equally correct because parks and farms serve different purposes and both provide value to a community in their own ways",
-      "The planner is correct because fertile soil is a resource the land offers, and a farm needs that resource, while a park does not need fertile soil to work well.",
-      "The planner is correct because fertile soil can only be used for farming and will be wasted if used for any other purpose"
+      "The proposal is wrong because building houses on rocky ground costs too much money and the town does not have enough funds to pay for construction on difficult terrain",
+      "The proposal is wrong because rocky hillsides are always better suited to farming than flat land, and housing should only be placed in areas with the cheapest building costs",
+      "The proposal is wrong because a beautiful view is a preference, not a land fact, and the flat land's poor soil makes it unsuitable for farming, while the rocky hillside cannot support crops no matter where it sits",
+      "The proposal is wrong because rocky hillsides tend to flood more often than flat land, and floodplains are better for housing than for farms since water features protect homes"
     ],
     "answer": "C",
     "hints": [
-      "A good planning reason must name a land, water, or resource fact, not just what people would enjoy.",
-      "What does a park actually need from the land, and what does a farm need? Is fertile soil one of those needs?"
+      "A planning reason must point to a land, water, or resource fact, not to how much people would enjoy something.",
+      "A farm needs fertile soil—sandy soil that has never grown good crops elsewhere will not work for farming."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-10.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A planner is deciding how to use four parcels of land. Parcel 1 is flat and sits on a floodplain. Parcel 2 is flat, has fertile soil, and sits next to a stream that flows year-round, but it is located far from any existing road. Parcel 3 is steep and rocky with no soil, but it overlooks a scenic pond. Parcel 4 is flat, stays dry, and is already connected to the main road through town. The town needs a new farm, a new park, and housing for one new family. Parcel 1 will not be used. Which of the remaining three parcels should become the farm, and which should become the housing? What should happen to the remaining parcel?",
+    "problemText": "A community planner has four parcels to assign to four different uses: farm, housing, park, and road. Parcel A is flat, has fertile soil, and sits next to a steady stream. Parcel B is steep and rocky with no soil, sits on a hillside, and overlooks a pond. Parcel C is flat, has poor sandy soil, and sits on a floodplain. Parcel D is flat with poor soil but sits on high ground, and a busy existing road already runs along its edge connecting two neighborhoods. The town's main need is to improve the connection between the two neighborhoods. Using the land, water, and resource facts, explain which parcel should become the road, and why—then identify what land use each of the other three parcels should serve and name at least one land, water, or resource fact that supports each choice.",
     "choices": [
-      "Parcel 3 should be the farm because it has a scenic view for farmers to enjoy, Parcel 4 should be the housing because it is flat, and Parcel 2 should become the park for recreation",
-      "Parcel 2 should be the farm because it is in a remote location away from town, Parcel 3 should be the housing because it overlooks water, and Parcel 4 should become the park for community use",
-      "Parcel 4 should be the farm because it is already connected to roads for transporting crops, Parcel 2 should be the housing because it has a stream for water, and Parcel 3 should become the park",
-      "Parcel 2 should be the farm because it has fertile soil and water, Parcel 4 should be the housing because it is flat and dry, and Parcel 3 should become the park because it is steep and rocky."
+      "Parcel A becomes the road because it is flat and has fertile soil, which makes construction easier. Parcel B becomes the housing because it sits high and overlooks water for scenic views. Parcel C becomes the farm because it is flat and accessible. Parcel D becomes the park because an existing road runs along its edge.",
+      "Parcel C becomes the road because it is flat and situated on the floodplain, which provides good drainage for vehicle traffic. Parcel A becomes the park because it is next to a steady stream and flat land works well for recreation. Parcel B becomes the housing because its high elevation prevents flooding. Parcel D should become the farm because it already has a road connection nearby for transporting crops.",
+      "Parcel B becomes the road because its rocky, steep ground provides a stable, durable base for vehicles to travel safely. Parcel A becomes the housing because it is flat and dry with water access. Parcel D becomes the farm because an existing road runs alongside it, making crop transport convenient. Parcel C should become the park because its floodplain location creates natural wetland habitats and seasonal water features for recreation.",
+      "Parcel D becomes the road because it already has a road running along it that connects two neighborhoods. Parcel A becomes the farm because it is flat, has fertile soil, and sits next to a steady stream. Parcel B becomes the park because its steep, rocky ground does not suit farming or housing. Parcel C remains available for future use because the floodplain makes it unsuitable for housing or farming."
     ],
     "answer": "D",
     "hints": [
-      "Check what each land use needs, then match each parcel's facts to those needs. A farm needs fertile soil and water; housing needs flat, dry ground; a park can use land that does not suit the other two.",
-      "Parcel 2 has fertile soil and a stream, which is what a farm needs. Parcel 4 is flat and dry, which is what housing needs. That leaves Parcel 3 for the park."
+      "A road's primary need is to connect two places people already travel between, not to have flat or fertile land.",
+      "After placing the road, check each remaining parcel against what a farm, park, and housing need—some parcels fail more than one use because of their land, water, or resource facts."
     ]
   }
 ]

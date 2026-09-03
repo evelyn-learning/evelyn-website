@@ -347,17 +347,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What does the term 'percent' mean in mathematics? Choose the definition that best matches what you learned.",
+    "problemText": "What does the percent sign (%) mean? A percent is a rate that compares a number to what value?",
     "choices": [
-      "A rate that compares a number to 100",
-      "A number larger than the whole amount",
-      "A way to show division by 10",
-      "A number that must always be less than 50"
+      "a comparison of a number to 100",
+      "a ratio of a number to 10",
+      "a division of the whole into equal parts",
+      "a multiplication of two numbers together"
     ],
     "answer": "A",
     "hints": [
-      "The lesson said percent means 'per 100'—it compares something to 100.",
-      "Think about what '25%' really means: 25 out of every ___."
+      "Think about the meaning of the word 'percent' — what number does 'per' refer to?",
+      "Remember that 25% means 25 out of every _____."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A store has 200 books. You need to find 1% of the total number of books. According to the lesson method, what should you do first to find 1% of any quantity?",
+    "problemText": "A bakery has 200 cookies. To find 1% of the cookies, what calculation should you do first?",
     "choices": [
       "Multiply 200 by 100",
       "Divide 200 by 100",
       "Multiply 200 by 1",
-      "Subtract 1 from 200"
+      "Divide 100 by 200"
     ],
     "answer": "B",
     "hints": [
-      "The lesson says 'the value of 1% of any quantity is the whole divided by 100.'",
-      "To find 1% of 200 books, you need to split the books into 100 equal groups."
+      "You are looking for the value of 1%, which is the building block for any percent of the whole.",
+      "1% means 1 out of every 100, so you need to break the whole quantity into 100 equal pieces."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "You want to find 5% of 60 meters using the value-of-1% method. First you find that 1% of 60 is 0.6. What is the next step you should take?",
+    "problemText": "A student has 300 pages to read for a book club. She reads 10% of the pages on Monday. How many pages does she read on Monday?",
     "choices": [
-      "Add 0.6 and 5 together",
-      "Divide 0.6 by 5",
-      "Multiply 0.6 by 5",
-      "Subtract 5 from 0.6"
+      "10 pages",
+      "3 pages",
+      "30 pages",
+      "3000 pages"
     ],
     "answer": "C",
     "hints": [
-      "Once you know 1%, you multiply it by however many percent you actually need.",
-      "5% means 5 copies of 1%, so you need to find 0.6 × 5."
+      "Start by finding the value of 1% — what is 300 divided by 100?",
+      "Once you know 1%, multiply it by 10 to get 10%."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A restaurant serves 200 meals on a Saturday night. The chef learns that 30% of the meals sold were vegetarian. Use both the value-of-1% method and a benchmark percent to verify the answer makes sense. Which statement is correct?",
+    "problemText": "A store receives a shipment of 160 video games. 25% of them are action games. Use a benchmark percent to check whether your answer is reasonable, then calculate how many action games the store received.",
     "choices": [
-      "1% of 200 is 2, so 30% is 60 meals; 50% of 200 is 100, so 30% must be less than 100, and 60 is less than 100, which checks out.",
-      "1% of 200 is 0.02, so 30% is 0.6 meals; 10% of 200 is 20, so 0.6 should be related to 20 by dividing by 100.",
-      "30% of 200 is 30 meals because 30 is the percent number; 50% of 200 is 100, so 30% must be smaller, and 30 is smaller than 100.",
-      "1% of 200 is 2, so 30% is 60 meals; 10% of 200 is 20, so 30% should be about 3 times that, and 60 is about 3 times 20, which checks out."
+      "6.4 action games",
+      "25 action games",
+      "80 action games",
+      "40 action games"
     ],
     "answer": "D",
     "hints": [
-      "Find 1% first (divide 200 by 100), then multiply by 30. Then pick a benchmark percent like 10% to check.",
-      "The lesson says 10% is easy to find (divide by 10), so use it to see if your answer is the right size."
+      "A benchmark for 25% is one-quarter — what is 160 divided by 4?",
+      "The decimal equivalent of 25% is 0.25 — what is 0.25 times 160?"
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student is trying to find 40% of 50 using the decimal shortcut method. The student correctly writes 40% as the decimal 0.4, then multiplies: 0.4 × 50. Which statement correctly describes what the student is doing and what the answer should be?",
+    "problemText": "A school library has 500 books. 20% of the books are fiction, and 10% of the books are biographies. How many more fiction books than biography books does the library have?",
     "choices": [
-      "The student is converting the percent to a decimal by dividing 40 by 100, then multiplying that decimal by the whole quantity; the answer is 20.",
-      "The student is multiplying the percent number 40 by the whole 50 without scaling down, which gives the wrong answer of 2000.",
-      "The student is dividing 40 by the whole 50 to get a decimal, which is not the shortcut method taught in the lesson.",
-      "The student is finding 1% of 50 first, which is 0.5, then multiplying by 40 to get 20, which is the two-step method, not the shortcut."
+      "50 more fiction books",
+      "10 more fiction books",
+      "100 more fiction books",
+      "200 more fiction books"
     ],
     "answer": "A",
     "hints": [
-      "The shortcut method says to write the percent as a decimal (by dividing by 100) and multiply that decimal straight by the whole.",
-      "Ask yourself: Does dividing 40 by 100 give 0.4? Does 0.4 × 50 equal 20?"
+      "Find 20% of 500 first, then find 10% of 500 separately — don't try to combine the percents.",
+      "Once you have both amounts, subtract to compare them."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6MATH-2.2",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A wildlife sanctuary has 160 animals. The staff reports that 12.5% of the animals are endangered. A student estimates the answer using only a benchmark percent and size reasoning before calculating. The student thinks: '12.5% is half of 25%, and 25% of 160 is 40, so 12.5% of 160 must be half of 40, which is 20.' Then the student checks by writing 12.5% as a decimal and multiplying: 0.125 × 160. Which statement is true?",
+    "problemText": "A common mistake when finding 35% of 200 is to multiply 200 by 35 directly, getting 7000, without dividing by 100 first. Explain why this method is wrong by finding the correct answer using the method taught in class, and then describe what the error assumes about the percent number.",
     "choices": [
-      "The estimate of 20 is reasonable for a check, but 0.125 × 160 equals 200, so the decimal method gives a different answer.",
-      "The estimate of 20 is correct, and 0.125 × 160 equals 20, so both methods match.",
-      "The estimate of 20 uses a shortcut that skips the value-of-1% method, so it cannot be trusted; the correct answer is 25.",
-      "The estimate of 20 is only valid if you first find 1% of 160, which is 1.6, and neither method the student used does this."
+      "The correct answer is 35, and the error assumes the percent number is already in decimal form.",
+      "The correct answer is 70, and the error skips the step of scaling the percent down by 100 before multiplying.",
+      "The correct answer is 7, and the error multiplies instead of divides the percent by 100.",
+      "The correct answer is 2000, and the error should have used the decimal 35.00 instead of the whole number 35."
     ],
     "answer": "B",
     "hints": [
-      "The benchmark method works because the student correctly recognized that 12.5% is half of 25%, and used a percent they could calculate mentally.",
-      "Verify the decimal shortcut: does dividing 12.5 by 100 give 0.125? Does 0.125 × 160 equal 20?"
+      "The decimal equivalent of 35% is found by dividing 35 by 100 — what decimal do you get?",
+      "Once you have the decimal, multiply it by 200 to get the correct answer; the error forgot to do the division-by-100 step."
     ]
   }
 ]

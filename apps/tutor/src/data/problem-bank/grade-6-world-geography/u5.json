@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6geo-the-water-cycle-001",
-    "loId": "m6geo.the-water-cycle",
-    "cedCode": "M6GEO-5.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Water sitting in an ocean is warmed by energy from the sun and changes into an invisible gas that rises into the air. What is the name of this stage of the water cycle?",
-    "choices": [
-      "Collection",
-      "Condensation",
-      "Precipitation",
-      "Evaporation"
-    ],
-    "answer": "D",
-    "hints": [
-      "This stage happens first, when the sun's energy warms liquid water.",
-      "The word contains 'vapor,' and that gas is what forms during this stage."
-    ]
-  },
-  {
-    "id": "m6geo-the-water-cycle-002",
-    "loId": "m6geo.the-water-cycle",
-    "cedCode": "M6GEO-5.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A puddle on the playground disappears on a hot, dry afternoon without any person removing the water or the puddle draining away. Which stage of the water cycle is responsible for the puddle vanishing?",
-    "choices": [
-      "Evaporation, because the sun's warmth changed the water into rising invisible vapor",
-      "Condensation, because cooling water vapor forms liquid droplets that cluster together in the air",
-      "Precipitation, because water is falling from clouds and landing on the ground as rain or snow",
-      "Collection, because liquid water is gathering and storing in oceans, lakes, and underground reserves"
-    ],
-    "answer": "A",
-    "hints": [
-      "Look for which stage involves the sun warming liquid water and turning it into a gas.",
-      "The puddle is disappearing into the air, not falling from the sky or gathering into a lake."
-    ]
-  },
-  {
-    "id": "m6geo-the-water-cycle-003",
-    "loId": "m6geo.the-water-cycle",
-    "cedCode": "M6GEO-5.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "High in the sky, water vapor that has risen from the ocean cools as it reaches a higher altitude. The cooled water vapor changes back into countless tiny liquid droplets that cluster together and float in the air. Which stage of the water cycle is being described?",
-    "choices": [
-      "Evaporation, because water is changing from a liquid into an invisible gas that rises into the atmosphere",
-      "Condensation, because water vapor is cooling and becoming liquid water droplets",
-      "Precipitation, because the liquid droplets have accumulated and are now heavy enough to fall as rain",
-      "Collection, because water droplets are merging together and flowing toward rivers and oceans"
-    ],
-    "answer": "B",
-    "hints": [
-      "This stage happens when something cools down and changes from a gas back into a liquid.",
-      "The tiny droplets floating together in the air form a cloud, which is the definition of this stage."
-    ]
-  },
-  {
-    "id": "m6geo-the-water-cycle-004",
-    "loId": "m6geo.the-water-cycle",
-    "cedCode": "M6GEO-5.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student observes a lake early in the morning and notices the water level is slightly lower than it was the previous afternoon. Later that same day, a cloud forms above the lake, and by evening, rain falls and raises the lake's level back up. Place the correct stage name on each event: the water level dropping in the morning, the cloud forming during the afternoon, and the rain falling in the evening. Which choice lists all three stages in the correct order?",
-    "choices": [
-      "Evaporation, precipitation, condensation",
-      "Condensation, evaporation, precipitation",
-      "Evaporation, condensation, precipitation",
-      "Precipitation, condensation, evaporation"
-    ],
-    "answer": "C",
-    "hints": [
-      "The water level dropped because warmth from the sun turned liquid water into rising vapor; that's where the cycle begins.",
-      "After vapor rises and the cloud forms, the droplets inside grow heavy and fall—which is the third stage, not the second."
-    ]
-  },
-  {
-    "id": "m6geo-the-water-cycle-005",
-    "loId": "m6geo.the-water-cycle",
-    "cedCode": "M6GEO-5.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student claims: 'Once rain falls from a cloud onto the ground, that is the final stage and the water cycle is complete.' Is this claim correct or incorrect? Why or why not, in terms of the water cycle's four stages?",
-    "choices": [
-      "The claim is correct because precipitation is the last stage, and once water reaches the ground the cycle stops.",
-      "The claim is incorrect because after precipitation, the water immediately evaporates back into the atmosphere, skipping any intermediate step between rainfall and the formation of new clouds.",
-      "The claim is incorrect because after precipitation, the water must undergo condensation again in order to form clouds and cycle back through the atmosphere rather than remaining on the ground.",
-      "The claim is incorrect because collection happens after precipitation, and collection returns water to lakes and oceans where evaporation can start the cycle again."
-    ],
-    "answer": "D",
-    "hints": [
-      "Remember that the water cycle is a loop with no ending point—the fourth stage leads back to the first.",
-      "After rain falls (precipitation), water gathers into oceans, lakes, and rivers; that gathering is the stage that comes next."
-    ]
-  },
-  {
-    "id": "m6geo-the-water-cycle-006",
-    "loId": "m6geo.the-water-cycle",
-    "cedCode": "M6GEO-5.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A river flows into the ocean on the coast. A fish scientist tracks a single water droplet in that river as it enters the ocean and sits there for several weeks. Without external human interference, describe which four stages that droplet will move through next, in order, and explain why it returns to a location where the river cycle can begin again.",
-    "choices": [
-      "Evaporation, condensation, precipitation, collection—the water evaporates from the ocean, condenses into a cloud, falls as rain, and collects in a river or lake where it can flow back to the ocean.",
-      "Collection, precipitation, condensation, evaporation—the water collects in the ocean, falls as rain, condenses into a cloud, and evaporates back into the ocean without ever returning to the river.",
-      "Condensation, precipitation, evaporation, collection—the water condenses as it sits in the ocean, falls as rain above the land, evaporates into the sky, and collects in rivers.",
-      "Evaporation, condensation, precipitation, evaporation—the water evaporates from the ocean, condenses twice into clouds, and falls as rain, then immediately evaporates again with no collection step."
-    ],
-    "answer": "A",
-    "hints": [
-      "The four stages must happen in the same order every time: evaporation, condensation, precipitation, collection.",
-      "For the droplet to return to the river or a location where it can flow back to the ocean, it must be collected in a lake or river on land after it falls as precipitation."
-    ]
-  },
-  {
     "id": "m6geo-weather-vs-climate-001",
     "loId": "m6geo.weather-vs-climate",
     "cedCode": "M6GEO-5.1",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6geo-the-water-cycle-001",
+    "loId": "m6geo.the-water-cycle",
+    "cedCode": "M6GEO-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Water sitting in a lake is warmed by the sun and changes into an invisible gas that rises into the air. What is the name of this stage of the water cycle?",
+    "choices": [
+      "Collection",
+      "Condensation",
+      "Precipitation",
+      "Evaporation"
+    ],
+    "answer": "D",
+    "hints": [
+      "This stage happens first and is driven by heat from the sun.",
+      "The word starts with 'e' and means liquid water is turning into a gas."
+    ]
+  },
+  {
+    "id": "m6geo-the-water-cycle-002",
+    "loId": "m6geo.the-water-cycle",
+    "cedCode": "M6GEO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A puddle forms on a sidewalk after rain. Two days later, on a hot sunny day, the puddle has disappeared even though no one used water to clean the sidewalk and no rain fell. Explain why the puddle is gone by naming the stage of the water cycle that caused it to disappear.",
+    "choices": [
+      "Evaporation, because the sun's heat warmed the liquid water and turned it into invisible water vapor that rose into the air",
+      "Condensation, because the water cooled down and changed back into liquid droplets that then floated away into the atmosphere",
+      "Precipitation, because the water fell back to the ground as rain or snow in a different location away from the sidewalk",
+      "Collection, because the water sank down through cracks in the pavement and gathered into a storm drain system beneath the sidewalk"
+    ],
+    "answer": "A",
+    "hints": [
+      "The puddle disappeared on a hot, sunny day, which tells you heat from the sun was involved.",
+      "The water changed from liquid form into something invisible that left the puddle behind."
+    ]
+  },
+  {
+    "id": "m6geo-the-water-cycle-003",
+    "loId": "m6geo.the-water-cycle",
+    "cedCode": "M6GEO-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A weather observer notices that water vapor has been rising high into the sky and cooling. Tiny liquid droplets too small to see individually are now clustering together in the air. The observer can see this clustering of droplets as a cloud. What stage of the water cycle is the water currently in?",
+    "choices": [
+      "Evaporation, because water is being heated by the sun and rising high into the atmosphere as an invisible gas",
+      "Condensation, because water vapor is cooling and changing back into liquid droplets",
+      "Precipitation, because water droplets are falling toward the ground as rain, snow, sleet, or hail",
+      "Collection, because water droplets are gathering and clustering together in one location in the sky to form a visible cloud"
+    ],
+    "answer": "B",
+    "hints": [
+      "The water is cooling, not warming, so look for a stage where cooling is the driver.",
+      "The water has changed from an invisible gas back into something you can see."
+    ]
+  },
+  {
+    "id": "m6geo-the-water-cycle-004",
+    "loId": "m6geo.the-water-cycle",
+    "cedCode": "M6GEO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A river in a warm valley flows into a flat area where it slows down and spreads out, forming a wide, shallow lake. Over the next several weeks, the air above the lake is consistently hot during the day and cool at night. Rain has not fallen in that region during this time. Describe what happens to the water's position and form as it moves through the water cycle stages, starting from its current state in the lake and returning to that same lake.",
+    "choices": [
+      "The lake water evaporates into vapor, rises and cools to condense into clouds over the lake, precipitation falls back into the lake immediately, and collection keeps the water in place",
+      "The lake water condenses into clouds directly without evaporating first, those clouds move to a different location, precipitation falls somewhere else, and the water stays away from the lake permanently",
+      "The lake water evaporates into vapor, rises and cools to condense into clouds, precipitation falls somewhere else entirely, and the fallen water must flow back to the lake through collection to complete the cycle",
+      "The lake water remains in the collection stage for several weeks while staying in place, then evaporation happens suddenly when a storm arrives and brings all four stages into sequence"
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that the four stages always happen in the same fixed order: evaporation, condensation, precipitation, collection.",
+      "Water vapor that cools into clouds above the lake might fall as rain in a different place, but it will eventually reach the lake again through the cycle."
+    ]
+  },
+  {
+    "id": "m6geo-the-water-cycle-005",
+    "loId": "m6geo.the-water-cycle",
+    "cedCode": "M6GEO-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student observes four different events happening around a mountain: (1) a glacier on the mountain peak is melting, (2) water droplets are clustering together in the air to form morning fog on the mountainside, (3) a stream is flowing downhill and carrying water into a valley lake, and (4) the water in the lake is turning into invisible vapor on a hot afternoon. The student wants to arrange these four events in the order they actually occur in the water cycle. Which arrangement correctly shows the water-cycle stages in their proper fixed sequence?",
+    "choices": [
+      "Event 2, then Event 1, then Event 4, then Event 3",
+      "Event 1, then Event 4, then Event 2, then Event 3",
+      "Event 4, then Event 2, then Event 3, then Event 1",
+      "Event 3, then Event 4, then Event 2, then Event 1"
+    ],
+    "answer": "D",
+    "hints": [
+      "Start by identifying which event represents evaporation—that must happen first because it is always the first stage.",
+      "Once you place evaporation first, the three stages that follow must go in order: condensation, precipitation, then collection."
+    ]
+  },
+  {
+    "id": "m6geo-the-water-cycle-006",
+    "loId": "m6geo.the-water-cycle",
+    "cedCode": "M6GEO-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A teacher sets up a closed glass jar containing a little water and places it in sunlight on a windowsill. The water warms and some of it turns into invisible vapor inside the jar. That vapor rises, cools, and condenses on the inside surface of the glass lid as tiny droplets of liquid water. Those droplets do not fall back into the original water; instead, they stay stuck to the lid. The teacher asks: 'In this jar, which stages of the water cycle are happening, and which stage is NOT happening, and why?' Based on what the jar shows, answer the teacher's question.",
+    "choices": [
+      "Evaporation and condensation are happening, but precipitation is not happening because the condensed droplets are not falling from the cloud to the ground surface, and collection cannot happen without precipitation first",
+      "All four stages are happening in the jar because when water warms it evaporates into vapor, and when that vapor cools it condenses into droplets, and those droplets will eventually fall back down into the water below to complete the full cycle",
+      "Only evaporation and condensation are happening in the jar, while precipitation and collection cannot occur because this is a closed system with no real clouds or rain, only water vapor and a glass surface where droplets stick",
+      "Evaporation, condensation, and precipitation are all happening because the water turns to vapor when heated, the vapor forms droplets on the lid when cooled, and the droplets fall downward due to gravity, but collection is not happening because the jar is sealed"
+    ],
+    "answer": "A",
+    "hints": [
+      "Trace the water's path in order: it starts as liquid in the jar and turns into vapor (which stage?), then the vapor cools and forms droplets on the glass (which stage?), then think about whether those droplets are falling like rain does.",
+      "Precipitation requires water droplets to fall from a cloud, but in this jar the droplets are stuck to the glass lid and never reach a surface below them."
+    ]
+  },
+  {
     "id": "m6geo-what-is-a-biome-001",
     "loId": "m6geo.what-is-a-biome",
     "cedCode": "M6GEO-5.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A biome is defined by three main characteristics. Which three pieces of information together tell a geographer which biome a place belongs to?",
+    "problemText": "A biome is defined by three characteristics that geographers use together to identify it. Which three characteristics are they?",
     "choices": [
       "Temperature, precipitation, and plant life",
-      "Temperature, elevation, and rainfall patterns",
-      "Plant life, soil type, and distance from the ocean",
-      "Precipitation, latitude, and the types of animals living there"
+      "Temperature, elevation, and soil type",
+      "Precipitation, wind speed, and animal life",
+      "Plant life, latitude, and distance from the ocean"
     ],
     "answer": "A",
     "hints": [
-      "The lesson teaches that naming the correct biome uses three clues together.",
-      "Think about what makes each biome unique to describe to someone who has never been there."
+      "Geographers match a place to a biome type by observing these three clues together.",
+      "Think about what you can observe about weather and living things when you describe a region."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A location receives very little rain in any month, and the ground is mostly bare with only a few plants spread far apart. Based on these two clues, which biome or biomes could this place be?",
+    "problemText": "A location receives very little rain in every month of the year, and the ground between plants is mostly bare and exposed. The few plants that grow there are spread far apart from one another. What biome does this describe?",
     "choices": [
-      "Only a desert, because deserts always have very little rain",
-      "Either a desert or a tundra, because both have very low precipitation",
-      "Only a tundra, because tundras have bare ground",
-      "Either a grassland or a rainforest, because both can have sparse plants"
+      "Rainforest",
+      "Desert",
+      "Grassland",
+      "Tundra"
     ],
     "answer": "B",
     "hints": [
-      "Two of the five biomes in the lesson share the characteristic of very low precipitation.",
-      "Remember that one clue by itself can point to more than one biome; you need all three clues to decide."
+      "Very low precipitation is a defining clue for which two biomes? Look at the plant-life clue to decide between them.",
+      "In one of those two dry biomes, plants are widely spaced and leave bare ground showing. In the other, low mosses and shrubs cover the ground instead."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A biome description states: 'Rain falls on most days throughout the year, with no dry season. Tall trees grow so closely together in layers that sunlight barely reaches the ground.' Which biome does this clearly describe?",
+    "problemText": "A place has warm months and genuinely cold months each year. Rain falls regularly through the year, and many tall trees grow close together in layers. Some of the trees lose all their leaves when the cold season arrives. Which biome is this?",
     "choices": [
-      "Tundra",
-      "Grassland",
       "Rainforest",
-      "Forest"
+      "Grassland",
+      "Forest",
+      "Tundra"
     ],
     "answer": "C",
     "hints": [
-      "Notice that the description mentions rain falling most days with no dry season—very high precipitation all year.",
-      "The layered trees blocking sunlight and the heat that never changes month to month narrow this down to one biome."
+      "Both rainforest and forest have many trees close together, so tree density alone will not tell them apart.",
+      "The temperature clue is the key: rainforest stays hot all year with almost no change, while this place has a genuinely cold season."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student reads two descriptions and needs to tell them apart. Description A: 'Low mosses and shrubs cover the ground; very little precipitation falls; it stays cold nearly all year.' Description B: 'Grasses cover almost all the ground; enough precipitation falls to keep it green; winters are cool but not freezing.' The student says both biomes have low plants instead of tall trees, so they must be the same biome. Explain why the student is wrong.",
+    "problemText": "A student reads this description: 'It is cold most of the year. Very little precipitation falls. The ground is covered by mosses and small shrubs, but no tall trees grow anywhere.' The student says, 'The low precipitation and short growing season mean this must be a grassland.' Explain what the student got wrong and identify the correct biome.",
     "choices": [
-      "The student did not understand that biomes are defined by latitude, not by what kinds of plants grow in them",
-      "The student focused on plant life instead of checking temperature and precipitation, which are the two clues that distinguish tundra from grassland",
-      "The student forgot that many different biomes can have low-growing plants, so using only that one clue cannot identify which specific biome a place belongs to",
-      "The student ignored the precipitation and temperature clues, which are different between the two descriptions and identify tundra and grassland as distinct biomes"
+      "The student confused two biomes that both have low precipitation and sparse plants; desert also has shrubs and very little rain, but the presence of mosses and the lack of any trees indicate tundra instead of desert or grassland.",
+      "The student ignored the vegetation clue entirely; grassland requires scattered trees and grasses to cover the ground, but this description shows only mosses and shrubs with no trees at all, which defines tundra instead.",
+      "The student checked only one clue; rainforest can also experience cold seasons if located at high elevation, so temperature alone is not enough to rule out other biomes or confirm grassland.",
+      "The student checked only one clue; grassland also gets low precipitation, but the plant-life clue shows this is tundra, not grassland, because tundra is treeless while grassland has scattered trees."
     ],
     "answer": "D",
     "hints": [
-      "Think about what separates tundra from grassland in the lesson content.",
-      "The lesson teaches that checking all three clues together is what narrows a description down to one biome."
+      "The key error is that the student decided based on fewer than all three clues. Which two biomes share low precipitation?",
+      "Look at the plant-life clue: grassland is defined by grasses covering the ground and scattered trees, while tundra is defined by mosses and shrubs with no trees at all."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A place experiences both a warm season and a cold season each year. Enough precipitation falls throughout the year to support many trees growing close together. However, some of those trees lose their leaves when the cold season arrives. Based on all three clues, which biome is this?",
+    "problemText": "Two regions both have grasses covering most of their ground and very few trees standing far apart. Region A receives just enough precipitation to keep grasses growing across nearly the entire area. Region B receives very little precipitation in any month, similar to the amount that falls in a desert. Using all three clue types, identify the biomes and explain why they are different.",
     "choices": [
-      "Forest, because it has a real cold season and enough precipitation for many trees that lose their leaves",
-      "Rainforest, because it has enough precipitation and trees close together, even though there is no cold season where leaves fall",
-      "Grassland, because it has a cold season, even though grassland does not have enough precipitation for many trees to grow close together",
-      "Tundra, because trees lose their leaves in cold seasons, even though tundra does not get enough precipitation to support many trees growing close together"
+      "Region A is grassland and Region B is tundra; the precipitation clue separates them because grassland gets enough rain for grasses while tundra gets very little rain and is covered by mosses and shrubs instead of grass.",
+      "Both are grasslands because they both have grasses and few trees; the precipitation difference does not matter for biome identification.",
+      "Region A is forest and Region B is grassland; the plant-life clue tells us that region A must have more trees than region B even though the description seems similar.",
+      "Region A is grassland and Region B is desert; tundra only occurs in places that stay cold all year, and neither description mentions a cold climate."
     ],
     "answer": "A",
     "hints": [
-      "Both forest and rainforest grow many trees, so the plant-life clue alone is not enough.",
-      "The key difference is that this place has a genuinely cold season where trees lose their leaves—only one of these biomes does that."
+      "Precipitation is the clue that separates these two; reread what each biome needs to support the plants that cover its ground.",
+      "Grassland gets enough rain for grass to cover the ground. Tundra gets very little rain and is instead covered by mosses and small shrubs rather than grass."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-5.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A geographer is describing two places to a student. Place 1 has very low precipitation, is cold for most of the year, and has mosses and shrubs covering the ground with no trees. Place 2 has very low precipitation, stays warm all year, and has a few scattered plants with most of the ground bare. The student says, 'Both places get very little rain, so they must be the same biome.' Identify which two biomes these actually are and explain why very low precipitation alone is not enough to group them together.",
+    "problemText": "A place is warm for several months and then cool for several months, but it never becomes as cold as a true winter freeze. Precipitation is moderate throughout the year. The ground is covered almost entirely by grasses, with only a few trees scattered at wide intervals. A student checks the temperature and plant-life clues and concludes this is a forest. Identify the error in the student's reasoning and explain why all three clues must be checked together to find the correct biome.",
     "choices": [
-      "Place 1 is grassland and Place 2 is rainforest; the student forgot that biomes change location based on elevation and water availability near the ground",
-      "Place 1 is tundra and Place 2 is desert; the temperature and plant-life clues differ, showing that low precipitation alone can describe two different biomes",
-      "Place 1 is desert and Place 2 is tundra; both receive very little precipitation and have few trees, making them essentially the same biome with only minor differences in appearance",
-      "Place 1 is tundra and Place 2 is grassland; both have low precipitation, but Place 1 is too cold for most trees while Place 2 is warm enough to support grasses year-round"
+      "The student was correct; this is a forest because it has both warm and cold seasons, which is the defining feature that separates forests from all other biomes.",
+      "The student ignored precipitation; forest requires enough precipitation to support many trees close together, while this description shows moderate precipitation with mostly grass and few trees, which matches grassland instead.",
+      "The student mistook the scattered trees for a sign of forest; actually, any biome with trees is called a forest, so the presence of scattered trees proves this is a forest.",
+      "The student did not notice that the place is not cold enough; tundra is the only biome without many trees, so the few trees scattered here rule out tundra and confirm this is a forest."
     ],
     "answer": "B",
     "hints": [
-      "Look closely at the temperature and plant-life descriptions for each place—they are quite different despite both having low precipitation.",
-      "The lesson teaches that precipitation alone can match more than one biome; the other two clues must be checked to tell them apart."
+      "Two of these biomes both have a warm season and a cool or cold season—so temperature alone cannot separate them. Which clue can distinguish between them?",
+      "Reread the plant-life and precipitation requirements: one biome needs enough rain for MANY trees close together, while the other needs enough rain for GRASSES but not enough for many trees."
     ]
   }
 ]

@@ -114,136 +114,22 @@
     ]
   },
   {
-    "id": "m6geo-resource-distribution-its-effects-001",
-    "loId": "m6geo.resource-distribution-and-its-effects",
-    "cedCode": "M6GEO-6.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following is an example of a natural resource? Consider what people use from nature to meet their needs.",
-    "choices": [
-      "Fertile soil in a farming region",
-      "A paved road built through a city",
-      "A factory that processes crops",
-      "A store that sells food to families"
-    ],
-    "answer": "A",
-    "hints": [
-      "A natural resource is found in nature, not built by people.",
-      "Think about what exists in the environment before people use it."
-    ]
-  },
-  {
-    "id": "m6geo-resource-distribution-its-effects-002",
-    "loId": "m6geo.resource-distribution-and-its-effects",
-    "cedCode": "M6GEO-6.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A coastal region has very thick forest but thin, rocky soil with little rainfall. Based on the region's resources, which large-scale activity would be most practical there?",
-    "choices": [
-      "Large-scale crop farming, because the region has land available",
-      "Large-scale logging, because the region has abundant trees to cut",
-      "Large-scale mining, because forests contain valuable minerals",
-      "Large-scale ranching, because the region has open space for grazing"
-    ],
-    "answer": "B",
-    "hints": [
-      "Match the resource that is actually present to the activity that depends on it.",
-      "Logging requires a specific resource; what does thick forest provide that logging needs?"
-    ]
-  },
-  {
-    "id": "m6geo-resource-distribution-its-effects-003",
-    "loId": "m6geo.resource-distribution-and-its-effects",
-    "cedCode": "M6GEO-6.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "Town Ashville has wide, flat land, deep fertile soil, and steady yearly rainfall. Which statement best explains why large-scale farming would be difficult in a town that lacks these exact resources?",
-    "choices": [
-      "Large-scale farming requires a different type of land shape in other locations.",
-      "Towns without farming must support a different activity, making farming impossible everywhere else.",
-      "The resources that farming depends on—fertile soil, flat land, and regular water—would not all be present.",
-      "Fertile soil and rainfall are not actually important to growing crops on a large scale."
-    ],
-    "answer": "C",
-    "hints": [
-      "Think about what farming needs to work: what specific conditions support it?",
-      "If even one of those conditions is missing, what happens to the activity?"
-    ]
-  },
-  {
-    "id": "m6geo-resource-distribution-its-effects-004",
-    "loId": "m6geo.resource-distribution-and-its-effects",
-    "cedCode": "M6GEO-6.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Town Pinewood is heavily forested but has thin, rocky soil. A student claims: \"Pinewood has no useful resources because it cannot support large-scale farming.\" Identify the error in this claim and explain what resource Pinewood actually has.",
-    "choices": [
-      "The student is wrong because forests grow in places with thin soil, so the soil must also be fertile for farming somewhere else.",
-      "The student is wrong because thin, rocky soil is actually a valuable resource that some activities need more than fertile soil.",
-      "The student is wrong because farming is not the only activity people do, so Pinewood must have all types of resources.",
-      "The student is wrong because Pinewood's forest is a useful resource that supports large-scale logging, even though the soil does not suit farming."
-    ],
-    "answer": "D",
-    "hints": [
-      "Missing one resource (fertile soil for farming) does not mean a place has no resources at all.",
-      "What specific resource does Pinewood have in abundance that suits a different activity?"
-    ]
-  },
-  {
-    "id": "m6geo-resource-distribution-its-effects-005",
-    "loId": "m6geo.resource-distribution-and-its-effects",
-    "cedCode": "M6GEO-6.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two neighboring regions have different resources. Region A has thick forest and thin soil; Region B has fertile soil, flat land, and little forest. A student writes: \"Region B has better land than Region A.\" What is the error in this statement, and how should it be corrected?",
-    "choices": [
-      "The error is calling one region's land \"better\" when it simply suits a different activity; each region's resources support different activities, and neither is better or worse.",
-      "The error is that Region A actually has better land because forested areas with thin soil are superior for supporting dense populations compared to flat farmland.",
-      "The error is that \"better\" is only correct when measuring by total quantity of resources, and Region B has a larger area of usable land than Region A does.",
-      "The error is that Region B's fertile soil and flat land are worse than Region A's forest because agricultural land is now less valuable in modern economies than timber is."
-    ],
-    "answer": "A",
-    "hints": [
-      "A resource difference is not the same as a ranking of which place is better overall.",
-      "How would the statement sound if you switched which region's resource was the focus?"
-    ]
-  },
-  {
-    "id": "m6geo-resource-distribution-its-effects-006",
-    "loId": "m6geo.resource-distribution-and-its-effects",
-    "cedCode": "M6GEO-6.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A prospector discovers a large mineral deposit in a mountain region with poor soil and sparse vegetation. Local leaders debate whether to develop mining there. One leader says: \"This region will become wealthy because it has valuable minerals.\" Another says: \"This region is worthless because it cannot farm.\" Using what you know about resource distribution and activity, explain why both statements are incomplete and what a more accurate description would be.",
-    "choices": [
-      "The first leader ignores the fact that mineral deposits do not occur naturally; the second ignores that farming is always more profitable than mining. A complete view is that the region's minerals suit mining, which is different from farming but not worse.",
-      "The first leader assumes minerals guarantee wealth without considering the effort needed to extract them; the second falsely assumes the region has no resources. A complete view is that the region has a mineral deposit that suits large-scale mining as an activity, separate from whether it can farm.",
-      "Both leaders are correct because a region either has resources or it does not, and there is no middle ground between wealth and worthlessness.",
-      "The first leader overestimates mineral value; the second is correct that regions without fertile soil cannot succeed. A complete view is that mining always fails in poor soil."
-    ],
-    "answer": "B",
-    "hints": [
-      "Each leader is making an error about what resources the region has and what activities they suit. What resource is actually present, and what activity does it support?",
-      "One leader ranks the region by one missing resource; the other ignores a resource that is actually there. How does the lesson distinguish between having one resource versus another?"
-    ]
-  },
-  {
     "id": "m6geo-conserving-natural-resources-001",
     "loId": "m6geo.conserving-natural-resources",
     "cedCode": "M6GEO-6.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "What does it mean to conserve a natural resource? Explain what changes and what stays the same when a resource is conserved.",
+    "problemText": "A student wants to conserve water. She turns off the tap while brushing her teeth instead of letting the water run the whole time. What is this conservation practice called?",
     "choices": [
-      "Conserving a resource means stopping people from using it altogether so that nature can make more of it faster and builds up a surplus that will never run out.",
-      "Conserving a resource means slowing down how fast people use it, so the same supply lasts longer over time. Nature does not change how it makes or replaces the resource—only the rate at which people draw from it changes.",
-      "Conserving a resource means finding a brand new resource to use instead, so the old one is never touched again and can recover on its own without any human activity interfering.",
-      "Conserving a resource means that nature automatically produces more of it in response to human use, so people can use it without any limits or concern for depletion."
+      "Reuse",
+      "Reduce",
+      "Recycle",
+      "Repair"
     ],
     "answer": "B",
     "hints": [
-      "Think about the key idea: what changes is how fast people draw from the resource, not how nature replaces it.",
-      "A conserved resource lasts longer—does that happen because nature speeds up, or because people slow down?"
+      "This happens before any water is wasted or thrown away.",
+      "The student is choosing to use a smaller amount from the start."
     ]
   },
   {
@@ -252,17 +138,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A school cafeteria used to give every student a new paper napkin each lunch. This year, they bought cloth napkins that students wash and reuse throughout the month. Which conservation practice does this change represent, and why does it lower how much new material must be made?",
+    "problemText": "A library has old wooden chairs that no longer match the new furniture style. Instead of throwing them out, the library donates them to a community center, which sets them up in its game room. The chairs are still solid and work the same way they did before. Which conservation practice does the library's action best describe?",
     "choices": [
-      "Recycle, because the napkins are washed and broken down into fibers that are spun into completely new napkins with different materials each time.",
-      "Reduce, because using cloth instead of paper means the school decides to buy fewer napkins overall and stops purchasing paper products entirely.",
-      "Reuse, because the same cloth napkins do their job multiple times instead of new napkins being made for each lunch.",
-      "Repair, because cloth napkins can be mended if they tear, allowing them to serve their purpose for a longer period of time before replacement."
+      "Reduce, because the library is using less furniture than it did before.",
+      "Recycle, because the wood from the chairs is being processed into new material.",
+      "Reuse, because the same chairs do another job instead of being thrown away.",
+      "Repair, because the chairs needed to be fixed before they could be used again."
     ],
     "answer": "C",
     "hints": [
-      "The key difference: are the same items being used again for the same job, or is something else happening to them?",
-      "When you wash a cloth napkin and use it again, nothing is broken down or remade—what is actually happening to that napkin?"
+      "The same chairs are not broken down or remade into something else.",
+      "The identical objects are kept working for a different purpose."
     ]
   },
   {
@@ -271,17 +157,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student's backpack zipper breaks. Instead of buying a new backpack, she takes it to a repair shop where a worker replaces the broken zipper with a new one. The student keeps using the same backpack for another two years. Why does this action conserve natural resources?",
+    "problemText": "A restaurant runs out of clean ceramic plates during lunch service. The kitchen crew quickly washes a stack of dirty plates and uses them again to serve more customers that same day. What conservation practice does washing and reusing the plates represent?",
     "choices": [
-      "Because the student reuses the backpack after the repair, which means no new backpack is ever needed and the student will never have to buy a replacement again.",
-      "Because repairing teaches the student to want fewer things, which reduces how much they buy overall and changes their shopping habits.",
-      "Because metal zippers can be melted down and remade, so the broken one becomes material for another zipper instead of being thrown away.",
-      "Because fixing the broken zipper allows the same backpack to keep doing its job, so a new backpack does not have to be made from new material yet."
+      "Reduce, because the restaurant washes plates instead of ordering new ones.",
+      "Repair, because the plates are cleaned to make them work like new.",
+      "Recycle, because water is used to clean the plates for a second use.",
+      "Reuse, because the same plates do their job again without being replaced."
     ],
     "answer": "D",
     "hints": [
-      "Repair works by fixing something that stopped working so it keeps doing its job. Does that delay when a new one has to be made?",
-      "Think about the rate idea: over those two years, how many new backpacks does this family have to make compared to families that replace a broken backpack right away?"
+      "The identical plates keep serving food, not being broken down into raw material.",
+      "Consider whether the plates are doing the same job again or a different job."
     ]
   },
   {
@@ -290,17 +176,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two families each buy a plastic lunch container. Family A uses the same container every day to pack their child's lunch for six years before it finally breaks. Family B uses a container for one month, then throws it away and buys a new one to replace it. Over those same six years, which family's practice does more to conserve natural resources, and what is the key difference between what happens in each case?",
+    "problemText": "A family uses paper napkins at dinner every night and throws them away after one use. A neighbor suggests that the family could conserve by switching to cloth napkins that are washed and used many times before wearing out. Explain why switching to cloth napkins slows down how quickly the family uses paper resources, even though it does not reduce, reuse, or recycle in the traditional sense.",
     "choices": [
-      "Family A conserves more because the same container does its job for many years, so fewer new containers need to be made from new material during that time. Family B needs to make or buy a new container many times, each time drawing new material.",
-      "Family B conserves more because throwing away containers allows the materials to be collected separately and processed into recycled products more efficiently than trying to reuse a single worn container.",
-      "Neither family conserves more because both families eventually discard their containers, and the environmental impact per person is the same whether disposal happens all at once or spread over time.",
-      "Family A conserves more, but only if the broken container is donated to someone else instead of being thrown away, otherwise both families create equal waste over the six-year period."
+      "By using the same cloth napkins repeatedly instead of new paper napkins every night, the family needs far fewer new napkins made from raw material over the same stretch of time.",
+      "Cloth napkins reduce the total demand for paper products each year because fewer trees need to be harvested annually to meet the family's napkin needs over time.",
+      "Cloth napkins lower the rate of resource consumption because one set of cloth items can serve the same function that would otherwise require many separate paper items purchased repeatedly.",
+      "Washing cloth napkins consumes fewer total resources than manufacturing and purchasing new paper napkins would demand from forests and factories throughout the year."
     ],
     "answer": "A",
     "hints": [
-      "Count how many new containers each family needs over six years. Does that number affect how much new material has to be drawn?",
-      "Reuse means the same item keeps working instead of being replaced. How many times is the same item replaced in each family's story?"
+      "Think about how many new paper napkins would be needed over a month or a year, compared to how many cloth napkins are needed.",
+      "The key idea is that the same conserving practice — slowing down how fast people draw on a resource — can work through different mechanisms."
     ]
   },
   {
@@ -309,17 +195,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A community runs a clothing swap where people bring clothes they no longer wear, and take home clothes that others brought. After the swap, some clothes are worn again by new owners for years. Other clothes that no one wants at the swap are sent to a factory where they are shredded and the fibers are spun into new yarn for making blankets. Why do both of these practices conserve natural resources, even though they work in completely different ways?",
+    "problemText": "A toy building block breaks in half and no longer connects properly to other blocks. A child's parent repairs the block by gluing the pieces back together. Compare this to a situation where a child simply stops playing with blocks and asks for video games instead. Only one of these is a conservation practice. Which one is it, and why?",
     "choices": [
-      "Both practices are forms of reuse because they both prevent clothes from being thrown into landfills and keep the items in circulation for extended periods of use.",
-      "Both practices lower how much new material must be drawn and made over time. Reuse keeps a worn item in service so no new item is made yet; recycling turns used material into material for a new product instead of making that product from freshly taken material.",
-      "Both practices work by reducing—people swap clothes because they decide to buy less, so fewer new clothes need to be made in factories and fewer resources are extracted overall.",
-      "Both practices are forms of repair because the clothes are restored to working condition and made to function again in some form, whether as clothing for new owners or as fiber for new products."
+      "Stopping to play with blocks is the conservation practice because it prevents the family from buying additional plastic toys that would require new material to be manufactured.",
+      "Repairing the broken block is the conservation practice because it keeps an already-made item in service longer instead of needing a new block made.",
+      "Both are conservation practices because they both result in fewer toys being made and fewer resources used during manufacturing processes.",
+      "Neither is a conservation practice because toys have already been manufactured, so the decision about them cannot affect how much new material gets extracted from the earth."
     ],
     "answer": "B",
     "hints": [
-      "Look at what happens to the clothes that find new owners versus what happens to the clothes sent to the factory. Are they treated the same way?",
-      "Think about the definitions: one keeps the same item doing a job again, the other breaks down used material and remakes it into something new. How are both of these different from each other, yet both lower how much is drawn?"
+      "Recall that reduce means using less from the very start, before anything breaks.",
+      "Repair applies only to something that has already stopped working, and it matters because the same item can keep doing its job."
     ]
   },
   {
@@ -328,17 +214,17 @@
     "cedCode": "M6GEO-6.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A family owns a wooden table that has one broken leg. They have three options: (1) hire a carpenter to fix the broken leg so the table keeps doing its job; (2) donate the broken table to a school, which will use it as-is to store supplies instead of throwing it away; (3) chop up the table and feed the wood into a chipper to make mulch for a garden. Which of these options is repair, which is reuse, and which would NOT be considered a conservation practice from this lesson? Explain why the one that is not a conservation practice does not meet the definition of conserve.",
+    "problemText": "Two students each receive a birthday gift. Student A's gift comes in a plastic clamshell container, which Student A cuts open, throws in the trash, and never uses again. Student B receives a gift in a sturdy cardboard box that can be folded and stored. Student B then uses the same box three times over the next year to pack items when moving to different homes. Neither student recycles or repairs anything. Over the course of one year, which student's choice leads to less new packaging material needing to be made, and which conservation practice explains why?",
     "choices": [
-      "Option 1 is reduce because the family chooses not to buy a new table. Option 2 is reuse. Option 3 is recycle since the wood becomes mulch. All three conserve because nothing ends up in a landfill or wasted.",
-      "Option 1 is repair. Option 2 is recycle because the table becomes something new and useful. Option 3 is not a conservation practice because mulch must be remade every season and does not provide permanent or lasting resource value.",
-      "Option 1 is repair (fixing the broken leg so the same table does its original job). Option 2 is reuse (the same table does another job instead of being thrown away). Option 3 is not a conservation practice because breaking the table apart and turning it into mulch does not slow down how fast people draw raw materials—the wood is used up and gone.",
-      "Option 1 is reuse because the table continues to function after being fixed by a carpenter. Option 2 is repair because the school restores it by putting it back into active use. Option 3 is not a conservation practice because wood that becomes mulch cannot be recovered or repurposed again into any other form."
+      "Student A uses less because avoiding single-use containers counts as reducing material use.",
+      "Neither student's choice matters because the packaging has already been made before they received the gifts.",
+      "Student B uses less because reusing the same box multiple times means fewer new boxes need to be made to replace it.",
+      "Student B uses less because the cardboard box can be broken down and remade, which is a form of recycling."
     ],
     "answer": "C",
     "hints": [
-      "Remember: repair fixes something broken so it does its original job again; reuse takes an item that works and gives it a new or continued job; recycle breaks down used material and remakes it into material for a new product. Which of these three definitions fit options 1, 2, and 3?",
-      "For the option that is not a conservation practice, ask: does turning wood into mulch slow down how fast new raw material has to be drawn? Does it make the same supply of wood last longer, or does it use it up?"
+      "One new box that does multiple jobs replaces fewer total new boxes than would have been needed otherwise.",
+      "Look for the practice where an item that still works gives another job instead of being thrown away."
     ]
   },
   {
@@ -347,17 +233,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A climate has long, freezing winters and heavy snowfall for several months each year. Which type of clothing adaptation would help people stay warm in this climate?",
+    "problemText": "An adaptation is a change people make to fit the climate they live in. Which of the following is an example of an adaptation?",
     "choices": [
-      "Wearing dark-colored clothing that absorbs heat from the sun",
-      "Wearing loose, lightweight clothing that lets air move freely against the skin",
-      "Wearing several layers of clothing so that warm air gets trapped between them",
-      "Wearing tightly fitted clothing made of thin fabric to reduce bulk"
+      "Staying indoors during hot days because you prefer cooler temperatures",
+      "Moving to a different country because you do not like the current weather",
+      "Wearing layers of clothing in a cold climate to trap warm air between them",
+      "Buying expensive outdoor gear because it is fashionable"
     ],
     "answer": "C",
     "hints": [
-      "Think about what happens to warm air when layers of clothing are stacked on top of each other.",
-      "The lesson explains layering as a way to trap warm air — which direction should that air move to keep a body warm in a freezing climate?"
+      "An adaptation solves a problem the climate creates.",
+      "Think about something people build, wear, eat, or use to travel that actually fits their climate's conditions."
     ]
   },
   {
@@ -366,17 +252,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A region has hot, sunny weather almost all year, with very little rainfall. People there wear loose-fitting, light-colored clothing. Explain why this clothing choice fits this climate better than wearing dark-colored, tightly fitted clothing would.",
+    "problemText": "A region receives heavy rain for four months each year and experiences widespread flooding in low-lying areas during that season. The ground turns to mud and many roads become impassable. Which form of transportation would work best for this climate?",
     "choices": [
-      "Light-colored fabric reflects more of the sun's heat away from the body, while dark colors absorb heat and make the wearer hotter in intense sun",
-      "Dark-colored clothing absorbs sunlight and traps heat against the skin, while tight-fitting clothes prevent air from circulating and cooling the body",
-      "Loose-fitting clothing allows air to circulate around the body and helps sweat evaporate, whereas tight clothing blocks airflow and keeps moisture on the skin",
-      "Light-colored, loose clothing reflects sunlight and allows air to move against the skin, helping the body release heat instead of trapping it"
+      "Large, heavy trucks designed to carry cargo long distances on paved highways",
+      "Bicycles, because they are lightweight and do not require fuel",
+      "Motorcycles, because they are faster than any other vehicle",
+      "Boats and raised walkways that can move people and goods over water and mud"
     ],
     "answer": "D",
     "hints": [
-      "Look at what light colors do to sunlight, and what loose clothing allows air to do.",
-      "The lesson states that loose clothing 'lets air move against the skin' — how does that help a body in extreme heat?"
+      "The tough problem here is water and mud covering the ground for part of the year.",
+      "Think about what vehicle or path would still work when regular roads flood."
     ]
   },
   {
@@ -385,17 +271,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A climate stays cold and snowy for most of the year, with very little time when crops can grow. What type of food adaptation would help people have enough to eat during the long winter months when nothing can be grown?",
+    "problemText": "A climate stays hot and sunny almost every day of the year, with very little rainfall. People who live there wear loose-fitting, lightweight clothing in light colors. Why does this clothing choice fit this climate?",
     "choices": [
-      "Storing dried or preserved foods that last for months, so there is enough supply when nothing grows",
-      "Growing only fresh vegetables outdoors during the brief warm season and eating them immediately to stay healthy",
-      "Importing all food from warmer regions year-round to replace crops that cannot survive the local climate",
-      "Eating only small amounts of food each day to stretch fresh supplies through the entire winter season"
+      "Loose, lightweight clothing lets air move against the skin and light colors reflect sunlight instead of absorbing heat",
+      "Light colors make people look fashionable in sunny places, and loose clothing is easier to pack when traveling to hot regions",
+      "The clothing dries quickly after washing in the intense sun and the light colors hide dust better in dry climates",
+      "Loose fitting garments reduce the amount of fabric needed to make a complete outfit, so people in hot places save money on clothing costs"
     ],
     "answer": "A",
     "hints": [
-      "The lesson explains that a climate with a long season when little grows 'needs food that can be stored for months.'",
-      "When a growing season is short and the rest of the year has no crops, what property must food have to provide nourishment for months?"
+      "Focus on how this clothing helps the body release heat, not on appearance or effort.",
+      "Think about what happens to heat when air moves against skin and when light colors face sunlight."
     ]
   },
   {
@@ -404,17 +290,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A climate has extremely cold winters with deep, heavy snow on the ground for months, and it also has heavy seasonal rains in spring that cause flooding. A house is being designed for this climate. Which statement correctly explains why a house with thick walls, small windows, a steep roof, and raised floors on stilts would fit this climate well?",
+    "problemText": "A climate has long, bitter winters with deep snow for several months, and a very short growing season. A house in this climate has thick walls, small windows, and a steep roof. A different climate is hot and humid all year with heavy rain and no winter. Explain why the same house design would fail in the second climate, even though it works well in the first.",
     "choices": [
-      "Thick walls and small windows hold heat in during winter, but the raised floors are unnecessary since heavy snow prevents flooding",
-      "Thick walls and small windows hold heat in during winter, while the steep roof sheds heavy snow, and raised floors keep the house above spring floodwaters",
-      "The raised floors are the only necessary feature because they protect against both the cold and flooding at the same time",
-      "Steep roofs help shed snow in winter, but wide windows are needed to let sunlight warm the house during the brief spring season before flooding"
+      "Steep roofs shed snow by directing it off the roof quickly, but in a hot, humid climate they would allow too much air circulation and make cooling the house more difficult",
+      "Thick walls and small windows hold heat inside, which is helpful when it is cold, but would trap unwanted heat in a climate that is always hot and humid",
+      "Small windows limit the size of the rooms inside the house, which works in cold climates where people stay indoors most of the year, but would feel cramped in a warm climate where people want to spend time outside",
+      "Thick walls are expensive to build in tropical regions because the materials used for cold climates, such as stone and heavy wood, are scarcer and cost more in places with heavy rain"
     ],
     "answer": "B",
     "hints": [
-      "This climate has two different tough problems: extreme cold in winter AND seasonal flooding in spring. Which features solve each problem?",
-      "Review what the lesson teaches about steep roofs for snow and about raised floors for floods — does this climate need both solutions?"
+      "Consider what problem thick walls and small windows solve in a cold climate.",
+      "Now flip it: what would those same features do in a place that is already hot and never needs heat to stay inside?"
     ]
   },
   {
@@ -423,17 +309,17 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student claims: 'A house with wide window openings and open sides is the best design for any climate because it lets light and air inside.' Explain two reasons why this design would actually fail badly in a climate with long, bitterly cold winters and heavy snowfall.",
+    "problemText": "A student says, 'People who live in a climate with a very long, cold winter and only a short growing season should eat fresh fruits and vegetables year-round, just like people in warm climates where crops grow most of the year.' What is wrong with this statement, and what food choice would actually fit the cold climate better?",
     "choices": [
-      "Wide windows are expensive to build and would require extra materials compared to small windows in any climate",
-      "The open design would allow warm air to escape during winter and let cold air flow inside constantly, while snow would accumulate inside through the open areas",
-      "Open sides and wide windows would let cold air pour inside and let warm air escape quickly, and the open roof would allow heavy snow to pile up inside the house",
-      "Open sides would prevent the roof from supporting the weight of heavy snow, and wide windows would crack when snow pressure pushes against them"
+      "Fresh fruits and vegetables require too much water to grow in cold climates, so people must rely on frozen food and canned goods that do not need water to be stored safely",
+      "Fresh food spoils quickly because the warm sun in all climates causes decay at the same rate, so people in cold climates must grow twice as many crops to replace those that rot",
+      "The statement ignores that in a long, cold climate very few crops can grow when snow covers the ground, so people need food that can be stored for months, such as dried food",
+      "Growing fresh food year-round is possible only in regions near the equator, so people living far from the equator must trade with tropical nations to receive shipped vegetables"
     ],
     "answer": "C",
     "hints": [
-      "Think about the two biggest problems that a cold, snowy climate creates for a house: holding heat inside AND managing heavy snow.",
-      "What does the lesson teach about why small windows are better than wide ones in a cold climate, and why a steep roof is better than a flat one?"
+      "Think about what 'long, cold winter' means for how long crops can actually grow in the ground.",
+      "If crops cannot grow for many months, what kind of food do people need so they have enough to eat?"
     ]
   },
   {
@@ -442,17 +328,131 @@
     "cedCode": "M6GEO-6.4",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "Two regions have very different climates. Region X has a hot, humid climate with heavy seasonal rains and frequent flooding. Region Y has long, cold, snowy winters with very little rain or melting snow — water freezes and stays frozen. A person suggests building the same type of house in both regions: a house with thin walls, wide window openings, and a flat roof. For each region, state whether this design would fit or fail, and for each answer, explain which specific climate problem the design either solves or creates.",
+    "problemText": "Two neighboring regions have very different climates. Region X has a long, cold, snowy winter and a short, mild summer. Region Y is hot and humid year-round with heavy seasonal rain. Compare how housing, clothing, and food storage would need to be different in these two regions. Then explain why a person who moved from Region X to Region Y could not use the same adaptations that worked in their original home.",
     "choices": [
-      "Region X: fails (flooding would destroy thin walls); Region Y: fails (thin walls cannot support heavy snow)",
-      "Region X: fails (would trap too much heat); Region Y: fits (wide windows bring in sunlight to warm the house)",
-      "Region X: fits (is cheaper to build); Region Y: fits (flat roofs are easier to maintain in snow)",
-      "Region X: fits (lets air move and water drain away); Region Y: fails (would let heat escape and allow snow to pile up)"
+      "Region X uses thick walls and heavy clothing to survive cold winters, but Region Y stays warm year-round so these same designs would trap excessive heat and make living conditions uncomfortably warm",
+      "Region X stores dried and preserved food using techniques suited to long dry winters because crops grow only a few months each year, while Region Y can grow fresh crops year-round due to continuous warmth and seasonal rain, making preservation methods unnecessary and less practical for the climate",
+      "Region Y needs stored dried food and heavy winter clothing just like Region X does because all regions must prepare for a cold season by using the same preservation and clothing strategies, even if that cold season never actually occurs in that particular location",
+      "Region X needs thick-walled houses, heavy layered clothing, and stored dried food, while Region Y needs open-sided houses, loose light clothing, and can rely on fresh food year-round, because the cold and snow in Region X require very different solutions than the heat and rain in Region Y"
     ],
     "answer": "D",
     "hints": [
-      "For Region X, remember that the lesson teaches open sides and wide roof overhangs help in hot, humid climates with flooding. For Region Y, recall that the lesson teaches thick walls and steep roofs are needed in cold, snowy climates.",
-      "Ask yourself: in Region X, does water need to drain away, and does air need to move? In Region Y, does heat need to stay inside, and does snow need to slide off?"
+      "List what problem each region's climate creates: cold/snow versus heat/water.",
+      "Now ask: does the same solution work for both? Would thick walls help in a hot, humid place?"
+    ]
+  },
+  {
+    "id": "m6geo-resource-distribution-its-effects-001",
+    "loId": "m6geo.resource-distribution-and-its-effects",
+    "cedCode": "M6GEO-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Natural resources are distributed unevenly across Earth. This means that some places have large amounts of a particular resource while other places have very little or none of that same resource. Based on this definition of resource distribution, which statement is true?",
+    "choices": [
+      "Fertile soil, thick forest, and mineral deposits each follow their own separate pattern of where they are found in large amounts.",
+      "Every place on Earth has the same amount of fertile soil, thick forest, and mineral deposits in equal proportions.",
+      "A place that has one type of natural resource in large amounts must also have equally large amounts of all other types of natural resources in the same location.",
+      "Resource distribution describes how quickly resources can be transported from one place to another and how fast they can be processed."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what 'uneven' means — are the patterns of different resources the same everywhere?",
+      "One pattern (fertile soil) does not predict another pattern (forest or minerals)."
+    ]
+  },
+  {
+    "id": "m6geo-resource-distribution-its-effects-002",
+    "loId": "m6geo.resource-distribution-and-its-effects",
+    "cedCode": "M6GEO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A region has deep, fertile soil and steady rainfall but very few trees. Based only on these facts about the region's resources, which large-scale activity would be most difficult to support there?",
+    "choices": [
+      "Large-scale crop farming, because farming needs steady rainfall and fertile soil to grow.",
+      "Large-scale logging, because logging depends on having enough trees to cut.",
+      "Large-scale fishing, because the region has water resources available.",
+      "Large-scale mining, because mining depends on access to mineral deposits underground."
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at what each activity depends on to work at a large scale.",
+      "The region has very few trees — does logging have what it needs?"
+    ]
+  },
+  {
+    "id": "m6geo-resource-distribution-its-effects-003",
+    "loId": "m6geo.resource-distribution-and-its-effects",
+    "cedCode": "M6GEO-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Town Riverside has a large mineral deposit in the ground and access to clean water. Which statement best explains why Riverside's resources would support large-scale mining?",
+    "choices": [
+      "Mining requires clean water more than any other resource, and Riverside has it in large amounts available for industrial use.",
+      "Mining is the only economic activity that can succeed in a town with mineral deposits, so Riverside must be suited to mining.",
+      "Mining depends on having a concentrated amount of valuable mineral to dig out, which Riverside has underground.",
+      "Any town with water access can mine minerals from the ground no matter what else is present or where the minerals are located."
+    ],
+    "answer": "C",
+    "hints": [
+      "What does mining actually need to do its work — what does it depend on?",
+      "A mineral deposit is a concentrated amount of valuable mineral built up in one place."
+    ]
+  },
+  {
+    "id": "m6geo-resource-distribution-its-effects-004",
+    "loId": "m6geo.resource-distribution-and-its-effects",
+    "cedCode": "M6GEO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Town Blackstone has thick forest and thin, rocky soil. A student claims: 'Blackstone's resources are not as good as a town with fertile land, because you cannot farm there.' Explain the error in this claim and correct it, using only facts about what each type of land suits.",
+    "choices": [
+      "The claim is wrong because it compares one type of land to another without checking what activities each type actually suits best. The correct statement is that Blackstone's thick forest and rocky soil are poor for farming but well-suited to logging, a different activity than the fertile land supports.",
+      "The claim is wrong because thin, rocky soil prevents farming but does not prevent all economic activity in a town. The correct statement is that Blackstone can rely on logging and forest products since its forest resource is thick, even though its soil prevents large-scale crop production.",
+      "The claim is wrong because it assumes that all resources must be ranked by whether they can support farming as the main activity. The correct statement is that Blackstone's forest is suited to logging while fertile land is suited to farming — different activities that cannot be ranked as better or worse.",
+      "The claim wrongly ranks Blackstone's land as 'not as good' by comparing one activity. The correct statement is that Blackstone's thick forest suits large-scale logging, while fertile land suits large-scale farming — each suits a different activity, not a better or worse one."
+    ],
+    "answer": "D",
+    "hints": [
+      "Is ranking one type of land 'better' than another a geography question, or does it assume something that goes beyond just describing resources?",
+      "What activity does thick forest suit, and what activity does fertile land suit? Are they ranked, or just different?"
+    ]
+  },
+  {
+    "id": "m6geo-resource-distribution-its-effects-005",
+    "loId": "m6geo.resource-distribution-and-its-effects",
+    "cedCode": "M6GEO-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Region A has wide, flat, fertile land with steady rainfall and very few mineral deposits. Region B has poor soil but large mineral deposits in the ground. A student writes: 'Region A is better than Region B because Region A can farm and Region B cannot.' Using the concept that a place missing one resource still has others that suit different activities, explain why this ranking is misleading.",
+    "choices": [
+      "The ranking is misleading because Region A's ability to farm does not make it 'better' overall; Region B's mineral deposit suits large-scale mining instead, a different activity that Region A cannot support as well. Neither place is ranked better — each suits a different activity.",
+      "The ranking is misleading because Region B can actually farm if it has access to irrigation and fertilizers, which means both regions can farm equally and Region A should not be ranked higher than Region B.",
+      "The ranking is misleading because it ignores that Region B has a valuable resource in its mineral deposits that suits mining, a major economic activity that Region A cannot perform as well even though Region A can farm.",
+      "The ranking is misleading because Region A's flat terrain makes it harder to farm than sloped land, so Region B with its poor soil should actually be ranked higher for its farming potential."
+    ],
+    "answer": "A",
+    "hints": [
+      "Just because Region B cannot farm, does that mean it has no useful resources?",
+      "What activity does Region B's resource suit, even if Region A's resource suits a different activity?"
+    ]
+  },
+  {
+    "id": "m6geo-resource-distribution-its-effects-006",
+    "loId": "m6geo.resource-distribution-and-its-effects",
+    "cedCode": "M6GEO-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two towns, both with thick forest, were compared by a student: 'Town Pine has thick forest and is suited to logging. Town Oak also has thick forest but has very different soil and rainfall than Pine. Yet Oak must also be suited to logging exactly like Pine is, because they both have the same forest resource.' Identify the error in this reasoning and explain what you would need to know about Town Oak to determine whether its resources really suit large-scale logging.",
+    "choices": [
+      "The error is that two towns with the same forest resource will always be suited to the same activities regardless of other conditions. You would need to know whether Town Oak's forest is the same age as Pine's forest to tell if logging will work equally well there.",
+      "The error is assuming that having one matching resource means all the other conditions for an activity are also the same. To determine whether Oak's resources really suit large-scale logging, you would need to know whether Oak has enough trees that can actually be cut — just having forest is not enough if the trees are too small, too scattered, or too difficult to access.",
+      "The error is that forests in different towns are never suited to logging under any circumstances, no matter what conditions exist. You would need to know the total population of Town Oak to determine whether logging could work there.",
+      "The error is that the student did not account for the fact that rainfall patterns are more important than forest for logging success. You would need to know Town Oak's rainfall amounts and patterns to see if logging is possible."
+    ],
+    "answer": "B",
+    "hints": [
+      "Does having a resource in the ground automatically mean an activity will succeed, or does the resource need to be usable in a certain way?",
+      "Large-scale logging depends on having enough trees to cut — what would 'enough' actually mean in practice?"
     ]
   }
 ]

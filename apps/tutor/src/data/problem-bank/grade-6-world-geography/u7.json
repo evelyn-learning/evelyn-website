@@ -114,120 +114,6 @@
     ]
   },
   {
-    "id": "m6geo-how-gps-finds-your-location-001",
-    "loId": "m6geo.how-gps-finds-your-location",
-    "cedCode": "M6GEO-7.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "What does GPS stand for, and what is the main job of a GPS satellite?",
-    "choices": [
-      "Global Position Service; satellites listen to receivers on the ground and tell them where they are",
-      "Global Positioning System; satellites send out signals that a receiver listens to in order to find a location",
-      "General Purpose Signals; satellites store maps and download them to receivers",
-      "Geo-tracking and Positioning System; satellites follow receivers and report their movement to other users"
-    ],
-    "answer": "B",
-    "hints": [
-      "Think about what a GPS satellite does — does it listen, or does it send?",
-      "The receiver is the device that does the listening. What does the satellite do?"
-    ]
-  },
-  {
-    "id": "m6geo-how-gps-finds-your-location-002",
-    "loId": "m6geo.how-gps-finds-your-location",
-    "cedCode": "M6GEO-7.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A GPS receiver picks up a signal from a satellite directly overhead and calculates that it is 22,000 kilometers away from that satellite. Based on only this one distance, how many possible locations could the receiver be at?",
-    "choices": [
-      "Exactly one location, because the receiver has calculated its distance from the satellite",
-      "Two possible locations, because circles can only cross at two points",
-      "Many possible locations forming a circle around the satellite, all at that same distance",
-      "Zero possible locations, because a receiver cannot work with just one satellite signal"
-    ],
-    "answer": "C",
-    "hints": [
-      "When you know you are a certain distance from one point in space, what shape do all those possible spots make?",
-      "Imagine drawing a circle on the ground centered at the satellite — every point on that circle is 22,000 km away from it."
-    ]
-  },
-  {
-    "id": "m6geo-how-gps-finds-your-location-003",
-    "loId": "m6geo.how-gps-finds-your-location",
-    "cedCode": "M6GEO-7.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A student claims that a GPS receiver needs a very strong, very clear signal from one powerful satellite to find its exact location. Is this claim correct, and why?",
-    "choices": [
-      "Yes, because a strong signal gives the receiver accurate distance information from that satellite",
-      "No, because a single distance from one satellite only narrows your location to a circle, not a point, so you need distances from at least three satellites to find your exact spot",
-      "Yes, because strong signals reach further through the atmosphere than weak signals do",
-      "No, because signal strength does not add more distances to combine; the receiver still needs distances from multiple satellites"
-    ],
-    "answer": "D",
-    "hints": [
-      "What is the difference between how clear a signal is and how many satellites the receiver can pick up?",
-      "One distance — even a very accurate one — narrows your location to what shape?"
-    ]
-  },
-  {
-    "id": "m6geo-how-gps-finds-your-location-004",
-    "loId": "m6geo.how-gps-finds-your-location",
-    "cedCode": "M6GEO-7.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A GPS receiver on a ship picks up signals from two satellites. It calculates that it is 200 km from the first satellite and 150 km from the second satellite. When the receiver draws a circle of possible spots around each satellite, the two circles cross at exactly two different points on the water. Why cannot the receiver's navigation system use this information to tell the ship captain the exact location yet?",
-    "choices": [
-      "Because the receiver has not yet combined distances from enough satellites to narrow the two crossing points down to one exact spot",
-      "Because the satellites do not know where the ship is, so they cannot confirm which of the two points is the correct location on the water",
-      "Because 200 km and 150 km are not accurate enough distances to pinpoint a location on water, requiring more precise measurements from additional satellites",
-      "Because two circles cannot actually cross at exactly two points on the same plane; geometric circles can only cross at one point or not at all"
-    ],
-    "answer": "A",
-    "hints": [
-      "The lesson showed that one circle leaves many possible spots, and two circles leave two possible spots. What does it take to narrow two spots down to one?",
-      "The ship needs to add distances from at least one more satellite to eliminate one of the two crossing points."
-    ]
-  },
-  {
-    "id": "m6geo-how-gps-finds-your-location-005",
-    "loId": "m6geo.how-gps-finds-your-location",
-    "cedCode": "M6GEO-7.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A hiker's GPS receiver receives signals from three satellites at the same time. The receiver works out that it is 24,000 km from satellite A, 22,000 km from satellite B, and 20,000 km from satellite C. When the receiver draws all three circles and finds the one spot where all three circles meet, why does the receiver know this spot is correct?",
-    "choices": [
-      "Because the three satellites sent confirmations to the receiver telling it which point to choose among all possible locations on Earth",
-      "Because the receiver tested the spot by checking that its distance to all three satellites matches the distances it calculated",
-      "Because three circles always meet at only one point, no matter what the distances are, making verification unnecessary",
-      "Because the satellites have a database of all possible locations on Earth, and they matched this one to it using triangulation mathematics"
-    ],
-    "answer": "B",
-    "hints": [
-      "How does the receiver verify that a location is correct — does it ask the satellites, or does it check something else?",
-      "Think about working backward: if the receiver measures distances from the chosen spot to all three satellites, what should those measurements show?"
-    ]
-  },
-  {
-    "id": "m6geo-how-gps-finds-your-location-006",
-    "loId": "m6geo.how-gps-finds-your-location",
-    "cedCode": "M6GEO-7.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A navigation system receives a signal from one satellite and displays a message: \"Your location is being calculated.\" A few seconds later, it receives a signal from a second satellite and updates the message: \"Still calculating.\" Finally, it picks up a third satellite's signal and displays your exact location on a map. Explain why the system did not display your exact location after the second satellite's signal arrived, even though by that point it had distance information from two satellites.",
-    "choices": [
-      "The second satellite's signal was weaker than the first, so the receiver could not trust the combined distances yet and had to wait for a stronger third signal to confirm",
-      "Because satellites must send their signals in a specific order, and the system was waiting for the third satellite to complete the sequence before it could work out the location",
-      "Because two distances from two satellites still narrow the location to two possible crossing points, not one exact spot; a third distance is needed to pick which of the two points is the true location",
-      "The second satellite did not know where the receiver was, so it could not narrow down the location any further than the first satellite had already done"
-    ],
-    "answer": "C",
-    "hints": [
-      "When two circles of possible spots cross each other, how many points do they share? What changes when you add a third circle?",
-      "The lesson showed that two distances alone leave two possible spots. What resolves the ambiguity?"
-    ]
-  },
-  {
     "id": "m6geo-reading-geographic-graphs-charts-001",
     "loId": "m6geo.reading-geographic-graphs-and-charts",
     "cedCode": "M6GEO-7.4",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6geo-how-gps-finds-your-location-001",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A GPS receiver picks up a radio signal sent out by a satellite. What is the one piece of information that this signal allows the receiver to figure out?",
+    "choices": [
+      "The exact location where the receiver is standing",
+      "How far away the satellite is from the receiver",
+      "Whether the satellite is moving toward or away from the receiver",
+      "The name and identification number of the satellite"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what a single distance tells you — is it enough by itself to pinpoint one exact spot, or does it only narrow the search?",
+      "Each satellite signal gives the receiver one piece of information to work with. What is that one thing?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-002",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A car's GPS receiver picks up a signal from one satellite and calculates that it is exactly 15,000 miles away from that satellite. Based on this distance alone, how many different locations on Earth could the car be parked at?",
+    "choices": [
+      "Exactly one location, because the satellite can only be in one place at a time",
+      "Exactly two locations, because circles intersect at two points in space",
+      "Many different locations — all points that are 15,000 miles away from the satellite",
+      "All locations within 15,000 miles of the satellite, forming a sphere around it"
+    ],
+    "answer": "C",
+    "hints": [
+      "Imagine drawing a circle around a satellite. Every point on that circle is the same distance from the center. Now think about whether the car must be on that circle or inside it.",
+      "One distance from one satellite narrows the search area from the whole Earth down to what shape?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-003",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student claims: 'If a GPS receiver gets a very strong, very clear signal from one satellite, the receiver can figure out its exact location right away.' Is this student correct? Why or why not?",
+    "choices": [
+      "Yes, because a strong signal gives the receiver enough electrical power to process location data without needing additional satellites for triangulation",
+      "No, because the receiver does not have permission to receive signals from satellites and must wait for authorization from ground control",
+      "Yes, because the satellite sends back encoded location information through the strength of the signal itself, allowing the receiver to decode its position",
+      "No, because signal strength and signal count are different; one satellite's distance, no matter how clear, still creates a circle of possible spots, not one exact point"
+    ],
+    "answer": "D",
+    "hints": [
+      "Does a strong, clear signal give you more satellites to work with, or just a clearer read on the one satellite you already have?",
+      "Remember: one distance makes a circle, not a point. Can signal strength change that?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-004",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A GPS receiver picks up signals from Satellite A and Satellite B, works out its distance from each one, and draws two circles on a map — one around Satellite A and one around Satellite B. These two circles cross at exactly two points on the map. The receiver's true location is at one of these two points, but it cannot yet tell which one. What must happen next for the receiver to narrow the search down to one exact spot?",
+    "choices": [
+      "Pick up a signal from a third satellite, work out the distance to it, and see which of the two points also lies on that third circle",
+      "Combine the two existing distances again, using a mathematical formula that factors in Earth's curvature to eliminate one of the intersection points",
+      "Ask the satellites to send a stronger confirmation signal that identifies which point matches the receiver's actual ground elevation and altitude",
+      "Wait for Satellite A or Satellite B to move to a new orbital position so their circles no longer overlap at two locations"
+    ],
+    "answer": "A",
+    "hints": [
+      "You have two circles and two crossing points. What you need is something to distinguish between them — what geometric object would that be?",
+      "Two distances gave you two points. What does a third distance add to the picture?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-005",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hiker stands on a mountain and her GPS receiver picks up signals from Satellites P, Q, and R. The receiver calculates distances of 20,000 km from P, 22,000 km from Q, and 21,000 km from R. The receiver combines all three of these distances and identifies one exact spot on the map as the hiker's location. Which of the following statements is true about this result?",
+    "choices": [
+      "The satellite that sent the strongest signal determined the final location",
+      "All three distances together narrow the search down to one spot, and that spot matches all three distances equally",
+      "Only one of the three distances actually matters; the other two are just backup",
+      "The receiver had to ignore one of the distances because the three circles did not all cross at the same point"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what it means for a point to be the correct location: does it have to match just one distance, or all of them?",
+      "The receiver combines the distances from several satellites. What would confirm that a single spot is the right answer?"
+    ]
+  },
+  {
+    "id": "m6geo-how-gps-finds-your-location-006",
+    "loId": "m6geo.how-gps-finds-your-location",
+    "cedCode": "M6GEO-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A satellite in space sends the same radio signal out to anyone in range — whether or not any receiver is listening, and whether or not the satellite knows a receiver is there. A farmer with a GPS receiver is standing on the ground in a field, far away from any ground control station. The farmer's receiver picks up that satellite's signal, works out a distance from it, and eventually pinpoints the farmer's exact location. In this scenario, who or what device actually figured out where the farmer was standing, and why did the figuring-out happen on that device rather than on the satellite?",
+    "choices": [
+      "The satellite figured it out by using signals sent back from the farmer's receiver to calculate distance and location accurately",
+      "Both the satellite and the receiver figured it out together, because they need to be in constant two-way contact to exchange calculations",
+      "The farmer's GPS receiver figured it out by listening to signals and doing calculations, because the satellite has no way to know the receiver exists or where it is",
+      "The ground control station figured it out by combining signals from all satellites and receivers, because individual receivers lack the power to perform such complex calculations"
+    ],
+    "answer": "C",
+    "hints": [
+      "A GPS receiver only listens — it does not send anything back up to the satellite. If it does not send anything, what does that tell you about whether the satellite can know the receiver's location?",
+      "Where does all the calculation work happen — inside the satellite, or inside the device on the ground?"
+    ]
+  },
+  {
     "id": "m6geo-reading-a-thematic-map-001",
     "loId": "m6geo.reading-a-thematic-map",
     "cedCode": "M6GEO-7.3",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A thematic map uses a key to show what each color or symbol means. Before you answer any question about a thematic map, what must you do first?",
+    "problemText": "A thematic map uses a key to show what each color or symbol on the map means. Before you answer any question about a thematic map, what should you do first?",
     "choices": [
-      "Identify which color or symbol looks the brightest or most obvious",
-      "Look at the map and find the area the question asks about",
+      "Look at which color or symbol appears most often on the map",
+      "Find the area the question asks about and then look for its color or symbol",
       "Read every entry in the key from top to bottom before looking at any area on the map",
-      "Decide whether the key uses shades or symbols and then skip the entries you do not need"
+      "Search the key for only the color or symbol the question mentions"
     ],
     "answer": "C",
     "hints": [
-      "The lesson emphasizes reading the ENTIRE key first, before matching any single area.",
-      "This habit ensures every color or symbol has a known meaning before you look for it on the map."
+      "The first step with any thematic map is to install one habit before doing anything else.",
+      "You need to know what every single entry means before you try to match any area to the key."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-7.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Lakeside shows vegetation type using a symbol key. The key states: a tree symbol means forest, a grass symbol means meadow, and a water drop symbol means wetland. On the map, the North Plain is marked with a grass symbol and the South Plain is marked with a water drop symbol. According to the key, what is the vegetation type in the South Plain?",
+    "problemText": "A thematic map of the country of Ravenbay shows tree cover using three shades of green. The key states: light green means sparse tree cover, medium green means moderate tree cover, and dark green means dense tree cover. According to the map description, Hilltop is shaded medium green and Lakeside is shaded dark green. Which statement is correct?",
     "choices": [
-      "Forest",
-      "Meadow",
-      "Grassland with some trees",
-      "Wetland"
+      "Hilltop has denser tree cover than Lakeside because it is listed first in the problem description",
+      "Hilltop has more tree cover because medium green represents a deeper shade of green than light green does",
+      "Both regions have the same amount of tree cover since they are both shown using shades of the same color",
+      "Lakeside has denser tree cover than Hilltop because the key lists dark green as dense tree cover"
     ],
     "answer": "D",
     "hints": [
-      "Find South Plain's symbol in the map description, then match it to the key.",
-      "The key defines exactly what each symbol means—nothing else."
+      "Match each region's shade to the key entry, then compare what the key says about each shade.",
+      "The key is the source of meaning—look up what dark green stands for and what medium green stands for."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-7.3",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Hilltop shows land elevation using three shades of brown. The key states: light brown means low elevation, medium brown means medium elevation, and dark brown means high elevation. On the map, the Western Ridge is shaded dark brown, the Central Valley is shaded light brown, and the Eastern Slope is shaded medium brown. Which area has the lowest elevation according to the key?",
+    "problemText": "A thematic map of the region of Westmarch shows different types of land use. The key uses symbols: a pine tree symbol for forest, a crossed pickaxe symbol for mining, and a factory symbol for industrial zones. On the map, Northpeak is marked with a pine tree symbol and Deepvale is marked with a crossed pickaxe symbol. A student claims that Northpeak has industrial zones because it is located at the top of the map. What is wrong with this student's reasoning?",
     "choices": [
-      "Central Valley",
-      "Western Ridge",
-      "Eastern Slope",
-      "Western Ridge and Eastern Slope together"
+      "The student looked at the position of the area on the map instead of reading the key and matching the symbol",
+      "The student relied on compass direction rather than using the map scale to calculate distance from industrial areas",
+      "The student interpreted the pine tree symbol as representing both forest and industrial use, which are not the same thing",
+      "The student assumed that areas drawn with larger symbols on the map represent industrial zones rather than checking the key"
     ],
     "answer": "A",
     "hints": [
-      "Read the shaded key entry for 'low elevation' and find which area matches that shade.",
-      "Light brown is the shade that means low elevation in this map's key."
+      "A symbol key tells you the meaning of each symbol—position on the map does not change what a symbol means.",
+      "To answer correctly, you must match the symbol to the key, not guess based on where the area sits."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-7.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Openfield shows land use with four separate symbols: a barn symbol means pasture, a factory symbol means industrial, a house symbol means residential, and a tree symbol means protected forest. On the map, Region A is marked with a barn symbol, Region B is marked with a house symbol, Region C is marked with a barn symbol, and Region D is marked with a factory symbol. A student wants to find all regions that have the same land use as Region A. Which step is correct according to the read-the-key-first routine?",
+    "problemText": "A thematic map of the territory of Silverpine shows annual snowfall using three shades of gray. The key states: light gray means low snowfall, medium gray means moderate snowfall, and dark gray means heavy snowfall. On the map, Northridge is shaded dark gray, Midvalley is shaded medium gray, Southplain is shaded light gray, and Westbrook is shaded dark gray. A question asks: 'Which regions receive moderate snowfall according to the key?' If the same map were used to answer a different question about which regions have the most forests, would the snowfall key still answer that question?",
     "choices": [
-      "Look at Region A first, then scan the map for other regions that look similar in appearance to Region A",
-      "Read the key to find what the barn symbol means, then find every region marked with that same barn symbol",
-      "Compare Region A to Regions B, C, and D one by one, and decide which looks most like a place where people work",
-      "Identify which symbol appears most often on the map, because the most common symbol shows the most important land use"
+      "Yes, because the key shows three different shades and three different regions can be compared",
+      "No, because the key is built to show snowfall data only, and forest cover is a different topic",
+      "Yes, because darker shades always mean larger or more important amounts on any map",
+      "No, because the key is printed in gray and forests are typically green"
     ],
     "answer": "B",
     "hints": [
-      "The routine has three steps: read the key, find the area's symbol, then match it back to the key.",
-      "In a symbol key, the same symbol always means the same thing everywhere it appears."
+      "A thematic map is designed around one chosen topic—ask yourself what topic this key is built to show.",
+      "A key built to show one kind of data cannot answer a question about a completely different kind of data."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-7.3",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A thematic map shows ocean temperature using three shades of blue: light blue means cold, medium blue means temperate, and dark blue means warm. On this map, the North Sea is shaded light blue, the Mid Sea is shaded medium blue, and the South Sea is shaded dark blue. A different thematic map shows ocean salinity using three shades of green: light green means low salinity, medium green means medium salinity, and dark green means high salinity. If someone asks you to use the first map to answer the question 'Which sea has the highest salinity?', what is the problem?",
+    "problemText": "A thematic map of the state of Timberbrook shows the main economic activity in each county using symbols: a wheat bundle means agriculture, a gear means manufacturing, and a dollar sign means services. On the map, Clearfield is marked with a wheat bundle, Ridgeton is marked with a gear, Millbrook is marked with a dollar sign, and Ashford is marked with a wheat bundle. A student looks at the map and says, 'The gear symbol looks more detailed and complex than the wheat symbol, so manufacturing must be more important than agriculture in Timberbrook.' Explain what is wrong with this reasoning and state which counties have agriculture as their main activity according to the key.",
     "choices": [
-      "The North Sea is in the wrong location for you to determine its salinity from temperature",
-      "The salinity map uses green, so the temperature map's blue shades are not accurate enough",
-      "The temperature map does not show salinity data, so its key cannot answer a question about salinity",
-      "You need to read both keys at the same time to answer any question about either topic"
+      "The student should have counted how many times each symbol appears on the map and concluded that the most frequently appearing symbol represents the most important activity in Timberbrook",
+      "The student is correct that the gear symbol looks more complex in design, but agriculture is still more important because wheat is the traditional crop; only Clearfield shows agriculture",
+      "In a symbol key, each symbol is a separate category with no ranking, so the look or size of a symbol says nothing about importance; Clearfield and Ashford have agriculture as their main activity",
+      "In a symbol key, symbols that appear darker or bolder represent more important industries in a region; only Ashford displays agriculture because it is the last county mentioned"
     ],
     "answer": "C",
     "hints": [
-      "Each thematic map is built around ONE topic, and its key answers questions ONLY about that topic.",
-      "The temperature key tells you about temperature, not salinity—different topics, different keys."
+      "In a symbol key, no symbol is naturally bigger, bolder, or more important than another—only the key's stated meaning matters.",
+      "To find all counties with agriculture, read the key to see which symbol stands for agriculture, then find every area marked with that same symbol on the map."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-7.3",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "A thematic map of the country Northmark shows forest cover using three shades of green. The key states: light green means 0–30% forest, medium green means 31–60% forest, and dark green means 61–100% forest. On the map, the Pine District is shaded dark green, the Birch District is shaded medium green, the Oak District is shaded light green, and the Spruce District is shaded dark green. A student claims, 'The Spruce District must have less forest than the Pine District, because the Spruce District is smaller on the map.' Identify what is wrong with this reasoning and state what the key actually shows about these two districts.",
+    "problemText": "A thematic map of the nation of Crowland shows two kinds of information: a shaded key using colors to represent population density (light yellow for low, medium orange for medium, dark red for high), and a symbol key using marks to show the main industry (a wheat symbol for farming, a gear symbol for manufacturing, a fish symbol for fishing). The map shows four regions: Northen is shaded medium orange with a fish symbol, Eastmarch is shaded dark red with a gear symbol, Westfield is shaded light yellow with a wheat symbol, and Southwick is shaded dark red with a wheat symbol. A student is asked: 'Which regions have both high population density AND farming as the main industry?' The student answers 'Eastmarch, because it is shaded dark red, which the key lists as high population density.' Explain what is wrong with the student's answer, identify the correct answer, and state why the student made this error.",
     "choices": [
-      "The student is correct—a smaller district on a map always means less forest, so the Spruce District definitely has less forest than the Pine District",
-      "The student mistakenly compared the physical sizes of the districts rather than checking their colors against the key, which shows both Pine and Spruce are dark green and thus both fall in the 61–100% forest-cover range",
-      "The student should have read the key to see that smaller districts have higher forest cover in Northmark",
-      "The student confused map size with data—both Pine District and Spruce District are shaded dark green, so the key shows both have the same forest-cover range of 61–100%, regardless of how large each district appears on the map"
+      "The student read the color key correctly but the symbol key is printed upside down; the correct answer is Westfield, because it appears last on the map",
+      "The student looked at the wrong map and confused the location; the correct answer is Eastmarch and Southwick, because both are shaded dark red",
+      "The student forgot to read the entire key; the correct answer is Northen, because it has the most symbols on the map",
+      "The student matched only the color to the key and ignored the symbol key; the correct answer is Southwick, because it is shaded dark red (high population density) AND marked with a wheat symbol (farming)"
     ],
     "answer": "D",
     "hints": [
-      "The size or appearance of a district on the map says nothing about its data value—only the key and the color/symbol do.",
-      "Find both districts' shades, look up each shade in the key, and compare what the key says—not the map's visual sizes."
+      "This question requires you to match data from TWO different keys—one for population density and one for industry—before combining them.",
+      "The student found one piece of correct information (high population density) but forgot to check the symbol key for the second piece (farming as main industry)."
     ]
   }
 ]

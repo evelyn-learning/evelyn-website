@@ -228,120 +228,6 @@
     ]
   },
   {
-    "id": "m6sci-mapping-geologic-hazards-001",
-    "loId": "m6sci.mapping-geologic-hazards",
-    "cedCode": "M6SCI-9.3",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "Which of the following best describes what 'elevated risk' means for a geographic region in terms of natural hazards? A region has elevated risk when it is understood to carry a higher chance of a particular hazard occurring, based on its history and location.",
-    "choices": [
-      "a higher-than-average chance of a hazard in that location, based on what has repeatedly happened there before, without saying when the next event will happen",
-      "a certainty that a major earthquake or volcanic eruption will definitely occur within the next year, determined by analyzing the region's position on a specific type of plate boundary",
-      "evidence that a hazard cannot possibly occur in that location because no events have been recorded recently, which indicates the region has natural protection from future hazardous events",
-      "a calculation of the exact date and time when the next earthquake or eruption will happen, determined by measuring the time intervals between earthquakes that occurred in the past"
-    ],
-    "answer": "A",
-    "hints": [
-      "Think about what the word 'risk' means: does it mean something will definitely happen, or something is more likely?",
-      "The lesson says elevated risk is based on the historical record, but does it tell us the exact timing of the next event?"
-    ]
-  },
-  {
-    "id": "m6sci-mapping-geologic-hazards-002",
-    "loId": "m6sci.mapping-geologic-hazards",
-    "cedCode": "M6SCI-9.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A geologist finds that surveys show an oceanic plate moving steadily toward a continental plate beneath a coastal region, with the distance between them shrinking over time. Over the past 150 years, this coast has recorded frequent earthquakes and multiple volcanic eruptions. What boundary type does the motion evidence indicate, and what does the historical record show matches that type?",
-    "choices": [
-      "A transform boundary; the earthquakes demonstrate that the plates are sliding sideways past each other horizontally without any plates converging together or spreading away from each other",
-      "A convergent, oceanic-continental subduction zone boundary; the historical pattern matches because subduction zones typically produce both earthquakes and volcanic arcs",
-      "A divergent boundary; the volcanic eruptions indicate that material is spreading outward and rising upward from beneath the plate boundary into the crust above",
-      "A convergent boundary where two continental plates collide head-on; the volcanic eruptions demonstrate this specific type of collision produces more active volcanoes than any other boundary type found on Earth"
-    ],
-    "answer": "B",
-    "hints": [
-      "The distance between the plates is shrinking—what does that motion direction tell you about the boundary type?",
-      "Look at the lesson's description of the Andes and Cascades mountains: what kind of plate collision produces both earthquakes and a volcanic arc?"
-    ]
-  },
-  {
-    "id": "m6sci-mapping-geologic-hazards-003",
-    "loId": "m6sci.mapping-geologic-hazards",
-    "cedCode": "M6SCI-9.3",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "California's San Andreas Fault is a transform boundary where the North American and Pacific plates slide horizontally past each other. Over the past two centuries, this region has experienced frequent earthquakes but no active volcanic eruptions. Why does the San Andreas Fault show this particular hazard pattern rather than the volcano-and-earthquake mix seen along the Andes?",
-    "choices": [
-      "Transform boundaries always produce more earthquakes than convergent boundaries, making it impossible for volcanoes to form anywhere along a transform fault zone",
-      "The San Andreas Fault is too young geologically to have built any volcanoes yet, but continued motion will eventually produce them over millions of years",
-      "Transform boundaries produce earthquakes from the side-by-side sliding motion, but no oceanic plate is being subducted beneath a continental plate, so no volcanic arc forms",
-      "The plate motion at the San Andreas Fault is pushing material downward at an angle that is too shallow to reach the depths where melting and volcanic activity occur"
-    ],
-    "answer": "C",
-    "hints": [
-      "What specific ingredient is needed to build a volcanic arc: what plate material must be forced beneath the other one?",
-      "At a transform boundary, the plates slide sideways. Does one plate get forced down beneath the other?"
-    ]
-  },
-  {
-    "id": "m6sci-mapping-geologic-hazards-004",
-    "loId": "m6sci.mapping-geologic-hazards",
-    "cedCode": "M6SCI-9.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two regions both sit on convergent boundaries where plates are closing the distance between them. Region M is a coastal area with an oceanic plate moving toward a continental plate; it has a 200-year record of frequent earthquakes, volcanic eruptions, and several large tsunamis. Region N is located hundreds of kilometers inland, where two continental plates are colliding; it has a 200-year record of frequent earthquakes and no volcanic eruptions, and no tsunami events. Explain why Region M's hazard pattern differs from Region N's, using the boundary types and the role of the ocean.",
-    "choices": [
-      "The difference exists because Region M's boundary is transform while Region N's is convergent, which means Region M is positioned on the coast where tsunamis can occur, while Region N's inland position provides complete protection from all water-related natural hazards",
-      "Region M experiences more frequent earthquakes because it is located on the coast where the weight of ocean water adds additional pressure to the plates and increases the speed of their motion, and Region N has fewer total hazards because it is inland where thicker continental rock prevents both earthquakes and volcanic activity from happening",
-      "Region M sits on a younger boundary that continues to produce volcanoes and tsunamis, while Region N sits on an older boundary where all volcanic energy has already been used up and now only earthquakes occur without any other types of hazards happening at all",
-      "Region M sits on an oceanic-continental subduction zone at the coast, where a sinking oceanic plate builds a volcanic arc and can displace the ocean water above it to create tsunamis. Region N sits on a continent-to-continent convergent boundary far from any ocean, so it produces earthquakes from the collision but no volcanic arc and no tsunami risk."
-    ],
-    "answer": "D",
-    "hints": [
-      "What specific type of plate pair (oceanic with what?) produces both earthquakes and a volcanic arc at a subduction zone?",
-      "Why would an inland boundary produce no tsunami risk even if it has strong earthquakes—what ingredient is missing?"
-    ]
-  },
-  {
-    "id": "m6sci-mapping-geologic-hazards-005",
-    "loId": "m6sci.mapping-geologic-hazards",
-    "cedCode": "M6SCI-9.3",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A scientist studies two locations along the Ring of Fire in the Pacific Ocean. Location X is a coastal region where a deep trench marks the boundary between an oceanic plate and a continental plate, with the oceanic plate sinking beneath the continent. Location Y is an inland volcanic region sitting on a transform boundary. Both locations have experienced strong earthquakes in the past five years. Can you infer that both locations carry the same mix of elevated hazards? Use evidence from the boundary types and their historical patterns to explain your answer.",
-    "choices": [
-      "No. Location X is on a subduction zone that has historically produced earthquakes, volcanoes, and possibly tsunamis, while Location Y is on a transform boundary that has produced earthquakes but no volcanic arc. The boundary types carry different hazard mixes despite both having recent earthquakes.",
-      "Yes. Both locations experienced earthquakes in the recent past, so they must both carry identical risks of earthquakes and volcanic eruptions occurring in the future because they both sit within the Ring of Fire region",
-      "No. Location X is positioned on an island, so it will always face tsunami risk from any earthquake that occurs, while Location Y is positioned inland and its distance from the ocean completely eliminates any possibility of tsunami hazards regardless of how strong the earthquakes become",
-      "Yes. Both regions are located within the Ring of Fire, which means all boundaries throughout this geographic region produce exactly the same combination of earthquakes, volcanic eruptions, and tsunamis in the same pattern"
-    ],
-    "answer": "A",
-    "hints": [
-      "A recent earthquake in one place does not tell you which boundary type is responsible. What type of plate motion happens at each boundary?",
-      "The Ring of Fire includes different boundary types within it. Does every part of the Ring produce the same hazards?"
-    ]
-  },
-  {
-    "id": "m6sci-mapping-geologic-hazards-006",
-    "loId": "m6sci.mapping-geologic-hazards",
-    "cedCode": "M6SCI-9.3",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A region called Zone W sits directly on a coastal convergent boundary where an oceanic plate has been moving toward a continental plate for millions of years. The historical record shows frequent earthquakes and an active volcanic arc, and geologists have documented several tsunamis triggered by undersea earthquakes there. Now consider a hypothetical scenario: suppose a massive earthquake occurs in Zone W tomorrow and causes significant damage. A resident claims this means Zone W is now 'safer' because the region has 'released its energy' and will not experience another major earthquake for many years. Using what you know about hazards, boundaries, and the historical record, explain whether this claim is scientifically sound.",
-    "choices": [
-      "The claim is sound because historical earthquake records from the distant past are no longer useful for predicting future hazards in a location after a major recent event, since the patterns that applied for millions of years are now completely replaced by new hazard conditions",
-      "The claim is not sound. The boundary that caused the earthquake is still in place and still actively closing the distance between the plates. The historical record from millions of years shows repeated earthquakes on this boundary, so one event does not change the region's long-term elevated risk. The boundary itself has not gone anywhere.",
-      "The claim is sound because one large earthquake completely empties the stress that has built up along the entire boundary, which causes the plates to temporarily stop moving for several years and reduces all types of hazard risk until stress begins accumulating again over an extended period of time",
-      "The claim is partially sound because the earthquake released all of the stress that was concentrated at this particular location on the boundary, which makes this spot safer than it was before, while other sections of the same boundary still maintain elevated risk from their own accumulated stress"
-    ],
-    "answer": "B",
-    "hints": [
-      "Does an event 'using up' hazard energy match what the lesson says about elevated risk being based on the boundary type that does not go away?",
-      "What causes the earthquakes at this boundary: a one-time release of energy, or the ongoing motion of plates that are continuously closing the distance?"
-    ]
-  },
-  {
     "id": "m6sci-forecasting-preparing-for-weather-hazards-001",
     "loId": "m6sci.forecasting-and-preparing-for-weather-hazards",
     "cedCode": "M6SCI-9.4",
@@ -453,6 +339,120 @@
     "hints": [
       "The key evidence is not just that flooding has happened; it is that it has happened the same way at the same location every time rainfall reaches a certain level.",
       "If floodwater depth cannot be reliably judged from inside a car, and the historical record shows this bridge consistently floods at this rainfall level, what does that mean for leaving the decision to individual drivers?"
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-001",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A geologist describes a location as having an 'elevated risk' of earthquakes. What does this term mean based on the historical record and plate boundary evidence?",
+    "choices": [
+      "That location has experienced repeated earthquakes in the past due to an active plate boundary there, making future earthquakes more likely than in places far from boundaries.",
+      "A major earthquake is certain to strike that location within the next few years based on historical patterns and current plate motion measurements because stress accumulates in predictable ways.",
+      "A single earthquake occurred there once, so another one is now overdue because plate stress builds up in predictable cycles at that boundary, making it statistically inevitable soon.",
+      "The location sits on a plate boundary where earthquakes have occurred before, but they are just as rare as anywhere else on Earth because plates move so slowly that stress releases infrequently."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what 'elevated' means — higher than something else, not certain or guaranteed.",
+      "Elevated risk is a chance based on what has repeatedly happened before, not a prediction of when an earthquake will strike."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-002",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A region sits along a transform boundary where two plates slide past each other. The region has a two-hundred-year record of frequent earthquakes. Based on how transform boundaries work, what else should you expect the hazard record to show?",
+    "choices": [
+      "Frequent volcanic eruptions occurring at the same locations as the earthquakes.",
+      "Little to no volcanic activity at the boundary itself, despite the frequent earthquakes.",
+      "A chain of active volcanoes running parallel to the fault line.",
+      "Tsunamis triggered by the earthquakes every few decades."
+    ],
+    "answer": "B",
+    "hints": [
+      "California's San Andreas Fault is a transform boundary — what kinds of hazards does it produce?",
+      "Not all plate boundaries produce volcanoes — the type of boundary and how the plates move matter."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-003",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A coastal city lies directly above a subduction zone where an oceanic plate is being forced beneath a continental plate. Over the last three hundred years, records show frequent earthquakes and an active volcanic arc in the mountains behind the city. The city council is debating whether to build a tsunami-warning system. Based on how tsunamis form at subduction zones, should they include a tsunami risk in their planning?",
+    "choices": [
+      "No, because subduction zones produce only earthquakes and volcanoes through friction and melting, but the vertical motion of plates does not disturb water.",
+      "No, because tsunamis only occur at transform boundaries where plates slide horizontally past each other, not at convergent boundaries where they collide.",
+      "Yes, because earthquakes on coastal subduction zones can suddenly shift the seafloor and displace the ocean water above it.",
+      "Yes, but only if the volcanic eruptions in the mountains happen to trigger the tsunami directly through ash fall into the ocean."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what happens to the ocean floor during a large earthquake on an underwater plate boundary.",
+      "When the seafloor suddenly moves at a subduction zone, what happens to the water sitting above it?"
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-004",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two mountainous regions both sit on convergent boundaries where the distance between plates is shrinking. Region P has a historical record of intense, frequent earthquakes but no active volcanic arc. Region Q has a similar history of frequent earthquakes plus a well-established chain of active volcanoes. Both regions are hundreds of kilometers inland, far from any ocean. Explain why Region Q has volcanoes while Region P does not, and explain why neither region carries a tsunami risk.",
+    "choices": [
+      "Region Q must be younger geologically, so its volcanoes have not cooled yet, while Region P is older and its volcanoes have stopped; neither has tsunami risk because both are far from the ocean where water cannot be displaced by land-based movement.",
+      "Region Q must have a more active boundary with stronger earthquakes that cause melting of rock, while Region P has weaker earthquakes that do not generate magma; neither would generate tsunamis because the ocean is not present at these inland locations to be displaced.",
+      "Region P's earthquakes are not strong enough to produce volcanoes through rock melting, while Region Q's stronger earthquakes create enough heat and pressure for magma formation; both regions have no tsunami risk because tsunamis require an ocean surface above the plate boundary that can be displaced.",
+      "Region Q sits on a subduction zone where an oceanic plate is being forced beneath a continental plate, while Region P sits where two continental plates collide; neither has tsunami risk because an inland earthquake cannot displace an ocean that is not there."
+    ],
+    "answer": "D",
+    "hints": [
+      "When two continental plates collide, different things happen than when an oceanic plate slides beneath a continental plate.",
+      "An inland region, no matter how strong its earthquakes, cannot produce a tsunami because there is no ocean body present to be displaced."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-005",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student reads that Japan and Indonesia both experience frequent earthquakes and tsunamis. The student incorrectly concludes that all regions with frequent earthquakes must also have tsunamis. Using what actually triggers a tsunami at a plate boundary, explain what mistake the student made and what additional condition must be present for an earthquake to produce a tsunami.",
+    "choices": [
+      "The student did not consider that Japan and Indonesia are island nations; a tsunami can only form when an earthquake shifts the seafloor suddenly, which requires a coastal subduction zone where the ocean sits above the boundary.",
+      "The student ignored that earthquakes occur at many boundary types and not all have water above them; a tsunami requires the seafloor to suddenly shift underwater at a location where a large ocean body is present directly above the plate boundary.",
+      "The student assumed all earthquakes happen at coastlines; a tsunami requires the earthquake to occur specifically at a subduction zone located beneath an ocean, where the sudden movement of the seafloor displaces the water column above it.",
+      "The student forgot that transform boundaries also produce earthquakes but no volcanoes; a tsunami requires the earthquake to displace a large volume of ocean water at a coastal convergent boundary where oceanic plates meet continents."
+    ],
+    "answer": "A",
+    "hints": [
+      "Both Japan and Indonesia sit on subduction zones at the edge of the Pacific — what do they have in common that the Himalayas do not?",
+      "A tsunami forms when the seafloor suddenly moves — the ocean has to be sitting directly above the plate boundary for the water to be displaced."
+    ]
+  },
+  {
+    "id": "m6sci-mapping-geologic-hazards-006",
+    "loId": "m6sci.mapping-geologic-hazards",
+    "cedCode": "M6SCI-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A geological survey maps four regions. Region 1: coastal, oceanic-continental subduction zone, two-hundred-year record of earthquakes and volcanoes. Region 2: inland, continent-to-continent convergent boundary, five-hundred-year record of earthquakes only. Region 3: coastal, oceanic-continental subduction zone, one-hundred-year record of earthquakes only, no eruptions yet. Region 4: coastal, transform boundary, three-hundred-year record of earthquakes only. A city planner is deciding which three of these regions most urgently need separate warning systems for both earthquakes AND tsunamis. Which three regions should receive both systems, and explain why the fourth region should not?",
+    "choices": [
+      "Regions 1, 2, and 3 should receive both systems because they all sit on convergent boundaries and have long historical records; Region 4 should not because its transform boundary does not produce the full range of hazards.",
+      "Regions 1, 3, and 4 should receive both systems because they are all coastal; Region 2 should not because it is inland and cannot produce tsunamis, even though it does sit on a convergent boundary.",
+      "Regions 1, 2, and 4 should receive both systems because they have the longest records overall; Region 3 should not because it has not produced eruptions yet, so it may not be as hazardous.",
+      "Regions 1 and 3 should receive both systems; Region 4 should only receive an earthquake system; Region 2 should only receive an earthquake system because the specific combination of coastal location and oceanic-continental subduction zone is needed for tsunami risk, and transform boundaries do not produce tsunamis."
+    ],
+    "answer": "B",
+    "hints": [
+      "Coastal location is necessary for tsunami risk because the ocean above must be displaced — which regions are coastal?",
+      "Think about which of the coastal regions can actually produce large undersea earthquakes that shift the seafloor — what type of boundary does that, and which coastal region does not have it?"
     ]
   }
 ]

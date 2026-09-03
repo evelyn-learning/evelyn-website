@@ -1,119 +1,5 @@
 [
   {
-    "id": "m6geo-coastal-connecting-landforms-001",
-    "loId": "m6geo.coastal-and-connecting-landforms",
-    "cedCode": "M6GEO-4.2",
-    "difficulty": 1,
-    "responseFormat": "mcq",
-    "problemText": "A piece of land has water touching all of its edges on every side. It is not connected to any other land. What is this landform called?",
-    "choices": [
-      "Isthmus",
-      "Peninsula",
-      "Island",
-      "Coast"
-    ],
-    "answer": "C",
-    "hints": [
-      "Trace the entire edge of this land with your finger. What do you find along every part of that edge?",
-      "The definition says this landform has no connection to any larger landmass at all."
-    ]
-  },
-  {
-    "id": "m6geo-coastal-connecting-landforms-002",
-    "loId": "m6geo.coastal-and-connecting-landforms",
-    "cedCode": "M6GEO-4.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A narrow strip of land has ocean water running along both its north and south edges for its entire length. At its western end, the strip widens into a large continent. At its eastern end, the strip widens into a completely different, separate continent. Is this strip an isthmus or a peninsula?",
-    "choices": [
-      "A peninsula, because it is a narrow strip of land with water on at least one side throughout its length",
-      "A peninsula, because it widens into a continent only at one of its two ends",
-      "An isthmus, because the water surrounds it on both of its long sides and land appears at both ends",
-      "An isthmus, because it has water on both long sides and land at both ends"
-    ],
-    "answer": "D",
-    "hints": [
-      "Use the one-question check: does the narrow strip lead to more land at its far end, or does it leave you surrounded by water?",
-      "An isthmus connects two land areas, while a peninsula dead-ends in water. What happens at each end of this strip?"
-    ]
-  },
-  {
-    "id": "m6geo-coastal-connecting-landforms-003",
-    "loId": "m6geo.coastal-and-connecting-landforms",
-    "cedCode": "M6GEO-4.2",
-    "difficulty": 2,
-    "responseFormat": "mcq",
-    "problemText": "A mapmaker describes a piece of land in her invented region. Water touches its northern, eastern, and southern edges. Its western edge is attached to a much larger area of land with no water breaking the connection. Which landform is being described?",
-    "choices": [
-      "A peninsula",
-      "An isthmus",
-      "An island",
-      "A coast"
-    ],
-    "answer": "A",
-    "hints": [
-      "Count how many sides have water and how many sides have land connection. Does water touch most sides or all sides?",
-      "This landform reaches out into water but stays attached on one side to a larger landmass."
-    ]
-  },
-  {
-    "id": "m6geo-coastal-connecting-landforms-004",
-    "loId": "m6geo.coastal-and-connecting-landforms",
-    "cedCode": "M6GEO-4.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "Two narrow strips of land are described below. Strip A has water on both its long sides but leads to more land at both ends. Strip B has water on both its long sides but leads to more land at one end and runs out into open ocean at the other end. Which strip is an isthmus, and why does the other strip fail to be one?",
-    "choices": [
-      "Strip B is an isthmus because it has water on both long sides and connects to at least one larger landmass; Strip A is a peninsula because one end does not connect to any land",
-      "Strip A is an isthmus because both ends lead to land; Strip B is a peninsula because one end reaches water instead of land",
-      "Strip B is an isthmus because it has water on two sides and touches two continents; Strip A fails because it is too narrow to be counted as land",
-      "Strip A is a peninsula because it is narrower; Strip B is an island because it is surrounded by water on both long sides and at one end"
-    ],
-    "answer": "B",
-    "hints": [
-      "An isthmus connects two land areas, not just one. Check the far end of each strip carefully.",
-      "A peninsula dead-ends in water on all sides except one. Which strip matches that definition better?"
-    ]
-  },
-  {
-    "id": "m6geo-coastal-connecting-landforms-005",
-    "loId": "m6geo.coastal-and-connecting-landforms",
-    "cedCode": "M6GEO-4.2",
-    "difficulty": 3,
-    "responseFormat": "mcq",
-    "problemText": "A student says, 'An island has no coast, because a coast is only found on mainlands.' Use the lesson definition of coast to explain why this statement is wrong.",
-    "choices": [
-      "The student is correct because islands are surrounded by water, so they cannot have a coast along the edges where water meets land",
-      "The student is wrong because coast names wherever land meets an ocean or sea, and a peninsula has a coast, so the same must be true for islands",
-      "Coast names wherever land meets an ocean or a sea, so an island has a coast running all the way around it because water touches every side",
-      "The student is partially correct because coasts are found on mainlands and peninsulas, but islands have edges called shorelines instead of coasts"
-    ],
-    "answer": "C",
-    "hints": [
-      "Coast answers a different question than island, peninsula, and isthmus. It names a place, not a shape.",
-      "Think about what the word coast means: the edge where land meets an ocean or sea. Does an island have such an edge?"
-    ]
-  },
-  {
-    "id": "m6geo-coastal-connecting-landforms-006",
-    "loId": "m6geo.coastal-and-connecting-landforms",
-    "cedCode": "M6GEO-4.2",
-    "difficulty": 4,
-    "responseFormat": "mcq",
-    "problemText": "A geography student is shown three different landforms in her region and must sort them correctly. Landform X is a narrow strip with water on both long sides and land at both ends. Landform Y is reached only by crossing water no matter which direction you come from. Landform Z touches the ocean but is attached to a larger landmass on one side and surrounded by water on three sides. The student also needs to name the edge running along the ocean for each landform. Which pairing is completely correct?",
-    "choices": [
-      "X is a peninsula, Y is an island, Z is an isthmus; all three have coasts along their ocean edges",
-      "X is a peninsula, Y is an island, Z is an isthmus; only Y has a coast all the way around",
-      "X is an isthmus, Y is an island, Z is an isthmus; only X and Y have coasts",
-      "X is an isthmus, Y is an island, Z is a peninsula; all three have coasts along their ocean edges"
-    ],
-    "answer": "D",
-    "hints": [
-      "Assign X, Y, and Z to their landforms using the one-question check: what is at the far end, and how many sides are attached to land?",
-      "Remember that coast is not the same list as the three shapes. Every landform that touches an ocean or sea has a coast somewhere along that edge."
-    ]
-  },
-  {
     "id": "m6geo-major-water-feature-vocabulary-001",
     "loId": "m6geo.major-water-feature-vocabulary",
     "cedCode": "M6GEO-4.3",
@@ -342,22 +228,136 @@
     ]
   },
   {
+    "id": "m6geo-coastal-connecting-landforms-001",
+    "loId": "m6geo.coastal-and-connecting-landforms",
+    "cedCode": "M6GEO-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A piece of land has water touching it on every single edge—north, south, east, and west. It is not connected to any other land at all. What is this landform called?",
+    "choices": [
+      "Isthmus",
+      "Peninsula",
+      "Island",
+      "Coast"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what happens when you trace the entire edge of this piece of land.",
+      "This landform has no connection to any larger landmass, so you must cross water no matter which direction you approach it from."
+    ]
+  },
+  {
+    "id": "m6geo-coastal-connecting-landforms-002",
+    "loId": "m6geo.coastal-and-connecting-landforms",
+    "cedCode": "M6GEO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Geographers are studying a made-up landform in the country of Solaria. The landform has water along its northern edge, water along its southern edge, and water along its eastern edge. On its western edge, it connects directly to the rest of Solaria with no water breaking that connection. Based on the description of how water touches this landform, which term best describes it?",
+    "choices": [
+      "Coast",
+      "Isthmus",
+      "Island",
+      "Peninsula"
+    ],
+    "answer": "D",
+    "hints": [
+      "Count how many sides have water touching them and how many sides connect to a larger landmass.",
+      "A peninsula has water on most sides but stays attached to a larger area of land on one side."
+    ]
+  },
+  {
+    "id": "m6geo-coastal-connecting-landforms-003",
+    "loId": "m6geo.coastal-and-connecting-landforms",
+    "cedCode": "M6GEO-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A narrow strip of land in the fictional region of Meridian has water running along both its north and south edges for its entire length. At its western end, the strip widens into a large area of land. At its eastern end, the strip widens into a completely separate country. What landform is this narrow strip?",
+    "choices": [
+      "Isthmus",
+      "Peninsula",
+      "Island",
+      "Coast"
+    ],
+    "answer": "A",
+    "hints": [
+      "An isthmus connects two larger areas of land at its ends, not one.",
+      "Ask yourself: does this strip lead to more land at both ends, or does it dead-end in water at one end?"
+    ]
+  },
+  {
+    "id": "m6geo-coastal-connecting-landforms-004",
+    "loId": "m6geo.coastal-and-connecting-landforms",
+    "cedCode": "M6GEO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two students are arguing about a fictional landform. Student A says it is a peninsula because it has a coast running along its water-facing sides. Student B says it cannot be a peninsula because it has water all the way around it. Which student is using the correct reasoning, and why?",
+    "choices": [
+      "Student A is wrong because having a coast does not determine whether a landform is a peninsula; Student B is right that water all the way around means it is an island, not a peninsula.",
+      "Student B is wrong because coast is a different concept from peninsula; both islands and peninsulas have coasts wherever they meet an ocean.",
+      "Student A is right because coasts are found only on peninsulas, not on islands.",
+      "Student B is right because any landform with water all the way around it is called a coast."
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that coast names the edge where land meets an ocean or sea—it is not the same kind of definition as peninsula, island, or isthmus.",
+      "A peninsula is defined by having water on most sides but staying attached to a larger landmass on one side, not by whether it has a coast."
+    ]
+  },
+  {
+    "id": "m6geo-coastal-connecting-landforms-005",
+    "loId": "m6geo.coastal-and-connecting-landforms",
+    "cedCode": "M6GEO-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A narrow strip of land in the country of Arkmore has ocean water running along both its long sides. At one end it widens into a large area of land that is part of Arkmore. At the other end it widens into a separate country. A student claims this strip is a peninsula. Explain why this claim is incorrect and name the correct landform.",
+    "choices": [
+      "The claim is incorrect because a peninsula must have water on all sides except one, but this strip only has water on two sides; the correct landform is an isthmus.",
+      "The claim is incorrect because peninsulas do not have separate countries at their ends; the correct landform is a coast.",
+      "The claim is incorrect because this strip connects two land areas instead of dead-ending in water at its far end; the correct landform is an isthmus.",
+      "The claim is incorrect because the strip has water on two sides instead of three; the correct landform is an island."
+    ],
+    "answer": "C",
+    "hints": [
+      "A peninsula dead-ends in water on every direction except the one it is attached by; this strip has land at both ends, not water at one end.",
+      "Use the one-question check: does this narrow strip lead to more land at its far end, or leave you surrounded by water there instead?"
+    ]
+  },
+  {
+    "id": "m6geo-coastal-connecting-landforms-006",
+    "loId": "m6geo.coastal-and-connecting-landforms",
+    "cedCode": "M6GEO-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three separate landforms exist in a fictional region. Landform X has water on three of its four sides and remains attached to a continent on the fourth side. Landform Y is a narrow strip with water on both its long sides and separate, larger areas of land at each end. Landform Z has water on every edge with no attachment to any other land. A geographer states that landforms X and Z both have coasts, but Y does not. Is this statement correct? Explain your reasoning using what defines each landform.",
+    "choices": [
+      "The statement is correct because Y is too narrow to have a coast, while X and Z both touch oceans.",
+      "The statement is incorrect because Z is an island with no connection to any ocean, so it cannot have a coast.",
+      "The statement is correct because coasts are found only on continents and peninsulas, not on islands or isthmuses.",
+      "The statement is incorrect because all three landforms have coasts wherever they meet an ocean or sea, regardless of their shape or how they attach to other land."
+    ],
+    "answer": "D",
+    "hints": [
+      "Coast answers a different question than the other three words—it names the edge itself, not a shape defined by how much water surrounds the land.",
+      "Remember that X is a peninsula, Y is an isthmus, and Z is an island. Does every one of these meet an ocean or sea somewhere along its edge?"
+    ]
+  },
+  {
     "id": "m6geo-major-landform-vocabulary-001",
     "loId": "m6geo.major-landform-vocabulary",
     "cedCode": "M6GEO-4.1",
     "difficulty": 1,
     "responseFormat": "mcq",
-    "problemText": "A landform has a flat surface across a wide area and rises far above the land next to it. What is this landform called?",
+    "problemText": "A landform rises steeply from the ground around it and comes to a narrow, pointed peak high above everything else nearby. What is this landform called?",
     "choices": [
-      "A plain",
+      "A hill",
+      "A mountain",
       "A plateau",
-      "A valley",
-      "A hill"
+      "A plain"
     ],
     "answer": "B",
     "hints": [
-      "Think about the two questions: does it stand HIGH or LOW, and is its top FLAT or does it narrow to a point?",
-      "This one is high AND flat on top, just like a plateau is described."
+      "Think about the two questions: does it stand HIGH, and does it come to a POINT or stay FLAT on top?",
+      "A mountain is the landform that rises steeply to a narrow peak."
     ]
   },
   {
@@ -366,17 +366,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "Picture a piece of land that rises only slightly above the ground around it and has smooth, rounded slopes instead of steep, jagged sides. The top does not form a sharp point. Which landform does this describe?",
+    "problemText": "Two pieces of invented land both stand above the country around them. The first rises steeply to a narrow ridge. The second rises much less steeply and has slopes that curve gently, coming nowhere near a point. Which of these two is a mountain?",
     "choices": [
-      "A mountain",
-      "A plateau",
-      "A hill",
-      "A plain"
+      "Both of them are mountains because they both stand above their surroundings",
+      "The second one, because it is taller than the first",
+      "The first one, because it rises steeply to a narrow ridge",
+      "Neither one is a mountain; they are both hills"
     ],
     "answer": "C",
     "hints": [
-      "Does this rise HIGH and steep, or not as high with gentler slopes?",
-      "Mountains come to narrow peaks; this one has rounded slopes, so it must be the lower, gentler landform."
+      "Standing high is not enough to be a mountain. What is different about how each one rises?",
+      "A mountain must be both HIGH and have a STEEP, NARROW shape that comes to a point or ridge."
     ]
   },
   {
@@ -385,17 +385,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 2,
     "responseFormat": "mcq",
-    "problemText": "A student sees a strip of lowland sandwiched between two mountain ranges on either side. What defines this strip as a valley?",
+    "problemText": "Imagine a wide stretch of ground that is flat or gently rolling from one side to the other, with almost no change in height anywhere across it. Nothing nearby stands taller than this stretch. What landform is this?",
     "choices": [
-      "It is low ground that has mountains nearby but not always directly on both sides of it",
-      "It is surrounded by mountains with steep peaks that rise above it on all edges",
-      "It has a completely flat and level surface with water running through the middle",
-      "It is low ground that sits between higher land on both sides"
+      "A plateau",
+      "A hill",
+      "A valley",
+      "A plain"
     ],
     "answer": "D",
     "hints": [
-      "A valley's definition depends on what sits NEXT to it, not just how low it is.",
-      "Remember: a valley is squeezed between higher land on two sides, which is what makes it a valley and not just any low ground."
+      "A plain stays LOW compared to the land around it. Which choice fits land that is flat and does not stand high?",
+      "The key word is 'flat or gently rolling' across a wide area with very little change in elevation."
     ]
   },
   {
@@ -404,17 +404,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "Two regions both stand well above the land surrounding them. Region X has a flat top that stretches for many miles, with edges that drop steeply. Region Y narrows to a single sharp peak and climbs more steeply than Region X. Which region is which landform, and why must you check both height AND shape to tell them apart?",
+    "problemText": "Three regions of invented land are described below. Region X is a long, low strip of ground with much higher ridges on both its left and right sides. Region Y is flat across its whole width, stands well above the country around it, but has steep edges where it drops away suddenly. Region Z is a gently rounded rise of land that sticks up above its surroundings, but only a little and without coming to a point. Which region is a plateau, which is a valley, and which is a hill?",
     "choices": [
-      "Region X is a plateau and Region Y is a mountain; you must check both because two landforms can stand high but have different top shapes",
-      "Region X is a hill and Region Y is a mountain; you must check both because height determines the name while shape determines the slope angle",
-      "Region X is a mountain and Region Y is a plateau; you must check both because steepness of climb is what tells them apart from all other landforms",
-      "Region X is a plateau and Region Y is a hill; you must check both because the number of peaks on top is what separates high landforms from each other"
+      "X is a valley, Y is a plateau, Z is a hill",
+      "X is a plateau, Y is a valley, Z is a hill",
+      "X is a valley, Y is a plateau, Z is a plain",
+      "X is a hill, Y is a plateau, Z is a valley"
     ],
     "answer": "A",
     "hints": [
-      "Both regions stand high, so HEIGHT alone won't tell them apart. What is different about their TOPS?",
-      "A flat top makes a plateau; a narrow peak makes a mountain. You need both the height question AND the shape question to name them correctly."
+      "Remember that a valley is defined by what sits NEXT to it: higher land on both sides.",
+      "A plateau must be HIGH on top but FLAT across its surface; a hill must be less high with gentler, rounded slopes."
     ]
   },
   {
@@ -423,17 +423,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 3,
     "responseFormat": "mcq",
-    "problemText": "A student says: 'A plain is the same thing as a valley because both are flat and level.' Explain why this statement is wrong by describing what makes a valley different from a plain in terms of what lies next to it.",
+    "problemText": "A student describes a landform as 'high ground with flat land on top, so it must be the same thing as a mountain.' Explain what is wrong with this reasoning and name the correct landform.",
     "choices": [
-      "A valley is surrounded by higher land on both sides that defines its shape, whereas a plain is simply a wide flat area and requires no specific features bordering it",
-      "A valley has higher land on both sides that borders it, while a plain is a wide stretch with no requirement for what sits next to it",
-      "A plain is defined by being surrounded by valleys on multiple sides, whereas a valley is only recognized when it appears between exactly two hills of equal height",
-      "A valley must contain running water to be called a valley, but a plain can be either wet or dry depending on the season and climate region"
+      "The student is correct; any high ground with a flat top is a mountain",
+      "The student checked only one property; the flat top actually makes this a plateau, not a mountain",
+      "The student is wrong because mountains are always narrow, but this describes a wide flat area, so it is a plain",
+      "The student is wrong because high, flat ground is always a hill, not a mountain"
     ],
     "answer": "B",
     "hints": [
-      "Both can be flat, so flatness is not what makes them different. What is the key property of what borders a valley?",
-      "A valley is DEFINED by the higher land on both its sides. A plain is just a wide, level stretch and is NOT defined by what surrounds it."
+      "A mountain must narrow to a point or ridge, not stay flat. What landform is high but has a flat top?",
+      "Both height and surface shape matter. High plus flat surface equals plateau, not mountain."
     ]
   },
   {
@@ -442,17 +442,17 @@
     "cedCode": "M6GEO-4.1",
     "difficulty": 4,
     "responseFormat": "mcq",
-    "problemText": "An imaginary continent has four different landforms. Landform A stands very high with steep sides and comes to a narrow rocky peak. Landform B is high and flat on top with steep drop-offs at its edges. Landform C rises gently above its surroundings with rounded slopes and moderate height. Landform D stretches for hundreds of miles with almost no change in elevation, and nothing around it stands much higher. One student claims that A, B, and C are all the same because they all stand above their surroundings, while D is different because it does not. Explain why this claim misses an important property that actually makes three of these landforms different from each other, even though they all stand high.",
+    "problemText": "An invented continent has four distinct regions described only in words, with no map or pictures. In the north, the land is broad and level, with only small ups and downs scattered across it, and nothing stands noticeably higher than anything else. In the east, the ground drops down sharply to form a narrow low corridor, with tall ridges rising on either side of this corridor. In the west, a large area sits well above all the surrounding country, spreads flat across its top for many miles, and has edges that fall away steeply to the land below. In the center, the terrain slopes up on all sides but reaches a sharp, rocky point at its highest spot. Using only the two-question method taught (height and surface shape), name all four landforms and explain why one of them is NOT a mountain even though it has the most dramatic rise in the center.",
     "choices": [
-      "The claim is wrong because A is a mountain with a peak, B is a plateau with a flat top, C is a hill with rounded slopes, and D is a plain with no high points, so comparing only height ignores the shape property that defines each",
-      "The claim is wrong because the shape of the TOP or SURFACE is the second property that must be checked; A has a point, B has a flat top, C has rounded slopes, so they are three different landforms",
-      "The claim is wrong because A, B, and C all require checking a second property beyond height—whether the top is pointed, flat, or rounded—whereas D is determined by height alone since it has no surface variation",
-      "The claim is wrong because A stands very high with steep sides while B and C stand at moderate heights, making them different categories even though all three are above their surroundings"
+      "North: plain, East: valley, West: plateau, Center: mountain. The center IS a mountain because it rises to a point, and mountains are defined by coming to a sharp peak like this one does.",
+      "North: plain, East: plateau, West: valley, Center: mountain. The east region forms a valley with steep ridge walls on both sides of the low corridor, making it match the valley description better than a plateau.",
+      "North: plain, East: valley, West: plateau, Center: hill. The center is not a mountain because mountains must be taller and steeper than a hill, and this region is in the center of the continent.",
+      "North: hill, East: valley, West: plateau, Center: mountain. The north region is broad and level with only small ups and downs, making it a plain rather than a hill which would have more pronounced elevation."
     ],
-    "answer": "B",
+    "answer": "C",
     "hints": [
-      "The student checked only one question: does it stand high? What is the SECOND question from the lesson that must also be answered?",
-      "Remember the two-question routine: high or low compared to surroundings, AND is the top flat or does it come to a point? Check how A, B, and C are different in their second property."
+      "Apply the two questions to EACH region separately: Does it stand HIGH or stay LOW, and is its surface FLAT or does it come to a POINT? Do not let the word 'dramatic' or location trick you.",
+      "A mountain rises steeply to a narrow peak and is FAR higher than the land around it. Reread what is actually said about the center region's height compared to the land 'around' it."
     ]
   }
 ]
