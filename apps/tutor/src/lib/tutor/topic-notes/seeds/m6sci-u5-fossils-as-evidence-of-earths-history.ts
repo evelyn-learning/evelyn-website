@@ -1,0 +1,78 @@
+/**
+ * Grade 6 Science — Unit 5 CED 5.3: Fossils as Evidence of Earth's History.
+ *
+ * Auto-extracted from the corresponding lesson plan
+ * (evelyn.ms.m6sci.fossils-as-evidence-of-earths-history.v1). Hand-edit freely after extraction; bump
+ * baselineVersion when you make material changes.
+ *
+ * Pointer-gen pass (scripts/gen-topic-notes-pointers.ts) enriches the
+ * pointers section via Opus when run on this baseline.
+ */
+
+import type { TopicNotesBaseline } from '../types';
+
+export const BASELINE_M6SCI_U5_FOSSILS_AS_EVIDENCE_OF_EARTHS_HISTORY: TopicNotesBaseline = {
+  baselineId: 'evelyn.ms.m6sci.fossils-as-evidence-of-earths-history.v1',
+  course: 'Grade 6 Science',
+  cedUnit: 5,
+  cedTopic: '5.3',
+  cedTitle: `Fossils as Evidence of Earth's History`,
+  planId: 'evelyn.ms.m6sci.fossils-as-evidence-of-earths-history.v1',
+  baselineVersion: 1,
+  lastUpdatedAt: '2026-09-03',
+  sources: [{ type: 'plan', planId: 'evelyn.ms.m6sci.fossils-as-evidence-of-earths-history.v1' }],
+  theory: [
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', content: `AN INDEX FOSSIL IS A TIME MARKER, AND THREE THINGS MAKE ONE USEFUL. It has to have lived during a narrow slice of geologic time, so that finding it narrows a window down instead of leaving it wide open. It has to have been spread across a large area while it was alive, so its fossil can turn up at many different locations far apart. And it has to look distinctive enough that it will not be confused with a similar-looking species from a different time. A fossil missing any one of those three is a weak choice for dating, even if it is a real and useful fossil for some other purpose.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', content: `THE TIME RANGE IS ALREADY KNOWN BEFORE YOU EVER FIND THE FOSSIL. Scientists work out how long a species existed by using absolute dating -- the method from the previous lesson -- on other rock that already contains that fossil. Once a species' known range is pinned down that way, every later discovery of that same fossil can borrow the answer: if the fossil is present in a layer, that layer must have formed sometime during the species' known range. No new radiometric measurement has to be taken on every layer that turns up.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', content: `AN INDEX FOSSIL CAN LINK LAYERS THAT ARE NOT EVEN CONNECTED. The order rule from the rock-layers lesson only works within a single, unbroken stack you can see start to finish. An index fossil is not limited that way: if the exact same index fossil species turns up in two rock layers on opposite sides of the world, with no visible layer joining them, both layers must have formed during that species' shared time range. Matching separated layers by age this way is called correlation, and it is the one thing an index fossil can do that position alone cannot.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', content: `AN INDEX FOSSIL STILL GIVES A WINDOW, NEVER ONE EXACT YEAR. If a species is known to have lived between two absolute dates, a layer holding its fossil could have formed at any point inside that window -- not necessarily in the middle, and not at one precise year. Getting a single exact age still requires radiometric dating of the rock itself, which stays the previous lesson's method, not this one.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', content: `WHAT AN INDEX FOSSIL DOES NOT TELL YOU. Finding the same fossil species in two layers says nothing about whether the two locations had the same environment at the time -- that is a separate question this lesson does not answer. It also says nothing about whether, or how, the species itself changed in appearance, grew more or less common, or eventually disappeared. Those are questions about how living things change over time, and answering them belongs to a different course. Here, a fossil is read only as a time marker, the same way a coin's stamped design is read only as a clue to when it was minted, never as a story about the coin.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', content: `A FOSSIL CAN BE A POOR CHOICE FOR DATING, EVEN A REAL ONE. A species that lived across almost all of Earth's fossil-bearing history narrows nothing down, because its presence is consistent with nearly any layer. A species that only ever lived in one small area is not widespread enough to help correlate layers anywhere else, even if its own time range was short. And a fossil that is easy to mix up with a different species from a different time period cannot be trusted to mark a window at all, because you cannot be sure which species you are actually looking at.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', kind: 'definition', title: 'index fossil', content: `a fossil used to date the rock layer it is found in, because the species is known to have lived only during a narrow window of time, was spread across a wide area, and is easy to tell apart from other species.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', kind: 'definition', title: 'correlate', content: `to match rock layers in different, unconnected locations to the same span of time using shared evidence such as an index fossil.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', kind: 'definition', title: 'time range', content: `the span of years, already worked out using absolute dating, during which a fossil species is known to have lived.` },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', kind: 'definition', title: 'widespread', content: 'found across a large geographic area, rather than in only one small location.' },
+    { loId: 'm6sci.fossils-as-evidence-of-earths-history', kind: 'definition', title: 'distinctive', content: `having a shape or pattern clear enough that it will not be mistaken for a different species.` },
+  ],
+  methods: [
+    {
+      title: 'Worked single layer window',
+      steps: [
+        `Start from what the coiled sea-shell fossil already tells you. Other rock, dated elsewhere by absolute methods, shows this species existed only from 100 million to 94 million years ago and at no other time. If the shale contains this fossil, the shale must have formed sometime inside that window.`,
+        `Find the size of the window with simple subtraction: 100 million years ago minus 94 million years ago leaves a span of 100 - 94 = 6 million years. That is a narrow slice compared with Earth's roughly 4.6-billion-year history, which is exactly why this fossil is useful for dating instead of useless.`,
+        `Check position as a second, different kind of clue. The layer below is already known to be older than 100 million years, and the layer above is already known to be younger than 94 million years. That matches an undisturbed stack in which the shale, sandwiched between them, falls inside the 100-to-94-million-year window -- consistent with the order rule from the rock-layers lesson, even though this lesson is not the one deriving that order.`,
+        `WRONG: "This fossil means the shale is exactly 97 million years old." CORRECT: "This fossil places the shale somewhere in the six-million-year window from 100 to 94 million years ago, not at one exact year." Getting one precise year still needs radiometric dating done on the rock itself.`,
+        `Now run the two checks a science answer needs, because there is no experiment to redo here. First, three clues of different kinds agree: the fossil's own known range says the shale falls in that six-million-year window; the already-known ages of the layers above and below independently agree with that same window; and the size of the window itself, only 6 million years against Earth's 4.6-billion-year history, is exactly the kind of narrow slice a good index fossil is supposed to produce. Second, change one thing and check that the answer moves with it: if this same fossil had instead turned out to be a species known continuously from 500 million years ago to today, finding it in the shale would say almost nothing about the shale's age, because the window would cover nearly the whole fossil record. A narrow window is not a nice extra feature. It is the entire reason the fossil is useful.`,
+      ],
+      example: { problem: `A shale layer at one cliff contains fossils of a coiled sea-shell creature. Other rock, dated elsewhere using absolute dating, already shows this species lived only between about 100 million years ago and 94 million years ago, and nowhere outside that window. In the same cliff, the layer directly below the shale contains an index fossil already known to be older than 100 million years, and the layer directly above the shale contains an index fossil already known to be younger than 94 million years. What can a geologist conclude about when the shale layer formed?`, solution: `The shale layer formed sometime within the six-million-year window from 100 million to 94 million years ago -- not at one exact year -- and that conclusion is backed up by the already-known ages of the layers directly above and below it.` },
+      relatedLoIds: ['m6sci.fossils-as-evidence-of-earths-history'],
+    },
+    {
+      title: 'Worked correlating distant layers',
+      steps: [
+        `Start from the shared fossil. Both layers hold the ridged clam, and that species is already known, from absolute dating done elsewhere, to have lived only between 84 million and 80 million years ago -- a window of 84 - 80 = 4 million years. Because both layers contain it, both must have formed sometime inside that same 4-million-year window.`,
+        `This is correlation: matching the ages of two layers that are not physically connected, using a fossil they share instead of tracing rock by hand from one to the other. Correlation is what an index fossil can do that position alone cannot -- superposition only orders layers you can see stacked in one place.`,
+        `Add a second, different kind of clue: at one of the two sites, scientists have also run absolute dating directly on the rock itself, and that measured age falls inside the same 84-to-80-million-year window -- an independent check that agrees with the fossil-based one.`,
+        `Add a third kind of check: neither layer contains any other index fossil whose already-known range would rule the shared window out. If one of the layers had also held a fossil known to exist only between 40 and 35 million years ago, that would contradict the 84-to-80-million-year window and the correlation would fail. That does not happen here, so the window holds up.`,
+        `WRONG: "The same fossil in both layers means the two continents had the same environment at the time." CORRECT: "The same fossil in both layers means only that both layers formed within the same window of time. It says nothing about whether the two places looked or felt alike."`,
+        `WRONG: "The two layers must sit right next to each other in the rock record, with nothing in between." CORRECT: "The two layers only have to fall within the same known window. Nothing about a shared fossil says whether other layers formed between them somewhere else in the world."`,
+        `This lesson stops at the window of time. It does not ask whether the ridged clam itself changed in appearance between the two continents, whether it grew more or less common over those 4 million years, or what happened to it afterward. Those are questions about how living things change over time, and they belong to a different course, not this one.`,
+        `Change one thing and check that the answer moves with it: if the second continent's layer had instead contained a fossil already known to live only between 40 and 35 million years ago, the two layers could not be correlated at all, because the two fossils' known ranges do not overlap anywhere. Sharing a fossil is what makes the match work; swap in a fossil with a non-overlapping range and the match breaks immediately.`,
+      ],
+      example: { problem: `In North America, a rock layer contains fossils of an extinct ridged clam. Other studies using absolute dating show this species lived only between about 84 million years ago and 80 million years ago. Thousands of kilometers away, on a different continent, a separate rock layer -- with no visible layer connecting it to the first one -- contains fossils of that exact same ridged-clam species, and no other index fossil that would rule out that window. What can a geologist conclude about the two layers, and what can she not conclude?`, solution: `Both layers formed sometime within the shared 4-million-year window, from about 84 to 80 million years ago. The geologist cannot conclude that the two locations had the same environment, that the layers sit next to each other in the rock record, or anything about whether the species changed between them.` },
+      relatedLoIds: ['m6sci.fossils-as-evidence-of-earths-history'],
+    },
+  ],
+  pointers: [
+    { content: `Students often say "This fossil means the layer is exactly 82 million years old." — An index fossil only places a layer somewhere inside its species' known window -- here, the four-million-year span from 84 to 80 million years ago -- not at one exact year. Turning that into a single number, even the midpoint, invents precision the fossil does not provide. Getting one exact year still requires radiometric dating done on the rock itself, which stays the previous lesson's method.`, kind: 'common-error' },
+    { content: `Students often say "It also proves the ridged clam species never changed at all while it existed." — An index fossil is read only as a marker of time, the same way a coin's stamped design is read only as a clue to when it was minted, never as a story about the coin. Whether, or how, a species changed in appearance over the time it existed is a separate question that this lesson does not address at all; it belongs to a different course.`, kind: 'common-error' },
+    { content: `A good index fossil lived during a narrow span of time, was spread across a wide area, and looks distinctive enough not to be confused with another species.`, kind: 'tip' },
+    { content: `A fossil's known time range comes from absolute dating done elsewhere, on other rock that already contains it -- this lesson reads that range off the fossil rather than measuring it fresh.`, kind: 'tip' },
+    { content: `If a layer contains an index fossil, the layer formed sometime within that fossil's known window -- not necessarily in the middle, and not at one exact year.`, kind: 'tip' },
+    { content: `Correlation matches the ages of separated, unconnected rock layers using a shared index fossil -- something position alone, inside a single stack, cannot do.`, kind: 'tip' },
+    { content: `A fossil that lived across almost all of Earth's fossil-bearing history, or that is confusable with another species, narrows nothing down, even if it is a real fossil.`, kind: 'tip' },
+    { content: `A fossil that is real but only ever found in one small area is not widespread enough to help correlate layers anywhere else.`, kind: 'tip' },
+    { content: `An index fossil says nothing about whether two locations shared an environment, and nothing about whether or how the species itself changed over time -- those are separate questions this lesson does not answer.`, kind: 'tip' },
+    { content: `Getting one exact year for a layer still requires radiometric dating of the rock itself, which is the previous lesson's method, not this one.`, kind: 'tip' },
+  ],
+};

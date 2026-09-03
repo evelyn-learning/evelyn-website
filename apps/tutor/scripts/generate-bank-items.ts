@@ -337,7 +337,7 @@ ${scopeSection}Return ONLY a JSON array of ${itemsPerLo} objects, this exact sha
 [{"difficulty":1,"problemText":"...","choices":["...","...","...","..."],"answer":"A","hints":["..."]}, ...]`;
 }
 
-function validateGenItem(it: GenItem, loId: string): string[] {
+function validateGenItem(it: GenItem, loId: string, msConventions = false): string[] {
   const errs: string[] = [];
   if (![1, 2, 3, 4].includes(it.difficulty)) errs.push(`bad difficulty ${it.difficulty}`);
   if (!it.problemText || it.problemText.trim().length < 10) errs.push('problemText too short');
@@ -354,6 +354,10 @@ function validateGenItem(it: GenItem, loId: string): string[] {
     // 960 items on the first Grade 6 run, 17 of them in mathematics.
     const norm = it.choices.map((c) => c.toLowerCase().replace(/\s+/g, ' ').trim().replace(/\.$/, ''));
     if (new Set(norm).size !== norm.length) errs.push('duplicate choice text');
+    // MS banks are 4-choice by convention. A 3-choice item raises the guess
+    // rate from 25% to 33% and cannot take a rotated position, so it is a
+    // defect here even though the generic validator allows 3-5.
+    if (msConventions && it.choices.length !== 4) errs.push(`needs exactly 4 choices, got ${it.choices.length}`);
   }
   if (/\$(\d)/.test(it.problemText || '')) errs.push(`WARN ${loId} problemText has $<digit> (currency/KaTeX trap)`);
   return errs;
@@ -375,10 +379,17 @@ function validateGenItem(it: GenItem, loId: string): string[] {
  *  position ("both A and B", "none of the above") — reordering those changes
  *  their meaning. The prompt forbids them; this is the belt to that braces. */
 function rotateAnswers(items: GenItem[], targetIdx: (i: number) => number): GenItem[] {
-  const REFERENTIAL = /\b(all|none|both|either|neither) of the (above|following)\b|\b(both|and|or) [A-D]\b|\banswers? [A-D]\b/i;
+  // Two patterns, and the case rules differ on purpose. "all of the above" is
+  // prose and matches case-insensitively; a reference to a SIBLING CHOICE is a
+  // capital letter and must match case-SENSITIVELY. Folding case here made the
+  // indefinite article "a" read as choice "A", so "a hammer and a nail" looked
+  // like a cross-reference and the item was skipped: 6 of 9 skipped ELA items
+  // were this false positive, against 2 real ones in mathematics.
+  const STOCK = /\b(all|none|both|either|neither) of the (above|following)\b/i;
+  const SIBLING = /\b(?:both|and|or|answers?|options?|choices?) [A-D]\b|\b[A-D] and [A-D]\b/;
   return items.map((it, i) => {
     if (!Array.isArray(it.choices) || it.choices.length !== 4) return it;
-    if (it.choices.some((c) => REFERENTIAL.test(c))) return it;
+    if (it.choices.some((c) => STOCK.test(c) || SIBLING.test(c))) return it;
     const from = ['A', 'B', 'C', 'D'].indexOf(it.answer);
     if (from < 0) return it;
     const to = targetIdx(i);
@@ -584,26 +595,35 @@ async function main() {
 
     if (opts.msConventions && items.length) {
       items = rotateAnswers(items, targetIdx);
-      const offenders = answerCueOffenders(items);
-      if (offenders.length) {
+      // Up to two repair rounds. One round left 28.3% of ELA items with a key
+      // longer than every distractor by more than the slack, against 7.9% in
+      // mathematics — the subjects differ because a correct inference or theme
+      // statement is naturally wordier than a correct number, so the rewrite
+      // has further to travel. Two rounds is a cap, not a target: the loop
+      // stops as soon as no item exceeds the slack, and a round that fails
+      // leaves the previous round's items untouched.
+      const before = answerCueOffenders(items).length;
+      for (let round = 1; round <= 2; round++) {
+        const offenders = answerCueOffenders(items);
+        if (!offenders.length) break;
         try {
           const r = await repairAnswerCues(anthropic, model, SYSTEM, items, offenders);
           usageIn += r.usageIn;
           usageOut += r.usageOut;
-          const before = offenders.length;
-          const after = answerCueOffenders(r.items).length;
           items = r.items;
-          console.log(`  ~ ${lo.loId}: answer-cue repair ${before} -> ${after} item(s) with an over-long key`);
         } catch (e) {
-          console.log(`  ⚠️  ${lo.loId}: answer-cue repair failed (${(e as Error).message}) — keeping originals`);
+          console.log(`  ⚠️  ${lo.loId}: answer-cue repair round ${round} failed (${(e as Error).message}) — keeping previous items`);
+          break;
         }
       }
+      const after = answerCueOffenders(items).length;
+      if (before) console.log(`  ~ ${lo.loId}: answer-cue repair ${before} -> ${after} item(s) with an over-long key`);
     }
 
     const seedItems: SeedItem[] = [];
     for (let idx = 0; idx < items.length; idx++) {
       const it = items[idx];
-      const errs = validateGenItem(it, lo.loId).filter((e) => !e.startsWith('WARN'));
+      const errs = validateGenItem(it, lo.loId, opts.msConventions).filter((e) => !e.startsWith('WARN'));
       if (errs.length) {
         console.log(`  [FAIL] ${lo.loId} d${it.difficulty}: ${errs.join('; ')}`);
         continue;
