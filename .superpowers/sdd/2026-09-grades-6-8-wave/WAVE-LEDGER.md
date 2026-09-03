@@ -103,6 +103,8 @@ Cross-course findings resolved by the controller after the drafts landed:
 - 2026-09-03 late: **m8math COMPLETE** — 40/40 registered in one edit (`register-course.py` + hand-wired exemplar chains), tsc clean, `lint-ms-plans: 366 plans OK` (328 + 38; next 404/442/480). Audit: 80 MCQs, longest-answer keyed 5/80 (6%, DIAGNOSTIC — below chance; distractors were lengthened per contract, no key trimmed). Controller spot-read 6 (2.2, 3.3, 5.2, 8.2, 9.3, 10.2): all sound. Four fan-out agents were cut off by a session rate limit mid-checklist; their files were complete on disk and passed the audit; each was RESUMED via SendMessage to finish its checklist rather than re-dispatched (recommended: check disk first, resume second).
 - m8ela fan-out started (U1-U2 rows in flight).
 
+## ✅ RESUMED AND CLEARED 2026-09-04 — the pause handoff below was executed in full; see the m8ela section at the end
+
 ## ⏸ PAUSED 2026-09-03 23:xx IST — HANDOFF TO AN OPUS SESSION (Fable quota)
 
 Praveen paused the Fable session to continue in Opus. State at pause (all committed on `worktree-demo-gate`):
@@ -124,3 +126,69 @@ Praveen paused the Fable session to continue in Opus. State at pause (all commit
 4. When 40 on disk: `python3 <wave-dir>/register-course.py m8ela M8ELA <wave-dir>/m8ela-CURRICULUM.md src/lib/tutor/lesson-plan/store.ts` (registers 38, skips the 2 exemplars), then HAND-WIRE the two exemplars' `prerequisites`/`followUps` (2.2: 2.1 → 2.3; 5.3: 5.2 → 5.4), tsc, `npm run lint:ms-plans` → expect **404**. Spot-read 6 (weight to U5-U6 grammar and U8-U10 writing rows). Commit.
 5. Repeat for m8sci (exemplars 2.1, 8.1; chains 1.4→2.1→2.2 and 7.4→8.1→8.2; lint 442) and m8geo (exemplars 7.1, 1.1; chains 6.4→7.1→7.2 and 1.1→1.2; lint 480).
 6. Then banks/notes/guides per the standing command block above; the G6 ship record in memory `project_grades_6_8_wave.md` carries the deploy traps.
+
+
+## m8ela COMPLETE 2026-09-04 (Opus session, worktree `demo-gate`)
+
+**`lint-ms-plans: 404 plans OK`** — the predicted number (328 + 38 m8math + 38 m8ela). tsc clean.
+`g8-seed-audit m8ela M8ELA`: 40 plans, 120 MCQs, ALL CHECKS CLEAN. `check-course-consistency`:
+40 rows / 40 files, no missing, no orphans, both exemplar chains hand-wired (2.2: 2.1→2.3; 5.3: 5.2→5.4).
+
+Ran as four batches of ≤8 (3 checklist-repair + 29 authoring + the 8 already on disk). Commits:
+`7442208b` (batch 1) · `b8a49f16` (audit fix) · `03fc346b` (batch 2) · `8933c986` + `58abf32a` (batch 3
++ rulings) · `d606ec99` (batch 4 + registration).
+
+**DF-3 across the finished course: 37/120 keyed-longest = 30.8%** against 25% chance. Healthy in BOTH
+directions — compare m8math's 6% (inverted) and the 67-94% shipped defect the apparatus was built for.
+
+**Controller spot-read: 6 rows, 18 items, all blind-answered cold** (5.1 gerunds, 6.3 dashes, 4.4 media,
+8.3 cohesion, 9.2 precise language, 10.4 citations). Every key forced; every real-world claim checked
+(magma vs lava, inverter DC→AC, folding, MLA 9 order/punctuation, gerund vs participle, dash vs comma).
+
+### Two defects found in SIGNED material — Praveen should know
+1. **m8ela row 5.1's scope cell called "the swimming pool" a PARTICIPLE.** The pool does not swim; that
+   is a gerund used attributively, and it fails the exact job test the row teaches. The cell is
+   student-facing AND grounds the bank generator, so it would have seeded items for the lesson that
+   teaches the distinction. Corrected to "the rattling window" in curriculum, brief and seed.
+2. **The ` -- ` description convention was imported into ELA from science.** Measured: shipped ELA uses
+   the em dash in 24 descriptions and ` -- ` in ZERO; science/math are the reverse. 12 m8ela descriptions
+   were corrected back. m8math left alone — it matches its own subject.
+
+### Instrument failure #8 (fixed) — it failed in BOTH directions at once
+The audit's grade check was `/last year|next year/`, case-SENSITIVE. It flagged 11 innocent passage
+sentences across 3 seeds while MISSING three real leaks that began with a capital "Last year" — one of
+them in already-registered m8math. Narrowing it to teaching verbs then missed "Last year you FOUND the
+volume". A verb list cannot be completed, so the check is now ADVISORY: phrase + first/second-person
+learner, and it PRINTS THE SENTENCE. Three hits across 60 files, all real. Four self-tests pin it.
+The leaks are fixed to the house convention "you already know" (`Last year you learned` has zero
+precedent in the shipped corpus).
+
+### Contract rulings 16-31 added (four blocks, all in `m8ela-FANOUT-CONTRACT.md`)
+16 DF-3 is a band not a floor · 17 the SCOPE GUARD sample is an illustration, not a template ·
+18 never assert a past school year · 19 ledger a distractor's world-facts, not its false premise ·
+20 "character-for-character" governs words/order/case, not boundary punctuation · 21 dual-code rows cite
+once at the end · 22 no specimen shared between a TEACHING segment and an ITEM (narrowed after 7.1 showed
+the first version contradicted the exemplar) · 23+26 bare `WRONG:` only for non-standard English;
+otherwise the label names the criterion · 24 em dash stays in ELA descriptions · 25+29 the ledger is
+required wherever the row's SUBJECT is a claim about the world · 27 U+2026 → ASCII · 28 **the variant
+labels do NOT match a `WRONG:` grep — my error, measured: 29/40 files hit, 11 missed; use
+`grep -E 'WRONG|WEAK:|VAGUE:'`** · 30 cell→description transforms (em dash stays, U+2026 → "...",
+U+2192 → "becomes", "the student's" → "your") · 31 a row may be honestly untestable in part — row 4.4
+teaches "convey a mood" and deliberately does not test it, because a described medium cannot carry one.
+
+### What the fan-out taught this round
+- **Three of my own steering notes were wrong** (two swapped row numbers, one "you are the last row").
+  Agents caught all three from their briefs; one had already ignored me before my correction arrived.
+  Steering remains the least reliable document in the stack — the brief is authoritative, say so every time.
+- **The DF-3 inversion is a real failure mode**: two agents independently closed a keyed-longest gap by
+  growing every distractor and made the key the SHORTEST choice in every item. Ruling 16 exists for this.
+- Agents converge. Seven independently decided a vocabulary/research row needs a claim ledger despite the
+  all-fiction exemption; two independently reached the same dual-code citation convention. Convergence
+  across independent agents is the strongest signal available here that a contract rule is missing.
+
+### Next: m8sci then m8geo (2/40 each, exemplars only)
+Same procedure. m8sci exemplars 2.1, 8.1 (chains 1.4→2.1→2.2 and 7.4→8.1→8.2), expected lint **442**.
+m8geo exemplars 7.1, 1.1 (chains 6.4→7.1→7.2 and 1.1→1.2), expected lint **480**.
+⚠️ Rulings 16-31 live in the m8ela contract; 16-20 were copied into all four, **21-31 were not**. Copy the
+ones that generalise before fanning out sci/geo, and re-derive per subject anything measured on ELA —
+ruling 24 in particular is ELA-specific and its science/math answer is the opposite.
