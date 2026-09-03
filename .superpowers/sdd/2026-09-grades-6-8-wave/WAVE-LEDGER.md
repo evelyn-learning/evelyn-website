@@ -11,7 +11,7 @@ Plan: docs/superpowers/plans/2026-09-02-grades-6-8-ms-course-wave.md (main e78c0
 | m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (97.9%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 239 (97.1%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 40/40 | ✓ 366 OK | – | – | – | – | – | – |
-| m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
+| m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 11/40 on disk (8 verified, 3 checklist-pending) | – | – | – | – | – | – |
 | m8sci | ✓ (m8sci-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
 | m8geo | ✓ (m8geo-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
 
@@ -102,3 +102,25 @@ Cross-course findings resolved by the controller after the drafts landed:
 - Batch 1 (m8math U1-U2, 8 rows) dispatched 2026-09-03.
 - 2026-09-03 late: **m8math COMPLETE** — 40/40 registered in one edit (`register-course.py` + hand-wired exemplar chains), tsc clean, `lint-ms-plans: 366 plans OK` (328 + 38; next 404/442/480). Audit: 80 MCQs, longest-answer keyed 5/80 (6%, DIAGNOSTIC — below chance; distractors were lengthened per contract, no key trimmed). Controller spot-read 6 (2.2, 3.3, 5.2, 8.2, 9.3, 10.2): all sound. Four fan-out agents were cut off by a session rate limit mid-checklist; their files were complete on disk and passed the audit; each was RESUMED via SendMessage to finish its checklist rather than re-dispatched (recommended: check disk first, resume second).
 - m8ela fan-out started (U1-U2 rows in flight).
+
+## ⏸ PAUSED 2026-09-03 23:xx IST — HANDOFF TO AN OPUS SESSION (Fable quota)
+
+Praveen paused the Fable session to continue in Opus. State at pause (all committed on `worktree-demo-gate`):
+- **m8math: COMPLETE** (40/40 registered, lint 366, spot-read ×6). Nothing left.
+- **m8ela: 11/40 files on disk.** Exemplars 2.2, 5.3. Fan-out rows VERIFIED by their author's full checklist and controller audit:
+  1.1 strongest-textual-evidence · 1.2 how-dialogue-propels-action-and-reveals-character · 1.3 how-an-incident-provokes-a-decision ·
+  1.4 comparing-the-structure-of-two-texts · 2.1 how-a-theme-develops-through-character-and-setting · 2.3 allusions-and-analogies-in-literature.
+  **CHECKLIST-PENDING** (agent killed at pause AFTER writing the file; file imports, passes `g8-seed-audit`, tsc clean, but the author never ran
+  blind-answer / quotation-sourcing / DF-3 distractor pass / SCOPE GUARD read-back — DF-3 is 7/9 keyed-longest on these three, the tell):
+  2.4 modern-stories-and-traditional-patterns · 3.1 how-a-central-idea-develops · 3.3 word-choice-and-analogy-in-informational-text.
+  **NOT STARTED / NO FILE** (agents killed before writing): 3.2 connections-and-distinctions-among-ideas · 3.4 the-role-of-a-sentence-in-a-paragraph ·
+  4.1 how-an-author-responds-to-opposing-views · 4.2 is-the-reasoning-sound · 4.3 where-two-texts-disagree-fact-or-interpretation · and every row from 4.4 on.
+- m8sci, m8geo: exemplars only (2/40 each), registered.
+
+### Resume procedure (Opus session; run from `apps/tutor` of the demo-gate worktree)
+1. `ls src/lib/tutor/lesson-plan/seeds | grep -c m8ela-` (expect 11) and `npx tsx ../../.superpowers/sdd/2026-09-grades-6-8-wave/g8-seed-audit.mts m8ela M8ELA` (expect clean).
+2. For the 3 CHECKLIST-PENDING files: dispatch one agent each with `G8-FANOUT-PROMPT.md` + its brief + the instruction "the file exists; do NOT rewrite it; run the contract's Before-you-finish checklist on it, fix what it finds, report". (The same resume-not-redispatch move worked for 4 rate-limited math agents.)
+3. Fan out the remaining 29 m8ela rows ≤8 at a time: one agent per row, prompt = "Read `<wave-dir>/G8-FANOUT-PROMPT.md` and follow it exactly. Your brief: `<wave-dir>/lesson-briefs/m8ela/u<N>-<slug>.md` (course m8ela)." After each batch: audit + tsc, commit the batch (`git add` the seed files only).
+4. When 40 on disk: `python3 <wave-dir>/register-course.py m8ela M8ELA <wave-dir>/m8ela-CURRICULUM.md src/lib/tutor/lesson-plan/store.ts` (registers 38, skips the 2 exemplars), then HAND-WIRE the two exemplars' `prerequisites`/`followUps` (2.2: 2.1 → 2.3; 5.3: 5.2 → 5.4), tsc, `npm run lint:ms-plans` → expect **404**. Spot-read 6 (weight to U5-U6 grammar and U8-U10 writing rows). Commit.
+5. Repeat for m8sci (exemplars 2.1, 8.1; chains 1.4→2.1→2.2 and 7.4→8.1→8.2; lint 442) and m8geo (exemplars 7.1, 1.1; chains 6.4→7.1→7.2 and 1.1→1.2; lint 480).
+6. Then banks/notes/guides per the standing command block above; the G6 ship record in memory `project_grades_6_8_wave.md` carries the deploy traps.
