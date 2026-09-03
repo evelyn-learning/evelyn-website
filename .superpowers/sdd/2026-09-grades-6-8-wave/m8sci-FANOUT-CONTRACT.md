@@ -1113,6 +1113,17 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
 > Rulings 16-20 were already in this file. The blocks below add 21-31. Every example cited
 > is from an ELA row -- the RULES generalise, the EXAMPLES do not, and ruling 24 has been
 > re-derived for this subject because ELA's answer is the wrong one here.
+>
+> ⚠️ **READ EVERY CHECKLIST CROSS-REFERENCE BY NAME, NOT BY NUMBER.** The ported rulings say
+> things like "item 13 tells you 0 of 3 is not the goal" and "clarifying item 14" -- those are
+> the ELA contract's numbers and they do not point at the same items here. THREE agents hit
+> this independently on the first science batch: one found the numbers pointed at unrelated
+> rules, two found they pointed past the end of the list. In THIS contract the DF-3 length
+> check is **6c** and the claim-ledger build is **12 of the report section** (note that 12 in
+> the science-accuracy list is a different, unrelated rule about particles). Where a ported
+> ruling extends an "all-fiction ledger exemption" (25 and 29), this contract has no such
+> exemption -- it already requires the full ledger unconditionally, so those rulings are a
+> no-op here rather than a loosening.
 
 ## Addenda — CONTROLLER RULINGS 2026-09-04 (second Opus batch, rows 5.1-6.4)
 
@@ -1223,9 +1234,17 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
     conversions are now settled, and they were each decided by re-measuring inside ELA
     rather than by inheriting a sibling subject's convention: the em dash becomes ` -- ` (ruling
     24, and see it for why that is the opposite of the ELA answer); U+2026 becomes three
-    ASCII periods (ruling 27); and **U+2192 (`→`) becomes the word "becomes"** -- row 9.2 found the arrow in its cell, measured zero arrows across
-    all m6/m7/m8 ELA seeds, and reasoned that an arrow read aloud in a voice session is
-    silence. Also settled by measurement: **"the student's" does not belong in a
+    ASCII periods (ruling 27); and **U+2192 (`→`) becomes the word that says what the arrow is
+    DOING in that sentence** -- an arrow read aloud in a voice session is silence, so it has
+    to become a verb. ELA row 9.2 needed "becomes" for a transformation; in SCIENCE the arrow
+    is usually the result of a computation and the verb is **"gives"**. Both first-batch
+    science authors reached "gives" independently, for cells reading `60 m in 20 s -> 3 m/s`
+    and `5 N left and 3 N right -> 2 N left`, where "becomes" is simply the wrong verb (and
+    ungrammatical after a compound subject). **Related, and it collides with almost every
+    science cell: bare unit abbreviations (`N`, `m/s`, `kg`) are expanded to words** when
+    copied into `los[0].description`, because this course's unit rule forbids them in a
+    spoken field -- the same class of transform, and the same resolution: "verbatim" governs
+    the words, the form rules govern the glyphs. Also settled by measurement: **"the student's" does not belong in a
     description.** Row 10.3's cell said "into the student's OWN sentence"; zero of 86 ELA
     descriptions say "the student" and the field is rendered to the student, so it was
     transformed to "your OWN sentence" -- the same class as the standing rule that
