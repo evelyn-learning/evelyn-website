@@ -83,6 +83,15 @@ function expandForSpeech(text: string): string {
     // Em-dash and en-dash (used as pause/break) -> comma for natural pause
     .replace(/—/g, ', ')
     .replace(/–/g, ', ')
+    // ASCII double hyphen, the typed stand-in for an em dash. It reached the
+    // voice untouched: the spaced-hyphen rule below needs whitespace right
+    // after a SINGLE hyphen, and the compound-word rule needs word characters
+    // on both sides, so " -- " matched neither. Authoring guidance that bans
+    // the em-dash character pushes writers to type this instead, which made
+    // the ban actively worse for speech than the character it replaced.
+    // 2,185 occurrences in the Grade 6 seeds and 511 already shipped in
+    // Grade 7 before this line existed.
+    .replace(/\s*--+\s*/g, ', ')
     // Hyphen surrounded by spaces (used as dash) -> comma for pause
     .replace(/\s+-\s+/g, ', ')
     // Hyphen in compound words like "real-world" -> just remove it
