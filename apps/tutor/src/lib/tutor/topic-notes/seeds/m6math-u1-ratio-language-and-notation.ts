@@ -67,5 +67,12 @@ export const BASELINE_M6MATH_U1_RATIO_LANGUAGE_AND_NOTATION: TopicNotesBaseline 
     { content: `"For every" language turns ratio notation into a sentence, such as "for every 2 cups of peanuts, there are 3 cups of raisins."`, kind: 'tip' },
     { content: `A part-to-part ratio compares one part to another part; a part-to-whole ratio compares one part to the total of everything in the group.`, kind: 'tip' },
     { content: `Writing a ratio as a fraction does not automatically mean "part of a whole" — always check which two quantities the ratio is actually naming.`, kind: 'tip' },
+    { content: `Don't flip the order just because one number is bigger. The ratio of 5 to 7 stays 5:7, even though 7 is larger. The order comes from which quantity is named first in the problem, not from which number looks more impressive.`, kind: 'common-error' },
+    { content: `When a ratio is written as a fraction, stop and check: is this part-to-part or part-to-whole? Writing 2/3 does NOT automatically mean '2 out of 3 total.' It could mean 2 peanuts compared to 3 raisins. Always name the two quantities the ratio is comparing.`, kind: 'gotcha' },
+    { content: `A ratio keeps both numbers alive. Saying '2 cups of peanuts to 3 cups of raisins' is not the same as 'the difference is 1 cup'—you're not subtracting, you're holding both quantities together for comparison.`, kind: 'vocab-note' },
+    { content: `Use 'for every' language to check your ratio's order. If the problem asks peanuts to raisins, your sentence should start with peanuts: 'For every 2 cups of peanuts, there are 3 cups of raisins.' If your sentence sounds backwards, the ratio is backwards.`, kind: 'tip' },
+    { content: `Part-to-whole always needs a sum. If you're comparing one ingredient to the whole mix, add up all the parts first. The whole is never given by a single number already in the problem.`, kind: 'edge-case' },
+    { content: `The terms of a ratio are the two numbers in it. In 2:3, the terms are 2 and 3. Don't confuse 'terms' with the words in the problem—'terms' means the actual numbers that appear in the ratio notation.`, kind: 'vocab-note' },
+    { content: `The three notations 2:3, 'two to three', and 2/3 are interchangeable—they name the exact same ratio. Pick whichever one fits cleanest in your sentence. They all answer the same question.`, kind: 'tip' },
   ],
 };

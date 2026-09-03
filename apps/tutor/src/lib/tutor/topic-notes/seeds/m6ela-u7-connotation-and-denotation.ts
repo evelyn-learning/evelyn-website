@@ -80,5 +80,13 @@ The hallway was filled with the ______ of fresh bread.`, solution: `Aroma. The w
     { content: `The method: confirm the denotation matches, then find the one detail that reveals a positive, neutral, or negative feeling, then cross out every word whose shade contradicts that detail.`, kind: 'tip' },
     { content: `A detail about size, age, or amount only proves the denotation is right. A separate detail, often about how someone reacts or behaves, is what decides the connotation.`, kind: 'tip' },
     { content: `This pattern works the same way for words about money, smells, sizes, ages, and groups of people: match the meaning first, then let the context pick the feeling.`, kind: 'tip' },
+    { content: `Don't pick a word just because it sounds nicer or meaner. Point to a specific detail in the sentence that forces your answer. If you can't point at it, you're guessing on feeling, not reading the text.`, kind: 'common-error' },
+    { content: `Denotation first, always. If a word's core meaning does not match what the sentence needs, cross it out before you even think about whether it sounds positive or negative.`, kind: 'tip' },
+    { content: `A detail about size, age, or amount only proves denotation. You need a *separate* detail—usually about how someone reacts, feels, or behaves—to decide the connotation.`, kind: 'edge-case' },
+    { content: `Neutral is not the same as invisible. 'Odor' is a real word choice—it just doesn't lean positive or negative. Don't skip it because it sounds boring.`, kind: 'vocab-note' },
+    { content: `Near-synonyms share a denotation but *not* a connotation. 'Thrifty,' 'stingy,' and 'cheap' all mean careful with money, but they feel completely different. That difference is the whole point.`, kind: 'vocab-note' },
+    { content: `Check every word for denotation before you cross any out. A word might feel wrong but still have the right meaning—or feel right but have the wrong meaning. Denotation is not a feeling check.`, kind: 'gotcha' },
+    { content: `If a detail is there, the author put it there on purpose. A sentence that says Priya 'does not mind one bit' is telling you the connotation straight out—don't ignore it.`, kind: 'tip' },
+    { content: `Two words can both denote the same thing but work for opposite reactions. 'Aroma' is for smells you want to linger near; 'stench' is for smells you want to escape. The denotation is the same; the context decides which one fits.`, kind: 'common-error' },
   ],
 };

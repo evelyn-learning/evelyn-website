@@ -73,5 +73,12 @@ export const BASELINE_M6MATH_U9_NETS_AND_SURFACE_AREA: TopicNotesBaseline = {
     { content: `A triangular prism's net is two triangles plus three rectangles, one rectangle wrapping each side of the triangle, including the slanted side.`, kind: 'tip' },
     { content: `Use the rectangle and triangle area formulas exactly as learned before; this lesson does not re-derive them.`, kind: 'tip' },
     { content: `Count the faces before adding, and double every matching pair — a skipped face or an un-doubled pair is the most common way to get surface area wrong.`, kind: 'tip' },
+    { content: `Count faces BEFORE you add anything. A rectangular prism has 6 faces (3 matching pairs), a triangular prism has 5 faces (2 triangles + 3 rectangles). If your net doesn't match, you'll skip a face.`, kind: 'tip' },
+    { content: `Don't multiply the three dimensions of a box together — that's volume, not surface area. Surface area comes from adding the areas of all six flat faces in the net.`, kind: 'common-error' },
+    { content: `Every matching pair in a rectangular prism must be counted twice: (top + bottom) + (front + back) + (end + end). If you add each pair only once, you're missing half your faces.`, kind: 'gotcha' },
+    { content: `In a triangular prism net, one rectangle wraps EVERY side of the triangle, including the slanted/longest side. Don't skip the rectangle that covers the hypotenuse or the third side.`, kind: 'common-error' },
+    { content: `When checking if a net will fold correctly, match the edge lengths: if an edge on one face is labeled 4 cm, the edge it will attach to in the net must also be 4 cm, not 5 cm or unlabeled.`, kind: 'tip' },
+    { content: `For triangular prisms, use the two perpendicular legs (not the hypotenuse) as your base and height for the triangle-area formula: (leg₁ × leg₂) ÷ 2.`, kind: 'vocab-note' },
+    { content: `Surface area must have square units (like square inches or cm²), not just inches or cm. If your answer doesn't have 'square' in the units, something is wrong.`, kind: 'edge-case' },
   ],
 };

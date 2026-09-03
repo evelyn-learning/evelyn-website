@@ -69,5 +69,11 @@ export const BASELINE_M6GEO_U1_MENTAL_MAPS_AND_SPATIAL_THINKING: TopicNotesBasel
     { content: `Two people who both know the same space well can build two different mental maps of it, and neither one has to be wrong.`, kind: 'tip' },
     { content: `A mental map lets a person choose a way to go, recognize a landmark as a sign of what comes next, and get from one familiar place to another without a printed map.`, kind: 'tip' },
     { content: `A mental map only covers a space a person has actually moved through. It does not reach into a place a person has never visited.`, kind: 'tip' },
+    { content: `A mental map is NOT a drawing you make once and memorize. It's the picture your brain builds gradually by moving through a space many times. You don't copy it from anywhere — you create it yourself.`, kind: 'vocab-note' },
+    { content: `Don't check if a mental map is "correct" by measuring the distances. Check it by asking: Are the landmarks in the right order? Are the turns right? If yes, the mental map works—even if distances are stretched or squeezed.`, kind: 'common-error' },
+    { content: `When you describe your mental map out loud, always name landmarks IN ORDER along the route, with the turns between them. Don't just list all the landmarks in a place.`, kind: 'gotcha' },
+    { content: `Two people can walk the same hallway every day and end up with different mental maps—both correct. Their maps depend on which door they use, which landmarks catch their eye, and their own paths through the space.`, kind: 'edge-case' },
+    { content: `Your mental map ends where your real experience ends. You can't have a detailed mental map of a place you've never actually walked through, no matter how well you studied a picture of it.`, kind: 'tip' },
+    { content: `To test your mental map, describe the walk backward—landmark by landmark, turns reversed. If it still makes sense and lands back where you started, your mental map is solid.`, kind: 'tip' },
   ],
 };

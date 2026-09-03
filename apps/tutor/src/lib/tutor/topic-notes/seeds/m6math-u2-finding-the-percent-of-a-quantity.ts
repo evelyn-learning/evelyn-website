@@ -69,5 +69,11 @@ export const BASELINE_M6MATH_U2_FINDING_THE_PERCENT_OF_A_QUANTITY: TopicNotesBas
     { content: `The shortcut: write the percent as a decimal (divide by 100) and multiply it directly by the quantity, for the exact same answer in one step.`, kind: 'tip' },
     { content: `Benchmark percents such as 10%, 25%, and 50% give a fast way to estimate or check an answer.`, kind: 'tip' },
     { content: `The percent number by itself is never the answer, and the whole times the percent number by itself is never the answer either; both need the percent scaled down by 100 first.`, kind: 'tip' },
+    { content: `The percent number is NEVER the answer by itself. 40% of 25 is not 40—it's 10. Always divide the percent by 100 (or find 1% first) before you multiply.`, kind: 'common-error' },
+    { content: `Whole × percent number ≠ answer. (25 × 40 = 1,000 is wrong!) You must scale down the percent first: use 0.40 × 25 or find 1% then multiply.`, kind: 'common-error' },
+    { content: `1% of a quantity is the whole ÷ 100, not the answer. For 80 cans, 1% is 0.8 cans—that's just your building block. Multiply it by the percent you need to finish.`, kind: 'edge-case' },
+    { content: `Check your answer with a benchmark. 10% = whole ÷ 10, and 50% = half. If your answer doesn't land in a sensible range, you scaled wrong.`, kind: 'tip' },
+    { content: `A percent as a decimal: divide the percent number by 100. 25% → 0.25, 15% → 0.15, 5% → 0.05. Then multiply the decimal straight by the whole.`, kind: 'vocab-note' },
+    { content: `Your answer must be smaller than the whole quantity. 6 players out of 40 makes sense; 600 doesn't. If your answer is too big, you forgot to divide the percent by 100.`, kind: 'gotcha' },
   ],
 };

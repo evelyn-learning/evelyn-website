@@ -67,5 +67,12 @@ export const BASELINE_M6MATH_U2_FINDING_THE_WHOLE_GIVEN_A_PART_AND_PERCENT: Topi
     { content: `To find the whole, divide the part by the decimal: WHOLE equals PART divided by DECIMAL.`, kind: 'tip' },
     { content: `The whole is always bigger than the part, as long as the percent is less than 100%. A smaller answer means something was divided by the wrong number.`, kind: 'tip' },
     { content: `Check every answer by multiplying it back by the decimal. It should return the exact part the problem gave.`, kind: 'tip' },
+    { content: `Convert the percent to decimal FIRST, before you divide. 40% → 0.40 (divide by 100), not 0.4 or 40. Moving the decimal point wrong is the #1 mistake here.`, kind: 'common-error' },
+    { content: `Divide the part BY the decimal, not multiply. If 12 is 40% of the whole, divide: 12 ÷ 0.40 = 30. Multiplying is last lesson's move (finding the part), not this one.`, kind: 'common-error' },
+    { content: `Your answer MUST be bigger than the part you started with (unless the percent is somehow over 100%, which is rare). Smaller answer? You divided by the wrong number.`, kind: 'tip' },
+    { content: `Don't divide by the percent number itself. Divide by its decimal form. Dividing 15 by 25 gives 0.6 (wrong). Dividing 15 by 0.25 gives 60 (right).`, kind: 'gotcha' },
+    { content: `Always multiply back to check. Multiply your whole by the decimal. If you get the exact part the problem stated, you're right. If not, redo the division.`, kind: 'tip' },
+    { content: `The equation is the same: PART = DECIMAL × WHOLE. Last lesson solved for PART. This lesson solves for WHOLE by dividing: WHOLE = PART ÷ DECIMAL. Same equation, different missing piece.`, kind: 'vocab-note' },
+    { content: `If the percent is exactly 100%, the whole equals the part (100% of something is all of it). This is rare, but don't be surprised if your answer matches the part.`, kind: 'edge-case' },
   ],
 };

@@ -69,5 +69,12 @@ export const BASELINE_M6MATH_U9_AREA_OF_TRIANGLES_AND_QUADRILATERALS: TopicNotes
     { content: `Height is always the straight up-and-down, perpendicular distance from the base to the point or side across from it, never the length of a slanted side.`, kind: 'tip' },
     { content: `A hard shape can be decomposed into a rectangle and triangles you already know how to measure, or found by subtracting a piece from a bigger rectangle.`, kind: 'tip' },
     { content: `When a shape is decomposed into pieces, every piece's area has to be added together to get the total.`, kind: 'tip' },
+    { content: `Height is ALWAYS perpendicular (straight up-and-down) to the base, never the length of a slanted side. If you use the slanted side's length instead, your area will be wrong.`, kind: 'common-error' },
+    { content: `After you decompose a shape into pieces, add ALL the piece areas together. Forgetting even one piece gives a wrong total.`, kind: 'gotcha' },
+    { content: `Any side of a triangle can be the base—just make sure the height you use is perpendicular to that same base, measured from the base straight across to the opposite corner.`, kind: 'vocab-note' },
+    { content: `When you decompose or compose a shape, the total area never changes—that's the whole point. If your two methods give different answers, recheck your measurements and arithmetic.`, kind: 'tip' },
+    { content: `Don't confuse 'base' with 'width' and 'height' with 'tall.' Base and height are always perpendicular to each other, but either one can point sideways or up depending on how the shape sits.`, kind: 'vocab-note' },
+    { content: `A diagonal across a rectangle makes two identical triangles, each with exactly half the rectangle's area. This is why the triangle formula divides by 2.`, kind: 'edge-case' },
+    { content: `For a composite or odd-shaped figure, try two different decomposition methods and check that both give the same answer. Different cuts, same total area.`, kind: 'tip' },
   ],
 };

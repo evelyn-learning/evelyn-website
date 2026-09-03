@@ -73,5 +73,12 @@ export const BASELINE_M6SCI_U1_CLASSIFYING_THE_PLANETS: TopicNotesBaseline = {
     { content: `This lesson sorts planets by what can be observed about them, not by why they ended up that way.`, kind: 'tip' },
     { content: 'Pluto is a dwarf planet, not one of the eight planets sorted here.', kind: 'tip' },
     { content: `No exact distance in kilometers is needed to sort a planet -- its position relative to the asteroid belt is enough.`, kind: 'tip' },
+    { content: `Don't say a planet is a giant just because it's big. A giant must ALSO be made of gas/ice AND have no solid surface. Size is part of the pattern, not the whole rule.`, kind: 'common-error' },
+    { content: `All four giant planets have rings — Jupiter, Saturn, Uranus, and Neptune. Saturn's are just the brightest and easiest to see from Earth. Don't assume a faint ring system means Saturn.`, kind: 'gotcha' },
+    { content: `To sort a planet, you need to check MULTIPLE properties — composition, surface, size, rings, and position relative to the asteroid belt. One clue alone is not enough.`, kind: 'tip' },
+    { content: `The asteroid belt location matters more than exact distance in kilometers. If a planet orbits before the belt, it's terrestrial; beyond the belt, it's a giant — no calculator needed.`, kind: 'vocab-note' },
+    { content: `Pluto is NOT one of the eight planets — it's a dwarf planet, so don't try to sort it into either group. The eight planets are Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune.`, kind: 'edge-case' },
+    { content: `Giant planets have no solid surface 'anywhere' — not even deep inside. You cannot land on them. Terrestrial planets have a solid surface you could actually touch.`, kind: 'vocab-note' },
+    { content: `This lesson sorts planets by OBSERVED PROPERTIES, not by why they are that way. Don't expect to learn *why* terrestrial planets are rocky or *why* giants are far out — that comes later.`, kind: 'gotcha' },
   ],
 };

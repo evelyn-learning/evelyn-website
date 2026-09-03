@@ -78,5 +78,12 @@ What went wrong, and what does current actually mean here?`, solution: `Current 
     { content: `Watch for a word with an everyday meaning too, such as current or crux. Trust the definition the text prints, not the meaning you walked in with.`, kind: 'tip' },
     { content: `Test your answer by swapping it back into the sentence. If the rest of the sentence stops making sense, the meaning came from outside the text.`, kind: 'tip' },
     { content: `A definition sits right next to the word it defines. An action or detail later in the same sentence is part of the story, not the term's meaning.`, kind: 'tip' },
+    { content: `Don't grab the everyday meaning you already know. If you walk in knowing what current means, that meaning will trick you. Always read the comma-and-dash signal first.`, kind: 'common-error' },
+    { content: `A restatement signal is a comma or dash right after the technical term itself, not somewhere else in the sentence. 'The term, definition here' — not 'definition here, the term'.`, kind: 'gotcha' },
+    { content: `Test your meaning by swapping it back in. If the sentence still makes sense, you're right. If it falls apart or sounds weird, you borrowed meaning from outside the text.`, kind: 'tip' },
+    { content: `Example clues use 'such as,' 'for instance,' or 'like' — they show specific cases, not a one-sentence definition. Both work; know which one you're reading.`, kind: 'vocab-note' },
+    { content: `A detail that happens later in the sentence — like 'adding frames above' or 'shaping the loaf' — is part of the story, not the term's meaning. The definition sits next to the term itself.`, kind: 'common-error' },
+    { content: `Technical words belong to one field (beekeeping, volcanoes, climbing, weather). If a word feels out of place in everyday chat, the text will likely explain it right there.`, kind: 'tip' },
+    { content: `Don't invent a meaning from outside knowledge. Use only the words the text itself prints. Even if you know what the word means elsewhere, ignore that here.`, kind: 'gotcha' },
   ],
 };

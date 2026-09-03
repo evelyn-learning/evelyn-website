@@ -68,5 +68,13 @@ export const BASELINE_M6ELA_U8_SUPPORTING_A_CLAIM_WITH_REASONS_AND_EVIDENCE: Top
     { content: `Good evidence is something you can point to: an observation, a documented example, or a statement from a credible source — never a number you cannot explain the source of.`, kind: 'tip' },
     { content: 'A single example is not a reason by itself, and a feeling is not evidence.', kind: 'tip' },
     { content: `A credible source is someone or something in a position to actually know. Judging which of several sources is more trustworthy comes later.`, kind: 'tip' },
+    { content: `**Test every reason with this sentence frame: "[Claim], because [reason]." If it sounds like you just said the claim twice, it's not a real reason — it's an echo.**`, kind: 'tip' },
+    { content: `A reason must answer *why* — not describe *what*. "A bench would be nice" is a description of the claim. "Kids have nowhere to sit while waiting" is a why.`, kind: 'common-error' },
+    { content: `**Run the relevance test: Say the reason out loud, then say the evidence, then ask 'Does this make that reason more believable?' If the answer is no, the evidence only relates to the topic, not to the reason.**`, kind: 'tip' },
+    { content: `Never use a number unless you can point to exactly where it came from. "Lots of kids" is vague. "I counted seventeen backpacks left in the cafeteria last week" is checkable.`, kind: 'gotcha' },
+    { content: `A *credible source* is someone whose job puts them in position to know — not someone you trust as a friend. A teacher's count of late arrivals is credible; a popular kid's opinion about pickup lines is not.`, kind: 'vocab-note' },
+    { content: `One observation or example is *evidence*, not a *reason*. Reason explains why. Evidence shows it's real. Don't skip the reason step.`, kind: 'edge-case' },
+    { content: `"Because I want it" or "Because it would help" restates the claim. A real reason names a problem or a fact that makes the claim necessary: "Because kids currently sit on the curb."`, kind: 'common-error' },
+    { content: `Reason and evidence are not the same thing. A reason is *what* problem or fact exists. Evidence is *proof* that it does. Don't confuse them.`, kind: 'vocab-note' },
   ],
 };

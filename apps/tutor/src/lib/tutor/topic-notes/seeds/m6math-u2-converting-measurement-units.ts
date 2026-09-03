@@ -67,5 +67,11 @@ export const BASELINE_M6MATH_U2_CONVERTING_MEASUREMENT_UNITS: TopicNotesBaseline
     { content: `Converting from a smaller unit to a larger unit means dividing by the conversion factor.`, kind: 'tip' },
     { content: `Check every conversion by reversing the operation: if you multiplied, divide back; if you divided, multiply back.`, kind: 'tip' },
     { content: `Size-test the answer: the number of small units should always be bigger than the number of large units for the same amount.`, kind: 'tip' },
+    { content: `The conversion factor is a ratio, not an amount to add. Don't write 5 feet + 12 = 17 inches. Multiply: 5 × 12 = 60 inches.`, kind: 'common-error' },
+    { content: `Larger unit → smaller unit = MULTIPLY. Smaller unit → larger unit = DIVIDE. Use a size test: if your answer is smaller when it should be bigger, you picked the wrong operation.`, kind: 'tip' },
+    { content: `Always reverse your operation to check: if you multiplied to convert, divide by the same number and you should get back what you started with. This catches mistakes before they become wrong answers.`, kind: 'tip' },
+    { content: `Don't divide when converting feet to inches or kilograms to grams. Dividing shrinks the number, but converting to a smaller unit should make the number grow.`, kind: 'gotcha' },
+    { content: `The conversion factor only works inside one system. You can convert feet to inches (both US customary), but you cannot use these factors to convert between systems like feet and meters.`, kind: 'edge-case' },
+    { content: `A conversion factor is always written as a ratio equal to 1: 12 inches over 1 foot, or 1000 grams over 1 kilogram. Multiplying by 1 never changes the actual amount, only the units.`, kind: 'vocab-note' },
   ],
 };

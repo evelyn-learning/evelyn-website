@@ -74,5 +74,12 @@ export const BASELINE_M6SCI_U8_READING_CLIMATE_GRAPHS: TopicNotesBaseline = {
     { content: `A real wet season or dry season is a stretch of months clearly higher or lower than the rest of the year, not just numbers that are not perfectly equal to each other.`, kind: 'tip' },
     { content: `The annual precipitation total is the sum of all twelve monthly precipitation numbers, and it can tell a different story than any single month does.`, kind: 'tip' },
     { content: `One month is never the whole pattern. Compare every month against the other eleven before naming a climate pattern or comparing two locations.`, kind: 'tip' },
+    { content: `Don't say a climate is 'wet' or 'dry' based on one month's number. Always compare that month against all eleven others first — one big number means nothing without context.`, kind: 'common-error' },
+    { content: `January is NOT always a winter month. Check the location's own warmest and coldest months on the climatograph to find its hemisphere — don't assume the calendar label applies everywhere.`, kind: 'gotcha' },
+    { content: `To find the hemisphere, look at which calendar months are warmest and coolest. June–August warm + December–February cool = Northern. Reverse that = Southern. The numbers themselves don't change — just which months they live in.`, kind: 'vocab-note' },
+    { content: `A real wet or dry season is a clear stretch of months that stand out from the rest. A few millimeters that wobble up and down slightly every month is not a wet or dry season — it's just normal monthly noise.`, kind: 'edge-case' },
+    { content: `Always add all twelve precipitation numbers to get the annual total — never guess or use just the wettest month. The total can reveal a pattern a single month hides (e.g., three wet months can carry 70% of the year's rain).`, kind: 'tip' },
+    { content: `The annual temperature range is just subtraction: warmest month minus coldest month. Find both values first — don't use an average or pick the wrong months.`, kind: 'vocab-note' },
+    { content: `When you compare two locations, keep the hemisphere reading and the wetness reading separate in your head. They answer different questions (where on Earth / how much rain), and one location can flip hemispheres while staying equally wet.`, kind: 'gotcha' },
   ],
 };

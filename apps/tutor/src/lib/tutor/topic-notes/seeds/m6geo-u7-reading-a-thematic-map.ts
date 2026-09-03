@@ -70,5 +70,12 @@ export const BASELINE_M6GEO_U7_READING_A_THEMATIC_MAP: TopicNotesBaseline = {
     { content: `To compare two or more areas, match each one to the key separately first, then compare what the key says about each -- never compare colors or symbols directly without checking the key.`, kind: 'tip' },
     { content: `A color or symbol means whatever that map's own key says it means, and nothing else. A different map's key can use the very same color or symbol for a completely different meaning.`, kind: 'tip' },
     { content: `A thematic map's key only answers questions about the one topic it was built to show; it cannot answer a question about a different topic that map never displayed.`, kind: 'tip' },
+    { content: `Always read the entire key top-to-bottom before looking at any single area on the map. Don't skip entries or guess at meanings.`, kind: 'tip' },
+    { content: `A darker shade only means 'more' if that map's key says so. A different map's key could use dark for 'less' instead. Check the key every time.`, kind: 'common-error' },
+    { content: `In a symbol key, a big or bold-looking symbol does NOT mean a bigger amount. Each symbol is just one separate category. The size of the picture on the map means nothing.`, kind: 'gotcha' },
+    { content: `Match each area to the key separately, then compare. Never compare two areas' colors or symbols directly without checking what the key says each one means.`, kind: 'tip' },
+    { content: `Same color or symbol on one map always means the same thing everywhere that map appears. If two regions have the same shade, the key entry for that shade applies to both.`, kind: 'vocab-note' },
+    { content: `A thematic map's key only answers questions about its one topic. A rainfall key cannot tell you which region grows the most crops, because that's not the topic the key was built for.`, kind: 'edge-case' },
+    { content: `Don't mix up shaded keys (light-to-dark range) with symbol keys (separate pictures). A shaded key shows a ranked amount; a symbol key shows separate categories.`, kind: 'vocab-note' },
   ],
 };

@@ -72,5 +72,13 @@ export const BASELINE_M6MATH_U3_DIVIDING_FRACTIONS_BY_FRACTIONS: TopicNotesBasel
     { content: `Only the second fraction flips. Flipping the first one gives a completely different number, not a near miss.`, kind: 'tip' },
     { content: `Simplify the result, then check by multiplying back: the answer times the second fraction must return the first fraction.`, kind: 'tip' },
     { content: `Dividing by a number less than 1 makes the answer bigger, so size-test every answer before you trust it.`, kind: 'tip' },
+    { content: `Only the SECOND fraction flips—the one after the division sign. Flipping the first one is not a small mistake; it lands you nowhere near the right answer.`, kind: 'common-error' },
+    { content: `Say it out loud: 'The second one flips.' Do this before you write anything down. It takes 3 seconds and catches the most common mistake.`, kind: 'tip' },
+    { content: `Dividing by a fraction less than 1 makes your answer BIGGER, not smaller. Run the size test first: if the divisor is less than 1, your answer must be bigger than the first fraction.`, kind: 'gotcha' },
+    { content: `The divisor is the fraction you divide BY—the one written after ÷. That is the one whose reciprocal you use. Do not mix up divisor with dividend.`, kind: 'vocab-note' },
+    { content: `After multiplying, always simplify. Then always check by multiplying your answer times the second fraction. It must give you the first fraction back, or something went wrong.`, kind: 'tip' },
+    { content: `The reciprocal of a fraction flipped is the fraction flipped. 2/5 flipped is 5/2. If you forget which way to flip, remember: numerator and denominator swap places, that's it.`, kind: 'vocab-note' },
+    { content: `Do not just multiply the two fractions as they stand. If you skip Keep-Change-Flip and write 4/5 × 2/3, you are answering a different question entirely—and the size test will catch you.`, kind: 'common-error' },
+    { content: `Before you do any arithmetic, ask: 'How many of the second fraction fit inside the first?' This one question will tell you if your final answer is roughly in the right ballpark.`, kind: 'tip' },
   ],
 };

@@ -67,5 +67,12 @@ export const BASELINE_M6MATH_U7_PARTS_OF_AN_EXPRESSION: TopicNotesBaseline = {
     { content: `A constant is a term with no variable attached to it, such as the 9 in 4x + 7y + 9.`, kind: 'tip' },
     { content: `Multiplication builds one term out of several factors; only addition or subtraction starts a brand-new term.`, kind: 'tip' },
     { content: 'Count the terms in an expression by counting its + and - signs and adding one.', kind: 'tip' },
+    { content: `Count + and − signs to find the number of terms. If you see two + signs, you have three terms. Don't count symbols or letters — only addition and subtraction create new terms.`, kind: 'tip' },
+    { content: `Inside one term, 6 and x multiplied together make ONE term (6x), not two. Factors are the pieces being multiplied *inside* a term; terms are the pieces being added or subtracted *between* them.`, kind: 'common-error' },
+    { content: `A coefficient is *only* for terms with a variable. The constant term (like 9 in 4x + 7y + 9) has no coefficient — it's just a number.`, kind: 'vocab-note' },
+    { content: `A variable written alone (like just 'n') has a coefficient of 1, even though no '1' is written. Don't assume the coefficient is missing — it's always there, understood to be 1.`, kind: 'edge-case' },
+    { content: `Don't mix up 'constant' with 'coefficient.' A constant is a whole term with no variable. A coefficient is the number factor *inside* a term that has a variable.`, kind: 'vocab-note' },
+    { content: `A term can have many factors. In 4mn, there are three factors: 4, m, and n. They're all multiplied together, so it's still just one term.`, kind: 'gotcha' },
+    { content: `The coefficient is the *number* that multiplies the variable(s). In 4mn, the coefficient is 4 (not 4m or 4mn). It's the number part only.`, kind: 'common-error' },
   ],
 };

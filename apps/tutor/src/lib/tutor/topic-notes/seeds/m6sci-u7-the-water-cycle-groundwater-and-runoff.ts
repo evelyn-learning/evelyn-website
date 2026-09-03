@@ -75,5 +75,13 @@ export const BASELINE_M6SCI_U7_THE_WATER_CYCLE_GROUNDWATER_AND_RUNOFF: TopicNote
     { content: `Recharge is infiltrating rain and melted snow adding water to the saturated zone, raising the water table; pumping water out faster than recharge replaces it lowers the water table and can dry up a well.`, kind: 'tip' },
     { content: `Some infiltrated water is taken up by plant roots. That water does not leave the water cycle -- much of it later returns to the atmosphere as water vapor through transpiration.`, kind: 'tip' },
     { content: `Groundwater fills the small spaces between grains of soil and cracks in rock -- it is not flowing through open underground rivers or caves.`, kind: 'tip' },
+    { content: `Don't say water 'disappears' when it infiltrates. Infiltration is a PATH, not an exit from the water cycle. That water either reaches an aquifer, gets taken up by plant roots, or flows underground to a stream.`, kind: 'common-error' },
+    { content: `A well comes up DRY if it stops ABOVE the water table, even if it's very deep. The well must pass below the water table into the saturated zone to reach water.`, kind: 'gotcha' },
+    { content: `Permeable vs. impermeable describes the GROUND, not the water. Permeable ground LET water through; impermeable ground BLOCKS it. Don't mix them up.`, kind: 'vocab-note' },
+    { content: `Groundwater is NOT hidden rivers in caves. Below the water table, water fills tiny spaces between soil grains and cracks in rock—like a fully soaked sponge, not a tunnel.`, kind: 'edge-case' },
+    { content: `When the water table DROPS (drought, heavy pumping), a well that used to reach water can run dry. The well didn't move—the water table did.`, kind: 'common-error' },
+    { content: `Transpiration is water vapor leaving a PLANT going into the AIR, not water in the soil. Once a plant takes up infiltrated water, transpiration sends much of it back to the atmosphere.`, kind: 'vocab-note' },
+    { content: `Same rainstorm, different ground = different amounts of runoff vs. infiltration. Sandy soil near clay soil: one puddle dries, one stays wet. Check what the ground is made of first.`, kind: 'tip' },
+    { content: `Recharge means water seeping DOWN into the aquifer, raising the water table. If pumping removes MORE water than recharge adds, the water table DROPS and wells can fail.`, kind: 'vocab-note' },
   ],
 };

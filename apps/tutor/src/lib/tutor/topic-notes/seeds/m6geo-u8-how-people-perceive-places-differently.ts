@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U8_HOW_PEOPLE_PERCEIVE_PLACES_DIFFERENTLY: TopicNote
     { content: `The same feature, such as a hill or a square, can produce two different descriptions without the feature itself changing at all.`, kind: 'tip' },
     { content: `Neither perception is more correct than the other. A difference in description is not a disagreement to settle.`, kind: 'tip' },
     { content: `To explain why two people perceive the same place differently, point to the stated experience behind each view -- never to personality, honesty, or who is right.`, kind: 'tip' },
+    { content: `Don't say one person's description is 'more correct.' Both a resident's and a visitor's descriptions of the same place can be equally true — they just come from different experience. Always trace the difference back to stated experience, never to who is 'right.'`, kind: 'common-error' },
+    { content: `When explaining why two people perceive a place differently, point to something specific about their *experience* (how long they've been there, what they do there, or what they compare it to) — never to their personality, honesty, or how observant they are.`, kind: 'gotcha' },
+    { content: `A visitor doesn't just see things fresh — a visitor also *compares* the new place to their home without meaning to. The same hill looks steep or flat depending on what hills (or flatness) the visitor is used to.`, kind: 'vocab-note' },
+    { content: `Don't confuse 'familiar' (something you've experienced so often it feels ordinary) with 'better known' or 'more correct.' A resident knows the fastest path across a square through repetition, not because they understand the square more truly.`, kind: 'vocab-note' },
+    { content: `Always use *stated* experience from the scenario. Don't invent reasons like 'the resident is a faster walker' or 'the visitor is easily confused.' Stick to what you're told — how long they've been there, what they do, what they compare it to.`, kind: 'tip' },
+    { content: `A place doesn't change when a resident and a visitor describe it differently. The *perception* changes because each person's experience is different. Keep the place fixed; explain why the two experiences are different.`, kind: 'edge-case' },
+    { content: `Both the resident's 'quick shortcut' and the visitor's 'huge and slow' can be accurate at the same time. Don't try to pick the 'real' answer. Instead, explain what each person actually experienced that led to their description.`, kind: 'gotcha' },
   ],
 };

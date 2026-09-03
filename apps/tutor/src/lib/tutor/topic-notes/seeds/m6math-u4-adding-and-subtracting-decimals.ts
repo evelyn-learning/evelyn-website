@@ -70,5 +70,13 @@ export const BASELINE_M6MATH_U4_ADDING_AND_SUBTRACTING_DECIMALS: TopicNotesBasel
     { content: `Add or subtract column by column like whole numbers, then drop the decimal point straight down into the answer.`, kind: 'tip' },
     { content: `Estimate first by rounding each number, so you can catch a misaligned or miscarried answer before you trust it.`, kind: 'tip' },
     { content: `Check an addition by subtracting one addend back out of the sum. Check a subtraction by adding the difference back to the number you subtracted.`, kind: 'tip' },
+    { content: `Line up decimal points, not last digits. Lining up the rightmost digit shifts every place value and ruins your answer.`, kind: 'common-error' },
+    { content: `Always pad with zeros to match decimal places before you add or subtract. Forgetting even one zero can silently drop a column and hide your mistake.`, kind: 'tip' },
+    { content: `The decimal point in your answer goes straight down from the decimal points above it. Do not guess where it belongs based on the size of the digits.`, kind: 'vocab-note' },
+    { content: `Estimate first by rounding each number to the nearest whole. If your exact answer is far from the estimate, stop and recheck—you probably misaligned or miscarried.`, kind: 'tip' },
+    { content: `When a decimal ends with 0 (like 5.60 or 9.40), that zero is real and counts. Do not drop it just because it "looks empty"—it holds a place value.`, kind: 'edge-case' },
+    { content: `Check addition with subtraction: subtract one addend from your sum. If you do not get back the other addend, you made a mistake.`, kind: 'tip' },
+    { content: `When subtracting, be extra careful with borrowing. After you borrow, cross out the old digit and write the new one so you do not forget and subtract the wrong amount.`, kind: 'common-error' },
+    { content: `A whole number like 20 has no decimal part written, but for addition/subtraction it has one: write it as 20.00 to match decimal places.`, kind: 'edge-case' },
   ],
 };

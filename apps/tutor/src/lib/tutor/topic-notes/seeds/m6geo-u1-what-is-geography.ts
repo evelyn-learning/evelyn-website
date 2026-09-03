@@ -73,5 +73,12 @@ export const BASELINE_M6GEO_U1_WHAT_IS_GEOGRAPHY: TopicNotesBaseline = {
     { content: `Region is an area that is grouped with other areas because they share something in common.`, kind: 'tip' },
     { content: 'Movement describes people, goods, or ideas traveling from one place to another.', kind: 'tip' },
     { content: `Human-environment interaction describes the ways that people and their surroundings affect each other.`, kind: 'tip' },
+    { content: `Don't confuse geography itself with its tools. Knowing that a mountain is called the Rockies is a fact, not geography. Geography asks WHERE it is, WHAT it's like, and HOW it affects people nearby.`, kind: 'common-error' },
+    { content: `Human-environment interaction goes BOTH WAYS. People shape their surroundings AND surroundings shape people's choices. It's not just about damage or harm—thick walls in a cold place is an example too.`, kind: 'gotcha' },
+    { content: `To tell PHYSICAL from HUMAN geography, ask: 'Would this still happen if no people existed?' Snow on mountains = yes (physical). A ski festival = no (human). If yes, it's physical. If no, it's human.`, kind: 'tip' },
+    { content: `PLACE and REGION are not the same. Place makes ONE area unique (what's special about it). Region groups MANY areas that share something in common (wheat crops on three continents).`, kind: 'vocab-note' },
+    { content: `MOVEMENT is about something TRAVELING between places—people, goods, or ideas. A shipping route with oranges traveling country to country is movement. A description of one town's red tile roofs is not.`, kind: 'common-error' },
+    { content: `LOCATION is just the answer to 'where is it?'—a single fixed spot. MOVEMENT is the same thing traveling from spot to spot. Don't mix them up: location pins a place; movement connects two places.`, kind: 'vocab-note' },
+    { content: `Geography needs BOTH branches. A real geography question about a mountain town asks about the snowfall (physical) AND the chairlift built to use it (human) AND how the two connect.`, kind: 'edge-case' },
   ],
 };

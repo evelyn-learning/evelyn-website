@@ -75,5 +75,13 @@ export const BASELINE_M6SCI_U3_IDENTIFYING_MINERALS_BY_THEIR_PROPERTIES: TopicNo
     { content: `Cleavage is breaking along smooth, flat, repeating surfaces, like mica peeling into sheets or halite breaking into cubes. Fracture is breaking with no flat repeating pattern, like quartz's curved, shell-shaped break.`, kind: 'tip' },
     { content: `Color is the least reliable property, because trace impurities can tint the same mineral different colors without changing anything else about it -- quartz can be colorless, purple, or pink and still be the same mineral.`, kind: 'tip' },
     { content: `Identifying a mineral means combining several of these testable properties together, never relying on just one -- especially not color.`, kind: 'tip' },
+    { content: `Don't use 'hard' and 'scratch-resistant' the same way. Hardness means resisting scratches, not resisting breaking. A mineral can be hard to scratch but easy to snap in half.`, kind: 'vocab-note' },
+    { content: `One solid piece does NOT equal one mineral. Granite is one solid rock holding together, but it's a mixture of quartz, feldspar, and mica grains. Check if properties stay the same throughout, not whether it's in one chunk.`, kind: 'common-error' },
+    { content: `Streak beats color every time. A mineral's outward color can be fooled by weathering or tiny impurities, but its streak stays the same sample to sample. If color and streak don't match, trust the streak.`, kind: 'gotcha' },
+    { content: `When testing hardness, ask 'which one wins and scratches the other?' The harder mineral leaves the scratch mark; the softer one gets marked. Don't test just by trying to scratch the specimen alone.`, kind: 'tip' },
+    { content: `Cleavage = same flat planes every time. Fracture = random, curvy, no pattern. A single mineral shows one or the other, not both. Don't say 'it broke' without specifying which type.`, kind: 'vocab-note' },
+    { content: `Metallic luster is shiny like a polished metal surface. Nonmetallic covers everything else — glassy, dull, earthy, waxy. 'Shiny' alone doesn't tell you which; look at what kind of shine.`, kind: 'vocab-note' },
+    { content: `You need at least two different kinds of evidence to identify a mineral, never just one property. Hardness alone, or streak alone, or color alone can fool you. Combine them like clues.`, kind: 'tip' },
+    { content: `If a mineral property changes between two samples, check whether you're actually looking at two different minerals or just different weathering/coloring of the same one. Test a fresh, uncoated spot if possible.`, kind: 'edge-case' },
   ],
 };

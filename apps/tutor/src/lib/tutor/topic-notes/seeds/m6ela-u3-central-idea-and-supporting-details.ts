@@ -81,5 +81,12 @@ Classmate's three details:
     { content: `A supporting detail is a specific fact that answers "how do you know that is true" for the central idea. A detail that is true but does not connect to the stated central idea is off topic, even inside the same paragraph.`, kind: 'tip' },
     { content: `Test every central idea against two separate details. One detail, or none, means you have a guess, and a detail that contradicts your sentence means the sentence is wrong.`, kind: 'tip' },
     { content: `A fact can be true and still not belong on a supporting-details list, when it explains something else entirely — an owl's three eyelids explain blinking, not why its neck turns.`, kind: 'tip' },
+    { content: `A topic is one or two words. A central idea is a complete sentence. If your answer fits in a word or short phrase, you named the topic, not the central idea. Always write yours as a full sentence that makes a claim.`, kind: 'vocab-note' },
+    { content: `Don't stop at the first sentence of a paragraph. Ask yourself: what idea does the whole text keep returning to? Your central idea must cover every part, not just one paragraph or one interesting fact.`, kind: 'common-error' },
+    { content: `A detail that is true and in the text can still be off topic if it doesn't connect to your central idea. Before you use a detail, always ask: does this fact help prove my central idea is true, or does it explain something else?`, kind: 'gotcha' },
+    { content: `Test your central idea with two details from different parts of the text. Point at them on the page. If you can only find one detail, or none, you have a guess, not a real central idea.`, kind: 'tip' },
+    { content: `If a detail in the text contradicts your central idea sentence, the sentence is wrong—not the detail. Revise your sentence so it fits what the text actually says.`, kind: 'gotcha' },
+    { content: `Don't confuse the author with the narrator. The author wrote the text. The narrator is the voice telling the story or explaining the facts. For central ideas in informational text, focus on what the text says the facts mean, not who said it.`, kind: 'vocab-note' },
+    { content: `One interesting or surprising fact is not the same as the central idea. Even if it's the most memorable detail, it still has to connect to and fit under the main point the whole text makes.`, kind: 'common-error' },
   ],
 };

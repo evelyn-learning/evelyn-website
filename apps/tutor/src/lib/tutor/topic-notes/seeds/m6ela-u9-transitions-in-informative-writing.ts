@@ -71,5 +71,12 @@ Worker bees collect nectar from flowers and carry it back to the hive inside a s
     { content: `However signals a turn against what was just said, and therefore signals a result that follows from it. They are not two fancy words for the same thing.`, kind: 'tip' },
     { content: `An informative paragraph strings together many separate facts about one topic, so the relationship between two sentences can change from fact to fact, unlike a claim-and-reason paragraph, which only ever joins one claim to its own reasons.`, kind: 'tip' },
     { content: `Not every sentence needs a transition. Add one only where the connection between two facts genuinely needs signaling.`, kind: 'tip' },
+    { content: `Say the relationship out loud in plain words before you pick any transition word. Finish this sentence: "The next fact ____ the fact before it." Only then reach for a word.`, kind: 'tip' },
+    { content: `"However" and "therefore" are not two fancy words for the same thing. "However" signals a turn *against* what was just said. "Therefore" signals a result *from* it. Swapping them tells the reader the wrong connection happened.`, kind: 'vocab-note' },
+    { content: `A transition can sound smooth and grown-up and still be wrong. Don't trust how a sentence sounds when read aloud. Check what the second sentence *actually does* to the first fact.`, kind: 'gotcha' },
+    { content: `Wrong transitions are worse than no transition at all. A wrong word makes the reader hunt for a connection that is not there. An empty space is honest.`, kind: 'common-error' },
+    { content: `Not every sentence needs a transition. Add one only when the connection between two facts genuinely needs signaling. Stacking transitions onto every sentence buries the few connections that actually matter.`, kind: 'tip' },
+    { content: `An informative paragraph strings together many separate facts about one topic, so the relationship between sentences can change from fact to fact. One sentence might need a sequence word ("next"), the next one might need an adding word ("also").`, kind: 'edge-case' },
+    { content: `When you see a transition, ask: What job is it built to do? Then ask: Does the second sentence actually do that job? If not, the transition is wrong, no matter how official it sounds.`, kind: 'tip' },
   ],
 };

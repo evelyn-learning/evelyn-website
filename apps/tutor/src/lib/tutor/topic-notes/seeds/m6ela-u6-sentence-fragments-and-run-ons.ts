@@ -72,5 +72,12 @@ export const BASELINE_M6ELA_U6_SENTENCE_FRAGMENTS_AND_RUN_ONS: TopicNotesBaselin
     { content: `Legal fixes: a period, a semicolon between two closely related sentences, or a comma plus a joining word that matches the meaning — for, and, nor, but, or, yet, so.`, kind: 'tip' },
     { content: `A transition word such as however is not a joining word. It needs a period or a semicolon in front of it, not just a comma.`, kind: 'tip' },
     { content: 'Length proves nothing. Count the complete thoughts, not the words.', kind: 'tip' },
+    { content: `Don't use a period to fix a fragment that starts with a starter word (because, although, when, since, if, while, after, before, unless). A period just moves the fragment to the next line. Attach it to a complete sentence with a comma instead.`, kind: 'common-error' },
+    { content: `A comma alone is never strong enough to hold two complete sentences apart. If you have two complete sentences with only a comma between them, you have a comma splice — and deleting the comma just turns it into a run-on.`, kind: 'gotcha' },
+    { content: `However, therefore, and similar transition words are NOT joining words (like and, but, so). They signal a turn but cannot hold two sentences together. Use a period or semicolon before them, not a comma.`, kind: 'vocab-note' },
+    { content: `Run the subject-verb-finished-thought test on BOTH sides of any comma you're unsure about. If both sides are complete sentences, you have a splice and need a period, semicolon, or comma + joining word.`, kind: 'tip' },
+    { content: `A starter word can go at the beginning OR the end of a sentence — but the comma placement changes. First: 'Because it rained, we stayed inside.' End: 'We stayed inside because it rained.' (No comma before because at the end.)`, kind: 'edge-case' },
+    { content: `Three words can be a complete sentence: 'The bell rang.' Three words can also be a fragment: 'Because the bell rang.' Count the complete thoughts, not the words — length is a trap.`, kind: 'common-error' },
+    { content: `When you fix a comma splice with a joining word, pick the word that matches your meaning. 'She loved the book, but the ending was sad' tells a different story than 'She loved the book, so the ending was sad.'`, kind: 'tip' },
   ],
 };

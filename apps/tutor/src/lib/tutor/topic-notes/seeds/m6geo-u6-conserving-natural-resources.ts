@@ -66,5 +66,11 @@ export const BASELINE_M6GEO_U6_CONSERVING_NATURAL_RESOURCES: TopicNotesBaseline 
     { content: `Recycle means used material is broken down and remade into new material for a different item, instead of that item being made from freshly taken material.`, kind: 'tip' },
     { content: `Repair means fixing something already broken so it keeps doing its original job, instead of replacing it with a new one.`, kind: 'tip' },
     { content: `All four practices matter for the same reason: each one lowers how much new material has to be taken over the same stretch of time, even though each one works at a different point.`, kind: 'tip' },
+    { content: `Don't say 'recycling' when the same item just keeps doing its job again. That's reuse. Recycling breaks down used material and remakes it into a different new product.`, kind: 'common-error' },
+    { content: `Reduce happens BEFORE anything breaks, gets thrown away, or needs replacing. If you wait until something breaks to fix it, that's repair, not reduce.`, kind: 'vocab-note' },
+    { content: `Repair only works on items that can actually be fixed. If something can't be repaired, you need reduce, reuse, or recycle instead.`, kind: 'edge-case' },
+    { content: `How much a conservation practice matters depends on HOW MANY TIMES the item avoids being replaced. Reusing something once is different from reusing it every day for a year.`, kind: 'gotcha' },
+    { content: `All four practices (reduce, reuse, recycle, repair) work the same way at heart: they lower how much NEW material has to be taken over time. They just work at different moments.`, kind: 'tip' },
+    { content: `Conserving a resource does NOT change how fast nature makes or replaces it. It changes how fast PEOPLE use it. A slower draw means the supply lasts longer.`, kind: 'vocab-note' },
   ],
 };

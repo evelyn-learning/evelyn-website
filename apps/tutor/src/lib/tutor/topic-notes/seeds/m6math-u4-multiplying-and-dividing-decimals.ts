@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U4_MULTIPLYING_AND_DIVIDING_DECIMALS: TopicNotesBas
     { content: `Estimate first with friendly rounded numbers, so you know roughly how big the exact answer should be before you compute it.`, kind: 'tip' },
     { content: `Misplacing the decimal point in a product, and shifting only ONE of the two decimal points in a division, are the two most common decimal mistakes — an estimate catches both.`, kind: 'tip' },
     { content: `Check every answer: for multiplication, compare the product to the estimate; for division, multiply the quotient by the original divisor and confirm it returns the original dividend.`, kind: 'tip' },
+    { content: `When multiplying decimals, count decimal places from BOTH factors and add them together. Don't count just one factor's decimal places.`, kind: 'common-error' },
+    { content: `Always estimate before you place the decimal point. Round each factor to a friendly number, multiply those, and check that your final answer lands nearby. If it doesn't, your decimal point is in the wrong spot.`, kind: 'tip' },
+    { content: `In division by a decimal, shift the decimal point in BOTH the divisor AND the dividend by the same number of places. Shifting only one gives a completely wrong answer.`, kind: 'common-error' },
+    { content: `When you shift decimal points in division, you can add zeros to the dividend if you run out of digits. This is fine and doesn't change the answer.`, kind: 'edge-case' },
+    { content: `Dividing by a number less than 1 makes your answer BIGGER, not smaller. Use this to catch division errors before you compute.`, kind: 'gotcha' },
+    { content: `Check multiplication by comparing your product to your estimate. Check division by multiplying the quotient by the ORIGINAL divisor—it should give you back the ORIGINAL dividend.`, kind: 'tip' },
+    { content: `Don't confuse 'divisor' and 'dividend.' The divisor is the number you divide BY (it gets shifted first). The dividend is the number being divided.`, kind: 'vocab-note' },
   ],
 };

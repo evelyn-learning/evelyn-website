@@ -69,5 +69,12 @@ export const BASELINE_M6MATH_U10_MEASURES_OF_CENTER: TopicNotesBaseline = {
     { content: `An outlier drags the mean toward itself, but the median barely moves, because the median depends only on order.`, kind: 'tip' },
     { content: `When a data set has no outlier, the mean and the median usually land close together and either one works well; when it has an outlier, the median usually describes the typical value better.`, kind: 'tip' },
     { content: `Finding the center is the first step in describing a data set; how spread out it is comes next.`, kind: 'tip' },
+    { content: `With an **even** number of values, the median is NOT one of the middle values—it's the mean of the two middle values. Always average them.`, kind: 'common-error' },
+    { content: `Before you pick 'mean' or 'median,' always scan the data for an outlier. Look at a rough sketch or ask: 'Is one value far away from the rest?'`, kind: 'tip' },
+    { content: `The mean **uses** every single value, which is why an outlier pulls it so hard. That's not a strength when one extreme value doesn't represent the group.`, kind: 'gotcha' },
+    { content: `The median depends only on **order**, not on how far away the biggest or smallest value sits. So it ignores outliers naturally.`, kind: 'vocab-note' },
+    { content: `Don't just report the mean or median—explain *why* you chose it. Say 'The median better describes a typical value because...' or 'The mean and median are close, so...'`, kind: 'tip' },
+    { content: `Check your mean by multiplying it back: (mean) × (count) should equal the sum. If it doesn't, you made an arithmetic error.`, kind: 'tip' },
+    { content: `An outlier doesn't have to be huge or tiny in absolute terms—it just has to sit far away from where the rest of the data clusters. Context matters.`, kind: 'edge-case' },
   ],
 };

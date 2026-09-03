@@ -67,5 +67,11 @@ export const BASELINE_M6GEO_U8_COMPARING_TWO_PLACES: TopicNotesBaseline = {
     { content: `A genuine comparison names either a similarity, where both places share the same kind of characteristic, or a difference, where they do not.`, kind: 'tip' },
     { content: `A difference is not a rank. Two places can have very different characteristics without either one being the better place.`, kind: 'tip' },
     { content: `Always check a comparison against what each place was actually described as having, since a comparison can match the right kind of characteristic and still get a detail backward.`, kind: 'tip' },
+    { content: `**Physical to physical, human to human.** Don't mix a landform with an activity, or climate with buildings. Compare mountains to mountains, wheat-growing to wheat-growing. If you're not matching the same KIND, it's not a real comparison.`, kind: 'common-error' },
+    { content: `**Reread BOTH place descriptions before you write the comparison.** It's easy to flip which place has which fact. Check your words against the original text so you don't accidentally swap the details.`, kind: 'tip' },
+    { content: `**A difference does NOT make one place better.** Two towns can have different climates, buildings, or activities without either one being superior. Don't turn geography into opinion.`, kind: 'gotcha' },
+    { content: `**'Both have X' is a similarity; 'one has X, the other has Y' is a difference.** Use the right word. Both tell you real things about how the places compare.`, kind: 'vocab-note' },
+    { content: `**Skip comparisons that flip the types.** If you start with 'Place A's landform compared to Place B's activity,' stop and find Place B's landform instead. Don't force a mismatch just to make a statement.`, kind: 'edge-case' },
+    { content: `**Physical characteristics = nature (landforms, climate). Human characteristics = people (buildings, jobs, activities).** When you name a characteristic, ask yourself: 'Did nature make this, or did people?' If you can't answer clearly, re-read the lesson definitions.`, kind: 'vocab-note' },
   ],
 };

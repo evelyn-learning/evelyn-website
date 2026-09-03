@@ -72,5 +72,13 @@ export const BASELINE_M6GEO_U5_WHAT_IS_A_BIOME: TopicNotesBaseline = {
     { content: `Tundra: cold most of the year with only a short cool season, low precipitation, no trees -- just mosses, low grasses, and small shrubs.`, kind: 'tip' },
     { content: `Grassland: warm for part of the year and cooler for the rest, enough precipitation for grasses but not for many trees, only a few scattered trees.`, kind: 'tip' },
     { content: `Forest: a genuinely warm season and a genuinely cold season, enough precipitation to support many trees growing close together, with some kinds of trees losing their leaves in the cold season.`, kind: 'tip' },
+    { content: `Don't pick a biome from one clue alone. Desert and tundra are both dry, but tundra has moss and shrubs covering the ground while desert has bare ground between scattered plants. Always check all three clues together.`, kind: 'common-error' },
+    { content: `"Only a few trees" in grassland does NOT mean zero trees. Grassland has scattered trees; tundra has zero trees because it's too cold. If you see "no trees at all," think tundra, not grassland.`, kind: 'vocab-note' },
+    { content: `Forest and rainforest both grow many trees close together, but they're different biomes. The temperature clue separates them: rainforest is hot all year; forest has a real cold season. Don't stop at "trees."`, kind: 'gotcha' },
+    { content: `In a rainforest, rain falls on MOST DAYS with no dry season. That's different from a forest that gets enough rain for trees but has dry spells. "Heavy and constant all year" is the rainforest clue, not just "wet."`, kind: 'vocab-note' },
+    { content: `Temperature alone doesn't decide a biome. A place can be hot and be either a desert (very little rain) or a rainforest (lots of rain). Read precipitation too before you name it.`, kind: 'edge-case' },
+    { content: `Tundra is dry like a desert but cold like a forest. Don't match it by just one trait. You need low precipitation AND cold temperature AND the special plant life (mosses, shrubs, no trees) to name it tundra.`, kind: 'tip' },
+    { content: `A grassland's defining separation from tundra is precipitation, not plant life. Both can look like ground covered by low plants, but grassland gets ENOUGH rain for grass; tundra gets very little rain and stays too cold for trees.`, kind: 'common-error' },
+    { content: `Always check your answer by going backward through the three clues (plant life → temperature → precipitation). If all three still agree with your biome choice, you have it right.`, kind: 'tip' },
   ],
 };

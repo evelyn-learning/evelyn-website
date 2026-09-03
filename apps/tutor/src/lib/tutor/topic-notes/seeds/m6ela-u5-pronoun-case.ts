@@ -78,5 +78,12 @@ Sentence 2: "My bike is fine, but their's is missing a pedal."`, solution: `Sent
     { content: `The drop test is the whole procedure: cover the other name and read the pronoun alone. "Me went to the park" is not a sentence, so the answer is I.`, kind: 'tip' },
     { content: `Possessive pronouns never take an apostrophe: its, hers, ours, yours, theirs, whose. WRONG: "The dog chewed it's leash." CORRECT: "The dog chewed its leash."`, kind: 'tip' },
     { content: `Sound is not evidence. Run the drop test and name the job, even when the right answer feels stiff.`, kind: 'tip' },
+    { content: `The drop test beats your ear every time. Even if "and me" sounds casual and "and I" sounds fancy, cover the other name and read the pronoun alone. That tells you the real answer.`, kind: 'gotcha' },
+    { content: `Possessive pronouns NEVER get an apostrophe. Not its, hers, ours, yours, theirs, or whose. Ever. If you see an apostrophe on one of these, it's always wrong.`, kind: 'common-error' },
+    { content: `After a preposition (to, for, with, from, after, between), always use object case. No exceptions. "Between you and me," not "between you and I." The preposition decides it.`, kind: 'vocab-note' },
+    { content: `Work one blank at a time when two pronouns are in a pair. Don't pick both at once. The same pair (like "Dev and ___") can be I in one sentence and me in another because the job is different each time.`, kind: 'tip' },
+    { content: `Don't confuse "it's" with "its." It's = "it is." Its = possession. Read it the long way to check: "The dog chewed it is leash" is not a sentence, so use its.`, kind: 'edge-case' },
+    { content: `When there's a pair with a pronoun, put yourself last: say "Ellie and I," not "I and Ellie." Good manners in writing. Then use the drop test to pick the right case.`, kind: 'vocab-note' },
+    { content: `Subject case does the verb. Object case receives the action or comes after a preposition. Possessive shows ownership. Name the job out loud before you pick the pronoun—don't just guess.`, kind: 'tip' },
   ],
 };

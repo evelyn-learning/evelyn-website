@@ -77,5 +77,13 @@ Source B (the school's program report): "The sixth-grade choir performed three s
     { content: `Emphasis is the detail an account spends the most words on. A personal account often emphasizes feeling; an official report often emphasizes numbers and logistics.`, kind: 'tip' },
     { content: `Different does not mean one account got a fact wrong. Ask first whether the two facts actually clash before deciding anyone made a mistake.`, kind: 'tip' },
     { content: `A good comparison names the shared fact, then names what each account adds that the other leaves out.`, kind: 'tip' },
+    { content: `Before you compare anything, verify both accounts describe the **same real event** — the same day, place, and happening. If the events don't match, there's nothing to compare yet.`, kind: 'tip' },
+    { content: `**Omission is not contradiction.** One account leaving out a detail that another includes is a choice about what to mention, not an error or disagreement.`, kind: 'common-error' },
+    { content: `A true disagreement only happens when two accounts state **opposite facts** about the same thing — like one saying Saturday and one saying Sunday. Different details are not disagreements.`, kind: 'gotcha' },
+    { content: `Find the shared fact first by making two lists. The sentence or fact appearing on **both lists** is the event itself — the part neither writer could leave out and still be about the same thing.`, kind: 'tip' },
+    { content: `**Emphasis** = what an account spends the most words on. A personal account might spend words on feelings; an official report on numbers. Both can report the same true event with different emphasis.`, kind: 'vocab-note' },
+    { content: `**Stance** is the tone or attitude behind the words — warm and personal, or plain and factual. Neither stance makes an account more true; it's just how the writer chose to sound.`, kind: 'vocab-note' },
+    { content: `Don't confuse the **author** (the real person who wrote) with the **narrator** or voice in the account. A school newsletter is written by someone, but it speaks in an official voice, not a personal one.`, kind: 'vocab-note' },
+    { content: `When one account includes a detail the other leaves out, ask: "Did the other account say the **opposite**, or did it just not mention it?" Only the opposite is a real disagreement.`, kind: 'tip' },
   ],
 };

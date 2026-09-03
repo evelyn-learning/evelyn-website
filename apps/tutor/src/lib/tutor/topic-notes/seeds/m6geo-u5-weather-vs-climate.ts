@@ -68,5 +68,12 @@ export const BASELINE_M6GEO_U5_WEATHER_VS_CLIMATE: TopicNotesBaseline = {
     { content: `Knowing a place's climate does not tell you what the weather is doing on any single day, and knowing today's weather does not tell you what the place's climate is.`, kind: 'tip' },
     { content: 'A forecast, even one covering several days, is still weather, not climate.', kind: 'tip' },
     { content: `To decide whether a statement is about weather or climate, ask whether it describes right now (or a few days) or the pattern a place is known for, year after year.`, kind: 'tip' },
+    { content: `Don't say "climate must be X" just because you saw one day or one week of weather that way. One hot week ≠ a hot climate. Need to know the year-after-year pattern, not just one moment.`, kind: 'common-error' },
+    { content: `A place can be BOTH: "It rained today" (weather) AND "This place has a dry climate" (climate). These answer different questions about the same spot. Neither one contradicts the other.`, kind: 'gotcha' },
+    { content: `Use the one test question: Is this about RIGHT NOW or a few days, OR about what a place is USUALLY like year after year? Short time = weather. Long pattern = climate.`, kind: 'tip' },
+    { content: `A forecast (even a 10-day forecast) is still weather, not climate. Forecasts predict days or weeks ahead, not the pattern across years.`, kind: 'vocab-note' },
+    { content: `Don't flip the logic: "Knowing a place's climate tells you what the weather MUST be today." It doesn't. Climate is the usual pattern; any single day can break the pattern.`, kind: 'common-error' },
+    { content: `Pattern means it happens over and over, year after year—not just twice or once last year. A pattern has to repeat across many years to count as climate.`, kind: 'vocab-note' },
+    { content: `"Right now or a few days" = weather. "Year after year" = climate. Seasons count toward climate. One season once does not.`, kind: 'edge-case' },
   ],
 };

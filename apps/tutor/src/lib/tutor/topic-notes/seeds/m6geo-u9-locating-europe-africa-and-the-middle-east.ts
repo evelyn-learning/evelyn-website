@@ -70,5 +70,12 @@ export const BASELINE_M6GEO_U9_LOCATING_EUROPE_AFRICA_AND_THE_MIDDLE_EAST: Topic
     { content: `Egypt sits north of the Sahara, so it is outside Sub-Saharan Africa under this lesson's convention. Some sources instead group Egypt with the Middle East.`, kind: 'tip' },
     { content: `Turkey has land on the European side of a narrow strait, so some sources group Turkey with Europe and other sources group it with the Middle East. Neither grouping is the one official answer.`, kind: 'tip' },
     { content: `A region's border is a choice made by whoever is doing the grouping, not a fixed physical line -- so a country near the edge, such as Egypt or Turkey, can reasonably be grouped more than one way.`, kind: 'tip' },
+    { content: `Don't mix up the African *continent* with the *region* called Sub-Saharan Africa. Africa is the continent; Sub-Saharan Africa is only the part south of the Sahara.`, kind: 'common-error' },
+    { content: `Sub-Saharan Africa does NOT touch the Mediterranean Sea. The Sahara and northern Africa block it. If you sail south from Europe across the Mediterranean, you reach *northern* Africa, not Sub-Saharan Africa.`, kind: 'gotcha' },
+    { content: `Europe and Africa are separated by *water only*, even at their closest point. Africa and the Middle East are joined by *land*. These two connections are different.`, kind: 'vocab-note' },
+    { content: `Egypt is *on* the African continent but lies *north* of the Sahara, so under this lesson it is outside Sub-Saharan Africa. (Some sources put Egypt in the Middle East instead.)`, kind: 'edge-case' },
+    { content: `Turkey straddles a narrow strait with land on both sides. Some sources group it with Europe, others with the Middle East. Both are valid choices — there is no one 'official' answer.`, kind: 'edge-case' },
+    { content: `Always answer the two location questions in this order: (1) Does it touch the Mediterranean? If yes, which side? (2) Which direction to reach the other two regions? This routine works every time.`, kind: 'tip' },
+    { content: `The Sahara is a desert that *separates* Sub-Saharan Africa from the Mediterranean coast — it's not part of Sub-Saharan Africa, it's the boundary.`, kind: 'vocab-note' },
   ],
 };

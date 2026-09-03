@@ -68,5 +68,12 @@ export const BASELINE_M6GEO_U2_CONTINENTS_AND_OCEANS: TopicNotesBaseline = {
     { content: `The Pacific Ocean lies between the Americas and Asia and Australia. The Atlantic Ocean lies between the Americas and Europe and Africa. The Indian Ocean lies between Africa, Asia, and Australia. The Arctic Ocean sits at the far northern end of the globe, bordered by North America, Europe, and Asia.`, kind: 'tip' },
     { content: `Describe any location with two questions: what does it touch along its edges, and in which direction does each neighbor lie? A position statement should hold up when flipped and read from the other side.`, kind: 'tip' },
     { content: `This lesson's seven-continent, four-ocean count is a convention, not the only one used by real geographers; some sources count six continents by combining Europe and Asia, or five oceans by adding the Southern Ocean.`, kind: 'tip' },
+    { content: `Don't think the four oceans are separate pools with walls between them. They're one connected body of water divided by names on a map, not by anything in the water itself.`, kind: 'common-error' },
+    { content: `Europe and Asia touch with NO ocean between them—they sit on one landmass. Don't assume every pair of continents has water separating them.`, kind: 'gotcha' },
+    { content: `When you describe a location, always ask both questions: what touches it, AND in which direction? One answer alone is not enough.`, kind: 'tip' },
+    { content: `Always flip your direction statement to check it. If Ocean X is east of Continent Y, then Continent Y must be west of Ocean X—they must match when reversed.`, kind: 'tip' },
+    { content: `Australia and Antarctica are the ONLY continents surrounded entirely by ocean. Don't confuse them—Australia is in the tropics; Antarctica is at the far south with ice.`, kind: 'common-error' },
+    { content: `The seven-continent count is a CONVENTION used in the U.S., not the only true answer. Some geographers count six by combining Europe and Asia. Say 'by convention' when you state the count.`, kind: 'vocab-note' },
+    { content: `A continent can have multiple neighbors of different kinds—oceans on some sides and land connections on others. That's normal, not a mistake in your description.`, kind: 'edge-case' },
   ],
 };

@@ -70,5 +70,11 @@ export const BASELINE_M6MATH_U5_RATIONAL_NUMBERS_ON_THE_NUMBER_LINE: TopicNotesB
     { content: `The opposite of a number is its mirror across zero: the same distance, the other side.`, kind: 'tip' },
     { content: `The opposite of the opposite of a number is the number itself, because two mirror-flips across zero return you to the start.`, kind: 'tip' },
     { content: `Placing a number or finding its opposite never asks you to add it to, or subtract it from, anything else.`, kind: 'tip' },
+    { content: `The negative sign applies to the whole number, not just the digits. -3/4 goes left of zero (between 0 and -1), not right. Don't ignore the sign because the fraction looks small.`, kind: 'common-error' },
+    { content: `Distance from zero is always positive. It's the number stripped of its sign. Distance for both 5 and -5 is 5, even though one sits right and one sits left.`, kind: 'vocab-note' },
+    { content: `Opposite of the opposite means two flips across zero—you land back home, not at 0 or somewhere new. Opposite of 6 is -6; opposite of -6 is 6 again.`, kind: 'common-error' },
+    { content: `Decimals and fractions are equally valid on the number line. Mark them between the integers—2.5 sits halfway between 2 and 3, just like 5/2 does. Same spot, different notation.`, kind: 'tip' },
+    { content: `Zero is its own opposite. It sits zero distance from itself, so there's no other side to flip to. Opposite of 0 is 0.`, kind: 'edge-case' },
+    { content: `Check your placement by counting distance and direction: Is this number X units left or right of zero? Does that match the sign and size of my number?`, kind: 'tip' },
   ],
 };

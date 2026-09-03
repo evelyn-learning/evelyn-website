@@ -72,5 +72,13 @@ export const BASELINE_M6GEO_U10_MAP_BASED_PROBLEM_SOLVING: TopicNotesBaseline = 
     { content: `North is wherever that map's own compass rose says it is, never assumed to be the top of the page.`, kind: 'tip' },
     { content: `Check a finished route by retracing it backward: reverse each leg, using the opposite direction and the same distance, in reverse order.`, kind: 'tip' },
     { content: `A planning problem that compares two routes is solved the same way: finish each route's total distance completely, then set the two finished totals side by side.`, kind: 'tip' },
+    { content: `Don't assume north is at the top. Check THIS map's compass rose first. North can point to any edge of the page, and every direction on that map depends on where that arrow points.`, kind: 'common-error' },
+    { content: `Read the legend FIRST, before you touch the compass rose or scale. If you skip this, you won't know what the symbols on the route actually mean.`, kind: 'tip' },
+    { content: `A leg is ONE straight stretch with ONE direction and ONE distance. Don't carry a leg's direction or distance into a different leg. Check the compass rose and count scale segments again for every new leg.`, kind: 'common-error' },
+    { content: `To find a leg's distance: count how many scale-bar segments it spans, then multiply by what one segment stands for. Don't eyeball or guess the distance.`, kind: 'vocab-note' },
+    { content: `A route's total distance is the sum of ALL its legs, not just the first one. Add every leg together at the end.`, kind: 'common-error' },
+    { content: `When comparing two routes, finish one route's complete total distance, then finish the other route's complete total, then compare. Don't mix the legs of different routes.`, kind: 'gotcha' },
+    { content: `To check your work, retrace the route backward: start at the end, reverse the last leg's direction (use the opposite on the compass rose), use the same distance, then do the previous leg in reverse. Your backward total should match your forward total.`, kind: 'tip' },
+    { content: `Opposite directions: north ↔ south, east ↔ west. Use them when retracing a route backward or checking a direction statement.`, kind: 'vocab-note' },
   ],
 };

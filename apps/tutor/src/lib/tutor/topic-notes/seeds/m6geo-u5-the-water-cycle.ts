@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U5_THE_WATER_CYCLE: TopicNotesBaseline = {
     { content: `Collection is fallen water gathering into oceans, lakes, rivers, and other bodies of water, ready to be warmed by the sun and evaporate again.`, kind: 'tip' },
     { content: `The four stages form a loop with no starting point and no ending point: collection leads right back into evaporation, and the cycle runs again.`, kind: 'tip' },
     { content: `Water never disappears during the water cycle. It only changes form and location as it moves through the four stages.`, kind: 'tip' },
+    { content: `The four stages must happen in this exact order: evaporation, then condensation, then precipitation, then collection. You cannot skip a stage or do them out of order.`, kind: 'gotcha' },
+    { content: `Water vapor is invisible. If you can see it, it's not water vapor—it's already condensed into tiny droplets forming a visible cloud or fog.`, kind: 'vocab-note' },
+    { content: `Don't say water 'disappears' during evaporation. It changes form—from liquid to invisible gas—but it's still there and still part of the water cycle.`, kind: 'common-error' },
+    { content: `Condensation makes clouds. If you see a cloud forming or growing, that's condensation happening—water vapor cooling and turning back into droplets you can now see clustered together.`, kind: 'tip' },
+    { content: `Precipitation is any water falling from a cloud—rain, snow, sleet, or hail. All four are precipitation. Don't call it evaporation, and don't think it only means rain.`, kind: 'vocab-note' },
+    { content: `Collection happens when water gathers into oceans, lakes, or rivers after it lands. Flowing downhill into a lake is part of collection, not a separate stage.`, kind: 'edge-case' },
+    { content: `The water cycle has no finish line. The same water evaporates again and again from different places on Earth. It's a loop, not a one-time journey.`, kind: 'gotcha' },
   ],
 };

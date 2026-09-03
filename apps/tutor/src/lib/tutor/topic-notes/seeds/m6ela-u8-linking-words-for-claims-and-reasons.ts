@@ -74,5 +74,12 @@ ___ (2) on Tuesday, the fourth-grade kickball game had only finished two innings
     { content: `For example and for instance introduce one specific case that backs up a reason that has already been stated in general terms.`, kind: 'tip' },
     { content: `A linking word can be spelled correctly and still be wrong, if it names a relationship that is not actually there — "however" is a completely correct word that is still the wrong choice whenever nothing turns against the claim.`, kind: 'tip' },
     { content: `Before choosing a word, say the relationship in plain words first: "this explains it," "this follows from it," or "this is one example of it." Then pick the family that matches.`, kind: 'tip' },
+    { content: `Say the relationship out loud BEFORE you pick a word. Ask: 'Does this explain the claim? Does it follow as a result? Is it one specific example?' Only then choose the linking word.`, kind: 'tip' },
+    { content: `Don't confuse **because** with **therefore**. Because attaches a reason to the claim it explains (claim, because reason). Therefore introduces what happens next as a result (reason. Therefore, claim).`, kind: 'vocab-note' },
+    { content: `A linking word can be spelled correctly and still be wrong. If 'however' sounds smooth but the sentence agrees with the claim instead of turning against it, 'however' is the wrong choice no matter how grown-up it sounds.`, kind: 'gotcha' },
+    { content: `An example is NOT a new result. One specific case proves a general reason already stated. If the sentence before it did not make a general point, 'for example' does not belong there.`, kind: 'common-error' },
+    { content: `Test your linking word by reading the whole sentence aloud. If the relationship feels wrong or forced, the word is wrong — even if it is spelled right and sounds formal.`, kind: 'tip' },
+    { content: `Do not treat 'for example' and 'for instance' as ways to add extra information. They mark one specific case that PROVES a general reason. Without a general pattern to prove, they do not belong.`, kind: 'edge-case' },
+    { content: `When you see 'therefore,' 'consequently,' or 'as a result,' check: did the reason come BEFORE this word in its own sentence? If not, these words are wrong.`, kind: 'tip' },
   ],
 };

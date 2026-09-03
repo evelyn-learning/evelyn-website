@@ -68,5 +68,12 @@ export const BASELINE_M6GEO_U8_MAPPING_YOUR_OWN_COMMUNITY: TopicNotesBaseline = 
     { content: `Getting the order and the turns right is not the same as labeling correctly. A map can have every landmark in the right place and still be wrong if one label does not match what kind of characteristic that landmark actually is.`, kind: 'tip' },
     { content: `Checking a labeled community map means going through it one landmark at a time, confirming the landmark named, the turn to the next one, and the physical-or-human label, all against the printed description.`, kind: 'tip' },
     { content: `Sketching and describing a labeled community map combines the mental-map skill of connecting landmarks by routes with the place-description skill of naming a physical or human characteristic.`, kind: 'tip' },
+    { content: `Getting the order and turns RIGHT does NOT mean the labels are RIGHT. Check both separately: first the route, then each landmark's physical-or-human label against the description.`, kind: 'gotcha' },
+    { content: `A meadow, stream, hill, or patch of woods is PHYSICAL — it happens on its own in nature. Do not call it human just because a person might use it.`, kind: 'common-error' },
+    { content: `Say 'physical' or 'human' — not 'natural' or 'man-made.' Use the exact vocabulary from the lesson so your labels match what the description asks for.`, kind: 'vocab-note' },
+    { content: `When you check a labeled map, go ONE LANDMARK AT A TIME and confirm three things every time: (1) the name, (2) the turn to the next one, (3) the physical-or-human label. Do not skip any.`, kind: 'tip' },
+    { content: `A footbridge, bus stop, library, and schoolhouse are all HUMAN — people built them. Do not call them physical even if they cross a stream or sit on a hill.`, kind: 'common-error' },
+    { content: `Your sketch shows the route (where landmarks sit and which turns connect them). Your label shows what KIND of landmark it is. These are two separate jobs — do both.`, kind: 'vocab-note' },
+    { content: `If your description matches the original order and turns but one label is wrong, your map is STILL WRONG. Correct that one label and re-check the whole thing against the description once more.`, kind: 'tip' },
   ],
 };

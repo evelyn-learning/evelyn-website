@@ -75,5 +75,12 @@ export const BASELINE_M6SCI_U7_EARTHS_FOUR_SPHERES_INTERACTING: TopicNotesBaseli
     { content: 'A burning forest releases gas and ash from the biosphere into the atmosphere.', kind: 'tip' },
     { content: `Water moves between the hydrosphere and the atmosphere and back -- the next two lessons trace exactly how.`, kind: 'tip' },
     { content: `Naming all four spheres present in a scene is not the same as describing an interaction. An interaction needs a specific thing moving in a specific direction between two of them.`, kind: 'tip' },
+    { content: `Don't say "all four spheres are present" and stop. That's just naming what you see. An interaction requires: which TWO spheres, WHAT is moving (be specific), and WHICH DIRECTION.`, kind: 'common-error' },
+    { content: `The biosphere is NOT separate from the other three. Living things swap matter and energy with geosphere, hydrosphere, and atmosphere just like those three swap with each other.`, kind: 'gotcha' },
+    { content: `When you name what's moving, be specific: say "soil," not "stuff"; say "ash and gas," not "material"; say "water," not "liquid." Vague words hide whether you really understand what left and what arrived.`, kind: 'vocab-note' },
+    { content: `A volcano erupting lava that flows down the slope and hardens is NOT a geosphere-atmosphere interaction. It's geosphere-to-geosphere. The direction the material moves matters.`, kind: 'edge-case' },
+    { content: `Don't confuse "water turning brown" with "the water itself changing into something new." Brown water means the water is CARRYING soil, not that the water changed color on its own.`, kind: 'common-error' },
+    { content: `"Sphere" here does NOT mean a ball shape. It means a whole share or system of Earth's stuff—all the geosphere together, all the hydrosphere together, etc.`, kind: 'vocab-note' },
+    { content: `When describing an interaction, always say WHICH DIRECTION—from geosphere INTO atmosphere, not just "between geosphere and atmosphere." Direction is one of the three required parts.`, kind: 'tip' },
   ],
 };

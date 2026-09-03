@@ -70,5 +70,11 @@ export const BASELINE_M6GEO_U4_MAJOR_WATER_FEATURE_VOCABULARY: TopicNotesBaselin
     { content: `A sea and a gulf are both salt water pockets, entered and left through one opening. A sea keeps a broad, open connection to the ocean. A gulf is more closed in, with land curving around most of its edge and a comparatively narrow opening left.`, kind: 'tip' },
     { content: `A strait is a passage, not a pocket: a narrow stretch of water with land on both sides that joins two larger bodies of water end to end, so a ship enters from one side and comes out into a different larger body of water on the other.`, kind: 'tip' },
     { content: `The line between a sea and a gulf is partly a matter of naming history. This lesson teaches the property the words are supposed to track, but a real name does not always match it perfectly.`, kind: 'tip' },
+    { content: `Don't judge by size or name alone. A river is defined by flowing downhill through a channel, not by being wide or long. A gulf is defined by being a pocket with one opening, not by sounding 'big' or 'small.'`, kind: 'common-error' },
+    { content: `Always ask: does the water move downhill through a channel first. If yes, it's a river—stop there. If no, then check enclosure. This order matters.`, kind: 'tip' },
+    { content: `A gulf and a strait both look narrow, but they are completely different. A gulf is a pocket you enter and exit the same way. A strait is a hallway you pass straight through to a different body of water.`, kind: 'gotcha' },
+    { content: `A lake has zero openings to the ocean or sea. A gulf has exactly one. A sea has one too, but it's broad. If you count openings, you can tell them apart.`, kind: 'vocab-note' },
+    { content: `Real places called 'Gulf of Mexico' or 'Baltic Sea' might not perfectly match this lesson's definitions. That's okay—they were named before the strict rules were written. Use the properties to classify anything without a label.`, kind: 'edge-case' },
+    { content: `Salt water and fresh water help identify lakes (usually fresh) versus seas and gulfs (always salt), but they are not the defining test. Focus on the shape and openings first.`, kind: 'vocab-note' },
   ],
 };

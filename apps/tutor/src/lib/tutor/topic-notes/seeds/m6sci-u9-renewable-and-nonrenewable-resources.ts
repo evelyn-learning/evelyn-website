@@ -71,5 +71,12 @@ export const BASELINE_M6SCI_U9_RENEWABLE_AND_NONRENEWABLE_RESOURCES: TopicNotesB
     { content: `Groundwater is renewable when it is pumped no faster than the aquifer recharges, and behaves like a nonrenewable resource when it is pumped much faster than that.`, kind: 'tip' },
     { content: `Timber is renewable when trees are cut at about the same rate new ones grow to replace them, and behaves like a nonrenewable resource when a forest is cut far faster than it can regrow.`, kind: 'tip' },
     { content: `Renewable does not mean unlimited and does not mean clean. A renewable resource can still run low, or run out for a while, if it is used faster than it is replaced.`, kind: 'tip' },
+    { content: `Renewable vs. nonrenewable is NOT about the material itself—it's always about comparing TWO RATES: how fast nature replaces it versus how fast people use it. Same resource can flip categories if the use rate changes.`, kind: 'gotcha' },
+    { content: `Don't say 'coal is forming right now, so it's renewable.' Coal DOES form somewhere, but formation takes millions of years while mining takes years. For any timescale that matters to people, coal mined today is NOT being replaced.`, kind: 'common-error' },
+    { content: `Solar energy is renewable NO MATTER HOW MUCH you capture—the sun doesn't supply less sunlight because solar farms exist. But a solar PANEL wearing out means the equipment fails, NOT that sunlight ran out. Don't confuse the resource with the technology.`, kind: 'vocab-note' },
+    { content: `Groundwater and timber are the SAME PATTERN: renewable if use rate ≈ replacement rate, nonrenewable if use rate >> replacement rate. The same aquifer or forest can switch from renewable to nonrenewable if people suddenly use more.`, kind: 'tip' },
+    { content: `'Renewable' does NOT mean 'unlimited' or 'clean.' An overpumped aquifer and an overcut forest prove a renewable resource can still run low or out if you use it faster than it's replaced.`, kind: 'common-error' },
+    { content: `When classifying a resource, ALWAYS name the two rates you're comparing (replacement rate and use rate) and say which is faster. 'Coal is nonrenewable because formation is much slower than mining' is complete; 'coal is nonrenewable' alone is not.`, kind: 'tip' },
+    { content: `Don't confuse 'Is the resource CAPABLE of being replaced?' with 'Is it being REPLACED at the rate it's being used?' Trees CAN regrow; that doesn't make logging a forest in one year renewable.`, kind: 'edge-case' },
   ],
 };

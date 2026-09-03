@@ -72,5 +72,12 @@ export const BASELINE_M6SCI_U5_MASS_EXTINCTIONS_AS_TIME_MARKERS: TopicNotesBasel
     { content: `The same worldwide fossil change, found at the same relative position in far-apart rock records, lets geologists match those layers in time, even without an age in years for either one.`, kind: 'tip' },
     { content: `This lesson uses the five boundaries only to mark WHEN something changed. It does not explain WHY any extinction happened, and for most of the five the exact cause is still actively debated among scientists.`, kind: 'tip' },
     { content: `The order of the five boundaries in an undisturbed rock record follows the same superposition rule as ordinary rock layers: lower means older.`, kind: 'tip' },
+    { content: `Don't confuse severity with division type. End-Permian is the MOST severe but marks an ERA boundary. End-Cretaceous is LESS severe but also marks an ERA boundary. Severity and type of division are completely separate facts.`, kind: 'gotcha' },
+    { content: `A mass-extinction boundary is a SUDDEN CHANGE IN FOSSILS across rock layers worldwide—not an explanation of why animals disappeared. When you identify a boundary, you're saying WHEN it happened, not WHY.`, kind: 'common-error' },
+    { content: `The five boundaries always appear in the same order in any undisturbed rock stack, from oldest (lowest) to youngest (highest): end-Ordovician → end-Devonian → end-Permian → end-Triassic → end-Cretaceous. Use this order to check your work.`, kind: 'tip' },
+    { content: `End-Permian and end-Cretaceous are the only two boundaries that divide ERAS. The other three (end-Ordovician, end-Devonian, end-Triassic) divide only PERIODS within a single era. Memorize which is which.`, kind: 'vocab-note' },
+    { content: `If two rock outcrops thousands of kilometers apart show the same abrupt fossil change at the same relative position in their layers, that match proves they formed at the same moment in geologic time—even without a radiometric age in years.`, kind: 'tip' },
+    { content: `End-Cretaceous is also called the K-Pg boundary. Don't be thrown if you see that name—it's the same event as end-Cretaceous, about 66 million years ago, marking the Mesozoic–Cenozoic boundary.`, kind: 'vocab-note' },
+    { content: `Edge case: End-Permian is the most severe mass extinction of the five, but it does NOT mark the boundary closest to now. End-Cretaceous, about 66 million years ago, is much more recent. Don't assume 'worst' means 'most recent.'`, kind: 'edge-case' },
   ],
 };

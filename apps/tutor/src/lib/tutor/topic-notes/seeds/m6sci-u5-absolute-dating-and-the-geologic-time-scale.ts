@@ -76,5 +76,13 @@ export const BASELINE_M6SCI_U5_ABSOLUTE_DATING_AND_THE_GEOLOGIC_TIME_SCALE: Topi
     { content: `The geologic time scale nests eon, then era, then period. The Phanerozoic Eon (started about 541 million years ago) holds the Paleozoic, Mesozoic and Cenozoic Eras; everything before it is the Precambrian.`, kind: 'tip' },
     { content: `Place an age by comparing it to the era boundary numbers, after writing every number out in full so millions are never confused with billions.`, kind: 'tip' },
     { content: `This lesson does not explain WHY an atom decays -- that mechanism is Grade 8 physical science.`, kind: 'tip' },
+    { content: `Carbon-14 dating only works on once-living material (wood, bone, shell). Never use it on rock. If someone says "carbon-14 dated this rock," they made a mistake.`, kind: 'common-error' },
+    { content: `Carbon-14 maxes out around 50,000 years; uranium-lead reaches billions. If a number looks huge (millions or billions), carbon-14 cannot have produced it—that's uranium-lead's job.`, kind: 'gotcha' },
+    { content: `Write out every zero before comparing ages to era boundaries. 1.8 billion = 1,800,000,000 and 541 million = 541,000,000. Seeing the zeros makes the difference unmissable; without them, billion and million blur together.`, kind: 'tip' },
+    { content: `Half-life means half of *what's left* decays each time, not half of the original amount every time. After 2 half-lives you have 1/4 remaining, not zero. It shrinks forever, never quite reaching exactly zero.`, kind: 'common-error' },
+    { content: `An age older than 541 million years does not belong in the Paleozoic, Mesozoic, or Cenozoic—it belongs in the Precambrian, the huge time span *before* the Phanerozoic Eon even started.`, kind: 'edge-case' },
+    { content: `Half-life does not speed up or slow down. Hot, cold, wet, dry—nothing changes it. That's what makes it a usable clock. Don't assume conditions change the decay rate.`, kind: 'vocab-note' },
+    { content: `Read your answer back: does the material match the method? Is the age inside the method's range? Does the placement on the time scale make sense? All three should say yes.`, kind: 'tip' },
+    { content: `The geologic time scale nests like a calendar: eon (biggest) contains eras, eras contain periods. You place an age only down to the era in this lesson, not the period.`, kind: 'vocab-note' },
   ],
 };

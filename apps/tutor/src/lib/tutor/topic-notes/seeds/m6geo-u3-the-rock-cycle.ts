@@ -72,5 +72,12 @@ export const BASELINE_M6GEO_U3_THE_ROCK_CYCLE: TopicNotesBaseline = {
     { content: `The rock cycle has no single fixed order -- the same starting rock can end up as either of the other two types, depending on what actually happens to it.`, kind: 'tip' },
     { content: `A rock only becomes igneous rock if it fully melts and then cools again. Heat and pressure without melting instead produce metamorphic rock.`, kind: 'tip' },
     { content: `This change happens over an extremely long time, far too slowly for anyone to see it happening.`, kind: 'tip' },
+    { content: `Don't classify rocks by how they look (color, size, grain). Classify them by HOW THEY FORMED. Two shiny rocks can be different types; two dull rocks can be the same type.`, kind: 'common-error' },
+    { content: `Heat + pressure WITHOUT melting = metamorphic. Heat + pressure WITH full melting = igneous (after it cools). Don't confuse 'very hot' with 'melted.'`, kind: 'gotcha' },
+    { content: `The rock cycle has NO single path. A sedimentary rock can become metamorphic OR igneous, depending on whether it fully melts or just gets squeezed. Same starting rock, different endings.`, kind: 'vocab-note' },
+    { content: `Magma is melted rock—still liquid. Igneous rock is the solid that forms AFTER magma cools. Don't mix up the two names.`, kind: 'vocab-note' },
+    { content: `When classifying a rock, check ALL THREE definitions, not just the first one that sounds right. Cross out the ones that DON'T fit.`, kind: 'tip' },
+    { content: `Sedimentary rock ALWAYS starts with loose pieces settling and being pressed together. If the description doesn't mention loose pieces or layers, it's not sedimentary.`, kind: 'edge-case' },
+    { content: `The rock cycle takes MILLIONS of years—way too slow to see. Don't expect to watch it happen or find a rock 'in progress.'`, kind: 'edge-case' },
   ],
 };

@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U7_READING_GEOGRAPHIC_GRAPHS_AND_CHARTS: TopicNotesB
     { content: `Comparing percents from two different pie charts does not say which actual amount is bigger unless the two wholes are the same size; multiply each percent by that place's own total to compare real amounts.`, kind: 'tip' },
     { content: `A table's value is found by matching one row to one column; comparing across rows or down columns, and adding several rows together when a question asks for it, finds the bigger comparison.`, kind: 'tip' },
     { content: `A comparison question always needs two numbers read correctly, not one; the single biggest bar, slice, or table value is never automatically bigger than several of the others added together.`, kind: 'tip' },
+    { content: `A **percent from one pie chart cannot be directly compared to a percent from a different pie chart** to find which actual amount is bigger. Always multiply each percent by that place's own total first.`, kind: 'common-error' },
+    { content: `The **single tallest or longest bar on a graph is NOT automatically bigger than several other bars added together**. Always add up the bars you're comparing before deciding.`, kind: 'common-error' },
+    { content: `When reading a pie chart, **all slices in ONE circle must add up to exactly 100 percent**. If they don't, something is labeled wrong or you misread a value.`, kind: 'tip' },
+    { content: `A comparison question **always needs two numbers**, not one. Reading just the tallest bar, biggest slice, or single cell is never a complete answer.`, kind: 'gotcha' },
+    { content: `**Write the unit (days, square kilometers, lakes, percent) next to every number** when you read it from the graph, pie chart, or table. Never drop the unit before comparing.`, kind: 'vocab-note' },
+    { content: `In a table, **add across rows or down columns only if the question asks for a total**. A single cell value is just one number; a sum is multiple numbers combined.`, kind: 'edge-case' },
+    { content: `**Percent and percentage points are different in words but the same in math.** A change from 40% to 30% is '10 percentage points' or just '10 percent lower'—both mean subtract 40 minus 30.`, kind: 'vocab-note' },
   ],
 };

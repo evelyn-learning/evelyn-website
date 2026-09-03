@@ -66,5 +66,12 @@ export const BASELINE_M6GEO_U6_RESOURCE_DISTRIBUTION_AND_ITS_EFFECTS: TopicNotes
     { content: `A place missing the one resource a particular activity needs is unlikely to support that activity, but it usually has a different resource that supports a different activity.`, kind: 'tip' },
     { content: `Having a resource suited to one activity does not make a place "better" than a place suited to a different activity -- different resources simply suit different activities.`, kind: 'tip' },
     { content: `Describing which activities a place's resources support is a geography question. Ranking one place above another because of which resource it has is not.`, kind: 'tip' },
+    { content: `Don't rank places as "better" or "worse" by their resources. Say what activity each place's resources support instead. Fertile soil suits farming, thick forest suits logging — neither is better, just different.`, kind: 'common-error' },
+    { content: `A place missing one resource (like no trees for logging) still has other resources (like fertile soil for farming). Don't assume "no trees" means "no resources at all."`, kind: 'gotcha' },
+    { content: `Resource distribution is about PATTERN — where each resource shows up in large amounts. One resource's pattern doesn't predict another's. Thick forest doesn't automatically mean fertile soil.`, kind: 'vocab-note' },
+    { content: `Match the activity to the resource it actually needs: farming needs fertile soil + water, logging needs thick forest, mining needs a mineral deposit. If the resource is there, the activity suits it. If not, it doesn't.`, kind: 'tip' },
+    { content: `When describing a place's resources, always say WHAT ACTIVITY it supports and WHY (which resource makes that possible). Never just rank it or leave out the resource.`, kind: 'common-error' },
+    { content: `Fertile soil is soil with nutrients and water. Thin, rocky soil is not fertile — it can't hold water and nutrients well. Don't mix these up when deciding if farming suits a place.`, kind: 'vocab-note' },
+    { content: `A place can have multiple resources (like both forest AND mineral deposits), but one big resource doesn't mean it also has the others. Check each resource separately.`, kind: 'edge-case' },
   ],
 };

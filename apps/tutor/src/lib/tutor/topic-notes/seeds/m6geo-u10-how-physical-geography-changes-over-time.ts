@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U10_HOW_PHYSICAL_GEOGRAPHY_CHANGES_OVER_TIME: TopicN
     { content: `Gradual change and sudden change are different. Sudden change happens fast enough that one clear event explains the whole difference; gradual change never shows a jump from one day to the next.`, kind: 'tip' },
     { content: `The best way to notice gradual change is to compare a description of a place from one time with a description of the very same place from a much later time.`, kind: 'tip' },
     { content: `A difference between an old description and a new description does not always mean one big event happened. It is more often a sign that many small changes have been adding up the whole time.`, kind: 'tip' },
+    { content: `Don't assume one map or description is wrong just because it differs from another. Both can be accurate if they were made at different times — the place itself changed, not the map.`, kind: 'common-error' },
+    { content: `Gradual change produces NO visible jump from one day to the next. If two descriptions taken only days or weeks apart show a huge difference, look for a sudden event (flood, storm) instead.`, kind: 'tip' },
+    { content: `"No single event mentioned" is a signal that gradual change probably happened. Don't assume a big event must have occurred just because a river's course or coastline shifted noticeably.`, kind: 'gotcha' },
+    { content: `Compare the same place at two different times to see gradual change. You can't notice it by standing in one spot on one day — the change is too slow.`, kind: 'vocab-note' },
+    { content: `A coastline or river course looking the same today doesn't mean it was the same 100 years ago. Physical geography looks permanent on any single day but changes over decades or centuries.`, kind: 'edge-case' },
+    { content: `Gradual change = many tiny shifts, one after another, over a long time. Sudden change = one big shift from one single event. Don't mix them up.`, kind: 'vocab-note' },
+    { content: `If two descriptions or maps of the same place are years apart and show a difference with no dramatic event mentioned, gradual change is the answer. Small changes add up.`, kind: 'tip' },
   ],
 };

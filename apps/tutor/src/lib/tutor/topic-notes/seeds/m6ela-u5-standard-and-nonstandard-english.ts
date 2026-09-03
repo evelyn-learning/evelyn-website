@@ -75,5 +75,12 @@ Sentence 2: "My uncle ain't been to that game since March."`, solution: `Sentenc
     { content: `Standard English pairs a plural subject with "were," not "was," and pairs "does not" or "do not" with the subject Standard English expects, not "don't" on its own. WRONG: "We was the last team." CORRECT: "We were the last team."`, kind: 'tip' },
     { content: `Revise in three moves: name the nonstandard form, swap in the exact standard form the sentence needs, then reread the whole sentence to check the meaning has not changed.`, kind: 'tip' },
     { content: `The swap belongs to formal writing — a report, a letter to an office, a class newsletter — not to every sentence a person says or writes.`, kind: 'tip' },
+    { content: `Don't just delete the second negative word. Ask what positive word it should become instead. "I don't have no pencil" → "I don't have **any** pencil," not "I don't have pencil."`, kind: 'common-error' },
+    { content: `"Ain't" can mean five different things. Always ask: *Which helping verb does this sentence actually need?* "She ain't ready" = is not. "They ain't left" = have not. Pick the exact one, then reread.`, kind: 'gotcha' },
+    { content: `A double negative hides inside one clause, even if other words sit between the two negatives. "The bus don't stop at my corner no more" = two negatives in *one* clause. Find and fix both.`, kind: 'edge-case' },
+    { content: `Your job is to match the form the *setting* calls for—formal writing, not every text or conversation. Dialogue in a story and a text to a friend do not need revising. Only swap when the assignment says 'report,' 'letter,' or 'formal.'`, kind: 'tip' },
+    { content: `Always reread the whole sentence after you revise. The meaning should not change—only the form. If it sounds different in meaning, you picked the wrong standard verb or positive word.`, kind: 'tip' },
+    { content: `Subject-verb pairs change together: "we was" → "we were," "he don't" → "he does not." The subject tells you which verb form Standard English needs. Look at the subject first.`, kind: 'vocab-note' },
+    { content: `A nonstandard form is not a sign someone doesn't know English well. It means the sentence follows a *different* set of rules—a dialect. Standard English is just the form school expects for formal writing.`, kind: 'gotcha' },
   ],
 };

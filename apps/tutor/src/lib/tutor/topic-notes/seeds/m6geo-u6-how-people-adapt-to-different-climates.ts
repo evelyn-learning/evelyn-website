@@ -70,5 +70,13 @@ export const BASELINE_M6GEO_U6_HOW_PEOPLE_ADAPT_TO_DIFFERENT_CLIMATES: TopicNote
     { content: `Loose, light-colored, lightweight clothing fits a hot, sunny, dry climate. The same clothing would let too much body heat escape in a long, cold, snowy climate.`, kind: 'tip' },
     { content: `A climate with a long growing season and steady rain supports fresh food through most of the year. A climate with a long food-scarce season needs food that can be stored.`, kind: 'tip' },
     { content: `The same adaptation can fit one climate well and fail in another -- always check why an adaptation works before assuming it works everywhere.`, kind: 'tip' },
+    { content: `An adaptation is NOT a sign a place is poor or old-fashioned. Thick walls and small windows solve a real problem: keeping heat in during bitter winters. Always ask "What climate problem does this solve?" not "Is this place behind the times?"`, kind: 'common-error' },
+    { content: `Before picking an adaptation, NAME THE TOUGHEST PROBLEM the climate creates first (too cold? too hot? too wet? too dry?). Then check if the adaptation solves that exact problem. If it doesn't, it's a mismatch.`, kind: 'tip' },
+    { content: `The SAME adaptation can work great in one climate and fail badly in another. Thick walls hold heat in cold climates but trap unwanted heat in hot, humid ones. Always test an adaptation against the specific climate it's built for.`, kind: 'gotcha' },
+    { content: `Light-colored, loose, lightweight clothing lets heat escape in hot climates. Dark, heavy, tight clothing traps heat in cold climates. They do opposite jobs—don't swap them.`, kind: 'vocab-note' },
+    { content: `A steep roof sheds HEAVY SNOW in cold climates; a flat roof lets snow pile up until it's too heavy. The roof shape solves a specific snow problem—it's not just a style choice.`, kind: 'edge-case' },
+    { content: `In a climate where little grows for months (too cold or too dry), people need STORED FOOD like dried foods to survive. Fresh food alone won't work if there's a long season with nothing to harvest.`, kind: 'common-error' },
+    { content: `Boats and raised walkways fit climates with heavy seasonal flooding and mud. Wheels and roads fit dry ground. The ground and water conditions a climate creates decide which transportation works.`, kind: 'vocab-note' },
+    { content: `A cool night in a desert doesn't mean desert clothing works everywhere. A loose, light outfit lets heat escape—perfect when it's hot, but dangerously cold when it's already freezing. Match each piece to that specific climate.`, kind: 'edge-case' },
   ],
 };

@@ -74,5 +74,12 @@ export const BASELINE_M6SCI_U5_FOSSILS_AS_EVIDENCE_OF_EARTHS_HISTORY: TopicNotes
     { content: `A fossil that is real but only ever found in one small area is not widespread enough to help correlate layers anywhere else.`, kind: 'tip' },
     { content: `An index fossil says nothing about whether two locations shared an environment, and nothing about whether or how the species itself changed over time -- those are separate questions this lesson does not answer.`, kind: 'tip' },
     { content: `Getting one exact year for a layer still requires radiometric dating of the rock itself, which is the previous lesson's method, not this one.`, kind: 'tip' },
+    { content: `Don't confuse the fossil's known time range with an exact year. A fossil places a layer *somewhere inside* that window, not at one precise date. Getting an exact year still needs radiometric dating of the rock itself.`, kind: 'common-error' },
+    { content: `A fossil's known time range is already figured out *before* you ever find it in a new layer—from absolute dating done elsewhere on other rocks. You're reading off an answer, not measuring a new one.`, kind: 'vocab-note' },
+    { content: `An index fossil must have three things or it's not useful for dating: (1) a narrow time range, (2) spread across a huge area, (3) distinctive shape. Missing any one? It's too weak for dating.`, kind: 'tip' },
+    { content: `Don't use an index fossil to answer questions about *environment* or *whether the species changed*. A fossil used as a time marker says nothing about those things—they're separate questions for a different course.`, kind: 'gotcha' },
+    { content: `Correlation matches distant, unconnected rock layers using a shared fossil—something the layer-stacking rule alone cannot do. Stacking order only works when you can trace layers by hand in one place.`, kind: 'vocab-note' },
+    { content: `A fossil that lived across nearly Earth's whole history is useless for dating, even though it's real. Its presence fits almost any layer, so it narrows nothing down.`, kind: 'edge-case' },
+    { content: `Same fossil in two continents = both layers formed in the same time window. It does *not* mean the layers sit next to each other, or that both places looked the same.`, kind: 'common-error' },
   ],
 };

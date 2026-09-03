@@ -78,5 +78,12 @@ export const BASELINE_M6MATH_U10_MEASURES_OF_SPREAD_AND_SUMMARIZING_DATA: TopicN
     { content: `A box plot draws a box from Q1 to Q3 with a line at the median, and whiskers out to the minimum and the maximum, so its shape shows how bunched or spread out the data is.`, kind: 'tip' },
     { content: `A real summary always names what was measured, how it was collected, and the units, alongside the numbers.`, kind: 'tip' },
     { content: `That closes out Grade 6 Math: from ratios and fractions through equations, geometry, and now a full data set described in its own words.`, kind: 'tip' },
+    { content: `When the data count is odd, **leave the median out of both halves** before finding Q1 and Q3. Don't include it twice or put it in one half only.`, kind: 'common-error' },
+    { content: `Don't mix up **range** and **IQR**. Range uses the two most extreme values (max – min); IQR uses only the middle half (Q3 – Q1). They answer different questions.`, kind: 'vocab-note' },
+    { content: `The **box** in a box plot holds about half the data (the middle half), not the spread of all the data. The whiskers reach out to the extremes.`, kind: 'gotcha' },
+    { content: `A short range doesn't mean the middle half is bunched. One extreme value far away can make the range big even if Q1 to Q3 is tight. Use **IQR to see what the middle is really doing**.`, kind: 'tip' },
+    { content: `Always **include units** and **name what was measured** when you write a summary. '18 pages,' '30 seconds,' or '12 minutes'—not just '18' or '30.'`, kind: 'common-error' },
+    { content: `When finding the median of a half with an **even number of values**, average the two middle values. Don't just pick one.`, kind: 'edge-case' },
+    { content: `**Order the data first.** You cannot find quartiles, the median, or even the range without sorting all values from least to greatest.`, kind: 'common-error' },
   ],
 };

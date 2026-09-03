@@ -75,5 +75,12 @@ export const BASELINE_M6GEO_U4_COASTAL_AND_CONNECTING_LANDFORMS: TopicNotesBasel
     { content: `An isthmus is a narrow strip with water along its two long sides, but at each end it widens into a separate, larger area of land -- trace either long side and you reach more land, never a dead end in water.`, kind: 'tip' },
     { content: `The one-question check for the confusable pair: does the strip lead to more land at its far end (isthmus) or does it leave you surrounded by water there instead (peninsula)?`, kind: 'tip' },
     { content: `Coast names the edge itself -- the strip of land wherever it meets an ocean or a sea -- and every piece of land that touches an ocean or a sea has one, mainland, peninsula, and island alike.`, kind: 'tip' },
+    { content: `Don't use size or shape to pick between these four words. A peninsula can be huge or tiny. An isthmus can be wide or skinny. Only ONE thing matters: what water touches it and what land it connects to.`, kind: 'common-error' },
+    { content: `Peninsula and isthmus are NOT the same just because both are skinny and have water beside them. The one-question check: does the far end reach MORE LAND, or does it dead-end in WATER? More land = isthmus. Water = peninsula.`, kind: 'gotcha' },
+    { content: `An island DOES have a coast. Coast is not another shape on the island/peninsula/isthmus list—it's the NAME of the edge wherever land meets ocean or sea. An island's coast just runs all the way around.`, kind: 'vocab-note' },
+    { content: `When you trace a peninsula's edge, you hit water on three sides and land on one. When you trace either long side of an isthmus, you ALWAYS hit MORE LAND at the far end—never water dead-end.`, kind: 'tip' },
+    { content: `An isthmus connects TWO separate land areas at its BOTH ends. If one end connects to land and the other runs out into open water, that's a peninsula, not an isthmus.`, kind: 'edge-case' },
+    { content: `Attachment to larger land is not the same as 'being part of the same country.' A peninsula is attached to a larger landmass—that landmass can be a country, a continent, or even another peninsula.`, kind: 'vocab-note' },
+    { content: `An island must have water on EVERY side AND no connection to any larger land at all. If even one tiny strip of land connects it to something bigger, it's not an island anymore.`, kind: 'common-error' },
   ],
 };

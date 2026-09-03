@@ -73,5 +73,13 @@ export const BASELINE_M6SCI_U6_LAYERS_AND_COMPOSITION_OF_THE_ATMOSPHERE: TopicNo
     { content: `Layer boundaries are not sharp lines. They are transition zones, and the exact altitude of each one shifts depending on latitude and other conditions.`, kind: 'tip' },
     { content: `By volume, dry air is about 78 percent nitrogen and about 21 percent oxygen -- those two gases alone make up about 99 percent of the air. The remaining roughly 1 percent is a mix of other gases, mostly argon, with carbon dioxide only a small part of that last 1 percent.`, kind: 'tip' },
     { content: `Temperature does not fall in a straight line all the way up. It goes down, up, down, up across the four layers, not down the whole way to space.`, kind: 'tip' },
+    { content: `Don't say the troposphere–stratosphere boundary is at exactly 12 km everywhere. It's thinner over the poles (~8 km) and thicker over the equator (~16 km). Use 12 km as a typical value, not a hard rule.`, kind: 'common-error' },
+    { content: `Oxygen matters for breathing, but nitrogen is the most abundant gas in air (~78%). Don't assume the gas you need most is the gas that's most common.`, kind: 'vocab-note' },
+    { content: `Temperature does NOT fall in one straight line from the ground to space. It goes down (troposphere), up (stratosphere), down (mesosphere), up (thermosphere). Each layer flips the trend.`, kind: 'gotcha' },
+    { content: `When you see a temperature trend switch (from falling to rising, or rising to falling) at an altitude, that's the signature of a layer boundary. Use the switch to identify which two layers meet, not just the altitude number alone.`, kind: 'tip' },
+    { content: `The stratosphere gets warmer as you climb because ozone absorbs ultraviolet radiation from the sun. That absorbed energy heats the layer. Don't forget the 'why' behind the trend.`, kind: 'vocab-note' },
+    { content: `The International Space Station orbits at ~400 km, which is in the thermosphere—not above the atmosphere. The thermosphere stretches hundreds of kilometers outward with no sharp top. Space is a fuzzy boundary, not a line.`, kind: 'edge-case' },
+    { content: `Composition by volume (78% N₂, 21% O₂, ~1% other) is about dry air. Real air also has water vapor, which changes this ratio slightly and concentrates in the troposphere. Don't overlook water vapor in weather discussions.`, kind: 'vocab-note' },
+    { content: `Layer boundaries are transition zones, not sharp lines. An altitude near 12 km, 50 km, or 85 km is 'near a boundary'—be careful about which layer to name if the problem doesn't give you a clear margin.`, kind: 'common-error' },
   ],
 };

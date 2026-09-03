@@ -76,5 +76,12 @@ Student analysis: "The tone is bad because the coach was mean."`, solution: `The
     { content: `Look for the word that carries the feeling, not the word that simply names a person, place or event.`, kind: 'tip' },
     { content: `Prove a tone by naming the exact word and the neutral synonym you swapped in for it.`, kind: 'tip' },
     { content: `WRONG: "The tone is bad because the coach was mean." CORRECT: "The word 'barked' gives the coach a curt, impatient tone."`, kind: 'tip' },
+    { content: `Tone lives in the WORDS on the page, not in your feelings about what happens. A sad event doesn't automatically create a sad tone if the writer chose calm words to describe it.`, kind: 'gotcha' },
+    { content: `Don't pick the word that NAMES the thing (folder, storm, coach). Pick the word that COLORS it with feeling (slammed, snapped, barked). The naming word almost never does the tone work.`, kind: 'common-error' },
+    { content: `Always run the swap test BEFORE you name the tone. Replace your word with a plain synonym, reread, and ask: what feeling left? That disappeared feeling is your answer.`, kind: 'tip' },
+    { content: `A tone answer is NOT done until you name: (1) the exact word, (2) the plain word you swapped in, and (3) what feeling the swap removed. Vague answers like 'the tone is bad' don't prove anything.`, kind: 'common-error' },
+    { content: `CONNOTATION is the feeling a word carries beyond its dictionary meaning. DENOTATION is the bare dictionary meaning. A word's connotation is what makes tone work—so focus there in tone questions.`, kind: 'vocab-note' },
+    { content: `Two words can have nearly the same denotation but opposite connotations. 'Hushed' and 'quiet' both mean low sound, but 'hushed' feels secret or tense, while 'quiet' is neutral. That difference IS the tone work.`, kind: 'edge-case' },
+    { content: `If swapping your word for a plain synonym barely changes the feeling, you picked the wrong word. Go back and find the one that carries more weight.`, kind: 'tip' },
   ],
 };

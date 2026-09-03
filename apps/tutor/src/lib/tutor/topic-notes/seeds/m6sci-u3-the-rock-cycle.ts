@@ -76,5 +76,12 @@ export const BASELINE_M6SCI_U3_THE_ROCK_CYCLE: TopicNotesBaseline = {
     { content: `Heat and pressure, without melting, turn any existing rock into metamorphic rock.`, kind: 'tip' },
     { content: `The process that acts LAST decides the resulting rock type -- the starting rock type does not decide it.`, kind: 'tip' },
     { content: `Melting and heat-and-pressure are different processes with different results: melting leads toward igneous rock through cooling, while heat and pressure without melting leads to metamorphic rock.`, kind: 'tip' },
+    { content: `Don't confuse weathering with erosion. Weathering breaks rock apart *where it sits*; erosion *carries* the broken pieces away. Weathering happens first, erosion second.`, kind: 'common-error' },
+    { content: `Melting and heat-and-pressure are NOT the same thing. Ask: "Did it melt completely?" If yes, it becomes igneous rock when cooled. If no (just squeezed and heated short of melting), it becomes metamorphic rock. Long heating alone doesn't guarantee melting.`, kind: 'gotcha' },
+    { content: `The rock cycle has NO fixed order and NO required starting point. Any rock type can become any other — igneous to sedimentary, sedimentary to igneous, metamorphic to sedimentary, etc. The *process* that acts decides where it goes, not what type it currently is.`, kind: 'common-error' },
+    { content: `Before you name the final rock type, always identify the *last* process in the chain. That last process determines the result — not the starting rock type. Change the last process, and the rock type changes with it.`, kind: 'tip' },
+    { content: `Compaction and cementation are two separate steps that usually happen together. Compaction = pressure presses grains together. Cementation = minerals glue them. You need *both* to turn loose sediment into solid sedimentary rock.`, kind: 'vocab-note' },
+    { content: `Weathering doesn't require movement — it's the breaking itself. Rain, ice, wind, and temperature changes crack rock *in place*. Only after weathering loosens pieces does erosion have something to move.`, kind: 'edge-case' },
+    { content: `When tracing a rock-cycle pathway, work through *one process at a time* in order, naming what each one does to the material. Don't skip steps or jump to the final answer. The intermediate steps prove you understand what each process actually does.`, kind: 'tip' },
   ],
 };

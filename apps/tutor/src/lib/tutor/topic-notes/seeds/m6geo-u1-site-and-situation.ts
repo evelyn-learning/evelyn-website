@@ -77,5 +77,11 @@ Sort each fact into site or situation, then explain why Millbrook is a place a s
     { content: `Site and situation are independent facts. A place can have an excellent site and a poor situation, or a poor site and an excellent situation, at the same time.`, kind: 'tip' },
     { content: `A settlement tends to grow where the site offers something useful right there and the situation connects the place usefully to what surrounds it -- both together, not just one.`, kind: 'tip' },
     { content: `Many real settlements have grown up next to a natural harbor at a river's mouth, like New York City: the sheltered harbor water is part of the site, and the river's reach inland and the ocean's reach outward are part of the situation.`, kind: 'tip' },
+    { content: `Use the move-it test: if a fact would travel with the ground when you pick it up and set it down elsewhere, it's site. If it depends on what's nearby, it's situation.`, kind: 'tip' },
+    { content: `Don't confuse situation with relative location. Relative location finds a place ("by the river"). Situation explains why that location is useful ("the river connects trade").`, kind: 'common-error' },
+    { content: `A place can have an excellent site and a poor situation at the same time — or the opposite. Always check both separately; one is never proof about the other.`, kind: 'gotcha' },
+    { content: `Site facts describe the ground itself: flatness, dryness, rock type, water right there, elevation. Situation facts describe what surrounds the spot: nearby routes, other settlements, mountains, ocean access.`, kind: 'vocab-note' },
+    { content: `When a river or harbor appears in a description, ask: is it about the water/ground at this exact spot (site), or about where that water connects to (situation)?`, kind: 'edge-case' },
+    { content: `A settlement grows because both site AND situation work together, not because one is excellent. Good ground alone, or a good route alone, is not enough.`, kind: 'common-error' },
   ],
 };

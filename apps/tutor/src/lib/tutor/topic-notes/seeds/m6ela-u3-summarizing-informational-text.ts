@@ -80,5 +80,12 @@ Student summary: "When an airplane climbs or drops quickly, the air pressure ins
     { content: `A summary that never reaches the passage's actual point, such as why the soda ends up flat or why the leaves finally show color, is incomplete, even when every sentence in it is true.`, kind: 'tip' },
     { content: `Test a summary by asking whether two readers who disagree about how interesting the topic is could both sign it. If not, a judgment is still hiding in it somewhere.`, kind: 'tip' },
     { content: `A good summary is noticeably shorter than the passage it reports on, not a sentence-for-sentence restatement of it.`, kind: 'tip' },
+    { content: `Don't start your summary with the passage's opening sentence. The real central idea often appears later. Start with the central idea you've already identified, even if it's not where the passage started.`, kind: 'common-error' },
+    { content: `Watch for quiet judgments hiding in words like 'this shows that,' 'which proves,' 'reveals,' and 'demonstrates.' These sneak in your opinion about what matters. Cut them. Report only what the text says.`, kind: 'gotcha' },
+    { content: `A retelling repeats every fact in order. A summary drops facts that are true but don't support the central idea. If your summary has a sentence for almost every sentence in the passage, you're retelling, not summarizing.`, kind: 'vocab-note' },
+    { content: `Before you write, ask yourself: 'What is the passage explaining or proving?' Every detail you keep must answer that question. If it doesn't, delete it—even if it's interesting or true.`, kind: 'tip' },
+    { content: `After you write your summary, read it aloud. Does it sound like you're reporting facts, or does it sound like you're telling someone what you think about the topic? If the second, a judgment is still in there.`, kind: 'tip' },
+    { content: `Your summary should be noticeably shorter than the passage—not just one or two sentences shorter. If a summary is almost as long as the original, you haven't dropped enough details.`, kind: 'edge-case' },
+    { content: `Don't confuse 'objective' with 'boring.' Objective means you report facts without adding your own conclusions. The facts themselves can be interesting; your summary just doesn't announce that they are.`, kind: 'vocab-note' },
   ],
 };

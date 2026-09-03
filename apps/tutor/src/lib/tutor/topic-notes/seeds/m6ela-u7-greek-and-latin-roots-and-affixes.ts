@@ -73,5 +73,12 @@ When our train pulled into the station, a porter loaded all four of our suitcase
     { content: `A root gives a starting point, not a finished definition — build the bridge from the root's meaning to the actual word, and confirm it with the sentence.`, kind: 'tip' },
     { content: `Matching letters is not proof of a shared root. WRONG: audacious relates to hearing because it starts with aud. CORRECT: audacious comes from a word meaning "to dare" and means bold enough to take a risk.`, kind: 'tip' },
     { content: `When the root and the sentence disagree, trust the sentence. A root-based guess is a hypothesis until the words around it confirm it.`, kind: 'tip' },
+    { content: `Don't stop at the root meaning alone. A root is a starting hypothesis, not a finished answer. Always build the bridge: explain how the root's core meaning connects to what the word actually does in the sentence.`, kind: 'common-error' },
+    { content: `Matching letters ≠ matching roots. Audacious starts with a-u-d like audience, but it comes from a different Latin word meaning "to dare." Always check: Does this word actually belong to the same word family, or just look like it does?`, kind: 'gotcha' },
+    { content: `A root you know from three or four familiar words is much stronger evidence than one you've only seen once. Count your word family before you trust the root.`, kind: 'tip' },
+    { content: `If the sentence and the root point to different meanings, always pick the sentence's answer. The root is a clue, not the final say.`, kind: 'common-error' },
+    { content: `Don't confuse the root with the whole word. Tele- means "far away," but telecast is not just "far-away-ness" — it's a broadcast sent to viewers far away. Name what the suffix adds too (-cast means the broadcast itself).`, kind: 'vocab-note' },
+    { content: `When you spot an unfamiliar word, look for the root piece first—not just the first few letters. Script hides inside transcript and describes, not just at the start.`, kind: 'tip' },
+    { content: `Recall the root meaning from a word you actually know well, not just a word you've seen. If you're unsure what audible means, aud- is a weaker clue than if you're certain.`, kind: 'edge-case' },
   ],
 };

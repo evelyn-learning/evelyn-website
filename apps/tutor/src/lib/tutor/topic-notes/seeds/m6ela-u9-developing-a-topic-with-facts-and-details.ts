@@ -69,5 +69,12 @@ export const BASELINE_M6ELA_U9_DEVELOPING_A_TOPIC_WITH_FACTS_AND_DETAILS: TopicN
     { content: `An example names one specific instance of the topic, not another general statement about it.`, kind: 'tip' },
     { content: `A detail has to be about this exact topic, not just the same general subject — a true fact can still fail to develop the sentence it sits under.`, kind: 'tip' },
     { content: `Never invent an exact number you cannot verify. Use a qualifier such as most, many, some, or thousands of instead.`, kind: 'tip' },
+    { content: `Don't mistake a reworded topic sentence for development. If you say the same thing twice with different words, you haven't added anything new. Read your sentence and ask: "Does this tell the reader something the topic sentence didn't already say?"`, kind: 'common-error' },
+    { content: `"A lot" and "really" and "so many" are not concrete details. Concrete means you could check it — a specific number, a name, an exact action. Replace vague words with something a reader could actually see or look up.`, kind: 'vocab-note' },
+    { content: `A fact can be true about the general subject and still NOT develop your exact topic sentence. Before you add a sentence, ask: "Does this explain THIS topic, or just the bigger subject?" True ≠ Relevant.`, kind: 'gotcha' },
+    { content: `When you name an exact number (542 butterflies, 15 miles, 89%), make sure you actually know it or can look it up. If you're guessing, use a qualifier instead: "many," "most," "thousands of." A number that sounds official but is made up is a lie, not a detail.`, kind: 'common-error' },
+    { content: `An example names ONE specific thing that happens, not a general statement about the topic restated. "Bees have different jobs" is not an example. "A worker bee spends her first weeks cleaning cells" is.`, kind: 'vocab-note' },
+    { content: `After you write a detail, read it back next to the topic sentence. If you could delete your detail and the topic sentence would still make sense without losing information, your detail isn't doing its job yet.`, kind: 'tip' },
+    { content: `If something is still being researched or debated, say so. Use "scientists believe," "evidence suggests," or "researchers think" instead of stating uncertain things as settled fact. Honesty about what we don't know is part of being checkable.`, kind: 'edge-case' },
   ],
 };

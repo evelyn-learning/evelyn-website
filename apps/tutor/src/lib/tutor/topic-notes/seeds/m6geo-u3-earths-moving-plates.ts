@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U3_EARTHS_MOVING_PLATES: TopicNotesBaseline = {
     { content: `Hundreds of millions of years ago the land was joined in one supercontinent called Pangaea, and it broke apart. That slow movement of the continents is called continental drift.`, kind: 'tip' },
     { content: `Three separate clues support it: the coastlines of South America and Africa fit together, the same fossils appear on both coasts, and bands of rock on the two coasts match.`, kind: 'tip' },
     { content: `Earthquakes and volcanoes crowd into long bands along the edges where plates meet, rather than spreading evenly over the globe.`, kind: 'tip' },
+    { content: `A plate is NOT the same as a continent. Plates carry continents, ocean floor, or both. The whole Earth surface—land AND sea floor—sits on plates.`, kind: 'vocab-note' },
+    { content: `One matching coastline shape is NOT enough proof. You need three separate kinds of evidence all pointing the same way: matching shapes, matching fossils, and matching rock bands.`, kind: 'common-error' },
+    { content: `The rock below the plates is SOLID, not liquid. It is hot enough to creep slowly over millions of years, like very stiff putty—but it is still rock, not an underground ocean.`, kind: 'gotcha' },
+    { content: `A few centimeters per year looks slow, but keep it going for 100 million years and you move a continent thousands of kilometers. Never mistake 'slow' for 'not moving.'`, kind: 'tip' },
+    { content: `Earthquakes and volcanoes cluster in bands along plate edges, NOT spread evenly all over. The middle of a plate is quiet; the rim is where action happens.`, kind: 'edge-case' },
+    { content: `Pangaea is ONE past supercontinent, not several. Use the name correctly: Pangaea broke up, and the pieces have been drifting apart since.`, kind: 'vocab-note' },
+    { content: `Don't confuse magma (melted rock underground) and lava (melted rock on the surface). Neither one is the layer the plates sit on.`, kind: 'vocab-note' },
   ],
 };

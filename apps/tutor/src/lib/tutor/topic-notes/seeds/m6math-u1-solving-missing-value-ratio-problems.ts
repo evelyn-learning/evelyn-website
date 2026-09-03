@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U1_SOLVING_MISSING_VALUE_RATIO_PROBLEMS: TopicNotes
     { content: `Check every answer by working backward: dividing (or multiplying) the new pair by the scale factor should land exactly back on the original ratio.`, kind: 'tip' },
     { content: `Each pair of values from the table becomes one point on the coordinate plane, written as an ordered pair (x, y), with the first quantity on the x-axis and the second on the y-axis.`, kind: 'tip' },
     { content: `Points plotted from the same ratio line up in a straight path, though naming that pattern with an equation comes in a later course.`, kind: 'tip' },
+    { content: `Scale factor is NOT the new number — it's how many times you multiply or divide the original. Find it by dividing (or comparing) the new quantity to its original partner, then apply it to the OTHER quantity.`, kind: 'common-error' },
+    { content: `Do NOT add or subtract the same amount to both quantities to scale a ratio. Only multiply or divide by the same factor — adding changes the ratio even though it feels fair.`, kind: 'gotcha' },
+    { content: `Always check your answer by working backward: divide (or multiply) both numbers in your new pair by the scale factor. You should land exactly on the original ratio.`, kind: 'tip' },
+    { content: `In a ratio table, EVERY column describes the same ratio using different-sized numbers — if 3:5 is one column, then 12:20 is still '3 red for every 5 blue,' just bigger.`, kind: 'vocab-note' },
+    { content: `When plotting on the coordinate plane, the FIRST quantity goes on the x-axis and the SECOND goes on the y-axis — order matters. (3, 5) and (5, 3) are different points.`, kind: 'common-error' },
+    { content: `Scale factor can be a fraction or a decimal, not just a whole number. If you're scaling DOWN (like 4 to 2), the scale factor is 1/2 or 0.5 — still multiply, don't subtract.`, kind: 'edge-case' },
+    { content: `The scale factor must be the SAME for both quantities in the same column — if you multiply the first quantity by 4, multiply the second by 4 too, not a different number.`, kind: 'common-error' },
   ],
 };

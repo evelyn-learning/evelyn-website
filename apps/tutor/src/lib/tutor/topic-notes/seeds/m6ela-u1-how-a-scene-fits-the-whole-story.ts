@@ -81,5 +81,13 @@ Sentence 4: "He finished last of the six robots that ran the course that morning
     { content: `A summary is not a job either. If your answer would still be true for a reader who had not finished the story, you have restated the part instead of explaining its job.`, kind: 'tip' },
     { content: `A part can contribute to plot (a setup an ending needs), setting (a detail about a place that matters again), or theme (a piece of what the whole story is building toward).`, kind: 'tip' },
     { content: `Prove any job you name by pointing at the exact later place in the text where it pays off.`, kind: 'tip' },
+    { content: `Don't name the plot stage (rising action, climax, resolution) when asked about a part's job. Stages tell you WHERE a sentence sits, not WHAT it does. Always point to the later moment that depends on it instead.`, kind: 'common-error' },
+    { content: `If your answer would still be true for someone who stopped reading halfway through, you've written a summary, not a job. A job only makes sense when you know what comes AFTER the part you're analyzing.`, kind: 'gotcha' },
+    { content: `A setup without a payoff is not a complete answer. Always end by pointing at the specific sentence or moment where the setup actually matters later. Name the sentence number or quote the payoff line.`, kind: 'tip' },
+    { content: `Don't confuse 'what the part is about' with 'what the part does.' A sentence about a bent wheel is not the same as a sentence that SETS UP why that wheel matters later. Always ask: what LATER sentence needs this one to make sense?`, kind: 'vocab-note' },
+    { content: `A part can do more than one job (plot AND setting, or setting AND theme), but pick ONE job and prove it with ONE payoff moment. Don't list multiple jobs without showing where each one pays off.`, kind: 'edge-case' },
+    { content: `When a part sets up something that is NEVER RESOLVED (like an ignored warning), that unresolved gap is the job. The payoff is often a consequence that follows from the gap itself, not from the setup being used.`, kind: 'gotcha' },
+    { content: `Location words like 'near the beginning,' 'middle,' or 'end' describe WHERE a part sits, not WHAT IT DOES. A part's job connects it to something that comes after, not just its position in the timeline.`, kind: 'vocab-note' },
+    { content: `Before you name a part's job, read the WHOLE story first. If you analyze a sentence in isolation, you won't see what later sentences depend on it. Hold the full text in your head.`, kind: 'tip' },
   ],
 };

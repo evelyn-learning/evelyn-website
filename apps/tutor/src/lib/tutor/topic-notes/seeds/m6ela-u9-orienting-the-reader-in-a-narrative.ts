@@ -71,5 +71,12 @@ Draft: "The bell rang and he panicked and ran to tell the teacher, and everyone 
     { content: `A natural sequence starts where the story actually starts. WRONG: an opening that reports how a trip ends before showing how it began. CORRECT: an opening that stops right at the moment things start going wrong.`, kind: 'tip' },
     { content: `Orienting a reader is not the same job as summarizing a whole story. An opening sets up a beginning; it does not report the middle or the ending in advance.`, kind: 'tip' },
     { content: `Check any opening against all three jobs: place and time, a named character, and a first event the story can move forward from.`, kind: 'tip' },
+    { content: `Don't confuse orienting with reassuring. Telling readers "it turns out okay" at the start removes the reason to keep reading. Orient means: where, when, who, and the first event—not how it ends.`, kind: 'common-error' },
+    { content: `One or two concrete details anchor a reader. A whole paragraph of backstory before anything happens is stalling, not orienting. Ask: can a reader picture where and when in the first sentence or two?`, kind: 'gotcha' },
+    { content: `Name your character. "A girl walked in" leaves a reader floating. "Maya walked in" plants them in the scene. An unnamed person or a crowd does not orient the way one named character does.`, kind: 'tip' },
+    { content: `Stop at the first event. If your opening mentions what happens next or how things end, you've gone too far. The first event is the thing that starts the story moving—not what came before it, not what comes after.`, kind: 'common-error' },
+    { content: `Vocab note: "orienting" is not the same as "summarizing." An opening sets up a beginning. A summary reports the whole plot. Check yourself: does your opening stop at the start, or does it tell what happens throughout?`, kind: 'vocab-note' },
+    { content: `Give your character a reason to be there right then. "Marcus stayed behind because it was his turn to feed the hamster" orients better than "Marcus was in the classroom." Action and purpose anchor the reader.`, kind: 'tip' },
+    { content: `Watch for jumps in time. If your opening mentions something that happened yesterday or last week, you've started too early. The first event should be the moment the story actually begins moving, not a memory of something that came before.`, kind: 'edge-case' },
   ],
 };

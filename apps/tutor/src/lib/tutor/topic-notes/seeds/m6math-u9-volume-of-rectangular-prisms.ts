@@ -73,5 +73,12 @@ export const BASELINE_M6MATH_U9_VOLUME_OF_RECTANGULAR_PRISMS: TopicNotesBaseline
     { content: `Multiply fractional edge lengths straight across, numerator times numerator and denominator times denominator, writing any whole number as itself over 1.`, kind: 'tip' },
     { content: `Volume is always measured in cubic units, such as cubic inches, because it counts cubes, not flat squares.`, kind: 'tip' },
     { content: `Multiplying only two of the three edges gives the area of one face, not the volume — always use all three.`, kind: 'tip' },
+    { content: `Don't add the edges — always multiply all three to find volume. Adding gives a length, not a volume; packing cubes only works when you multiply.`, kind: 'common-error' },
+    { content: `Two edges multiplied = area of ONE face (square units). Three edges multiplied = volume of the whole box (cubic units). Check your units to catch this mistake.`, kind: 'gotcha' },
+    { content: `When edges are fractions, pick a small cube size that divides evenly into ALL three edges, not just one. If you pick wrong, you'll have leftover space or gaps.`, kind: 'edge-case' },
+    { content: `A small cube with edge 1/2 has volume 1/8, and edge 1/4 has volume 1/64. Don't forget to cube the fraction — multiply it three times, not once.`, kind: 'common-error' },
+    { content: `V = l × w × h works exactly the same for fractions as for whole numbers. Once you pick the right small cube, packing and multiplying the edges always agree.`, kind: 'tip' },
+    { content: `Write whole-number edges as fractions over 1 before multiplying. This keeps all three dimensions in the same form and makes the calculation clearer.`, kind: 'vocab-note' },
+    { content: `Cubic units come from cubes, so volume always uses 'cubic' (like cubic inches), not 'square' (which is for area). Check the unit name to verify you multiplied all three dimensions.`, kind: 'vocab-note' },
   ],
 };

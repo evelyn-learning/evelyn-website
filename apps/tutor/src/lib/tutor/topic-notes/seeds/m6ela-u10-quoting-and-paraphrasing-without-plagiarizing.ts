@@ -76,5 +76,12 @@ You want your reader to hear the sign's exact warning. Decide which move fits, w
     { content: `Copying a sentence exactly, even with a source named beside it, is not a paraphrase. Quotation marks are what tell a reader the exact words are not the student's own.`, kind: 'tip' },
     { content: `Both a quote and a paraphrase need credit. Ask: did I know this before I found the source? If not, say where it came from.`, kind: 'tip' },
     { content: `Presenting another person's exact words or rebuilt idea as your own, with no quotation marks and no credit, is plagiarism, even if only a couple of words were changed.`, kind: 'tip' },
+    { content: `A paraphrase is NOT swapping a few words and keeping the same sentence order. You must change the sentence structure too. Use the look-away method: read, cover the source, say it aloud in your own words, write it down, then check accuracy.`, kind: 'common-error' },
+    { content: `Quotation marks are the only thing that tells your reader the exact words are not yours. Naming the source is not enough. If the words are exact, they must be in quotation marks—no exceptions, even if you cite where they came from.`, kind: 'gotcha' },
+    { content: `Before you quote or paraphrase, ask yourself: did I know this idea before I read the source? If the answer is no, the source gets credit. If yes, it is your own thinking and needs no citation.`, kind: 'tip' },
+    { content: `A paraphrase covers roughly the same amount of ground as the original sentence—same length, same completeness. If you shrink it down to just the main idea in a few words, that is a summary or a condensation, not a paraphrase.`, kind: 'edge-case' },
+    { content: `Do not paste the source's sentence into your draft, change one or two words, and call it a paraphrase. That is still the source's sentence wearing a costume. Cover the source completely before you write.`, kind: 'common-error' },
+    { content: `Use a quote when the exact wording is striking, precise, or is itself the point you are making. Use a paraphrase when only the idea matters, not how it is worded. Pick one move per sentence; do not mix them in a way that leaves part of the source's exact wording unquoted.`, kind: 'vocab-note' },
+    { content: `If you copy the source's exact sentence, word-swap inside it, and do not use quotation marks, that is plagiarism—even if you named the source. Changing a word or two does not erase that the words are not yours.`, kind: 'gotcha' },
   ],
 };

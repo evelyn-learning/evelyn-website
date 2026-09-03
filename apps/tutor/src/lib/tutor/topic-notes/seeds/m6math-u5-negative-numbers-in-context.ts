@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U5_NEGATIVE_NUMBERS_IN_CONTEXT: TopicNotesBaseline 
     { content: 'Opposites such as +3 and -3 sit the same distance from zero on opposite sides.', kind: 'tip' },
     { content: `On a number line, negatives go left of zero and positives go right; draw the line standing up when the story is about up and down.`, kind: 'tip' },
     { content: `Use the sign or use the direction word, never both: -12 feet, or 12 feet below, but not -12 feet below.`, kind: 'tip' },
+    { content: `The minus sign IS the direction word. Writing "-12 feet below" says below twice. Pick one: write -12 feet, or write 12 feet below, never both together.`, kind: 'common-error' },
+    { content: `Before you write any signed number, name what zero means in that situation. On a thermometer, zero is freezing. At sea level, zero is the ocean surface. In a bank account, zero is empty. The story tells you; don't skip it.`, kind: 'tip' },
+    { content: `The digits tell you the distance from zero. The sign tells you the direction. -12 and 12 are the same distance away; the minus just flips which side you're on.`, kind: 'vocab-note' },
+    { content: `Don't ignore the minus sign and keep only the number. -20 dollars and 20 dollars are opposites: one means owed, the other means saved. The sign changes everything.`, kind: 'common-error' },
+    { content: `Opposites are the same distance from zero but on opposite sides. +3 and -3 both sit 3 units away; they're a matched pair. If +3 is above, -3 is below by the same amount.`, kind: 'vocab-note' },
+    { content: `When the story is about up and down—elevation, depth, temperature—draw your number line standing up, not sideways. Positives go up, negatives go down.`, kind: 'tip' },
+    { content: `Zero is not nothing—it's the agreed starting line that both directions are measured from. A cave map can put zero at the entrance instead of sea level. Whoever writes the numbers picks where zero sits.`, kind: 'edge-case' },
   ],
 };

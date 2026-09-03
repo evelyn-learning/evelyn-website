@@ -70,5 +70,12 @@ export const BASELINE_M6GEO_U9_CONTINENTS_SUBREGIONS_AND_HOW_GEOGRAPHERS_GROUP_T
     { content: `A region's border is a chosen convention, based on whatever shared trait a source cares about -- it is not a physical fact the way a coastline is.`, kind: 'tip' },
     { content: `Two different sources can group the very same countries into regions differently, using different shared traits, and neither grouping has to be wrong.`, kind: 'tip' },
     { content: `This lesson covers why regions get grouped, not exactly where any one region sits on the globe or exactly which countries belong inside it.`, kind: 'tip' },
+    { content: `A region is NOT a country and does NOT have its own government. A country has borders set by law; a region is just a name geographers chose to group countries together.`, kind: 'common-error' },
+    { content: `Nearness alone does NOT make a region. Countries must be neighbors AND share a specific trait — like climate, language, trade, or coastline. Check: what is the actual shared thing?`, kind: 'gotcha' },
+    { content: `One country can sit in two different regions at the same time if two sources group by different traits. Both groupings can be right. This is not a mistake — it is how regions work.`, kind: 'edge-case' },
+    { content: `Region borders are choices humans made, not lines nature drew. The same group of countries could be named and bordered slightly differently by different people. That does not make one wrong.`, kind: 'vocab-note' },
+    { content: `Do NOT say 'Latin America' or 'the Middle East' to name exact countries. This lesson uses those as examples of region names, not as a list of which countries belong where.`, kind: 'tip' },
+    { content: `Ask yourself: 'What shared thing did this source use to group these countries?' If you cannot name it, you have not found the real reason for the region.`, kind: 'tip' },
+    { content: `A continent is one of Earth's largest landmasses. A region is a group of countries geographers named for study. Do not swap them — a region is much smaller and is not a physical thing.`, kind: 'vocab-note' },
   ],
 };

@@ -74,5 +74,12 @@ export const BASELINE_M6ELA_U5_KEEPING_PRONOUN_NUMBER_AND_PERSON_CONSISTENT: Top
     { content: `A shift is only visible across sentences. Hold the pronoun the passage opened with in mind, and check every later pronoun that refers to the same person or group against it.`, kind: 'tip' },
     { content: `Not every change is a mistake. If the writing gives a real reason — a task handed to one person alone, or a new person joining the action — the pronoun is allowed to change with it.`, kind: 'tip' },
     { content: `The fix is to change only the pronoun that broke away so it matches what the passage already established, not to rewrite the whole passage.`, kind: 'tip' },
+    { content: `Don't confuse the narrator with the author. The narrator's pronoun (I, we, you) must stay consistent throughout the piece. The author is the real person writing, but the narrator is the voice telling the story.`, kind: 'vocab-note' },
+    { content: `A shift is only a mistake if the writing gives NO REASON for it. If the piece says "Dad asked me to do it alone," then "I" replacing "we" is allowed. Always ask: did something real change, or did the pronoun just slide?`, kind: 'gotcha' },
+    { content: `"You" in a personal story is almost always wrong. If the passage opens with "I" and nobody is being directly addressed, that "you" should become "I." Check: is the writer talking TO the reader, or just telling a story?`, kind: 'common-error' },
+    { content: `Read the whole piece before you mark any pronoun wrong. A single sentence can look correct on its own but be the broken link in the passage. Compare every pronoun to the opening pronoun first.`, kind: 'tip' },
+    { content: `If "we" appears but no second person is ever named or introduced, that "we" has nobody to point at. It's a mistake. Replace it with the singular pronoun that matches who is actually doing the action.`, kind: 'edge-case' },
+    { content: `Change only the pronoun that broke away, not the whole sentence. If "Then we labeled" is wrong, write "Then I labeled"—don't rewrite the rest of the sentence unless you have to.`, kind: 'tip' },
+    { content: `"I" and "you" are never interchangeable in the same story. Don't think of them as meaning the same thing. "I" is the person telling it; "you" is someone being spoken to directly. Only one can work in a personal narrative.`, kind: 'vocab-note' },
   ],
 };

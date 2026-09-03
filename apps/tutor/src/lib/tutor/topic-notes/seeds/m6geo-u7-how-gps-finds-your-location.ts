@@ -71,5 +71,11 @@ export const BASELINE_M6GEO_U7_HOW_GPS_FINDS_YOUR_LOCATION: TopicNotesBaseline =
     { content: `Combining distances from more than one satellite at the same time narrows the possible spots down, and a receiver keeps adding satellites until only one location fits every distance.`, kind: 'tip' },
     { content: `The satellite does not know the receiver's location. It only sends its signal; the receiver does all of the figuring out.`, kind: 'tip' },
     { content: `More satellites give a receiver more distances to combine, not a stronger version of one signal.`, kind: 'tip' },
+    { content: `A GPS receiver only **listens**—it never sends anything up to satellites. Don't confuse it with a walkie-talkie, which sends and receives both ways.`, kind: 'common-error' },
+    { content: `One satellite signal = one distance = a whole circle of possible spots, not one exact location. You need **at least 3 satellites** to find one exact spot.`, kind: 'gotcha' },
+    { content: `Signal **strength** and signal **count** are different. A very strong signal from one satellite still leaves you on a circle. You need signals from *more satellites*, not stronger ones.`, kind: 'vocab-note' },
+    { content: `The **satellite never knows** where the receiver is. The satellite just broadcasts the same signal to everyone. The **receiver** does all the figuring out.`, kind: 'common-error' },
+    { content: `Two circles cross at two points. To pick the right one, you need a **third distance** from a third satellite—two distances alone leave you stuck between two spots.`, kind: 'edge-case' },
+    { content: `The receiver **combines distances at the same time**—not one after another. It listens to multiple satellites and uses all their distances together to find one spot.`, kind: 'vocab-note' },
   ],
 };

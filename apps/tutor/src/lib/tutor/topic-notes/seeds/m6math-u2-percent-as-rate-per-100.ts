@@ -69,5 +69,12 @@ export const BASELINE_M6MATH_U2_PERCENT_AS_RATE_PER_100: TopicNotesBaseline = {
     { content: `Decimal to percent: multiply by 100 and slide the decimal point two places RIGHT, so 0.6 = 60%.`, kind: 'tip' },
     { content: `To turn a fraction into a percent, scale it so the denominator becomes 100, then read the numerator as the percent: 1/4 = 25/100 = 25%.`, kind: 'tip' },
     { content: `A hundredths grid shows all three forms in one picture: shading 60 of 100 squares is 60%, 60/100, and 0.60 at once.`, kind: 'tip' },
+    { content: `When converting percent to decimal, always slide the point TWO places left, not one. Write 7% as 07. first so you see both zeros, then slide: 07. → 0.07, not 0.7. Check your answer against something you know: 50% = 0.5, so 7% must be much smaller.`, kind: 'common-error' },
+    { content: `Don't write the percent sign onto a decimal without multiplying by 100 first. 0.5% and 0.5 are NOT the same. To convert 0.5 to a percent, multiply by 100 (slide right twice): 0.5 = 50%, not 0.5%.`, kind: 'common-error' },
+    { content: `A percent is the WHOLE FRACTION scaled to a denominator of 100, not just the numerator. 1/4 is NOT 1%; you must scale it: 1/4 = 25/100 = 25%. Always find what number makes the denominator 100 first.`, kind: 'gotcha' },
+    { content: `When you simplify a fraction after writing percent as a fraction (e.g., 60/100 = 3/5), the rate does not change. Both 60% and 3/5 name the same amount; only the labels are different. Always scale back to check: 3/5 × 20/20 should equal 60/100.`, kind: 'tip' },
+    { content: `Small percents (less than 10%) need a placeholder zero when you write them as decimals. 8% is 0.08, not 0.8. Picture the hundredths grid: shading 8 out of 100 tiny squares is a small amount, which 0.08 shows but 0.8 does not.`, kind: 'edge-case' },
+    { content: `To turn a fraction into a percent, ask yourself: 'What do I multiply the denominator by to get 100?' Then multiply the numerator by that same number. If you can't make the denominator 100 exactly, divide the numerator by the denominator to get a decimal, then multiply by 100.`, kind: 'tip' },
+    { content: `The percent sign (%) and '/100' say the exact same thing. 60% means 60 out of 100, which is why you can drop the % and write 60/100 directly. Don't treat the % as a mysterious symbol; it's shorthand for a fraction with 100 on the bottom.`, kind: 'vocab-note' },
   ],
 };

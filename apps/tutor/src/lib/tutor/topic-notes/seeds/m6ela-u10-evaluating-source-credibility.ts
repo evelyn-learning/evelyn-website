@@ -70,5 +70,12 @@ export const BASELINE_M6ELA_U10_EVALUATING_SOURCE_CREDIBILITY: TopicNotesBaselin
     { content: `Ask WHAT WOULD THEY GAIN: does believing the claim make the writer money, win an argument, or make them look good. A motive means double-check the claim, not throw the source away.`, kind: 'tip' },
     { content: `A professional-looking page or a serious-sounding name proves nothing on its own. Reasoning through the three questions is what actually decides.`, kind: 'tip' },
     { content: `When two sources disagree, run the three questions on each one. The source that cannot explain how it would know, or that gains the most from its answer, is usually the one that does not match the source with real records behind it.`, kind: 'tip' },
+    { content: `Don't confuse 'has a motive' with 'is lying.' A source that gains something from a particular answer still needs the same three questions: who, how, and what would they gain. Answer all three before deciding.`, kind: 'common-error' },
+    { content: `A screen name or 'anonymous' is an immediate red flag—not because it's definitely wrong, but because nobody can be held responsible if it is. You cannot ask 'how would they know' if you do not know who 'they' are.`, kind: 'gotcha' },
+    { content: `Firsthand means the writer actually has the records, ran the test, or did the work themselves. 'Everyone knows' or 'I heard' or 'they say' is secondhand and does not count, no matter how confident it sounds.`, kind: 'vocab-note' },
+    { content: `One strong source is a good start, not a proof. Always look for a second, independent source that confirms the same information before you treat a claim as settled in your research report.`, kind: 'tip' },
+    { content: `When two sources give different numbers for the same fact, do not just pick the one you like. Run the three questions on each one. The source closest to actual records, with the least reason to exaggerate, is usually the more credible one.`, kind: 'edge-case' },
+    { content: `A polished design, official-sounding name, or serious color scheme proves nothing. Ask the three questions on a fancy page the same way you would on a plain one.`, kind: 'common-error' },
+    { content: `Corroborate means a different, separate source independently confirms the same fact—not just another page that copied from the first one. Check whether your two sources actually came from different places and methods.`, kind: 'vocab-note' },
   ],
 };

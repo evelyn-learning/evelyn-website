@@ -72,5 +72,11 @@ export const BASELINE_M6GEO_U9_LOCATING_THE_AMERICAS: TopicNotesBaseline = {
     { content: `The Caribbean is a region of islands, not one connected mainland. Its islands lie in and around the Caribbean Sea, east of Central America, so it is not part of the north-to-south overland connection running through the other three regions.`, kind: 'tip' },
     { content: `The Equator crosses the northern part of South America. North America, Central America, and the Caribbean lie entirely north of the Equator; South America is the only one of the four with land on both sides of it.`, kind: 'tip' },
     { content: `Geographers do not all draw these four regions the same way -- some sources count Central America and the Caribbean as parts of the continent of North America rather than as separate regions. Neither convention is wrong.`, kind: 'tip' },
+    { content: `Don't assume neighbors share the same hemisphere. North America and South America connect directly, but only South America crosses the Equator. Always check each region against the Equator on its own.`, kind: 'common-error' },
+    { content: `Central America is NOT a continent — it's an isthmus (a narrow connecting strip). North America and South America are the only two continents in this group of four regions.`, kind: 'vocab-note' },
+    { content: `The Caribbean is islands, not mainland. A van driving overland from North America to South America passes through Central America, not the Caribbean, because the Caribbean sits east as separate islands you can't drive to.`, kind: 'gotcha' },
+    { content: `When you name the regions in order from north to south, you get: North America, Central America, South America. The Caribbean doesn't fit in that line — it branches east as islands.`, kind: 'tip' },
+    { content: `Some geographers group Central America and the Caribbean with North America instead of treating them as separate regions. Both ways are accepted — just be clear about which you're using.`, kind: 'edge-case' },
+    { content: `The Equator crosses *through* South America (not just touches its edge), so South America is the only one of the four with land in both hemispheres.`, kind: 'vocab-note' },
   ],
 };

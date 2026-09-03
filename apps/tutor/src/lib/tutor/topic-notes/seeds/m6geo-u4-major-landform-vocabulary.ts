@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U4_MAJOR_LANDFORM_VOCABULARY: TopicNotesBaseline = {
     { content: `A plain does not stand above the land around it. It is a wide stretch that is flat or gently rolling with very little change in elevation.`, kind: 'tip' },
     { content: `A valley is low ground running between higher land on both sides, such as two ridges or two mountains.`, kind: 'tip' },
     { content: `Every one of these five landforms needs both of its properties checked before it can be named. Height alone, or flatness alone, is never enough.`, kind: 'tip' },
+    { content: `Always check TWO properties: how high it stands compared to surrounding land, AND whether its top is flat or rises to a point. One property alone will trick you.`, kind: 'gotcha' },
+    { content: `A plateau and a plain are NOT the same just because both are flat on top. A plateau stands HIGH above its surroundings; a plain does NOT stand above the land around it.`, kind: 'common-error' },
+    { content: `A hill is NOT a baby mountain or an unfinished mountain. Hills and mountains are two separate categories right now, told apart by height and slope gentleness, not by time or growth.`, kind: 'common-error' },
+    { content: `A valley MUST have higher land on BOTH sides. Low ground by itself is not a valley—it needs to be squeezed between ridges or mountains to count.`, kind: 'vocab-note' },
+    { content: `Use the two questions when you are stuck: Does this stand HIGH or stay LOW compared to its surroundings? Is its top FLAT or does it rise to a PEAK? Answer both, then name it.`, kind: 'tip' },
+    { content: `A mountain's steep slopes and narrow peak at the top are just as important as its height. High land that stays rounded and gentle-sloped is a hill, not a mountain.`, kind: 'edge-case' },
+    { content: `Never use a real place (like the Rocky Mountains or the Great Plains) to name or check a landform. Use only the words given and the two-question rule.`, kind: 'gotcha' },
   ],
 };

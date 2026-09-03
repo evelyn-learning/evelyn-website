@@ -67,5 +67,11 @@ export const BASELINE_M6MATH_U1_UNIT_RATES_AND_UNIT_PRICING: TopicNotesBaseline 
     { content: `The second number in a unit rate can never be zero, because dividing by zero has no answer.`, kind: 'tip' },
     { content: `To compare two offers, turn each into a unit price and pick the smaller number, not the smaller total.`, kind: 'tip' },
     { content: `Check every unit rate by multiplying it back by the second number to see if you land on the first number again.`, kind: 'tip' },
+    { content: `Read the 'per' phrase FIRST before you write any division. The word before 'per' goes on top, the word after goes on bottom. Price per pouch means dollars ÷ pouches, not the other way around.`, kind: 'common-error' },
+    { content: `Comparing total prices when the quantities differ is a trap. $2.40 looks cheaper than $3.50, but if one buys 3 items and the other buys 5, you're comparing apples to oranges. Always find the unit price first.`, kind: 'gotcha' },
+    { content: `Always attach the unit to your answer: write '$1.50 per marker', not just '1.50'. The unit tells you that you divided in the right order and answers the right question.`, kind: 'vocab-note' },
+    { content: `Check your unit rate by multiplying it back by the second number. If you get the first number again, you divided correctly. 0.80 × 5 = 4.00 ✓ means the unit price is right.`, kind: 'tip' },
+    { content: `The second number in a ratio can never be zero when you turn it into a unit rate. You cannot divide by zero, so 'miles per zero hours' is impossible, not an answer.`, kind: 'edge-case' },
+    { content: `Unit price and unit rate are the same thing when money is involved. Don't think of them as different topics—unit price is just what we call a unit rate about dollars.`, kind: 'vocab-note' },
   ],
 };

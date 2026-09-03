@@ -69,5 +69,12 @@ export const BASELINE_M6ELA_U10_GIVING_BASIC_SOURCE_INFORMATION: TopicNotesBasel
     { content: `WHERE is the name of the place holding the source, clear enough that someone else could go find it there.`, kind: 'tip' },
     { content: `Write the record down the moment a source gets used. Waiting means trying to remember details that have already started to fade.`, kind: 'tip' },
     { content: `This closes the research skills in this course. The three-piece habit works on any source, in any class, for the rest of a student's life, any time something needs to be found again.`, kind: 'tip' },
+    { content: `Don't write what the source is about (the topic). Write the exact title printed on the source itself. "The chicken article" describes a topic; "Picking the Right Chicken Breed for Your Yard" is the real title someone can search for.`, kind: 'common-error' },
+    { content: `The author is whoever MADE the source, not whoever is QUOTED inside it. A magazine writer is the author even if the article interviews five people. A channel is the author even if a guest scientist explains everything.`, kind: 'gotcha' },
+    { content: `Write down the record the moment you use a source. Don't wait until later. Exact titles and author names fade from memory fast, but three labeled lines take only seconds.`, kind: 'tip' },
+    { content: `Use three labeled lines: WHO, WHAT, WHERE. This layout keeps the three pieces from sliding into each other. "Priya Anand coopcorner.example" is one running blur; WHO: Priya Anand. WHAT: [title]. WHERE: coopcorner.example is clear.`, kind: 'tip' },
+    { content: `WHERE needs to be specific enough for someone else to find the source. "The internet" doesn't work. Write the actual website name, magazine name, or channel name—something concrete.`, kind: 'edge-case' },
+    { content: `A title is a label for one specific source, not a category. Many videos could be called "the frog video," but only one is called "Why Do Frogs Disappear in Winter?" Copy the exact wording printed on or under the source.`, kind: 'vocab-note' },
+    { content: `This is a record, not a formatted citation. You're just capturing WHO, WHAT, and WHERE clearly on three labeled lines. Fancy punctuation and alphabetizing come later in a different lesson.`, kind: 'edge-case' },
   ],
 };

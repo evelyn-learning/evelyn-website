@@ -72,5 +72,13 @@ export const BASELINE_M6SCI_U7_THE_WATER_CYCLE_EVAPORATION_CONDENSATION_PRECIPIT
     { content: `The order of this pathway is fixed: evaporation, then condensation, then precipitation. A later step cannot happen until the step before it has already happened.`, kind: 'tip' },
     { content: `This lesson stops once precipitation reaches Earth's surface. What the water does next -- soaking into the ground, running off across the land, or being taken up by a plant -- is the next lesson's topic.`, kind: 'tip' },
     { content: `Neither wind nor sunlight turns water vapor into liquid droplets. Cooling does. Wind can only move a cloud once it already exists.`, kind: 'tip' },
+    { content: `Evaporation does NOT require boiling. Liquid water at a puddle or lake surface changes to invisible vapor at ordinary air temperature, driven by sun's energy. Boiling is a different, much hotter event.`, kind: 'common-error' },
+    { content: `Condensation is caused by COOLING, not by wind or sunlight. As vapor rises and cools high in the atmosphere, it becomes liquid droplets. Wind can move a cloud around, but it does not create one.`, kind: 'gotcha' },
+    { content: `The water cycle is an ORDERED CHAIN: evaporation → condensation → precipitation. You cannot skip steps. Vapor must condense into liquid BEFORE it can fall as rain—it cannot fall as precipitation while invisible.`, kind: 'vocab-note' },
+    { content: `When precipitation reaches the ground or ocean, THIS LESSON ENDS. Don't describe what happens next—soaking into soil, flowing downhill, or being absorbed by plants—that's a separate topic. Stop at 'water falls to Earth's surface.'`, kind: 'edge-case' },
+    { content: `Water VAPOR is invisible. If you can see it (steam, mist, fog), it's actually tiny LIQUID droplets, not gas. Vapor mixes silently into the air; you see only clouds made of liquid.`, kind: 'vocab-note' },
+    { content: `A puddle disappears FASTER on hot, sunny days and SLOWER on cool, cloudy ones because evaporation is driven by sun's energy. Use this pattern to check your answer: if the process slows when sun weakens, you named evaporation correctly.`, kind: 'tip' },
+    { content: `Evaporation happens at ANY temperature where liquid water is exposed to air—not just on hot days, just faster on hot days. A puddle or wet clothes dry even on a cool or cold morning.`, kind: 'edge-case' },
+    { content: `The water cycle has NO starting point and NO ending point—it repeats forever. The same water molecule can evaporate, condense, and fall as rain, then evaporate again the next day. Call it a CYCLE, not a trip.`, kind: 'vocab-note' },
   ],
 };

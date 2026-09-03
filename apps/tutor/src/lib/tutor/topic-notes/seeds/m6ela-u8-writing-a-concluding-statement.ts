@@ -75,5 +75,11 @@ A student drafted this ending: "Our library should stay open one extra hour afte
     { content: `Never introduce a brand-new reason in the last sentence. Every reason needs its own place earlier in the argument, not a surprise appearance at the end.`, kind: 'tip' },
     { content: `Watch for an ending that trails off into a general appeal, true of almost any topic, instead of staying tied to the exact argument on the page.`, kind: 'tip' },
     { content: `Test any ending by covering the claim and reasons and asking: could this sentence close a totally different argument? If yes, it has not followed from this one.`, kind: 'tip' },
+    { content: `Don't copy the opening claim word-for-word at the end. Retyping the exact sentence sounds like the argument stopped, not finished. Say the same idea a new way instead.`, kind: 'common-error' },
+    { content: `Before you write your concluding statement, reread the claim and all reasons on the page. Every single word in your ending must trace back to something already there — nothing brand new.`, kind: 'tip' },
+    { content: `A new reason sneaking into the last sentence is a trap. If you introduce a point for the first time in the conclusion, readers have zero evidence for it and the ending feels like a different argument started.`, kind: 'gotcha' },
+    { content: `Test your ending by covering up the claim and reasons, then reading only your last sentence alone. If it could finish almost any argument, it's too vague. It should only make sense with THIS exact argument.`, kind: 'tip' },
+    { content: `Beware the general reminder that sounds smart but floats free from your specific reasons — like 'we should always think about the environment' when your argument was about a recycling bin location.`, kind: 'edge-case' },
+    { content: `Tie your restated claim to the actual reasons you already gave by name or detail. Use 'so that' or 'because' language to show how the ending grows straight out of what came before.`, kind: 'vocab-note' },
   ],
 };

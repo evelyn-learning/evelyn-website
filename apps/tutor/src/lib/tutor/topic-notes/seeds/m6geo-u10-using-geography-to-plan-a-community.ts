@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U10_USING_GEOGRAPHY_TO_PLAN_A_COMMUNITY: TopicNotesB
     { content: `A good planning reason names a land, water, or resource fact. A preference, such as "people like the view," is not a planning reason on its own.`, kind: 'tip' },
     { content: `One flooding fact rules out only the uses that need to stay dry -- it does not rule out every possible use for that land.`, kind: 'tip' },
     { content: `This is the last lesson in the course, and it uses the same skill the course opened with: look closely at the facts about a place before deciding what belongs there.`, kind: 'tip' },
+    { content: `Don't confuse a preference with a planning reason. "People like the view" is not a reason to put housing there. A planning reason must name a land, water, or resource fact: "The land stays dry" or "Fertile soil is here."`, kind: 'common-error' },
+    { content: `Flooding rules out housing and farms, but not parks. Don't assume one flooding fact makes land useless for everything. Parks can sit on floodplain land.`, kind: 'gotcha' },
+    { content: `A park does NOT need flat, fertile land. In fact, steep, rocky land that fails for farms or housing is often perfect for a park.`, kind: 'vocab-note' },
+    { content: `Match land to the use that actually needs what that land has. Don't ask "which use is most important?" Ask "which use's specific needs does this land's facts meet?"`, kind: 'tip' },
+    { content: `Gather all three kinds of facts before choosing: shape (flat or steep), water (is there a source, will it flood?), and resource (fertile soil or not). Don't decide without checking all three.`, kind: 'tip' },
+    { content: `A road's main job is to connect places people already travel between. Roads don't care as much about flat land or fertile soil as farms do.`, kind: 'edge-case' },
+    { content: `If land fails one requirement for a use, it fails that use — even if it's perfect for everything else. Steep, rocky land cannot be a farm, period, no matter how close the water is.`, kind: 'common-error' },
   ],
 };

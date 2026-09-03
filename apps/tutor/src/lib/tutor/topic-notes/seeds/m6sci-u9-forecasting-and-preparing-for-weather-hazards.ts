@@ -74,5 +74,13 @@ export const BASELINE_M6SCI_U9_FORECASTING_AND_PREPARING_FOR_WEATHER_HAZARDS: To
     { content: `A dropping wind category does not mean a dropping overall risk; a weakening storm on a track with a history of slowing and stalling can still bring dangerous, extended rain and flooding.`, kind: 'tip' },
     { content: `Floodwater depth cannot be judged by looking at it, and a site with a track record of flooding at a given rainfall level should be closed, not left to case-by-case judgment.`, kind: 'tip' },
     { content: `During a tornado warning, official guidance is to move to a small interior room on the lowest floor, away from windows, because flying debris and broken glass are the danger even without a direct hit.`, kind: 'tip' },
+    { content: `A forecast cone shows a *range* for the storm's center, not its exact path or size. Wind, rain, and storm surge reach *beyond* the cone, so locations just outside it still need to prepare.`, kind: 'gotcha' },
+    { content: `Don't confuse *watch* and *warning*. Watch = conditions are favorable, time to prepare. Warning = hazard is happening or expected very soon, act now. Mixing these up changes when you respond.`, kind: 'vocab-note' },
+    { content: `Past luck is not protection. A town that has avoided direct hits before is not safer unless the *current forecast and historical record for a similar track* show lower risk this time.`, kind: 'common-error' },
+    { content: `A storm weakening in wind does not mean weakening in overall risk. If historical records show storms on this track slow down and stall after landfall, heavy rain and flooding can still be severe even as wind drops.`, kind: 'gotcha' },
+    { content: `Historical data is evidence *for that location and that kind of track*—not a general rule. A pattern at one neighborhood or one bridge is real, but only for there, not everywhere.`, kind: 'vocab-note' },
+    { content: `Preparedness and mitigation are different: preparedness gets ready for *one specific forecast* (pack supplies now); mitigation reduces risk long-term *before any storm is forecast* (reinforce a building). Know which one the plan is.`, kind: 'vocab-note' },
+    { content: `Floodwater depth cannot be judged by looking at it. A bridge or road with a track record of flooding at a given rainfall level should be *closed*, not left to drivers' judgment.`, kind: 'tip' },
+    { content: `When a plan fails the evidence check, pinpoint *how*: too weak for the risk, too broad (treats everywhere the same when risk is specific), or aimed at the wrong hazard or location. Name the mismatch.`, kind: 'tip' },
   ],
 };

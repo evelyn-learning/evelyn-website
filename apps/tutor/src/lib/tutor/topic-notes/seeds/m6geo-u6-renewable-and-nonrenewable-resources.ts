@@ -73,5 +73,12 @@ export const BASELINE_M6GEO_U6_RENEWABLE_AND_NONRENEWABLE_RESOURCES: TopicNotesB
     { content: `Where a resource is found does not decide its classification. Geothermal energy and copper ore both come from underground, yet one is renewable and the other is nonrenewable.`, kind: 'tip' },
     { content: `How a resource is used, how far it can be shipped, or how costly it is to obtain, does not decide its classification either. Only how long nature takes to resupply it does.`, kind: 'tip' },
     { content: `Renewable and nonrenewable describe how long nature takes to resupply a resource. They are not a judgment about which group is better.`, kind: 'tip' },
+    { content: `Don't use location to decide the classification. Geothermal energy is underground AND renewable. Coal is underground AND nonrenewable. Only the one-question test decides it.`, kind: 'common-error' },
+    { content: `A natural resource can be energy (wind, sunlight, geothermal heat) OR solid material (coal, ore). Energy counts as a natural resource even if you can't hold it in your hand.`, kind: 'vocab-note' },
+    { content: `Ask the one-question test BEFORE classifying: 'Can nature supply a new amount within a person's lifetime?' If you skip this step and guess based on examples, you'll mix up renewable and nonrenewable.`, kind: 'tip' },
+    { content: `Renewable and nonrenewable describe ONLY how long nature takes to resupply — not whether a resource is clean, useful, expensive, or better. Don't confuse the classification with a value judgment.`, kind: 'gotcha' },
+    { content: `Fossil fuels (coal, petroleum, natural gas) are all nonrenewable. Mineral ore (like copper or iron ore) is also nonrenewable. Both take far longer than a human lifetime to form.`, kind: 'vocab-note' },
+    { content: `One matching example doesn't prove a rule. When you hear 'any' or 'every,' test it against a contrasting case from the lesson (like the geothermal + coal pair).`, kind: 'tip' },
+    { content: `Geothermal energy is NOT the same as fossil fuels. Geothermal is renewable heat from deep Earth (made continuously). Coal and petroleum are nonrenewable fossil fuels (made over millions of years).`, kind: 'vocab-note' },
   ],
 };

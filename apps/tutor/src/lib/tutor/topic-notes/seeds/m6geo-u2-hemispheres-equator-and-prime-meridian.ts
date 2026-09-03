@@ -70,5 +70,12 @@ export const BASELINE_M6GEO_U2_HEMISPHERES_EQUATOR_AND_PRIME_MERIDIAN: TopicNote
     { content: `Almost every place on Earth is in two hemispheres, one from each pair; only a place sitting exactly on one of the lines is not. Naming only one is an unfinished answer.`, kind: 'tip' },
     { content: `A large area can spread across a line. Both lines cross Africa, so Africa has land in all four hemispheres, while Antarctica lies entirely in the Southern Hemisphere.`, kind: 'tip' },
     { content: `Both lines are agreed on rather than painted on. Nobody can see them from a plane.`, kind: 'tip' },
+    { content: `Don't confuse which direction a line RUNS with which direction it SEPARATES. The Prime Meridian runs north-south (pole to pole), but it separates EAST from WEST. The Equator runs east-west, but it separates NORTH from SOUTH.`, kind: 'common-error' },
+    { content: `Always answer TWO questions in THIS order: (1) North or south of Equator? (2) East or west of Prime Meridian? If you name only one hemisphere, your answer is incomplete. Every place (except points exactly on a line) sits in two hemispheres, one from each pair.`, kind: 'tip' },
+    { content: `A continent or country is NOT a point. If BOTH the Equator and Prime Meridian cross Africa, Africa has land in all FOUR hemispheres — not just two. Check each line separately and count all combinations.`, kind: 'edge-case' },
+    { content: `An answer like 'Northern AND Southern' is impossible — those come from the same pair. A correct answer always has one from the north-south pair AND one from the east-west pair, like 'Northern AND Western.'`, kind: 'gotcha' },
+    { content: `The Equator and Prime Meridian are IMAGINARY — not painted on Earth, not visible from a plane. They exist only on maps and globes because people agreed to draw them there. The Equator's location is fixed by the poles; the Prime Meridian's location was chosen by agreement.`, kind: 'vocab-note' },
+    { content: `Crossing a line while heading in one direction puts you on the far side of that line. If you cross the Equator heading north, you end up north of it. If you cross the Prime Meridian heading west, you end up west of it.`, kind: 'tip' },
+    { content: `A place sitting EXACTLY on a line (e.g., on the Equator or Prime Meridian) is ON the boundary, not inside a hemisphere. In practice, almost every place is in two hemispheres — the exception proves the rule.`, kind: 'edge-case' },
   ],
 };

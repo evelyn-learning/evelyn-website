@@ -71,5 +71,12 @@ export const BASELINE_M6MATH_U7_EQUIVALENT_EXPRESSIONS: TopicNotesBaseline = {
     { content: `A variable term and a constant are never like terms, even when they share a digit; only terms with the exact same variable can be combined.`, kind: 'tip' },
     { content: `Combine like terms by adding their coefficients and keeping the variable; when a product is hiding inside a longer expression, distribute first, then combine.`, kind: 'tip' },
     { content: `Check that two expressions — expanded or factored — are equivalent by substituting a whole number into each one and comparing the results.`, kind: 'tip' },
+    { content: `The 4 in 4(n + 3) must multiply EVERY term inside the parentheses, not just the first one. Many mistakes come from forgetting to multiply the constant: 4(n + 3) = 4n + 12, not 4n + 3.`, kind: 'common-error' },
+    { content: `A term with a variable (like 5x) and a plain number (like 5) are NOT like terms, even though they share the digit 5. Only combine terms with the exact same variable.`, kind: 'vocab-note' },
+    { content: `When you combine like terms, add only the coefficients — keep the variable. 3x + 2x = 5x, not 5 or 5x².`, kind: 'tip' },
+    { content: `If a term has no like term to combine with, write it down anyway. A lone constant doesn't disappear just because nothing combines with it.`, kind: 'gotcha' },
+    { content: `To factor an expression backward, find the GCF of all terms, then divide each term by it. For 6x + 15, the GCF is 3, so 6x + 15 = 3(2x + 5).`, kind: 'tip' },
+    { content: `Test equivalence by picking one whole number, substituting it into both expressions, and checking they give the same answer. If they match, the forms are likely equivalent.`, kind: 'tip' },
+    { content: `When an expression has a product hiding inside (like 2(x + 3) + 4x), always distribute first, then combine like terms. Order matters.`, kind: 'tip' },
   ],
 };

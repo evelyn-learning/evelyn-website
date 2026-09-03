@@ -81,5 +81,12 @@ Resolution: "Priya ran to the cafeteria, filled two buckets with ice from the fr
     { content: `The climax is one moment, not the most stressful moment. It is the turning point where the outcome becomes decided.`, kind: 'tip' },
     { content: 'Resolution comes after the turning point and shows how the conflict settled.', kind: 'tip' },
     { content: `Sort any sentence by asking, in order: has the trouble started, is tension still building, is this the turning point, or is the outcome already decided?`, kind: 'tip' },
+    { content: `The climax is NOT the most stressful or emotional moment. It's the sentence where something *happens* — an action, a reveal, a choice — that actually *changes the outcome*. The most tense feeling often comes in rising action, right before the real turning point.`, kind: 'common-error' },
+    { content: `Rising action can be multiple sentences long. Don't label just one sentence as rising action and then jump to the climax. Keep asking 'Is the outcome still uncertain?' for each new sentence—if yes, it's still rising action.`, kind: 'gotcha' },
+    { content: `Exposition ends the *moment* trouble appears—not when characters start worrying about trouble. Look for the sentence where the *first problem actually shows up*, then everything after that is rising action.`, kind: 'edge-case' },
+    { content: `The climax is always *one sentence* (or at most one brief moment), not a long stretch. If you're pointing at three sentences and calling them the climax, you've probably grabbed rising action + climax + resolution together.`, kind: 'vocab-note' },
+    { content: `Don't confuse the *narrator* (who tells the story) with the *author* (who wrote it). A story can be told from one character's point of view without that character being the person who wrote the story. When you're mapping plot, you're following what *happens*, not who's telling you about it.`, kind: 'vocab-note' },
+    { content: `Use the four-question test in order: (1) Has trouble started? (2) Is tension still building? (3) Is this the turning point? (4) Is the outcome already decided? Stop at the first 'yes.' Don't skip around or you'll mislabel.`, kind: 'tip' },
+    { content: `Resolution isn't just 'the end.' It's the part *after the outcome is already decided* that shows what changed because of the turning point. If nothing has changed yet, you're still in rising action or at the climax.`, kind: 'common-error' },
   ],
 };

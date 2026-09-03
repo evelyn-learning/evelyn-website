@@ -72,5 +72,13 @@ export const BASELINE_M6MATH_U4_GCF_LCM_AND_THE_DISTRIBUTIVE_PROPERTY: TopicNote
     { content: `GCF and LCM are the same search run in opposite directions: GCF looks down through shared factors, LCM looks up through shared multiples. Say out loud which direction a problem needs before answering.`, kind: 'tip' },
     { content: `The distributive property lets a common factor be pulled out of a sum: 24 + 36 = 12 × (2 + 3), because dividing each number by 12 gives the numbers inside the parentheses.`, kind: 'tip' },
     { content: `Check a distributive rewrite by multiplying back out, and check an LCM by dividing it by both original numbers; every division should come out even.`, kind: 'tip' },
+    { content: `Say out loud: "Am I looking for the biggest shared factor or the smallest shared multiple?" before you start. GCF and LCM are opposites — mixing them up is the #1 slip on this topic.`, kind: 'gotcha' },
+    { content: `Factors go DOWN (they're ≤ the number). Multiples go UP (they're ≥ the number). If your list is getting bigger, you're listing multiples, not factors.`, kind: 'vocab-note' },
+    { content: `When you pull out a common factor using the distributive property, always divide each original number by that factor to find what goes inside the parentheses. Don't guess.`, kind: 'common-error' },
+    { content: `To find the LCM, you need the smallest number on the multiples lists, not the biggest. Stop searching as soon as you see a number that appears on both lists.`, kind: 'edge-case' },
+    { content: `After you write a distributive rewrite like 24 + 36 = 12 × (2 + 3), multiply back out: 12 × 5 = 60, and check that it matches the original sum. No match = wrong answer.`, kind: 'tip' },
+    { content: `The GCF is always ≤ the smaller original number. If your GCF is bigger than both numbers, it's wrong — you probably found an LCM by mistake.`, kind: 'common-error' },
+    { content: `Don't skip 1 when you list factors — 1 is always a factor of every number, and it's always a common factor. It just won't be the GCF unless the two numbers share no other factors.`, kind: 'edge-case' },
+    { content: `When checking an LCM, divide it by each original number. If even one division has a remainder, it's not a common multiple — your LCM is wrong.`, kind: 'tip' },
   ],
 };

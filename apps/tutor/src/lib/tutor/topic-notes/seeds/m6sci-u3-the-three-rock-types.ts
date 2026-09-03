@@ -73,5 +73,13 @@ export const BASELINE_M6SCI_U3_THE_THREE_ROCK_TYPES: TopicNotesBaseline = {
     { content: `Stripes can come from two different processes: deposited sediment layers (sedimentary) or squeezed mineral bands, called foliation (metamorphic). Check for pebbles, grains, or fossils to tell them apart.`, kind: 'tip' },
     { content: `Crystal size and banding are clues about the FORMATION PROCESS, never clues about a rock's age.`, kind: 'tip' },
     { content: `Granite and basalt are igneous; sandstone and limestone are sedimentary; marble and slate are metamorphic.`, kind: 'tip' },
+    { content: `The process that formed the rock decides its family, not what it looks like. Two rocks that look identical might be different types if they formed different ways. Always name the process first.`, kind: 'gotcha' },
+    { content: `Don't confuse crystal SIZE with rock AGE. Large crystals mean slow cooling, not old age. A rock could have huge crystals and be young, or tiny crystals and be ancient.`, kind: 'common-error' },
+    { content: `STRIPES in a rock can be sedimentary layering OR metamorphic foliation—completely different causes. Look for: sediment layers have visible grains, pebbles, or fossils; foliation has no grains or fossils, just squeezed mineral bands.`, kind: 'edge-case' },
+    { content: `Metamorphic rock stays solid the whole time heat and pressure act on it. If the rock fully melted, it becomes igneous again when it cools, not metamorphic. No melting = metamorphic. Full melt = igneous.`, kind: 'vocab-note' },
+    { content: `Don't say 'old rock' or 'buried rock' to identify metamorphic rock. Metamorphic only if the description actually says heat and pressure changed an existing solid rock. Being old or deep does not make a rock metamorphic.`, kind: 'common-error' },
+    { content: `In sedimentary rock, grains stay the same size and shape—they are just pressed and glued. In igneous rock, crystals actually grow during cooling. No new crystals form in sedimentary rock.`, kind: 'vocab-note' },
+    { content: `Magma is underground melted rock; lava is the same melted rock after it reaches the surface. Both cool into igneous rock, but the location tells you the cooling speed and final crystal size.`, kind: 'vocab-note' },
+    { content: `A rock can change families over time: sedimentary shale → metamorphic slate (heat and pressure, no melt). Name the current family based on what made it most recently, not what it started as.`, kind: 'edge-case' },
   ],
 };

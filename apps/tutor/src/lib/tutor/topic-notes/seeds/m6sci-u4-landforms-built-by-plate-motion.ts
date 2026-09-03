@@ -75,5 +75,13 @@ export const BASELINE_M6SCI_U4_LANDFORMS_BUILT_BY_PLATE_MOTION: TopicNotesBaseli
     { content: `Oceanic plus oceanic, divergent, builds a mid-ocean ridge, where magma fills the widening gap and hardens into new ocean floor -- the Mid-Atlantic Ridge is an active example.`, kind: 'tip' },
     { content: `Continental plus continental, divergent, builds a rift valley, where the land between the plates stretches and drops -- the East African Rift is one example, and the Red Sea shows what a continental rift can become if it widens far enough.`, kind: 'tip' },
     { content: `The direction plates move and the density of the crust each plate carries both matter -- neither one alone predicts the landform.`, kind: 'tip' },
+    { content: `Don't assume convergent always means UP. At a convergent boundary, the denser plate sinks down (subduction), making a trench. Direction of push is the same; density decides the outcome.`, kind: 'common-error' },
+    { content: `Say the process BEFORE the landform name. Don't just say 'trench' — say 'subduction zone with an ocean trench' or 'where the denser plate sinks, forming a trench.' The landform is the result, not the cause.`, kind: 'vocab-note' },
+    { content: `Oceanic crust is denser. Always. That's why at oceanic-plus-oceanic convergent boundaries, one plate ALWAYS subducts — they're never equal density like continental plates can be.`, kind: 'tip' },
+    { content: `A rift valley is NOT a small trench. Rifts form where plates PULL APART (divergent); trenches form where plates PUSH TOGETHER and one sinks (convergent). Opposite motion, opposite landforms.`, kind: 'gotcha' },
+    { content: `Volcanic island arcs sit ABOVE the sinking plate, not where new crust forms. The volcanoes come from melted rock recycled out of the subducting plate and mantle — that's not new crust creation.`, kind: 'common-error' },
+    { content: `Check TWO things at convergent boundaries: direction (both plates pushing in) AND density (which plate is denser). Both matter. One boundary type, two possible landforms.`, kind: 'tip' },
+    { content: `A trench and a volcanic island arc are a PAIR, not separate landforms. The trench is where one plate bends down; the arc sits on top of the plate riding above it. They happen together at oceanic-convergent boundaries.`, kind: 'edge-case' },
+    { content: `Transform boundaries do NOT build any of the five landforms in this lesson. They slide plates past each other with no net up, down, or new crust — no trench, ridge, mountain, arc, or rift.`, kind: 'vocab-note' },
   ],
 };

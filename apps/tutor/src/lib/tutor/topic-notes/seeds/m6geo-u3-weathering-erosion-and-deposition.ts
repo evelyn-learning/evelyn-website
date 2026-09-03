@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U3_WEATHERING_EROSION_AND_DEPOSITION: TopicNotesBase
     { content: `Many different forces -- wind, moving water, and freezing-and-thawing ice -- can weather, erode, or deposit material, and many different everyday materials -- rock, sand, soil, gravel, dust, even a crack in a brick or a piece of wood -- can be weathered, eroded, or deposited.`, kind: 'tip' },
     { content: `A description usually shows only one of the three at a time. Check the exact words: is something breaking apart where it sits, already loose and still moving, or already come to rest somewhere new?`, kind: 'tip' },
     { content: `"Erosion" is not a catch-all word for any wearing-away or breaking-down -- treating it that way is the most common mistake with these three words.`, kind: 'tip' },
+    { content: `Don't use 'erosion' as a catch-all for any breaking apart or wearing away. Erosion only carries stuff that's *already loose*. Cracking in place is weathering, not erosion.`, kind: 'common-error' },
+    { content: `Weathering, erosion, deposition happen in *only* that order — you cannot skip steps. Something must break loose (weathering) before wind or water can carry it (erosion), and it must be carried before it can settle (deposition).`, kind: 'gotcha' },
+    { content: `If loose material is *still moving* through air, down a slope, or along a stream — and has not yet stopped — that is erosion *only*. Do not call it deposition until it actually comes to rest.`, kind: 'vocab-note' },
+    { content: `A description usually shows *one* process at a time, not all three at once. Match the exact words to one test: Is it breaking apart? Is it traveling? Has it settled? Pick the one that fits.`, kind: 'tip' },
+    { content: `Weathering can happen to sand, soil, dust, gravel, wood, brick — not just rock. And wind, moving water, freezing ice can all do weathering, erosion, or deposition. Don't narrow your thinking to rock + rivers only.`, kind: 'edge-case' },
+    { content: `If a piece is sitting in the *exact same spot* where it broke free — even if it's inside a crack or wedged in place — it has not been eroded or deposited. It is still at its starting point.`, kind: 'common-error' },
+    { content: `For deposition to happen, the carrying force must *slow down or stop*. Wind still blowing at full speed, water still rushing fast — those are still erosion, not deposition yet. Slowing down is the one trigger.`, kind: 'vocab-note' },
   ],
 };

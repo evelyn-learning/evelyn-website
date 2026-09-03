@@ -73,5 +73,13 @@ export const BASELINE_M6SCI_U1_SCALE_OF_THE_SOLAR_SYSTEM: TopicNotesBaseline = {
     { content: `A planet's real distance from the sun stays close to fixed all year. Earth's average distance from the sun, about 150,000,000 kilometers, is called one astronomical unit.`, kind: 'tip' },
     { content: `Earth's distance from another planet, like Mars, is NOT fixed the way Earth's distance from the sun is, because both planets keep moving along their own paths at their own pace.`, kind: 'tip' },
     { content: `A not-to-scale poster or drawing is for clarity, not accuracy -- a size relationship shown on one is not evidence about a distance relationship, or the reverse.`, kind: 'tip' },
+    { content: `Don't read a size relationship off a poster as evidence about distance, or vice versa. Mars looks similar in size to Earth on most classroom posters, but Mars is 1.5 times farther from the sun than Earth is. The two facts are separate.`, kind: 'common-error' },
+    { content: `A single not-to-scale drawing cannot show both planet sizes and distances accurately at the same time. If the sun were a 30 cm ball, Earth would be 2.7 mm (sesame seed) but 32 meters away — no page is big enough for that.`, kind: 'gotcha' },
+    { content: `The scale factor is always the same number (e.g., 46,400 km per model cm), but it shrinks planets and stretches distances in opposite directions. One factor, two wildly different results.`, kind: 'vocab-note' },
+    { content: `Earth's distance from the sun (150 million km, or 1 AU) is almost fixed all year. Earth's distance from Mars keeps changing because both planets orbit at different speeds. Don't mix them up.`, kind: 'vocab-note' },
+    { content: `A planet's size in a scale model has nothing to do with where it sits. A small planet like Mars is still 1.5 times farther from the sun than Earth — its small size doesn't pull it closer.`, kind: 'common-error' },
+    { content: `Always divide the same way when comparing sizes: bigger diameter ÷ smaller diameter. The sun is 1,392,000 km ÷ 12,742 km ≈ 109 times Earth's diameter, not Earth times 109.`, kind: 'tip' },
+    { content: `Check your model answer using the ratio directly instead of the scale factor. If Mars is 1.5 times farther from the sun than Earth, then Mars's model distance = Earth's model distance × 1.5. Simpler and less error-prone.`, kind: 'tip' },
+    { content: `Changing the object you pick for the sun (beach ball vs. weather balloon) changes all the model measurements, but the ratio between sun and planet stays the same. The ratio is what's real, not the specific ball.`, kind: 'edge-case' },
   ],
 };

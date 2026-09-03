@@ -71,5 +71,12 @@ export const BASELINE_M6MATH_U3_WORD_PROBLEMS_WITH_FRACTION_DIVISION: TopicNotes
     { content: 'The word "of" between two amounts usually signals multiplication, not division.', kind: 'tip' },
     { content: `Convert any mixed number to an improper fraction first; the rule for which number is the total and which is the group size does not change.`, kind: 'tip' },
     { content: `When a problem asks for whole groups, round the quotient DOWN to a whole number, and find the leftover amount separately if the problem asks for it.`, kind: 'tip' },
+    { content: `Total divided by group size, always in that order. If you flip it, you answer a completely different question and get a nonsense answer.`, kind: 'common-error' },
+    { content: `"How many groups fit inside?" = division. "What is a fraction OF an amount?" = multiplication. Read the whole sentence before you pick the operation.`, kind: 'vocab-note' },
+    { content: `Convert mixed numbers to improper fractions before you set up the division. The rule for total and group size doesn't change just because you have a mixed number.`, kind: 'tip' },
+    { content: `When the answer is a mixed number and the problem asks for whole groups, keep only the whole number part and find the leftover separately. Never round up.`, kind: 'common-error' },
+    { content: `Check your setup by saying it out loud as a full sentence. Does it match the question? Do that before you compute.`, kind: 'gotcha' },
+    { content: `Multiply back to check: (number of groups) × (group size) should equal the total. If it doesn't, your setup or computation is wrong.`, kind: 'tip' },
+    { content: `If any leftover is less than one full group, it's not enough for another item. Report it as a separate amount, not rounded into the count.`, kind: 'edge-case' },
   ],
 };

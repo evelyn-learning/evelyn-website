@@ -71,5 +71,12 @@ export const BASELINE_M6GEO_U2_PARTS_OF_A_MAP: TopicNotesBaseline = {
     { content: `The scale bar answers about how big a distance on the map really is, using marks for a real-world distance.`, kind: 'tip' },
     { content: `The legend does not tell you how far apart two things are -- that is the scale bar's job.`, kind: 'tip' },
     { content: `The title does not tell you which way is north -- that is the compass rose's job.`, kind: 'tip' },
+    { content: `Don't confuse the legend with the scale bar. The legend says what symbols MEAN; the scale bar says how far apart things REALLY are. They answer different questions.`, kind: 'common-error' },
+    { content: `Always check the compass rose on THAT map before saying which direction something is. If the N arrow points right instead of up, north is to the right, and all directions flip. Every map's compass rose is different.`, kind: 'gotcha' },
+    { content: `The title is words naming the map's subject, not a small drawing. The compass rose is a small drawing with an arrow. Don't swap them just because both sit near the top.`, kind: 'vocab-note' },
+    { content: `Each map picks its own symbols. A red circle might mean 'city' on one map but 'fire station' on another. Always read the legend on the map in front of you—never guess from a different map.`, kind: 'tip' },
+    { content: `Match the question to the part, not the other way around. 'What is this map showing?' → title. 'What does this symbol mean?' → legend. 'Which direction?' → compass rose. 'How far really?' → scale bar.`, kind: 'tip' },
+    { content: `A scale bar connects the page to the real world using distance marks (like '0' and '1 mile'). It's the ONLY part that tells you real-world size. A ruler on your desk won't work—use the scale bar printed on that map.`, kind: 'edge-case' },
+    { content: `If a map is missing one of the four parts, you can't answer the question that part is built for. No title? You don't know the subject. No scale bar? You can't find real distances. No part, no answer.`, kind: 'gotcha' },
   ],
 };

@@ -74,5 +74,11 @@ export const BASELINE_M6ELA_U1_HOW_CHARACTERS_RESPOND_AND_CHANGE: TopicNotesBase
     { content: `Not every reaction is a change. WRONG: "Theo is brave when the dog gets loose" (one moment only). CORRECT: "Theo changes from someone who avoids other dogs to someone who welcomes them" (compares the start of the story to the end).`, kind: 'tip' },
     { content: `A claimed trait is not evidence. Trust what the character does over a label like brave or responsible.`, kind: 'tip' },
     { content: `Every response or change needs an event to point at. Before naming one, name the moment in the story that provoked it.`, kind: 'tip' },
+    { content: `Don't stop at the middle event. A single brave or dramatic moment is a response, not a change. For a change, compare how the character acts near the start to how they act near the end.`, kind: 'common-error' },
+    { content: `Before you name a response or a change, point your finger at the event in the text that caused it. If you can't name the moment, you're guessing, not describing.`, kind: 'tip' },
+    { content: `A response can be shown without feeling words. Don't wait for the text to say 'angry' or 'sad.' Look for what the character does or says instead: walking away, snapping at someone, staying late to fix a mistake.`, kind: 'gotcha' },
+    { content: `A claimed trait (like 'brave' or 'responsible') is not evidence unless the character's actions prove it. If the text only labels the character, find the exact action that shows the trait instead.`, kind: 'vocab-note' },
+    { content: `Not every strong reaction lasts. A character can respond intensely to one event and go right back to acting the same way. Check if the difference still shows up later—if not, it's a response, not a change.`, kind: 'edge-case' },
+    { content: `When you describe a change, use 'from...to' language and name details from both the beginning and the end. Saying 'Lena becomes confident' is too vague; say 'from someone who sat silent to someone who volunteers first.'`, kind: 'tip' },
   ],
 };

@@ -76,5 +76,12 @@ export const BASELINE_M6SCI_U5_RELATIVE_DATING_AND_ROCK_LAYERS: TopicNotesBaseli
     { content: `A cutting feature sits in the MIDDLE of the order whenever a layer lies unbroken across it, and at the end only when nothing covers it.`, kind: 'tip' },
     { content: `A disturbance is information, not a dead end -- it tells you an extra event happened after the layers formed.`, kind: 'tip' },
     { content: 'The rock type never decides the order. Position and cross-cutting do.', kind: 'tip' },
+    { content: `**Relative dating = order only.** Never write an age in years (like "300 million years old"). That's a different method. Relative dating answers "which came first", not "how old".`, kind: 'vocab-note' },
+    { content: `**Always say UNDISTURBED when you use superposition.** "The bottom layer is the oldest" only works if layers are still flat. Folding, tilting, or faults move rock after it hardens—then the bottom layer is NOT guaranteed to be the oldest.`, kind: 'common-error' },
+    { content: `**Check for disturbance FIRST.** Before you order anything by superposition, ask: are the layers flat, or tilted/folded/broken? If they're not flat, superposition alone won't work—you need the other rules too.`, kind: 'tip' },
+    { content: `**A cutting feature is NOT always the youngest.** It's younger than what it cuts AND older than anything lying unbroken across it. If a layer covers it, the feature goes in the MIDDLE, not at the end.`, kind: 'gotcha' },
+    { content: `**Rock type doesn't decide the order.** Limestone is not older than sandstone just because it sounds older. Position in the stack (superposition) and cross-cutting (faults, intrusions) decide—not the rock names.`, kind: 'common-error' },
+    { content: `**Original horizontality is your alarm bell.** Sediment spreads out flat when it settles. If you see tilted or folded layers, something moved them after they hardened—that's a clue an extra event happened.`, kind: 'vocab-note' },
+    { content: `**After you write the order, read it back.** Ask: could each thing only have formed after the one before it? If any step fails that question, your order is wrong. This catches mistakes the rules alone might hide.`, kind: 'tip' },
   ],
 };

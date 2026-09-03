@@ -78,5 +78,11 @@ A student wrote: "Bailey knows how to tell time, because dogs are smart animals.
     { content: `If the text already says something outright, restating it is not an inference — it is an explicit fact repeated.`, kind: 'tip' },
     { content: `A good inference stays inside the text's own details. An idea built from an outside belief or rule is an assumption, not an inference.`, kind: 'tip' },
     { content: `Test every inference: name at least one exact phrase from the text that supports it. If you cannot, it is a guess.`, kind: 'tip' },
+    { content: `Don't call it an inference if the text already says it word-for-word. Restating an explicit fact in different words is still just repeating — nothing was figured out. Always ask: does the passage state this directly?`, kind: 'common-error' },
+    { content: `An inference needs at least two details from the text, combined. One detail alone is not enough — you need to connect clues to build a conclusion the text doesn't say outright.`, kind: 'tip' },
+    { content: `If your inference depends on something you already believe (a rule, a fact you learned outside the text), it's an assumption, not an inference. Stick to what the passage actually gives you.`, kind: 'gotcha' },
+    { content: `Before you trust an inference, point your finger at the exact words from the text that support it. If you can't name a phrase, it's a guess, not an inference.`, kind: 'tip' },
+    { content: `Textual evidence is not 'the story shows' or 'you can tell' — it's the exact sentence or phrase. Quote it or name it precisely. Vague language is a red flag.`, kind: 'vocab-note' },
+    { content: `Explicit and inference are opposites: if the text says it plainly, there's no inferring to do. If the text never says it directly, you can infer it from clues. Check which one you're dealing with before you answer.`, kind: 'edge-case' },
   ],
 };

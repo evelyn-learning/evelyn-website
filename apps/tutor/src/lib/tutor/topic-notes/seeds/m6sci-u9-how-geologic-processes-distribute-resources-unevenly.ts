@@ -69,5 +69,12 @@ export const BASELINE_M6SCI_U9_HOW_GEOLOGIC_PROCESSES_DISTRIBUTE_RESOURCES_UNEVE
     { content: `Copper ore of this kind forms where mineral-rich fluid rises from magma near a subducting plate boundary and deposits minerals in cracks in the surrounding rock, as along the Andes in Chile and Peru.`, kind: 'tip' },
     { content: `A productive aquifer depends on a thick layer of permeable sediment, such as the sand and gravel spread by ancient rivers beneath the Ogallala Aquifer, not just a long history or a nearby mountain range.`, kind: 'tip' },
     { content: `This lesson asks WHY a resource sits where it does; the previous lesson asked whether a resource is replaced about as fast as it is used. Those are two different questions about the same resources.`, kind: 'tip' },
+    { content: `Don't say "oil is under the ground here." Say "ancient sea + burial + heat + pressure + sealing rock layer = oil here." Name the process before naming the resource.`, kind: 'common-error' },
+    { content: `Digging deeper does NOT fix a missing process. If no ancient sea ever covered a region, drilling 10,000 feet down won't create buried marine organic material. Depth reveals history; it doesn't rewrite it.`, kind: 'gotcha' },
+    { content: `A resource needs TWO things, not just one. Coal needs ancient swamps AND burial. Oil needs ancient sea AND a sealing trap. Copper needs subduction AND rising magma. Missing either piece = no resource.`, kind: 'edge-case' },
+    { content: `"Permeable" means water (or oil) CAN flow through it. "Impermeable" means it CAN'T. A reservoir rock must be permeable; a sealing layer must be impermeable. Don't flip these.`, kind: 'vocab-note' },
+    { content: `Same ground = different resources depending on which processes happened there. Appalachia has coal (swamp burial). West Texas has oil (ancient sea + trap). Neither has the Andes' copper (no subduction zone). Process determines what's possible.`, kind: 'tip' },
+    { content: `An aquifer is productive because of thick, permeable sediment—NOT just because mountains are nearby or ground is wet today. Look for the ancient river, ancient sea, or ancient deposit that left that permeable layer behind.`, kind: 'common-error' },
+    { content: `Copper ore from rising magma is different from copper scattered in low amounts everywhere. An ORE DEPOSIT is a concentration built by the process—ore means it's worth mining, not just present.`, kind: 'vocab-note' },
   ],
 };

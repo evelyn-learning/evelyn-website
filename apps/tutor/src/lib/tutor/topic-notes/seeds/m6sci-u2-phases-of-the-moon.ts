@@ -76,5 +76,13 @@ export const BASELINE_M6SCI_U2_PHASES_OF_THE_MOON: TopicNotesBaseline = {
     { content: `Phases are not caused by Earth's shadow. Earth's shadow on the Moon is a lunar eclipse, which is rare and lasts hours.`, kind: 'tip' },
     { content: `There is no dark side of the Moon. There is a far side, and it is lit for half of every month.`, kind: 'tip' },
     { content: `The Moon is often visible in daylight, which is another sign that phases depend on angle and not on nightfall.`, kind: 'tip' },
+    { content: `**Half the Moon is always lit.** When you see a crescent, the dark part isn't unlighted—it's the half facing away from the sun. You're only seeing a sliver of the lit half.`, kind: 'vocab-note' },
+    { content: `Don't confuse **phase** (the shape you see now) with **position in orbit** (how far through the 29.5-day cycle). A first quarter moon looks like half a circle but is only ¼ of the way around its orbit.`, kind: 'common-error' },
+    { content: `**A phase is not Earth's shadow.** Proof: a first quarter moon is high in the sky at sunset while the sun is on the horizon. Earth's shadow points away from the sun, so it's nowhere near the Moon—yet half is still dark.`, kind: 'gotcha' },
+    { content: `The Moon's **far side is not dark**—it's lit for half the month, just like the near side. At new moon, the far side is fully sunlit. Don't say 'dark side'; say 'far side.'`, kind: 'vocab-note' },
+    { content: `The Moon is **often visible in daylight**—waxing crescents in the afternoon, first quarters in the day, full moons at noon. That only works if phases depend on angle, not on nightfall.`, kind: 'tip' },
+    { content: `**Waxing = growing; waning = shrinking.** Both describe the lit part getting bigger or smaller night-to-night as you watch the phase sequence. They don't describe the Moon's distance from Earth.`, kind: 'vocab-note' },
+    { content: `In the Northern Hemisphere, **waxing moons are lit on the right; waning moons are lit on the left.** Use this as a quick check—but remember it flips if you're south of the equator.`, kind: 'tip' },
+    { content: `A **lunar eclipse** (rare, lasts a few hours) is different from phases (happen every month, take weeks). Don't call a phase an eclipse—and Earth's shadow reaching the Moon is only one rare moment, not the reason phases exist.`, kind: 'edge-case' },
   ],
 };

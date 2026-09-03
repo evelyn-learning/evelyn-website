@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U7_NUMERICAL_EXPRESSIONS_WITH_EXPONENTS: TopicNotes
     { content: `In a bigger expression, evaluate the power first, before addition, subtraction, or multiplication that sits next to it.`, kind: 'tip' },
     { content: `An exponent applies only to the base written next to it, never to a sum on the other side of a plus or minus sign, unless parentheses group them together.`, kind: 'tip' },
     { content: `Check a power by expanding it back into its repeated-multiplication factors and multiplying them one at a time.`, kind: 'tip' },
+    { content: `The exponent is a **count of factors**, not a number to multiply by. 3⁴ means 3 × 3 × 3 × 3 = 81, NOT 3 × 4 = 12. Check: if you get an answer close to base × exponent, you mixed them up.`, kind: 'common-error' },
+    { content: `An exponent **only touches the base sitting right next to it**. In 4 + 5², only the 5 is squared, not the 4. Compute 5² = 25 first, then add: 4 + 25 = 29. No parentheses? The exponent does not reach across the plus sign.`, kind: 'gotcha' },
+    { content: `When you write repeated multiplication as a power, **count the factors to find the exponent**. In 6 × 6 × 6, there are three 6s, so the exponent is 3, giving 6³. The exponent is never one of the factors.`, kind: 'vocab-note' },
+    { content: `Say the exponent out loud before you compute: '3 to the fourth power' or '5 squared.' Hearing the words helps you remember it's repeated multiplication, not 3 × 4 or 5 × 2.`, kind: 'tip' },
+    { content: `Watch out for 2¹ and 2⁰ edge cases. 2¹ = 2 (only one factor of 2), and 2⁰ = 1 by definition, even though it looks weird. These show up later; don't assume exponents are always 2 or bigger.`, kind: 'edge-case' },
+    { content: `Parentheses change everything: (4 + 5)² = 9² = 81, but 4 + 5² = 4 + 25 = 29. If parentheses are there, evaluate inside them first, then apply the exponent to the result.`, kind: 'gotcha' },
+    { content: `Squared means exponent 2, cubed means exponent 3. After that, just say the number: 'two to the fifth power,' not 'two to the fifth-ed.' Know the names so you can write them down correctly.`, kind: 'vocab-note' },
   ],
 };

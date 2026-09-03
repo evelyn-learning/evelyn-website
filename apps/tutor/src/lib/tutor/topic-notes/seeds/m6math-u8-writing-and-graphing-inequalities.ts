@@ -72,5 +72,12 @@ export const BASELINE_M6MATH_U8_WRITING_AND_GRAPHING_INEQUALITIES: TopicNotesBas
     { content: `Shade to the RIGHT of the open circle for > and to the LEFT of the open circle for <, with an arrow showing the shading continues forever.`, kind: 'tip' },
     { content: `Always name the variable and its units before writing the inequality, so the symbol and the story stay connected.`, kind: 'tip' },
     { content: `Check an inequality by testing one number inside the shaded region and the boundary number itself; the shaded number should make the inequality true and the boundary number should make it false.`, kind: 'tip' },
+    { content: `Open circle means the boundary number is NOT a solution. Test it: does 48 > 48? No. So 48 gets an open circle, not a filled one.`, kind: 'common-error' },
+    { content: `The symbol points to the smaller number. If it points left (< shape), shade left. If it opens right (> shape), shade right. Don't shade by habit—follow the symbol.`, kind: 'gotcha' },
+    { content: `"More than," "greater than," and "over" all mean > (strict). "Fewer than," "less than," and "under" all mean < (strict). None of these phrases include the word "equal," so never write ≥ or ≤.`, kind: 'vocab-note' },
+    { content: `Always write what the variable represents and its units before you write the inequality. Example: "Let n = number of books" not just "n." This keeps you connected to the real-world rule.`, kind: 'tip' },
+    { content: `A solution to x > 5 can be a decimal (5.1, 5.5, 10.2) or a whole number (6, 7, 100). The boundary 5 itself is never a solution, but there are infinitely many on both sides of it.`, kind: 'edge-case' },
+    { content: `Check your graph by testing two numbers: one inside the shaded region (should make the inequality true) and the boundary number (should make it false). If either fails, fix the graph.`, kind: 'tip' },
+    { content: `Don't confuse the boundary number with the smallest or largest solution. For h > 48, there is no smallest solution (solutions keep going down to 0 and below), and there is no largest solution (they keep going up forever).`, kind: 'common-error' },
   ],
 };

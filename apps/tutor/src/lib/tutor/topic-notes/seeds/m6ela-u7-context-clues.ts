@@ -79,5 +79,13 @@ What went wrong, and what does somber actually mean here?`, solution: `Somber me
     { content: `A restatement clue says the same idea again, later, in plainer words, with no signal announcing it.`, kind: 'tip' },
     { content: `A contrast clue gives you the opposite. Signals: but, however, although, unlike, instead. Flip whatever the other half of the sentence says.`, kind: 'tip' },
     { content: `An example clue shows what a word covers through specific cases introduced by such as, like or for instance. Whichever clue you use, test your guess by substituting it back into the sentence.`, kind: 'tip' },
+    { content: `Don't guess at a hard word before finishing its entire sentence. The clue is almost always sitting one sentence away, not right next to the word itself.`, kind: 'common-error' },
+    { content: `When you see a contrast signal (but, however, although, unlike, instead), flip the meaning of the other half of the sentence. If one side says tired, the hard word means the opposite.`, kind: 'gotcha' },
+    { content: `A restatement clue has no signal word announcing it—look for the same idea said again in easier words, one or two sentences later. Don't wait for a comma or 'or.'`, kind: 'vocab-note' },
+    { content: `Before you search for a clue, ask what job the hard word does: Does it name something, describe a feeling or state, or show an action? This job rules out entire categories of wrong guesses before you read further.`, kind: 'tip' },
+    { content: `Always swap your guess back into the sentence to test it. If the sentence still makes complete sense with your meaning in the hard word's place, keep it. If not, the guess is wrong—no matter how confident it feels.`, kind: 'common-error' },
+    { content: `When an example clue lists specific cases (like, such as, for instance), ask what all the examples have in common—don't focus on just one item in the list.`, kind: 'common-error' },
+    { content: `A definition clue often announces itself with a comma followed by 'or,' or the word 'means,' or a dash. These signal words mean the meaning is sitting right there—take it at its word.`, kind: 'vocab-note' },
+    { content: `Don't confuse the feeling you'd have in the situation with the actual meaning the passage gives. A game is exhausting, but that doesn't mean every word in a passage about a game means tired.`, kind: 'edge-case' },
   ],
 };

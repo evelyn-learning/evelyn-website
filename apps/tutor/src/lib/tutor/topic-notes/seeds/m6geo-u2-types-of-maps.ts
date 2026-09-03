@@ -68,5 +68,11 @@ export const BASELINE_M6GEO_U2_TYPES_OF_MAPS: TopicNotesBaseline = {
     { content: `The same place can appear on a political map, a physical map, and a thematic map, and all three can look completely different, because each is built around a different legend.`, kind: 'tip' },
     { content: `Choose the right kind of map by reading what its legend actually lists, never by guessing from a name or from the fact that it uses color.`, kind: 'tip' },
     { content: `A map using many colors is not automatically physical -- what the colors stand for is what decides the type.`, kind: 'tip' },
+    { content: `Don't pick a map type by its colors alone. Ask what the colors *stand for*: elevation = physical, one data topic = thematic, country separation = political.`, kind: 'common-error' },
+    { content: `Political-map colors are just there to tell countries apart, not to show anything about the land itself. Don't confuse them with elevation colors on a physical map.`, kind: 'vocab-note' },
+    { content: `Thematic maps can show almost any one chosen topic—rainfall, population, crops, languages, disease rates. Rainfall is one example, never the only allowed topic.`, kind: 'common-error' },
+    { content: `Always check the legend first, not the map's appearance or its name. The legend tells you what information the mapmaker actually chose to show.`, kind: 'tip' },
+    { content: `A country can appear on a political map, a physical map, and a thematic map all at once—three maps, three different legends, three different looks. Don't assume one map type fits all questions.`, kind: 'edge-case' },
+    { content: `Physical maps show elevation (how high the land sits) with colors running low to high. Symbols like stars or special shapes mark rivers, lakes, and peaks—not cities or capitals.`, kind: 'vocab-note' },
   ],
 };

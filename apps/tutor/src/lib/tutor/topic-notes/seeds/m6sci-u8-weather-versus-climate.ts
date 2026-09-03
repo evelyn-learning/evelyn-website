@@ -71,5 +71,12 @@ export const BASELINE_M6SCI_U8_WEATHER_VERSUS_CLIMATE: TopicNotesBaseline = {
     { content: `One unusual day never proves a region's climate has changed. Showing a real change would require comparing one multi-decade average against a later multi-decade average.`, kind: 'tip' },
     { content: `A climate description is not a forecast for any single day. "Rainy climate" describes a long-run average, not a guarantee about tomorrow.`, kind: 'tip' },
     { content: `To decide whether a statement is about weather or climate, check its timescale: a short, specific span describes weather; a long span reported as an average describes climate.`, kind: 'tip' },
+    { content: `Don't confuse "it happened once" with "that's the pattern." One snowy day ≠ snowy climate. One hot week ≠ warming climate. Climate needs decades of averaged data, not single events.`, kind: 'common-error' },
+    { content: `A climate description does NOT predict tomorrow's weather. "Rainy climate" means lots of rain on average over years—it still has dry days. "Dry climate" can still get a rainstorm.`, kind: 'gotcha' },
+    { content: `Always ask: Is this statement about RIGHT NOW or about a LONG-RUN AVERAGE? Right now = weather. Decades of averaged data = climate. That one question sorts almost every statement correctly.`, kind: 'tip' },
+    { content: `"Average" is a climate word. If you see "average temperature," "typical," "over 30 years," that statement is talking about climate, not weather—even if it also mentions a specific place.`, kind: 'vocab-note' },
+    { content: `One unusual event stands OUT from the pattern because it IS unusual. If a storm dumps more rain in one day than a desert gets in a year, that's a sign it's weather, not the climate.`, kind: 'tip' },
+    { content: `Changing the climate requires the SAME unusual event repeated across decades, not just one big event. One storm = weather. Storms every week for 60 years = new climate. The repetition over time is what matters.`, kind: 'edge-case' },
+    { content: `"I visited in July and it wasn't hot, so the climate must be mild" is backwards. Your one-day visit is weather. The region's climate is the average of every July for 30+ years, which your visit doesn't change.`, kind: 'common-error' },
   ],
 };

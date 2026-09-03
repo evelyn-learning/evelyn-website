@@ -70,5 +70,13 @@ export const BASELINE_M6SCI_U1_GRAVITY_AND_ORBITAL_MOTION: TopicNotesBaseline = 
     { content: `An orbit is gravity constantly pulling an object toward a central body while the object moves sideways fast enough to keep missing it.`, kind: 'tip' },
     { content: `The same picture explains a planet orbiting the sun, a moon orbiting a planet, and a satellite orbiting Earth -- only the central body and the orbiting object change.`, kind: 'tip' },
     { content: `An astronaut floats in orbit because the astronaut and the spacecraft are falling toward Earth together at the same rate, not because gravity has stopped.`, kind: 'tip' },
+    { content: `Don't say "there's no gravity in space." Gravity never switches off. Astronauts float because they and the spacecraft fall toward Earth together at the same rate — not because gravity stopped pulling.`, kind: 'common-error' },
+    { content: `Always mention SIDEWAYS SPEED when you explain why a satellite orbits instead of crashing down. Gravity pulls it toward Earth the whole time — but if sideways speed is fast enough, it keeps missing.`, kind: 'tip' },
+    { content: `When comparing gravity's pull between two objects, change only ONE thing at a time (either mass OR distance). If both differ, you usually can't say which pull is stronger without doing math.`, kind: 'tip' },
+    { content: `Gravity pulls the pen AND the astronaut AND the spacecraft all together at the same rate. That's why the pen floats next to her — not because gravity isn't there.`, kind: 'vocab-note' },
+    { content: `A satellite is NOT held up by gravity like you're held up by the floor. It's constantly falling and constantly missing — that's the orbit. Gravity never stops pulling downward.`, kind: 'gotcha' },
+    { content: `Closer = stronger pull. Farther = weaker pull. Say it both ways to lock it in when comparing two objects at different distances.`, kind: 'vocab-note' },
+    { content: `A ball rolling off the table and a satellite orbiting Earth ARE THE SAME SITUATION — just different sideways speeds. Gravity works the same way on both.`, kind: 'tip' },
+    { content: `Don't confuse 'gravity pulls on object A' with 'gravity is what keeps object A in orbit.' Gravity alone does the pulling — the orbit depends on how fast sideways the object is already moving.`, kind: 'common-error' },
   ],
 };

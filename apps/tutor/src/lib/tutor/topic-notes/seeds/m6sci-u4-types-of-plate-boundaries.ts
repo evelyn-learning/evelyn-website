@@ -73,5 +73,12 @@ export const BASELINE_M6SCI_U4_TYPES_OF_PLATE_BOUNDARIES: TopicNotesBaseline = {
     { content: `A plate is not the same thing as a continent. A single plate can carry open ocean floor and a continent together, and a boundary's type is decided by direction alone -- never by whether either plate happens to be carrying a continent.`, kind: 'tip' },
     { content: `Earthquakes can happen at all three boundary types, not only where plates collide.`, kind: 'tip' },
     { content: `What each boundary type actually builds -- mountains, ridges, trenches -- is the next lesson. This lesson is about identifying the type from the motion alone.`, kind: 'tip' },
+    { content: `Don't confuse "moving in different directions" with "convergent." At a transform boundary, the two sides move in opposite directions (one north, one south) but slide PAST each other. Check the distance ACROSS the boundary: if it's shrinking, convergent; if it's growing, divergent; if it stays the same, transform.`, kind: 'common-error' },
+    { content: `A plate is NOT a continent. One plate can carry both ocean floor AND a continent at the same time. A boundary's type depends only on plate motion (apart/together/past), never on what the plate happens to be carrying.`, kind: 'vocab-note' },
+    { content: `The one question that decides boundary type: Are the two plates moving apart, together, or past each other? Answer that first, then verify with distance trend (growing, shrinking, or constant).`, kind: 'tip' },
+    { content: `Earthquakes happen at ALL three boundary types — convergent, divergent, and transform. Earthquakes alone do not tell you which type a boundary is. The San Andreas Fault is transform, not convergent, even though it has frequent earthquakes.`, kind: 'gotcha' },
+    { content: `Divergent boundaries pull apart; convergent boundaries push together; transform boundaries slide past. Use these action words to check your answer — they match the names and the physics.`, kind: 'vocab-note' },
+    { content: `Measure distance ACROSS the boundary, not along it. At a transform boundary, both sides move along the boundary line, which looks like motion — but the gap across it stays constant, so it's not convergent or divergent.`, kind: 'edge-case' },
+    { content: `This lesson is only about identifying the boundary type from motion direction. What it builds (mountains, ridges, trenches) is the next lesson — don't try to name the landform here.`, kind: 'tip' },
   ],
 };

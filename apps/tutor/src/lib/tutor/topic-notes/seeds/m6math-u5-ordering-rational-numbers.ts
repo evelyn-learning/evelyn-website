@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U5_ORDERING_RATIONAL_NUMBERS: TopicNotesBaseline = 
     { content: `A negative number with a bigger digit is still farther left on the number line, and so is still the lesser number: -9 < -2.`, kind: 'tip' },
     { content: `To order a list of three or four rational numbers, find each one's position on the number line and read them off from left to right, least to greatest.`, kind: 'tip' },
     { content: `An explanation of an inequality must describe the exact quantity the numbers represent, not a different quantity from the same story.`, kind: 'tip' },
+    { content: `Don't compare the size of the digits—compare position on the number line. Between -9 and -2, the digit 9 is bigger, but -9 sits farther left, so -9 < -2. Always ask: which one is farther right?`, kind: 'common-error' },
+    { content: `The open side of < or > always points to the *smaller* number. If you write it backward, flip the whole symbol: -6 < 68 and 68 > -6 are the same fact, just different symbol directions.`, kind: 'vocab-note' },
+    { content: `An inequality statement with just numbers and a symbol is NOT a complete answer. Always write a sentence explaining what it means for the real quantities: 'The temperature in Death Valley is lower than in Denver,' not just '-282 < 5280.'`, kind: 'gotcha' },
+    { content: `When you explain an inequality, describe the exact quantity the numbers represent—temperature, elevation, balance, etc. Don't swap in a different quantity from the story. Wrong: 'Since -1 < 24, the fish tank has less water.' Right: 'The fish tank is colder than the pool.'`, kind: 'common-error' },
+    { content: `Zero is neither positive nor negative. When ordering a list that includes 0, place it between all negative numbers (to the right) and all positive numbers (to the left). Example: -0.75, 0, 3.`, kind: 'edge-case' },
+    { content: `To order a list, find where each number sits on the number line, then read from left to right (least to greatest) or right to left (greatest to least). Don't sort by digit size or other shortcuts—use position every time.`, kind: 'tip' },
+    { content: `Comparing two negatives: the one farther from zero is the smaller number, not the larger. -12.5 is farther left than -0.75, so -12.5 < -0.75, even though 12.5 > 0.75.`, kind: 'gotcha' },
   ],
 };

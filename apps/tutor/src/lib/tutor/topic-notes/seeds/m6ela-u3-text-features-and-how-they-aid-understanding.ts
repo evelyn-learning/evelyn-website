@@ -80,5 +80,12 @@ What does the caption give a reader that neither the photograph nor the paragrap
     { content: `A sidebar adds a related fact beside the main explanation without becoming part of it. A reader could skip it and still follow the section's point, but would understand it less fully.`, kind: 'tip' },
     { content: `A graphic shows how several parts relate to each other all at once, which a paragraph's sentences can only describe one part at a time.`, kind: 'tip' },
     { content: `To find what any feature contributes, cover it with your thumb and reread the paragraph alone. Whatever is missing from the paragraph but present under your thumb is that feature's contribution.`, kind: 'tip' },
+    { content: `Don't confuse a heading with a summary. A heading names the topic of the section, not what the paragraph actually says. "How Ants Find Their Way Home" tells you WHERE to look, not HOW they do it.`, kind: 'common-error' },
+    { content: `A caption earns its place by adding something new. If the picture already shows it and the paragraph already says it, the caption is just repeating. Real captions add a place, a date, an amount, or make a wordy detail visible instead of just written.`, kind: 'gotcha' },
+    { content: `A sidebar is not proof. It adds a related fact beside the main explanation, but it doesn't have to cover every example or back up the paragraph's main claim. A reader could skip it and still follow the section.`, kind: 'vocab-note' },
+    { content: `Use the thumb test: cover the feature with your thumb and reread the paragraph alone. Whatever is now missing from the paragraph is what that feature contributes. If nothing is missing, the feature isn't adding anything to this section.`, kind: 'tip' },
+    { content: `A graphic shows relationships all at once—where parts sit relative to each other. A paragraph has to describe them one at a time in words, which takes longer and is harder to picture. Ask: what does the diagram let me see in one glance?`, kind: 'edge-case' },
+    { content: `A text feature belongs to ONE section only. A heading, caption, sidebar, or graphic sits with a particular paragraph and does its job there. Ask 'what does this add to understanding THIS section?' not 'what is this used for in general?'`, kind: 'common-error' },
+    { content: `Don't skip the caption just because you can see the picture. A caption often carries a fact the photo cannot show—a place, a date, a measurement—that the paragraph doesn't mention either. That fact lives only in the caption.`, kind: 'gotcha' },
   ],
 };

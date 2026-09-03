@@ -78,5 +78,11 @@ A student says: "Property Larkspur has the biggest, flattest lot, so it must be 
     { content: `The move-it test still works here: a fact that would travel with the ground if it were moved is a site fact; a fact that depends on what happens to be nearby is a situation fact.`, kind: 'tip' },
     { content: `Counting how many facts are listed about a location does not decide which one is better. A short list with a genuinely good site fact and a genuinely good situation fact beats a long list that is weak on one or both.`, kind: 'tip' },
     { content: `The best answer to a siting question always names one site reason and one situation reason together, not one of the two alone.`, kind: 'tip' },
+    { content: `Don't pick a location just because it has a good site OR a good situation. You must check BOTH. A flat lot with great ground means nothing if no one can reach it.`, kind: 'common-error' },
+    { content: `A true fact is not automatically a good reason. The mailbox color, fence paint, or building age might be true, but none of those are site facts (ground itself) or situation facts (what's nearby), so they give zero justification.`, kind: 'gotcha' },
+    { content: `Use the move-it test: if you could pick up the ground and set it down anywhere else, would that fact come with it? If yes, it's site. If no, it's situation.`, kind: 'tip' },
+    { content: `More facts written down does not mean a better location. One strong site fact plus one strong situation fact beats ten weak or irrelevant facts.`, kind: 'common-error' },
+    { content: `Always state your justification with one fact from each category: name one site reason (about the ground) AND one situation reason (about what's nearby), not just one of the two.`, kind: 'vocab-note' },
+    { content: `A justification can be wrong even when its fact is true if the fact doesn't actually belong to that location, or belongs to a different category than you claimed.`, kind: 'edge-case' },
   ],
 };

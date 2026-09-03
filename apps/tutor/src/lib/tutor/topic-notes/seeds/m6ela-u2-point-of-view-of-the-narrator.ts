@@ -74,5 +74,12 @@ export const BASELINE_M6ELA_U2_POINT_OF_VIEW_OF_THE_NARRATOR: TopicNotesBaseline
     { content: 'Second person is rare and speaks straight to the reader as you.', kind: 'tip' },
     { content: `The narrator is not the author. An author can invent a narrator that is a different age, a different person, or not even human, and the narrator's own words are often the proof.`, kind: 'tip' },
     { content: `Only the narration counts when naming the point of view. A character saying I inside quotation marks is dialogue, not narration.`, kind: 'tip' },
+    { content: `Always ask "whose thoughts do you get?" before naming the point of view. Don't rely on pronouns alone — pronouns only narrow it down to first or third person, not which kind of third.`, kind: 'tip' },
+    { content: `If a character says "I" inside quotation marks, that I belongs to the speaker, not the narrator. Cover the dialogue and read only the narration to find the real point of view.`, kind: 'common-error' },
+    { content: `Third person limited and third person omniscient both use he, she, they, and names. The difference is HOW MANY characters' thoughts open: limited = one character only; omniscient = two or more in the same passage.`, kind: 'vocab-note' },
+    { content: `The narrator is an invented voice, not the real author. If the narrator says something the real author plainly is not ("I've been a statue for fifty years"), that proves it's a made-up narrator.`, kind: 'gotcha' },
+    { content: `In first person, the reader learns only what that one character knows. If something happened somewhere the narrator wasn't, you won't find out about it — that's a limit of first person, not a mistake in the story.`, kind: 'edge-case' },
+    { content: `Second person (you) is rare. Don't assume a story is second person just because a character is addressed as you — check whether the *narration* uses you, not just the dialogue.`, kind: 'vocab-note' },
+    { content: `In third person limited, other characters can still appear and do things — they just aren't shown thinking. Don't confuse "limited to one character's mind" with "only one character exists."`, kind: 'common-error' },
   ],
 };

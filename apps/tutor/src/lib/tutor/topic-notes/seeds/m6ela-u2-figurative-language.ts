@@ -77,5 +77,12 @@ Line 2: "By the third act, the gym floor was a river of spilled lemonade." Class
     { content: `Hyperbole is an exaggeration so large that nobody is meant to believe it. It is not a lie, and the size of the stretch tells you the size of the feeling.`, kind: 'tip' },
     { content: `The meaning test, every time: name what is being described, name what it is compared to or what is being stretched, then say the one plain idea that connects them.`, kind: 'tip' },
     { content: `Stopping at "simile" or "personification" has not answered the question yet. Always finish with what the figure actually means.`, kind: 'tip' },
+    { content: `Naming the device ("metaphor," "simile") is only step one. Always finish by saying what it actually means in plain words. "Metaphor" alone is not a complete answer.`, kind: 'gotcha' },
+    { content: `Check for like or as FIRST before you name anything. No like, no as = not a simile. If it says IS without like or as, it's a metaphor.`, kind: 'tip' },
+    { content: `A metaphor must describe something that could NOT be literally true. "The classroom was a beehive" works because a classroom is not actually a beehive. If it could literally be true, it's a fact, not a metaphor.`, kind: 'edge-case' },
+    { content: `Personification is not saying something IS alive. It's borrowing ONE human quality to describe it more vividly. A furnace can literally make noise, but only something with a mind can complain—that's the borrowed quality.`, kind: 'vocab-note' },
+    { content: `For personification, test the QUALITY, not the verb. Verbs can be tricky: machines can squeal or shake. Look for something only a mind can do: refuse, worry, complain, choose.`, kind: 'common-error' },
+    { content: `Hyperbole is not a lie or a mistake—it's on purpose, and nobody is supposed to believe it literally. The bigger the stretch, the stronger the feeling the writer wants to show.`, kind: 'vocab-note' },
+    { content: `After you name the device, ask: What is being described? What is it compared to or stretched? What ONE plain idea connects them? Write that plain idea as your meaning.`, kind: 'tip' },
   ],
 };

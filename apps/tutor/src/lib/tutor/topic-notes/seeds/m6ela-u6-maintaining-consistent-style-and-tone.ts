@@ -75,5 +75,13 @@ export const BASELINE_M6ELA_U6_MAINTAINING_CONSISTENT_STYLE_AND_TONE: TopicNotes
     { content: `A lapse can be a grammatically perfect sentence. The problem is its register, not its structure.`, kind: 'tip' },
     { content: `Fix a lapse by rewriting it in the established register while keeping the same information.`, kind: 'tip' },
     { content: `This is a whole-passage check. A single word's tone inside one sentence is a different skill.`, kind: 'tip' },
+    { content: `Don't confuse a grammar problem with a register problem. A sentence can be a perfect, complete sentence with no fragments or run-ons and still be the lapse — because the issue is its wording, not how it's built.`, kind: 'common-error' },
+    { content: `Read the whole piece first before you mark any sentence as the lapse. Decide which register most of it uses (formal or informal), then check every sentence against that majority. The one that doesn't match is your lapse.`, kind: 'tip' },
+    { content: `A lapse can switch registers either direction: a casual aside in a formal piece, or stiff, jargon-heavy words in a casual piece. The fix works the same way both directions — rewrite the sentence in the register the rest of the piece already established.`, kind: 'edge-case' },
+    { content: `When you fix a lapse, keep the same information the sentence originally gave — just say it in the established register. You're not changing what the sentence means; you're changing how it sounds.`, kind: 'tip' },
+    { content: `Watch for casual filler words ('anyway,' 'basically,' 'like,' 'honestly,' 'kind of') and exaggeration ('a million nails') — they scream informal register. Formal register uses precise vocabulary and formal transitions like 'subsequently' and 'aforementioned'.`, kind: 'vocab-note' },
+    { content: `Don't hunt for the word with the strongest feeling — that's for analyzing tone inside a finished story. Here, you're comparing whole sentences to the register the rest of your piece already uses. Look at sentences as units, not words.`, kind: 'gotcha' },
+    { content: `If you find a sentence that sounds 'off' but can't say why, try rewriting it to match the rest of the piece. If it's suddenly much easier to read and sounds natural, that sentence was your lapse.`, kind: 'tip' },
+    { content: `Register is about audience and purpose, not about being right or wrong. A formal report and a text to a friend are both correct — they just use different registers. The mistake is mixing them inside one piece.`, kind: 'vocab-note' },
   ],
 };

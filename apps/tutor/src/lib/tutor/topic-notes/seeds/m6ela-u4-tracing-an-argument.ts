@@ -75,5 +75,12 @@ export const BASELINE_M6ELA_U4_TRACING_AN_ARGUMENT: TopicNotesBaseline = {
     { content: `Sorting is not grading. The only question is whether a reason and evidence are attached, not whether they are strong enough — that comes in a later grade.`, kind: 'tip' },
     { content: `WRONG: "It sounds certain, so it must be supported." CORRECT: check for an actual reason and evidence right around the claim — a confident tone proves nothing on its own.`, kind: 'tip' },
     { content: `To sort any claim, find it, then read the sentences right around it. A printed reason and evidence there means supported; the argument moving on to its next point means not supported.`, kind: 'tip' },
+    { content: `Don't confuse a reason that *feels true* with a reason the *text printed*. If you supply the reason from your own head, stop — reread the sentences around the claim. Only mark supported if the text itself has the reason and evidence right there.`, kind: 'common-error' },
+    { content: `Confident words like "obviously," "everybody knows," and "clearly" are NOT evidence. They describe how sure a sentence sounds, not what backs it up. Always look for an actual fact or example, never trust the tone.`, kind: 'gotcha' },
+    { content: `An unsupported claim can be big, important, or placed right at the end of a paragraph — size and placement don't matter. Check *all* specific claims the same way: reason and evidence nearby, or not supported.`, kind: 'edge-case' },
+    { content: `When you find a claim, read the 1–2 sentences *right next to it* — before and after. If the reason and fact are buried three sentences away, that's not attached enough. Look for them close by or the claim is not supported.`, kind: 'tip' },
+    { content: `A reason without evidence is not enough. A sentence that explains *why* (reason) must be paired with a *fact, count, or example* (evidence) before the claim counts as supported.`, kind: 'vocab-note' },
+    { content: `Remember: you are NOT deciding if the reason makes sense or if the evidence is strong. You are ONLY sorting into two boxes: reason and evidence are there, or they are not. Save judgment for later.`, kind: 'tip' },
+    { content: `The main claim is the big ask — the thing the whole piece is arguing for. Specific claims are smaller points meant to help convince you of the main claim. Sort only the specific claims, not the main one.`, kind: 'vocab-note' },
   ],
 };

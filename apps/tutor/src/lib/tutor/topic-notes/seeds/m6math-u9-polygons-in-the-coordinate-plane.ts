@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U9_POLYGONS_IN_THE_COORDINATE_PLANE: TopicNotesBase
     { content: `Find a horizontal or vertical side's length exactly like row 6.3: use each vertex's distance from zero, subtract when both are on the same side of zero, add when they are on opposite sides.`, kind: 'tip' },
     { content: `A side connecting two vertices that share neither coordinate is diagonal; this lesson names that it exists but does not compute its exact length.`, kind: 'tip' },
     { content: `Finding the area a polygon encloses is a separate skill from drawing the polygon and measuring one of its sides.`, kind: 'tip' },
+    { content: `Don't stop connecting vertices after the last one in the list. Always draw one more segment from the last vertex back to the first to close the shape. Without it, you have an open path, not a polygon.`, kind: 'common-error' },
+    { content: `When a side crosses zero (one vertex positive, one negative on the same axis), add the distances from zero, don't subtract. Subtracting only works when both vertices are on the same side of zero.`, kind: 'common-error' },
+    { content: `Check which coordinate is shared before measuring a side's length. Same second coordinate = horizontal side (use first coords). Same first coordinate = vertical side (use second coords). Neither shared = diagonal side (can't measure it in this lesson).`, kind: 'vocab-note' },
+    { content: `Plot all vertices first, then connect them in the exact order given. The order matters—it determines which vertices are neighbors and which sides get drawn.`, kind: 'tip' },
+    { content: `A diagonal side (vertices share no coordinate) gets drawn and is part of the polygon, but you cannot find its exact length using the method in this lesson. Don't try.`, kind: 'edge-case' },
+    { content: `Absolute value bars || mean distance from zero, always positive. |3| = 3 and |-3| = 3 both equal 3, even though one is positive and one is negative.`, kind: 'vocab-note' },
+    { content: `Count on the grid to double-check your side length after subtracting or adding distances. If the side is horizontal or vertical, stepping from one vertex to the other should match your answer.`, kind: 'tip' },
   ],
 };

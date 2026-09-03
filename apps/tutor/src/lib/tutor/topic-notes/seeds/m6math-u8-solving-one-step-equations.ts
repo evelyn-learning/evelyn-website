@@ -67,5 +67,12 @@ export const BASELINE_M6MATH_U8_SOLVING_ONE_STEP_EQUATIONS: TopicNotesBaseline =
     { content: 'Apply every move to both sides, so the equation stays balanced.', kind: 'tip' },
     { content: 'Check every solution by substituting it back into the original equation.', kind: 'tip' },
     { content: `p, q, and the solution can be whole numbers, decimals, or fractions — the same two moves work every time.`, kind: 'tip' },
+    { content: `Look at the NUMBER NEXT TO x FIRST. If it's added (like x + 5), subtract. If it's multiplying (like 5x), divide. Picking the wrong inverse means x stays stuck in the equation.`, kind: 'common-error' },
+    { content: `In 5x, the 5 is NOT added to x — it's multiplying x. Writing it as '5 + x' or treating it like addition will break your solution.`, kind: 'vocab-note' },
+    { content: `Always substitute your answer back into the ORIGINAL equation, not a rewritten version. If both sides don't match exactly, the solution is wrong — backtrack and find your error.`, kind: 'tip' },
+    { content: `Do the same operation to BOTH sides at the exact same time. Forgetting one side or doing it on different steps breaks the balance and creates a new, wrong equation.`, kind: 'gotcha' },
+    { content: `If x is already isolated (like x = 12), STOP — that's your answer. Don't subtract or divide again just because a number is sitting on the right side.`, kind: 'edge-case' },
+    { content: `Decimals and fractions work exactly the same way as whole numbers. 2.5x = 10 and 1/2 x = 5 are solved by dividing both sides, just like 2x = 10.`, kind: 'vocab-note' },
+    { content: `Don't confuse the coefficient (the 12 in 12x) with the answer. After you divide, 12 is gone — it's not part of your solution.`, kind: 'common-error' },
   ],
 };

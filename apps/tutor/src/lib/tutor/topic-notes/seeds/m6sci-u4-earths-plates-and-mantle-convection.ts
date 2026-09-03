@@ -73,5 +73,12 @@ export const BASELINE_M6SCI_U4_EARTHS_PLATES_AND_MANTLE_CONVECTION: TopicNotesBa
     { content: `What drives that circulating motion is energy from deep inside Earth; exactly how that energy moves through the rock is a topic for a later grade.`, kind: 'tip' },
     { content: `Plates typically move only a few centimeters a year, but that motion adds up to hundreds of kilometers over millions of years.`, kind: 'tip' },
     { content: `Different plates move at different speeds and in different directions -- what happens where two plates meet is the next lesson.`, kind: 'tip' },
+    { content: `Don't say 'the plates float on liquid magma.' The asthenosphere is SOLID rock that flows slowly—like stiff putty bending over time, not melted rock. Actual magma is only in scattered pockets.`, kind: 'common-error' },
+    { content: `Coastlines and plate boundaries are NOT the same line. North America's coastline is on TOP of the North American Plate, but the plate's real edge is far out in the Atlantic Ocean. A continent and ocean floor can sit on one plate together.`, kind: 'gotcha' },
+    { content: `When you multiply a tiny yearly rate by millions of years, track every zero carefully. Write out 10 million as 10,000,000 before multiplying, then convert step-by-step (÷100, ÷1000). One lost zero makes your answer wrong by a whole order of magnitude.`, kind: 'tip' },
+    { content: `A tectonic plate = a slab of lithosphere, NOT a continent. The Pacific Plate has almost no continent on it—just ocean floor. Plates and continents are separate things that don't line up one-to-one.`, kind: 'vocab-note' },
+    { content: `Mantle convection is the MOTION PATTERN itself (solid rock circulating slowly), not the energy or heat that powers it. Say what the pattern does, not what makes it happen—that mechanism is Grade 8 science.`, kind: 'vocab-note' },
+    { content: `Few centimeters per year sounds tiny, but 10 million years is enormous. Always check your answer makes sense: 4 cm/year over 10 million years should land in hundreds of kilometers (drivable in a day), not meters or thousands of km.`, kind: 'tip' },
+    { content: `The lithosphere includes BOTH the crust AND the topmost part of the mantle—one rigid layer. This is why a plate can carry continental crust (land) and oceanic crust (seafloor) together as one piece.`, kind: 'edge-case' },
   ],
 };

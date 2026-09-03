@@ -77,5 +77,13 @@ export const BASELINE_M6SCI_U7_WEATHERING_EROSION_AND_DEPOSITION_BY_WATER: Topic
     { content: `A floodplain is the flat land beside a river that gets a new layer of sediment each time the river overflows its banks, spreads out, and slows down (for example, the Nile River's floodplain).`, kind: 'tip' },
     { content: `A canyon forms the opposite way -- erosion keeps carrying away the sediment that weathering loosens from a riverbed and walls, cutting the land down deeper over an extremely long stretch of time (for example, the Grand Canyon, cut by the Colorado River).`, kind: 'tip' },
     { content: `A canyon and a delta come from the very same three processes; a canyon is what erosion leaves behind, and a delta is what erosion carried away and deposition dropped somewhere else.`, kind: 'tip' },
+    { content: `Don't say "water eroded the rock into sediment." Say "water weathered the rock loose, then erosion carried it away." Weathering breaks rock; erosion only moves what's already broken. Two jobs, two words, in order.`, kind: 'common-error' },
+    { content: `Mechanical weathering = same rock, smaller pieces. Chemical weathering = rock composition actually changes. The presence of water doesn't decide which—how the rock changes does.`, kind: 'vocab-note' },
+    { content: `Deposition happens where water SLOWS DOWN, never where it rushes fastest. Fast water carries sediment; slow water drops it. Heaviest pieces fall first.`, kind: 'gotcha' },
+    { content: `A canyon and a delta both use weathering + erosion + deposition, but opposite outcomes. Canyon: erosion carries sediment away, leaving a hole. Delta: erosion carries sediment there, and deposition fills it in.`, kind: 'edge-case' },
+    { content: `Ice wedging breaks rock by freezing and expanding in a crack, repeating over time. It's mechanical weathering, not a one-time event. Same with grinding—it takes many tumbles to break a boulder into sand.`, kind: 'tip' },
+    { content: `Rainwater picks up CO₂ from air and becomes slightly acidic, letting it dissolve limestone. That's chemical weathering. Don't confuse it with just water physically breaking rock.`, kind: 'vocab-note' },
+    { content: `A river can't deposit sediment in a narrow, steep gorge because the water stays fast. Deposition needs slow water. A canyon forms instead because erosion keeps winning.`, kind: 'tip' },
+    { content: `Slow-moving water can only carry tiny pieces (sand, mud). Fast water can carry gravel and boulders. The speed of the water decides the size limit of what it hauls.`, kind: 'vocab-note' },
   ],
 };

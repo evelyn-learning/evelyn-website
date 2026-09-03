@@ -74,5 +74,12 @@ export const BASELINE_M6ELA_U6_VARYING_SENTENCE_PATTERNS_FOR_STYLE: TopicNotesBa
     { content: `Short sentences land hard and speed up a moment; longer sentences slow down to add detail or explanation. The piece decides which job is needed where.`, kind: 'tip' },
     { content: `A varied sentence is still a complete, correct sentence — variety is never an excuse for a fragment or two sentences jammed together with no connecting word.`, kind: 'tip' },
     { content: `Test a revision by pointing at what it fixes: a repeated opener it removes, or a relationship it states. If a revision only sounds fancier or longer without doing either, it has not fixed anything.`, kind: 'tip' },
+    { content: `Don't confuse 'varying sentences' with 'changing the facts.' Rewrite the shape only — opener and length. Every original detail must still be there, word-for-word, when you're done.`, kind: 'common-error' },
+    { content: `When you spot three or more sentences starting with the exact same word in a row, that's what a reader notices first—before they even read the content. That's your target to fix.`, kind: 'tip' },
+    { content: `A connector (when, after, because, so, as soon as, if) does a specific job: it states a relationship between two ideas that the original separate sentences left unsaid. Don't add one just to make sentences longer.`, kind: 'vocab-note' },
+    { content: `Fancier words or longer sentences alone do not fix choppiness. Point at what you actually fixed: Did you remove a repeated opener? Did you add a connector that states a new relationship? If neither, you haven't fixed it.`, kind: 'gotcha' },
+    { content: `A short sentence ('The door slammed.') and a long sentence ('After three tries, the old door finally clicked shut behind her.') do different jobs—one lands hard, one adds detail. Neither is 'better'; the piece decides what's needed.`, kind: 'edge-case' },
+    { content: `You can combine two short sentences with a connector, but only if they're closely related. 'I fed the dog and walked to school' works; 'I fed the dog because I walked to school' does not.`, kind: 'common-error' },
+    { content: `A varied sentence is still a complete, correct sentence. Fixing choppiness is never an excuse to write a fragment or jam two sentences together with no connector or punctuation.`, kind: 'gotcha' },
   ],
 };

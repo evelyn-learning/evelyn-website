@@ -69,5 +69,12 @@ export const BASELINE_M6GEO_U4_READING_ELEVATION_AND_RELIEF: TopicNotesBaseline 
     { content: `To compare two places, answer the elevation question for each one first, then the relief question for each one, and never assume that one answer decides the other.`, kind: 'tip' },
     { content: `Two places can share an elevation and still have very different relief, and two places can share a relief description and still sit at very different elevations.`, kind: 'tip' },
     { content: `Sometimes elevation and relief point the same way for a place, and sometimes they point opposite ways -- the only way to know is to check each one.`, kind: 'tip' },
+    { content: `**Elevation and relief are two separate questions.** Never guess relief from elevation or elevation from relief. Always read and answer both independently for each place.`, kind: 'gotcha' },
+    { content: `**Sea level is always the starting point for elevation.** When a description says a place sits '40 meters above sea level' or 'close to the coastline,' that's elevation. Don't confuse it with how bumpy the nearby land is.`, kind: 'vocab-note' },
+    { content: `**Low relief doesn't mean low elevation.** A high mountain plateau sits 2,000+ meters above sea level but can still have nearly flat ground for miles—high elevation, low relief. Check both facts.`, kind: 'edge-case' },
+    { content: `**When comparing two places, don't carry the answer from one place to the next.** Run elevation on both places first, finish that question, then run relief on both places fresh. Don't let place A's answer change how you read place B.`, kind: 'tip' },
+    { content: `**'Rise and fall sharply' = high relief. 'Stays nearly level' = low relief. Look for those words in the description before deciding relief—don't guess from elevation.**`, kind: 'common-error' },
+    { content: `**Two places with the same relief can sit at completely different elevations.** One steep valley at sea level, one steep valley on a mountain—both high relief, very different elevations. Read each place's own description.`, kind: 'edge-case' },
+    { content: `**Elevation uses numbers ('1,850 meters above sea level'). Relief uses descriptions of change ('rises and falls sharply' or 'stays nearly level').** Don't mix up the two types of language.`, kind: 'vocab-note' },
   ],
 };

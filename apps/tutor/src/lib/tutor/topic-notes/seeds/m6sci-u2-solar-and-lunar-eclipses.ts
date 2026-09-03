@@ -72,5 +72,11 @@ export const BASELINE_M6SCI_U2_SOLAR_AND_LUNAR_ECLIPSES: TopicNotesBaseline = {
     { content: `Because Earth's shadow is large compared with the Moon, a lunar eclipse is visible from the entire night side of Earth at once.`, kind: 'tip' },
     { content: `Eclipses do not happen every new moon or full moon because the Moon's orbit is tilted about 5 degrees from Earth's orbit around the sun, so most months the Moon passes above or below the line an eclipse needs.`, kind: 'tip' },
     { content: `Never look directly at the sun, even during a solar eclipse. Use eclipse glasses built to a safety standard, or watch an indirect projection, and never rely on ordinary sunglasses.`, kind: 'tip' },
+    { content: `The body in the **middle** of the three (Sun, Moon, Earth) is always the one doing the blocking. Don't say "solar eclipse" or "lunar eclipse" until you've named which body is in the middle.`, kind: 'vocab-note' },
+    { content: `Solar eclipse = new moon only. Lunar eclipse = full moon only. If you mix up the phase with the wrong eclipse type, your whole answer is backwards.`, kind: 'common-error' },
+    { content: `A solar eclipse is **not** visible from the whole daytime side of Earth — only a narrow strip. A lunar eclipse **is** visible from the entire night side at once. Size difference between shadows is why.`, kind: 'gotcha' },
+    { content: `"Why don't we get an eclipse every month?" The Moon's orbit is tilted ~5 degrees from Earth's orbit, so the three bodies line up closely enough only when the Moon is **also** near where the orbits cross. Most new and full moons miss the line.`, kind: 'edge-case' },
+    { content: `Don't confuse "an eclipse happens at new moon" with "every new moon produces an eclipse." An eclipse requires both the right phase AND the Moon to be near the orbital crossing points.`, kind: 'common-error' },
+    { content: `Never look at the sun during a solar eclipse without eclipse glasses rated to a specific safety standard, or watch it indirectly (projection, pinhole viewer). Regular sunglasses do **not** work.`, kind: 'tip' },
   ],
 };

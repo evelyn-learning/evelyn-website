@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U1_REPRESENTING_RATIOS_WITH_TABLES_AND_DIAGRAMS: To
     { content: `A double number line stacks two number lines with matching tick marks, so every vertical pair of ticks is an equivalent ratio.`, kind: 'tip' },
     { content: `A ratio table, a tape diagram, and a double number line for the same ratio all show the identical set of equivalent ratios — they are the same relationship in different pictures.`, kind: 'tip' },
     { content: `Check any equivalent ratio by dividing both numbers back down by the scale factor; the result must return the original ratio.`, kind: 'tip' },
+    { content: `Multiply BOTH numbers by the same factor—never add the same amount to both. Adding 4 to each number in 2:3 gives 6:7, which is NOT equivalent. Multiplying by 2 gives 4:6, which IS equivalent.`, kind: 'common-error' },
+    { content: `In a ratio table, read STRAIGHT DOWN a column to get one equivalent ratio. Each column is a complete ratio pair, not a separate number to track.`, kind: 'tip' },
+    { content: `If you change only ONE number in a ratio, it's not equivalent. Both the first and second numbers must be multiplied by the same scale factor.`, kind: 'gotcha' },
+    { content: `A scale factor is the number you multiply by, not the difference or the sum. If 2 becomes 6, the scale factor is 3 (because 2 × 3 = 6), not 4 (the difference).`, kind: 'vocab-note' },
+    { content: `Always check your answer by dividing both numbers back down by the scale factor. If you don't get the original ratio, something went wrong.`, kind: 'tip' },
+    { content: `A tape diagram's equal parts represent the same SIZE, not the same count. If each part is 4 cups and the ratio is 2:3, then 2 parts = 8 cups and 3 parts = 12 cups, not 2 and 3.`, kind: 'edge-case' },
+    { content: `A ratio table, tape diagram, and double number line all show the SAME equivalent ratios in different pictures. Pick whichever one makes the numbers easiest to work with.`, kind: 'vocab-note' },
   ],
 };

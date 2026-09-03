@@ -69,5 +69,12 @@ export const BASELINE_M6GEO_U5_ECOSYSTEMS_AND_HABITATS: TopicNotesBaseline = {
     { content: `A habitat is the specific spot inside an ecosystem where one particular living thing lives. A habitat is always smaller than the ecosystem that contains it.`, kind: 'tip' },
     { content: `One ecosystem can hold many different habitats at the same time, for many different living things.`, kind: 'tip' },
     { content: `Size does not decide which word applies. The whole place is the ecosystem; the smaller spot where one living thing lives is the habitat.`, kind: 'tip' },
+    { content: `Ecosystem = WHOLE PLACE (living + nonliving together). Habitat = ONE SPOT inside it where ONE living thing lives. Size matters: habitat is always smaller and sits inside the ecosystem.`, kind: 'vocab-note' },
+    { content: `Don't say 'a plant is living because it grows.' Say 'a plant is living because it grows AND needs energy AND makes more of its own kind.' All three, not just one.`, kind: 'common-error' },
+    { content: `A puddle that spreads after rain is still nonliving. It's not growing—water is being added to it from outside. Growing means using your own energy to make yourself bigger.`, kind: 'gotcha' },
+    { content: `Movement is NOT part of the living test. A plant rooted in place is biotic. Wind pushing a rock is not making the rock alive.`, kind: 'common-error' },
+    { content: `One ecosystem can hold MANY habitats at once. A pond has a fish habitat in open water, a frog habitat on a lily pad, AND a worm habitat in the muddy bottom—all in the same ecosystem.`, kind: 'tip' },
+    { content: `When you sort a scene, count biotic and abiotic parts separately. Make sure every named thing gets sorted exactly once—nothing left out, nothing sorted twice.`, kind: 'tip' },
+    { content: `Sunlight, water, air, and rocks are abiotic even though they move around or change. Use the three-part test: do they grow, need energy, and reproduce? No = abiotic.`, kind: 'vocab-note' },
   ],
 };

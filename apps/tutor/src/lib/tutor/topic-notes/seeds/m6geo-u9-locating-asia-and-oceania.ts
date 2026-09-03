@@ -69,5 +69,12 @@ export const BASELINE_M6GEO_U9_LOCATING_ASIA_AND_OCEANIA: TopicNotesBaseline = {
     { content: `East Asia touches the Pacific Ocean only and lies north of Southeast Asia. Southeast Asia lies between South Asia and East Asia and touches both the Pacific Ocean and the Indian Ocean.`, kind: 'tip' },
     { content: `Oceania is centered on the Pacific Ocean, south and east of Southeast Asia. Its own definition varies by source: some use the Pacific island groups alone, others also include the continent of Australia, and the term Australasia is sometimes used narrowly and sometimes as another name for Oceania.`, kind: 'tip' },
     { content: `Oceania's islands are located by where they lie across the Pacific Ocean, not by how small or how far away they seem.`, kind: 'tip' },
+    { content: `Don't say "Oceania is part of Asia." Oceania is a separate Pacific region studied alongside Asia's sub-regions because it's close to Southeast Asia and shares the Pacific Ocean — not because it's on the Asian continent.`, kind: 'common-error' },
+    { content: `When locating a region, use BOTH questions together: (1) which ocean(s) does it touch? and (2) which other regions sit next to it and where? One answer alone isn't enough to pinpoint it.`, kind: 'tip' },
+    { content: `**Central Asia is landlocked** — it touches NEITHER the Pacific Ocean NOR the Indian Ocean. It's the only region of the five with no ocean coastline at all.`, kind: 'vocab-note' },
+    { content: `Southeast Asia is the ONLY region of the five that touches BOTH oceans. East Asia and South Asia each touch exactly one; Central Asia touches none; Oceania sits in the Pacific.`, kind: 'gotcha' },
+    { content: `There is no single 'official' way to divide Asia into sub-regions. Different sources name Western Asia or Northern Asia instead of (or alongside) the four sub-regions this lesson uses.`, kind: 'edge-case' },
+    { content: `When you see "Oceania" or "Australasia," check your source: some definitions include ONLY the Pacific islands (Melanesia, Micronesia, Polynesia), while others also include the continent of Australia.`, kind: 'vocab-note' },
+    { content: `Don't locate Oceania by saying "it's far away and small." Instead, say where it sits: it spans the Pacific Ocean, south and east of Southeast Asia, and includes island groups and (depending on the source) Australia.`, kind: 'common-error' },
   ],
 };

@@ -78,5 +78,12 @@ Sentence 2: "The library which just added a whole shelf of comics closes at six 
     { content: `Three marks do the same job: a pair of commas, a pair of parentheses, or a pair of dashes. Use the same mark on both sides. Never mix a comma with a dash in one pair.`, kind: 'tip' },
     { content: `Nonrestrictive information in the middle of a sentence needs a mark on both sides. WRONG: "My teacher, Ms. Alvarez teaches two science classes." CORRECT: "My teacher, Ms. Alvarez, teaches two science classes."`, kind: 'tip' },
     { content: 'The test works the same whether the extra part is one word or a whole clause.', kind: 'tip' },
+    { content: `The removal test is not about pauses or how something sounds when you read it aloud. It's about whether the sentence still points to the same person, place, or thing when you cover the part in question. Don't use your ear — use your thumb.`, kind: 'common-error' },
+    { content: `Nonrestrictive information in the middle of a sentence needs TWO marks — one before AND one after. A single comma on one side only is an incomplete pair. Always check: if you put a mark down, where is its partner?`, kind: 'gotcha' },
+    { content: `Never open a pair with one mark and close it with a different mark. Once you pick commas, use commas on both sides. Once you pick dashes, use dashes on both sides. A pair must match.`, kind: 'vocab-note' },
+    { content: `When extra information sits at the very end of a sentence, it needs only ONE mark before it — the period at the end does the closing job for you. Example: 'She waved to her best friend, Priya.' One comma is enough.`, kind: 'edge-case' },
+    { content: `The same words in the same order can be restrictive OR nonrestrictive — it all depends on the real-world fact. With one dog: 'Mateo's dog, Biscuit,' (commas). With two dogs: 'Mateo's dog Biscuit' (no commas). The sentence doesn't change; the punctuation does.`, kind: 'gotcha' },
+    { content: `An appositive is a noun or noun phrase that renames or identifies another noun right next to it (like 'Daniel' in 'my brother, Daniel'). All appositives are nonrestrictive when they're in the middle of a sentence — always run the removal test to be sure.`, kind: 'vocab-note' },
+    { content: `The removal test works exactly the same way for a single word as it does for a whole clause. Cover 'Biscuit' or cover 'which just reopened last month' — the question is the same: does the sentence still point to the same thing?`, kind: 'tip' },
   ],
 };

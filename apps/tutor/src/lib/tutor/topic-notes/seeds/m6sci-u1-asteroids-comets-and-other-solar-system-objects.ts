@@ -74,5 +74,13 @@ export const BASELINE_M6SCI_U1_ASTEROIDS_COMETS_AND_OTHER_SOLAR_SYSTEM_OBJECTS: 
     { content: `The same small fragment has three names depending on location: meteoroid out in space, meteor as it burns in Earth's atmosphere, and meteorite if a piece survives to reach the ground.`, kind: 'tip' },
     { content: `Most of these objects are leftover material from the process that formed the sun and planets about 4.6 billion years ago.`, kind: 'tip' },
     { content: `Distance from the sun alone does not decide what kind of object something is -- composition, orbit shape, and whether the object is round all matter too.`, kind: 'tip' },
+    { content: `Don't use distance from the sun to identify an object. A comet far beyond Neptune and a dwarf planet in the same region look completely different — check composition, orbit shape, and roundness instead.`, kind: 'common-error' },
+    { content: `A comet's tail points away from the sun, not behind the comet. On the way out from the sun, the tail shoots forward — not backward like a car's dust trail.`, kind: 'gotcha' },
+    { content: `Meteoroid → meteor → meteorite are the same rock, renamed by location. It's not three different types of space rock — location changes the name, not the object.`, kind: 'vocab-note' },
+    { content: `Asteroids are lumpy and irregular, not round. Their gravity is too weak to squeeze them into spheres, so if it looks like a lumpy potato, it's probably an asteroid, not a dwarf planet.`, kind: 'tip' },
+    { content: `A dwarf planet is not just a small planet — it's defined by two things: round from its own gravity AND has not cleared its orbit. Both conditions must be true.`, kind: 'vocab-note' },
+    { content: `Most meteoroids burn up completely in the atmosphere. If a 'shooting star' doesn't leave a meteorite on the ground, it never became a meteorite at all — it stayed a meteoroid, then became a meteor, and that's it.`, kind: 'edge-case' },
+    { content: `'Shooting star' is a common name, not a science name. It's a meteor — the name 'star' is just historical and misleading. Real stars don't fall.`, kind: 'vocab-note' },
+    { content: `The asteroid belt is rocky; the Kuiper Belt is icy. Remember the order: asteroid belt is between Mars and Jupiter, Kuiper Belt is way past Neptune.`, kind: 'tip' },
   ],
 };

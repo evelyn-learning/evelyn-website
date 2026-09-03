@@ -68,5 +68,12 @@ export const BASELINE_M6MATH_U5_ABSOLUTE_VALUE: TopicNotesBaseline = {
     { content: `On the number line, greater than means farther to the right, so -3 is greater than -18 even though 18 is a bigger digit than 3.`, kind: 'tip' },
     { content: `Comparing which number is greater (order) and comparing which absolute value is bigger (magnitude) are different questions and can give opposite answers for the same two numbers.`, kind: 'tip' },
     { content: `Before comparing two numbers, decide which question is being asked: order (which is greater as a signed number) or magnitude (which absolute value is bigger).`, kind: 'tip' },
+    { content: `Don't confuse "greater than" with "bigger digit." On the number line, -3 is greater than -18 because -3 sits farther right, even though 18 is a bigger digit than 3.`, kind: 'common-error' },
+    { content: `The bars | | mean "distance from zero," not an operation. They don't double the number, add to it, or change it—they just measure how far it sits from zero.`, kind: 'vocab-note' },
+    { content: `Opposites always have the same absolute value. If |a| = 12, then both a and its opposite sit 12 units from zero: a could be 12 or -12.`, kind: 'tip' },
+    { content: `Before you compare two numbers, ask yourself: Am I comparing which one is greater (order), or which one has a bigger distance from zero (magnitude)? These give opposite answers for negatives.`, kind: 'gotcha' },
+    { content: `Closer to zero means smaller absolute value, not bigger. If -6 is closer to zero than -25, then |-6| < |-25|, not the other way around.`, kind: 'common-error' },
+    { content: `Absolute value is never negative. If you get a negative answer, you made an error. The result is always zero or positive.`, kind: 'edge-case' },
+    { content: `A debt of $25 is bigger than a debt of $6 (compare absolute values), but a balance of -6 dollars is better than a balance of -25 dollars (compare as signed numbers). Know which context the problem is asking about.`, kind: 'tip' },
   ],
 };

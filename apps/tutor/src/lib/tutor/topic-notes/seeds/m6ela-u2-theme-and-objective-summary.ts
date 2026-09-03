@@ -79,5 +79,13 @@ Student summary: "This story was really inspiring. Priya runs a reading club for
     { content: `Test every theme against two separate details. One detail, or none, means you have a guess.`, kind: 'tip' },
     { content: `An objective summary reports what happened, in order, in your own words, and reaches the ending.`, kind: 'tip' },
     { content: `Objective means your opinion stays out. Cut sad, best, boring, amazing, and every "I think". If two readers who disagreed about the story could both sign it, it is objective.`, kind: 'tip' },
+    { content: `One-word answers are topics, not themes. If you write 'friendship' or 'courage,' you've stopped too early. Turn it into a full sentence: 'Courage grows when you face what scares you.' Then point at two details that prove it.`, kind: 'common-error' },
+    { content: `Watch the first words of your theme sentence. If it starts with 'Always' or 'Never,' you wrote a command, not a theme. Erase those words and report what the story actually showed instead.`, kind: 'gotcha' },
+    { content: `Do the two-detail test before you finish. Say your theme, then point at two different moments in the story that support it. If you can only find one, or zero, you have a guess, not a theme.`, kind: 'tip' },
+    { content: `Don't add details that aren't in the story. A summary uses only what the text says. Inventing a character's color of shirt or a feeling nobody mentioned is wrong, even if it sounds good.`, kind: 'common-error' },
+    { content: `Cross out every word that grades the story: sad, amazing, best, boring, inspiring, terrible. These are your opinions sneaking in. A summary should work for any reader—lover or hater—who reads the same text.`, kind: 'vocab-note' },
+    { content: `A summary must reach the ending. If you stop before the last event or the resolution, you haven't summarized the whole story—you've summarized partway through it.`, kind: 'edge-case' },
+    { content: `Your theme answers 'What does the story show about people in general?' not 'What happened to this one character?' Zoom out from Dario to everyone: 'Refusing help can finish a project and still leave you alone.'`, kind: 'vocab-note' },
+    { content: `Don't confuse 'I think' with an objective summary. Erase 'I think,' 'I felt,' and 'in my opinion'—they show the summary is still yours, not the story's. The summary should report facts, not your reaction to them.`, kind: 'common-error' },
   ],
 };

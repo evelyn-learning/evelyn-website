@@ -69,5 +69,12 @@ export const BASELINE_M6GEO_U3_LAYERS_OF_THE_EARTH: TopicNotesBaseline = {
     { content: `The core sits at Earth's very center, inside the mantle. It is made mostly of metal rather than rock, and of the three layers it is the hottest.`, kind: 'tip' },
     { content: `A layer can be identified by where it sits or by what it is made of. Both kinds of clue should point at the same layer.`, kind: 'tip' },
     { content: `Nobody has ever dug or drilled anywhere close to the mantle or the core. What is known about them comes from other kinds of evidence, not from digging.`, kind: 'tip' },
+    { content: `Don't confuse 'thin' with 'small.' The mantle fills MORE space than the crust and core combined—it's huge, just not as thick as you might think.`, kind: 'common-error' },
+    { content: `Position and composition are two separate clues. Always check BOTH when identifying a layer—where it sits AND what it's made of.`, kind: 'tip' },
+    { content: `The core is metal, not rock. Crust and mantle are rock. If you see 'metal,' it's the core; if you see 'rock,' it's crust or mantle.`, kind: 'vocab-note' },
+    { content: `We've only ever drilled into the crust. Everything we know about the mantle and core comes from OTHER evidence, not digging.`, kind: 'gotcha' },
+    { content: `Order from surface to center: crust → mantle → core. Memorize this as a fixed chain. There are no exceptions or rearrangements.`, kind: 'tip' },
+    { content: `Don't use 'takes up space' and 'sits at the very center' to mean the same thing. A layer can be small in size but still reach the farthest point (the core).`, kind: 'common-error' },
+    { content: `Solid rock means crust OR mantle—that clue alone isn't enough. You need a second clue (thinness, reachability, heat) to narrow it down.`, kind: 'edge-case' },
   ],
 };

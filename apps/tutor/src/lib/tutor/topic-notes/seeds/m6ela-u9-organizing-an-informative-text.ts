@@ -71,5 +71,12 @@ export const BASELINE_M6ELA_U9_ORGANIZING_AN_INFORMATIVE_TEXT: TopicNotesBaselin
     { content: `Using two strategies at once does not cover more information; it removes the one signal that tells a reader what kind of sentence is coming next.`, kind: 'tip' },
     { content: `An informative opening states the topic and signals the strategy coming next. It never asks a reader to agree or disagree with anything — that is Unit 8's job, not this one.`, kind: 'tip' },
     { content: `A sentence that only names an unstated reason for a fact, without the notes actually saying that reason, is an invented cause, not a fact the piece can organize around.`, kind: 'tip' },
+    { content: `Don't switch strategies mid-piece. If you open with classification (sorting into groups), every supporting sentence must name a group or describe one group — never suddenly compare two groups or explain why something happened.`, kind: 'common-error' },
+    { content: `Cause/effect is not "because something is true." It's "because X happens, then Y happens" — a chain of events. If your notes don't show one thing making another happen, cause/effect is not your strategy.`, kind: 'vocab-note' },
+    { content: `Comparison/contrast needs exactly two named things, not three or more. If your topic splits into three kinds, you have classification, not comparison/contrast.`, kind: 'gotcha' },
+    { content: `Your opening sentence must signal the strategy, not argue a side. Never write "The school should have more recycling bins." Write "The school has two kinds of recycling bins" or "The gym floor gets slippery on rainy days because..."`, kind: 'common-error' },
+    { content: `Pick your strategy before you write any supporting sentences. The strategy you pick decides which sentence comes next, so choosing it first keeps you from wandering.`, kind: 'tip' },
+    { content: `Definition strategy fits a topic the reader has never seen explained before. If your audience already knows what the thing is, definition is not your strategy — look for classification or cause/effect instead.`, kind: 'edge-case' },
+    { content: `In classification, describe every group the same way — same facts, same pattern each time. If you give three facts about the first group and one fact about the second, the reader cannot tell if you switched strategies or just got lazy.`, kind: 'tip' },
   ],
 };

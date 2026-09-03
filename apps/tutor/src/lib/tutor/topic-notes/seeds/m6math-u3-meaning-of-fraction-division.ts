@@ -72,5 +72,12 @@ export const BASELINE_M6MATH_U3_MEANING_OF_FRACTION_DIVISION: TopicNotesBaseline
     { content: `Rewriting both fractions with a common denominator turns the question into counting same-size pieces.`, kind: 'tip' },
     { content: `A leftover piece that does not fill a whole group is a fraction of one more group, not a whole extra group.`, kind: 'tip' },
     { content: `Dividing by a fraction smaller than 1 gives MORE groups than you started with, not fewer; a smaller answer is a sign that something went wrong.`, kind: 'tip' },
+    { content: `**Dividend** is what you start with (the amount being divided); **divisor** is the size of one group (what you divide by). Don't flip them—3/4 ÷ 1/4 means 3/4 is the dividend and 1/4 is the divisor.`, kind: 'vocab-note' },
+    { content: `Division asks "how many groups fit inside?" not "what's left over?" When you see a division symbol, reframe it as a counting question before you draw or calculate.`, kind: 'gotcha' },
+    { content: `If the dividend and divisor don't share the same denominator, rewrite **both** with a common denominator before you model or count. Same-size pieces make counting possible.`, kind: 'tip' },
+    { content: `A leftover piece that's smaller than one full group is a **fraction of one more group**, not a whole extra group and not zero. Check: does the leftover equal half the divisor? Then it's 1/2 of a group.`, kind: 'common-error' },
+    { content: `Dividing by a fraction smaller than 1 always gives an answer **larger** than the dividend. If your answer is smaller than what you started with, something went wrong—likely you multiplied instead of counted.`, kind: 'edge-case' },
+    { content: `On a number line, mark the divisor-size jumps and count only the jumps that **land inside** the shaded dividend. A jump that lands exactly on the edge still counts; a jump that goes past does not.`, kind: 'tip' },
+    { content: `An area model and a number line give the **same answer**—they're just different pictures of the same counting. If they disagree, check your common denominator and your count.`, kind: 'tip' },
   ],
 };

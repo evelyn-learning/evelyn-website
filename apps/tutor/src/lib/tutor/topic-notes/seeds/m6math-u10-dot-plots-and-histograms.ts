@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U10_DOT_PLOTS_AND_HISTOGRAMS: TopicNotesBaseline = 
     { content: `Both displays label the horizontal axis with the quantity measured; a histogram also labels the other axis with the count in each interval.`, kind: 'tip' },
     { content: `A histogram bar tells you how many values fall somewhere in that interval, never the exact value for any one item inside it.`, kind: 'tip' },
     { content: `Check a finished display by counting: total dots, or the sum of every bar height, must equal the total number of values in the data set.`, kind: 'tip' },
+    { content: `In a dot plot, the total count is the **sum of all dots**, not just the tallest stack. Count every dot above every value on the line.`, kind: 'common-error' },
+    { content: `A histogram bar height tells you how many values fall **somewhere in that interval**, not the exact value for any single student. You lose individual values when you group them.`, kind: 'gotcha' },
+    { content: `Histogram intervals must be **equal width** and must **not overlap**. If one interval is 10-19 and the next is 20-29, every value belongs to exactly one interval.`, kind: 'vocab-note' },
+    { content: `Don't confuse 'which display to use' with 'how to read it.' Use a dot plot for small data sets with few different values. Use a histogram for large or spread-out data. Each has different readability.`, kind: 'tip' },
+    { content: `Always **check your work** by counting: sum of all dot counts (or all bar heights) must equal the total number of values in the data set. If it doesn't match, you missed or miscounted something.`, kind: 'tip' },
+    { content: `In a histogram, the label on the vertical axis is usually 'count' or 'number of [students/values],' not the quantity being measured. The horizontal axis shows the quantity (minutes, pets, goals).`, kind: 'vocab-note' },
+    { content: `A dot plot shows the exact data; a histogram shows a summary. Once values go into an interval, you can't recover them. This is a trade-off, not a flaw.`, kind: 'edge-case' },
   ],
 };

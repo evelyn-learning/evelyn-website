@@ -70,5 +70,12 @@ export const BASELINE_M6MATH_U7_WRITING_AND_EVALUATING_ALGEBRAIC_EXPRESSIONS: To
     { content: `To evaluate an expression, substitute the given number for the variable, then follow the order of operations.`, kind: 'tip' },
     { content: `A formula, such as P = 2l + 2w, is an expression with a job — evaluate it the same way as any other expression, by substituting and then computing.`, kind: 'tip' },
     { content: `Check an expression by testing it with a number, and check an evaluation by rereading the answer against the original story.`, kind: 'tip' },
+    { content: `Don't read "less than" left to right. "5 less than n" means n - 5, not 5 - n. Say "n, then take away 5" before you write anything.`, kind: 'common-error' },
+    { content: `When you write multiplication with a variable, drop the × sign. Write 6n, not 6 × n. But keep ÷ or write a fraction bar for division: n ÷ 4 or n/4.`, kind: 'vocab-note' },
+    { content: `Order of operations still rules after you substitute. In 3n + 5 with n = 4, multiply 3 × 4 first (=12), then add 5 (=17). Don't group the 4 and 5 just because they're close on the page.`, kind: 'common-error' },
+    { content: `Always check your expression with a number before you turn it in. Pick any value for the variable, work the word phrase in plain math, and see if your expression matches. This catches flipped subtraction instantly.`, kind: 'tip' },
+    { content: `A formula is just an expression with a real-world job. Evaluate it exactly the way you evaluate any other expression: substitute, then follow order of operations. No new rules.`, kind: 'gotcha' },
+    { content: `A variable is not a mystery — it's a placeholder for a number. It can change from one problem to the next, but in any single problem, the variable stands for exactly one value.`, kind: 'vocab-note' },
+    { content: `Include units in your final answer when the problem gives them. If you find perimeter in feet, write "30 feet", not just "30". The units are part of the meaning.`, kind: 'edge-case' },
   ],
 };

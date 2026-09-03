@@ -68,5 +68,12 @@ export const BASELINE_M6GEO_U8_WHAT_MAKES_A_PLACE_UNIQUE: TopicNotesBaseline = {
     { content: `A description is complete when it names at least one of each kind. The number of details does not decide it -- the mix of types does.`, kind: 'tip' },
     { content: `Buildings and activities describe what people have built and what people do, not what kind of people they are.`, kind: 'tip' },
     { content: `Many different complete descriptions of the same place are possible, as long as each one pairs at least one physical characteristic with at least one human characteristic.`, kind: 'tip' },
+    { content: `Don't count details — count KINDS. Ten physical details with zero human details is NOT complete. One of each kind IS complete.`, kind: 'common-error' },
+    { content: `Always run the two questions in order: Question 1 first (physical characteristic?), then Question 2 (human characteristic?). Both must be yes.`, kind: 'tip' },
+    { content: `A human characteristic describes what people BUILD and DO there — not what KIND of people they are. A market and fishing boats are human characteristics; 'hardworking people' is not.`, kind: 'vocab-note' },
+    { content: `Physical characteristics (landforms, climate) would be there even with zero people. If it requires people, it's human, not physical.`, kind: 'gotcha' },
+    { content: `A river is a landform (physical). A fishing fleet that uses the river is an activity (human). The same place can have both — don't mix them up.`, kind: 'vocab-note' },
+    { content: `Many different complete descriptions of the same place exist. Describing Rivermill by its valley + apple market is just as complete as describing it by its climate + porched buildings.`, kind: 'edge-case' },
+    { content: `Climate is long-term weather pattern (cold winters, dry summers). A single day's rain is weather, not climate. Watch for this when reading descriptions.`, kind: 'vocab-note' },
   ],
 };

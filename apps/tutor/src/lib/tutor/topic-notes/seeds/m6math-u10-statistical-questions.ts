@@ -67,5 +67,11 @@ export const BASELINE_M6MATH_U10_STATISTICAL_QUESTIONS: TopicNotesBaseline = {
     { content: `Mentioning a large group is not enough by itself. A question that produces a single count or a single fixed fact about that group is still not statistical.`, kind: 'tip' },
     { content: `A statistical question is written so that EACH member of a group can give their own, possibly different, answer.`, kind: 'tip' },
     { content: 'The set of answers collected to answer a statistical question is called data.', kind: 'tip' },
+    { content: `Mentioning a big group doesn't automatically make it statistical. Check: does the question produce ONE number for the whole group, or MANY separate answers from each member? Only the second is statistical.`, kind: 'common-error' },
+    { content: `One question can absolutely be statistical. Don't judge by how many times you ask it—judge by whether the answers are expected to differ from person to person or object to object.`, kind: 'gotcha' },
+    { content: `Use the variability test: before collecting any data, ask yourself, "Will different people/objects/times give different answers, or will everyone say the same thing?" If you expect differences, it's statistical.`, kind: 'tip' },
+    { content: `Questions about ONE specific person, ONE specific object, or ONE specific time usually have exactly one correct answer—not statistical. Look for words like "this," "today," or a name.`, kind: 'edge-case' },
+    { content: `To turn a non-statistical question into a statistical one, keep the topic the same and change who or what is being asked. Don't swap topics—that's a different question entirely.`, kind: 'vocab-note' },
+    { content: `"Data" means the set of answers collected from each member, not a single fact. If a question produces one total, it didn't collect data—it produced one answer.`, kind: 'vocab-note' },
   ],
 };

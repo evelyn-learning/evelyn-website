@@ -66,5 +66,12 @@ export const BASELINE_M6MATH_U6_SOLVING_REAL_WORLD_COORDINATE_PLANE_PROBLEMS: To
     { content: `Two points that share an x-coordinate sit on the same north-south street; two that share a y-coordinate sit on the same east-west street.`, kind: 'tip' },
     { content: `To find the distance between two points that share a coordinate, add their distances from zero when they sit on opposite sides of the shared axis, and subtract when they sit on the same side.`, kind: 'tip' },
     { content: `Plotting a point is only the first step. The real question is always what the graphed points tell you, like which street two flags share or how far apart they sit.`, kind: 'tip' },
+    { content: `Get the sign from the direction word, never from where the number sits in the sentence. West and south are always negative; east and north are always positive — even if the number comes first.`, kind: 'common-error' },
+    { content: `Remember: x-coordinate first, y-coordinate second. East-west (x) comes before north-south (y) in the ordered pair, just like in the alphabet.`, kind: 'vocab-note' },
+    { content: `Before plotting, check the signs to name the quadrant. (positive, positive) = northeast, (negative, positive) = northwest, (negative, negative) = southwest, (positive, negative) = southeast.`, kind: 'tip' },
+    { content: `When two points share a coordinate, check whether the other coordinates sit on the same side or opposite sides of zero. Add distances only if opposite sides; subtract only if same side.`, kind: 'common-error' },
+    { content: `A shared x-coordinate means a shared north-south street. A shared y-coordinate means a shared east-west street. Spot this before you count.`, kind: 'tip' },
+    { content: `Distance is never negative. If your answer is negative, you've subtracted in the wrong direction — flip it to positive.`, kind: 'edge-case' },
+    { content: `The origin (0, 0) is Town Square on the map. A point on an axis has one zero coordinate — it sits on a street that passes through Town Square.`, kind: 'vocab-note' },
   ],
 };

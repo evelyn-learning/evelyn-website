@@ -69,5 +69,11 @@ export const BASELINE_M6MATH_U6_FINDING_DISTANCE_BETWEEN_POINTS: TopicNotesBasel
     { content: `If both points sit on the same side of zero, subtract the shorter distance from zero from the longer one to find the gap.`, kind: 'tip' },
     { content: `If the two points sit on opposite sides of zero, add their two distances from zero together instead of subtracting.`, kind: 'tip' },
     { content: `This method only works when two points share a first or second coordinate; when neither matches, a different method is needed.`, kind: 'tip' },
+    { content: `Don't use the same method for **same side of zero** and **opposite sides of zero**. Same side? Subtract. Opposite sides (one positive, one negative)? Add. Always check the signs first.`, kind: 'common-error' },
+    { content: `**Ignore the matching coordinate.** If two points share a y-coordinate, the y-value tells you *which* horizontal line they're on, but it doesn't affect the distance. Distance comes only from how the x-coordinates differ.`, kind: 'tip' },
+    { content: `Absolute value always gives you a **non-negative distance**—even |−8| = 8. Never write a negative distance. Distance is how far apart, never negative.`, kind: 'vocab-note' },
+    { content: `Check: **Do the two points share a first coordinate or a second coordinate?** If they share neither (like (2, 4) and (9, 10)), this lesson's method does not work. Stop and ask for a different method.`, kind: 'edge-case' },
+    { content: `**Count on your fingers** or trace on the grid to double-check. If you got 7 blocks by subtracting, count the steps: does moving from one coordinate to the other really take 7 jumps? This catches sign errors fast.`, kind: 'tip' },
+    { content: `When points are on **opposite sides of zero**, zero sits *between* them—like the fountain above Main Street and the bench below. You must cross zero, so add, don't subtract.`, kind: 'gotcha' },
   ],
 };

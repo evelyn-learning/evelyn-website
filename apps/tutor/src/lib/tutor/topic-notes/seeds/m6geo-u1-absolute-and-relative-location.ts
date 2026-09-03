@@ -69,5 +69,12 @@ export const BASELINE_M6GEO_U1_ABSOLUTE_AND_RELATIVE_LOCATION: TopicNotesBaselin
     { content: `One place has only one absolute location, but it can have many different relative locations, one for each reference point chosen.`, kind: 'tip' },
     { content: `A number appearing in a description does not automatically make it absolute, and a place name appearing in a description does not automatically make it relative -- check whether the description depends on a separate reference point.`, kind: 'tip' },
     { content: `A full description of a place often uses both an absolute location and a relative location together.`, kind: 'tip' },
+    { content: `Don't assume a description is relative just because it mentions a place name. Check: does it depend on knowing another place first? "42 Willow Street" names a street but isn't relative—it works alone.`, kind: 'common-error' },
+    { content: `One place, one absolute location, many relative locations. The same building is "next to the school" for one person and "across from the bakery" for another—both true, but the address never changes.`, kind: 'tip' },
+    { content: `A relative location needs a reference point you already know. If someone says 'two doors down from the pet shop' and you've never heard of the pet shop, that description tells you nothing.`, kind: 'gotcha' },
+    { content: `Being precise doesn't make something absolute. 'Exactly behind Mia's house' is precise but still relative because it depends on knowing where Mia's house is.`, kind: 'common-error' },
+    { content: `Absolute location = works alone. Relative location = needs a reference point. Use this one-sentence test every time you classify.`, kind: 'tip' },
+    { content: `Coordinates are absolute locations too, not just street addresses. They're fixed numbers mapmakers agree on—like an address, they point to the same exact spot for everyone.`, kind: 'vocab-note' },
+    { content: `Changing the reference point changes the relative description—but not which kind of location it is. 'Behind the school' and 'near the playground' are both still relative, even though they're different sentences.`, kind: 'edge-case' },
   ],
 };

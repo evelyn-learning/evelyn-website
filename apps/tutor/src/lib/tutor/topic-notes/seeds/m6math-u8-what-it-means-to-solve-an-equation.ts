@@ -70,5 +70,11 @@ export const BASELINE_M6MATH_U8_WHAT_IT_MEANS_TO_SOLVE_AN_EQUATION: TopicNotesBa
     { content: `An equation usually has one solution from a set of candidates; an inequality can have several, so never assume there is only one.`, kind: 'tip' },
     { content: 'A candidate that fails a check is still useful. It rules that value out.', kind: 'tip' },
     { content: `Solving is not the same as simplifying: simplifying rewrites an expression, solving finds the value that makes a statement true.`, kind: 'tip' },
+    { content: `When you substitute, compute first, then compare. Don't skip the arithmetic step or you'll make a slip like 5 + 9 = 16 instead of 14.`, kind: 'common-error' },
+    { content: `For an equation, both sides must be exactly equal. For an inequality, you only check if the comparison (< or >) is true. Don't treat inequalities like equations.`, kind: 'gotcha' },
+    { content: `An inequality often has many solutions from one set of candidates, not just one. Always test every candidate; don't stop after finding the first true one.`, kind: 'edge-case' },
+    { content: `A candidate that doesn't work is not wasted—it proves that number is not a solution. Use failed checks to rule out values.`, kind: 'tip' },
+    { content: `Solving (finding the value that makes a statement true) is different from simplifying (rewriting an expression). You check with substitution, not by simplifying both sides.`, kind: 'vocab-note' },
+    { content: `After substituting a number for the letter, compute everything before you say whether the statement is true or false.`, kind: 'common-error' },
   ],
 };

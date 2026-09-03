@@ -73,5 +73,13 @@ FIRST DRAFT: "Twice last month a recess monitor had to walk into the parking lot
     { content: `Keep each reason next to its own evidence. Evidence dumped together at the end, or matched to the wrong reason, leaves a reader unable to tell what backs up what.`, kind: 'tip' },
     { content: `State the claim early. Burying it at the end of the paragraph forces a reader through several unexplained sentences before learning what is even being argued.`, kind: 'tip' },
     { content: `This lesson stops at introducing one claim and organizing its reasons and evidence. Whether those reasons are strong enough, and how to answer an opposing view, come later.`, kind: 'tip' },
+    { content: `Don't confuse the topic with the claim. A topic just names the subject ("the library's hours"). A claim takes a side ("the library should stay open later"). If you can't tell what side you're on, you don't have a claim yet.`, kind: 'common-error' },
+    { content: `A question is not a claim. "Should we have a dress code?" asks but doesn't answer. Answer your own question in one plain sentence to turn it into a claim: "Our school should have a dress code."`, kind: 'gotcha' },
+    { content: `A fact is not a claim. If something is checkable and nobody could reasonably disagree with it, it's a fact, not a claim. "The cafeteria closes at 2:45" is a fact. "The cafeteria should close later" is a claim.`, kind: 'vocab-note' },
+    { content: `Put the claim first. If the claim hides in the last sentence, a reader spends the whole paragraph not knowing what you're arguing. State it up front, then follow with reasons and evidence.`, kind: 'common-error' },
+    { content: `Pair each reason with its own evidence right after it. Don't pile all the evidence at the end. A reader won't know which fact supports which reason if they're separated.`, kind: 'tip' },
+    { content: `One claim per argument opening. Don't stitch two positions together ("the library should stay open later AND the vending machine should be fixed"). Each claim needs its own set of reasons and evidence.`, kind: 'edge-case' },
+    { content: `"Probably" or "I think" don't make a sentence weaker—but they don't turn a topic into a claim either. "The sign-up sheet is probably worth thinking about" still only points at the topic. Say plainly what should happen instead.`, kind: 'gotcha' },
+    { content: `Decide your order before you write the rest. Don't choose an order because it sounds dramatic or save your "best" reason for last. Think through which reason comes first and what evidence backs each one, then stick to that plan.`, kind: 'common-error' },
   ],
 };

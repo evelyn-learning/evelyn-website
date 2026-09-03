@@ -78,5 +78,12 @@ export const BASELINE_M6SCI_U8_HOW_OCEAN_CURRENTS_MOVE_HEAT_AROUND_THE_GLOBE: To
     { content: `The cold Labrador Current keeps the coast of Newfoundland and Labrador colder and foggier than the United Kingdom, even at a similar latitude.`, kind: 'tip' },
     { content: `A current's effect stacks on top of latitude, elevation and distance from water -- it does not replace those general factors, it adds to them.`, kind: 'tip' },
     { content: `This lesson traces what a current carries and where it takes it -- not what makes the current move in the first place, which is a topic for a later grade.`, kind: 'tip' },
+    { content: `"Warm" and "cold" are comparisons to the surrounding water RIGHT NOW, not fixed temperatures. A warm current can feel freezing to swim in — it's still warm because it's warmer than the Arctic water next to it.`, kind: 'vocab-note' },
+    { content: `Don't say a current changes only the ocean water. Currents change the AIR above the water too — that's what people on the coast actually feel. The warm Gulf Stream makes Norway's air milder, not just the ocean.`, kind: 'common-error' },
+    { content: `A current keeps its warm/cold label the WHOLE WAY if the comparison still holds. Don't assume it switches labels just because it moved. Trace: origin temperature → direction → does it stay warmer/colder than surroundings?`, kind: 'tip' },
+    { content: `Two coasts at nearly the same latitude (like Newfoundland and the UK, or San Diego and Charleston) can have totally different climates because of different currents — NOT because latitude is wrong. Currents ADD ON TOP of latitude's effect.`, kind: 'gotcha' },
+    { content: `When you trace a current, START with where it begins (tropics or poles?), THEN its direction. That tells you if it's warm or cold. Don't jump to the climate effect without doing those two steps first.`, kind: 'tip' },
+    { content: `A cold current can still be called a "current" carrying cold water — don't confuse it with a place that is just naturally cold at that latitude. The current is the MOVING water doing the cooling, not the latitude itself.`, kind: 'vocab-note' },
+    { content: `Fog on a cold-current coast (like Newfoundland) happens because warm air moving over cold water cools sharply — but that mechanism is NOT covered this year. You can say 'cold current, cooler climate, more fog' without explaining HOW the coldness gets to the air.`, kind: 'edge-case' },
   ],
 };

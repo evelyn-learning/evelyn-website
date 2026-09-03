@@ -71,5 +71,13 @@ export const BASELINE_M6MATH_U3_DIVIDING_MIXED_NUMBERS: TopicNotesBaseline = {
     { content: `Only flip the improper-fraction form of the divisor. Flipping a mixed number itself, without converting it first, is not a real reciprocal.`, kind: 'tip' },
     { content: `Simplify the result, convert it back to a mixed number if that is the clearer form, and check by multiplying the answer by the divisor to get the dividend back.`, kind: 'tip' },
     { content: `Size test: dividing by a number less than 1 makes the answer bigger than the dividend, and dividing by a number greater than 1 makes the answer smaller.`, kind: 'tip' },
+    { content: `Convert BOTH mixed numbers to improper fractions before you do anything else — including the divisor. Don't try to flip a mixed number directly; flip only the converted improper fraction.`, kind: 'common-error' },
+    { content: `When converting a mixed number, always multiply the whole number by the denominator first, then add the numerator. The denominator stays the same. For 2 and 1/4: (2 × 4) + 1 = 9, so it becomes 9/4.`, kind: 'tip' },
+    { content: `Don't split a mixed-number division into separate whole-number and fraction divisions. Dividing 2 and 1/3 by 1 and 1/2 as '2 ÷ 1 = 2, then 1/3 ÷ 1/2 = 2/3, then combine' gives the wrong answer. Always convert first.`, kind: 'common-error' },
+    { content: `Use the size test before you divide to predict whether your answer should be bigger or smaller than the dividend. If the divisor is less than 1, the answer is bigger. If the divisor is greater than 1, the answer is smaller.`, kind: 'tip' },
+    { content: `Always check your answer by multiplying it back by the divisor. You should get the dividend. If you don't, your conversion or reciprocal was wrong.`, kind: 'tip' },
+    { content: `If your final answer is an improper fraction, convert it back to a mixed number to match the format of the original problem and make the answer easier to read.`, kind: 'vocab-note' },
+    { content: `A reciprocal is a flipped fraction: 3/2 flips to 2/3, and they multiply to give 1. Never flip the whole number part of a mixed number by itself — that's not a reciprocal.`, kind: 'vocab-note' },
+    { content: `If the divisor is a whole number (like 6), treat it as an improper fraction with denominator 1 (6/1) before flipping to get 1/6.`, kind: 'edge-case' },
   ],
 };

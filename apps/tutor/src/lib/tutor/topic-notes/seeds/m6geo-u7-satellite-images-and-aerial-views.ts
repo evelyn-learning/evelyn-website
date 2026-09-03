@@ -69,5 +69,11 @@ export const BASELINE_M6GEO_U7_SATELLITE_IMAGES_AND_AERIAL_VIEWS: TopicNotesBase
     { content: `A map names what it shows with labels, such as a road's name or a boundary's label. A picture, by itself, shows shapes and colors with no names attached.`, kind: 'tip' },
     { content: `Some real things, such as a boundary with no physical mark, leave nothing for a camera to capture. A map can still draw and label such a line.`, kind: 'tip' },
     { content: `A picture's advantage is showing real, current, unplanned detail exactly as it existed. A map's advantage is naming what it shows and adding information a picture cannot capture.`, kind: 'tip' },
+    { content: `Don't say 'satellite image' and 'aerial view' as if they're the same thing. Satellite = camera in space, far away. Aerial view = camera in aircraft, much closer. Different heights, different names.`, kind: 'vocab-note' },
+    { content: `A picture shows only what's physically there right now — not what a mapmaker decided to draw. A map shows only what the mapmaker chose to include — not everything physically there. They answer different questions.`, kind: 'gotcha' },
+    { content: `If you can't see a line painted on the ground, no picture — satellite or aerial — can show it. But a map can draw it anyway. This is why maps can show borders that have no physical mark.`, kind: 'edge-case' },
+    { content: `A picture shows shapes and colors. It does NOT label them. Looking at an aerial view won't tell you the river's name or the town's name — only a map with labels can do that.`, kind: 'common-error' },
+    { content: `A map can be outdated or incomplete, but a picture shows what was actually there when it was taken. If a new building was built yesterday, the old map won't show it, but today's aerial view will.`, kind: 'tip' },
+    { content: `Don't confuse 'real' with 'complete.' A picture is real (it captures actual physical objects), but it's not complete (it can't show invisible things like unmarked borders). A map is drawn (not real), but it can be complete in ways pictures cannot.`, kind: 'gotcha' },
   ],
 };

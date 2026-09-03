@@ -71,5 +71,12 @@ export const BASELINE_M6MATH_U6_PLOTTING_POINTS_IN_ALL_FOUR_QUADRANTS: TopicNote
     { content: `The two axes create four quadrants with four sign patterns: I is (+, +), II is (-, +), III is (-, -), IV is (+, -).`, kind: 'tip' },
     { content: 'A coordinate of 0 puts a point on an axis, not inside any quadrant.', kind: 'tip' },
     { content: `Swapping the two numbers in an ordered pair, like reading (3, -5) as (-5, 3), moves the point to a different location entirely.`, kind: 'tip' },
+    { content: `Order is EVERYTHING in an ordered pair. (3, −5) and (−5, 3) are two completely different points in two different quadrants. Always: FIRST number = x-coordinate (left/right), SECOND number = y-coordinate (up/down).`, kind: 'common-error' },
+    { content: `A point with a 0 coordinate sits ON an axis, not IN a quadrant. (0, −6) is on the y-axis. (4, 0) is on the x-axis. Quadrants only contain points where BOTH x and y are nonzero.`, kind: 'edge-case' },
+    { content: `The sign tells you the DIRECTION, not a number to compute. A negative x-coordinate doesn't mean 'subtract'—it means 'move left.' Same with negative y: move down. You're reading a direction, not doing arithmetic.`, kind: 'vocab-note' },
+    { content: `Always start at the origin (0, 0) every time you plot a point. Move along the x-axis first (left or right), then move along the y-axis (up or down). This two-step method prevents getting lost.`, kind: 'tip' },
+    { content: `Memorize the four quadrant sign patterns: I is (+,+), II is (−,+), III is (−,−), IV is (+,−). They go counterclockwise starting at the upper right. If signs don't match the pattern, you're in the wrong quadrant.`, kind: 'gotcha' },
+    { content: `Negative doesn't mean 'smaller' on a coordinate plane—it means a direction. (−1, 5) is not 'less' than (1, 5); it's just to the LEFT instead of to the RIGHT. Both are valid locations.`, kind: 'vocab-note' },
+    { content: `When you read a point's location from a graph, count from the origin every time. Don't count from another point on the grid. The origin is your anchor.`, kind: 'tip' },
   ],
 };

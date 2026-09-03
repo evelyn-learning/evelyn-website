@@ -72,5 +72,12 @@ export const BASELINE_M6SCI_U2_EARTHS_ROTATION_DAY_AND_NIGHT: TopicNotesBaseline
     { content: `Earth's rotation rate does not change with the seasons, so a full day-night cycle stays close to 24 hours all year, at every latitude.`, kind: 'tip' },
     { content: `How those roughly 24 hours split between daylight and darkness CAN shift over the year away from the equator, but this lesson does not explain why -- that is the next lesson, on revolution and the seasons.`, kind: 'tip' },
     { content: `Rotation (about 24 hours) and revolution (about 365 and a quarter days, Earth's orbit around the sun) are two different motions. Do not mix them up.`, kind: 'tip' },
+    { content: `Don't say "the sun moves around Earth." Say "Earth spins, and this makes the sun APPEAR to move." The sun itself stays still; Earth's rotation creates the illusion.`, kind: 'vocab-note' },
+    { content: `Rotation and revolution are two completely different motions. Rotation = Earth spinning (24 hours). Revolution = Earth orbiting the sun (365 days). Don't mix them up when explaining day/night.`, kind: 'common-error' },
+    { content: `The tilt of Earth's axis exists, but it does NOT explain why day and night happen. It also does NOT guarantee 12 hours of daylight everywhere, every day. The tilt matters for the next lesson (seasons), not this one.`, kind: 'gotcha' },
+    { content: `Earth's distance from the sun barely changes during one day. Night is NOT because Earth is farther away from the sun—it's because your location is on the dark side of the spinning Earth.`, kind: 'common-error' },
+    { content: `Exactly half of Earth is lit by the sun at any instant. This does not change because of Earth's tilt. The tilt does not create more darkness or make one half bigger—it just leans.`, kind: 'edge-case' },
+    { content: `Earth spins west to east. This means a place farther EAST sees sunrise FIRST. If you see this backwards, flip your picture of the spinning Earth and re-check the direction.`, kind: 'tip' },
+    { content: `"About 24 hours" is the rotation period EVERYWHERE on Earth, every day of the year. It does not change with the seasons. What CAN change is how daylight and darkness split those 24 hours—but that is next lesson's topic.`, kind: 'vocab-note' },
   ],
 };

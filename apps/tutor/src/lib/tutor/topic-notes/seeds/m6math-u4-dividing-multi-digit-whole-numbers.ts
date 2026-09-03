@@ -76,5 +76,12 @@ export const BASELINE_M6MATH_U4_DIVIDING_MULTI_DIGIT_WHOLE_NUMBERS: TopicNotesBa
     { content: `Keep bringing down digits until none are left in the dividend, even when a step gives a quotient digit of 0.`, kind: 'tip' },
     { content: `A remainder must always be smaller than the divisor. If it is not, the quotient digit chosen was too small.`, kind: 'tip' },
     { content: `Check every answer by multiplying the quotient by the divisor and adding the remainder; the result must equal the original dividend.`, kind: 'tip' },
+    { content: `If the remainder is bigger than the divisor, your quotient digit was too small. Try the next digit up and subtract again.`, kind: 'common-error' },
+    { content: `Write a 0 in the quotient when the divisor doesn't fit into the digits you're looking at. Never skip that position or your whole answer shifts left and becomes too small.`, kind: 'gotcha' },
+    { content: `Estimate using friendly numbers before you start dividing. If your final answer is way off from the estimate, a digit landed in the wrong place.`, kind: 'tip' },
+    { content: `Don't stop dividing just because the numbers look small. Keep going until you've brought down every single digit of the dividend.`, kind: 'common-error' },
+    { content: `Check your answer by multiplying quotient × divisor + remainder. It must equal the original dividend exactly. If it doesn't, an arithmetic slip happened somewhere.`, kind: 'tip' },
+    { content: `The remainder is what's left over after the last subtraction. It's never zero if you wrote a remainder — it's always smaller than the divisor.`, kind: 'vocab-note' },
+    { content: `When the divisor doesn't fit into the first digit alone, look at the first two (or more) digits together before you divide.`, kind: 'edge-case' },
   ],
 };

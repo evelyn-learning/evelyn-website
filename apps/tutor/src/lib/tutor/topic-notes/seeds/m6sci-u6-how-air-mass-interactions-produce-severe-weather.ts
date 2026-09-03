@@ -74,5 +74,12 @@ export const BASELINE_M6SCI_U6_HOW_AIR_MASS_INTERACTIONS_PRODUCE_SEVERE_WEATHER:
     { content: `A hurricane forms within a single warm, moist tropical air mass over warm ocean water, with low wind shear letting many thunderstorms organize into one large system with a calm eye and an intense eyewall -- not from two air masses colliding along a front.`, kind: 'tip' },
     { content: `Hurricanes are far larger and last far longer than tornadoes, and they weaken once they move over land or much cooler water and lose their supply of ocean moisture.`, kind: 'tip' },
     { content: `A tornado is not a small hurricane. Each forms from a different, specific combination of conditions.`, kind: 'tip' },
+    { content: `A front is NOT a storm—it's the boundary where two air masses meet. The front causes lifting, which can trigger a thunderstorm, but don't confuse the front itself with the severe weather.`, kind: 'vocab-note' },
+    { content: `Wind shear is a CHANGE in wind speed OR direction (or both) between two heights. Check both—wind can change direction without changing speed, and either counts.`, kind: 'vocab-note' },
+    { content: `Thunderstorms need lifting + warm, moist air. Tornadoes need all that PLUS wind shear. A cold front alone does not guarantee a tornado—you must check for shear separately.`, kind: 'common-error' },
+    { content: `Hurricanes form INSIDE one warm, moist tropical air mass over ocean water—NOT from two air masses colliding. No front, no collision needed. This is the opposite of thunderstorms and tornadoes.`, kind: 'gotcha' },
+    { content: `A tornado is narrow, lasts minutes, and stays on the ground. A hurricane spans hundreds of kilometers and lasts days. They both spin, but they are not different sizes of the same thing.`, kind: 'edge-case' },
+    { content: `A hurricane dies when it moves over land or much colder water—it loses the warm ocean water feeding moisture into it. That is why the conditions that made it cannot travel with it.`, kind: 'tip' },
+    { content: `Supercell is a specific kind of thunderstorm with a rotating updraft. Not all thunderstorms are supercells, and not all supercells produce tornadoes, even though supercells are the ones most likely to.`, kind: 'vocab-note' },
   ],
 };

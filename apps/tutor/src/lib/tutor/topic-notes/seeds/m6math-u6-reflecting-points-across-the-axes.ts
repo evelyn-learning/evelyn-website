@@ -69,5 +69,11 @@ export const BASELINE_M6MATH_U6_REFLECTING_POINTS_ACROSS_THE_AXES: TopicNotesBas
     { content: `Reflecting across both axes flips both coordinates' signs, in either order.`, kind: 'tip' },
     { content: `A reflection sits the same distance from the axis as the original point, just on the other side.`, kind: 'tip' },
     { content: `Finding a reflection is reading off an opposite, never adding, subtracting, multiplying, or dividing.`, kind: 'tip' },
+    { content: `The coordinate that MOVES is the one that CHANGES. Across the x-axis? Point moves up/down, so y flips. Across the y-axis? Point moves left/right, so x flips. NOT the axis name.`, kind: 'gotcha' },
+    { content: `Reflecting is NOT math. Don't add, subtract, multiply, or divide. Just write the opposite sign of the coordinate you have. (3, 4) across x-axis is (3, -4), period.`, kind: 'common-error' },
+    { content: `When you reflect across BOTH axes, BOTH coordinates flip sign. If you get only one sign flipped, you stopped halfway. Check your work by counting: did I cross two lines or one?`, kind: 'edge-case' },
+    { content: `Same distance, opposite side. A point 7 units above the x-axis reflects to 7 units below. The distance from the axis never changes—only which side it's on. Use this to check your answer.`, kind: 'tip' },
+    { content: `Don't confuse 'opposite' (like +5 and -5) with 'opposite side of the axis.' They're related but different. The coordinate value gets the opposite sign; the point ends up on the opposite side of the line.`, kind: 'vocab-note' },
+    { content: `The order doesn't matter for double reflections. Reflect across x then y, or y then x—you land at the same spot. Both coordinates flip either way.`, kind: 'tip' },
   ],
 };

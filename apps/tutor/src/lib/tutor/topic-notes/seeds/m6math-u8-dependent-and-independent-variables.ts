@@ -69,5 +69,12 @@ export const BASELINE_M6MATH_U8_DEPENDENT_AND_INDEPENDENT_VARIABLES: TopicNotesB
     { content: `On a graph, the independent variable goes on the x-axis and the dependent variable goes on the y-axis.`, kind: 'tip' },
     { content: `Some equations start with a fixed amount that is added once, not multiplied by the independent variable — check this by finding what the equation gives when the independent variable is 0.`, kind: 'tip' },
     { content: `Check every equation against a value you already know before trusting it for a value you do not.`, kind: 'tip' },
+    { content: `Ask "which one depends on the other?" to find independent vs. dependent. The one that depends is dependent; the one chosen or controlled is independent.`, kind: 'tip' },
+    { content: `A fixed amount (head start, flat fee, initial balance) gets ADDED once, never multiplied by the independent variable. Check by plugging in 0: you should get exactly that fixed amount.`, kind: 'common-error' },
+    { content: `Independent variable ALWAYS goes on the x-axis, dependent on the y-axis—no exceptions. Plot (independent, dependent) as (x, y).`, kind: 'gotcha' },
+    { content: `Every row in a table is one pair: pick a value for the independent variable, plug it into the equation, write down what you get for the dependent variable.`, kind: 'vocab-note' },
+    { content: `Don't leave parts of the situation out of your equation. If the problem mentions a head start, flat fee, or starting amount, it must appear in the equation.`, kind: 'common-error' },
+    { content: `Write the equation for the dependent variable, not the independent one. The equation should compute m from w, not w from m.`, kind: 'vocab-note' },
+    { content: `Check your equation with a value you already know (like the head start when the independent variable is 0) before using it to find unknown values.`, kind: 'tip' },
   ],
 };
