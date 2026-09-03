@@ -2224,6 +2224,14 @@ import { SEED_M6GEO_U10_GEOGRAPHIC_REASONING_IN_EVERYDAY_DECISIONS } from './see
 import { SEED_M6GEO_U10_MAP_BASED_PROBLEM_SOLVING } from './seeds/m6geo-u10-map-based-problem-solving';
 import { SEED_M6GEO_U10_HOW_PHYSICAL_GEOGRAPHY_CHANGES_OVER_TIME } from './seeds/m6geo-u10-how-physical-geography-changes-over-time';
 import { SEED_M6GEO_U10_USING_GEOGRAPHY_TO_PLAN_A_COMMUNITY } from './seeds/m6geo-u10-using-geography-to-plan-a-community';
+import { SEED_M8MATH_U4_EQUATIONS_WITH_VARIABLES_ON_BOTH_SIDES } from './seeds/m8math-u4-equations-with-variables-on-both-sides';
+import { SEED_M8MATH_U6_IDENTIFYING_FUNCTIONS } from './seeds/m8math-u6-identifying-functions';
+import { SEED_M8ELA_U2_DRAMATIC_IRONY_SUSPENSE_AND_HUMOR } from './seeds/m8ela-u2-dramatic-irony-suspense-and-humor';
+import { SEED_M8ELA_U5_ACTIVE_AND_PASSIVE_VOICE } from './seeds/m8ela-u5-active-and-passive-voice';
+import { SEED_M8SCI_U2_NEWTONS_FIRST_LAW_INERTIA_AND_FRICTION } from './seeds/m8sci-u2-newtons-first-law-inertia-and-friction';
+import { SEED_M8SCI_U8_EVIDENCE_OF_A_CHEMICAL_REACTION } from './seeds/m8sci-u8-evidence-of-a-chemical-reaction';
+import { SEED_M8GEO_U1_COUNTS_RATES_AND_FAIR_COMPARISON } from './seeds/m8geo-u1-counts-rates-and-fair-comparison';
+import { SEED_M8GEO_U7_HAZARD_RISK_EXPOSURE_AND_VULNERABILITY } from './seeds/m8geo-u7-hazard-risk-exposure-and-vulnerability';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -4372,6 +4380,14 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M6GEO_U10_MAP_BASED_PROBLEM_SOLVING,
   SEED_M6GEO_U10_HOW_PHYSICAL_GEOGRAPHY_CHANGES_OVER_TIME,
   SEED_M6GEO_U10_USING_GEOGRAPHY_TO_PLAN_A_COMMUNITY,
+  SEED_M8MATH_U4_EQUATIONS_WITH_VARIABLES_ON_BOTH_SIDES,
+  SEED_M8MATH_U6_IDENTIFYING_FUNCTIONS,
+  SEED_M8ELA_U2_DRAMATIC_IRONY_SUSPENSE_AND_HUMOR,
+  SEED_M8ELA_U5_ACTIVE_AND_PASSIVE_VOICE,
+  SEED_M8SCI_U2_NEWTONS_FIRST_LAW_INERTIA_AND_FRICTION,
+  SEED_M8SCI_U8_EVIDENCE_OF_A_CHEMICAL_REACTION,
+  SEED_M8GEO_U1_COUNTS_RATES_AND_FAIR_COMPARISON,
+  SEED_M8GEO_U7_HAZARD_RISK_EXPOSURE_AND_VULNERABILITY,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
