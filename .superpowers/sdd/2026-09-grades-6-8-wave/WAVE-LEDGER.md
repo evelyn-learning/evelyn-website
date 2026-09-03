@@ -10,10 +10,10 @@ Plan: docs/superpowers/plans/2026-09-02-grades-6-8-ms-course-wave.md (main e78c0
 | m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | ✓ 240 (95.0%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (97.9%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 239 (97.1%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
-| m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
-| m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
-| m8sci | ✓ (m8sci-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
-| m8geo | ✓ (m8geo-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
+| m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
+| m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
+| m8sci | ✓ (m8sci-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
+| m8geo | ✓ (m8geo-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | – | 0 | – | – | – | – | – | – |
 
 ## Contract sources (Task 0.3)
 
@@ -40,6 +40,8 @@ GUIDES_MODEL=claude-haiku-4-5 npx tsx tools/generate-guides.ts --course <KEY>
 ```
 
 ## Decisions / rulings log
+
+- 2026-09-03 (Fable session evelynlearning-1c): all four Grade 8 curricula SIGNED OFF as drafted (Praveen: "Keep going" on the batched request). Controller defaults applied: m8geo 7.2 absorbs the greenhouse mechanism at define depth; the three missing G6 `unit-titles.ts` blocks ride in the G8 unit-titles commit. Exemplars chosen: m8math 6.1 identifying-functions (concept) + 4.1 equations-with-variables-on-both-sides (procedure); m8ela 2.2 dramatic-irony-suspense-and-humor (reading) + 5.3 active-and-passive-voice (grammar); m8sci 2.1 newtons-first-law-inertia-and-friction (concept) + 8.1 evidence-of-a-chemical-reaction (classification); m8geo 7.1 hazard-risk-exposure-and-vulnerability (concept) + 1.1 counts-rates-and-fair-comparison (data procedure).
 
 - 2026-09-02: m6math curriculum drafted; flag for Praveen: topics 1.2/1.3 share 6.RP.A.3a and 9.1 splits 6.G.A.1 by pedagogical stage rather than one-code-per-topic.
 - 2026-09-02: Task 0.1 shipped `--ms-conventions` + `--difficulty-spread` (commit 920eff7a); known stricter behavior: a model-dropped item leaves a difficulty gap rather than repacking (regen the LO instead).
