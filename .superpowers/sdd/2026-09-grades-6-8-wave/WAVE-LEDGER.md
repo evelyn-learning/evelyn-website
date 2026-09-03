@@ -10,10 +10,10 @@ Plan: docs/superpowers/plans/2026-09-02-grades-6-8-ms-course-wave.md (main e78c0
 | m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | ✓ 240 (95.0%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (97.9%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 239 (97.1%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
-| m8math | – | – | – | 0 | – | – | – | – | – | – |
-| m8ela | – | – | – | 0 | – | – | – | – | – | – |
-| m8sci | – | – | – | 0 | – | – | – | – | – | – |
-| m8geo | – | – | – | 0 | – | – | – | – | – | – |
+| m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
+| m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
+| m8sci | ✓ (m8sci-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
+| m8geo | ✓ (m8geo-CURRICULUM.md, drafted 2026-09-03) | ⏳ awaiting Praveen (batched G8 drop) | – | 0 | – | – | – | – | – | – |
 
 ## Contract sources (Task 0.3)
 
@@ -61,3 +61,27 @@ NOTHING pushed or deployed. Phase 2 is Praveen's call.
 layers, rock cycle, weathering/erosion/deposition, water cycle, weather vs climate).
 The wave's overlap apparatus only points vertically between grades and cannot see a
 sibling course in the same grade.
+
+
+## Grade 8 drop — curricula DRAFTED 2026-09-03 (session evelynlearning-1c), sign-off PENDING
+
+Four tables drafted by parallel agents from `G8-CURRICULUM-BRIEF.md` (scratchpad; copy in this dir), each
+shape-checked with `gen-lesson-briefs.py` (10 × 4 = 40, unique slugs). Every table opens with a
+`## ⚠️ For sign-off` section; the batched sign-off request lists them.
+
+Cross-course findings resolved by the controller after the drafts landed:
+- m8sci 1.2 (distance-time graphs) vs m8math 3.1/3.3 (slope): math owns slope; science stays in words.
+- **No MS science course owns the greenhouse MECHANISM** (m6sci 10.1-10.2 = carbon cycle + evidence;
+  m8sci excludes climate by design). m8geo 7.2 offers to absorb a one-paragraph mechanism — owner's call.
+- m8sci has no hazard/weather/climate row, so m8geo U7 has no same-grade sibling overlap (unlike m6geo/m6sci).
+- m8geo scoping decision: blended vertical-BY-DEPTH spine + 2 North America units (the G6 file's two
+  candidate seats, both taken) — owner rules.
+- New upper neighbours the plan never listed: `ap-human-geo-*` (grade 11, imported) for m8geo;
+  14 `ap-physics*` seeds for m8sci (no HS physics course exists); 11 legacy `g8-sci-*` files are the
+  best physical-science salvage.
+- ⚠️ Shipped-G6 gap found while preparing Task 1.2: `unit-titles.ts` carries ONLY `grade-6-math`; the
+  lesson picker shows bare "UNIT N" headers for grade-6-ela / grade-6-earth-space-science /
+  grade-6-world-geography. Fix folds into the G8 unit-titles commit (same file, signed G6 titles).
+- The plan's "registries already carry all eight grade-6/8 rows" is TRUE for the engine (taxonomy, lint,
+  COURSE_NAMES, COURSE_PREFIX, MS_COURSE_NAMES, MS_SUBJECT_PHRASE) and FALSE for academy
+  `seed/mappings.json` (generated; G8 keys appear only after Task 1.6's `buildCourse` + `seed:gen`).
