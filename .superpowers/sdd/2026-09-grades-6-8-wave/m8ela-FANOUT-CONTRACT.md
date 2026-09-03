@@ -455,3 +455,58 @@ You cannot run the full lint (it selects all MS plans and will report other unit
 15. **Re-read your `SCOPE GUARD` against the finished file, clause by clause.** For every "this lesson never …" and every "every … in this file is …", go find the evidence in your own body. If a clause is not true as written, fix the clause or fix the body — do not leave a guard that a reviewer will trust and that quietly is not so. This is the last thing you do, after every other edit.
 
 Do NOT commit. Do NOT edit `store.ts`. The controller registers, commits and runs the gate.
+
+## Addenda — CONTROLLER RULINGS 2026-09-04, from the first Opus fan-out batch
+
+These come from eight agents working rows 2.4-4.3 in parallel. Each was found by an
+agent's own checklist, not by a gate. They bind you exactly as the numbered list does.
+
+16. **DF-3 is a BAND, not a floor.** Item 13 tells you 0 of 3 is not the goal. Two
+    agents in one batch still drove it there, and both independently reported the same
+    consequence: growing *every* distractor to close a keyed-longest gap made the key
+    the **shortest** choice in all three items, which is the identical guessable signal
+    with its sign flipped. One agent's first pass took its distractors to 325 and 291
+    characters against a 246-character key. So: change nothing unless the key is longest
+    by a margin a student could actually see (roughly >10%, not the 2-14 characters that
+    two of these files were carrying), and after any growth **re-measure and confirm you
+    have not simply inverted it**. A margin inside noise is not a defect and does not
+    want a fix.
+
+17. **The `SCOPE GUARD` section's worked sample is an ILLUSTRATION, not a template.**
+    It happens to use row 4.2. The agent who actually wrote 4.2 found two of the sample's
+    "deliberately allowed" clauses false of any correct 4.2 file — it claims "counterclaim"
+    appears in a distractor (rebuttal is 4.1/8.2 material, so a correct file need not use
+    the word) and reads as though the G7 relevance/sufficiency tests never run in the row,
+    when a good 4.2 file runs them on purpose to show them passing while the argument still
+    breaks. **Write your guard against your own finished body.** A guard is the one thing in
+    the file whose whole value is that it is true as written; a pasted clause is a guard that
+    a reviewer will trust and that quietly is not so.
+
+18. **Never assert what the student did in a previous school year.** No "last year you
+    learned X", no "last year you found X", no "next year you will". The phrase has ZERO
+    precedent in the shipped corpus — a grep across every seed found it only in three files
+    from this wave, and the house convention in every other course is **"you already know
+    …"**, which is timeless. This is the same defect the audit's grade check exists to stop:
+    a student may be taking Grade 8 content off-grade, and the sentence is then simply false
+    about them. Referring to an earlier lesson **in this course** ("you learned in the last
+    lesson") is fine and is also precedented.
+
+19. **Clarifying item 14 for distractors.** Two agents asked the same question, and the
+    answer is: a distractor's *premise* is by construction the student's false belief ("a
+    field guide is written to record what an animal does rather than to admire it") and has
+    no truth-grounds to record — do not ledger it as a claim. What you DO ledger is any
+    **fact about the world a distractor leans on** while being wrong about the skill (that
+    "casualty" belongs to the vocabulary of disasters; that melted water refreezes). The
+    rule behind item 14 is unchanged and is the reason the distinction matters: a distractor
+    may be wrong about the SKILL, never about the WORLD, because a false fact in a wrong
+    answer reaches the student with no correction attached.
+
+20. **Clarifying item 4, "character-for-character".** Two agents hit the same wall: a
+    quotation whose source punctuation differs at the boundary (the excerpt has a comma or a
+    semicolon where your sentence needs a period) cannot satisfy the rule literally, and one
+    file's own NOTE asserted a "character-for-character" invariant it did not hold. The rule
+    governs **the words and their order and case**, and it is absolute there — the batch found
+    seven quotations that had silently gained a sentence-initial capital, plus one quoting a
+    phrase that appeared nowhere in its passage. Re-cut the quoted span so it ends where the
+    source ends, or drop the quotation marks and paraphrase. Never adjust a word to fit the
+    frame, and never let a quote frame change the source's grammar.
