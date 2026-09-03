@@ -506,3 +506,140 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
     phrase that appeared nowhere in its passage. Re-cut the quoted span so it ends where the
     source ends, or drop the quotation marks and paraphrase. Never adjust a word to fit the
     frame, and never let a quote frame change the source's grammar.
+
+
+> **PORTED 2026-09-04 from `m8ela-FANOUT-CONTRACT.md`, where rulings 16-31 were earned.**
+> Rulings 16-20 were already in this file. The blocks below add 21-31. Every example cited
+> is from an ELA row -- the RULES generalise, the EXAMPLES do not, and ruling 24 has been
+> re-derived for this subject because ELA's answer is the wrong one here.
+
+## Addenda — CONTROLLER RULINGS 2026-09-04 (second Opus batch, rows 5.1-6.4)
+
+21. **Dual-code rows: cite once, at the end.** Some scope cells embed their standard
+    codes mid-sentence ("(L.8.2a)", "(L.8.2b)"). Copying part (i) verbatim AND appending
+    the citation would then cite twice or three times. Drop the inline codes while
+    copying and append one parenthesis at the end listing both: `(CCSS L.8.2a, L.8.2b)`.
+    Rows 1.1 and 6.4 reached this convention independently; it now also binds 7.1, 9.3,
+    9.4 and 10.3.
+
+22. **No specimen may be shared between a TEACHING segment and an ITEM.** Row 5.2's
+    author found its concept `keyIdeas` using the exact sentence and answer of its own
+    try_yourself 3, which made the file's hardest item answerable by recall rather than
+    by the skill, and a `WRONG:`/`CORRECT:` specimen identical to item 1's choice a,
+    which eliminated one distractor for free. Neither is visible to any gate.
+
+    **CORRECTED 2026-09-04 after row 7.1 flagged it too broad.** The mechanism is
+    leakage into an assessed item, so the rule binds only where a specimen crosses
+    that line: no `try_yourself` stem, choice or answer may also appear in the hook,
+    concept, worked examples, recap or misconception check. Two TEACHING segments
+    sharing a specimen is fine and is house style -- the procedure-led exemplar
+    `m8ela-u5-active-and-passive-voice.ts` shares one between concept keyIdea 3 and
+    recap line 3, and a recap restating an error the concept already labelled cannot
+    leak anything. Before you finish, list every specimen in your items and confirm
+    none of them appears in a teaching segment.
+
+23. **`WRONG:` where neither form is an error.** Rows whose subject is a CHOICE between
+    two correct forms (6.2 voice-and-mood-for-effect is the clear case; 6.1 is shifts-in-voice-and-mood) cannot label a
+    grammatical sentence a bare `WRONG:` without installing the very rule the contract
+    forbids inventing -- "the passive is always wrong". Use `WRONG FOR THIS EFFECT:`
+    beside its `CORRECT:`, and say so in the NOTE. **CORRECTED 2026-09-04:** this ruling
+    originally claimed such a label "still matches a reviewer's grep for `WRONG:` because
+    the string is a prefix". That is FALSE and was my error -- the colon sits after
+    EFFECT, so `WRONG FOR THIS EFFECT:` does not contain the substring `WRONG:`. See
+    ruling 28 for the review grep that actually works. Keep bare `WRONG:` for genuinely
+    non-standard forms.
+
+24. **The em dash in `los[0].description` is decided PER SUBJECT, and GEOGRAPHY HAS NO
+    PRECEDENT EITHER WAY.** Measured: across 19 shipped m6geo descriptions, the em dash
+    appears ZERO times and ` -- ` appears ZERO times -- the question has simply never come
+    up, because those descriptions never needed a dash. So this ruling rests on nothing
+    observed in your own subject. Use ` -- `, for consistency with the other non-ELA middle
+    school courses (science measured 7 to 0 in its favour), and know that you are following
+    a sibling subject rather than a precedent of your own. Better still: write the
+    description so it does not need a dash. (ELA measured the OPPOSITE way, 24 em dashes to
+    zero, and its contract carries the opposite ruling. **Re-run a precedent comparison
+    inside your own subject AND artifact type; never inherit a sibling's measurement.**)
+
+## Addenda — CONTROLLER RULINGS 2026-09-04 (third Opus batch, rows 7.1-8.4)
+
+25. **Unit 7 vocabulary rows DO write a claim ledger, even though every scenario is
+    invented.** Checklist item 14 exempts an all-fiction file and names only rows 2.3/2.4
+    as exceptions. Three Unit 7 authors independently judged that wrong for their rows and
+    wrote a full ledger anyway; they were right, and the exemption is hereby extended.
+    A vocabulary row necessarily asserts **word senses, registers and etymologies**, and a
+    student takes those as facts about English — "dough" for money, `-cred-` from *credere*,
+    firm < persistent < resolute. Several such claims sit in DISTRACTORS, which is the case
+    item 14 exists for: a false fact in a wrong answer reaches the student with no
+    correction. Ledger every root, sense and register claim with a real source, never
+    "widely stated". The invented people and settings stay STIPULATED as usual.
+
+26. **Generalising ruling 23: the label must name the criterion the specimen fails.**
+    Three rows in one batch hit cases a bare `WRONG:` would misrepresent, and each needed a
+    different label, so the rule is not a fixed vocabulary — it is: **bare `WRONG:` is
+    reserved for a form that is genuinely non-standard English.** Everything else names its
+    criterion. Observed and approved: `WRONG FOR THIS EFFECT:` (6.2, where neither voice is
+    an error), `WRONG FOR THESE FACTS:` / `WRONG FOR THIS PLACE:` / `WRONG FOR THIS
+    PURPOSE:` (7.4, near-synonyms), `WRONG FOR A FORMAL ARGUMENT:` (8.4, register — where a
+    bare label would teach "a contraction is always wrong in writing"), and `WEAK:`/
+    `STRONG:` (8.3, for a sentence that is grammatical AND true but stops short of the
+    move, which neither `WRONG:` nor `WRONG FOR THIS EFFECT:` fits). **NONE of these variants matches a grep for
+    `WRONG:`** -- see ruling 28. Every row using any of them must say so in its NOTE. 8.4 also shows the strongest version of the move: it makes the
+    over-generalisation the subject of its own misconception check.
+
+27. **A curriculum cell containing U+2026 vs "copy verbatim".** Row 8.3's cell prints a real
+    ellipsis inside its example phrase, which checklist item 9 bans from the file. Convert
+    it to three ASCII periods while copying; "verbatim" governs the words, and item 9
+    governs the glyph. Same shape as ruling 24 for the em dash, opposite conclusion,
+    because the corpus and the ban point the same way here.
+
+## Addenda — CONTROLLER RULINGS 2026-09-04 (fourth Opus batch, rows 4.4, 9.1-10.4)
+
+28. **The `WRONG:` grep does not find the variant labels — my error, now measured.**
+    Rulings 23 and 26 both asserted that `WRONG FOR THIS EFFECT:` and its siblings "still
+    match a reviewer's grep for `WRONG:` because the string is a prefix". That is simply
+    false: the colon sits after EFFECT, so the substring `WRONG:` never occurs. Row 4.4's
+    author caught it and it measures out across the finished course — a `grep 'WRONG:'`
+    hits 29 of 40 files and silently misses the labels in the other 11. **The review grep
+    is `grep -E 'WRONG|WEAK:|VAGUE:'`** (no colon after WRONG), which finds all of them.
+    Both rulings are corrected in place. Labels in use across the course: bare `WRONG:`,
+    then FOR THIS EFFECT / THESE FACTS / THIS PLACE / THIS PURPOSE / THIS READER / THIS
+    FORMAT / THIS SEARCH / THIS MAIN QUESTION / THIS POINT OF VIEW / THIS TIME SHIFT /
+    A FORMAL ARGUMENT / A REFLECTION / A CONCLUSION, plus `WEAK:`/`STRONG:` and
+    `VAGUE:`/`PRECISE:`/`STILL VAGUE:`.
+
+    The general point is worth more than the fix: **I asserted a string property without
+    running the string.** It is the same failure the wave keeps meeting from the other
+    side -- a claim about an instrument, stated confidently, never executed. One grep
+    would have settled it at the moment I wrote the ruling.
+
+29. **Ruling 25 extends to Unit 9 and Unit 10.** Three more authors reached the same
+    judgment independently: a row cannot be taught without asserting facts the student
+    takes as facts about the world -- domain vocabulary and technical terms (9.2), how
+    searching behaves (10.2), a citation format's order and punctuation (10.4), the
+    real-world claims a research question presupposes (10.1). All wrote a full ledger
+    despite the all-fiction exemption. **Any row whose subject matter is itself a claim
+    about the world writes the ledger, whatever its scenarios are made of.** That is the
+    rule; the unit numbers are just where it has been observed.
+
+30. **Transforming a curriculum cell for a SPOKEN, student-facing field.** Three
+    conversions are now settled, and they were each decided by re-measuring inside ELA
+    rather than by inheriting a sibling subject's convention: the em dash becomes ` -- ` (ruling
+    24, and see it for why that is the opposite of the ELA answer); U+2026 becomes three
+    ASCII periods (ruling 27); and **U+2192 (`→`) becomes the word "becomes"** -- row 9.2 found the arrow in its cell, measured zero arrows across
+    all m6/m7/m8 ELA seeds, and reasoned that an arrow read aloud in a voice session is
+    silence. Also settled by measurement: **"the student's" does not belong in a
+    description.** Row 10.3's cell said "into the student's OWN sentence"; zero of 86 ELA
+    descriptions say "the student" and the field is rendered to the student, so it was
+    transformed to "your OWN sentence" -- the same class as the standing rule that
+    authoring-facing words drop while copying.
+
+31. **A row may be honestly untestable in part — say so rather than fake it.** Row 4.4
+    (RI.8.7, choosing a medium) is assessed with every medium DESCRIBED in words, because
+    this is a voice tutor with nothing to show. Its author reported that three of the
+    four purposes the row names survive description (show a trend, teach a procedure,
+    allow re-reading) because they rest on properties words can carry, but **"convey a
+    mood" does not**: you cannot judge whether a presentation conveys a mood without
+    experiencing it. So that quarter of the standard is TAUGHT in the file and
+    deliberately NOT TESTED by any item, and the file says so. This is the right move and
+    the right disclosure. If a row's format cannot honestly assess part of its standard,
+    teach it, exclude it from the items, and record the gap where a reviewer will find it.
