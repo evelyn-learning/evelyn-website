@@ -58,8 +58,8 @@ export const SEED_M8MATH_U6_IDENTIFYING_FUNCTIONS: LessonPlan = {
         'Define a function as a rule that assigns exactly one output to each input; test tables, mapping diagrams, sets of ordered pairs, and a plotted set of points for a repeated input with different outputs; the graph of a function is its set of (input, output) pairs (CCSS 8.F.A.1).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m8math.systems-word-problems'],
+  followUps: ['m8math.linear-vs-nonlinear-functions'],
   estimatedMinutes: 20,
   segments: [
     {

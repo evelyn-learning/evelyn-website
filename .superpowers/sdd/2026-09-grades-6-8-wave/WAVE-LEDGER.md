@@ -10,7 +10,7 @@ Plan: docs/superpowers/plans/2026-09-02-grades-6-8-ms-course-wave.md (main e78c0
 | m6ela | ✓ (m6ela-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 244 OK | ✓ 240 (95.0%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6sci | ✓ (m6sci-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 (repaired) | 40/40 | ✓ 282 OK | ✓ 240 (97.9%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
 | m6geo | ✓ (m6geo-CURRICULUM.md) | ✓ 2026-09-02 | ✓ 2 + contract | 40/40 | ✓ 320 OK | ✓ 239 (97.1%) | ✓ 40 + ptrs | ✓ 40 | gate MET | – |
-| m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
+| m8math | ✓ (m8math-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 40/40 | ✓ 366 OK | – | – | – | – | – | – |
 | m8ela | ✓ (m8ela-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
 | m8sci | ✓ (m8sci-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
 | m8geo | ✓ (m8geo-CURRICULUM.md, drafted 2026-09-03) | ✓ 2026-09-03 (batch, as drafted) | ✓ 2 (reviewed) | 2/40 | – | – | – | – | – | – |
@@ -100,3 +100,5 @@ Cross-course findings resolved by the controller after the drafts landed:
   → tsc. Register all 40 per course with `register-course.py` (wires nothing — chains come from the seeds; the
   exemplars' chains must be hand-wired at that point) → `lint-ms-plans` expected 360/400/440/480.
 - Batch 1 (m8math U1-U2, 8 rows) dispatched 2026-09-03.
+- 2026-09-03 late: **m8math COMPLETE** — 40/40 registered in one edit (`register-course.py` + hand-wired exemplar chains), tsc clean, `lint-ms-plans: 366 plans OK` (328 + 38; next 404/442/480). Audit: 80 MCQs, longest-answer keyed 5/80 (6%, DIAGNOSTIC — below chance; distractors were lengthened per contract, no key trimmed). Controller spot-read 6 (2.2, 3.3, 5.2, 8.2, 9.3, 10.2): all sound. Four fan-out agents were cut off by a session rate limit mid-checklist; their files were complete on disk and passed the audit; each was RESUMED via SendMessage to finish its checklist rather than re-dispatched (recommended: check disk first, resume second).
+- m8ela fan-out started (U1-U2 rows in flight).

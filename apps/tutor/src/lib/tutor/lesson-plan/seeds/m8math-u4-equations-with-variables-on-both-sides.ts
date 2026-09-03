@@ -59,8 +59,8 @@ export const SEED_M8MATH_U4_EQUATIONS_WITH_VARIABLES_ON_BOTH_SIDES: LessonPlan =
         'Solve ax + b = cx + d with integer coefficients by collecting variable terms on one side and constants on the other, finishing as a two-step equation and checking by substitution (CCSS 8.EE.C.7b).',
     },
   ],
-  prerequisites: [],
-  followUps: [],
+  prerequisites: ['m8math.deriving-y-equals-mx-plus-b'],
+  followUps: ['m8math.equations-with-distribution-and-like-terms'],
   estimatedMinutes: 20,
   segments: [
     {

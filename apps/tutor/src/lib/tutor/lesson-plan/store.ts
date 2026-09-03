@@ -2232,6 +2232,44 @@ import { SEED_M8SCI_U2_NEWTONS_FIRST_LAW_INERTIA_AND_FRICTION } from './seeds/m8
 import { SEED_M8SCI_U8_EVIDENCE_OF_A_CHEMICAL_REACTION } from './seeds/m8sci-u8-evidence-of-a-chemical-reaction';
 import { SEED_M8GEO_U1_COUNTS_RATES_AND_FAIR_COMPARISON } from './seeds/m8geo-u1-counts-rates-and-fair-comparison';
 import { SEED_M8GEO_U7_HAZARD_RISK_EXPOSURE_AND_VULNERABILITY } from './seeds/m8geo-u7-hazard-risk-exposure-and-vulnerability';
+import { SEED_M8MATH_U1_REPEATING_DECIMALS_TO_FRACTIONS } from './seeds/m8math-u1-repeating-decimals-to-fractions';
+import { SEED_M8MATH_U1_RATIONAL_AND_IRRATIONAL_NUMBERS } from './seeds/m8math-u1-rational-and-irrational-numbers';
+import { SEED_M8MATH_U1_SQUARE_ROOTS_AND_CUBE_ROOTS } from './seeds/m8math-u1-square-roots-and-cube-roots';
+import { SEED_M8MATH_U1_ESTIMATING_AND_LOCATING_IRRATIONAL_NUMBERS } from './seeds/m8math-u1-estimating-and-locating-irrational-numbers';
+import { SEED_M8MATH_U2_PRODUCT_QUOTIENT_AND_POWER_OF_A_POWER_RULES } from './seeds/m8math-u2-product-quotient-and-power-of-a-power-rules';
+import { SEED_M8MATH_U2_ZERO_AND_NEGATIVE_EXPONENTS } from './seeds/m8math-u2-zero-and-negative-exponents';
+import { SEED_M8MATH_U2_SCIENTIFIC_NOTATION } from './seeds/m8math-u2-scientific-notation';
+import { SEED_M8MATH_U2_OPERATIONS_IN_SCIENTIFIC_NOTATION } from './seeds/m8math-u2-operations-in-scientific-notation';
+import { SEED_M8MATH_U3_UNIT_RATE_AS_SLOPE } from './seeds/m8math-u3-unit-rate-as-slope';
+import { SEED_M8MATH_U3_COMPARING_PROPORTIONAL_RELATIONSHIPS } from './seeds/m8math-u3-comparing-proportional-relationships';
+import { SEED_M8MATH_U3_SLOPE_FROM_SIMILAR_TRIANGLES } from './seeds/m8math-u3-slope-from-similar-triangles';
+import { SEED_M8MATH_U3_DERIVING_Y_EQUALS_MX_PLUS_B } from './seeds/m8math-u3-deriving-y-equals-mx-plus-b';
+import { SEED_M8MATH_U4_EQUATIONS_WITH_DISTRIBUTION_AND_LIKE_TERMS } from './seeds/m8math-u4-equations-with-distribution-and-like-terms';
+import { SEED_M8MATH_U4_EQUATIONS_WITH_RATIONAL_COEFFICIENTS } from './seeds/m8math-u4-equations-with-rational-coefficients';
+import { SEED_M8MATH_U4_ONE_NONE_OR_INFINITELY_MANY_SOLUTIONS } from './seeds/m8math-u4-one-none-or-infinitely-many-solutions';
+import { SEED_M8MATH_U5_SOLUTIONS_OF_SYSTEMS_AS_INTERSECTION_POINTS } from './seeds/m8math-u5-solutions-of-systems-as-intersection-points';
+import { SEED_M8MATH_U5_SOLVING_SYSTEMS_BY_GRAPHING } from './seeds/m8math-u5-solving-systems-by-graphing';
+import { SEED_M8MATH_U5_SOLVING_SYSTEMS_BY_SUBSTITUTION } from './seeds/m8math-u5-solving-systems-by-substitution';
+import { SEED_M8MATH_U5_SYSTEMS_WORD_PROBLEMS } from './seeds/m8math-u5-systems-word-problems';
+import { SEED_M8MATH_U6_LINEAR_VS_NONLINEAR_FUNCTIONS } from './seeds/m8math-u6-linear-vs-nonlinear-functions';
+import { SEED_M8MATH_U6_COMPARING_FUNCTIONS_IN_DIFFERENT_REPRESENTATIONS } from './seeds/m8math-u6-comparing-functions-in-different-representations';
+import { SEED_M8MATH_U6_VOLUME_OF_CYLINDERS_CONES_AND_SPHERES } from './seeds/m8math-u6-volume-of-cylinders-cones-and-spheres';
+import { SEED_M8MATH_U7_RATE_OF_CHANGE_AND_INITIAL_VALUE_FROM_TABLES_AND_GRAPHS } from './seeds/m8math-u7-rate-of-change-and-initial-value-from-tables-and-graphs';
+import { SEED_M8MATH_U7_CONSTRUCTING_LINEAR_MODELS_FROM_DESCRIPTIONS } from './seeds/m8math-u7-constructing-linear-models-from-descriptions';
+import { SEED_M8MATH_U7_INTERPRETING_AND_USING_LINEAR_MODELS } from './seeds/m8math-u7-interpreting-and-using-linear-models';
+import { SEED_M8MATH_U7_DESCRIBING_AND_SKETCHING_QUALITATIVE_GRAPHS } from './seeds/m8math-u7-describing-and-sketching-qualitative-graphs';
+import { SEED_M8MATH_U8_TRANSLATIONS_AND_REFLECTIONS } from './seeds/m8math-u8-translations-and-reflections';
+import { SEED_M8MATH_U8_ROTATIONS_ABOUT_THE_ORIGIN } from './seeds/m8math-u8-rotations-about-the-origin';
+import { SEED_M8MATH_U8_CONGRUENCE_THROUGH_RIGID_MOTIONS } from './seeds/m8math-u8-congruence-through-rigid-motions';
+import { SEED_M8MATH_U8_DILATIONS_AND_SIMILARITY } from './seeds/m8math-u8-dilations-and-similarity';
+import { SEED_M8MATH_U9_PARALLEL_LINES_CUT_BY_A_TRANSVERSAL } from './seeds/m8math-u9-parallel-lines-cut-by-a-transversal';
+import { SEED_M8MATH_U9_TRIANGLE_ANGLE_SUM_EXTERIOR_ANGLES_AND_AA_SIMILARITY } from './seeds/m8math-u9-triangle-angle-sum-exterior-angles-and-aa-similarity';
+import { SEED_M8MATH_U9_THE_PYTHAGOREAN_THEOREM_AND_ITS_CONVERSE } from './seeds/m8math-u9-the-pythagorean-theorem-and-its-converse';
+import { SEED_M8MATH_U9_PYTHAGOREAN_APPLICATIONS_AND_DISTANCE_BETWEEN_POINTS } from './seeds/m8math-u9-pythagorean-applications-and-distance-between-points';
+import { SEED_M8MATH_U10_SCATTER_PLOTS_AND_ASSOCIATION } from './seeds/m8math-u10-scatter-plots-and-association';
+import { SEED_M8MATH_U10_FITTING_A_LINE_TO_A_SCATTER_PLOT } from './seeds/m8math-u10-fitting-a-line-to-a-scatter-plot';
+import { SEED_M8MATH_U10_USING_A_LINEAR_MODEL_WITH_BIVARIATE_DATA } from './seeds/m8math-u10-using-a-linear-model-with-bivariate-data';
+import { SEED_M8MATH_U10_TWO_WAY_TABLES_AND_RELATIVE_FREQUENCIES } from './seeds/m8math-u10-two-way-tables-and-relative-frequencies';
 /** Seeded plans bundled with the codebase. Curated for the public demo
  *  flow; partner plans live in the DB and merge in via listLessonPlans. */
 export const SEED_PLANS: LessonPlan[] = [
@@ -4388,6 +4426,44 @@ export const SEED_PLANS: LessonPlan[] = [
   SEED_M8SCI_U8_EVIDENCE_OF_A_CHEMICAL_REACTION,
   SEED_M8GEO_U1_COUNTS_RATES_AND_FAIR_COMPARISON,
   SEED_M8GEO_U7_HAZARD_RISK_EXPOSURE_AND_VULNERABILITY,
+  SEED_M8MATH_U1_REPEATING_DECIMALS_TO_FRACTIONS,
+  SEED_M8MATH_U1_RATIONAL_AND_IRRATIONAL_NUMBERS,
+  SEED_M8MATH_U1_SQUARE_ROOTS_AND_CUBE_ROOTS,
+  SEED_M8MATH_U1_ESTIMATING_AND_LOCATING_IRRATIONAL_NUMBERS,
+  SEED_M8MATH_U2_PRODUCT_QUOTIENT_AND_POWER_OF_A_POWER_RULES,
+  SEED_M8MATH_U2_ZERO_AND_NEGATIVE_EXPONENTS,
+  SEED_M8MATH_U2_SCIENTIFIC_NOTATION,
+  SEED_M8MATH_U2_OPERATIONS_IN_SCIENTIFIC_NOTATION,
+  SEED_M8MATH_U3_UNIT_RATE_AS_SLOPE,
+  SEED_M8MATH_U3_COMPARING_PROPORTIONAL_RELATIONSHIPS,
+  SEED_M8MATH_U3_SLOPE_FROM_SIMILAR_TRIANGLES,
+  SEED_M8MATH_U3_DERIVING_Y_EQUALS_MX_PLUS_B,
+  SEED_M8MATH_U4_EQUATIONS_WITH_DISTRIBUTION_AND_LIKE_TERMS,
+  SEED_M8MATH_U4_EQUATIONS_WITH_RATIONAL_COEFFICIENTS,
+  SEED_M8MATH_U4_ONE_NONE_OR_INFINITELY_MANY_SOLUTIONS,
+  SEED_M8MATH_U5_SOLUTIONS_OF_SYSTEMS_AS_INTERSECTION_POINTS,
+  SEED_M8MATH_U5_SOLVING_SYSTEMS_BY_GRAPHING,
+  SEED_M8MATH_U5_SOLVING_SYSTEMS_BY_SUBSTITUTION,
+  SEED_M8MATH_U5_SYSTEMS_WORD_PROBLEMS,
+  SEED_M8MATH_U6_LINEAR_VS_NONLINEAR_FUNCTIONS,
+  SEED_M8MATH_U6_COMPARING_FUNCTIONS_IN_DIFFERENT_REPRESENTATIONS,
+  SEED_M8MATH_U6_VOLUME_OF_CYLINDERS_CONES_AND_SPHERES,
+  SEED_M8MATH_U7_RATE_OF_CHANGE_AND_INITIAL_VALUE_FROM_TABLES_AND_GRAPHS,
+  SEED_M8MATH_U7_CONSTRUCTING_LINEAR_MODELS_FROM_DESCRIPTIONS,
+  SEED_M8MATH_U7_INTERPRETING_AND_USING_LINEAR_MODELS,
+  SEED_M8MATH_U7_DESCRIBING_AND_SKETCHING_QUALITATIVE_GRAPHS,
+  SEED_M8MATH_U8_TRANSLATIONS_AND_REFLECTIONS,
+  SEED_M8MATH_U8_ROTATIONS_ABOUT_THE_ORIGIN,
+  SEED_M8MATH_U8_CONGRUENCE_THROUGH_RIGID_MOTIONS,
+  SEED_M8MATH_U8_DILATIONS_AND_SIMILARITY,
+  SEED_M8MATH_U9_PARALLEL_LINES_CUT_BY_A_TRANSVERSAL,
+  SEED_M8MATH_U9_TRIANGLE_ANGLE_SUM_EXTERIOR_ANGLES_AND_AA_SIMILARITY,
+  SEED_M8MATH_U9_THE_PYTHAGOREAN_THEOREM_AND_ITS_CONVERSE,
+  SEED_M8MATH_U9_PYTHAGOREAN_APPLICATIONS_AND_DISTANCE_BETWEEN_POINTS,
+  SEED_M8MATH_U10_SCATTER_PLOTS_AND_ASSOCIATION,
+  SEED_M8MATH_U10_FITTING_A_LINE_TO_A_SCATTER_PLOT,
+  SEED_M8MATH_U10_USING_A_LINEAR_MODEL_WITH_BIVARIATE_DATA,
+  SEED_M8MATH_U10_TWO_WAY_TABLES_AND_RELATIVE_FREQUENCIES,
 ];
 
 const seedById = new Map(SEED_PLANS.map((p) => [p.id, p]));
