@@ -61,6 +61,17 @@ function check(name: string, cond: boolean, detail?: string) {
   const r = detectBoardContradiction({ turnText: 'Right, 9 + 16 = 30.', renderedText: '16 + 9 = 25' });
   check('reordered operands → ok', r.verdict === 'ok', JSON.stringify(r));
 }
+{
+  // The connector rule rewrites "is"/"gives"/"equals" into "=". Without word
+  // boundaries those matched INSIDE words ("This is history" became
+  // "Th = = h = tory"), which is exactly the kind of upstream looseness a
+  // fail-closed detector must not rely on EQN_RE to absorb.
+  const r = detectBoardContradiction({
+    turnText: 'This is history: the sum 16 + 9 + 9 + 4 is 38 on your sheet.',
+    renderedText: '16 + 9 + 9 + 4 = 38',
+  });
+  check('connector rule does not match inside words', r.verdict === 'ok', JSON.stringify(r));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

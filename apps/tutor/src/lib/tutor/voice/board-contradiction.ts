@@ -39,7 +39,7 @@ function flatten(s: string): string {
     .replace(/−/g, '-')
     .replace(/\bplus\b/gi, '+')
     .replace(/\btimes\b/gi, '*')
-    .replace(/—?\s*(?:that'?s|equals|comes out to|gives|is)\s*\*?/gi, ' = ')
+    .replace(/—?\s*\b(?:that'?s|equals|comes out to|gives|is)\b\s*\*?/gi, ' = ')
     .replace(/\s+/g, ' ')
     .trim();
 }
