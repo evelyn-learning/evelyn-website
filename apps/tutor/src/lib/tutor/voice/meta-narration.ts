@@ -34,7 +34,7 @@ const SELF_REFERENCE_RE =
 // "compute" is load-bearing: "Let me compute the area
 // together" is legitimate teaching and must survive.
 const SELF_AUDIT_RE =
-  /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'""]?not quite["'""]? was\b/i;
+  /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'“”]?not quite["'“”]? was\b/i;
 
 /** A tag-shaped run: '<' + a letter or '/', a tag name, then '>'. Requires
  *  BOTH delimiters, so spoken inequalities ("3 < 10", "$x < 5$ and $y > 2$")

@@ -67,5 +67,10 @@ check('regex 3 fires with structural:false',
 check('regex 4 fires with structural:false',
   isMetaNarration('I need to check my prior turn before answering.', { structural: false }));
 
+// Curly quotes are the common case in generated speech, and the character
+// class carrying them was lost once already in an extraction.
+check('"my "Not quite" was" leak (typographic curly quotes)',
+  isMetaNarration('So my "Not quite" was right after all.'));
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
