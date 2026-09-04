@@ -93,6 +93,7 @@ import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer } f
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
+import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
 import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
@@ -228,6 +229,7 @@ import {
   TUTOR_THINK_TIME_HOLD,
   TUTOR_TURN_COALESCE,
   TUTOR_OPENING_BARGEIN_ESCAPE,
+  TUTOR_VERDICT_REPLANT_ON_KILL,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -10894,14 +10896,23 @@ export function VoiceTutorRealtime({
                         console.warn(`[brain-orchestrator] false-assertion DOWNGRADED (stale anchor — unboarded question last turn): ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected}`);
                         onDebugEvent?.('false_assertion_downgraded_stale_anchor', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)}`);
                       } else {
+                        // Verdict preservation (portal-704e3e01): if this
+                        // attempt had already graded the student, tell the
+                        // retry it must grade again. Without this the retry
+                        // answers the rejection by saying nothing about the
+                        // student's answer at all and opening on new content.
+                        const killedTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
+                        const carriedVerdict = TUTOR_VERDICT_REPLANT_ON_KILL && hasVerdictOpener(killedTextSoFar);
                         const reason =
                           `You asserted ${fa.answerVar} = ${fa.asserted}, but the verified answer for the active problem is ${fa.expected}. ` +
-                          `Re-derive the value step by step and re-deliver the turn with the correct final value — never state ${fa.answerVar} = ${fa.asserted} again.`;
+                          `Re-derive the value step by step and re-deliver the turn with the correct final value — never state ${fa.answerVar} = ${fa.asserted} again.`
+                          + (carriedVerdict ? VERDICT_REPLANT_CLAUSE : '');
                         rejectionsThisAttempt.push({ action: 'false_final_assertion', reason });
                         judgeRetriesUsed++;
                         await performKill();
                         console.warn(`[brain-orchestrator] false-assertion check: asserted ${fa.answerVar}=${fa.asserted} vs verified ${fa.expected} — kill + retry`);
                         onDebugEvent?.('false_assertion_kill', `${fa.answerVar}=${fa.asserted} verified=${fa.expected?.slice(0, 40)} (${fa.matchReason})`);
+                        if (carriedVerdict) onDebugEvent?.('verdict_replant_requested', `${fa.answerVar}=${fa.asserted}`);
                         continue;
                       }
                     }

@@ -108,6 +108,13 @@ export const TUTOR_FALSE_ASSERTION_KILL =
  *  correct answer to the spoken side-question isn't killed against a stale
  *  anchor. Default ON. */
 export const TUTOR_FA_STALE_ANCHOR_DOWNGRADE = process.env.NEXT_PUBLIC_TUTOR_FA_STALE_ANCHOR_DOWNGRADE !== 'off';
+/** portal-704e3e01 (2026-09-04): a false-assertion KILL removed the turn's
+ *  verdict and the retry restored none — the student asked out loud whether
+ *  she had got the previous question right. Appends a replant clause to the
+ *  false-assertion rejection so the re-delivery still grades the answer.
+ *  Default ON; NEXT_PUBLIC_TUTOR_VERDICT_REPLANT_ON_KILL=off is the switch. */
+export const TUTOR_VERDICT_REPLANT_ON_KILL =
+  process.env.NEXT_PUBLIC_TUTOR_VERDICT_REPLANT_ON_KILL !== 'off';
 // R58 student-declared hold (live, portal-2f23ece4: "ignore everything I
 // say until I say candle" — the tutor kept answering every overheard
 // utterance and the private aside landed in the transcript). While

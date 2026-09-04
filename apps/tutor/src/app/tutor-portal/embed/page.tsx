@@ -79,7 +79,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'brain_', 'judge', 'tool_call', 'verdict_', 'render_sync', 'cover_silent',
   'turn_length', 'completion_gated', 'auto_', 'pacing_', 'improvised_answer',
   //   R58: solver-dispute correction note + false-final-assertion kill:
-  'improvised_mismatch_note_planted', 'false_assertion_kill',
+  'improvised_mismatch_note_planted', 'false_assertion_kill', 'verdict_replant_requested',
   //   R58: student-declared hold family (armed/active/swallowed/resumed/
   //   check_in) + first-session tip + noise-floor nudge:
   'student_hold_', 'first_session_tip', 'noise_floor_',
