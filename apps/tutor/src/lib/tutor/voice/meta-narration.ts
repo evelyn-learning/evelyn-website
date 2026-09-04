@@ -37,10 +37,12 @@ const SELF_AUDIT_RE =
   /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'“”]?not quite["'“”]? was\b/i;
 
 /** A tag-shaped run: '<' + a letter or '/', a tag name, then '>'. Requires
- *  BOTH delimiters, so spoken inequalities ("3 < 10", "$x < 5$ and $y > 2$")
- *  cannot match — there is no tag name between them. LaTeX is unaffected:
- *  '\frac{...}' carries no angle brackets at all. */
-const MARKUP_RE = /<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*)?>/;
+ *  BOTH delimiters AND an '=' in any attribute section (so unspaced algebra
+ *  like "3<n and n>10" or "a<b and c>d" survives — prose between brackets
+ *  never contains attribute assignments). Legitimate markup either has no
+ *  attributes ("<result>", "<thinking>") or carries a real one
+ *  ("<span style="...">"). Spoken inequalities and LaTeX are unaffected. */
+const MARKUP_RE = /<\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^<>]*=[^<>]*)?>/;
 
 export function isMetaNarration(
   sentence: string,

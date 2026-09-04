@@ -61,6 +61,17 @@ check('"my Not quite was" leak', isMetaNarration('So my "Not quite" was right af
 // The load-bearing colon: legitimate teaching must SURVIVE.
 check('"let me compute the area" survives', !isMetaNarration('Let me compute the area together with you.'));
 
+// A prose run between angle brackets is structurally tag-shaped
+// ("<n and n>"), so the attribute section must contain '=' before the
+// sentence is treated as markup. Without that, ordinary algebra with two
+// unspaced comparisons was silently dropped from TTS and the transcript.
+check('unspaced variable comparison survives 1',
+  !isMetaNarration('Since 3<n and n>10 does not hold together, let us solve it directly.'));
+check('unspaced variable comparison survives 2',
+  !isMetaNarration('x<y is bigger, so y>2 too.'));
+check('unspaced variable comparison survives 3',
+  !isMetaNarration('We need a<b and later on c>d to hold.'));
+
 // All four phrase regexes must fire regardless of the structural option.
 check('regex 3 fires with structural:false',
   isMetaNarration('That is not an answer, so classify silently.', { structural: false }));
@@ -68,9 +79,13 @@ check('regex 4 fires with structural:false',
   isMetaNarration('I need to check my prior turn before answering.', { structural: false }));
 
 // Curly quotes are the common case in generated speech, and the character
-// class carrying them was lost once already in an extraction.
-check('"my "Not quite" was" leak (typographic curly quotes)',
+// class carrying them was lost once already in an extraction. Escapes, not
+// literals: the curly characters have been mangled twice in transit already,
+// and a literal here would silently become ASCII again.
+check('ASCII straight quotes are matched',
   isMetaNarration('So my "Not quite" was right after all.'));
+check('typographic curly quotes are matched',
+  isMetaNarration(`So my “Not quite” was right after all.`));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

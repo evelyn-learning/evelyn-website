@@ -11195,36 +11195,37 @@ export function VoiceTutorRealtime({
                     }
                   }
                   // Round-7++ meta-narration filter. The system prompt
-                  // already forbids speaking internal reasoning (“the
-                  // student said X — that's a greenlight to advance”,
-                  // “let me mark this segment complete”, “the active
-                  // problem is …”), but Sonnet still leaks meta
+                  // already forbids speaking internal reasoning ("the
+                  // student said X — that's a greenlight to advance",
+                  // "let me mark this segment complete", "the active
+                  // problem is …"), but Sonnet still leaks meta
                   // sentences regularly — observed 2026-05-03 session:
-                  // brain spoke “The student already solved this one —
-                  // 16 is correct for {12, 14, 16, 18, 20}.” and “Let
+                  // brain spoke "The student already solved this one —
+                  // 16 is correct for {12, 14, 16, 18, 20}." and "Let
                   // me check — the *active* problem is the dataset
-                  // {2, 4, 6, 8, 10}.” Soft prompt rules are not
+                  // {2, 4, 6, 8, 10}." Soft prompt rules are not
                   // enough; orchestrator-side filtering is the safety
                   // net. Detect canonical leak patterns and drop the
                   // sentence from TTS + transcript without retrying.
+                  // Generic patterns only — no subject content.
                   // Generic patterns only — no subject content. Added
                   // 2026-09-04: structural markup rule (portal-704e3e01).
-                  // R58 additions (live, portal-9c73c826 “'Um, let me
+                  // R58 additions (live, portal-9c73c826 "'Um, let me
                   // think' isn't an answer yet — no verdict, just give
-                  // her room”, portal-dc11fac1 “it doesn't have a
-                  // request pattern I need to classify away”, and two
+                  // her room", portal-dc11fac1 "it doesn't have a
+                  // request pattern I need to classify away", and two
                   // evelyntutor screenshots narrating the judge
                   // correction-note re-check aloud): the verdict-guard
-                  // and correction-note vocabulary. “the student” is
+                  // and correction-note vocabulary. "the student" is
                   // now dropped ANYWHERE in a sentence — speaking TO
-                  // the student, a third-person “the student” is
+                  // the student, a third-person "the student" is
                   // always meta (the screenshot leak was mid-sentence:
-                  // “Re-checking my last correction — the student had
-                  // actually written…”). Deliberately NOT matched:
-                  // bare “classify”/”check”/”answer” — all three are
-                  // legitimate teaching content (“Ready to try
-                  // classifying one yourself?”, “your check was
-                  // right”); only the meta COLLOCATIONS are dropped.
+                  // "Re-checking my last correction — the student had
+                  // actually written…"). Deliberately NOT matched:
+                  // bare "classify"/"check"/"answer" — all three are
+                  // legitimate teaching content ("Ready to try
+                  // classifying one yourself?", "your check was
+                  // right"); only the meta COLLOCATIONS are dropped.
                   const metaNarrationRe = isMetaNarration(updatedSentence, {
                     structural: TUTOR_META_NARRATION_STRUCTURAL,
                   });
