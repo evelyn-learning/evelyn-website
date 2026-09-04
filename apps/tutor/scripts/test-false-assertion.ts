@@ -187,9 +187,11 @@ const MCQ_CHOICES = ['A', 'B', 'C', 'D'].map((l) => ({ letter: l, text: l }));
     r.verdict === 'ok', JSON.stringify(r));
 }
 {
-  // Same card, and the tutor asserts a value that is NOT choice C. With
-  // letters-only choices the guard still cannot resolve "18" to a letter,
-  // so it must stay silent rather than guess. Documents the coverage cost.
+  // Same card, and the tutor asserts a value that is NOT choice C. The
+  // single-letter safety net fires on the bare "C" before the matcher is
+  // reached, so the guard returns ok without trying to resolve "18" to a
+  // letter. This documents the coverage cost: a wrong numeric assertion on
+  // an MCQ card also escapes detection.
   const r = checkFalseFinalAssertion({
     sentence: 'Right, $x = 18$ — choice B.',
     problemStatement: MCQ_STATEMENT,
@@ -201,7 +203,9 @@ const MCQ_CHOICES = ['A', 'B', 'C', 'D'].map((l) => ({ letter: l, text: l }));
 }
 {
   // Safety net inside the module: even with NO choices supplied, a bare
-  // single-letter verified answer can never be compared to a number.
+  // single-letter verified answer is assumed MCQ and returns ok — an
+  // approximation, since a non-MCQ problem could legitimately have a
+  // single-letter verified answer (e, i, a code). Deliberate fail-closed.
   const r = checkFalseFinalAssertion({
     sentence: "Exactly. $x = 9$ — that's choice *C*.",
     problemStatement: MCQ_STATEMENT,
@@ -218,6 +222,33 @@ const MCQ_CHOICES = ['A', 'B', 'C', 'D'].map((l) => ({ letter: l, text: l }));
     choices: undefined,
   });
   check('numeric verified answer still fires with choices undefined',
+    r.verdict === 'false_assertion', JSON.stringify(r));
+}
+
+// Passthrough pin. Every test above uses a BARE letter, which the
+// single-letter safety net intercepts before the matcher is reached — so
+// none of them exercise `choices`. "C)" is the one live-plausible shape
+// that escapes the safety net and still resolves via resolveMcqLetter, so
+// it is the only input where supplying choices changes the verdict.
+{
+  const r = checkFalseFinalAssertion({
+    sentence: "Exactly. $x = 9$ — that's choice *C*.",
+    problemStatement: MCQ_STATEMENT,
+    verifiedExpectedAnswer: 'C)',
+    choices: MCQ_CHOICES,
+  });
+  check('choices passthrough: "C)" resolves via resolveMcqLetter → ok',
+    r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  // The same input WITHOUT choices is a false kill — this is what the
+  // passthrough prevents, and what a regression would reintroduce.
+  const r = checkFalseFinalAssertion({
+    sentence: "Exactly. $x = 9$ — that's choice *C*.",
+    problemStatement: MCQ_STATEMENT,
+    verifiedExpectedAnswer: 'C)',
+  });
+  check('without choices the same card false-kills → false_assertion',
     r.verdict === 'false_assertion', JSON.stringify(r));
 }
 
