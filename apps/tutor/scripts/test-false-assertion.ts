@@ -171,5 +171,55 @@ check('no answer var → null', extractAnswerVariable('Compute the mean of the d
     r.verdict === 'false_assertion' && r.asserted === '8', JSON.stringify(r));
 }
 
+// ─── portal-704e3e01 @1113.7s — MCQ card, verified answer is a LETTER ───
+// showProblem-4: choices A "x = 4.5" · B "x = 18" · C "x = 9" · D "x = -9",
+// verified "C". The brain said "Exactly. $x = 9$ — that's choice *C*."
+const MCQ_STATEMENT = 'Solve for $x$: $4(x - 3) = 2x + 6$. What is x?';
+const MCQ_CHOICES = ['A', 'B', 'C', 'D'].map((l) => ({ letter: l, text: l }));
+{
+  const r = checkFalseFinalAssertion({
+    sentence: "Exactly. $x = 9$ — that's choice *C*.",
+    problemStatement: MCQ_STATEMENT,
+    verifiedExpectedAnswer: 'C',
+    choices: MCQ_CHOICES,
+  });
+  check('portal-704e3e01: numeric assertion vs MCQ letter answer → ok (never kill)',
+    r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  // Same card, and the tutor asserts a value that is NOT choice C. With
+  // letters-only choices the guard still cannot resolve "18" to a letter,
+  // so it must stay silent rather than guess. Documents the coverage cost.
+  const r = checkFalseFinalAssertion({
+    sentence: 'Right, $x = 18$ — choice B.',
+    problemStatement: MCQ_STATEMENT,
+    verifiedExpectedAnswer: 'C',
+    choices: MCQ_CHOICES,
+  });
+  check('MCQ coverage cost is explicit: wrong numeric assertion also → ok',
+    r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  // Safety net inside the module: even with NO choices supplied, a bare
+  // single-letter verified answer can never be compared to a number.
+  const r = checkFalseFinalAssertion({
+    sentence: "Exactly. $x = 9$ — that's choice *C*.",
+    problemStatement: MCQ_STATEMENT,
+    verifiedExpectedAnswer: 'C',
+  });
+  check('bare single-letter verified answer, no choices → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  // Non-MCQ behaviour is untouched: a numeric verified answer still kills.
+  const r = checkFalseFinalAssertion({
+    sentence: 'Right. Dividing both sides by 3 gives $x = 11$.',
+    problemStatement: STATEMENT,
+    verifiedExpectedAnswer: VERIFIED,
+    choices: undefined,
+  });
+  check('numeric verified answer still fires with choices undefined',
+    r.verdict === 'false_assertion', JSON.stringify(r));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

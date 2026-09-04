@@ -10868,11 +10868,20 @@ export function VoiceTutorRealtime({
                   // so praised intermediate steps stay safe. Per-sentence,
                   // like praise-contradiction above.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && TUTOR_FALSE_ASSERTION_KILL) {
+                    // Live MCQ choices, same construction as the praise-echo
+                    // and inverse-verdict sites below. Without them, an MCQ
+                    // card whose verified answer is the letter "C" made every
+                    // correct numeric assertion disagree — portal-704e3e01
+                    // @1113.7s killed "Exactly. $x = 9$ — that's choice *C*."
+                    const faChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
+                      : undefined;
                     const fa = checkFalseFinalAssertion({
                       sentence: updatedSentence,
                       problemStatement: currentProblemRef.current?.statement,
                       verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
                       spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
+                      choices: faChoices,
                     });
                     if (fa.verdict === 'false_assertion') {
                       // Issue A: last turn's board-anchor note (planted because that

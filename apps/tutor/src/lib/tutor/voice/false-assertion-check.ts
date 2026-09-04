@@ -72,9 +72,20 @@ export function checkFalseFinalAssertion(args: {
   verifiedExpectedAnswer?: string;
   /** R49 currency reconciliation, mirrored from inverse-verdict-check. */
   spokenMoneyEnabled?: boolean;
+  /** Live MCQ choices, same shape the praise-echo check builds. Without
+   *  these, a verified answer that is a choice LETTER is compared against
+   *  the tutor's numeric assertion and always disagrees — portal-704e3e01
+   *  @1113.7s killed "Exactly. $x = 9$ — that's choice *C*." on a card
+   *  whose verified answer was the string "C". */
+  choices?: Array<{ letter: string; text: string }>;
 }): FalseAssertionResult {
   const verified = (args.verifiedExpectedAnswer ?? '').trim();
   if (!verified) return OK;
+  // Safety net independent of the caller: a bare single letter is an MCQ
+  // key, and the value this module extracts is always numeric — there is
+  // no comparison to make, so never claim one. Belt-and-braces with the
+  // `choices` passthrough below.
+  if (/^[A-Za-z]$/.test(verified)) return OK;
   const answerVar = extractAnswerVariable(args.problemStatement ?? '');
   if (!answerVar) return OK;
   const sentence = args.sentence ?? '';
@@ -111,7 +122,7 @@ export function checkFalseFinalAssertion(args: {
   const m = all[all.length - 1];
   const asserted = m[1].replace(/\\d?frac\{(-?\d+)\}\{(-?\d+)\}/, '$1/$2').replace(/\s+/g, '');
 
-  const cmp = matchUtteranceToAnswer(asserted, verified, undefined, {
+  const cmp = matchUtteranceToAnswer(asserted, verified, args.choices, {
     monetary: args.spokenMoneyEnabled === true,
   });
   if (cmp.verdict === 'disagree') {
