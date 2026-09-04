@@ -62,15 +62,29 @@ function check(name: string, cond: boolean, detail?: string) {
   check('reordered operands → ok', r.verdict === 'ok', JSON.stringify(r));
 }
 {
-  // The connector rule rewrites "is"/"gives"/"equals" into "=". Without word
-  // boundaries those matched INSIDE words ("This is history" became
-  // "Th = = h = tory"), which is exactly the kind of upstream looseness a
-  // fail-closed detector must not rely on EQN_RE to absorb.
+  // The connector rule rewrites "is"/"gives"/"equals" into " = ". The \b
+  // anchors keep that to whole words.
+  //
+  // DISCRIMINATING — this case is red without the anchors and green with them.
+  // The previous test here ('This is history: … is 38 on your sheet.' → ok)
+  // proved nothing: unanchored, `flatten` mangled the prose to "Th = = h =
+  // tory", which contains no digits and matches nothing, and the real chain
+  // still resolved to 38 = 38, so deleting the \b left the suite green.
+  //
+  // Here the connector is GLUED to the chain's last operand ("…4is 38" — the
+  // brain drops that space regularly). With \b there is no word boundary
+  // between "4" and "is", so nothing is rewritten, no equation is formed and
+  // the detector correctly stays silent. Without \b the substring "is"
+  // becomes "=" and MANUFACTURES "16 + 9 + 9 + 4 = 38", which contradicts the
+  // board's 182 and would KILL a sentence that never made an arithmetic claim
+  // at all. Glue is the only shape that discriminates: for any longer word the
+  // leftover letters ("th" from "this") sit between the chain and the "=" and
+  // EQN_RE rejects the match anyway.
   const r = detectBoardContradiction({
-    turnText: 'This is history: the sum 16 + 9 + 9 + 4 is 38 on your sheet.',
-    renderedText: '16 + 9 + 9 + 4 = 38',
+    turnText: 'The running total 16 + 9 + 9 + 4is 38 short of where we land.',
+    renderedText: '16 + 9 + 9 + 4 = 182',
   });
-  check('connector rule does not match inside words', r.verdict === 'ok', JSON.stringify(r));
+  check('connector rule does not match inside words (\\b anchors)', r.verdict === 'ok', JSON.stringify(r));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
