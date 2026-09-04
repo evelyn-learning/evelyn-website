@@ -12268,6 +12268,30 @@ export function VoiceTutorRealtime({
                       }
                     }
                   }
+                  // Kill scope, SECOND pass (portal-704e3e01 @1414.3s). The
+                  // gate at the tool funnel above runs BEFORE the four
+                  // `name = 'show_segment_card'` rewrites between it and here
+                  // (the show_worked_example and show_problem substitutions).
+                  // show_problem / show_worked_example are deliberately NOT
+                  // withheld after a kill — a validated render survives a
+                  // dropped narration — but once one has been REWRITTEN into
+                  // show_segment_card it is a lesson-state tool, and letting
+                  // it dispatch puts the authored segment card on the board on
+                  // the strength of a turn the student never heard. That is
+                  // the same half of the incident the first gate exists to
+                  // stop. Re-testing here (rather than moving the gate down)
+                  // keeps the first gate's behaviour for directly-emitted
+                  // lesson-state tools exactly as it was: those already
+                  // `continue`d above and can never reach this line, so this
+                  // check only ever fires on a rewritten name.
+                  // The `continue` targets the same enclosing per-SSE-line
+                  // loop as the first gate — `for (const line of
+                  // block.split('\n'))` — there is no intervening loop.
+                  if (TUTOR_KILL_WITHHOLDS_ADVANCE && attemptKilled && shouldWithholdAfterKill(name)) {
+                    console.warn(`[brain-orchestrator] withholding lesson-state tool "${name}" (rewritten after the kill) — attempt already killed`);
+                    onDebugEvent?.('kill_withheld_lesson_tool', name);
+                    continue;
+                  }
                   // Lever A — show_segment_card resolution. Brain emits a
                   // segment id; the runtime pulls authored data from the
                   // active lesson plan and synthesizes the equivalent
