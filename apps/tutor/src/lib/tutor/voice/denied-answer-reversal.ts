@@ -46,6 +46,16 @@ function normalize(text: string): string {
     .trim();
 }
 
+/** Opener-shape normalization. Unlike normalize(), this PRESERVES dashes and
+ *  sentence terminators: they are the signal that the value terminates the
+ *  opening clause ("Right. Twelve — …") rather than being predicated upon
+ *  ("Right, 12 is a common denominator"). Stripping them caused false
+ *  reversals on ordinary teaching speech. */
+function normalizeForOpener(text: string, spokenWords: boolean): string {
+  const t = spokenWords ? spokenNumbersToDigits(text ?? '') : (text ?? '');
+  return t.toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
 /** A short, answer-like student utterance worth tracking when denied —
  *  null for give-ups, long explanations, or empty residue. */
 export function extractDeniableAnswer(utterance: string): string | null {
@@ -71,6 +81,9 @@ function escapeRe(s: string): string {
  *  "Right. Twelve —" after denying a correct 12 fifteen seconds earlier, and
  *  none of the prose assertion shapes below matched it. */
 const VERDICT_OPENER = String.raw`exactly|right|correct|precisely|yes|nice|perfect|that'?s it`;
+
+const OPENER_SHAPE_RE = (p: string) => new RegExp(
+  `^\\s*(?:${VERDICT_OPENER})\\b[\\s.,!]*\\b${p}\\b\\s*(?:[—–-]|[.!?]|$)`, 'i');
 
 export function checkDeniedAnswerReversal(args: {
   sentence: string;
@@ -99,15 +112,18 @@ export function checkDeniedAnswerReversal(args: {
     // Negation anywhere adjacent to the phrase → a denial re-statement, not
     // a reversal ("it's not the central executive").
     if (new RegExp(`\\b(?:not|isn'?t|wasn'?t|instead of|rather than|unlike|never)\\s+(?:the\\s+|a\\s+|an\\s+)?${p}\\b`).test(sentence)) continue;
+    // Test the verdict-opener shape against lighter normalization that preserves
+    // dashes and terminators — they signal the value terminates the opening clause.
+    if (args.normalizeSpokenWords === true) {
+      const openerSentence = normalizeForOpener(args.sentence, true);
+      if (OPENER_SHAPE_RE(p).test(openerSentence)) {
+        return { verdict: 'reversal', phrase: d.phrase, turn: d.turn };
+      }
+    }
     const assertion = new RegExp(
       `(?:\\b(?:it'?s|it\\s+is|that'?s|that\\s+is|this\\s+is|the\\s+answer\\s+is|resolution\\s+is|belongs?\\s+to)\\s+(?:the\\s+|a\\s+|an\\s+)?${p}\\b` +
       `|\\b${p}\\s+after\\s+all\\b` +
-      `|\\b${p}\\s+(?:is|was)\\s+(?:the\\s+(?:one|answer)|correct|right|exactly\\s+(?:it|right))\\b` +
-      // Verdict opener then the value, within the opening clause only:
-      // "Right. Twelve —", "Exactly. 12 it is." Anchored at the start so a
-      // mid-explanation mention of the value never fires.
-      `|^\\s*(?:${VERDICT_OPENER})\\b[\\s.,!—-]*${p}\\b)`,
-      'i',
+      `|\\b${p}\\s+(?:is|was)\\s+(?:the\\s+(?:one|answer)|correct|right|exactly\\s+(?:it|right))\\b)`,
     );
     if (assertion.test(sentence)) {
       return { verdict: 'reversal', phrase: d.phrase, turn: d.turn };

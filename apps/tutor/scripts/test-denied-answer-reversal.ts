@@ -115,14 +115,26 @@ check(
   { verdict: 'reversal', phrase: '12', turn: 22 },
 );
 check(
-  '"Exactly. Twelve it is." is a reversal',
+  'verdict opener + bare terminal value is a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Right. Twelve.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'reversal', phrase: '12', turn: 22 },
+);
+// Deliberately missed: "Exactly. Twelve it is." — the value is predicated upon
+// by "is", so it does not terminate the opening clause. Guards must fail closed.
+check(
+  '"Exactly. Twelve it is." is NOT a reversal (miss is deliberate)',
   checkDeniedAnswerReversal({
     sentence: 'Exactly. Twelve it is.',
     denied: [{ phrase: '12', turn: 22 }],
     currentTurn: 23,
     normalizeSpokenWords: true,
   }),
-  { verdict: 'reversal', phrase: '12', turn: 22 },
+  { verdict: 'ok' },
 );
 // ─── FAIL CLOSED: a bare mention while teaching is not a reversal ───
 check(
@@ -149,6 +161,57 @@ check(
   'descriptive mention is NOT a reversal',
   checkDeniedAnswerReversal({
     sentence: 'Look at the twelve on the board and compare it to the median.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+// ─── False-positive regression tests: opener + predicated value ───
+check(
+  'verdict opener + predicated value "is a common denominator" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Right, 12 is a common denominator here, but not what we need for this problem.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "of the 15 students" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Yes, 12 of the 15 students in that study got it right, which is interesting.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "minutes left" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: "Nice, 12 minutes left in the session, let's keep going.",
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "is divisible by" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Correct, 12 is divisible by both 3 and 4.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'verdict opener + predicated value "of the fifteen apples" is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Right, twelve of the fifteen apples were rotten, so we discard those first.',
     denied: [{ phrase: '12', turn: 22 }],
     currentTurn: 23,
     normalizeSpokenWords: true,
