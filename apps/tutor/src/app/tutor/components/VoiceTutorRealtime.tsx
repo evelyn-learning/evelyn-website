@@ -6691,8 +6691,11 @@ export function VoiceTutorRealtime({
         // generate_problem substitute resolves AFTER the title is computed
         // (portal-704e3e01 @1122.5s: "…2(x + 5) − 3 = 4x −" over a card
         // reading "x/2 + 3 = x/5 + 6").
+        // Last, not first: if a batch ever carries two showProblem commands
+        // the later one supersedes the earlier on the page, and titling from
+        // the first would reproduce this task's own bug within one flush.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const renderedProblem = processed.find((cmd) => String(cmd.action) === 'showProblem') as any;
+        const renderedProblem = [...processed].reverse().find((cmd) => String(cmd.action) === 'showProblem') as any;
         const renderedStatement = typeof renderedProblem?.problem?.statement === 'string'
           ? renderedProblem.problem.statement
           : undefined;

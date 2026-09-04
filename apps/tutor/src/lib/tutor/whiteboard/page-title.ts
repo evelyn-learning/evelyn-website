@@ -37,9 +37,13 @@ function stagePrefix(title: string): string {
   return i > 0 ? title.slice(0, i + 2) : '';
 }
 
-/** Normalized for comparison only — never for display. */
+/** Normalized for comparison only — never for display. The ellipsis is
+ *  stripped because `truncatePageTitle` appends one to the deferred title,
+ *  and without stripping it a truncated authored title can never match the
+ *  full rendered statement it is a prefix of — firing a spurious retitle on
+ *  every long authored problem. */
 function comparable(s: string): string {
-  return (s ?? '').toLowerCase().replace(/[\s$\\{}]+/g, '');
+  return (s ?? '').toLowerCase().replace(/[\s$\\{}…]+/g, '');
 }
 
 export function retitleFromBatch(args: {

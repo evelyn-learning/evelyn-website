@@ -64,6 +64,27 @@ const LIVE = 'Try: Solve for x and type your answer as a number: 2(x + 5) − 3 
   });
   check('matching statement does not retitle', r.retitled === false, JSON.stringify(r));
 }
+{
+  // Any authored title long enough to be truncated carries an ellipsis, and
+  // the ellipsis must not defeat the same-problem check.
+  const authored = 'Solve for x and show each step of your working clearly: 2(x + 5) - 3 = 4x - 11';
+  const r = retitleFromBatch({
+    deferredTitle: truncatePageTitle(`Try: ${authored}`),
+    renderedStatement: authored,
+  });
+  check('a TRUNCATED authored title does not retitle when the same card renders',
+    r.retitled === false, JSON.stringify(r));
+}
+{
+  // Reworded-but-same is still expected to retitle — that is the accepted
+  // limit of a text comparison, pinned so the behaviour is deliberate.
+  const r = retitleFromBatch({
+    deferredTitle: 'Try: Solve for x: 2(x + 5) - 3 = 4x - 11',
+    renderedStatement: 'Find the value of x. $2(x + 5) - 3 = 4x - 11$. Show your work.',
+  });
+  check('reworded statement retitles (documented limit of text comparison)',
+    r.retitled === true, JSON.stringify(r));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
