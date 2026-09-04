@@ -10776,6 +10776,7 @@ export function VoiceTutorRealtime({
                       sentence: updatedSentence,
                       denied: deniedAnswersRef.current,
                       currentTurn: studentTurnCounterRef.current,
+                      normalizeSpokenWords: TUTOR_SPOKEN_NUMBER_GUARDS,
                     });
                     if (rev.verdict === 'reversal') {
                       deniedAnswersRef.current = deniedAnswersRef.current.filter(

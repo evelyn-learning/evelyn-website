@@ -93,6 +93,69 @@ check(
   { verdict: 'ok' },
 );
 
+// ─── portal-9a9b7c09: denied a CORRECT "12" @748.6s, affirmed it @763.6s ───
+check(
+  'portal-9a9b7c09: spoken "Twelve" reverses a stashed "12"',
+  checkDeniedAnswerReversal({
+    sentence: 'Right. Twelve — five plus nineteen is twenty-four, and twenty-four over two is twelve.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'reversal', phrase: '12', turn: 22 },
+);
+check(
+  'verdict opener + bare digit value is a reversal shape',
+  checkDeniedAnswerReversal({
+    sentence: 'Right. 12 — five plus nineteen is twenty-four.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'reversal', phrase: '12', turn: 22 },
+);
+check(
+  '"Exactly. Twelve it is." is a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Exactly. Twelve it is.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'reversal', phrase: '12', turn: 22 },
+);
+// ─── FAIL CLOSED: a bare mention while teaching is not a reversal ───
+check(
+  'hypothetical mention is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'If it were twelve, the interquartile range would change.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'negated restatement is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: "It's not twelve — look at the upper half again.",
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+check(
+  'descriptive mention is NOT a reversal',
+  checkDeniedAnswerReversal({
+    sentence: 'Look at the twelve on the board and compare it to the median.',
+    denied: [{ phrase: '12', turn: 22 }],
+    currentTurn: 23,
+    normalizeSpokenWords: true,
+  }),
+  { verdict: 'ok' },
+);
+
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);
   process.exit(1);

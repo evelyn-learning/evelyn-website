@@ -25,6 +25,8 @@
  *    MAX_AGE_TURNS student turns.
  */
 
+import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
+
 export interface DeniedAnswer {
   phrase: string;
   turn: number;
@@ -64,20 +66,35 @@ function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/** Praise/denial openers a tutor grades with. A reversal in a math session is
+ *  almost always "<verdict>. <value>" — portal-9a9b7c09 @763.6s said
+ *  "Right. Twelve —" after denying a correct 12 fifteen seconds earlier, and
+ *  none of the prose assertion shapes below matched it. */
+const VERDICT_OPENER = String.raw`exactly|right|correct|precisely|yes|nice|perfect|that'?s it`;
+
 export function checkDeniedAnswerReversal(args: {
   sentence: string;
   denied: DeniedAnswer[];
   currentTurn: number;
   maxAgeTurns?: number;
+  normalizeSpokenWords?: boolean;
 }): { verdict: 'ok' } | { verdict: 'reversal'; phrase: string; turn: number } {
   const maxAge = args.maxAgeTurns ?? DEFAULT_MAX_AGE_TURNS;
-  const sentence = normalize(args.sentence);
+  const sentence = normalize(
+    args.normalizeSpokenWords === true ? spokenNumbersToDigits(args.sentence) : args.sentence,
+  );
   if (!sentence) return { verdict: 'ok' };
   for (const d of args.denied) {
     if (!d.phrase) continue;
     if (d.turn >= args.currentTurn) continue;             // the denial's own turn
     if (args.currentTurn - d.turn > maxAge) continue;     // stale — student moved on
-    const p = escapeRe(d.phrase);
+    // The stash holds the STUDENT's text (usually digits) and the tutor
+    // reverses in words; normalize the phrase the same way as the sentence.
+    const phrase = normalize(
+      args.normalizeSpokenWords === true ? spokenNumbersToDigits(d.phrase) : d.phrase,
+    );
+    if (!phrase) continue;
+    const p = escapeRe(phrase);
     if (!new RegExp(`\\b${p}\\b`).test(sentence)) continue;
     // Negation anywhere adjacent to the phrase → a denial re-statement, not
     // a reversal ("it's not the central executive").
@@ -85,7 +102,12 @@ export function checkDeniedAnswerReversal(args: {
     const assertion = new RegExp(
       `(?:\\b(?:it'?s|it\\s+is|that'?s|that\\s+is|this\\s+is|the\\s+answer\\s+is|resolution\\s+is|belongs?\\s+to)\\s+(?:the\\s+|a\\s+|an\\s+)?${p}\\b` +
       `|\\b${p}\\s+after\\s+all\\b` +
-      `|\\b${p}\\s+(?:is|was)\\s+(?:the\\s+(?:one|answer)|correct|right|exactly\\s+(?:it|right))\\b)`,
+      `|\\b${p}\\s+(?:is|was)\\s+(?:the\\s+(?:one|answer)|correct|right|exactly\\s+(?:it|right))\\b` +
+      // Verdict opener then the value, within the opening clause only:
+      // "Right. Twelve —", "Exactly. 12 it is." Anchored at the start so a
+      // mid-explanation mention of the value never fires.
+      `|^\\s*(?:${VERDICT_OPENER})\\b[\\s.,!—-]*${p}\\b)`,
+      'i',
     );
     if (assertion.test(sentence)) {
       return { verdict: 'reversal', phrase: d.phrase, turn: d.turn };
