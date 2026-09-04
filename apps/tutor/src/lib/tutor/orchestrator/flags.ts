@@ -682,8 +682,12 @@ export const TUTOR_PAGE_TITLE_FROM_RENDER =
  *  dead-start sessions with ZERO debug events. Events ride a 30s interval or a
  *  beforeunload beacon an iframed embed does not reliably get. Adds pagehide +
  *  visibilitychange listeners and one early flush inside the first 10s after
- *  the first start_tap (a page load with no tap is navigation, not a dead
- *  start, and mints nothing).
+ *  the session latches — on the first start_tap OR evelyn:session-started,
+ *  whichever fires first (fix-round-2: resumeContinue() now also emits
+ *  start_tap, since a resumed mount deliberately suppresses the
+ *  session-started dispatch — see TUTOR_DEFER_SESSION_DOC below). A page
+ *  load with neither signal is navigation, not a dead start, and mints
+ *  nothing.
  *  Default ON; NEXT_PUBLIC_TUTOR_TELEMETRY_SURVIVAL=off is the switch. */
 export const TUTOR_TELEMETRY_SURVIVAL =
   process.env.NEXT_PUBLIC_TUTOR_TELEMETRY_SURVIVAL !== 'off';

@@ -19130,6 +19130,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // a second trigger after the session has started is a harmless no-op.
   const resumeContinue = useCallback(() => {
     if (hasStarted || !resumeState) return;
+    // Resume is a start action (portal-00fa1bb7 telemetry fix-round-2). The
+    // "Continue lesson" overlay and the mic-dock resume tap both land here,
+    // and neither reaches the embed's other latch: start_tap is emitted only
+    // by handleMicClick, and TutorSession seeds sessionStartedDispatchedRef
+    // to true when resumeState is set, so 'evelyn:session-started' is
+    // deliberately suppressed on a resumed mount. Without this the embed
+    // never latches and a resumed session — real transcript, real cost —
+    // persists nothing at all. The hasStarted early-return above guarantees
+    // this fires exactly once per real resume.
+    onDebugEvent?.('start_tap', 'action=resume_continue');
     hasStartedRef.current = true;
     setHasStarted(true);
     // Task E1 / demo time-box: stamp the actual session start for the demo-stop
@@ -19153,7 +19163,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       { silent: true, bypassMidUtteranceGuard: true },
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasStarted, resumeState, onSessionStarted, realtime, handleStudentTranscriptForBrain]);
+  }, [hasStarted, resumeState, onSessionStarted, onDebugEvent, realtime, handleStudentTranscriptForBrain]);
   resumeContinueRef.current = resumeContinue;
 
   // Hard-stop cap (time-box): a wall-clock timer that ends the session when
