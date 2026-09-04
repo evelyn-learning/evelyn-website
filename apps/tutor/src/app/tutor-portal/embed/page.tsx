@@ -489,35 +489,45 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const debugEventsRef = useRef<Array<{ type: string; message: string; timestamp: string; data?: Record<string, unknown> }>>([]);
   const lastSavedDebugCountRef = useRef(0);
   // Task 12/13 (portal-00fa1bb7 / -5bc0fc1e / -c3007206): latches the moment
-  // this session became real, from WHICHEVER of two signals fires first —
-  // neither alone is sufficient (fix-round-1 finding):
+  // this session became real, from WHICHEVER of THREE signals fires first
+  // (fix-round-3 renamed this from a name that named only one of them).
+  // Three rounds each closed one named entry point and uncovered another —
+  // enumerating entry points was the wrong shape of fix, so the third
+  // source latches on the INVARIANT instead: a session is one where the
+  // tutor actually did something, and every path that costs money ends in a
+  // brain turn, which produces transcript. That closes every present and
+  // future entry point without naming any of them.
   //  - start_tap (VTR fires it on every orb/mic tap, see resolveStartTap):
   //    covers a tap that FAILS to start — the dead-start class this whole
   //    telemetry effort exists to diagnose. session-started never fires for
   //    that case, so latching on it alone would silently drop dead starts.
-  //  - evelyn:session-started (window event, listened for below): covers the
-  //    "Continue lesson" overlay's resumeContinue() path, which sets
-  //    hasStarted and dispatches real brain turns WITHOUT ever emitting
-  //    start_tap. Latching on start_tap alone left resumed sessions with
-  //    firstStartTapAtRef permanently null — every gated write shut for a
-  //    session's entire life, transcript and brain cost included.
-  // A normal start fires both; `=== null` on each setter means the first one
-  // wins and the second is a no-op. Set here for start_tap (via the same
-  // onDebugEvent channel everything else here already rides) and again in
-  // the onStarted listener below for evelyn:session-started.
-  const firstStartTapAtRef = useRef<number | null>(null);
+  //  - evelyn:session-started (window event, listened for below): covers
+  //    gesture/typed-first-message starts, which never emit start_tap.
+  //  - transcript.length > 0 (effect further below, fix-round-3 backstop):
+  //    the "Continue lesson" overlay resume, the resume-await toolbar
+  //    (Draw / Text note / Camera — interactive and gated on nothing during
+  //    that window) and a restored try-yourself card all end in a real,
+  //    costed brain turn while bypassing both signals above. This is the
+  //    ONE latch source that is not an enumeration — it closes the class,
+  //    not an instance.
+  // Keep all three: start_tap and session-started fire EARLIER than the
+  // first transcript entry, so the early-flush window opens sooner and a
+  // session that dies between tap and first turn still gets its row. The
+  // transcript latch is the backstop, not a replacement. `=== null` on each
+  // setter means the first signal wins and the rest are no-ops.
+  const sessionEngagedAtRef = useRef<number | null>(null);
   // Single definition of the gate (fix-round-1: the reviewer flagged the
   // duplicated three-line check at the two write sites below). A page load
   // is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206): hold every
-  // tutorsessions write until firstStartTapAtRef latches, so a load that
-  // neither taps Start nor resumes writes nothing at all.
-  const sessionNotYetEngaged = () => TUTOR_DEFER_SESSION_DOC && firstStartTapAtRef.current === null;
+  // tutorsessions write until sessionEngagedAtRef latches, so a load that
+  // neither taps, starts, resumes, nor produces transcript writes nothing.
+  const sessionNotYetEngaged = () => TUTOR_DEFER_SESSION_DOC && sessionEngagedAtRef.current === null;
   // 2026-08-07: signature matches VTR's onDebugEvent — the third `data` arg
   // used to be silently dropped here (every embed event persisted without its
   // structured payload). Message truncation mirrors /tutor's collector.
   const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
-    if (type === 'start_tap' && firstStartTapAtRef.current === null) {
-      firstStartTapAtRef.current = Date.now();
+    if (type === 'start_tap' && sessionEngagedAtRef.current === null) {
+      sessionEngagedAtRef.current = Date.now();
     }
     if (!EMBED_DEBUG_EVENT_PREFIXES.some((p) => type.startsWith(p))) return;
     debugEventsRef.current.push({
@@ -640,10 +650,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // A page load is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206).
     // The session-usage upsert runs on mount, so browsing the partner's lesson
     // menu minted one abandoned row per click — indistinguishable from a real
-    // failed start. sessionNotYetEngaged() latches on EITHER start_tap or
-    // evelyn:session-started (see firstStartTapAtRef above) — a tap that never
-    // became a session must still get its row and its telemetry, and so must
-    // a session resumed via the overlay button, which never taps at all.
+    // failed start. sessionNotYetEngaged() latches on WHICHEVER of start_tap,
+    // evelyn:session-started, or transcript.length > 0 fires first (see
+    // sessionEngagedAtRef above) — a tap that never became a session must
+    // still get its row and its telemetry, and so must a session resumed or
+    // engaged through a path that never taps or dispatches at all.
     if (sessionNotYetEngaged()) {
       return;
     }
@@ -871,9 +882,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // lessonPlanId (config.curriculum_module) can be set at mount, so a plan
     // load — and this checkpoint — used to fire before any engagement signal,
     // independently of saveSession's gate. Same latch (sessionNotYetEngaged,
-    // see firstStartTapAtRef above), same reasoning: hold the write until the
-    // session actually starts or resumes; the postMessage above still tells
-    // the parent frame the plan loaded, which is not a DB write.
+    // see sessionEngagedAtRef above), same reasoning: hold the write until
+    // the session actually engages (tap, start, resume, or transcript); the
+    // postMessage above still tells the parent frame the plan loaded, which
+    // is not a DB write.
     if (sessionNotYetEngaged()) {
       return;
     }
@@ -985,14 +997,19 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // at iframe mount. Additive protocol message; older portals ignore it.
   useEffect(() => {
     const onStarted = (e: Event) => {
-      // Fix-round-1 (portal-00fa1bb7 etc.): resumeContinue() (the "Continue
-      // lesson" overlay) never emits start_tap, so it's the SECOND signal
-      // that can latch firstStartTapAtRef — first-writer-wins, matching the
-      // addDebugEvent setter above. Without this, a resumed session never
-      // latches and every gated write (30s interval, early-flush poller,
-      // final save, emitProgress) stays shut for its entire life.
-      if (firstStartTapAtRef.current === null) {
-        firstStartTapAtRef.current = Date.now();
+      // Fix-round-1 (portal-00fa1bb7 etc.): a second signal that can latch
+      // sessionEngagedAtRef — first-writer-wins, matching the addDebugEvent
+      // setter above. Covers gesture/typed-first-message starts (typed
+      // message, agenda pick), which never emit start_tap. NOT the resume
+      // path: TutorSession seeds sessionStartedDispatchedRef to true
+      // whenever resumeState is set, so this event is deliberately
+      // suppressed on every resumed mount — resumeContinue() now emits
+      // start_tap directly instead (fix-round-2), and a resume-await
+      // toolbar action or restored try-yourself card that bypasses BOTH of
+      // those still latches on the transcript.length > 0 backstop
+      // (fix-round-3, effect further below).
+      if (sessionEngagedAtRef.current === null) {
+        sessionEngagedAtRef.current = Date.now();
       }
       const startedAtMs = (e as CustomEvent<{ startedAtMs?: number }>).detail?.startedAtMs;
       window.parent.postMessage(
@@ -1011,6 +1028,24 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     window.addEventListener('evelyn:session-started', onStarted);
     return () => window.removeEventListener('evelyn:session-started', onStarted);
   }, [sessionId]);
+
+  // Third latch, and the only one that is not an enumeration (fix-round-3,
+  // portal-00fa1bb7 / -5bc0fc1e / -c3007206). A session is one where the
+  // tutor actually did something, and every path that costs money — mic
+  // tap, typed first message, agenda pick, "Continue lesson", the student
+  // tools cluster during a resume-await window, a restored try-yourself
+  // card — ends in a brain turn, which produces transcript. Latching on
+  // that closes every present and future entry point without naming any of
+  // them. Three earlier rounds each closed one named path and found
+  // another. Safe against false latching: transcript starts `[]` and is
+  // only ever populated via onTranscriptUpdate from the live session — a
+  // resume restores lesson POSITION, not transcript, so a pure page load of
+  // a resumable session still has length 0 here.
+  useEffect(() => {
+    if (transcript.length > 0 && sessionEngagedAtRef.current === null) {
+      sessionEngagedAtRef.current = Date.now();
+    }
+  }, [transcript.length]);
 
   // Save as abandoned on page unload.
   // beforeunload alone is not enough: this page runs in an IFRAME on the
@@ -1063,17 +1098,18 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // Early-window flush (portal-00fa1bb7): the first debug events arrive
   // within ~2s of the student's first start tap, and a dead-start page is
   // gone well before the 30s tick, so without this every dead start
-  // persists nothing at all. Measured from firstStartTapAtRef — latched on
-  // EITHER the first start_tap (in addDebugEvent) or evelyn:session-started
-  // (in the onStarted listener, for the "Continue lesson" overlay resume
-  // path, which never taps) — NOT from mount: a page load where the student
-  // neither tapped nor resumed is plain navigation and should mint no save;
-  // a tap that never became a session is exactly the dead-start case this
-  // exists to capture, so it must flush.
+  // persists nothing at all. Measured from sessionEngagedAtRef — latched on
+  // WHICHEVER of start_tap (in addDebugEvent), evelyn:session-started (in
+  // the onStarted listener), or transcript.length > 0 (the effect below)
+  // fires first — NOT from mount: a page load with none of the three is
+  // plain navigation and should mint no save; a tap that never became a
+  // session is exactly the dead-start case this exists to capture, so it
+  // must flush. The first two fire earlier than the transcript backstop, so
+  // most sessions still open this window at the true engagement moment.
   useEffect(() => {
     if (!TUTOR_TELEMETRY_SURVIVAL || sessionEnded) return;
     const t = setInterval(() => {
-      const tapAt = firstStartTapAtRef.current;
+      const tapAt = sessionEngagedAtRef.current;
       if (tapAt === null) return; // no tap yet — nothing to flush early
       if (shouldFlushEarly({
         eventCount: debugEventsRef.current.length,
