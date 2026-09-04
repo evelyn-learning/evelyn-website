@@ -138,8 +138,11 @@ export async function POST(req: NextRequest) {
     const setOnInsertFields: Record<string, unknown> = {};
 
     // Location capture (admin debugging): resolve the client IP once, on
-    // the insert that creates the session document.
-    const isNewSession = !(await TutorSession.exists({ sessionId }));
+    // the insert that creates the session document. The same lookup also
+    // feeds the cross-sitting reuse check below — one indexed point lookup
+    // serving both, rather than two against an identical filter.
+    const existingDoc = await TutorSession.findOne({ sessionId }, { createdAt: 1 }).lean();
+    const isNewSession = !existingDoc;
     const clientIp = isNewSession ? extractClientIp(req.headers) : undefined;
     if (clientIp) setOnInsertFields.clientIp = clientIp.slice(0, 100);
 
@@ -290,11 +293,13 @@ export async function POST(req: NextRequest) {
     // three sessions in one row. Refuse the append, log loudly enough for the
     // partner integration to be fixed, and let the caller carry on: losing one
     // session's telemetry is far better than corrupting a third document.
-    const existing = await TutorSession.findOne({ sessionId }, { createdAt: 1 }).lean();
-    if (isStaleSessionReuse({ existingCreatedAt: (existing as { createdAt?: Date } | null)?.createdAt, now: new Date() })) {
+    // Reuses existingDoc from the isNewSession lookup above — one indexed
+    // point query on { sessionId } serving both checks.
+    const existingCreatedAt = (existingDoc as { createdAt?: Date } | null)?.createdAt;
+    if (isStaleSessionReuse({ existingCreatedAt, now: new Date() })) {
       console.error(
         `[session-usage] REFUSING stale session-id reuse: ${sessionId} was created ` +
-        `${(existing as { createdAt?: Date }).createdAt?.toISOString()} — partner minted a token reusing it. ` +
+        `${existingCreatedAt?.toISOString()} — partner minted a token reusing it. ` +
         `partner=${body.sourcePartnerId ?? 'unknown'}`,
       );
       return NextResponse.json(
