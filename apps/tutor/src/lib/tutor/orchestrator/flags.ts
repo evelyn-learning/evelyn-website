@@ -655,3 +655,10 @@ export const TUTOR_SPOKEN_NUMBER_GUARDS =
  *  Default ON; NEXT_PUBLIC_TUTOR_BOARD_CONTRADICTION=off is the switch. */
 export const TUTOR_BOARD_CONTRADICTION =
   process.env.NEXT_PUBLIC_TUTOR_BOARD_CONTRADICTION !== 'off';
+/** portal-704e3e01 (2026-09-04) @1027.9s: the brain spoke a whole
+ *  <result>…</result> block aloud. The meta-narration filter matched content
+ *  phrases and that block contained none. Extract to a pure module and add a
+ *  structural markup rule. Flag TUTOR_META_NARRATION_STRUCTURAL (default ON).
+ *  Default ON; NEXT_PUBLIC_TUTOR_META_NARRATION_STRUCTURAL=off is the switch. */
+export const TUTOR_META_NARRATION_STRUCTURAL =
+  process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_STRUCTURAL !== 'off';

@@ -181,6 +181,7 @@
     "test:inverse-verdict": "npx tsx scripts/test-inverse-verdict-check.ts",
     "test:objective-credit": "npx tsx scripts/test-objective-credit.ts",
     "test:card-narration": "npx tsx scripts/test-card-narration.ts",
+    "test:meta-narration": "npx tsx scripts/test-meta-narration.ts",
     "test:false-assertion": "npx tsx scripts/test-false-assertion.ts",
     "test:verdict-preservation": "npx tsx scripts/test-verdict-preservation.ts",
     "test:kill-scope": "npx tsx scripts/test-kill-scope.ts",

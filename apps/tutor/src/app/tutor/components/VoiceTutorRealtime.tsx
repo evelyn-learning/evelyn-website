@@ -84,6 +84,7 @@ import {
   type AnchorKeywords,
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
+import { isMetaNarration } from '@/lib/tutor/voice/meta-narration';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
@@ -233,6 +234,7 @@ import {
   TUTOR_VERDICT_REPLANT_ON_KILL,
   TUTOR_KILL_WITHHOLDS_ADVANCE,
   TUTOR_SPOKEN_NUMBER_GUARDS,
+  TUTOR_META_NARRATION_STRUCTURAL,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -11193,49 +11195,39 @@ export function VoiceTutorRealtime({
                     }
                   }
                   // Round-7++ meta-narration filter. The system prompt
-                  // already forbids speaking internal reasoning ("the
-                  // student said X — that's a greenlight to advance",
-                  // "let me mark this segment complete", "the active
-                  // problem is …"), but Sonnet still leaks meta
+                  // already forbids speaking internal reasoning (“the
+                  // student said X — that's a greenlight to advance”,
+                  // “let me mark this segment complete”, “the active
+                  // problem is …”), but Sonnet still leaks meta
                   // sentences regularly — observed 2026-05-03 session:
-                  // brain spoke "The student already solved this one —
-                  // 16 is correct for {12, 14, 16, 18, 20}." and "Let
+                  // brain spoke “The student already solved this one —
+                  // 16 is correct for {12, 14, 16, 18, 20}.” and “Let
                   // me check — the *active* problem is the dataset
-                  // {2, 4, 6, 8, 10}." Soft prompt rules are not
+                  // {2, 4, 6, 8, 10}.” Soft prompt rules are not
                   // enough; orchestrator-side filtering is the safety
                   // net. Detect canonical leak patterns and drop the
                   // sentence from TTS + transcript without retrying.
-                  // Generic patterns only — no subject content.
-                  // R58 additions (live, portal-9c73c826 "'Um, let me
+                  // Generic patterns only — no subject content. Added
+                  // 2026-09-04: structural markup rule (portal-704e3e01).
+                  // R58 additions (live, portal-9c73c826 “'Um, let me
                   // think' isn't an answer yet — no verdict, just give
-                  // her room", portal-dc11fac1 "it doesn't have a
-                  // request pattern I need to classify away", and two
+                  // her room”, portal-dc11fac1 “it doesn't have a
+                  // request pattern I need to classify away”, and two
                   // evelyntutor screenshots narrating the judge
                   // correction-note re-check aloud): the verdict-guard
-                  // and correction-note vocabulary. "the student" is
+                  // and correction-note vocabulary. “the student” is
                   // now dropped ANYWHERE in a sentence — speaking TO
-                  // the student, a third-person "the student" is
+                  // the student, a third-person “the student” is
                   // always meta (the screenshot leak was mid-sentence:
-                  // "Re-checking my last correction — the student had
-                  // actually written…"). Deliberately NOT matched:
-                  // bare "classify"/"check"/"answer" — all three are
-                  // legitimate teaching content ("Ready to try
-                  // classifying one yourself?", "your check was
-                  // right"); only the meta COLLOCATIONS are dropped.
-                  const metaNarrationRe = /^\s*(?:the student\b|the active problem\b|let me mark\b|since the student\b|the runtime\b|the system\b|that'?s? a greenlight\b|re-?checking my\b)/i
-                    .test(updatedSentence)
-                    || /\bactive problem\b|\bgreenlight to advance\b|\bmark (?:it|this|the)? *(?:segment )?complete\b|\b(?:current|active) *segment\s*[Ii][Dd]?\b|\bcanonicaltext\b|\btool[_ ]result\b/i
-                    .test(updatedSentence)
-                    || /\bthe student\b|\bno verdict\b|\bisn'?t (?:quite )?an answer\b|\bnot an answer\b|\bmy (?:last|earlier|previous) correction\b|\bmy correction was\b|\bnothing to walk back\b|\bno correction (?:is )?needed\b|\brequest pattern\b|\bclassify (?:away|silently)\b|\bgive (?:her|him|them) (?:room|space)\b|\bautomated review\b/i
-                    .test(updatedSentence)
-                    // 2026-08-31 (Haiku observation round): spoken self-audit
-                    // collocations that slipped the lists above — "I need to
-                    // check myself first / my prior turn", "Let me compute:
-                    // 8+8+5+5", "So my 'Not quite' was correct". Colon after
-                    // "compute" is load-bearing: "Let me compute the area
-                    // together" is legitimate teaching and must survive.
-                    || /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'“”]?not quite["'“”]? was\b/i
-                    .test(updatedSentence);
+                  // “Re-checking my last correction — the student had
+                  // actually written…”). Deliberately NOT matched:
+                  // bare “classify”/”check”/”answer” — all three are
+                  // legitimate teaching content (“Ready to try
+                  // classifying one yourself?”, “your check was
+                  // right”); only the meta COLLOCATIONS are dropped.
+                  const metaNarrationRe = isMetaNarration(updatedSentence, {
+                    structural: TUTOR_META_NARRATION_STRUCTURAL,
+                  });
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('meta_narration_dropped', updatedSentence.slice(0, 80));
