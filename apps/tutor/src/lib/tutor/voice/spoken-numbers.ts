@@ -12,8 +12,12 @@
  * be reused.
  *
  * Fails CLOSED. A lone "one" is left alone (it is a determiner far more often
- * than a numeral: "that one number", "one more step"), which costs a guard the
- * occasional true positive and can never manufacture a false one.
+ * than a numeral: "that one number", "one more step"), and an "and" that is not
+ * inside a hundreds compound SPLITS the run rather than merging across it
+ * ("twenty and forty" is two values, not 60) — merging manufactured an
+ * arithmetic claim the tutor never made and got a correct turn killed. Both
+ * cost a guard the occasional true positive and can never manufacture a false
+ * one.
  *
  * Pure module — no imports, no side effects, never throws.
  */
@@ -55,11 +59,57 @@ function parseShorthand(run: string): number | null {
   return rest !== null && rest >= 10 && rest <= 99 ? 100 + rest : null;
 }
 
+/** One run of number words with no "and" in it → its digits, or the run
+ *  unchanged when it cannot be resolved. */
+function convertValue(core: string): string {
+  if (/^one$/i.test(core)) return core;   // determiner — fail closed
+  const sh = parseShorthand(core);
+  if (sh !== null) return String(sh);
+  const v = parseRun(core);
+  return v === null ? core : String(v);
+}
+
+/** Convert a run that contains "and" but no "hundred": every "and" in it
+ *  separates two INDEPENDENT numbers, so each side converts on its own and the
+ *  "and" is handed back verbatim. Splitting on the token also subsumes the
+ *  leading/trailing-"and" prose handling, which is the same case. */
+function splitRunOnAnd(run: string): string {
+  const parts = run.split(/([- ]+)/);   // token, sep, token, sep, …
+  let out = '';
+  let seg: string[] = [];
+  const flush = () => {
+    const text = seg.join('');
+    seg = [];
+    if (!text.trim()) { out += text; return; }
+    const lead = /^[- ]*/.exec(text)![0];
+    const trail = /[- ]*$/.exec(text)![0];
+    out += lead + convertValue(text.slice(lead.length, text.length - trail.length)) + trail;
+  };
+  for (const p of parts) {
+    if (/^and$/i.test(p)) { flush(); out += p; }
+    else seg.push(p);
+  }
+  flush();
+  return out;
+}
+
 export function spokenNumbersToDigits(text: string): string {
   return (text ?? '').replace(RUN_RE, (m) => {
-    // "and" joins number words INSIDE a value ("one hundred and forty-four");
-    // a leading or trailing one is ordinary prose ("…and the four and the total")
-    // and must be handed back rather than swallowed into the match.
+    // "and" is value-internal ONLY inside a hundreds compound ("one hundred
+    // and forty-four" = 144). Everywhere else it joins two INDEPENDENT
+    // numbers, and merging them MANUFACTURES a claim the tutor never made:
+    // "We had twenty and forty times two is eighty" normalized to
+    // "60 times 2 is 80" and checkArithmeticClaims KILLED the turn as a false
+    // assertion. A false kill is the failure this whole layer exists to
+    // avoid, so a run with an "and" and no "hundred" is split at every "and".
+    // (Residual, deliberately accepted: a run mixing both — "twenty and one
+    // hundred" — still goes down the hundreds path and mis-merges. It is not
+    // a shape the brain produces, and widening the rule risks re-opening the
+    // false-kill path this closes.)
+    if (!/\bhundred\b/i.test(m) && /\band\b/i.test(m)) return splitRunOnAnd(m);
+    // Hundreds compound: "and" is value-internal, but a leading or trailing
+    // "and" is still ordinary prose ("…and one hundred is your answer") and
+    // must be handed back rather than swallowed into the value.
     let head = '';
     let core = m;
     let tail = '';
@@ -75,10 +125,6 @@ export function spokenNumbersToDigits(text: string): string {
     }
     const tm = core.match(/(?:[- ]+and)+$/i);
     if (tm) { tail = core.slice(core.length - tm[0].length); core = core.slice(0, core.length - tm[0].length); }
-    if (/^one$/i.test(core.trim())) return m;   // determiner — fail closed
-    const sh = parseShorthand(core);
-    if (sh !== null) return head + String(sh) + tail;
-    const v = parseRun(core);
-    return head + (v === null ? core : String(v)) + tail;
+    return head + convertValue(core) + tail;
   });
 }

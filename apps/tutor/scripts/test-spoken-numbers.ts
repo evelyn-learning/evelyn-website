@@ -5,6 +5,7 @@
  * Usage: npx tsx scripts/test-spoken-numbers.ts  (npm run test:spoken-numbers)
  */
 import { spokenNumbersToDigits } from '../src/lib/tutor/voice/spoken-numbers';
+import { checkArithmeticClaims } from '../src/lib/tutor/voice/arithmetic-claim-check';
 
 let passed = 0;
 let failed = 0;
@@ -60,6 +61,26 @@ eq('leading and + hundreds mid-sentence',
 // Both kinds of "and" in one run: the leading one is prose and survives,
 // the value-internal one is consumed into 144.
 eq('leading prose and + value-internal and', 'and one hundred and forty-four', 'and 144');
+
+// ─── "and" between two INDEPENDENT numbers must not merge them ───
+// parseRun filtered every "and" unconditionally, so "twenty and forty" became
+// a single value 60. That fed checkArithmeticClaims, which then read
+// "We had twenty and forty times two is eighty" as "60 times 2 is 80" and
+// KILLED a correct turn as a false assertion. "and" is value-internal only in
+// a hundreds compound ("one hundred and forty-four"), which the cases above
+// pin unchanged.
+eq('independent numbers joined by "and" stay separate',
+  'twenty and forty', '20 and 40');
+eq('the full false-kill sentence normalizes without merging',
+  'We had twenty and forty times two is eighty',
+  'We had 20 and 40 times 2 is 80');
+
+// The guard that was doing the killing, on the same sentence, end to end.
+{
+  const r = checkArithmeticClaims('We had twenty and forty times two is eighty', { normalizeSpokenWords: true });
+  check('checkArithmeticClaims no longer kills "twenty and forty times two is eighty"',
+    r.verdict === 'ok', JSON.stringify(r));
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
