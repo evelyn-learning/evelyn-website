@@ -690,10 +690,14 @@ export const TUTOR_TELEMETRY_SURVIVAL =
 /** portal-00fa1bb7 / -5bc0fc1e / -c3007206: the session-usage upsert runs on
  *  MOUNT, so every embed load mints a tutorsessions row — a student browsing
  *  the lesson menu creates one "abandoned" session per click, indistinguishable
- *  from a real failed start. Holds every write until the first start_tap, NOT
- *  session-started: a tap that never became a session is exactly the dead-start
- *  case worth diagnosing, and it must still get its row and its telemetry. A
- *  load with no tap at all is plain navigation and mints nothing.
+ *  from a real failed start. Holds every write until the session is ENGAGED,
+ *  latched on WHICHEVER of two signals fires first: the first start_tap (a
+ *  tap that never became a session is exactly the dead-start case worth
+ *  diagnosing, and it must still get its row and its telemetry) or
+ *  evelyn:session-started (the "Continue lesson" overlay resumes a session
+ *  without ever tapping — fix-round-1: latching on start_tap alone left every
+ *  resumed session's writes shut for its entire life). A load with neither
+ *  signal is plain navigation and mints nothing.
  *  Default ON; NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC=off is the switch. */
 export const TUTOR_DEFER_SESSION_DOC =
   process.env.NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC !== 'off';
