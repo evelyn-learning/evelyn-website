@@ -149,7 +149,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // (a tutor stating something false is the single most important thing to
   // have a record of, and NONE of it was being kept).
   'qpin_', 'segment_overlong', 'posed_problem_unboarded',
-  'quantities_unanchored', 'map_pins_', 'image_upload',
+  'quantities_unanchored', 'board_contradiction', 'map_pins_', 'image_upload',
   'whiteboard_false_claim', 'fact_wrong', 'wrong_final_answer',
   'answer_miscorrection', 'spoken_card_mismatch', 'voice_board_mismatch',
   'context_loss', 'uncertain_transcript', 'noise_filtered',

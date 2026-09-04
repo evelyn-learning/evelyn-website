@@ -647,3 +647,11 @@ export const TUTOR_OPENING_BARGEIN_ESCAPE =
  *  Default ON; NEXT_PUBLIC_TUTOR_SPOKEN_NUMBER_GUARDS=off is the switch. */
 export const TUTOR_SPOKEN_NUMBER_GUARDS =
   process.env.NEXT_PUBLIC_TUTOR_SPOKEN_NUMBER_GUARDS !== 'off';
+/** portal-9a9b7c09 (2026-09-04): showEquation-11 painted
+ *  "16 + 9 + 9 + 4 + 144 = 182" while the same turn's speech said the total
+ *  was thirty-eight. The judge flagged it at kill severity and, being
+ *  advisory-only, aired nothing. The board is ground truth the tutor wrote
+ *  itself, so this deterministic comparison may kill.
+ *  Default ON; NEXT_PUBLIC_TUTOR_BOARD_CONTRADICTION=off is the switch. */
+export const TUTOR_BOARD_CONTRADICTION =
+  process.env.NEXT_PUBLIC_TUTOR_BOARD_CONTRADICTION !== 'off';

@@ -68,6 +68,7 @@
     "test:define-before-quiz": "npx tsx scripts/test-define-before-quiz-prompt.ts",
     "test:redraw-intent": "npx tsx scripts/test-redraw-intent.ts",
     "test:denied-answer-reversal": "npx tsx scripts/test-denied-answer-reversal.ts",
+    "test:board-contradiction": "npx tsx scripts/test-board-contradiction.ts",
     "test:verdict-classifier": "npx tsx scripts/tutor/verdict-bank/classifier.test.ts",
     "test:verdict-probes": "npx tsx scripts/tutor/verdict-bank/probes.test.ts",
     "test:verdict-provider": "npx tsx scripts/tutor/verdict-bank/provider.test.ts",

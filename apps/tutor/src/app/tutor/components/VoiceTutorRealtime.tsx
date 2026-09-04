@@ -188,6 +188,7 @@ import {
   TUTOR_NOISE_FLOOR_NUDGE,
   TUTOR_DOCK_STATE_ONLY,
   TUTOR_QUANTITY_ANCHOR,
+  TUTOR_BOARD_CONTRADICTION,
   TUTOR_IDLE_NUDGE_V2,
   TUTOR_ANSWER_REVEAL_GUARD,
   TUTOR_DEDUP_RETRY_CONTEXT,
@@ -240,6 +241,7 @@ import {
 } from '@/lib/tutor/voice/bargein-gate';
 import { isSubstantiveAsk, isBoardContentTool, buildBoardAnchorNote } from '@/lib/tutor/voice/question-anchor';
 import { detectVoiceOnlyExercise, detectUnanchoredQuantities, detectPosedProblemUnboarded, RENDER_TOOLS } from '@/lib/tutor/voice/exercise-board-check';
+import { detectBoardContradiction } from '@/lib/tutor/voice/board-contradiction';
 import { findOutOfBoundsPins, buildMapBoundsRejection, findCrowdedPins, buildCrowdedPinsRejection } from '@/lib/tutor/whiteboard/map-pin-bounds';
 import { readPacingVerdict } from '@/lib/tutor/voice/pacing-verdict';
 import { detectAnotherProblemRequest } from '@/lib/tutor/voice/another-problem-request';
@@ -14043,6 +14045,23 @@ export function VoiceTutorRealtime({
             onDebugEvent?.(
               'quantities_unanchored',
               `${q.missing.length}/${q.considered} spoken value(s) never reached the board: ${q.missing.join(', ')}`,
+            );
+          }
+        }
+        // The CONTRADICTION companion to the coverage check above. Coverage
+        // asks "did the spoken number reach the board?"; this asks "does the
+        // board DISAGREE?" — portal-9a9b7c09 painted the correct total and
+        // spoke the wrong one in the same turn, twice.
+        if (TUTOR_BOARD_CONTRADICTION) {
+          const bc = detectBoardContradiction({
+            turnText: fullText,
+            renderedText: turnRenderPayloadTextRef.current,
+          });
+          if (bc.verdict === 'contradiction') {
+            console.warn(`[brain-orchestrator] board contradiction: "${bc.expr}" board=${bc.boardValue} spoken=${bc.spokenValue}`);
+            onDebugEvent?.(
+              'board_contradiction',
+              `${bc.expr} · board=${bc.boardValue} spoken=${bc.spokenValue}`,
             );
           }
         }
