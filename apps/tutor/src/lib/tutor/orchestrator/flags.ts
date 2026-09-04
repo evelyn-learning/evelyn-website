@@ -687,3 +687,13 @@ export const TUTOR_PAGE_TITLE_FROM_RENDER =
  *  Default ON; NEXT_PUBLIC_TUTOR_TELEMETRY_SURVIVAL=off is the switch. */
 export const TUTOR_TELEMETRY_SURVIVAL =
   process.env.NEXT_PUBLIC_TUTOR_TELEMETRY_SURVIVAL !== 'off';
+/** portal-00fa1bb7 / -5bc0fc1e / -c3007206: the session-usage upsert runs on
+ *  MOUNT, so every embed load mints a tutorsessions row — a student browsing
+ *  the lesson menu creates one "abandoned" session per click, indistinguishable
+ *  from a real failed start. Holds every write until the first start_tap, NOT
+ *  session-started: a tap that never became a session is exactly the dead-start
+ *  case worth diagnosing, and it must still get its row and its telemetry. A
+ *  load with no tap at all is plain navigation and mints nothing.
+ *  Default ON; NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC=off is the switch. */
+export const TUTOR_DEFER_SESSION_DOC =
+  process.env.NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC !== 'off';

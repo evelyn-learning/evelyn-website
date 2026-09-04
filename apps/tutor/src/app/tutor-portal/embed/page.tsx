@@ -27,7 +27,7 @@ import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { TUTOR_TELEMETRY_SURVIVAL } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC } from '@/lib/tutor/orchestrator/flags';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId } from '@core/voice/cartesia-voice-registry';
@@ -620,6 +620,15 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const saveSession = useCallback((status: 'active' | 'completed' | 'abandoned') => {
     const now = new Date();
     const duration = Math.round((now.getTime() - sessionStartRef.current.getTime()) / 1000);
+    // A page load is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206).
+    // The session-usage upsert runs on mount, so browsing the partner's lesson
+    // menu minted one abandoned row per click — indistinguishable from a real
+    // failed start. Latch on the first start_tap, NOT on session-started: a tap
+    // that never became a session is exactly the case worth diagnosing, and it
+    // must still get its row and its telemetry.
+    if (TUTOR_DEFER_SESSION_DOC && firstStartTapAtRef.current === null) {
+      return;
+    }
     // Slim base: everything except transcript/whiteboard — always fits the
     // sendBeacon/keepalive body quota, so the end-of-session facts
     // (endedAt, duration, counts, cost) survive even when the full payload
@@ -839,6 +848,16 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         ...(practiceStatsRef.current ? { practice: practiceStatsRef.current } : {}),
       },
     }, '*');
+
+    // A page load is not a session (portal-00fa1bb7 / -5bc0fc1e / -c3007206).
+    // lessonPlanId (config.curriculum_module) can be set at mount, so a plan
+    // load — and this checkpoint — used to fire before any start_tap,
+    // independently of saveSession's gate. Same latch, same reasoning: hold
+    // the write until the first start_tap; the postMessage above still tells
+    // the parent frame the plan loaded, which is not a DB write.
+    if (TUTOR_DEFER_SESSION_DOC && firstStartTapAtRef.current === null) {
+      return;
+    }
 
     // Identity fields included so this upsert inserts validly if it lands
     // before the first full save (required-field validation on insert).
