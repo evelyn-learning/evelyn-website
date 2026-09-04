@@ -114,5 +114,40 @@ check('no answer var → null', extractAnswerVariable('Compute the mean of the d
   check('different variable (y, answer var is x) → ok', r.verdict === 'ok', JSON.stringify(r));
 }
 
+// ─── portal-704e3e01 @1414.3s — the brain's sentence was CORRECT ───
+// "Exactly. $3x = 30$ divided by $3$ gives $x = 10$." was killed as x=30.
+// The coefficient satisfied the left boundary [^a-zA-Z]; non-global match
+// meant the real terminal value ($x = 10$) was never reached.
+{
+  const r = checkFalseFinalAssertion({
+    sentence: 'Exactly. $3x = 30$ divided by $3$ gives $x = 10$.',
+    problemStatement: 'Solve for x: x/2 + 3 = x/5 + 6. What is x?',
+    verifiedExpectedAnswer: '10',
+  });
+  check('portal-704e3e01: coefficient step 3x = 30 does not mask the true x = 10',
+    r.verdict === 'ok', JSON.stringify(r));
+}
+// The same intermediate step the suite already claims to cover, moved off
+// the end of the sentence so the trailing-period lookahead cannot save it.
+{
+  const r = checkFalseFinalAssertion({
+    sentence: 'Right — subtracting 7 gives 3x = 13 on the left.',
+    problemStatement: STATEMENT,
+    verifiedExpectedAnswer: VERIFIED,
+  });
+  check('mid-sentence intermediate step (3x = 13 …) → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+// When a sentence asserts more than one value, the LAST one is the value
+// the student takes away — judge that, not the working step before it.
+{
+  const r = checkFalseFinalAssertion({
+    sentence: 'So 2x = 26, which means $x = 13$ exactly.',
+    problemStatement: STATEMENT,
+    verifiedExpectedAnswer: '13',
+    });
+  check('multi-assertion sentence judges the LAST value (13, correct) → ok',
+    r.verdict === 'ok', JSON.stringify(r));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
