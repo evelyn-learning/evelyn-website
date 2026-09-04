@@ -258,6 +258,7 @@
     "test:partner-limits": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-limits.ts",
     "test:partner-limits-set": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' scripts/test-partner-limits-set.ts",
     "test:page-title": "npx tsx scripts/test-page-title.ts",
-    "test:flush-policy": "npx tsx scripts/test-flush-policy.ts"
+    "test:flush-policy": "npx tsx scripts/test-flush-policy.ts",
+    "test:session-id-reuse": "npx tsx scripts/test-session-id-reuse.ts"
   }
 }

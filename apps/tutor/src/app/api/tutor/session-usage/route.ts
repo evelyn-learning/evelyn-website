@@ -13,6 +13,7 @@ import { lookupGeo } from "@/lib/tutor/recordings/geo";
 import { checkEmbedAuthAsync } from "@/lib/tutor/portal/embed-token";
 import { demoGateSecret } from "@/lib/tutor/demo-gate/gate";
 import { DEMO_GRANT_COOKIE, verifyDemoGrant } from "@/lib/tutor/demo-gate/grant";
+import { isStaleSessionReuse } from "@/lib/tutor/portal/session-id-reuse";
 
 /**
  * GET /api/tutor/session-usage?sessionId= — read prior session state for the
@@ -281,6 +282,25 @@ export async function POST(req: NextRequest) {
 
     if (Object.keys(pushOps).length > 0) {
       updateOp.$push = pushOps;
+    }
+
+    // Cross-sitting append refusal (portal-85b2c632). The partner mints embed
+    // tokens that reuse a session_id across days, so a new session's transcript
+    // was being appended onto a document created days earlier — three days of
+    // three sessions in one row. Refuse the append, log loudly enough for the
+    // partner integration to be fixed, and let the caller carry on: losing one
+    // session's telemetry is far better than corrupting a third document.
+    const existing = await TutorSession.findOne({ sessionId }, { createdAt: 1 }).lean();
+    if (isStaleSessionReuse({ existingCreatedAt: (existing as { createdAt?: Date } | null)?.createdAt, now: new Date() })) {
+      console.error(
+        `[session-usage] REFUSING stale session-id reuse: ${sessionId} was created ` +
+        `${(existing as { createdAt?: Date }).createdAt?.toISOString()} — partner minted a token reusing it. ` +
+        `partner=${body.sourcePartnerId ?? 'unknown'}`,
+      );
+      return NextResponse.json(
+        { ok: false, error: 'stale_session_id_reuse', sessionId },
+        { status: 409 },
+      );
     }
 
     const session = await TutorSession.findOneAndUpdate(
