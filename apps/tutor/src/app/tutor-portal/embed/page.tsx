@@ -503,13 +503,19 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   //    that case, so latching on it alone would silently drop dead starts.
   //  - evelyn:session-started (window event, listened for below): covers
   //    gesture/typed-first-message starts, which never emit start_tap.
-  //  - transcript.length > 0 (effect further below, fix-round-3 backstop):
-  //    the "Continue lesson" overlay resume, the resume-await toolbar
-  //    (Draw / Text note / Camera — interactive and gated on nothing during
-  //    that window) and a restored try-yourself card all end in a real,
-  //    costed brain turn while bypassing both signals above. This is the
-  //    ONE latch source that is not an enumeration — it closes the class,
-  //    not an instance.
+  //  - transcript GROWTH past the resume baseline (effect further below,
+  //    fix-round-3 backstop, baselined in fix-round-4): the "Continue
+  //    lesson" overlay resume, the resume-await toolbar (Draw / Text note /
+  //    Camera — interactive and gated on nothing during that window) and a
+  //    restored try-yourself card all end in a real, costed brain turn
+  //    while bypassing both signals above. This is the ONE latch source
+  //    that is not an enumeration — it closes the class, not an instance.
+  //    It is `> resumeState.transcript.length`, not `> 0`, because a resume
+  //    DOES restore transcript at mount with no gesture (VTR's resume-seed
+  //    effect calls onTranscriptUpdate straight into this page's
+  //    setTranscript); `> 0` made merely PREVIEWING a resumable session
+  //    latch, and the resulting abandoned save overwrote the real prior
+  //    session's duration/endedAt/status.
   // Keep all three: start_tap and session-started fire EARLIER than the
   // first transcript entry, so the early-flush window opens sooner and a
   // session that dies between tap and first turn still gets its row. The
@@ -651,7 +657,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // The session-usage upsert runs on mount, so browsing the partner's lesson
     // menu minted one abandoned row per click — indistinguishable from a real
     // failed start. sessionNotYetEngaged() latches on WHICHEVER of start_tap,
-    // evelyn:session-started, or transcript.length > 0 fires first (see
+    // evelyn:session-started, or transcript growth past the resume baseline
+    // fires first (see
     // sessionEngagedAtRef above) — a tap that never became a session must
     // still get its row and its telemetry, and so must a session resumed or
     // engaged through a path that never taps or dispatches at all.
@@ -1006,8 +1013,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       // suppressed on every resumed mount — resumeContinue() now emits
       // start_tap directly instead (fix-round-2), and a resume-await
       // toolbar action or restored try-yourself card that bypasses BOTH of
-      // those still latches on the transcript.length > 0 backstop
-      // (fix-round-3, effect further below).
+      // those still latches on the transcript backstop (fix-round-3, effect
+      // further below — measured against the resume baseline, not zero,
+      // since a resumed mount seeds the restored transcript with no
+      // gesture).
       if (sessionEngagedAtRef.current === null) {
         sessionEngagedAtRef.current = Date.now();
       }
@@ -1037,15 +1046,36 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // card — ends in a brain turn, which produces transcript. Latching on
   // that closes every present and future entry point without naming any of
   // them. Three earlier rounds each closed one named path and found
-  // another. Safe against false latching: transcript starts `[]` and is
-  // only ever populated via onTranscriptUpdate from the live session — a
-  // resume restores lesson POSITION, not transcript, so a pure page load of
-  // a resumable session still has length 0 here.
+  // another.
+  //
+  // Fix-round-4 — measured against a BASELINE, not against zero. A resume
+  // DOES restore transcript, contrary to what this comment claimed through
+  // round 3: VoiceTutorRealtime's resume-seed effect (the one-time
+  // `resumeContentSeededRef` effect) runs at MOUNT, with no user gesture,
+  // and does `onTranscriptUpdate([...resumeState.transcript])` — wired
+  // through TutorSession's pass-through handleVoiceTranscriptUpdate to this
+  // page's setTranscript. So latching on `> 0` made merely OPENING a
+  // resumable session engage the gate. The row isn't newly minted (a resume
+  // reuses config.session_id), but the preview-and-close then overwrote the
+  // real prior session's duration/endedAt/status with an 'abandoned' save
+  // timed from this mount — reopening the same hole from the other side: a
+  // false POSITIVE, where rounds 1-3 were fighting false negatives.
+  //
+  // The baseline is exactly what the seed will write, and it is race-free:
+  // the first render of <TutorSession> is gated on `resumeReady` (see the
+  // early return below), and the checkpoint effect calls setResumeState
+  // before setResumeReady(true) in the same continuation, so resumeState is
+  // final before VTR — and therefore its seed — can mount. setResumeState
+  // has exactly one call site, so it never moves afterwards.
+  //   pure load of a resumable session → length === baseline  → no latch
+  //   any live turn (fresh or resumed) → length  >  baseline  → latch
+  //   fresh session                    → baseline 0, first turn latches
+  const resumedTranscriptBaseline = resumeState?.transcript.length ?? 0;
   useEffect(() => {
-    if (transcript.length > 0 && sessionEngagedAtRef.current === null) {
+    if (transcript.length > resumedTranscriptBaseline && sessionEngagedAtRef.current === null) {
       sessionEngagedAtRef.current = Date.now();
     }
-  }, [transcript.length]);
+  }, [transcript.length, resumedTranscriptBaseline]);
 
   // Save as abandoned on page unload.
   // beforeunload alone is not enough: this page runs in an IFRAME on the
@@ -1100,8 +1130,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // gone well before the 30s tick, so without this every dead start
   // persists nothing at all. Measured from sessionEngagedAtRef — latched on
   // WHICHEVER of start_tap (in addDebugEvent), evelyn:session-started (in
-  // the onStarted listener), or transcript.length > 0 (the effect below)
-  // fires first — NOT from mount: a page load with none of the three is
+  // the onStarted listener), or transcript growth past the resume baseline
+  // (the effect above) fires first — NOT from mount: a load with none of
+  // the three is
   // plain navigation and should mint no save; a tap that never became a
   // session is exactly the dead-start case this exists to capture, so it
   // must flush. The first two fire earlier than the transcript backstop, so

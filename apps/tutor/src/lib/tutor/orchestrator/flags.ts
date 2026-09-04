@@ -683,12 +683,15 @@ export const TUTOR_PAGE_TITLE_FROM_RENDER =
  *  beforeunload beacon an iframed embed does not reliably get. Adds pagehide +
  *  visibilitychange listeners and one early flush inside the first 10s after
  *  the session latches — on WHICHEVER of three signals fires first: the
- *  first start_tap, evelyn:session-started, or transcript.length > 0
- *  (fix-round-3: the transcript backstop closes every entry point that
- *  bypasses the first two — e.g. the resume-await toolbar or a restored
- *  try-yourself card — without naming any of them; start_tap and
+ *  first start_tap, evelyn:session-started, or transcript growth PAST the
+ *  resume baseline (fix-round-3: the transcript backstop closes every entry
+ *  point that bypasses the first two — e.g. the resume-await toolbar or a
+ *  restored try-yourself card — without naming any of them; start_tap and
  *  session-started still fire earlier when they apply, opening the window
- *  sooner). A page load with none of the three is navigation, not a dead
+ *  sooner). The baseline is resumeState.transcript.length, not zero,
+ *  because a resume DOES restore transcript at mount with no gesture —
+ *  fix-round-4 corrected an earlier claim here that it restored only
+ *  position. A page load with none of the three is navigation, not a dead
  *  start, and mints nothing.
  *  Default ON; NEXT_PUBLIC_TUTOR_TELEMETRY_SURVIVAL=off is the switch. */
 export const TUTOR_TELEMETRY_SURVIVAL =
@@ -703,13 +706,16 @@ export const TUTOR_TELEMETRY_SURVIVAL =
  *  still get its row and its telemetry — resumeContinue() emits this too,
  *  as of fix-round-2, since a resumed mount deliberately suppresses the
  *  session-started dispatch below), evelyn:session-started (gesture /
- *  typed-first-message starts), or transcript.length > 0 (fix-round-3
- *  backstop — after three rounds each
- *  closing one named entry point and finding another, this latches on the
- *  invariant instead: a session is one where the tutor actually did
- *  something, and every costed path ends in a brain turn that produces
- *  transcript). A load with none of the three is plain navigation and mints
- *  nothing.
+ *  typed-first-message starts), or transcript growth PAST the resume
+ *  baseline (fix-round-3 backstop — after three rounds each closing one
+ *  named entry point and finding another, this latches on the invariant
+ *  instead: a session is one where the tutor actually did something, and
+ *  every costed path ends in a brain turn that produces transcript;
+ *  fix-round-4 baselined it at resumeState.transcript.length because a
+ *  resume DOES restore transcript at mount with no gesture, so a `> 0`
+ *  test made merely previewing a resumable session latch and overwrite the
+ *  real prior session's duration/endedAt/status with an abandoned save).
+ *  A load with none of the three is plain navigation and mints nothing.
  *  Default ON; NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC=off is the switch. */
 export const TUTOR_DEFER_SESSION_DOC =
   process.env.NEXT_PUBLIC_TUTOR_DEFER_SESSION_DOC !== 'off';
