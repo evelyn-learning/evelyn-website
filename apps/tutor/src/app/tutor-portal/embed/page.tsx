@@ -703,6 +703,10 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         };
       })(),
     };
+    // Snapshot the debug-event delta BEFORE building the payload, but do not
+    // advance the high-water mark until the events are actually handed off.
+    const newDebugEvents = debugEventsRef.current.slice(lastSavedDebugCountRef.current);
+    const debugEventsHighWater = lastSavedDebugCountRef.current + newDebugEvents.length;
     const payload = {
       ...basePayload,
       ...(transcript.length > 0 ? {
@@ -728,15 +732,23 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
           ...(typeof sourceMessageIndex === 'number' && sourceMessageIndex >= 0 ? { sourceMessageIndex } : {}),
         })),
       } : {}),
-      // Delta-append allowlisted debug events (same batching convention as
-      // the /tutor page: count advances at send, at-most-once best-effort).
-      ...(() => {
-        const newDebugEvents = debugEventsRef.current.slice(lastSavedDebugCountRef.current);
-        lastSavedDebugCountRef.current = debugEventsRef.current.length;
-        return newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {};
-      })(),
+      // Delta-append allowlisted debug events. The high-water mark is NOT
+      // advanced here — see commitDebugEvents() below.
+      ...(newDebugEvents.length > 0 ? { debugEvents: newDebugEvents } : {}),
     };
     const body = JSON.stringify(payload);
+
+    /** Advance the delta high-water mark. Called ONLY once the events have
+     *  actually been handed off — sendBeacon returned true, or a fetch was
+     *  issued with `body` (which carries them). Never on a basePayload
+     *  fallback: basePayload has no debugEvents, so advancing there loses the
+     *  delta forever. That used to be survivable because the fallback could
+     *  fire at most once per session; visibilitychange → hidden now calls
+     *  saveSession('abandoned') on EVERY tab-hide, so a long session could
+     *  drop several deltas — in the round whose whole point is telemetry
+     *  survival. Best-effort remains at-most-once by design: a fetch that is
+     *  issued and then fails still counts as handed off. */
+    const commitDebugEvents = () => { lastSavedDebugCountRef.current = debugEventsHighWater; };
 
     if (status === 'active') {
       fetch('/api/tutor/session-usage', {
@@ -744,6 +756,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
       }).catch(() => {});
+      commitDebugEvents();   // issued WITH the events
       return;
     }
 
@@ -753,7 +766,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
       // 47-minute transcript vanished on 2026-07-13. Fall back to the slim
       // summary, which always fits; the transcript itself is already in the
       // DB courtesy of the periodic flush above.
-      if (!navigator.sendBeacon('/api/tutor/session-usage', body)) {
+      if (navigator.sendBeacon('/api/tutor/session-usage', body)) {
+        commitDebugEvents();   // accepted WITH the events
+      } else {
+        // Slim fallback carries NO debugEvents — leave the high-water mark
+        // where it is so the delta rides the next save instead of vanishing.
         navigator.sendBeacon('/api/tutor/session-usage', JSON.stringify(basePayload));
       }
       return;
@@ -770,6 +787,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         body,
         keepalive: true,
       }).catch(() => {});
+      commitDebugEvents();   // issued WITH the events
     } else {
       fetch('/api/tutor/session-usage', {
         method: 'POST',
@@ -782,6 +800,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
         body,
       }).catch(() => {});
+      commitDebugEvents();   // the second fetch carries the events
     }
   }, [sessionId, subject, topic, level, sessionGoal, inputMode, voiceEngine, studentName, transcript, whiteboardCommands, embedToken]);
 
@@ -1083,10 +1102,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // pagehide fires on bfcache navigation and iframe teardown; a
   // visibilitychange to 'hidden' is the only signal on mobile tab-kill.
   // All three funnel into the same idempotent saveSession('abandoned'):
-  // lastSavedDebugCountRef advances synchronously at send (so a second call's
-  // debug-event delta is empty) and transcript/whiteboardCommands are $set to
-  // the client's current full array on the server, not $push — replaying the
-  // same array twice is a no-op, not a duplicate.
+  // lastSavedDebugCountRef advances synchronously once the events are handed
+  // off (so a second call's debug-event delta is empty; it deliberately does
+  // NOT advance when the oversized-body fallback drops them, which is why a
+  // per-tab-hide 'abandoned' save can no longer lose a delta) and
+  // transcript/whiteboardCommands are $set to the client's current full array
+  // on the server, not $push — replaying the same array twice is a no-op, not
+  // a duplicate.
   useEffect(() => {
     if (sessionEnded) return;
     const handleUnload = () => saveSession('abandoned');
