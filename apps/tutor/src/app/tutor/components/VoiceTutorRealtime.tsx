@@ -235,6 +235,7 @@ import {
   TUTOR_KILL_WITHHOLDS_ADVANCE,
   TUTOR_SPOKEN_NUMBER_GUARDS,
   TUTOR_META_NARRATION_STRUCTURAL,
+  TUTOR_SUBSTITUTE_GATE,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -273,6 +274,7 @@ import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-les
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
 import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
+import { shouldSubstituteShowProblem } from '@/lib/tutor/orchestrator/show-problem-substitution';
 import type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
 
 export type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
@@ -11207,7 +11209,6 @@ export function VoiceTutorRealtime({
                   // enough; orchestrator-side filtering is the safety
                   // net. Detect canonical leak patterns and drop the
                   // sentence from TTS + transcript without retrying.
-                  // Generic patterns only — no subject content.
                   // Generic patterns only — no subject content. Added
                   // 2026-09-04: structural markup rule (portal-704e3e01).
                   // R58 additions (live, portal-9c73c826 "'Um, let me
@@ -12209,14 +12210,34 @@ export function VoiceTutorRealtime({
                         // 2026-05-02 retest where harder {12,14,16,18,20}
                         // problem became the original {2,4,6,8,10} card
                         // because both were "find the mean".
-                        if (!targetsDiverge && !newPageInTurn && !generateProblemInTurn) {
+                        // Substitution gate (portal-704e3e01). The two
+                        // pre-existing conditions are unchanged; the gate adds
+                        // the two cases where substituting guarantees the
+                        // orchestrator will kill its own override.
+                        const lastStudentTextForSub = ([...transcriptRef.current]
+                          .reverse()
+                          .find((e) => e.role === 'student')?.text ?? '');
+                        const subDecision = shouldSubstituteShowProblem({
+                          targetsDiverge,
+                          newPageInTurn,
+                          generateProblemInTurn,
+                          segmentComplete: TUTOR_SUBSTITUTE_GATE && !!segId && completedSegmentIdsRef.current.has(segId),
+                          studentAskedForAnother: TUTOR_SUBSTITUTE_GATE && detectAnotherProblemRequest(lastStudentTextForSub),
+                        });
+                        if (subDecision.substitute) {
                           console.log(`[brain-orchestrator] auto-substitute show_problem → show_segment_card for segment "${segId}" (authored truth exists)`);
                           onDebugEvent?.('show_problem_substituted', `→ show_segment_card("${segId}")`);
                           name = 'show_segment_card';
                           args = { segmentId: segId };
-                        } else if (!targetsDiverge && newPageInTurn) {
+                        } else if (subDecision.skipReason === 'new-page-in-turn') {
                           console.log(`[brain-orchestrator] show_problem on segment "${segId}" with matching target but new_page in turn — fresh-context render, NOT substituting.`);
                           onDebugEvent?.('show_problem_substitute_bypass', `new_page-in-turn; segId="${segId}" target="${brainTarget}"`);
+                          // Fall through to dispatch the brain's
+                          // free-form show_problem as-is.
+                        } else if (subDecision.skipReason === 'segment-complete'
+                                || subDecision.skipReason === 'student-asked-for-another') {
+                          console.log(`[brain-orchestrator] show_problem substitution SKIPPED (${subDecision.skipReason}) for segment "${segId}" — dispatching the brain's own card.`);
+                          onDebugEvent?.('show_problem_substitution_skipped', `${subDecision.skipReason}; segId="${segId}"`);
                           // Fall through to dispatch the brain's
                           // free-form show_problem as-is.
                         }

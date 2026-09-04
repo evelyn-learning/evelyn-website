@@ -185,6 +185,7 @@
     "test:false-assertion": "npx tsx scripts/test-false-assertion.ts",
     "test:verdict-preservation": "npx tsx scripts/test-verdict-preservation.ts",
     "test:kill-scope": "npx tsx scripts/test-kill-scope.ts",
+    "test:show-problem-substitution": "npx tsx scripts/test-show-problem-substitution.ts",
     "test:student-hold": "npx tsx scripts/test-student-hold.ts",
     "test:verdict-charity-rules": "npx tsx scripts/test-verdict-charity-rules.ts",
     "test:caps-emphasis-prompt": "npx tsx scripts/test-caps-emphasis-prompt.ts",

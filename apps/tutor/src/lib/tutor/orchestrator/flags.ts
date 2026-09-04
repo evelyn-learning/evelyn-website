@@ -662,3 +662,12 @@ export const TUTOR_BOARD_CONTRADICTION =
  *  Default ON; NEXT_PUBLIC_TUTOR_META_NARRATION_STRUCTURAL=off is the switch. */
 export const TUTOR_META_NARRATION_STRUCTURAL =
   process.env.NEXT_PUBLIC_TUTOR_META_NARRATION_STRUCTURAL !== 'off';
+
+/** portal-704e3e01 (2026-09-04): the show_problem → show_segment_card
+ *  substitution twice chose a card the orchestrator then rejected — a
+ *  COMPLETE segment @1111.7s, and a card already on the board while the
+ *  student had asked for a different problem @1021.1s. Both became
+ *  self-inflicted validator retries. Gates the substitution on those two.
+ *  Default ON; NEXT_PUBLIC_TUTOR_SUBSTITUTE_GATE=off is the switch. */
+export const TUTOR_SUBSTITUTE_GATE =
+  process.env.NEXT_PUBLIC_TUTOR_SUBSTITUTE_GATE !== 'off';

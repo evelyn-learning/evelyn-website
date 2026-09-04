@@ -168,7 +168,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   counterpart to the killed_render family above.
   'kill_withheld_lesson_tool',
   //   whether the card matched what was said (content drift):
-  'show_problem_', 'show_segment_card', 'show_worked_example',
+  'show_problem_', 'show_problem_substitution_skipped', 'show_segment_card', 'show_worked_example',
   'problem_equation_drift', 'board_anchor_flagged', 'meta_narration_dropped',
   //   pedagogy advisories:
   'bare_praise_ending_advisory', 'affirmative_no_advance_advisory',
