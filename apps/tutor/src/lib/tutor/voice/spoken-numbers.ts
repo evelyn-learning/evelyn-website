@@ -58,13 +58,14 @@ function parseShorthand(run: string): number | null {
 export function spokenNumbersToDigits(text: string): string {
   return (text ?? '').replace(RUN_RE, (m) => {
     // "and" joins number words INSIDE a value ("one hundred and forty-four");
-    // a trailing one is ordinary prose ("…and the four and the total") and
-    // must be handed back rather than swallowed into the match.
+    // a leading or trailing one is ordinary prose ("…and the four and the total")
+    // and must be handed back rather than swallowed into the match.
     let head = '';
     let core = m;
     let tail = '';
-    // Leading "and" is prose unless part of "hundred and"
-    if (/^and\b/i.test(core) && !/hundred/i.test(core)) {
+    // Leading "and" is prose — it can never be part of a compound number, which
+    // would always have a leading digit before its "hundred".
+    if (/^and\b/i.test(core)) {
       const match = core.match(/^and[- ]?/i);
       if (match) {
         head = match[0];

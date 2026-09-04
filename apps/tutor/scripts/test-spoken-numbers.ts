@@ -51,5 +51,15 @@ eq('no numbers', 'Take your time — no rush.', 'Take your time — no rush.');
 eq('already digits', 'Distribute the $4$ across both terms.', 'Distribute the $4$ across both terms.');
 eq('empty', '', '');
 
+// ─── Leading "and" is prose even when a hundreds value follows later in the
+// same run — the shape that the original `hundred`-anywhere guard broke. ───
+eq('leading and + hundreds value', 'and one hundred is your answer', 'and 100 is your answer');
+eq('leading and + hundreds mid-sentence',
+  "She added ten, and one hundred is what's left.",
+  "She added 10, and 100 is what's left.");
+// Both kinds of "and" in one run: the leading one is prose and survives,
+// the value-internal one is consumed into 144.
+eq('leading prose and + value-internal and', 'and one hundred and forty-four', 'and 144');
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
