@@ -144,9 +144,31 @@ check('no answer var → null', extractAnswerVariable('Compute the mean of the d
     sentence: 'So 2x = 26, which means $x = 13$ exactly.',
     problemStatement: STATEMENT,
     verifiedExpectedAnswer: '13',
-    });
+  });
   check('multi-assertion sentence judges the LAST value (13, correct) → ok',
     r.verdict === 'ok', JSON.stringify(r));
+}
+// Selection-order pin. Both assertions clear the digit boundary, so the
+// match array genuinely holds two values — this is the only test in the
+// suite where all[0] and all[all.length - 1] disagree. A revert to
+// first-match selection fails BOTH directions below.
+{
+  const r = checkFalseFinalAssertion({
+    sentence: 'Right — $x = 5$, no wait, $x = 8$.',
+    problemStatement: STATEMENT,
+    verifiedExpectedAnswer: '8',
+  });
+  check('two boundary-passing assertions: the LAST one (8) is judged → ok',
+    r.verdict === 'ok', JSON.stringify(r));
+}
+{
+  const r = checkFalseFinalAssertion({
+    sentence: 'Right — $x = 5$, no wait, $x = 8$.',
+    problemStatement: STATEMENT,
+    verifiedExpectedAnswer: '5',
+  });
+  check('two boundary-passing assertions: the FIRST one (5) is NOT judged → false_assertion',
+    r.verdict === 'false_assertion' && r.asserted === '8', JSON.stringify(r));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
