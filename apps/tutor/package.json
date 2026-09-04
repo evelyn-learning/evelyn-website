@@ -173,6 +173,7 @@
     "test:arith-claim": "npx tsx scripts/test-arithmetic-claim-check.ts",
     "test:answer-match": "npx tsx scripts/test-utterance-answer-match.ts",
     "test:spoken-money": "npx tsx scripts/test-spoken-money.ts",
+    "test:spoken-numbers": "npx tsx scripts/test-spoken-numbers.ts",
     "test:simplification-verdict": "npx tsx scripts/test-simplification-verdict-check.ts",
     "test:praise-contradiction": "npx tsx scripts/test-praise-contradiction.ts",
     "test:praise-echo": "npx tsx scripts/test-praise-echo-check.ts",
