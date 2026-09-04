@@ -671,3 +671,10 @@ export const TUTOR_META_NARRATION_STRUCTURAL =
  *  Default ON; NEXT_PUBLIC_TUTOR_SUBSTITUTE_GATE=off is the switch. */
 export const TUTOR_SUBSTITUTE_GATE =
   process.env.NEXT_PUBLIC_TUTOR_SUBSTITUTE_GATE !== 'off';
+/** portal-704e3e01 (2026-09-04) @1122.5s: the auto-newPage was titled from
+ *  the plan's authored problem while the card that rendered was a
+ *  generate_problem substitute, and the fixed slice(0, 70) cut it
+ *  mid-expression. Retitles at flush from the problem actually rendering.
+ *  Default ON; NEXT_PUBLIC_TUTOR_PAGE_TITLE_FROM_RENDER=off is the switch. */
+export const TUTOR_PAGE_TITLE_FROM_RENDER =
+  process.env.NEXT_PUBLIC_TUTOR_PAGE_TITLE_FROM_RENDER !== 'off';

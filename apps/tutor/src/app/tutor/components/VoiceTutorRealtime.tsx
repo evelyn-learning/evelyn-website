@@ -163,6 +163,7 @@ import { isCurveLessConic, findPriorConic, carryForwardConicCurve } from '@/lib/
 import { flushableCount, shouldBypassRenderSync } from '@/lib/tutor/whiteboard/render-sync';
 import { shouldAbortStalledBrain } from '@/lib/tutor/voice/brain-stall';
 import type { InteractionType } from '@/hooks/useDemoTracking';
+import { truncatePageTitle, retitleFromBatch } from '@/lib/tutor/whiteboard/page-title';
 
 import {
   TUTOR_BRAIN_FAST_OPENER,
@@ -236,6 +237,7 @@ import {
   TUTOR_SPOKEN_NUMBER_GUARDS,
   TUTOR_META_NARRATION_STRUCTURAL,
   TUTOR_SUBSTITUTE_GATE,
+  TUTOR_PAGE_TITLE_FROM_RENDER,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -3957,7 +3959,9 @@ export function VoiceTutorRealtime({
     const descRaw = loDesc || (nextSeg as any)?.goal || (nextSeg as any)?.problem || (nextSeg as any)?.question || '';
     const desc = (typeof descRaw === 'string' ? descRaw : '').trim();
     const newPageTitle = stage && desc ? `${stage}: ${desc}` : stage || desc || nextSeg?.id || '';
-    const pageTitleStr = String(newPageTitle).slice(0, 70);
+    // Boundary-safe: the fixed slice cut "…= 4x − 11" to "…= 4x −"
+    // mid-expression (portal-704e3e01 @1122.5s).
+    const pageTitleStr = truncatePageTitle(String(newPageTitle));
     // Defer the auto-newPage to the next batch — fire only if that batch
     // contains a command that actually renders (see pendingAdvanceNewPageRef).
     // Turn-end seam skip (R44 review round 3, Finding 1b): the three
@@ -6682,14 +6686,31 @@ export function VoiceTutorRealtime({
       });
       if (hasFreshTeaching) {
         const deferred = pendingAdvanceNewPageRef.current;
-        processed = [{ action: 'newPage', title: deferred.title } as WhiteboardCommand, ...processed];
+        // Title from the problem that is actually about to render, not the
+        // authored one this page was named after at advance time — a
+        // generate_problem substitute resolves AFTER the title is computed
+        // (portal-704e3e01 @1122.5s: "…2(x + 5) − 3 = 4x −" over a card
+        // reading "x/2 + 3 = x/5 + 6").
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const renderedProblem = processed.find((cmd) => String(cmd.action) === 'showProblem') as any;
+        const renderedStatement = typeof renderedProblem?.problem?.statement === 'string'
+          ? renderedProblem.problem.statement
+          : undefined;
+        const titleDecision = TUTOR_PAGE_TITLE_FROM_RENDER
+          ? retitleFromBatch({ deferredTitle: deferred.title, renderedStatement })
+          : { title: deferred.title, retitled: false };
+        const pageTitle = titleDecision.title;
+        processed = [{ action: 'newPage', title: pageTitle } as WhiteboardCommand, ...processed];
         // Open the deferred page in the catalog Page model (this synthetic
         // newPage is prepended after the step-1 side-effect loop, so the
         // setCurrentPage bridge never sees it). setCurrentPage syncs the view.
-        catalogRef.current.openPage({ title: deferred.title, segmentId: deferred.segmentId });
-        catalogRef.current.setCurrentPage(deferred.title);
-        console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${deferred.title}")`);
-        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${deferred.title}`);
+        catalogRef.current.openPage({ title: pageTitle, segmentId: deferred.segmentId });
+        catalogRef.current.setCurrentPage(pageTitle);
+        console.log(`[VoiceTutorRealtime] auto-newPage on segment advance FLUSHED (deferred) → "${deferred.segmentId}" ("${pageTitle}")`);
+        onDebugEvent?.('auto_newpage_on_advance_flushed', `${deferred.segmentId}: ${pageTitle}`);
+        if (titleDecision.retitled) {
+          onDebugEvent?.('auto_newpage_retitled_from_render', `${deferred.segmentId}: "${deferred.title}" → "${pageTitle}"`);
+        }
         pendingAdvanceNewPageRef.current = null;
       } else {
         console.log('[VoiceTutorRealtime] auto-newPage on segment advance STILL deferred — no fresh teaching content this batch');

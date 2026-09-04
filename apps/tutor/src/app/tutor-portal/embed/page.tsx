@@ -202,6 +202,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'student_turn_coalesced',
   //   the "give me a moment" think-time hold armed for a turn:
   'think_time_hold_set',
+  // portal-704e3e01 (2026-09-04): page retitled from the problem that actually
+  // renders instead of the authored one from segment advance time.
+  'auto_newpage_retitled_from_render',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
