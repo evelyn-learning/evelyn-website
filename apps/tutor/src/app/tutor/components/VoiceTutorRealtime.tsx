@@ -230,6 +230,7 @@ import {
   TUTOR_TURN_COALESCE,
   TUTOR_OPENING_BARGEIN_ESCAPE,
   TUTOR_VERDICT_REPLANT_ON_KILL,
+  TUTOR_KILL_WITHHOLDS_ADVANCE,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -266,6 +267,7 @@ import { rasterizeGestureStrokes, sanitizeInkOcrText } from '@/lib/tutor/orchest
 import { formatLessonPlanForRealtime } from '@/lib/tutor/orchestrator/format-lesson-plan';
 import { inferAdvanceFromSegmentCard } from '@/lib/tutor/orchestrator/segment-advance';
 import { matchStudentJumpIntent } from '@/lib/tutor/orchestrator/student-jump-intent';
+import { shouldWithholdAfterKill } from '@/lib/tutor/orchestrator/kill-scope';
 import type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
 
 export type { RealtimeHandle, TutorMilestone, TutorResumeState } from '@/lib/tutor/orchestrator/types';
@@ -11721,6 +11723,17 @@ export function VoiceTutorRealtime({
                         })
                         .catch(() => { /* verification is best-effort */ });
                     }
+                  }
+                  // Kill scope (portal-704e3e01 @1414.3s). Once this attempt
+                  // is killed its speech is gone, so any lesson-STATE tool
+                  // still arriving would advance the lesson on a turn the
+                  // student never heard. Renders deliberately still dispatch
+                  // (TUTOR_KEEP_VALIDATED_ON_KILL owns that decision). The
+                  // retry re-emits the advance if it still means it.
+                  if (TUTOR_KILL_WITHHOLDS_ADVANCE && attemptKilled && shouldWithholdAfterKill(name)) {
+                    console.warn(`[brain-orchestrator] withholding lesson-state tool "${name}" — attempt already killed`);
+                    onDebugEvent?.('kill_withheld_lesson_tool', name);
+                    continue;
                   }
                   totalToolNamesSeen.push(name);
                   // #4: a Skip turn that actually advances is a legit

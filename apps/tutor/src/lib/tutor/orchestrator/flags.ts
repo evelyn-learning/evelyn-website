@@ -115,6 +115,14 @@ export const TUTOR_FA_STALE_ANCHOR_DOWNGRADE = process.env.NEXT_PUBLIC_TUTOR_FA_
  *  Default ON; NEXT_PUBLIC_TUTOR_VERDICT_REPLANT_ON_KILL=off is the switch. */
 export const TUTOR_VERDICT_REPLANT_ON_KILL =
   process.env.NEXT_PUBLIC_TUTOR_VERDICT_REPLANT_ON_KILL !== 'off';
+/** portal-704e3e01 (2026-09-04) @1414.3s: performKill retracted the speech
+ *  while mark_segment_complete / advance_lesson / show_segment_card from the
+ *  SAME killed turn dispatched anyway, moving the lesson onto content the
+ *  student never heard introduced. Withholds lesson-STATE tools (never
+ *  renders) for the remainder of a killed attempt.
+ *  Default ON; NEXT_PUBLIC_TUTOR_KILL_WITHHOLDS_ADVANCE=off is the switch. */
+export const TUTOR_KILL_WITHHOLDS_ADVANCE =
+  process.env.NEXT_PUBLIC_TUTOR_KILL_WITHHOLDS_ADVANCE !== 'off';
 // R58 student-declared hold (live, portal-2f23ece4: "ignore everything I
 // say until I say candle" — the tutor kept answering every overheard
 // utterance and the private aside landed in the transcript). While

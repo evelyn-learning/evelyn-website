@@ -163,6 +163,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'nonanswer_praise_retry', 'kill_suppressed_final_attempt',
   //   why something vanished from the board:
   'killed_render', 'figure_evolve_removed', 'prescribed_render',
+  //   portal-704e3e01 (2026-09-04): a lesson-STATE tool withheld because its
+  //   turn was already killed (kill-scope.ts) — the advance/mark_complete
+  //   counterpart to the killed_render family above.
+  'kill_withheld_lesson_tool',
   //   whether the card matched what was said (content drift):
   'show_problem_', 'show_segment_card', 'show_worked_example',
   'problem_equation_drift', 'board_anchor_flagged', 'meta_narration_dropped',
