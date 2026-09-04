@@ -27,6 +27,8 @@ import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
+import { TUTOR_TELEMETRY_SURVIVAL } from '@/lib/tutor/orchestrator/flags';
+import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId } from '@core/voice/cartesia-voice-registry';
 
@@ -486,10 +488,20 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // turn — not the full /tutor-page firehose (real-student volume).
   const debugEventsRef = useRef<Array<{ type: string; message: string; timestamp: string; data?: Record<string, unknown> }>>([]);
   const lastSavedDebugCountRef = useRef(0);
+  // Task 12 (portal-00fa1bb7 etc.): the early-flush window is measured from
+  // the first start_tap, not mount — a page load with no tap is navigation
+  // and should mint nothing, but a tap that never became a session (the
+  // dead-start class) must get its telemetry. VTR fires start_tap on EVERY
+  // orb/mic tap (see resolveStartTap), so this latches on the first one seen
+  // via the same onDebugEvent channel everything else here already rides.
+  const firstStartTapAtRef = useRef<number | null>(null);
   // 2026-08-07: signature matches VTR's onDebugEvent — the third `data` arg
   // used to be silently dropped here (every embed event persisted without its
   // structured payload). Message truncation mirrors /tutor's collector.
   const addDebugEvent = useCallback((type: string, message: string, data?: Record<string, unknown>) => {
+    if (type === 'start_tap' && firstStartTapAtRef.current === null) {
+      firstStartTapAtRef.current = Date.now();
+    }
     if (!EMBED_DEBUG_EVENT_PREFIXES.some((p) => type.startsWith(p))) return;
     debugEventsRef.current.push({
       type,
@@ -953,12 +965,32 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     return () => window.removeEventListener('evelyn:session-started', onStarted);
   }, [sessionId]);
 
-  // Save as abandoned on page unload
+  // Save as abandoned on page unload.
+  // beforeunload alone is not enough: this page runs in an IFRAME on the
+  // partner's site, where it is the least reliably delivered unload event.
+  // pagehide fires on bfcache navigation and iframe teardown; a
+  // visibilitychange to 'hidden' is the only signal on mobile tab-kill.
+  // All three funnel into the same idempotent saveSession('abandoned'):
+  // lastSavedDebugCountRef advances synchronously at send (so a second call's
+  // debug-event delta is empty) and transcript/whiteboardCommands are $set to
+  // the client's current full array on the server, not $push — replaying the
+  // same array twice is a no-op, not a duplicate.
   useEffect(() => {
     if (sessionEnded) return;
-    const handleBeforeUnload = () => saveSession('abandoned');
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    const handleUnload = () => saveSession('abandoned');
+    const handleVisibility = () => {
+      if (document.visibilityState === 'hidden') saveSession('abandoned');
+    };
+    window.addEventListener('beforeunload', handleUnload);
+    if (TUTOR_TELEMETRY_SURVIVAL) {
+      window.addEventListener('pagehide', handleUnload);
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+    return () => {
+      window.removeEventListener('beforeunload', handleUnload);
+      window.removeEventListener('pagehide', handleUnload);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
   }, [sessionEnded, saveSession]);
 
   // Periodic active flush every 30s while the session runs, so an abnormal
@@ -979,6 +1011,30 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     if (sessionEnded) return;
     const interval = setInterval(() => saveSessionRef.current('active'), 30_000);
     return () => clearInterval(interval);
+  }, [sessionEnded]);
+
+  // Early-window flush (portal-00fa1bb7): the first debug events arrive
+  // within ~2s of the student's first start tap, and a dead-start page is
+  // gone well before the 30s tick, so without this every dead start
+  // persists nothing at all. Measured from the first start_tap
+  // (firstStartTapAtRef, latched in addDebugEvent), NOT from mount — a page
+  // load where the student never tapped is plain navigation and should mint
+  // no save; a tap that never became a session is exactly the dead-start
+  // case this exists to capture, so it must flush.
+  useEffect(() => {
+    if (!TUTOR_TELEMETRY_SURVIVAL || sessionEnded) return;
+    const t = setInterval(() => {
+      const tapAt = firstStartTapAtRef.current;
+      if (tapAt === null) return; // no tap yet — nothing to flush early
+      if (shouldFlushEarly({
+        eventCount: debugEventsRef.current.length,
+        lastFlushedCount: lastSavedDebugCountRef.current,
+        msSinceMount: Date.now() - tapAt,
+      })) {
+        saveSessionRef.current('active');
+      }
+    }, 2_000);
+    return () => clearInterval(t);
   }, [sessionEnded]);
 
   // Session ended view
