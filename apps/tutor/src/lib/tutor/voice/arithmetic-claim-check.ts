@@ -9,8 +9,10 @@
  * "A op B is C". Anything with variables, units, percents, ranges, multiple
  * operators, or approximation language is left alone ('ok'). Never throws.
  *
- * Pure module — no imports, no side effects.
+ * Imports spokenNumbersToDigits for normalizing spoken numbers (portal-9a9b7c09).
  */
+
+import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 
 export interface ArithmeticClaimResult {
   verdict: 'ok' | 'false_denial' | 'false_assertion';
@@ -30,7 +32,7 @@ const OP = String.raw`[+\-*/]`;
 // Denial phrases MUST come before assertion phrases in the alternation so
 // "isn't" / "is not" never half-match as "is".
 const DENIAL = String.raw`(?:isn't|is\s+not)(?:\s+equal\s+to)?|(?:doesn't|does\s+not)\s+equal|≠`;
-const ASSERT = String.raw`that's|equals|is|=`;
+const ASSERT = String.raw`that's|equals|is|=|comes\s+out\s+to|gives`;
 
 // (?<![\w.%])  — the first operand must not be glued to a letter/digit/dot/%
 //               (rejects "Q3", ".5" continuations, "18cm"-style prefixes).
@@ -42,9 +44,48 @@ const CLAIM_RE = new RegExp(
   'gi'
 );
 
+// Chained same-operator claim: "A + B + C … is D" (three or more operands).
+// portal-9a9b7c09 @451.1s: "Sixteen plus nine plus nine plus four plus
+// one-forty-four — that's thirty-eight" (the sum is 182). CLAIM_RE handles
+// exactly one binary operation, and its CONTEXT_OPS check deliberately skips
+// anything longer, so this shape had no detector at all.
+//
+// The backreference \2 forces ONE operator family across the whole chain.
+// Without it a mixed chain is evaluated left-to-right and contradicts
+// precedence: a prototype graded "16 + 9 * 2 is 50" false against 288
+// (the correct value is 34) — a false KILL, the exact class this round
+// exists to remove. Mixed chains are never judged.
+const CHAIN_RE = new RegExp(
+  String.raw`(?<![\w.%])(${NUM}\s*([+*])\s*${NUM}(?:\s*\2\s*${NUM})+)\s*[—,-]?\s*(?:${DENIAL}|${ASSERT})\s*\*?(${NUM})\*?(?![\w%.])`,
+  'i',
+);
+
 /** Chars that, appearing (space-separated) right before/after the claim, mean the
  *  matched expression is a fragment of something bigger — skip it. */
 const CONTEXT_OPS = '+-*/^=%';
+
+function checkChainedClaim(text: string): ArithmeticClaimResult {
+  const m = text.match(CHAIN_RE);
+  if (!m) return OK;
+  const [full, expr, op, cRaw] = m;
+  const parts = expr.split(/\s*[+*]\s*/).map(parseFloat);
+  if (parts.some(Number.isNaN)) return OK;
+  const claimed = parseFloat(cRaw);
+  if (Number.isNaN(claimed)) return OK;
+  const truth = op === '+'
+    ? parts.reduce((a, b) => a + b, 0)
+    : parts.reduce((a, b) => a * b, 1);
+  const denied = new RegExp(DENIAL, 'i').test(full);
+  const agree = fmt(truth) === fmt(claimed);
+  if (denied) {
+    return agree
+      ? { verdict: 'false_denial', claim: full.trim(), correct: `${expr} = ${fmt(truth)}` }
+      : OK;
+  }
+  return agree
+    ? OK
+    : { verdict: 'false_assertion', claim: full.trim(), correct: `${expr} = ${fmt(truth)}` };
+}
 
 function normalize(sentence: string): string {
   return sentence
@@ -86,12 +127,24 @@ function decimalsOf(numLiteral: string): number {
  * Check one spoken sentence for a false arithmetic denial or assertion.
  * Returns 'ok' for everything it cannot judge with certainty. Never throws.
  */
-export function checkArithmeticClaims(sentence: string): ArithmeticClaimResult {
+export function checkArithmeticClaims(
+  sentence: string,
+  opts?: { normalizeSpokenWords?: boolean },
+): ArithmeticClaimResult {
   try {
     if (typeof sentence !== 'string' || sentence.length === 0) return OK;
     if (APPROX_RE.test(sentence)) return OK;
 
-    const text = normalize(sentence);
+    // The tutor speaks numbers as words; NUM is digits-only (portal-9a9b7c09).
+    const source = opts?.normalizeSpokenWords === true
+      ? spokenNumbersToDigits(sentence)
+      : sentence;
+    const text = normalize(source);
+
+    // Same-operator chains first — they are invisible to CLAIM_RE below.
+    const chained = checkChainedClaim(text);
+    if (chained.verdict !== 'ok') return chained;
+
     CLAIM_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
     while ((m = CLAIM_RE.exec(text)) !== null) {

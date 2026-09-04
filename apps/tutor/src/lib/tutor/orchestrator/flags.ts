@@ -640,3 +640,10 @@ export const TUTOR_STT_ENGINE_INK2 =
 // standing flag-default rule.
 export const TUTOR_OPENING_BARGEIN_ESCAPE =
   process.env.NEXT_PUBLIC_TUTOR_OPENING_BARGEIN_ESCAPE !== 'off';
+/** portal-9a9b7c09 (2026-09-04): the tutor speaks numbers as words and every
+ *  arithmetic guard parses digits, so a session with seven defective turns
+ *  fired zero kills. Feeds tutor sentences through spokenNumbersToDigits
+ *  before the arithmetic and reversal guards.
+ *  Default ON; NEXT_PUBLIC_TUTOR_SPOKEN_NUMBER_GUARDS=off is the switch. */
+export const TUTOR_SPOKEN_NUMBER_GUARDS =
+  process.env.NEXT_PUBLIC_TUTOR_SPOKEN_NUMBER_GUARDS !== 'off';

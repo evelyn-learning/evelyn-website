@@ -231,6 +231,7 @@ import {
   TUTOR_OPENING_BARGEIN_ESCAPE,
   TUTOR_VERDICT_REPLANT_ON_KILL,
   TUTOR_KILL_WITHHOLDS_ADVANCE,
+  TUTOR_SPOKEN_NUMBER_GUARDS,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -10710,7 +10711,9 @@ export function VoiceTutorRealtime({
                   // wrong; a retry ACKNOWLEDGING the error states TRUE
                   // arithmetic and passes), capped by judgeRetriesUsed.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
-                    const arith = checkArithmeticClaims(updatedSentence);
+                    const arith = checkArithmeticClaims(updatedSentence, {
+                      normalizeSpokenWords: TUTOR_SPOKEN_NUMBER_GUARDS,
+                    });
                     if (arith.verdict !== 'ok') {
                       const reason =
                         arith.verdict === 'false_denial'
