@@ -9,10 +9,18 @@
  * events stamped 2026-09-04. Every duration, startedAt and per-session cost on
  * such a row is meaningless.
  *
- * The threshold is generous on purpose. A legitimate resume — a reconnect, a
+ * The threshold is generous on purpose. A same-sitting resume — a reconnect, a
  * reload, a student returning after a break — happens within one sitting; the
- * observed corruption spans DAYS. Anything under the window is allowed, so a
- * long real session can never be refused.
+ * observed corruption spans DAYS.
+ *
+ * A `true` verdict means LOG IT, not REFUSE IT. The route acts on this by
+ * writing a loud console.error and then performing the write anyway. It must
+ * NOT gate the write, because conversation resume is a documented feature with
+ * a THIRTY-DAY window (RESUME_MAX_AGE_MS in @evelyn/portal-contract/v1,
+ * enforced in portal/resume.ts) that writes back to the SAME sessionId — so a
+ * document spanning days is also what a working resume produces, and refusing
+ * it destroys that sitting's transcript, whiteboard, cost and lessonProgress
+ * checkpoint. This module cannot tell the two apart; the log is for a human.
  *
  * Pure module — no side effects, never throws.
  */

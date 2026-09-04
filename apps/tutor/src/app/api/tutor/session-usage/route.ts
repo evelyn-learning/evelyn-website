@@ -287,24 +287,33 @@ export async function POST(req: NextRequest) {
       updateOp.$push = pushOps;
     }
 
-    // Cross-sitting append refusal (portal-85b2c632). The partner mints embed
+    // Cross-sitting reuse DETECTION (portal-85b2c632). The partner mints embed
     // tokens that reuse a session_id across days, so a new session's transcript
-    // was being appended onto a document created days earlier — three days of
-    // three sessions in one row. Refuse the append, log loudly enough for the
-    // partner integration to be fixed, and let the caller carry on: losing one
-    // session's telemetry is far better than corrupting a third document.
+    // gets appended onto a document created days earlier — three days of three
+    // sessions in one row. The loud log below is the artifact: it is what gets
+    // the partner's token-minting fixed, and it costs the student nothing.
+    //
+    // LOG ONLY — never refuse. This branch previously returned 409, and every
+    // client caller ends `.catch(() => {})`, so the refusal was silent. But
+    // conversation resume is a first-class feature with a THIRTY-DAY window
+    // (RESUME_MAX_AGE_MS in @evelyn/portal-contract/v1, enforced in
+    // lib/tutor/portal/resume.ts) and it writes back to the SAME sessionId. A
+    // document spanning several days is therefore exactly what a WORKING
+    // resume produces, not proof of corruption — and refusing it silently
+    // destroyed the whole sitting: transcript, whiteboard, cost, and the
+    // lessonProgress checkpoint, so the student's next resume dropped them
+    // back to the previous position and they redid work they had finished.
+    // Losing a student's session is far worse than a partner's row being
+    // muddled, so the write falls through to the normal upsert below.
     // Reuses existingDoc from the isNewSession lookup above — one indexed
     // point query on { sessionId } serving both checks.
     const existingCreatedAt = (existingDoc as { createdAt?: Date } | null)?.createdAt;
     if (isStaleSessionReuse({ existingCreatedAt, now: new Date() })) {
       console.error(
-        `[session-usage] REFUSING stale session-id reuse: ${sessionId} was created ` +
-        `${existingCreatedAt?.toISOString()} — partner minted a token reusing it. ` +
+        `[session-usage] stale session-id reuse (writing anyway): ${sessionId} was created ` +
+        `${existingCreatedAt?.toISOString()} — partner may be minting a token reusing it, ` +
+        `or this is a legitimate multi-day resume. ` +
         `partner=${body.sourcePartnerId ?? 'unknown'}`,
-      );
-      return NextResponse.json(
-        { ok: false, error: 'stale_session_id_reuse', sessionId },
-        { status: 409 },
       );
     }
 
