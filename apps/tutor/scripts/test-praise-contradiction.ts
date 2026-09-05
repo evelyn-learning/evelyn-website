@@ -217,5 +217,28 @@ function check(name: string, cond: boolean, detail?: string) {
   check('review m3: "i.e." does not end a sentence → null', detectPraiseContradiction(abbrev, { studentUtterance: 'twelve' }) === null, JSON.stringify(detectPraiseContradiction(abbrev, { studentUtterance: 'twelve' })));
 }
 
+// ---------- Final review, Important 5: the `branch` discriminator ----------
+// The caller builds the kill REASON from this. 'negation' and 'substitution'
+// affirmed a VALUE the turn later contradicts; 'bare-denial' affirmed prose,
+// so quoting it as 'you affirmed "X" … says "not X"' is nonsense. One pin per
+// branch, in the order the detector tries them.
+{
+  const negation = 'Right — one half.\n\n…you\'ve gone *one third* of the way, not one half.';
+  const rNeg = detectPraiseContradiction(negation);
+  check('branch: explicit "not <affirmed>" → negation', rNeg?.branch === 'negation', JSON.stringify(rNeg));
+
+  const substitution = 'Right. $2x$.\n\nThe derivative of $3x^2$ is $3 \\cdot 2x = 6x$ — so $f\'\'(x) = 6x$.';
+  const rSub = detectPraiseContradiction(substitution);
+  check('branch: silent value substitution → substitution', rSub?.branch === 'substitution', JSON.stringify(rSub));
+
+  const bareValueFree = "Right, let's look at this together. Not quite — let's recheck the second step.";
+  const rBare = detectPraiseContradiction(bareValueFree);
+  check('branch: bare praise + value-FREE denial → bare-denial', rBare?.branch === 'bare-denial', JSON.stringify(rBare));
+
+  const inst3 = "Right, let's check the reasoning behind it. If we substitute x = 9 we get 27 + 6, which is 33. Right, that gives x = 21 on the other side, so x=9 isn't quite it here.";
+  const rInst3 = detectPraiseContradiction(inst3, { studentUtterance: 'x equals nine' });
+  check('branch: bare praise + denial naming the STUDENT value → bare-denial', rInst3?.branch === 'bare-denial', JSON.stringify(rInst3));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

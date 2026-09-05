@@ -225,10 +225,17 @@ function matchesStudentValue(named: string, studentVal: string): boolean {
  *   `TUTOR_FALSE_PRAISE_OPENER` is off, so that flag is a true kill switch for
  *   the widening as well as for the false-praise-opener guard — a kill path
  *   whose switch only half-disables it is the trap this repo keeps re-learning. */
+/** Which of the three shapes fired. The caller needs it because the kill
+ *  REASON differs: 'negation' and 'substitution' both have an affirmed VALUE
+ *  the turn later contradicts, while 'bare-denial' affirmed prose and the
+ *  contradiction is a later denial of the student's answer — describing that
+ *  as "you praised value X then asserted a different one" is nonsense. */
+export type PraiseContradictionBranch = 'negation' | 'substitution' | 'bare-denial';
+
 export function detectPraiseContradiction(
   turnText: string,
   opts?: { studentUtterance?: string; bareDenialWidening?: boolean },
-): { affirmed: string } | null {
+): { affirmed: string; branch: PraiseContradictionBranch } | null {
   const m = turnText.match(PRAISE_OPENER_RE);
   if (!m) return null;
   const affirmed = m[1].replace(/\*/g, '').trim().replace(/\s+/g, ' ');
@@ -243,7 +250,7 @@ export function detectPraiseContradiction(
   // for word-ending tokens (still rejects "not one halves" as a match for
   // "one half") while correctly closing after symbol-ending tokens.
   const contra = new RegExp(`\\bnot\\s+${escaped}(?!\\w)`, 'i');
-  if (contra.test(rest)) return { affirmed };
+  if (contra.test(rest)) return { affirmed, branch: 'negation' };
 
   if (isMathValueToken(affirmed)) {
     const affirmedNorm = normalizeMathToken(affirmed);
@@ -255,7 +262,7 @@ export function detectPraiseContradiction(
       finalRhsNorm = eq.rhsNorm;
     }
     if (qualifies && finalRhsNorm !== null && finalRhsNorm !== affirmedNorm) {
-      return { affirmed };
+      return { affirmed, branch: 'substitution' };
     }
   }
 
@@ -282,9 +289,9 @@ export function detectPraiseContradiction(
         // makes it part-scoping rather than an unrelated later clause.
         const partScope = PART_SCOPE_RE.exec(s);
         if (partScope && partScope.index < denialIdx) continue;
-        return { affirmed };
+        return { affirmed, branch: 'bare-denial' };
       }
-      if (studentVal && named.some((v) => matchesStudentValue(v, studentVal))) return { affirmed };
+      if (studentVal && named.some((v) => matchesStudentValue(v, studentVal))) return { affirmed, branch: 'bare-denial' };
     }
   }
 
