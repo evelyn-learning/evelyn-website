@@ -27,6 +27,7 @@ import {
   type GapEntry,
   type GapEvidence,
   type GapSignalCode,
+  type RecapRecord,
   type SessionMemory,
   type PlanContentFillings,
   type PlanContentSeen,
@@ -74,6 +75,12 @@ const GAP_DECAY_CANDIDATE_DAYS = 21;
  *  same TTL as confirmed. */
 const GAP_DECAY_CONFIRMED_DAYS = 90;
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
+/** Confidence cap for gaps whose first (or only) record came from the
+ *  orchestrator's behavioural inference rather than a brain tool call.
+ *  Inference is a weaker signal than a brain-observed misconception, so
+ *  it must never single-session-promote a gap to 'confirmed' — only
+ *  cross-session re-triggering (sessionIds.length >= 2) can. */
+export const INFERRED_CONFIDENCE_CAP = 0.5;
 
 function clamp01(n: number): number { return Math.max(0, Math.min(1, n)); }
 function computeConfidence(signals: GapSignalCode[]): number {
@@ -194,6 +201,16 @@ export interface RecordGapInput {
    *  promotion (a candidate fired in 2+ distinct sessions promotes to
    *  confirmed regardless of single-session confidence). */
   sessionId: string;
+  /** How many times this record represents a RECURRENCE of the same gap
+   *  (ledger count from the orchestrator's struggle-ledger). Summed into
+   *  evidence.recurrenceCount on merge. */
+  recurrences?: number;
+  /** True when this record came from the orchestrator's behavioural
+   *  inference rather than a brain tool call. See INFERRED_CONFIDENCE_CAP. */
+  inferred?: boolean;
+  /** Consent-gated recap offer/outcome for this record. Merged into
+   *  evidence.recap via mergeRecap. */
+  recap?: { offered: number; outcome?: RecapRecord['lastOutcome'] };
 }
 
 /** Match an existing GapEntry by identity (kind + key) regardless of status,
@@ -220,6 +237,28 @@ function resolvedMatch(g: GapEntry, input: RecordGapInput): boolean {
   const a = (g.conceptLabel ?? '').trim().toLowerCase();
   const b = (input.conceptLabel ?? '').trim().toLowerCase();
   return g.kind === 'prerequisite' && a === b && a !== '';
+}
+
+/** Merge one record's recap offer/outcome into the gap's accumulated
+ *  RecapRecord. Pure — returns undefined only when there is neither a
+ *  prior record nor an incoming one. */
+function mergeRecap(prev: RecapRecord | undefined, input: RecordGapInput['recap'], now: string): RecapRecord | undefined {
+  if (!input) return prev;
+  const base: RecapRecord = prev ?? { offers: 0, accepts: 0, declines: 0, lastOfferAt: now };
+  return {
+    offers: base.offers + input.offered,
+    accepts: base.accepts + (input.outcome === 'accepted' || input.outcome === 'improved' || input.outcome === 'still_struggling' ? 1 : 0),
+    declines: base.declines + (input.outcome === 'declined' ? 1 : 0),
+    lastOfferAt: input.offered > 0 ? now : base.lastOfferAt,
+    lastOutcome: input.outcome ?? base.lastOutcome,
+  };
+}
+
+/** Cap confidence at INFERRED_CONFIDENCE_CAP when either this record or
+ *  the existing entry originated from behavioural inference — inference
+ *  must never single-session-promote a gap to 'confirmed'. */
+function capInferred(confidence: number, inferred: boolean | undefined, prevInferred: boolean | undefined): number {
+  return inferred || prevInferred ? Math.min(confidence, INFERRED_CONFIDENCE_CAP) : confidence;
 }
 
 /** Record (or update) a learning gap. Two-tier promotion model:
@@ -251,9 +290,10 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
       ...(existing.sessionIds ?? []),
       input.sessionId,
     ]));
-    const confidence = Math.max(
-      existing.confidence ?? 0,
-      computeConfidence(mergedSignals),
+    const confidence = capInferred(
+      Math.max(existing.confidence ?? 0, computeConfidence(mergedSignals)),
+      input.inferred,
+      existing.evidence?.inferred,
     );
     const promotable = existing.status === 'candidate' || existing.status === 'open';
     const shouldPromote = promotable
@@ -262,10 +302,15 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
       ? 'confirmed'
       : existing.status === 'open' ? 'confirmed' // migrate legacy entries
       : existing.status;
+    const mergedRecap = mergeRecap(existing.evidence?.recap, input.recap, now);
     const evidence: GapEvidence = {
       signals: mergedSignals,
       observation: input.observation, // most recent wins
       studentQuotes: mergedQuotes,
+      ...(existing.evidence?.inferred || input.inferred ? { inferred: true } : {}),
+      ...((existing.evidence?.recurrenceCount ?? 0) + (input.recurrences ?? 0) > 0
+        ? { recurrenceCount: (existing.evidence?.recurrenceCount ?? 0) + (input.recurrences ?? 0) } : {}),
+      ...(mergedRecap ? { recap: mergedRecap } : {}),
     };
     const updated: GapEntry = {
       ...existing,
@@ -286,8 +331,9 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
   if (reopenIdx >= 0) {
     const existing = profile.gaps[reopenIdx];
     const signals = [...input.signals];
-    const confidence = computeConfidence(signals);
+    const confidence = capInferred(computeConfidence(signals), input.inferred, undefined);
     const status: GapEntry['status'] = confidence >= CONFIDENCE_PROMOTE_THRESHOLD ? 'confirmed' : 'candidate';
+    const reopenRecap = mergeRecap(undefined, input.recap, now);
     const reopened: GapEntry = {
       ...existing,
       kind: input.kind,
@@ -300,6 +346,9 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
         signals,
         observation: input.observation,
         studentQuotes: [...input.studentQuotes],
+        ...(input.inferred ? { inferred: true } : {}),
+        ...(input.recurrences ? { recurrenceCount: input.recurrences } : {}),
+        ...(reopenRecap ? { recap: reopenRecap } : {}),
       },
       status,
     };
@@ -308,8 +357,9 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
 
   // No match — create new candidate (or confirmed if signals strong enough on first fire).
   const signals = [...input.signals];
-  const confidence = computeConfidence(signals);
+  const confidence = capInferred(computeConfidence(signals), input.inferred, undefined);
   const status: GapEntry['status'] = confidence >= CONFIDENCE_PROMOTE_THRESHOLD ? 'confirmed' : 'candidate';
+  const newRecap = mergeRecap(undefined, input.recap, now);
   const newGap: GapEntry = {
     id: `gap_${Math.random().toString(36).slice(2, 10)}`,
     kind: input.kind,
@@ -321,6 +371,9 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
       signals,
       observation: input.observation,
       studentQuotes: [...input.studentQuotes],
+      ...(input.inferred ? { inferred: true } : {}),
+      ...(input.recurrences ? { recurrenceCount: input.recurrences } : {}),
+      ...(newRecap ? { recap: newRecap } : {}),
     },
     sessionIds: [input.sessionId],
     firstSeenAt: now,

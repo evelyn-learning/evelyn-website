@@ -42,6 +42,7 @@ export interface IStudentProfile {
   externalStudentId?: string;
   metadata?: Record<string, unknown>;
   planContentSeen?: Record<string, PlanContentSeen>;
+  nextSessionIntent?: { text: string; sessionId: string; at: string };
 }
 
 export type IStudentProfileDoc = mongoose.Document<string, object, IStudentProfile> & IStudentProfile;
@@ -75,6 +76,8 @@ const StudentProfileSchema = new Schema<IStudentProfile>(
     metadata: { type: Schema.Types.Mixed, default: {} },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     planContentSeen: { type: Schema.Types.Mixed as any, default: undefined },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    nextSessionIntent: { type: Schema.Types.Mixed as any, default: undefined },
   },
   {
     _id: false,
@@ -114,5 +117,6 @@ export function toStudentProfile(doc: IStudentProfileDoc): StudentProfile {
     partnerId: obj.partnerId,
     metadata: obj.metadata,
     planContentSeen: obj.planContentSeen,
+    nextSessionIntent: obj.nextSessionIntent,
   };
 }

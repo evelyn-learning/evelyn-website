@@ -19,7 +19,7 @@
  */
 
 import { strict as assert } from 'node:assert';
-import { applyCrossSessionPromotion, resolveSettledGaps, isGapStale, upsertSessionMemory } from '../src/lib/tutor/student-profile/store';
+import { applyCrossSessionPromotion, resolveSettledGaps, isGapStale, upsertSessionMemory, recordGap, INFERRED_CONFIDENCE_CAP } from '../src/lib/tutor/student-profile/store';
 import type { StudentProfile, GapEntry, MasteryEntry, SessionMemory } from '../src/lib/tutor/student-profile/types';
 
 let passed = 0;
@@ -480,6 +480,62 @@ test('merge preserves entry position (session stays in place, other sessions una
   assert.strictEqual(p.recentSessions[0].sessionId, 's1');
   assert.deepStrictEqual(p.recentSessions[0].losTouched, ['y']);
   assert.deepStrictEqual(p.recentSessions[1].losTouched, ['x'], 'other session untouched');
+});
+
+// ---------------------------------------------------------------------------
+// recordGap — holistic-pedagogy round: recurrence / inferred cap / recap
+// record (spec §A.7/§B.6). Engine-only evidence fields the orchestrator's
+// struggle-ledger + close_session_notes flow feed into recordGap.
+// ---------------------------------------------------------------------------
+console.log('\nrecordGap: recurrence / inferred cap / recap record (holistic-pedagogy round)\n');
+
+let gapProfile = makeProfile();
+gapProfile = recordGap(gapProfile, {
+  kind: 'lo', loId: 'lo1', observation: 'Inferred from behaviour: 2 incorrect attempts', studentQuotes: [],
+  signals: ['INCORRECT_STREAK_2_PLUS', 'NO_RECOVERY', 'STUCK_CUE'], sessionId: 's1', inferred: true,
+});
+
+test('inferred gap with 3 signals stays candidate (confidence capped)', () => {
+  const g = gapProfile.gaps[0];
+  assert.strictEqual(g.status, 'candidate');
+  assert.ok((g.confidence ?? 1) <= INFERRED_CONFIDENCE_CAP, 'confidence should be capped at INFERRED_CONFIDENCE_CAP');
+});
+
+test('inferred flag persisted on evidence', () => {
+  assert.strictEqual(gapProfile.gaps[0].evidence?.inferred, true);
+});
+
+gapProfile = recordGap(gapProfile, {
+  kind: 'lo', loId: 'lo1', observation: 'again', studentQuotes: [], signals: ['NO_RECOVERY'], sessionId: 's1',
+  recurrences: 2, recap: { offered: 1, outcome: 'declined' },
+});
+
+test('recurrenceCount accumulates on merge', () => {
+  assert.strictEqual(gapProfile.gaps[0].evidence?.recurrenceCount, 2);
+});
+
+test('recap record merged', () => {
+  const recap = gapProfile.gaps[0].evidence?.recap;
+  assert.ok(recap, 'expected a recap record');
+  assert.strictEqual(recap!.offers, 1);
+  assert.strictEqual(recap!.declines, 1);
+  assert.strictEqual(recap!.lastOutcome, 'declined');
+});
+
+gapProfile = recordGap(gapProfile, {
+  kind: 'lo', loId: 'lo1', observation: 'again2', studentQuotes: [], signals: ['NO_RECOVERY'], sessionId: 's2',
+  recurrences: 1, recap: { offered: 1, outcome: 'accepted' },
+});
+
+test('second merge adds to counters (recurrenceCount=3, recap offers=2 accepts=1)', () => {
+  const g = gapProfile.gaps[0];
+  assert.strictEqual(g.evidence?.recurrenceCount, 3);
+  assert.strictEqual(g.evidence?.recap?.offers, 2);
+  assert.strictEqual(g.evidence?.recap?.accepts, 1);
+});
+
+test('two sessions still promote (unchanged rule)', () => {
+  assert.strictEqual(gapProfile.gaps[0].status, 'confirmed');
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);
