@@ -581,5 +581,77 @@ test('two sessions still promote (unchanged rule)', () => {
   assert.strictEqual(gapProfile.gaps[0].status, 'confirmed');
 });
 
+// ---------------------------------------------------------------------------
+// Final review, Critical 1 — bookkeepingOnly. The recap state machine and the
+// ledger flush-safety path push entries whose only payload is a counter
+// ("Recap offered this session.", "Recurred later in the session."). On an LO
+// with no gap those entries used to CREATE a candidate gap — parent-visible via
+// /api/portal/v1/gaps and brain-visible via <student_profile> — and on an
+// existing gap their placeholder text overwrote the real observation.
+// ---------------------------------------------------------------------------
+console.log('\nrecordGap: bookkeepingOnly (final review, Critical 1)\n');
+
+const noMatch = recordGap(makeProfile(), {
+  kind: 'lo', loId: 'loNever', observation: 'Recap offered this session.', studentQuotes: [], signals: [],
+  sessionId: 'sBk', recap: { offered: 1, outcome: 'declined' }, bookkeepingOnly: true,
+});
+
+test('bookkeeping-only with no matching gap creates nothing', () => {
+  assert.strictEqual(noMatch.gaps.length, 0);
+});
+
+// Same, but the profile HAS gaps — just not on this LO (the review's phantom
+// case: a recap offered on a homework-weak / review-due LO with no gap).
+const otherGapProfile = makeProfile([makeGap({ loId: 'loOther' })]);
+const noMatchAmongGaps = recordGap(otherGapProfile, {
+  kind: 'lo', loId: 'loNever', observation: 'Recurred later in the session.', studentQuotes: [], signals: ['NO_RECOVERY'],
+  sessionId: 'sBk', recurrences: 1, bookkeepingOnly: true,
+});
+
+test('bookkeeping-only with no ACTIVE match leaves gaps.length unchanged', () => {
+  assert.strictEqual(noMatchAmongGaps.gaps.length, otherGapProfile.gaps.length);
+  assert.strictEqual(noMatchAmongGaps.gaps[0].evidence?.observation, 'Test observation');
+});
+
+// Existing active gap: counters merge, evidence is left alone.
+let bookkept = makeProfile([makeGap({
+  loId: 'loBk',
+  sessionIds: ['s1'],
+  evidence: { signals: ['MISCONCEPTION_DETECTED'], observation: 'Real observation', studentQuotes: ['I think it is nine'], recurrenceCount: 1 },
+})]);
+bookkept = recordGap(bookkept, {
+  kind: 'lo', loId: 'loBk', observation: 'Recap offered this session.', studentQuotes: [], signals: [],
+  sessionId: 's2', recap: { offered: 1, outcome: 'accepted' }, bookkeepingOnly: true,
+});
+bookkept = recordGap(bookkept, {
+  kind: 'lo', loId: 'loBk', observation: 'Recurred later in the session.', studentQuotes: [], signals: ['NO_RECOVERY'],
+  sessionId: 's2', recurrences: 1, bookkeepingOnly: true,
+});
+
+test('bookkeeping-only on an existing gap leaves observation/signals/quotes/status alone', () => {
+  const g = bookkept.gaps[0];
+  assert.strictEqual(bookkept.gaps.length, 1);
+  assert.strictEqual(g.evidence?.observation, 'Real observation');
+  assert.deepStrictEqual(g.evidence?.signals, ['MISCONCEPTION_DETECTED']);
+  assert.deepStrictEqual(g.evidence?.studentQuotes, ['I think it is nine']);
+  assert.strictEqual(g.status, 'candidate');
+  assert.strictEqual(g.confidence, 0.25);
+});
+
+test('bookkeeping-only merges recap counters and the recurrence tally', () => {
+  const g = bookkept.gaps[0];
+  assert.strictEqual(g.evidence?.recap?.offers, 1);
+  assert.strictEqual(g.evidence?.recap?.accepts, 1);
+  assert.strictEqual(g.evidence?.recap?.lastOutcome, 'accepted');
+  // The flush-safety recurrence entry MUST still count on the server gap.
+  assert.strictEqual(g.evidence?.recurrenceCount, 2);
+});
+
+test('bookkeeping-only adds the sessionId and bumps lastSeenAt', () => {
+  const g = bookkept.gaps[0];
+  assert.deepStrictEqual(g.sessionIds, ['s1', 's2']);
+  assert.ok(g.lastSeenAt > '2026-05-08T00:00:00.000Z', 'lastSeenAt should advance');
+});
+
 console.log(`\n${passed} passed, ${failed} failed\n`);
 process.exit(failed > 0 ? 1 : 0);

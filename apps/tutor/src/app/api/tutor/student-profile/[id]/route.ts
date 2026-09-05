@@ -135,6 +135,10 @@ interface CommitBody {
     inferred?: boolean;
     /** Consent-gated recap outcome for this gap this increment. */
     recap?: { offered: number; outcome?: 'accepted' | 'declined' | 'improved' | 'still_struggling' };
+    /** True when this entry carries ONLY recap/recurrence bookkeeping for a
+     *  gap the session already recorded. The store merges those counters into
+     *  an existing active gap and never creates one — see RecordGapInput. */
+    bookkeepingOnly?: boolean;
   }>;
   /** Full transcript for the summary generator. */
   transcript?: Array<{ role: 'student' | 'tutor'; text: string }>;
@@ -324,6 +328,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
                 : undefined,
             }
           : undefined,
+        // Trust boundary: only the literal `true` enables the bookkeeping
+        // path, matching this file's validation style for client-supplied flags.
+        bookkeepingOnly: g.bookkeepingOnly === true,
       });
     }
   }

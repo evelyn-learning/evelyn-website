@@ -211,6 +211,16 @@ export interface RecordGapInput {
   /** Consent-gated recap offer/outcome for this record. Merged into
    *  evidence.recap via mergeRecap. */
   recap?: { offered: number; outcome?: RecapRecord['lastOutcome'] };
+  /** Bookkeeping-only record. TRUE for entries whose ONLY purpose is to
+   *  carry recap counters or a recurrence tally for a gap the session
+   *  already knows about ("Recap offered this session.", "Recurred later
+   *  in the session."). Such a record must never CREATE a gap (it would
+   *  surface a phantom candidate to parents via /api/portal/v1/gaps and to
+   *  the brain via <student_profile>) and must never overwrite the real
+   *  observation/signals/quotes of an existing one. When true, recordGap
+   *  merges ONLY recap + recurrences (plus lastSeenAt/sessionIds) into an
+   *  EXISTING active match, and is a no-op when there is no active match. */
+  bookkeepingOnly?: boolean;
 }
 
 /** Match an existing GapEntry by identity (kind + key) regardless of status,
@@ -284,6 +294,26 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
   const idx = profile.gaps.findIndex((g) => activeMatch(g, input));
   if (idx >= 0) {
     const existing = profile.gaps[idx];
+    // Bookkeeping-only: merge recap + recurrences and touch lastSeenAt /
+    // sessionIds. Deliberately leaves observation, signals, studentQuotes,
+    // confidence and status exactly as they are — this record carries no
+    // new evidence about the gap, only counters about how we handled it.
+    if (input.bookkeepingOnly) {
+      const bookkeepingRecap = mergeRecap(existing.evidence?.recap, input.recap, now);
+      const bookkeepingRecurrences = (existing.evidence?.recurrenceCount ?? 0) + (input.recurrences ?? 0);
+      const bookkeepingEvidence: GapEvidence = {
+        ...(existing.evidence ?? { signals: [], observation: '', studentQuotes: [] }),
+        ...(bookkeepingRecurrences > 0 ? { recurrenceCount: bookkeepingRecurrences } : {}),
+        ...(bookkeepingRecap ? { recap: bookkeepingRecap } : {}),
+      };
+      const bookkept: GapEntry = {
+        ...existing,
+        lastSeenAt: now,
+        sessionIds: Array.from(new Set([...(existing.sessionIds ?? []), input.sessionId])),
+        evidence: bookkeepingEvidence,
+      };
+      return { ...profile, gaps: profile.gaps.map((g, i) => (i === idx ? bookkept : g)) };
+    }
     const mergedSignals: GapSignalCode[] = Array.from(new Set([
       ...((existing.evidence?.signals ?? []) as GapSignalCode[]),
       ...input.signals,
@@ -331,6 +361,11 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
     };
     return { ...profile, gaps: profile.gaps.map((g, i) => (i === idx ? updated : g)) };
   }
+
+  // Bookkeeping-only with no ACTIVE match: nothing to annotate. Never
+  // create a gap and never re-open a resolved one from a counter-carrying
+  // record — that is exactly the phantom-gap failure this flag prevents.
+  if (input.bookkeepingOnly) return profile;
 
   // Resolved match — re-open as a fresh candidate (preserve id + firstSeenAt).
   const reopenIdx = profile.gaps.findIndex((g) => resolvedMatch(g, input));
