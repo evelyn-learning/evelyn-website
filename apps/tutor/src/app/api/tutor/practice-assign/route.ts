@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
   const studentId = typeof body.studentId === 'string' ? body.studentId : '';
   const sessionId = typeof body.sessionId === 'string' ? body.sessionId : '';
   const loIds = Array.isArray(body.loIds) ? body.loIds.filter((x): x is string => typeof x === 'string') : [];
-  const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 240) : '';
+  // Trimmed for the emptiness check only — `assignPractice` owns the 240-char
+  // cap (and the locator/nextTimeIntent caps below) so both this route and
+  // the commit-time fallback enforce them the same way.
+  const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
   if (!studentId || !sessionId || loIds.length === 0 || !reason) {
     return NextResponse.json({ error: 'studentId, sessionId, loIds[], reason required' }, { status: 400 });
   }
@@ -32,8 +35,8 @@ export async function POST(req: NextRequest) {
       lessonPlanId: typeof body.lessonPlanId === 'string' ? body.lessonPlanId : undefined,
       courseId: typeof body.courseId === 'string' ? body.courseId : undefined,
       loIds, reason,
-      locator: typeof body.locator === 'string' && body.locator.trim() ? body.locator.trim().slice(0, 80) : undefined,
-      nextTimeIntent: typeof body.nextTimeIntent === 'string' ? body.nextTimeIntent.trim().slice(0, 200) : undefined,
+      locator: typeof body.locator === 'string' ? body.locator : undefined,
+      nextTimeIntent: typeof body.nextTimeIntent === 'string' ? body.nextTimeIntent : undefined,
       subject: typeof body.subject === 'string' ? body.subject : undefined,
       auto: false,
     });

@@ -334,11 +334,20 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
       .sort((a, b) => ((b.recurrences ?? 0) - (a.recurrences ?? 0)) || ((b.signals?.length ?? 0) - (a.signals?.length ?? 0)));
     if (candidates.length) {
       try {
+        // `sessionId` is a unique index on PracticeAssignment (Task 9), which
+        // is the incidental TOCTOU mitigation between a tool-time
+        // practice-assign write and this fallback: if both race, this check
+        // can pass for both, but the loser's upsertAssignment hits a
+        // duplicate-key error rather than a second record — caught below.
         const existing = await findAssignmentBySession(body.sessionId);
         if (!existing) {
           const plan = body.lessonPlanId ? await getLessonPlan(body.lessonPlanId) : null;
           const lo = plan?.los.find((l) => l.id === candidates[0].loId);
-          const title = lo?.shortTitle ?? lo?.description ?? candidates[0].loId!;
+          // Cap the title BEFORE building the sentence so the synthesized
+          // reason stays readable rather than truncating mid-sentence when a
+          // plan LO has only a long `description` (assignPractice caps the
+          // whole reason string too, as a backstop).
+          const title = (lo?.shortTitle ?? lo?.description ?? candidates[0].loId!).slice(0, 120);
           const out = await assignPractice({
             profileId, partnerId: partnerIdForInternalRoute(auth), externalStudentId: id, sessionId: body.sessionId,
             lessonPlanId: body.lessonPlanId, loIds: [candidates[0].loId!],

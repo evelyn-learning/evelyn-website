@@ -46,15 +46,21 @@ export async function assignPractice(input: {
     mongoPracticeSources(),
   );
   if (los.length === 0) return null;
+  // Caps enforced HERE (not at each call site) so both the direct route and
+  // the commit-time fallback — whose synthesized reason can run long off a
+  // plan LO's full `description` — inherit them uniformly.
+  const reason = input.reason.trim().slice(0, 240);
+  const locator = input.locator?.trim().slice(0, 80) || undefined;
+  const nextTimeIntent = input.nextTimeIntent?.trim().slice(0, 200) || undefined;
   const rec = await upsertAssignment({
     studentId: input.profileId,
     partnerId: input.partnerId,
     sessionId: input.sessionId,
     lessonPlanId: input.lessonPlanId,
     courseId: input.courseId,
-    los: los.map((l) => ({ ...l, reason: input.reason })),
-    nextTimeIntent: input.nextTimeIntent,
-    locator: input.locator,
+    los: los.map((l) => ({ ...l, reason })),
+    nextTimeIntent,
+    locator,
     auto: input.auto,
     assignedAt: new Date(),
   });
