@@ -66,6 +66,17 @@ import {
   resolveSegmentEvidence,
   type SegmentEvidenceSignal,
 } from '@/lib/tutor/orchestrator/segment-evidence';
+import {
+  createLedger,
+  applyLedgerEvent,
+  markRecovered,
+  STUCK_CUE_RE,
+  CONFUSION_RE,
+  prereqKey,
+  type LedgerState,
+  type LedgerDetection,
+  type LedgerEventKind,
+} from '@/lib/tutor/orchestrator/struggle-ledger';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
 import { buildWhiteboardSummary } from '@/lib/tutor/whiteboard/summary';
@@ -238,6 +249,7 @@ import {
   TUTOR_META_NARRATION_STRUCTURAL,
   TUTOR_SUBSTITUTE_GATE,
   TUTOR_PAGE_TITLE_FROM_RENDER,
+  TUTOR_STRUGGLE_LEDGER,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -2301,6 +2313,17 @@ export function VoiceTutorRealtime({
       observation: string;
       studentQuotes: string[];
       signals: string[];
+      /** Holistic-pedagogy round (spec §A): true when the ORCHESTRATOR
+       *  inferred this gap from the struggle ledger rather than the brain
+       *  naming it. The store caps confidence for inferred gaps. */
+      inferred?: boolean;
+      /** How many recurrences of this gap this increment carries (ledger
+       *  detections ≥ 2, or a brain record_gap with recurrence:true).
+       *  Summed into evidence.recurrenceCount server-side. */
+      recurrences?: number;
+      /** Consent-gated recap offer/outcome for this gap this increment
+       *  (written by the recap state machine). */
+      recap?: { offered: number; outcome?: 'accepted' | 'declined' | 'improved' | 'still_struggling' };
     }>;
     /** Per-session topic-notes ATTEMPT counts, used by the orchestrator
      *  rate-limit gate. Counts every accepted (post-warmup, pre-rate-cap)
@@ -2338,6 +2361,102 @@ export function VoiceTutorRealtime({
     topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
     segmentOutcomes: [],
   });
+  // ── Holistic-pedagogy round (spec §A): per-LO struggle ledger ────────
+  // One LedgerState per session (fresh via the key={sessionId} remount).
+  // Fed from sites the orchestrator already owns (streak increments, cue
+  // matches, segment turn counts, brain gap calls); on a detection it
+  // either pushes an INFERRED gap (the student never named the
+  // difficulty) or marks a RECURRENCE on an existing one.
+  const ledgerRef = useRef<LedgerState>(createLedger());
+  // Set by the recap state machine while a recap runs in free mode, so
+  // events with no segment LO still attribute to the recap's LO.
+  const activeLedgerLoRef = useRef<string | null>(null);
+  // The recap state machine registers itself here (recap arming listens
+  // for recurrences). Null until then — the ledger never depends on it.
+  const recurrenceListenerRef = useRef<((d: LedgerDetection & { loTitle: string }) => void) | null>(null);
+  /** Segment → LO, using the SAME resolution the mastery-delta /
+   *  segment-evidence sites use: the segment's own LO group when it
+   *  resolves to one of the plan's LOs (generated AND review plans mint
+   *  ids on the "<loId>-hook/-concept/-worked/-try" convention), else the
+   *  plan's first LO (curated single-LO plans). */
+  const loForSegment = (segId: string): string | null => {
+    const plan = lessonPlanRef.current;
+    if (!plan) return null;
+    const groupId = segId ? loGroupOf(segId) : undefined;
+    const resolved = !!(groupId && plan.los?.some((lo) => lo.id === groupId));
+    return (resolved ? groupId : plan.los?.[0]?.id) ?? null;
+  };
+  const loTitleFor = (loId: string): string => {
+    const lo = lessonPlanRef.current?.los?.find((l) => l.id === loId);
+    return lo?.shortTitle ?? lo?.description ?? loId;
+  };
+  /** Feed one ledger event. On a detection: bump the recurrence count of
+   *  an existing accumulator gap (or push a minimal recurrence-only entry
+   *  when the accumulator was already flushed — the store merges it onto
+   *  the committed gap), else push an INFERRED gap when the brain hasn't
+   *  recorded one for this LO in this segment.
+   *  Flag-off ⇒ returns immediately; nothing in this file's behaviour
+   *  changes. */
+  const feedLedger = (kind: LedgerEventKind, explicitLoId?: string | null, explicitSegId?: string) => {
+    if (!TUTOR_STRUGGLE_LEDGER) return;
+    const segId = explicitSegId || currentSegmentIdRef.current;
+    const loId = explicitLoId ?? (segId ? loForSegment(segId) : activeLedgerLoRef.current);
+    if (!loId) return;
+    const d = applyLedgerEvent(ledgerRef.current, { kind, loId, segId: segId || 'free', atMs: Date.now() });
+    if (!d) return;
+    const accum = sessionAccumRef.current;
+    const isPrereq = loId.startsWith('prereq:');
+    const existing = accum.gaps.find((g) => (isPrereq
+      ? g.kind === 'prerequisite' && prereqKey(g.conceptLabel ?? '') === loId
+      : g.kind === 'lo' && g.loId === loId));
+    // A brain_gap event that produced this LO's FIRST detection is not a
+    // recurrence — it IS the gap the brain just pushed one line earlier.
+    // (Without this, every brain record_gap would immediately stamp
+    // recurrences=1 on its own fresh entry and arm a recap.)
+    const brainGapFirstDetection = kind === 'brain_gap' && d.count === 1;
+    if (!brainGapFirstDetection && (d.recurrence || existing)) {
+      if (existing) {
+        existing.recurrences = (existing.recurrences ?? 0) + 1;
+      } else {
+        // The accumulator was flushed since the first sighting. Push a
+        // minimal entry carrying only the recurrence — the commit route
+        // merges it onto the already-committed gap by loId/conceptLabel.
+        accum.gaps.push({
+          ...(isPrereq
+            ? { kind: 'prerequisite' as const, conceptLabel: loId.slice('prereq:'.length) }
+            : { kind: 'lo' as const, loId }),
+          observation: 'Recurred later in the session.',
+          studentQuotes: [],
+          signals: d.signals,
+          recurrences: 1,
+        });
+        if (!isPrereq) accum.losTouched.add(loId);
+      }
+      console.log(`[VoiceTutorRealtime] gap recurred loId="${loId}" count=${d.count} signals=[${d.signals.join(',')}]`);
+      onDebugEvent?.('gap_recurred', `lo="${loId}" count=${d.count}`);
+      recurrenceListenerRef.current?.({ ...d, loTitle: loTitleFor(loId) });
+      scheduleProfileFlush();
+      return;
+    }
+    const lo = ledgerRef.current.get(loId);
+    if (!brainGapFirstDetection && !d.sawBrainGapThisSegment && !isPrereq && lo && !lo.inferredPushed) {
+      lo.inferredPushed = true;
+      const wrongs = lo.events.filter((e) => e.kind === 'wrong').length;
+      const signalPhrase = d.signals.map((s) => s.toLowerCase().replace(/_/g, ' ')).join(', ') || 'repeated difficulty';
+      accum.gaps.push({
+        kind: 'lo',
+        loId,
+        inferred: true,
+        observation: `Inferred from behaviour: ${wrongs} incorrect attempt${wrongs === 1 ? '' : 's'} and ${signalPhrase} on this objective; the student did not name the difficulty.`,
+        studentQuotes: [],
+        signals: d.signals,
+      });
+      accum.losTouched.add(loId);
+      console.log(`[VoiceTutorRealtime] gap inferred loId="${loId}" signals=[${d.signals.join(',')}]`);
+      onDebugEvent?.('gap_inferred', `lo="${loId}" signals=${d.signals.join('+')}`);
+      scheduleProfileFlush();
+    }
+  };
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
   // the first one's audio — observed 2026-04-26 when the user typed two
@@ -6263,7 +6382,9 @@ export function VoiceTutorRealtime({
           objectiveSignals.push('INCORRECT_STREAK_2_PLUS');
         }
         const cue = studentCueRef.current?.cue;
-        if (cue && /\b(stuck|skip|don't know|dont know|i don't get|help me|can't do)\b/i.test(cue)) {
+        // STUCK_CUE_RE (struggle-ledger.ts) is this regex, moved verbatim so
+        // the ledger and this objective-signal stamp share one definition.
+        if (cue && STUCK_CUE_RE.test(cue)) {
           objectiveSignals.push('STUCK_CUE');
         }
         if (segmentTurnCountRef.current.count >= 6) {
@@ -6276,6 +6397,37 @@ export function VoiceTutorRealtime({
         const brainSignals: string[] = Array.isArray(c.signalsObserved) ? c.signalsObserved : [];
         // Union — preserves order, dedupes.
         const signals = Array.from(new Set([...brainSignals, ...objectiveSignals]));
+        // Holistic-pedagogy round (spec §A.5): the brain can mark a gap it
+        // has ALREADY recorded this session as recurring. Never push a
+        // second accumulator entry for it — bump the existing entry's
+        // recurrence count (the store sums them into
+        // evidence.recurrenceCount) and notify the recap listener.
+        const brainRecurrence = TUTOR_STRUGGLE_LEDGER && c.recurrence === true;
+        if (brainRecurrence) {
+          const isPrereqCmd = cmd.action !== 'recordGap';
+          const key: string | null = isPrereqCmd
+            ? (typeof c.conceptLabel === 'string' && c.conceptLabel.trim() ? prereqKey(c.conceptLabel) : null)
+            : (typeof c.loId === 'string' && c.loId ? c.loId : null);
+          const priorEntry = key === null ? undefined : sessionAccumRef.current.gaps.find((g) => (isPrereqCmd
+            ? g.kind === 'prerequisite' && prereqKey(g.conceptLabel ?? '') === key
+            : g.kind === 'lo' && g.loId === key));
+          if (key && priorEntry) {
+            priorEntry.recurrences = (priorEntry.recurrences ?? 0) + 1;
+            const count = priorEntry.recurrences + 1;
+            console.log(`[VoiceTutorRealtime] gap recurred (brain) key="${key}" count=${count} signals=[${signals.join(',')}]`);
+            onDebugEvent?.('gap_recurred', `lo="${key}" count=${count}`);
+            recurrenceListenerRef.current?.({
+              loId: key,
+              count,
+              recurrence: true,
+              signals: signals as LedgerDetection['signals'],
+              sawBrainGapThisSegment: true,
+              loTitle: isPrereqCmd ? String(c.conceptLabel) : loTitleFor(key),
+            });
+            scheduleProfileFlush();
+            continue;
+          }
+        }
         if (cmd.action === 'recordGap') {
           if (c.loId && observation) {
             sessionAccumRef.current.gaps.push({
@@ -6284,10 +6436,19 @@ export function VoiceTutorRealtime({
               observation,
               studentQuotes,
               signals,
+              // recurrence:true with no accumulator entry ⇒ the gap was
+              // already flushed; carry the count so the store merges it
+              // onto the committed entry instead of losing it.
+              ...(brainRecurrence ? { recurrences: 1 } : {}),
             });
             sessionAccumRef.current.losTouched.add(c.loId);
             console.log(`[VoiceTutorRealtime] gap recorded: kind=lo loId="${c.loId}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
             scheduleProfileFlush();
+            // Ledger: a brain-named gap is the strongest struggle signal
+            // (weight 2). It never pushes an inferred duplicate — the
+            // detection it triggers carries sawBrainGapThisSegment — but it
+            // primes the LO so a LATER struggle on it reads as a recurrence.
+            feedLedger('brain_gap', c.loId);
           }
         } else {
           if (c.conceptLabel && observation) {
@@ -6297,9 +6458,11 @@ export function VoiceTutorRealtime({
               observation,
               studentQuotes,
               signals,
+              ...(brainRecurrence ? { recurrences: 1 } : {}),
             });
             console.log(`[VoiceTutorRealtime] gap recorded: kind=prerequisite concept="${c.conceptLabel}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
             scheduleProfileFlush();
+            feedLedger('brain_gap', prereqKey(c.conceptLabel));
           }
         }
         continue;
@@ -9221,6 +9384,10 @@ export function VoiceTutorRealtime({
         }
         if (isVerification) {
           segmentTurnCountRef.current = { segId: segIdNow, count: segmentTurnCountRef.current.count + 1 };
+          // Struggle ledger (spec §A): crossing the SLOW_SEGMENT threshold
+          // (the same 6 the objective-signal stamp uses) is half a struggle
+          // point — fired ONCE, on the crossing turn, not every turn after.
+          if (segmentTurnCountRef.current.count === 6) feedLedger('slow_segment', undefined, segIdNow || undefined);
         }
         // Boredom-cue regex — verbatim match logged for telemetry. Cue
         // is consumed by the next-turn student_state block formatter.
@@ -9246,6 +9413,9 @@ export function VoiceTutorRealtime({
           studentCueRef.current = { cue: cueMatch[0], turn: pacingTurnCounterRef.current };
           logPacing(`student-cue cue="${cueMatch[0]}" turn=${pacingTurnCounterRef.current}`);
           onDebugEvent?.('pacing_cue', `cue="${cueMatch[0]}"`);
+          // Struggle ledger (spec §A): only the STUCK-shaped cues are a
+          // struggle signal — a "faster"/"boring" pacing cue is not.
+          if (STUCK_CUE_RE.test(cueMatch[0])) feedLedger('stuck_cue');
           // Phase 3: pace-direction cues additionally step paceBias.
           // "slow down" / "slower" → -1 (more depth). "faster" / "speed
           // up" → +1 (less depth). Other cues (skip/easy/boring/etc.)
@@ -9258,6 +9428,11 @@ export function VoiceTutorRealtime({
             stepPaceBias(+1, 'cue', cueMatch[0]);
           }
         }
+        // Struggle ledger (spec §A): verbalized confusion is a struggle
+        // signal in its own right — it is NOT in the boredom-cue set, so
+        // it is read off the transcript directly (generic shapes only, no
+        // subject terms — see CONFUSION_RE).
+        if (CONFUSION_RE.test(lower)) feedLedger('confusion');
       }
       // Mirror current segment id into the catalog so subsequent
       // appends are stamped with it AND getSnapshot's filter scopes
@@ -14290,6 +14465,13 @@ export function VoiceTutorRealtime({
                 && studentIncorrectStreakRef.current.count > 0) {
               studentIncorrectStreakRef.current = { segId, count: 0 };
             }
+            // Struggle ledger (spec §A): a correct answer is recovery on
+            // this LO — clears the "still struggling" mark without erasing
+            // the detection history.
+            if (TUTOR_STRUGGLE_LEDGER) {
+              const ledgerLo = (segId ? loForSegment(segId) : null) ?? activeLedgerLoRef.current;
+              if (ledgerLo) markRecovered(ledgerRef.current, ledgerLo);
+            }
             logPacing(`streak-correct seg="${segId}" count=${studentStreakRef.current.count}`);
             onDebugEvent?.('pacing_streak', `correct=${studentStreakRef.current.count}`);
             if (decision.objective && objectiveSignal) {
@@ -14348,6 +14530,12 @@ export function VoiceTutorRealtime({
             const priorIncCount = studentIncorrectStreakRef.current.segId === segId
               ? studentIncorrectStreakRef.current.count : 0;
             studentIncorrectStreakRef.current = { segId, count: priorIncCount + 1 };
+            // Struggle ledger (spec §A): a wrong answer is one struggle
+            // event on this segment's LO; a SECOND consecutive one is a
+            // failure to recover after the tutor's correction. Attribute to
+            // the segment the student actually ANSWERED on (segId, the
+            // turn-start snapshot) — the brain may have advanced mid-turn.
+            feedLedger(priorIncCount >= 1 ? 'no_recovery' : 'wrong', undefined, segId || undefined);
             if (studentStreakRef.current.segId === segId
                 && studentStreakRef.current.count > 0) {
               studentStreakRef.current = { segId, count: 0 };
