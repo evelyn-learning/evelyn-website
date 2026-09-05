@@ -44,7 +44,7 @@ import connectDB from '@core/db';
 import { getLessonPlan } from '../lesson-plan/store';
 import { getOrCreateStudentProfile, isGapStale } from '../student-profile/store';
 import { TUNING, trendOf } from './estimator';
-import { getLearnerHints } from './hints';
+import { getLearnerHints, type LearnerHints } from './hints';
 import { findOpenAssignments } from '../practice-assign/store';
 import { computeHomeworkStatus, describeHomework, type HomeworkStatus } from '../practice-assign/status';
 import { pickRecapCandidate, type RecapCandidate } from './recap-candidate';
@@ -62,11 +62,56 @@ const MAX_GAPS = 3;
 const GAP_OBSERVATION_MAX_CHARS = 160;
 
 /** Hard ceiling on the rendered block (~600 tokens). The widened block can
- *  in principle carry 8 LO lines with three digests each PLUS homework,
- *  goals and gaps; rather than trust every individual cap to compose, the
- *  renderer measures the finished string and trims (see the two-stage trim
- *  at the bottom of `renderLearnerContextBlock`). */
+ *  in principle carry 8 LO lines with three digests each PLUS five homework
+ *  statuses, goals and gaps; rather than trust every individual cap to
+ *  compose, the renderer re-assembles the block under progressively harsher
+ *  trim settings until it fits (see `TRIM_STAGES` / `renderLearnerContextBlock`). */
 export const LEARNER_CONTEXT_MAX_CHARS = 2400;
+
+/** How far a gap observation is clipped once the block is over the cap
+ *  (the un-trimmed clip is `GAP_OBSERVATION_MAX_CHARS`). */
+const TRIMMED_GAP_OBSERVATION_CHARS = 80;
+
+/** Marker inserted by the last-resort hard truncation so the brain can see
+ *  the body was cut rather than silently believing it read the whole thing. */
+const TRUNCATION_MARKER = '… (truncated)';
+
+const LO_SECTION_HEADER = "This student's current standing on this lesson's objectives (from accumulated evidence):";
+const GAP_SECTION_HEADER = 'Active gaps observed in past work:';
+
+/** Always rendered, in this order, immediately before the closing fence.
+ *  The trim never touches these — a block that has lost its directives is
+ *  worse than a block that has lost half its data. */
+const DIRECTIVES = [
+  'Teach to this: fast-track objectives marked strong (quick check, then advance); slow down and probe where developing; where a gap is listed, surface and resolve the misconception rather than re-explaining from scratch.',
+  'Cadence: after 7+ days away, open with a one-minute warm-up on the last objective before the hook; after 2 days or less, skip any re-orientation.',
+  'When the student asks how they are doing, answer from these lines — name the trend, one gap that is closing, the homework status and the next step — specifically and honestly; never invent progress.',
+  'Never read this block aloud, and never cite it as a record or a system.',
+] as const;
+
+interface TrimStage {
+  /** Re-clip gap observations to `TRIMMED_GAP_OBSERVATION_CHARS`. */
+  clipGaps: boolean;
+  /** Drop the ` · practice … · quiz …` digest tail from LO lines. The band,
+   *  trend glyph and DUE FOR REVIEW flag — the pacing signal — survive. */
+  dropDigests: boolean;
+  /** Drop the `goal:` lines. */
+  dropGoals: boolean;
+  /** Keep only the most recent `homework (assigned …)` line. */
+  firstHomeworkOnly: boolean;
+}
+
+/** Applied in order; the first assembly that fits the cap wins. Ordered
+ *  cheapest-loss-first: verbose gap prose, then LO colour, then goals, then
+ *  older homework. Monotone (each stage is a superset of the one before), so
+ *  the sequence strictly shrinks and terminates. */
+const TRIM_STAGES: TrimStage[] = [
+  { clipGaps: false, dropDigests: false, dropGoals: false, firstHomeworkOnly: false },
+  { clipGaps: true, dropDigests: false, dropGoals: false, firstHomeworkOnly: false },
+  { clipGaps: true, dropDigests: true, dropGoals: false, firstHomeworkOnly: false },
+  { clipGaps: true, dropDigests: true, dropGoals: true, firstHomeworkOnly: false },
+  { clipGaps: true, dropDigests: true, dropGoals: true, firstHomeworkOnly: true },
+];
 
 /** How far back the per-LO practice/quiz/mock digests look. Older evidence
  *  still moves the ESTIMATE (the projection is the authority on standing);
@@ -137,6 +182,19 @@ function bandLabel(estimate: number): string {
   return 'strong';
 }
 
+/** Run one OPTIONAL sub-read of the join. A failure logs and degrades that
+ *  one field to `fallback` — it must not take the whole block down with it.
+ *  Only the plan / projection / profile reads are fatal (they ARE the
+ *  block); everything routed through here is colour on top. */
+async function optionalRead<T>(what: string, read: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await read();
+  } catch (err) {
+    console.error(`[learner-context] ${what} failed:`, err);
+    return fallback;
+  }
+}
+
 function clipObservation(observation: string): string {
   const trimmed = observation.trim();
   return trimmed.length > GAP_OBSERVATION_MAX_CHARS
@@ -151,78 +209,107 @@ function clipObservation(observation: string): string {
  * a genuinely empty pair of inputs suppresses the block).
  *
  * Every field past `los`/`gaps` renders at most ONE line, and only when the
- * caller supplied it — a `getLearnerContext` failure part-way through
- * (hints down, no assignments) degrades line by line rather than all at
- * once.
+ * caller supplied it — `getLearnerContext` wraps each optional sub-read in
+ * its own try/catch, so a hints outage or a homework-read failure costs you
+ * that one line rather than the whole block.
+ *
+ * TRIM: the block is assembled from SEGMENTED arrays (LO rows keep their
+ * digest tail separate; gap rows keep their raw observation) rather than
+ * post-processed with regexes over the finished string — the previous
+ * regex approach could not converge and mis-targeted any line containing
+ * " · " (a goal or a homework title). Assembly is retried under each
+ * `TRIM_STAGES` setting until it fits, then, only if even the harshest
+ * stage overflows, the BODY is hard-truncated with a `… (truncated)`
+ * marker so the block always closes with its four directives and
+ * `</learner_context>`.
  */
 export function renderLearnerContextBlock(input: LearnerContextInput): string | null {
   const { los, gaps } = input;
   if (los.length === 0 && gaps.length === 0) return null;
 
-  const lines: string[] = ['<learner_context>'];
+  // --- segment the content (nothing is stringified into one blob yet) ---
 
-  const cappedLos = los.slice(0, MAX_LOS);
-  if (cappedLos.length > 0) {
-    lines.push("This student's current standing on this lesson's objectives (from accumulated evidence):");
-    for (const lo of cappedLos) {
-      const estimate = lo.estimate ?? TUNING.untouchedPrior;
-      const trend = lo.trend ? ` ${TREND_GLYPH[lo.trend]}` : '';
-      const due = lo.reviewDue ? ' — DUE FOR REVIEW' : '';
-      const digests: string[] = [];
-      if (lo.practice) digests.push(`practice ${lo.practice.correct}/${lo.practice.total} on ${lo.practice.date}`);
-      if (lo.quiz) digests.push(`quiz ${lo.quiz.awarded}/${lo.quiz.max} pts on ${lo.quiz.date}`);
-      if (lo.mock) digests.push(`mock ${lo.mock.correct}/${lo.mock.total} (${lo.mock.date})`);
-      const tail = digests.length > 0 ? ` · ${digests.join(' · ')}` : '';
-      lines.push(`- ${lo.title}: ${bandLabel(estimate)} (${lo.confidence} confidence)${trend}${due}${tail}`);
-    }
-  }
+  const loRows = los.slice(0, MAX_LOS).map((lo) => {
+    const estimate = lo.estimate ?? TUNING.untouchedPrior;
+    const trend = lo.trend ? ` ${TREND_GLYPH[lo.trend]}` : '';
+    const due = lo.reviewDue ? ' — DUE FOR REVIEW' : '';
+    const digests: string[] = [];
+    if (lo.practice) digests.push(`practice ${lo.practice.correct}/${lo.practice.total} on ${lo.practice.date}`);
+    if (lo.quiz) digests.push(`quiz ${lo.quiz.awarded}/${lo.quiz.max} pts on ${lo.quiz.date}`);
+    if (lo.mock) digests.push(`mock ${lo.mock.correct}/${lo.mock.total} (${lo.mock.date})`);
+    return {
+      base: `- ${lo.title}: ${bandLabel(estimate)} (${lo.confidence} confidence)${trend}${due}`,
+      tail: digests.length > 0 ? ` · ${digests.join(' · ')}` : '',
+    };
+  });
 
-  if (input.ability) lines.push(`ability: ${input.ability}`);
+  const midLines: string[] = [];
+  if (input.ability) midLines.push(`ability: ${input.ability}`);
   if (typeof input.gapsResolved90d === 'number' && input.gapsResolved90d > 0) {
-    lines.push(`gaps resolved in the last 90 days: ${input.gapsResolved90d}`);
+    midLines.push(`gaps resolved in the last 90 days: ${input.gapsResolved90d}`);
   }
   if (input.cadence) {
     const d = input.cadence.daysSinceLast;
     const last = d === null ? 'no prior session on record' : `last session ${d} day${d === 1 ? '' : 's'} ago`;
     const n = input.cadence.sessionsLast7d;
-    lines.push(`cadence: ${last}; ${n} session${n === 1 ? '' : 's'} in the last 7 days`);
+    midLines.push(`cadence: ${last}; ${n} session${n === 1 ? '' : 's'} in the last 7 days`);
   }
   if (input.nextTimeIntent) {
-    lines.push(`next time (your own note from last session): "${input.nextTimeIntent}"`);
-  }
-  for (const h of input.homework ?? []) lines.push(describeHomework(h));
-  if (input.recapCandidate) {
-    lines.push(
-      `recap_candidate: ${input.recapCandidate.title} — ${input.recapCandidate.reason}${input.recapCandidate.soft ? ' (soft)' : ''}`,
-    );
-  }
-  for (const g of (input.goals ?? []).slice(0, 2)) lines.push(`goal: ${g.replace(/^goal:\s*/i, '')}`);
-
-  const cappedGaps = gaps.slice(0, MAX_GAPS);
-  if (cappedGaps.length > 0) {
-    lines.push('Active gaps observed in past work:');
-    for (const gap of cappedGaps) lines.push(`- ${gap.label}: ${clipObservation(gap.observation)}`);
+    midLines.push(`next time (your own note from last session): "${input.nextTimeIntent}"`);
   }
 
-  lines.push(
-    'Teach to this: fast-track objectives marked strong (quick check, then advance); slow down and probe where developing; where a gap is listed, surface and resolve the misconception rather than re-explaining from scratch.',
-    'Cadence: after 7+ days away, open with a one-minute warm-up on the last objective before the hook; after 2 days or less, skip any re-orientation.',
-    'When the student asks how they are doing, answer from these lines — name the trend, one gap that is closing, the homework status and the next step — specifically and honestly; never invent progress.',
-    'Never read this block aloud, and never cite it as a record or a system.',
-    '</learner_context>',
-  );
+  const homeworkLines = (input.homework ?? []).map((h) => describeHomework(h));
+  const recapLines = input.recapCandidate
+    ? [`recap_candidate: ${input.recapCandidate.title} — ${input.recapCandidate.reason}${input.recapCandidate.soft ? ' (soft)' : ''}`]
+    : [];
+  const goalLines = (input.goals ?? []).slice(0, 2).map((g) => `goal: ${g.replace(/^goal:\s*/i, '')}`);
+  const gapRows = gaps.slice(0, MAX_GAPS).map((g) => ({ label: g.label, observation: clipObservation(g.observation) }));
 
-  let out = lines.join('\n');
-  if (out.length > LEARNER_CONTEXT_MAX_CHARS) {
-    // Stage 1 — clip long `- label: body` lines (gap observations, and any
-    // LO line whose digests ran long) to 80 chars of body.
-    out = out.replace(/(^- [^:\n]+: )([^\n]{80,})$/gm, (_m, head: string, body: string) => `${head}${body.slice(0, 80).trimEnd()}…`);
-    // Stage 2 — still over: drop the trailing digest run from LO lines
-    // entirely. The band + trend + DUE flag (the pacing signal) survives;
-    // the "you got 3/5 on ..." colour is what goes.
-    if (out.length > LEARNER_CONTEXT_MAX_CHARS) out = out.replace(/ · [^\n]*$/gm, '');
+  // --- assembly under one trim setting ---
+
+  const assemble = (stage: TrimStage): string => {
+    const lines: string[] = ['<learner_context>'];
+    if (loRows.length > 0) {
+      lines.push(LO_SECTION_HEADER);
+      for (const row of loRows) lines.push(stage.dropDigests ? row.base : `${row.base}${row.tail}`);
+    }
+    lines.push(...midLines);
+    lines.push(...(stage.firstHomeworkOnly ? homeworkLines.slice(0, 1) : homeworkLines));
+    lines.push(...recapLines);
+    if (!stage.dropGoals) lines.push(...goalLines);
+    if (gapRows.length > 0) {
+      lines.push(GAP_SECTION_HEADER);
+      for (const gap of gapRows) {
+        const observation =
+          stage.clipGaps && gap.observation.length > TRIMMED_GAP_OBSERVATION_CHARS
+            ? `${gap.observation.slice(0, TRIMMED_GAP_OBSERVATION_CHARS).trimEnd()}…`
+            : gap.observation;
+        lines.push(`- ${gap.label}: ${observation}`);
+      }
+    }
+    lines.push(...DIRECTIVES, '</learner_context>');
+    return lines.join('\n');
+  };
+
+  let out = '';
+  for (const stage of TRIM_STAGES) {
+    out = assemble(stage);
+    if (out.length <= LEARNER_CONTEXT_MAX_CHARS) return out;
   }
-  return out;
+
+  // --- last resort: hard-truncate the body, keep the fence + directives ---
+  const closing = [...DIRECTIVES, '</learner_context>'];
+  const body = out.split('\n').slice(1, -closing.length);
+  const fixedCost = '<learner_context>\n'.length + TRUNCATION_MARKER.length + 1 + closing.join('\n').length;
+  const budget = Math.max(0, LEARNER_CONTEXT_MAX_CHARS - fixedCost);
+  const kept: string[] = [];
+  let used = 0;
+  for (const line of body) {
+    if (used + line.length + 1 > budget) break;
+    kept.push(line);
+    used += line.length + 1;
+  }
+  return ['<learner_context>', ...kept, TRUNCATION_MARKER, ...closing].join('\n');
 }
 
 /**
@@ -242,6 +329,16 @@ export function renderLearnerContextBlock(input: LearnerContextInput): string | 
  * (logged via console.error for the DB-error case) so a learner-context
  * failure never takes down the boot-context fetch that also carries the
  * student profile.
+ *
+ * DEGRADES FIELD BY FIELD. Only THREE reads are fatal — the lesson plan,
+ * the projections and the student profile — because they are the block:
+ * without them there is no standing to state. Every other sub-read (the
+ * trend snapshot, the digest evidence rows, the ability-band hints, the
+ * open assignments + their evidence rows, and the recap-candidate pick)
+ * runs inside its OWN try/catch via `optionalRead`, logs
+ * `[learner-context] <what> failed`, and degrades to undefined/empty. A
+ * homework-collection outage therefore costs the block its homework line,
+ * not its existence.
  *
  * M1C-IDENTITY: resolved by caller. `profileId` must already be RESOLVED
  * by the caller (its sole caller, the internal
@@ -281,23 +378,36 @@ export async function getLearnerContext(
     const now = Date.now();
 
     // trend: same read the portal learner-state route does — the most
-    // recent snapshot dated at or before `trendWindowDays` ago.
+    // recent snapshot dated at or before `trendWindowDays` ago. OPTIONAL:
+    // no snapshot (or a failed read) means no trend glyph, not no block.
     const cutoffDate = new Date(now - TUNING.trendWindowDays * MS_PER_DAY).toISOString().slice(0, 10);
-    const prior = await LearnerStateSnapshotModel.findOne({ studentId: profileId, date: { $lte: cutoffDate } })
-      .sort({ date: -1 })
-      .lean();
-    const priorByLo = new Map((prior?.los ?? []).map((l) => [l.loId, l.estimate]));
+    const priorByLo = await optionalRead(
+      'trend snapshot read',
+      async () => {
+        const prior = await LearnerStateSnapshotModel.findOne({ studentId: profileId, date: { $lte: cutoffDate } })
+          .sort({ date: -1 })
+          .lean();
+        return new Map((prior?.los ?? []).map((l) => [l.loId, l.estimate]));
+      },
+      new Map<string, number>(),
+    );
 
-    // per-LO digests from the raw evidence rows (last 60 days, newest first)
+    // per-LO digests from the raw evidence rows (last 60 days, newest
+    // first). OPTIONAL: no rows means LO lines without their digest tail.
     const loIds = cappedPlanLos.map((l) => l.id);
-    const rows = await EvidenceEventModel.find({
-      studentId: profileId,
-      loId: { $in: loIds },
-      occurredAt: { $gte: new Date(now - DIGEST_WINDOW_DAYS * MS_PER_DAY) },
-    })
-      .select('loId source outcome pointsAwarded maxPoints occurredAt sessionId')
-      .sort({ occurredAt: -1 })
-      .lean();
+    const rows = await optionalRead(
+      'evidence digest read',
+      () =>
+        EvidenceEventModel.find({
+          studentId: profileId,
+          loId: { $in: loIds },
+          occurredAt: { $gte: new Date(now - DIGEST_WINDOW_DAYS * MS_PER_DAY) },
+        })
+          .select('loId source outcome pointsAwarded maxPoints occurredAt sessionId')
+          .sort({ occurredAt: -1 })
+          .lean(),
+      [],
+    );
 
     const digestFor = (loId: string): Pick<LearnerContextLo, 'practice' | 'quiz' | 'mock'> => {
       const byLo = rows.filter((r) => r.loId === loId);
@@ -346,7 +456,11 @@ export async function getLearnerContext(
         estimate: proj ? proj.estimate : null,
         confidence: proj ? proj.confidence : 'low',
         reviewDue: !!(proj?.reviewDueAt && proj.reviewDueAt.getTime() <= now),
-        trend: trendOf(proj?.estimate ?? null, priorByLo.get(lo.id)),
+        // Only when there is a REAL 14-day-ago value to compare against.
+        // `trendOf` answers 'flat' for a missing prior, which would stamp a
+        // meaningless `→` on every line of a new student's block; an absent
+        // `trend` renders no glyph at all.
+        ...(priorByLo.has(lo.id) ? { trend: trendOf(proj?.estimate ?? null, priorByLo.get(lo.id)) } : {}),
         ...digestFor(lo.id),
       };
     });
@@ -361,7 +475,12 @@ export async function getLearnerContext(
         observation: g.evidence?.observation ?? g.description ?? '(no detail)',
       }));
 
-    const hints = await getLearnerHints(opts.externalStudentId, opts.subject, opts.partnerId);
+    // OPTIONAL: no band ⇒ the `ability:` line simply doesn't render.
+    const hints = await optionalRead<LearnerHints | null>(
+      'ability-band hints read',
+      () => getLearnerHints(opts.externalStudentId, opts.subject, opts.partnerId),
+      null,
+    );
     const gapsResolved90d = profile.gaps.filter(
       (g) => g.status === 'resolved' && Date.parse(g.lastSeenAt) >= now - RESOLVED_WINDOW_DAYS * MS_PER_DAY,
     ).length;
@@ -375,30 +494,46 @@ export async function getLearnerContext(
         ? profile.nextSessionIntent.text
         : undefined;
 
-    const open = await findOpenAssignments(profileId, { withinDays: HOMEWORK_WINDOW_DAYS, requireLocator: true });
-    const hwItemIds = open.flatMap((a) => a.los.flatMap((l) => l.items.map((i) => i.id)));
-    const hwRows =
-      hwItemIds.length > 0
-        ? await EvidenceEventModel.find({ studentId: profileId, itemId: { $in: hwItemIds } })
-            .select('itemId outcome occurredAt')
-            .lean()
-        : [];
-    const homework = open.map((a) => computeHomeworkStatus(a, hwRows));
+    // OPTIONAL: assignments + their evidence rows are ONE unit (the rows are
+    // meaningless without the assignments), so one catch covers both. A
+    // failure ⇒ no homework line and empty `extras.homework`.
+    const homework = await optionalRead<HomeworkStatus[]>(
+      'open-homework read',
+      async () => {
+        const open = await findOpenAssignments(profileId, { withinDays: HOMEWORK_WINDOW_DAYS, requireLocator: true });
+        const hwItemIds = open.flatMap((a) => a.los.flatMap((l) => l.items.map((i) => i.id)));
+        const hwRows =
+          hwItemIds.length > 0
+            ? await EvidenceEventModel.find({ studentId: profileId, itemId: { $in: hwItemIds } })
+                .select('itemId outcome occurredAt')
+                .lean()
+            : [];
+        return open.map((a) => computeHomeworkStatus(a, hwRows));
+      },
+      [],
+    );
 
-    const recapCandidate = pickRecapCandidate({
-      planLos: cappedPlanLos.map((l) => ({ loId: l.id, title: l.shortTitle ?? l.description })),
-      projections: new Map(
-        projections.map((p) => [p.loId, { estimate: p.estimate, ...(p.reviewDueAt ? { reviewDueAt: p.reviewDueAt } : {}) }]),
-      ),
-      gaps: profile.gaps,
-      homework,
-      now: new Date(now),
-    });
+    // OPTIONAL and PURE, but wrapped all the same: a throw in the picker
+    // must not cost the caller the standing block it was decorating.
+    let recapCandidate: RecapCandidate | null = null;
+    try {
+      recapCandidate = pickRecapCandidate({
+        planLos: cappedPlanLos.map((l) => ({ loId: l.id, title: l.shortTitle ?? l.description })),
+        projections: new Map(
+          projections.map((p) => [p.loId, { estimate: p.estimate, ...(p.reviewDueAt ? { reviewDueAt: p.reviewDueAt } : {}) }]),
+        ),
+        gaps: profile.gaps,
+        homework,
+        now: new Date(now),
+      });
+    } catch (err) {
+      console.error('[learner-context] recap-candidate pick failed:', err);
+    }
 
     const block = renderLearnerContextBlock({
       los,
       gaps,
-      ability: hints.band,
+      ability: hints?.band,
       gapsResolved90d,
       cadence,
       nextTimeIntent: intent,
