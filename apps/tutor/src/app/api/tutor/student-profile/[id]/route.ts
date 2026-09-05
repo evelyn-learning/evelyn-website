@@ -168,6 +168,11 @@ const MAX_SEGMENT_OUTCOMES_PER_COMMIT = 100;
  *  trusting client-side filtering alone. */
 const EVALUATIVE_SEGMENT_KINDS = new Set<string>(['try_yourself', 'misconception_check']);
 
+/** Holistic-pedagogy round — allowed recap outcome values. Validated defensively
+ *  at the profile commit route to prevent un-narrowed client strings from
+ *  reaching the store layer. */
+const RECAP_OUTCOMES = new Set(['accepted', 'declined', 'improved', 'still_struggling']);
+
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
   let body: CommitBody;
@@ -290,7 +295,14 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         sessionId: body.sessionId,
         recurrences: typeof g.recurrences === 'number' && g.recurrences > 0 ? Math.min(g.recurrences, 20) : undefined,
         inferred: g.inferred === true,
-        recap: g.recap && typeof g.recap.offered === 'number' ? { offered: Math.max(0, Math.min(g.recap.offered, 5)), outcome: g.recap.outcome } : undefined,
+        recap: g.recap && typeof g.recap.offered === 'number'
+          ? {
+              offered: Math.max(0, Math.min(g.recap.offered, 5)),
+              outcome: typeof g.recap.outcome === 'string' && RECAP_OUTCOMES.has(g.recap.outcome)
+                ? (g.recap.outcome as 'accepted' | 'declined' | 'improved' | 'still_struggling')
+                : undefined,
+            }
+          : undefined,
       });
     }
   }
