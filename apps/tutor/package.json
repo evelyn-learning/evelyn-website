@@ -48,6 +48,7 @@
     "test:portal-mock": "npx tsx scripts/test-portal-mock-endpoints.ts",
     "test:practice-assign": "npx tsx scripts/test-practice-assign.ts",
     "test:homework-status": "npx tsx scripts/test-homework-status.ts",
+    "test:recap-candidate": "npx tsx scripts/test-recap-candidate.ts",
     "test:embed-token": "npx tsx scripts/test-embed-token.ts",
     "test:partner-token-secrets": "npx tsx scripts/test-partner-token-secrets.ts",
     "test:material-classify": "npx tsx scripts/test-material-classify.ts",
