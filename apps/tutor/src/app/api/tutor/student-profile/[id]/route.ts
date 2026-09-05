@@ -108,6 +108,12 @@ interface CommitBody {
     signals?: string[];
     /** Legacy field — old clients may still post this. Mapped to observation. */
     description?: string;
+    /** Holistic-pedagogy round: ledger recurrence count this increment. */
+    recurrences?: number;
+    /** True when the orchestrator inferred this gap from behaviour. */
+    inferred?: boolean;
+    /** Consent-gated recap outcome for this gap this increment. */
+    recap?: { offered: number; outcome?: 'accepted' | 'declined' | 'improved' | 'still_struggling' };
   }>;
   /** Full transcript for the summary generator. */
   transcript?: Array<{ role: 'student' | 'tutor'; text: string }>;
@@ -139,6 +145,14 @@ interface CommitBody {
     streakAtComplete?: number;
     turns?: number;
   }>;
+  /** Spec §C.3 — close_session_notes.nextTimeIntent (final commit only). */
+  nextSessionIntent?: string;
+  /** Spec §C.6 — embed-config practice locator, stamped on any auto-assigned
+   *  homework record (Task 10). Absent ⇒ record stays behind the gate. */
+  practiceLocator?: string;
+  /** Spec §C.4 — assignment ids whose homework line rendered at boot; the
+   *  final commit acknowledges them (Task 10). */
+  homeworkAcknowledged?: string[];
 }
 
 /** Task 11 — client-supplied cap so a runaway/misbehaving client can't
@@ -274,6 +288,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
         studentQuotes: g.studentQuotes ?? [],
         signals: (g.signals ?? []) as GapSignalCode[],
         sessionId: body.sessionId,
+        recurrences: typeof g.recurrences === 'number' && g.recurrences > 0 ? Math.min(g.recurrences, 20) : undefined,
+        inferred: g.inferred === true,
+        recap: g.recap && typeof g.recap.offered === 'number' ? { offered: Math.max(0, Math.min(g.recap.offered, 5)), outcome: g.recap.outcome } : undefined,
       });
     }
   }
@@ -283,6 +300,14 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   // skips any gap whose sessionIds already contains body.sessionId.
   if (Array.isArray(body.masteryDeltas) && body.masteryDeltas.length) {
     profile = applyCrossSessionPromotion(profile, body.masteryDeltas, body.sessionId);
+  }
+
+  // Persist nextSessionIntent to profile (Spec §C.3). Final commit only.
+  if (typeof body.nextSessionIntent === 'string' && body.nextSessionIntent.trim()) {
+    profile = {
+      ...profile,
+      nextSessionIntent: { text: body.nextSessionIntent.trim().slice(0, 200), sessionId: body.sessionId, at: new Date().toISOString() },
+    };
   }
 
   let summaryError: string | undefined;
