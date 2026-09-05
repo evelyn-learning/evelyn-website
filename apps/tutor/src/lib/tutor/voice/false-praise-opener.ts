@@ -1,6 +1,7 @@
 /**
  * False-praise-opener guard (holistic-pedagogy round, spec §D.2; fix round 1
- * widened the kill scope and added same-sentence self-correction handling).
+ * widened the kill scope and added same-sentence self-correction handling;
+ * fix round 2 narrowed the self-correction signal after a re-review probe).
  *
  * Third live instance of praise-then-reverse (2026-09-05, QA session turn 5):
  * the student picked a wrong MCQ option and the tutor opened "Right, let's
@@ -24,10 +25,38 @@
  * remainder itself being a follow-up QUESTION (trailing "?"). The third
  * probe above contains neither a denial phrase nor a contrast word — a bare
  * "so where did the extra one go?" is a Socratic re-check, not a flat
- * continuation — so the question-ending check is required to keep it quiet;
- * verified it does not swallow either must-still-fire case below (neither
- * "Right, let's check the reasoning behind it." nor "Exactly. So that gives
- * us the answer." ends its remainder in "?").
+ * continuation — so a question-ending check was added to keep it quiet.
+ *
+ * SELF-CORRECTION NARROWED (fix round 2). A re-review probe found the
+ * round-1 "ends in ?" signal over-broad: {sentence:'Right! Should we try
+ * another one?', studentUtterance:'C', verifiedExpectedAnswer:'B',
+ * choices:[A,B,C letters]} returned `ok` — ANY trailing "?" bypassed even
+ * the MCQ-letter kill, including a question with nothing to do with the
+ * student's answer. Two fixes:
+ *   1. The question-mark signal now requires an actual wh-word (where/what/
+ *      why/how/which/when) in the remainder AND a trailing "?" —
+ *      `isWhQuestion()`. "Should we try another one?" has no wh-word, so it
+ *      no longer counts as self-correcting; "so where did the extra one
+ *      go?" still does.
+ *   2. The wh-question signal no longer exempts the MCQ-letter kill branch
+ *      at all — only `DENIAL_RE` / a contrast marker can. An MCQ pick is
+ *      always a terminal, single-shot answer (Important 2's reasoning), so
+ *      a trailing question about something else in the same sentence must
+ *      not suppress it. `selfCorrectsByDenialOrContrast` and
+ *      `selfCorrectsByWhQuestion` are therefore computed and consumed
+ *      separately: the MCQ-kill branch checks only the first; the value
+ *      branch (and the unverified/advisory branch) check both.
+ *
+ * DEFERRED GAP (not fixed, recorded for a future round): a single-sentence
+ * walk-back like "Right — actually it's thirteen." is exempted here by the
+ * contrast marker ("actually") even though the tutor never lets the
+ * affirmation stand — that's correct for THIS guard, but it is also
+ * invisible to praise-contradiction.ts's bare-denial branch (which needs a
+ * LATER sentence). Neither detector currently catches a same-sentence
+ * walk-back that substitutes a new value with no denial/contrast word at
+ * all ("Right — it's thirteen, not twelve." falls to praise-contradiction's
+ * `not <phrase>` branch, but a bare substitution without "not" would not).
+ * See `checkFalsePraiseOpener`'s doc comment for the exact scope note.
  *
  * TIER WIDENING (fix round 1, Important 2). A probe found this guard killing
  * on an intermediate-step check: {sentence:'Right, now add one.',
@@ -85,18 +114,31 @@ export const PRAISE_OPENER_STRICT_RE =
  *  being walked back within the same breath (fix round 1, Important 1). */
 const CONTRAST_MARKER_RE = /\b(?:but|though|however|actually|except)\b/i;
 
-/** True when the text AFTER a matched opener already undermines it: a
- *  denial (`DENIAL_RE`), a contrast conjunction, or the remainder is itself
- *  a follow-up question ("so where did the extra one go?") — a genuine
- *  Socratic re-check is not a flat continuation. See the fix-round-1 header
- *  note (Important 1) for the probe evidence behind each branch. */
-function remainderSelfCorrects(remainder: string): boolean {
+/** A wh-question word — required (fix round 2) alongside a trailing "?" for
+ *  the question signal to count, so an UNRELATED question ("Should we try
+ *  another one?") can't ride along on any trailing "?". */
+const WH_QUESTION_WORD_RE = /\b(?:where|what|why|how|which|when)\b/i;
+
+/** True when the remainder is a denial (`DENIAL_RE`) or contains a contrast
+ *  conjunction — the strong signal: this exempts EVERY kill branch,
+ *  including the MCQ-letter one (fix round 2: a contrast marker like "but"
+ *  after an MCQ pick means the tutor is already correcting itself, so the
+ *  kill would be redundant/wrong; see the "but check your sign" pin). */
+function selfCorrectsByDenialOrContrast(remainder: string): boolean {
   const r = remainder.trim();
   if (!r) return false;
-  if (DENIAL_RE.test(r)) return true;
-  if (CONTRAST_MARKER_RE.test(r)) return true;
-  if (/\?\s*$/.test(r)) return true;
-  return false;
+  return DENIAL_RE.test(r) || CONTRAST_MARKER_RE.test(r);
+}
+
+/** True when the remainder is a genuine wh-question ("so where did the
+ *  extra one go?") — the weak signal: this NEVER exempts the MCQ-letter
+ *  kill branch (fix round 2, New Important), only the value-disagree
+ *  branch, because an MCQ pick is always a terminal answer and a trailing
+ *  question about something unrelated must not suppress that kill. */
+function selfCorrectsByWhQuestion(remainder: string): boolean {
+  const r = remainder.trim();
+  if (!r) return false;
+  return /\?\s*$/.test(r) && WH_QUESTION_WORD_RE.test(r);
 }
 
 /** No list separators, at most one '=', short. */
@@ -131,6 +173,21 @@ function isMcqResolvedReason(reason: string): boolean {
   return /^mcq\b/.test(reason ?? '');
 }
 
+/**
+ * DEFERRED GAP (fix round 2, recorded — not fixed here): a single-sentence
+ * walk-back with no denial word and no contrast conjunction at all — e.g.
+ * "Right — it's thirteen." said over a student who answered "twelve", with
+ * neither "not" nor "but/though/however/actually/except" anywhere — is not
+ * caught by this guard (no self-correction signal fires, so it falls
+ * through to the normal disagree/kill logic — which is arguably correct
+ * for THAT shape) but a *different* single-sentence walk-back that DOES
+ * carry a contrast word ("Right — actually it's thirteen.") is exempted by
+ * `selfCorrectsByDenialOrContrast` and is ALSO invisible to
+ * praise-contradiction.ts's bare-denial branch (which requires the denial
+ * to land in a LATER sentence than the opener). That combination is a real
+ * blind spot for the "affirm-then-immediately-correct-with-a-hedge-word"
+ * shape; left as a follow-up rather than fixed now.
+ */
 export function checkFalsePraiseOpener(args: {
   sentence: string; studentUtterance: string;
   verifiedExpectedAnswer?: string; unverifiedCardAnswer?: string;
@@ -147,7 +204,8 @@ export function checkFalsePraiseOpener(args: {
     const openerMatch = PRAISE_OPENER_STRICT_RE.exec(args.sentence ?? '');
     if (!openerMatch) return OK;
     const remainder = (args.sentence ?? '').slice(openerMatch.index + openerMatch[0].length);
-    if (remainderSelfCorrects(remainder)) return OK;
+    const strongSelfCorrect = selfCorrectsByDenialOrContrast(remainder);
+    const whSelfCorrect = selfCorrectsByWhQuestion(remainder);
     if (!isAnswerShaped(args.studentUtterance)) return OK;
     const monetary = !!args.spokenMoneyEnabled && !!args.problemContext && looksMonetary(args.problemContext);
     const verified = (args.verifiedExpectedAnswer ?? '').trim();
@@ -155,14 +213,25 @@ export function checkFalsePraiseOpener(args: {
       if (!isSingleValued(verified)) return OK;
       const m = matchUtteranceToAnswer(args.studentUtterance, verified, args.choices, { monetary });
       if (m.verdict !== 'disagree') return OK;
-      const mcqKill = !!(args.choices && args.choices.length > 0) && isMcqResolvedReason(m.reason);
-      if (mcqKill || args.finalAnswerTurn === true) {
+      const mcqResolved = !!(args.choices && args.choices.length > 0) && isMcqResolvedReason(m.reason);
+      if (mcqResolved) {
+        // Fix round 2: the MCQ-letter kill checks ONLY the strong signal —
+        // a wh-question elsewhere in the sentence must not suppress it.
+        if (strongSelfCorrect) return OK;
+        return { verdict: 'false_praise', expected: verified, matchReason: m.reason };
+      }
+      // Value path checks BOTH signals.
+      if (strongSelfCorrect || whSelfCorrect) return OK;
+      if (args.finalAnswerTurn === true) {
         return { verdict: 'false_praise', expected: verified, matchReason: m.reason };
       }
       return { verdict: 'advisory_false_praise', expected: verified, matchReason: m.reason };
     }
     const unverified = (args.unverifiedCardAnswer ?? '').trim();
     if (unverified && isSingleValued(unverified)) {
+      // Unverified never kills regardless of MCQ/value shape, so it is
+      // treated like the value path: both signals suppress the advisory.
+      if (strongSelfCorrect || whSelfCorrect) return OK;
       const m = matchUtteranceToAnswer(args.studentUtterance, unverified, args.choices, { monetary });
       return m.verdict === 'disagree' ? { verdict: 'advisory_false_praise', expected: unverified, matchReason: m.reason } : OK;
     }

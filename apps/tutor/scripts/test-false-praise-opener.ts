@@ -41,6 +41,16 @@
  *      is what prevents this firing, not the comparator, which strips the comma and disagrees anyway).
  *  Minor (c): matchUtteranceToAnswer('twelve','13',{length:1} as any) throws "choices is not iterable"
  *    inside resolveMcqLetter's `for...of` — checkFalsePraiseOpener's try/catch must swallow it.
+ *
+ *  FIX ROUND 2 probe (task-7-report.md carries full RED/GREEN evidence). The
+ *  round-1 "ends in ?" signal was over-broad — it exempted the MCQ-letter
+ *  kill for ANY trailing question, unrelated or not:
+ *    WH_QUESTION_WORD_RE=/\b(?:where|what|why|how|which|when)\b/i, endsQ=/\?\s*$/
+ *      " Should we try another one?"    -> wh=false endsQ=true   (NOT a self-correction any more)
+ *      " so where did the extra one go?" -> wh=true  endsQ=true   (still a self-correction)
+ *      " but check your sign."           -> wh=false endsQ=false  (self-corrects via contrast, not wh)
+ *  Ruling: the wh-question signal only exempts the value-disagree branch,
+ *  never the MCQ-letter kill branch; only DENIAL_RE/contrast exempts MCQ.
  */
 import { checkFalsePraiseOpener, isSingleValued, isAnswerShaped, PRAISE_OPENER_STRICT_RE } from '../src/lib/tutor/voice/false-praise-opener';
 let passed = 0, failed = 0;
@@ -50,8 +60,12 @@ function check(name: string, cond: boolean, detail?: string) { if (cond) { passe
 check('strict opener: "Right, let\'s check…"', PRAISE_OPENER_STRICT_RE.test("Right, let's check the reasoning behind it."));
 check('strict opener: "Exactly."', PRAISE_OPENER_STRICT_RE.test('Exactly.'));
 check('strict opener excludes "Right idea"', !PRAISE_OPENER_STRICT_RE.test('Right idea — but check the sign.'));
-check('strict opener excludes "Close"', !PRAISE_OPENER_STRICT_RE.test('Close, but not quite.'));
-check('strict opener excludes "Almost"', !PRAISE_OPENER_STRICT_RE.test('Almost there.'));
+// Fix round 2, open minor: pin the alternation with a positive control in
+// the same assertion so these can't pass merely because "close"/"almost"
+// aren't literally in the word list — a bug that also removed "correct"
+// from the alternation would have left them trivially true forever.
+check('strict opener excludes "Close" but accepts "Correct."', !PRAISE_OPENER_STRICT_RE.test('Close, but not quite.') && PRAISE_OPENER_STRICT_RE.test('Correct.'));
+check('strict opener excludes "Almost" but accepts "Exactly."', !PRAISE_OPENER_STRICT_RE.test('Almost there.') && PRAISE_OPENER_STRICT_RE.test('Exactly.'));
 check('strict opener excludes mid-sentence right', !PRAISE_OPENER_STRICT_RE.test('The roots part is right, the vertex is not.'));
 
 // single-valued
@@ -152,6 +166,32 @@ check('semicolon list is not single-valued', !isSingleValued('x = 2; y = 5'));
 { // a genuine DENIAL_RE-matching remainder (not just a contrast word) also self-corrects
   const r = checkFalsePraiseOpener({ sentence: 'Right, not quite — check that again.', studentUtterance: 'twelve', verifiedExpectedAnswer: '13' });
   check('same-sentence DENIAL_RE match → ok', r.verdict === 'ok', JSON.stringify(r));
+}
+
+// Fix round 2, New Important — the wh-question signal must NEVER exempt the
+// MCQ-letter kill, and must require an actual wh-word (not just any "?").
+{ // the reported over-broad case: an UNRELATED question after the opener
+  // must not save an MCQ-letter disagree from a kill.
+  const r = checkFalsePraiseOpener({
+    sentence: 'Right! Should we try another one?', studentUtterance: 'C', verifiedExpectedAnswer: 'B',
+    choices: [{ letter: 'A', text: 'A' }, { letter: 'B', text: 'B' }, { letter: 'C', text: 'C' }],
+  });
+  check('unrelated question after MCQ-letter disagree → false_praise (pinned)', r.verdict === 'false_praise', JSON.stringify(r));
+}
+{ // wh-question still exempts the VALUE branch, even with finalAnswerTurn:true
+  const r = checkFalsePraiseOpener({ sentence: 'Right, so where did the extra one go?', studentUtterance: 'twelve', verifiedExpectedAnswer: '13', finalAnswerTurn: true });
+  check('wh-question + finalAnswerTurn:true (value) → ok (pinned)', r.verdict === 'ok', JSON.stringify(r));
+}
+{ // the SAME shape, but a non-wh question, with finalAnswerTurn:true — must fire
+  const r = checkFalsePraiseOpener({ sentence: 'Right! Should we try another one?', studentUtterance: 'twelve', verifiedExpectedAnswer: '13', finalAnswerTurn: true });
+  check('non-wh question + finalAnswerTurn:true (value) → false_praise (pinned)', r.verdict === 'false_praise', JSON.stringify(r));
+}
+{ // contrast marker (strong signal) exempts the MCQ-letter kill too
+  const r = checkFalsePraiseOpener({
+    sentence: 'Right, but check your sign.', studentUtterance: 'C', verifiedExpectedAnswer: 'B',
+    choices: [{ letter: 'A', text: 'A' }, { letter: 'B', text: 'B' }, { letter: 'C', text: 'C' }],
+  });
+  check('contrast marker exempts MCQ-letter kill too → ok (pinned)', r.verdict === 'ok', JSON.stringify(r));
 }
 
 // Minor (c): a throwing comparator call must still resolve to ok, never throw.
