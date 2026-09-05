@@ -1,0 +1,57 @@
+# SDD ledger — holistic-pedagogy Plan 2 (contract v1.15.0 + academy) — copied from the git-ignored workspace; Tasks 1–4 complete, Task 5 rollout Praveen-gated
+
+# SDD ledger — plan: docs/superpowers/plans/2026-09-05-holistic-pedagogy-plan2-contract-academy.md
+Spec: docs/superpowers/specs/2026-09-05-tutor-holistic-pedagogy-round-design.md (§C.7 academy, §C.8, §C.9, §8). Plan 1 merged + deployed (main 49ff5ab1 → six-fix round d74762d7 pending deploy).
+Started 2026-09-06 by the Plan 1 session on Praveen's "begin working further on Plan 2, I'm taking off for the day".
+Repos: contract /Users/luke/Dev/portal-contract (main 7ddddc8, v1.14.0) · engine worktree tutor-rounds · academy WORKTREE /Users/luke/Dev/academy/.claude/worktrees/holistic-pedagogy-plan2 (branch holistic-pedagogy-plan2 from origin/main cba2cbd — the plan's "feature branch from origin/main" done as a worktree per the four-session protocol; root academy main 7989ad2 is STALE, untouched).
+
+## Pre-flight scan
+| Pair / task | Produces vs consumes | Finding |
+|---|---|---|
+| T1 → T2 | contract exports AssignedPractice{Request,Response,Entry}Schema + SessionResult fields; T2 imports from `@evelyn/portal-contract/v1` | consistent; T2 needs the rsynced dist in the ENGINE node_modules |
+| T1 → T3 | same exports for EngineClient | consistent; T3 needs the dist in the ACADEMY WORKTREE node_modules (plan names the root academy checkout — Ruling below) |
+| T2 → T3 | engine route POST /api/portal/v1/assigned-practice ← EngineClient.assignedPractice('/assigned-practice') | consistent path |
+| T3 → T4 | GET /me/assigned-practice, POST /artifacts/practice/assigned ← web BFF + lib/me.ts | consistent |
+| T2 internal | route uses `resolveProfileIdOrRaw`, `findOpenAssignments(…, {withinDays, requireLocator})`, `computeHomeworkStatus(a, rows)`, `PracticeAssignmentModel`, `EvidenceEventModel` from `@/models` | verify at dispatch: names exist in Plan 1 (findOpenAssignments/computeHomeworkStatus yes); `resolveProfileIdOrRaw` + `@/models` barrel — implementer to confirm, fall back to the file's own resolver |
+| T2 internal | `findAssignmentBySession(req.sessionId)` in session-result.ts | Plan 1 store exports it — implementer to confirm |
+| T3 internal | `Enrollment.goal.{targetDate,targetScore}`, `CourseNode.unit` | implementer to confirm field names against the models; if `goal` is shaped differently, mint goal_note from whatever exists and ledger it |
+| T3 internal | `engineCourseIdForCourseId` helper | must already exist in core.ts (used by other routes) — confirm |
+| T5 | tag push + deploys | Praveen-gated — NOT run this session; leave a handoff |
+| Global | contract "rsync into BOTH consumers' node_modules" while the engine deploy build is running | Ruling: rsync into the ENGINE worktree only AFTER the six-fix deploy has completed (build must not pick up an unpinned v1.15.0); academy rsync after the worktree's npm install |
+
+Rulings (pre-flight):
+- Ruling: academy work happens in worktree `.claude/worktrees/holistic-pedagogy-plan2` (not the root checkout) — why: four-session protocol is worktree-only and root main is stale — cost if wrong: none (branch is the same the plan names).
+- Ruling: contract dist is rsynced into the engine worktree only after the current engine deploy finishes — why: the deploy builds from the worktree's node_modules — cost if wrong: one rebuild.
+- Ruling: Task 5 (tag push, engine deploy, academy deploys, live check) is NOT executed without Praveen — why: plan marks them gated; he is away — cost if wrong: a day's delay.
+Task 1: implementer DONE (sonnet) → contract main 78231c0 (7ddddc8 base); 45/0 tests; build clean; dist rsynced into the academy worktree only. Concerns: tests placed inside main(); README changelog gap pre-existing.
+Task 1: review → Spec ✅ Quality ✅ (2 minors, no action). Task 1: complete — contract main 78231c0 (untagged, unpushed).
+Task 2 BASE=17827db9
+Task 2: implementer DONE (sonnet) → b74a4594; portal-contract 36/0, portal-endpoints 23/0, tsc clean; no deviations.
+Task 2: review → Spec ✅ Quality ❌ — Critical: route's courseId filter never matches (no author stamps PracticeAssignment.courseId) while the academy BFF always sends courseId ⇒ card never renders; Critical: package.json pin #v1.15.0 vs package-lock #v1.14.0 ⇒ `npm ci` on deploy would fail (tag not pushed yet); Important: findAssignmentBySession(sessionId) not student-scoped on the emit path (session-id reuse seen in prod); Important: courseId filter applied after findOpenAssignments' limit(5).
+Ruling (plan-mandated pin, overturned for now): REVERT the engine `#v1.15.0` pin — pins + `npm install` (lock regen) happen together in Task 5 step 1 after the tag push — why: `npm ci` hard-fails on a desynced lock and the tag cannot resolve before it exists — cost if wrong: none (Task 5 re-applies). Same for the academy pins (Task 3 told).
+Ruling: courseId semantics = wildcard when the assignment carries none (`!courseId || !a.courseId || a.courseId === courseId`), pushed INTO the Mongo query of findOpenAssignments via an additive `courseId?` option ($or with $exists:false) so the limit applies after the filter; the tool-time author stamps courseId when the client knows one (EmbedConfig course id if present) — why: the academy always sends courseId; an unstamped record must still surface — cost if wrong: a cross-course card in the rare multi-course student.
+Ruling: session-result echo requires `assignment.studentId === profileId` (student-scoped) — why: partner-supplied sessionId is a bare string and reuse has been observed — cost if wrong: none.
+Task 2: fix round 1 → 45426b61 (courseIdFilter $or in store + route; pin reverted; emit student-scoped; 5 new practice-assign cases). No courseId available in VTR scope — tool-time records stay unstamped (wildcard). Scoped re-review dispatched.
+Task 3: implementer DONE_WITH_CONCERNS (opus) → academy d0f0acf (base cba2cbd); typecheck clean; vitest 282 files / 4740 tests 0 fail; new assigned-practice test 3/3. Deviations accepted: `session.set('assignedPractice', …)` (DocumentArray typing); only processResult applies a SessionResult; resumeSession re-mints locator+goal (the brief's "second call" was startFreeformSession). Deferred: goalNote on freeform starts; package-lock churn from npm install left uncommitted; no route-level tests for the two new routes.
+Task 2: re-review → all addressed, no new findings. Task 2: complete — engine tutor-rounds 45426b61 (pin stays #v1.14.0 until Task 5).
+Task 3: review → Spec ✅ Quality ✅ + 1 Important (bare Error ⇒ 500 on a stale card; fix = notFound) + 5 minors (duplicate CourseNode read; no uniqueness guard on the reuse key; owner-scoped reuse; `unit` truthiness; no route-level test) — minors deferred to the final review. Fix round 1 dispatched (resume). Ruling: the one-line fix is verified by the controller from the diff, no re-review seat — why: a single substitution with an existing test covering it — cost if wrong: one review seat later.
+Task 3: fix round 1 → d75d23d (notFound), controller-verified from the diff. Task 3: complete. Task 4 BASE=d75d23d
+Task 4: implementer DONE (opus) → academy 9ccdc32; web+root typecheck clean; eyeball skipped (Task 5). Concerns: token names adapted; preset ids enter seenRef; assigned pill is a server snapshot.
+Engine gate on 45426b61: tsc 0; test:all 229 PASS / FAIL = exactly the 4 known reds (embed-token, verdict-guard, pedagogy-posed-problem, pedagogy-d1).
+Task 4: review → Spec ✅ Quality ❌ — Important: preset useEffect has no run-once guard (strict-mode double invoke falls through to the ordinary draw and commits against the wrong set); minors: raw 404 text shown to the student (folded into the fix), e2e practice.spec `.first()` now fixture-dependent, apiGet doc comment, non-unique `assigned-start` testid (deferred to final review). Fix round 1 dispatched (resume); controller verifies the diff.
+Task 4: fix round 1 → 90f7430 (preset consumed once; friendly 404 copy), controller-verified. Task 4: complete. Academy branch head 90f7430.
+Final whole-branch review (opus): With fixes. C1 student read shares the tutor's acknowledgedAt filter (card vanishes once the tutor mentions it); C2 academy deploy before the tag would crash (npm ci on server); I1 nextSessionIntent fallback unscoped/unaged; I2 answer keys serialized into the Practice tab; I3 §C.9 session chip not rendered; I4 partner-allowlist 403 invisible; I5 card inside the free-tier lock. Minors worth fixing: stale status pill; e2e practice.spec .first(); nodeDoc?.unit truthiness; best-effort route test.
+Rulings (ONE fix wave, two repos in parallel): C1 FIX — `findOpenAssignments` gains `ignoreAcknowledged?` and the route's default path uses it (open-to-the-student = within window + locator, regardless of tutor acknowledgement); C2 PARK — the rollout checklist already orders tag → pin+lock → deploy; add an explicit warning; I1 FIX — fallback only when `profile.nextSessionIntent.sessionId === req.sessionId`; I2 FIX — PracticeTab strips `items` to [] before passing to the client, card uses `status.total`; I3 FIX — `SessionView.assignedPractice?` + "Homework assigned · N questions" chip on the sessions list; I4 PARK — checklist gets a positive-200 assertion; I5 FIX — assigned cards render above/outside the locked branch; minors: stale pill FIX (bump local status on attempt), unit truthiness FIX (`!= null`), e2e `.first()` FIX (scope to the quiz card), route-level test SKIP; academy package-lock churn: DISCARD (it was my npm install's) before rollout.
+Fix wave (engine): 0a4415e4 — openAssignmentsQuery() + ignoreAcknowledged (route default path); intent fallback scoped to req.sessionId; practice-assign 20/20, endpoints 23/23, contract 36/36, learner-context 45/45, tsc clean.
+Fix wave (academy): 4421731 — items stripped on the tab (count from status.total); SessionView + sessions-row chip; cards above the locked branch; live pill; unit != null; e2e testid. web+root typecheck clean; 3 files/11 tests.
+Fix wave (engine) re-review: all addressed, no new findings.
+Fix wave (academy) re-review: all addressed, no new findings.
+
+## FINAL (2026-09-06) — Tasks 1–4 COMPLETE across three repos; Task 5 (rollout) is Praveen's
+- contract `/Users/luke/Dev/portal-contract` main `78231c0` = v1.15.0 — UNTAGGED, UNPUSHED.
+- engine worktree `tutor-rounds` `0a4415e4` (3 commits over main `17827db9`: b74a4594 route+result, 45426b61 fix round, 0a4415e4 fix wave). Pin still `#v1.14.0` by ruling; node_modules holds the 1.15.0 build.
+- academy worktree `holistic-pedagogy-plan2` `4421731` (6 commits over origin/main `cba2cbd`: d0f0acf api, d75d23d 404, 9ccdc32 web, 90f7430 preset guard, 4421731 fix wave). Pins still `#v1.14.0`; lock churn discarded.
+- Final review verdict "With fixes" → one wave (engine 0a4415e4 + academy 4421731), both scoped re-reviews clean. Parked with rulings: C2 (deploy ordering — checklist), I4 (allowlist 403 invisible — checklist positive-200 assertion), route-level best-effort test (skipped), goalNote on freeform starts (deferred).
+- Rollout checklist for Praveen: docs/superpowers/reports/2026-09-06-holistic-pedagogy-plan2-rollout-checklist.md (tag → pin+lock → engine gate/deploy/push → academy env-drift/deploy ×2 → live check with a positive 200).
+- Workspace kept (Task 5 open).
+Engine gate on 0a4415e4: tsc 0; test:all 229 PASS / 4 known reds.
