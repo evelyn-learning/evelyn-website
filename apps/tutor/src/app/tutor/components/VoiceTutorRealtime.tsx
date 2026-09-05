@@ -1956,6 +1956,14 @@ export function VoiceTutorRealtime({
   // counting, and the endpoint upserts SessionMemory by sessionId).
   // No-op when studentId is unset (demo flow).
   //
+  // Fix round 1 (spec §C.1) — the locator line is what licenses the brain to
+  // PROMISE homework ("if none is given, do not mention homework at all"). With
+  // TUTOR_CLOSE_NOTES off the handler drops the assign, so naming a location
+  // would have the tutor promise practice nothing ever creates. Withholding the
+  // locator is the safe flag-off state; the tool + prompt section stay live
+  // (silent tools are never flag-gated in this codebase).
+  const locatorForPrompt = TUTOR_CLOSE_NOTES ? practiceLocator : undefined;
+
   // Learning-gaps blending (2026-07-05): commits are now INCREMENTAL, not
   // End-button-only. Previously the sole call site was the End/Pause click,
   // so a tab close / mobile swipe-away / reload silently lost the whole
@@ -2058,7 +2066,10 @@ export function VoiceTutorRealtime({
       // acknowledgements only matter once the session is over. Absent
       // fields ⇒ the route's body is byte-identical to pre-round.
       ...(isFinal && accum.nextTimeIntent ? { nextSessionIntent: accum.nextTimeIntent } : {}),
-      ...(isFinal && practiceLocator ? { practiceLocator } : {}),
+      // Same TUTOR_CLOSE_NOTES derivation the prompt uses: flag-off must never
+      // stamp a locator onto the route's fallback auto-assignment either, or a
+      // killed feature still writes locator-labelled homework nobody announced.
+      ...(isFinal && locatorForPrompt ? { practiceLocator: locatorForPrompt } : {}),
       ...(isFinal && homeworkAckIdsRef.current.length ? { homeworkAcknowledged: homeworkAckIdsRef.current } : {}),
     };
     sessionAccumRef.current = {
@@ -2109,7 +2120,7 @@ export function VoiceTutorRealtime({
     } catch (err) {
       console.warn('[VoiceTutorRealtime] profile commit error:', err);
     }
-  }, [studentId, subject, topic, level, lessonPlanId, embedToken, practiceLocator]);
+  }, [studentId, subject, topic, level, lessonPlanId, embedToken, practiceLocator, locatorForPrompt]);
   // Count of commits already posted this session — lets the final commit
   // post transcript+summary even when its own accumulator increment is
   // empty (everything already flushed incrementally).
@@ -2354,13 +2365,6 @@ export function VoiceTutorRealtime({
   // byte-identical to the old `studentProfileBlockRef.current || undefined`.
   const transientContextBlockRef = useRef<string | null>(null);
   const transientContextComputedRef = useRef(false);
-  // Fix round 1 (spec §C.1) — the locator line is what licenses the brain to
-  // PROMISE homework ("if none is given, do not mention homework at all"). With
-  // TUTOR_CLOSE_NOTES off the handler drops the assign, so naming a location
-  // would have the tutor promise practice nothing ever creates. Withholding the
-  // locator is the safe flag-off state; the tool + prompt section stay live
-  // (silent tools are never flag-gated in this codebase).
-  const locatorForPrompt = TUTOR_CLOSE_NOTES ? practiceLocator : undefined;
   if (!transientContextComputedRef.current) {
     transientContextComputedRef.current = true;
     transientContextBlockRef.current =
@@ -2412,6 +2416,12 @@ export function VoiceTutorRealtime({
       /** Consent-gated recap offer/outcome for this gap this increment
        *  (written by the recap state machine). */
       recap?: { offered: number; outcome?: 'accepted' | 'declined' | 'improved' | 'still_struggling' };
+      /** True for entries that carry ONLY recap/recurrence bookkeeping for a
+       *  gap already on the server profile (recap offered/returned; the
+       *  flush-safety recurrence entry). The commit route forwards the flag
+       *  and the store merges those counters into an EXISTING active gap
+       *  only — never creating one, never overwriting its observation. */
+      bookkeepingOnly?: boolean;
     }>;
     /** Per-session topic-notes ATTEMPT counts, used by the orchestrator
      *  rate-limit gate. Counts every accepted (post-warmup, pre-rate-cap)
@@ -2561,6 +2571,8 @@ export function VoiceTutorRealtime({
           studentQuotes: [],
           signals: d.signals,
           recurrences: 1,
+          // Carries a recurrence tally only. Never create a gap from it.
+          bookkeepingOnly: true,
         });
         if (!isPrereq) accum.losTouched.add(loId);
       }
@@ -6223,7 +6235,7 @@ export function VoiceTutorRealtime({
               // route merges both entries by loId, so flushed and unflushed
               // timings both land offers 1 / accepts 1 / lastOutcome=outcome.
               // `offered: 0` — the offer itself was counted at reply time.
-              sessionAccumRef.current.gaps.push({ kind: 'lo', loId: a.loId, observation: `Recap ${outcome === 'improved' ? 'helped' : 'did not settle it'} this session.`, studentQuotes: [], signals: [], recap: { offered: 0, outcome } });
+              sessionAccumRef.current.gaps.push({ kind: 'lo', loId: a.loId, observation: `Recap ${outcome === 'improved' ? 'helped' : 'did not settle it'} this session.`, studentQuotes: [], signals: [], recap: { offered: 0, outcome }, bookkeepingOnly: true });
               console.log(`[VoiceTutorRealtime] recap returned lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
               onDebugEvent?.('recap_returned', `lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
               activeRecapRef.current = null;
@@ -10136,7 +10148,7 @@ export function VoiceTutorRealtime({
           const g = accum.gaps.find((x) => x.kind === 'lo' && x.loId === loId);
           const rec = { offered: 1, outcome: verdict === 'accept' ? 'accepted' as const : verdict === 'decline' ? 'declined' as const : undefined };
           if (g) g.recap = rec;
-          else if (verdict !== 'unclear') accum.gaps.push({ kind: 'lo', loId, observation: 'Recap offered this session.', studentQuotes: [], signals: [], recap: rec });
+          else if (verdict !== 'unclear') accum.gaps.push({ kind: 'lo', loId, observation: 'Recap offered this session.', studentQuotes: [], signals: [], recap: rec, bookkeepingOnly: true });
           // Accept ⇒ stage the GO block for this turn; decline/unclear ⇒
           // the brain is told the verdict so it acknowledges and moves on.
           if (verdict === 'accept') pendingRecapGoRef.current = { loId, loTitle: entry.loTitle };
@@ -11526,15 +11538,22 @@ export function VoiceTutorRealtime({
                         : { bareDenialWidening: false },
                     );
                     if (praiseContradiction) {
-                      const { affirmed } = praiseContradiction;
-                      const reason =
-                        `Your opener affirmed "${affirmed}" but your own explanation says "not ${affirmed}". ` +
-                        `Re-deliver the turn with the verdict and explanation agreeing — open with the TRUE verdict.`;
+                      const { affirmed, branch } = praiseContradiction;
+                      // The bare-denial branch affirmed PROSE, not a value —
+                      // the value-shaped reason ('you affirmed "X" … says "not
+                      // X"') would quote a clause the turn never negated, so
+                      // the brain would be re-delivering against a nonsense
+                      // instruction. Describe the actual shape instead.
+                      const reason = branch === 'bare-denial'
+                        ? `Your opener praised the student's answer, then a later sentence denied it in the same turn. `
+                          + `Re-emit: open with the TRUE verdict for what they said, then guide.`
+                        : `Your opener affirmed "${affirmed}" but your own explanation says "not ${affirmed}". `
+                          + `Re-deliver the turn with the verdict and explanation agreeing — open with the TRUE verdict.`;
                       rejectionsThisAttempt.push({ action: 'praise_contradiction', reason });
                       judgeRetriesUsed++;
                       await performKill();
-                      console.warn(`[brain-orchestrator] deterministic praise-contradiction check: affirmed "${affirmed}" then denied it in "${praiseContradictionTextSoFar.slice(0, 120)}" — kill + retry`);
-                      onDebugEvent?.('praise_contradiction_kill', `affirmed=${affirmed}`);
+                      console.warn(`[brain-orchestrator] deterministic praise-contradiction check (${branch}): affirmed "${affirmed}" then denied it in "${praiseContradictionTextSoFar.slice(0, 120)}" — kill + retry`);
+                      onDebugEvent?.('praise_contradiction_kill', `branch=${branch} affirmed=${affirmed}`);
                       continue;
                     }
                   }
@@ -19771,9 +19790,12 @@ export function VoiceTutorRealtime({
             // actually speak may trigger it. pickContinuityClause's precedence
             // puts homework FIRST, so a landed clause + non-empty homework ⇒
             // the landed clause IS the homework clause.
-            const ackHomework = landedContinuity ? learnerExtrasRef.current?.homework ?? [] : [];
-            if (ackHomework.length) {
-              homeworkAckIdsRef.current = ackHomework.map((h) => h.assignmentId);
+            // ONLY homework[0]: pickContinuityClause names exactly that one
+            // assignment (`input.homework?.[0]`). Acknowledging the rest would
+            // permanently mark assignments the tutor never mentioned.
+            const ackHomework = landedContinuity ? learnerExtrasRef.current?.homework?.[0] : undefined;
+            if (ackHomework) {
+              homeworkAckIdsRef.current = [ackHomework.assignmentId];
             }
             // Teacher persona: the one-sentence introduce-yourself directive
             // is stashed SEPARATELY (rides the first brain turn only — see
