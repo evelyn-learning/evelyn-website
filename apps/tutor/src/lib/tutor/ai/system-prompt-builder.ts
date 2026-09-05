@@ -1567,8 +1567,23 @@ import type { RecapCandidate } from '@/lib/tutor/learner-model/recap-candidate';
 export interface ContinuityInput { homework?: HomeworkStatus[]; nextTimeIntent?: string; recapCandidate?: RecapCandidate | null }
 
 const ONE_MOVE = 'This is your ONE continuity move for the opening — do not add a second callback or any recap of past sessions beyond it. ';
+
+/** Oxford-comma join: 1 title as-is, 2 as "A and B", 3+ as "A, B, and C". */
+function joinTitles(titles: string[]): string {
+  if (titles.length <= 2) return titles.join(' and ');
+  return `${titles.slice(0, -1).join(', ')}, and ${titles[titles.length - 1]}`;
+}
+
 function recapOfferSentence(c: RecapCandidate, lead: string): string {
   return `${lead}ask whether they would like a two-minute recap of ${c.title} before today's lesson or to go straight in, then wait for their answer before the day's hook.${c.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}`;
+}
+
+/** The offer as its OWN short sentence, used wherever a preceding sentence
+ *  (the homework check, or honoring the next-time intent) is instructed to
+ *  stand alone as ONE sentence — the ask-and-wait must never be folded into
+ *  that same sentence, or "ONE sentence" and "ask ... then wait" contradict. */
+function secondSentenceOffer(c: RecapCandidate): string {
+  return `Then, in a second short sentence, ask whether they would like a two-minute recap of ${c.title} before today's lesson or to go straight in, and wait for their answer before the day's hook.${c.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}`;
 }
 
 /** Spec §C.6 precedence: homework result → next-time intent → recap offer.
@@ -1578,20 +1593,21 @@ export function pickContinuityClause(input: ContinuityInput): { clause: string; 
   const cand = input.recapCandidate ?? null;
   const offer = cand ? { loId: cand.loId, loTitle: cand.title, soft: cand.soft } : undefined;
   if (hw) {
-    const title = hw.los.map((l) => l.title).join(' and ');
+    const title = joinTitles(hw.los.map((l) => l.title));
     if (hw.overall === 'done') {
       return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: they got the homework done well (${title}) — acknowledge that specifically, then move into today's content.` };
     }
-    const status = hw.overall === 'untouched'
-      ? `they did not get to the homework on ${title} — ask lightly, with no guilt, then `
-      : `their homework on ${title} was only partly done or went shakily — say so kindly in one sentence, then `;
-    if (offer) return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: ${recapOfferSentence(cand!, status)}`, recapOffer: offer };
-    return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: ${status}continue into today's content.` };
+    const check = hw.overall === 'untouched'
+      ? `they did not get to the homework on ${title} — ask lightly, with no guilt.`
+      : `their homework on ${title} was only partly done or went shakily — say so kindly.`;
+    if (offer) return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: ${check} ${secondSentenceOffer(cand!)}`, recapOffer: offer };
+    return { clause: `${ONE_MOVE}Open by checking the homework in ONE sentence: ${check} Then continue into today's content.` };
   }
   if (input.nextTimeIntent) {
-    const base = `${ONE_MOVE}You said last time you would start with "${input.nextTimeIntent}" — honor that in your opening. `;
-    if (offer) return { clause: base + recapOfferSentence(cand!, 'Before starting, '), recapOffer: offer };
-    return { clause: base.trimEnd() };
+    const intentText = input.nextTimeIntent.replace(/"/g, "'");
+    const base = `${ONE_MOVE}You said last time you would start with "${intentText}" — honor that in your opening, in ONE sentence.`;
+    if (offer) return { clause: `${base} ${secondSentenceOffer(cand!)}`, recapOffer: offer };
+    return { clause: base };
   }
   if (offer) {
     return { clause: `${ONE_MOVE}Your continuity sentence this session is an OFFER: mention that ${cand!.title} gave them some trouble last time (or that it is a good moment to revisit it), and ${recapOfferSentence(cand!, '')}`, recapOffer: offer };
