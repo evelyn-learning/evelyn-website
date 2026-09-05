@@ -32,6 +32,10 @@ export interface RealtimeHandle {
      *  route's fallback auto-assign). Undefined when nothing was assigned;
      *  the end-of-session card is absent in that case. */
     assignedPractice?: Array<{ loId: string; title: string; count: number }>;
+    /** Fix round 1 (spec §C.6) — the host-supplied place that practice lands
+     *  ("Unit 2 · Practice"). Present exactly when `assignedPractice` is: the
+     *  engine only surfaces an assignment it can point the student at. */
+    practiceLocator?: string;
   };
   /** Phase 3: step the session-level depth preference. Negative =
    *  more depth / slower teaching. Positive = less depth. Clamped

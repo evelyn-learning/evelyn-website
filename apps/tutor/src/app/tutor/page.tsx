@@ -3244,7 +3244,8 @@ function TutorPage() {
         {sessionSummary.assignedPractice?.length ? (
           <div className="mt-4 text-sm">
             <span className="font-medium">Homework:</span>{' '}
-            {sessionSummary.assignedPractice.map((a) => `${a.count} questions on ${a.title}`).join(' · ')} — find them in your Practice tab.
+            {sessionSummary.assignedPractice.map((a) => `${a.count} questions on ${a.title}`).join(' · ')}
+            {sessionSummary.practiceLocator ? ` — find them under ${sessionSummary.practiceLocator}.` : ' — find them in your Practice tab.'}
           </div>
         ) : null}
 

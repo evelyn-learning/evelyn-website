@@ -1993,9 +1993,11 @@ export function VoiceTutorRealtime({
     const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0
       && accum.segmentOutcomes.length === 0
       // Holistic-pedagogy round (spec §C.2): a session whose ONLY new signal
-      // is the tutor's next-time intent must still commit it. Only ever set
-      // under TUTOR_CLOSE_NOTES ⇒ flag-off this term is always false.
-      && !accum.nextTimeIntent;
+      // is the tutor's next-time intent must still commit it — but only the
+      // FINAL commit sends nextSessionIntent, so scoping to isFinal keeps an
+      // intermediate flush from posting a body with nothing new in it. Only
+      // ever set under TUTOR_CLOSE_NOTES ⇒ flag-off this term is always false.
+      && !(opts?.final === true && accum.nextTimeIntent);
     // Content variety (phase 1): a FINAL commit must still post to CAPTURE the
     // fillings shown, even on a session that accumulated nothing gradeable
     // (e.g. a hook-only session the student didn't finish) — otherwise the
@@ -2050,12 +2052,12 @@ export function VoiceTutorRealtime({
       gaps: [],
       topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
       segmentOutcomes: [],
-      // Holistic-pedagogy round (spec §C.2): these two are NOT increments —
-      // they are session-scoped latches only the FINAL commit consumes. An
-      // intermediate flush must carry them forward or a close_session_notes
-      // that fired before the last debounced flush would lose its intent
-      // and the commit route would re-assign practice it already assigned.
-      ...(isFinal ? {} : { nextTimeIntent: accum.nextTimeIntent, assignmentMade: accum.assignmentMade }),
+      // Holistic-pedagogy round (spec §C.2): nextTimeIntent is NOT an
+      // increment — it is a session-scoped latch only the FINAL commit
+      // consumes. An intermediate flush must carry it forward or a
+      // close_session_notes that fired before the last debounced flush
+      // would lose its intent.
+      ...(isFinal ? {} : { nextTimeIntent: accum.nextTimeIntent }),
     };
     profileFlushCountRef.current += 1;
     try {
@@ -2079,8 +2081,15 @@ export function VoiceTutorRealtime({
       // its call failed). Adopt its result for the summary card — but never
       // overwrite an assignment the in-session tool call already made.
       if (Array.isArray(data.assigned) && data.assigned.length && assignedPracticeRef.current === null) {
-        assignedPracticeRef.current = data.assigned as Array<{ loId: string; title: string; count: number }>;
-        onDebugEventRef.current?.('practice_assigned_auto', (data.assigned as Array<{ loId: string; count: number }>).map((a) => `${a.loId}:${a.count}`).join(','));
+        const detail = (data.assigned as Array<{ loId: string; count: number }>).map((a) => `${a.loId}:${a.count}`).join(',');
+        // Fix round 1 (spec §C.6) — same locator gate as the in-session path:
+        // no locator ⇒ the record exists but nothing announces it.
+        if (practiceLocator) {
+          assignedPracticeRef.current = data.assigned as Array<{ loId: string; title: string; count: number }>;
+          onDebugEventRef.current?.('practice_assigned_auto', detail);
+        } else {
+          onDebugEventRef.current?.('practice_assigned_auto', `silent=no-locator ${detail}`);
+        }
       }
     } catch (err) {
       console.warn('[VoiceTutorRealtime] profile commit error:', err);
@@ -2330,11 +2339,18 @@ export function VoiceTutorRealtime({
   // byte-identical to the old `studentProfileBlockRef.current || undefined`.
   const transientContextBlockRef = useRef<string | null>(null);
   const transientContextComputedRef = useRef(false);
+  // Fix round 1 (spec §C.1) — the locator line is what licenses the brain to
+  // PROMISE homework ("if none is given, do not mention homework at all"). With
+  // TUTOR_CLOSE_NOTES off the handler drops the assign, so naming a location
+  // would have the tutor promise practice nothing ever creates. Withholding the
+  // locator is the safe flag-off state; the tool + prompt section stay live
+  // (silent tools are never flag-gated in this codebase).
+  const locatorForPrompt = TUTOR_CLOSE_NOTES ? practiceLocator : undefined;
   if (!transientContextComputedRef.current) {
     transientContextComputedRef.current = true;
     transientContextBlockRef.current =
-      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener || readinessNote || practiceLocator || goalNote)
-        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, goalNote })
+      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener || readinessNote || locatorForPrompt || goalNote)
+        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator: locatorForPrompt, goalNote })
         : null;
   }
   // Task 17 — learner-context boot block (flag TUTOR_LEARNER_CONTEXT,
@@ -2418,11 +2434,6 @@ export function VoiceTutorRealtime({
      *  (as `nextSessionIntent`), so the intermediate reset below carries it
      *  forward instead of clearing it. */
     nextTimeIntent?: string;
-    /** Holistic-pedagogy round (spec §C.2): true once the in-session
-     *  practice-assign call succeeded, so the commit route's fallback
-     *  auto-assign does not double-assign. Carried across intermediate
-     *  flushes for the same reason as nextTimeIntent. */
-    assignmentMade?: boolean;
   }>({
     losTouched: new Set(),
     masteryDeltas: [],
@@ -6588,7 +6599,6 @@ export function VoiceTutorRealtime({
         const ledgerLos = new Set([...ledgerRef.current.keys()].filter((k) => !k.startsWith('prereq:')));
         const loIds = c.assignLoIds.filter((id) => planLos.has(id) || ledgerLos.has(id));
         if (loIds.length && studentId && !closeNotesFiredRef.current) {
-          closeNotesFiredRef.current = true;
           const reason = (c.reason ?? '').trim() || 'Your tutor picked these to follow up on today\'s lesson.';
           void (async () => {
             try {
@@ -6606,11 +6616,27 @@ export function VoiceTutorRealtime({
                   nextTimeIntent: c.nextTimeIntent,
                 }),
               });
+              // Fix round 1 (minor 2) — the once-latch closes only on a
+              // REACHED route (200 assigned / 204 nothing-to-assign). A 5xx
+              // or a thrown fetch leaves it open so a second
+              // close_session_notes can retry; the route's sessionId-keyed
+              // upsert makes that retry idempotent.
+              if (res.status === 200 || res.status === 204) closeNotesFiredRef.current = true;
               if (res.status === 200) {
                 const data = await res.json() as { assigned: Array<{ loId: string; title: string; count: number }> };
-                assignedPracticeRef.current = data.assigned;
-                sessionAccumRef.current.assignmentMade = true;
-                onDebugEvent?.('practice_assigned', data.assigned.map((a) => `${a.loId}:${a.count}`).join(','));
+                const detail = data.assigned.map((a) => `${a.loId}:${a.count}`).join(',');
+                // Fix round 1 (spec §C.6) — the STUDENT-FACING surface is
+                // gated on a locator: with no place to send them, the /tutor
+                // summary must not announce homework. The assignment record
+                // is still created (it is real data the host can surface
+                // later); only the announcement is suppressed, and the debug
+                // event says so.
+                if (practiceLocator) {
+                  assignedPracticeRef.current = data.assigned;
+                  onDebugEvent?.('practice_assigned', detail);
+                } else {
+                  onDebugEvent?.('practice_assigned', `silent=no-locator ${detail}`);
+                }
               } else if (res.status !== 204) {
                 onDebugEvent?.('practice_assign_failed', `status=${res.status}`);
               }
@@ -8626,8 +8652,8 @@ export function VoiceTutorRealtime({
         learnerContextBlockRef.current = data.learnerContext ?? null;
         if (learnerContextBlockRef.current !== null) {
           transientContextBlockRef.current =
-            TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote || practiceLocator || goalNote)
-              ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote, practiceLocator, goalNote })
+            TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote || locatorForPrompt || goalNote)
+              ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote, practiceLocator: locatorForPrompt, goalNote })
               : null;
         }
         if (TUTOR_PEDAGOGY_OPENER) {
@@ -19219,6 +19245,10 @@ export function VoiceTutorRealtime({
           // this session (in-session tool call, or the commit-route fallback).
           // Undefined when nothing was assigned ⇒ the summary card is absent.
           assignedPractice: assignedPracticeRef.current ?? undefined,
+          // Fix round 1 (spec §C.6): the ref is only ever set when a locator
+          // exists, so this is present whenever assignedPractice is — the page
+          // names the real place instead of a hardcoded "Practice tab".
+          practiceLocator: assignedPracticeRef.current ? practiceLocator : undefined,
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
         setSpeakingRate,
