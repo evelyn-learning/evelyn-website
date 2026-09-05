@@ -48,11 +48,11 @@ import {
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
-// Task 20 — shape of the boot route's `learnerExtras`. TYPE-ONLY on BOTH:
-// recap-candidate.ts pulls the Mongoose learner store at module load, so a
-// value import would drag server-only code into the client bundle.
-import type { RecapCandidate } from '@/lib/tutor/learner-model/recap-candidate';
-import type { HomeworkStatus } from '@/lib/tutor/practice-assign/status';
+// Task 20 — shape of the boot route's `learnerExtras`, imported from the
+// module that PRODUCES it so the two can never drift. TYPE-ONLY: context-block
+// pulls the Mongoose learner store at module load, so a value import would
+// drag server-only code into the client bundle.
+import type { LearnerContextExtras } from '@/lib/tutor/learner-model/context-block';
 import {
   resolveCompletionOutcome,
   shouldFireRecapMilestone,
@@ -2465,19 +2465,19 @@ export function VoiceTutorRealtime({
   // summary card. Null until an assign succeeds (either the in-session tool
   // call or the commit-route fallback).
   const assignedPracticeRef = useRef<Array<{ loId: string; title: string; count: number }> | null>(null);
-  // Task 20 fills this: ids of homework items the student acknowledged
-  // out loud this session. Declared now so the final commit body can carry
+  // Task 20 fills this: ids of the homework assignments the tutor is
+  // instructed to raise out loud this session. Filled at the opener-seed
+  // site and ONLY when the homework continuity clause actually landed in
+  // the opening directive (fix round 1) — the commit route turns these into
+  // a permanent `acknowledgedAt` write, so a clause that is never spoken
+  // must never reach it. Declared here so the final commit body can carry
   // `homeworkAcknowledged` without a second edit to that call site.
   const homeworkAckIdsRef = useRef<string[]>([]);
   // Task 20 — the STRUCTURED twin of learnerContextBlockRef, set by the same
   // boot fetch (server flag TUTOR_LEARNER_CONTEXT + a lessonPlanId prop ⇒ the
   // field is present; otherwise it stays null). Only ever read under
   // TUTOR_RECAP_OFFER, so flag off ⇒ the opener behaves exactly as before.
-  const learnerExtrasRef = useRef<{
-    recapCandidate: RecapCandidate | null;
-    homework: HomeworkStatus[];
-    nextTimeIntent?: string;
-  } | null>(null);
+  const learnerExtrasRef = useRef<LearnerContextExtras | null>(null);
   // The continuity clause chosen at opener-seed time (spec §C.6). Stashed so
   // the agenda-rail REBUILD of the opening directive (handleMicClick) can
   // prepend the SAME clause instead of re-deriving it — the rebuild has no
@@ -2622,6 +2622,11 @@ export function VoiceTutorRealtime({
    *  utterance is classified as the reply. */
   const armSessionStartRecap = (c: { loId: string; loTitle: string; soft: boolean }) => {
     if (!TUTOR_RECAP_OFFER || recapRef.current.has(c.loId)) return;
+    // Fix round 1 — mirror the recurrence listener's rule: never stack a
+    // second offer while one is still awaiting its reply. The classifier
+    // consumes the FIRST pending entry it finds, so a second pending entry
+    // would be answered by the wrong utterance.
+    if ([...recapRef.current.values()].some((e) => e.outcome === 'pending')) return;
     recapRef.current.set(c.loId, { source: 'session-start', offeredAtMs: Date.now(), outcome: 'pending', loTitle: c.loTitle });
     onDebugEvent?.('recap_offer_armed', `lo="${c.loId}" source=session-start${c.soft ? ' soft' : ''}`);
   };
@@ -8748,9 +8753,14 @@ export function VoiceTutorRealtime({
         // (pipe-separated, at most 2 — the server strips the prefix). Both are
         // appended ONLY under TUTOR_RECAP_OFFER so a flag-off boot sends the
         // byte-identical URL every pre-Task-20 caller sent.
+        // `subject` and `socialMemory` are read here but deliberately kept OUT
+        // of this effect's `[studentId, embedToken]` dep array: the boot fetch
+        // is mount-once (the refs it fills are read once at opener-seed time),
+        // and adding a prop that can change mid-session would refetch the
+        // profile on every change.
         const goalNotes = TUTOR_RECAP_OFFER
           ? (socialMemory ?? [])
-            .map((t) => t.note?.trim() ?? '')
+            .map((t) => (t.note ?? '').replace(/\|/g, ' ').trim())
             .filter((n) => /^goal:/i.test(n))
             .slice(0, 2)
           : [];
@@ -8782,11 +8792,19 @@ export function VoiceTutorRealtime({
         // `?? null` keeps the ref's default. Gated on TUTOR_RECAP_OFFER: flag
         // off ⇒ nothing is consumed and homeworkAckIdsRef stays empty, so the
         // session-commit body carries no `homeworkAcknowledged` key.
+        // Fix round 1: this site does NOT fill homeworkAckIdsRef. Writing an
+        // acknowledgement is a one-way DB effect (`acknowledgedAt` on the
+        // assignment), and boot cannot know whether the tutor will ever SAY
+        // anything about the homework — the journey may be ineligible for a
+        // continuity clause, or there may be no opener clause to prepend it
+        // to. The fill moved to the opener-seed site, where the clause that
+        // will actually be spoken is known. The debug event stays here as
+        // pure telemetry (hence the `seen:` prefix — it records what the boot
+        // read, never an acknowledgement).
         if (TUTOR_RECAP_OFFER) {
           learnerExtrasRef.current = data.learnerExtras ?? null;
           if (learnerExtrasRef.current?.homework?.length) {
-            homeworkAckIdsRef.current = learnerExtrasRef.current.homework.map((h) => h.assignmentId);
-            onDebugEvent?.('homework_checked', learnerExtrasRef.current.homework.map((h) => `${h.assignmentId}:${h.overall}`).join(','));
+            onDebugEvent?.('homework_checked', `seen:${learnerExtrasRef.current.homework.map((h) => `${h.assignmentId}:${h.overall}`).join(',')}`);
           }
         }
         if (learnerContextBlockRef.current !== null) {
@@ -19731,8 +19749,6 @@ export function VoiceTutorRealtime({
               && (beh.journey === 'subscribed-returning' || beh.journey === 'node-revisit' || beh.journey === 'course-complete')
               ? pickContinuityClause(learnerExtrasRef.current)
               : null;
-            if (continuity?.recapOffer) armSessionStartRecap(continuity.recapOffer);
-            continuityClauseRef.current = continuity?.clause ?? null;
             // Resume-stale nuance: the student HAD started this lesson but
             // the checkpoint was too old to restore — prepend the one-line
             // re-orient instruction to the same directive (no new machinery;
@@ -19743,6 +19759,22 @@ export function VoiceTutorRealtime({
                 : continuity && openerClause
                   ? `${continuity.clause} ${openerClause}`
                   : openerClause;
+            // Fix round 1 — every side effect of the continuity clause hangs
+            // off whether the clause LANDED in the directive, not off whether
+            // one was picked: with no opener clause there is nothing to
+            // prepend to, so nothing is spoken and nothing may be recorded.
+            const landedContinuity = continuity && openerClause ? continuity : null;
+            continuityClauseRef.current = landedContinuity?.clause ?? null;
+            if (landedContinuity?.recapOffer) armSessionStartRecap(landedContinuity.recapOffer);
+            // Homework acknowledgement (spec §B.7): `acknowledgedAt` is a
+            // permanent one-way DB write, so only the clause the tutor will
+            // actually speak may trigger it. pickContinuityClause's precedence
+            // puts homework FIRST, so a landed clause + non-empty homework ⇒
+            // the landed clause IS the homework clause.
+            const ackHomework = landedContinuity ? learnerExtrasRef.current?.homework ?? [] : [];
+            if (ackHomework.length) {
+              homeworkAckIdsRef.current = ackHomework.map((h) => h.assignmentId);
+            }
             // Teacher persona: the one-sentence introduce-yourself directive
             // is stashed SEPARATELY (rides the first brain turn only — see
             // the attach site) and ONLY for first-meeting journeys. Pickups,
