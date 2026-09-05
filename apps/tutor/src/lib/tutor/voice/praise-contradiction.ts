@@ -153,17 +153,68 @@ const BARE_DENIAL_RE = /\b(?:isn'?t\s+(?:quite\s+)?(?:it|right|correct)|not\s+qu
  *  the exact aside class VoiceTutorRealtime's inverse-verdict gate documents. */
 const DENIAL_ASIDE_RE = /\b(?:not\s+quite|isn'?t\s+quite)\s+(?:the\s+same|similar|like|as)\b/i;
 
+/** A denial framed as a HYPOTHETICAL or a FORWARD warning — "if someone said
+ *  the slope is negative, that's not correct", "careful on the next one…",
+ *  "a common mistake is…". It denies a claim nobody made, so it is never a
+ *  verdict on this student's answer, whether or not a value is named (fix
+ *  round 1, Important 1). Applied to BOTH arms of the branch for that reason. */
+const DENIAL_HYPOTHETICAL_RE =
+  /\b(?:if\s+(?:someone|you|a\s+student)|careful|watch\s+(?:out\s+)?(?:for|on)|on\s+the\s+next|a\s+common\s+mistake|students\s+often|would(?:n'?t)?\s+be)\b/i;
+
+/** A denial scoped to a PART of the work ("your sign ON THE second term
+ *  isn't quite right") rather than to the answer as a whole. Applied to the
+ *  value-free arm ONLY: with no value named, "a bare denial can only be
+ *  about what the student just said" is exactly the assumption a part-scoped
+ *  denial breaks (fix round 1, Important 1). The same-value arm has positive
+ *  evidence the denial is about the student's own number, so it is not
+ *  weakened here — the live instance 3 denies "on the other side, so x=9
+ *  isn't quite it" and must keep firing. */
+const PART_SCOPE_RE = /\b(?:on|for|in|with)\s+(?:the|your)\s+\w+/i;
+
 /** Digits, decimals, fractions, or a $…$ span — "a value was named". */
 const VALUE_TOKEN_RE = /\d+(?:[./]\d+)?|\$[^$]+\$/g;
 
+/** Abbreviations whose trailing period is not a sentence end (fix round 1,
+ *  minor 3). Without this, "…roughly 30 percent, i.e. not quite right." splits
+ *  into a value-bearing fragment and a value-FREE denial fragment, and the
+ *  value-free arm then reads that fragment as a bare denial of the student's
+ *  answer. */
+const ABBREV_TAIL_RE = /(?:^|\s)(?:vs|e\.g|i\.e|approx|etc)\.$/i;
+
 function splitSentences(text: string): string[] {
-  return text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+  const parts = text.split(/(?<=[.!?])\s+/);
+  const merged: string[] = [];
+  for (const part of parts) {
+    if (merged.length > 0 && ABBREV_TAIL_RE.test(merged[merged.length - 1])) {
+      merged[merged.length - 1] += ' ' + part;
+    } else {
+      merged.push(part);
+    }
+  }
+  return merged.map((s) => s.trim()).filter(Boolean);
 }
 
 /** Spoken numerals → digits, then strip currency/whitespace and a leading
  *  "x=" style variable label, so "x equals nine" and "x=9" compare. */
 function normValue(s: string): string {
   return spokenNumbersToDigits(s).toLowerCase().replace(/[$\s]/g, '').replace(/^[a-z]'?=/, '');
+}
+
+/** Does a value named in the denial refer to what the student said?
+ *
+ *  Equality, or a SUFFIX match on a token boundary. The suffix arm exists so
+ *  a labelled utterance ("x equals nine" → "xequals9") still matches a bare
+ *  "9"; the boundary condition is what stops it matching a DIFFERENT number
+ *  that merely ends the same way (fix round 1, Important 2: "one hundred
+ *  nineteen" → "119" must NOT match a denial naming "9"). The character
+ *  immediately before the matched suffix must therefore not be a digit —
+ *  "xequals9" passes ("s"), "119" does not ("1"). */
+function matchesStudentValue(named: string, studentVal: string): boolean {
+  if (!named) return false;
+  if (named === studentVal) return true;
+  if (!studentVal.endsWith(named)) return false;
+  const prev = studentVal[studentVal.length - named.length - 1];
+  return prev !== undefined && !/\d/.test(prev);
 }
 
 /** @param opts.studentUtterance  the utterance the turn is grading — scopes
@@ -214,13 +265,26 @@ export function detectPraiseContradiction(
     const sentences = splitSentences(rest);
     const studentVal = opts?.studentUtterance ? normValue(opts.studentUtterance) : '';
     for (const s of sentences) {
-      const denial = DENIAL_RE.test(s) || BARE_DENIAL_RE.test(s);
-      if (!denial) continue;
-      // Exclusion (never a fire condition): a comparison aside, not a verdict.
+      // Where the denial sits, so "before the denial marker" is answerable.
+      // DENIAL_RE is anchored, so an opener-shaped denial is always at 0.
+      const bare = BARE_DENIAL_RE.exec(s);
+      const denialIdx = DENIAL_RE.test(s) ? 0 : (bare ? bare.index : -1);
+      if (denialIdx < 0) continue;
+      // Exclusions below (never fire conditions): each one only ever skips.
+      // A comparison aside, not a verdict.
       if (DENIAL_ASIDE_RE.test(s)) continue;
+      // A hypothetical or a forward warning — denies a claim nobody made.
+      if (DENIAL_HYPOTHETICAL_RE.test(s)) continue;
       const named = (s.match(VALUE_TOKEN_RE) ?? []).map(normValue);
-      if (named.length === 0) return { affirmed };
-      if (studentVal && named.some((v) => v === studentVal || (v.length > 0 && studentVal.endsWith(v)))) return { affirmed };
+      if (named.length === 0) {
+        // Value-free arm only: a denial scoped to a PART of the work is not
+        // a verdict on the whole answer. "Before the denial marker" is what
+        // makes it part-scoping rather than an unrelated later clause.
+        const partScope = PART_SCOPE_RE.exec(s);
+        if (partScope && partScope.index < denialIdx) continue;
+        return { affirmed };
+      }
+      if (studentVal && named.some((v) => matchesStudentValue(v, studentVal))) return { affirmed };
     }
   }
 

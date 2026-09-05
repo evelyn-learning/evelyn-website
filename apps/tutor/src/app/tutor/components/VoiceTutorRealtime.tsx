@@ -11202,6 +11202,16 @@ export function VoiceTutorRealtime({
                       choices: mcqChoices,
                       spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
                       problemContext: pendingSpoken?.statement ?? currentProblemRef.current?.statement ?? pendingEq?.latex,
+                      // Only the utterance ledger knows whether THIS student
+                      // turn was an answer attempt at all; a scaffolding
+                      // sub-question's answer must never be judged against the
+                      // card's final key (that is the false kill Task 7's fix
+                      // round closed). Deliberately NOT derived from
+                      // pendingSpoken/pendingEq/trackedAtMs — those say which
+                      // key is freshest, never whether the student was
+                      // answering the card as a whole.
+                      finalAnswerTurn: lastStudentVerificationRef.current?.isVerification === true
+                        && lastStudentVerificationRef.current.turn === pacingTurnCounterRef.current,
                     });
                     if (fp.verdict === 'false_praise') {
                       const reason =

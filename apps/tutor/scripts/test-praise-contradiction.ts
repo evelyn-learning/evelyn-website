@@ -178,5 +178,44 @@ function check(name: string, cond: boolean, detail?: string) {
   check('flag off: the value-substitution branch still fires', detectPraiseContradiction(subst, { bareDenialWidening: false })?.affirmed === '$2x$');
 }
 
+// ---------- Fix round 1 (task review) ----------
+// Important 1: the value-free arm assumed "a bare denial can only be about
+// what the student just said". Three probe shapes break that assumption —
+// a denial scoped to a PART of the work, a forward warning, and a
+// hypothetical about a claim nobody made.
+{
+  const partScoped = "Right, the setup is correct. Your sign on the second term isn't quite right, though.";
+  check('review I1: PART-scoped denial ("on the second term") → null', detectPraiseContradiction(partScoped, { studentUtterance: 'twelve' }) === null, JSON.stringify(detectPraiseContradiction(partScoped, { studentUtterance: 'twelve' })));
+  const forward = "Right, nice. Careful on the next one though — halving isn't quite right when the coefficient is negative.";
+  check('review I1: forward warning ("careful … on the next one") → null', detectPraiseContradiction(forward) === null, JSON.stringify(detectPraiseContradiction(forward)));
+  const hypothetical = "Right, that's the idea. If someone said the slope is negative, that's not correct.";
+  check('review I1: hypothetical ("if someone said …") → null', detectPraiseContradiction(hypothetical) === null, JSON.stringify(detectPraiseContradiction(hypothetical)));
+  // …and the two shapes the branch exists for still fire. Instance 3's own
+  // denial sentence contains "on the other side" — which is why PART_SCOPE_RE
+  // is applied to the VALUE-FREE arm only, never to the same-value arm.
+  const inst3 = "Right, let's check the reasoning behind it. If we substitute x = 9 we get 27 + 6, which is 33. Right, that gives x = 21 on the other side, so x=9 isn't quite it here.";
+  check('review I1: instance 3 still fires (same-value arm unweakened)', detectPraiseContradiction(inst3, { studentUtterance: 'x equals nine' }) !== null, JSON.stringify(detectPraiseContradiction(inst3, { studentUtterance: 'x equals nine' })));
+  const bare = "Right, let's look at this together. Not quite — let's recheck the second step.";
+  check('review I1: bare denial still fires', detectPraiseContradiction(bare) !== null, JSON.stringify(detectPraiseContradiction(bare)));
+}
+
+// Important 2: a suffix match only counts on a token boundary — otherwise a
+// DIFFERENT number that merely ends the same way matches.
+{
+  const probe = "Right, let's see. Actually 9 isn't quite it.";
+  check('review I2: "119" vs a denial naming "9" → null (digit before the suffix)', detectPraiseContradiction(probe, { studentUtterance: 'one hundred nineteen' }) === null, JSON.stringify(detectPraiseContradiction(probe, { studentUtterance: 'one hundred nineteen' })));
+  const labelled = "Right, let's see. $x = 9$ isn't quite it.";
+  check('review I2: "x equals nine" vs a denial naming "$x = 9$" → fires', detectPraiseContradiction(labelled, { studentUtterance: 'x equals nine' }) !== null, JSON.stringify(detectPraiseContradiction(labelled, { studentUtterance: 'x equals nine' })));
+}
+
+// Minor 3: an abbreviation's period must not end a sentence. Split here and
+// "not quite right for this shape." becomes a value-FREE denial fragment that
+// the bare arm reads as a verdict on the student; merged, the "30" it belongs
+// with is visible and the student's "twelve" plainly does not match it.
+{
+  const abbrev = "Right, good start. That gives roughly 30 percent, i.e. not quite right for this shape.";
+  check('review m3: "i.e." does not end a sentence → null', detectPraiseContradiction(abbrev, { studentUtterance: 'twelve' }) === null, JSON.stringify(detectPraiseContradiction(abbrev, { studentUtterance: 'twelve' })));
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);
