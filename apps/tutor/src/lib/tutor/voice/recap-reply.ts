@@ -51,8 +51,11 @@ export function classifyRecapReply(text: string): RecapReply {
     t = t.replace(LEADING_FILLER, '').trim();
   }
 
-  // Clean up leading punctuation
-  t = t.replace(/^[\s,.!-]+/, '').trim();
+  // Clean up leading punctuation, and TRAILING punctuation too: the four
+  // end-anchored decline shapes below must still match "let's just start." /
+  // "go straight in!" — with the period left in place they fell through to
+  // AMBIGUOUS_START_RE and read as 'unclear' (scoped re-review of caefdf04).
+  t = t.replace(/^[\s,.!-]+/, '').replace(/[\s,.!?-]+$/, '').trim();
 
   if (!t) return 'unclear';
 

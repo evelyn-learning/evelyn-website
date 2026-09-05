@@ -17,6 +17,7 @@ check("accept: sure let's do it (short remainder)", c('sure let\'s do it') === '
 // 'unclear', so a real decline was never counted as one (declines gate the
 // soft/excluded logic in pickRecapCandidate).
 for (const s of ['go straight in', "I'd rather go straight in", "let's just start", "let's just get going"]) check(`decline (final review): "${s}"`, c(s) === 'decline');
+for (const s of ["let's just start.", 'go straight in!', "Let's just get going..."]) check(`decline survives trailing punctuation: "${s}"`, c(s) === 'decline', `got ${c(s)}`);
 check('accept (final review): "sure why not"', c('sure why not') === 'accept');
 // The "why not" exemption is remainder-scoped only — a long or marker-bearing
 // reply that happens to contain it stays unclear.
