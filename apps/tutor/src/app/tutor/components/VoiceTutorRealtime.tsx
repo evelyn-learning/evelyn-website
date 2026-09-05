@@ -29,7 +29,7 @@ import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
 // classification of the student's reply to a recap OFFER.
 import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
-import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
+import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
 import {
   resolveOpeningBehavior,
@@ -48,6 +48,11 @@ import {
 import { buildAgendaItems } from '@/lib/tutor/lesson-plan/agenda';
 import { renderTransientContextBlock, type LastOpenerRecord } from '@/lib/tutor/student-profile/transient-context';
 import type { SocialThread, ProgressDigest } from '@evelyn/portal-contract/v1';
+// Task 20 — shape of the boot route's `learnerExtras`. TYPE-ONLY on BOTH:
+// recap-candidate.ts pulls the Mongoose learner store at module load, so a
+// value import would drag server-only code into the client bundle.
+import type { RecapCandidate } from '@/lib/tutor/learner-model/recap-candidate';
+import type { HomeworkStatus } from '@/lib/tutor/practice-assign/status';
 import {
   resolveCompletionOutcome,
   shouldFireRecapMilestone,
@@ -2458,6 +2463,20 @@ export function VoiceTutorRealtime({
   // out loud this session. Declared now so the final commit body can carry
   // `homeworkAcknowledged` without a second edit to that call site.
   const homeworkAckIdsRef = useRef<string[]>([]);
+  // Task 20 — the STRUCTURED twin of learnerContextBlockRef, set by the same
+  // boot fetch (server flag TUTOR_LEARNER_CONTEXT + a lessonPlanId prop ⇒ the
+  // field is present; otherwise it stays null). Only ever read under
+  // TUTOR_RECAP_OFFER, so flag off ⇒ the opener behaves exactly as before.
+  const learnerExtrasRef = useRef<{
+    recapCandidate: RecapCandidate | null;
+    homework: HomeworkStatus[];
+    nextTimeIntent?: string;
+  } | null>(null);
+  // The continuity clause chosen at opener-seed time (spec §C.6). Stashed so
+  // the agenda-rail REBUILD of the opening directive (handleMicClick) can
+  // prepend the SAME clause instead of re-deriving it — the rebuild has no
+  // OpeningBehavior in scope. Null whenever no clause applies.
+  const continuityClauseRef = useRef<string | null>(null);
   // ── Holistic-pedagogy round (spec §A): per-LO struggle ledger ────────
   // One LedgerState per session (fresh via the key={sessionId} remount).
   // Fed from sites the orchestrator already owns (streak increments, cue
@@ -8698,8 +8717,22 @@ export function VoiceTutorRealtime({
         // can (flag-gated) join the learner-context block for THIS lesson's
         // objectives. Absent prop ⇒ query string unchanged ⇒ same request
         // shape as before Task 17.
+        // Task 20: `subject` scopes the server's ability-band hint read and
+        // `goals` carries the student's `Goal:`-prefixed social-memory notes
+        // (pipe-separated, at most 2 — the server strips the prefix). Both are
+        // appended ONLY under TUTOR_RECAP_OFFER so a flag-off boot sends the
+        // byte-identical URL every pre-Task-20 caller sent.
+        const goalNotes = TUTOR_RECAP_OFFER
+          ? (socialMemory ?? [])
+            .map((t) => t.note?.trim() ?? '')
+            .filter((n) => /^goal:/i.test(n))
+            .slice(0, 2)
+          : [];
+        const extrasQuery = TUTOR_RECAP_OFFER
+          ? `${subject ? `&subject=${encodeURIComponent(subject)}` : ''}${goalNotes.length ? `&goals=${encodeURIComponent(goalNotes.join('|'))}` : ''}`
+          : '';
         const url = lessonPlanId
-          ? `/api/tutor/student-profile/${encodeURIComponent(studentId)}?lessonPlanId=${encodeURIComponent(lessonPlanId)}`
+          ? `/api/tutor/student-profile/${encodeURIComponent(studentId)}?lessonPlanId=${encodeURIComponent(lessonPlanId)}${extrasQuery}`
           : `/api/tutor/student-profile/${encodeURIComponent(studentId)}`;
         const res = await fetch(
           url,
@@ -8718,6 +8751,18 @@ export function VoiceTutorRealtime({
         // `data.learnerContext` is `undefined` when the field is absent
         // (flag off / no param), so `?? null` keeps the ref's default.
         learnerContextBlockRef.current = data.learnerContext ?? null;
+        // Task 20 — structured extras for the opener. `learnerExtras` is
+        // absent unless the server flag is on AND lessonPlanId was sent, so
+        // `?? null` keeps the ref's default. Gated on TUTOR_RECAP_OFFER: flag
+        // off ⇒ nothing is consumed and homeworkAckIdsRef stays empty, so the
+        // session-commit body carries no `homeworkAcknowledged` key.
+        if (TUTOR_RECAP_OFFER) {
+          learnerExtrasRef.current = data.learnerExtras ?? null;
+          if (learnerExtrasRef.current?.homework?.length) {
+            homeworkAckIdsRef.current = learnerExtrasRef.current.homework.map((h) => h.assignmentId);
+            onDebugEvent?.('homework_checked', learnerExtrasRef.current.homework.map((h) => `${h.assignmentId}:${h.overall}`).join(','));
+          }
+        }
         if (learnerContextBlockRef.current !== null) {
           transientContextBlockRef.current =
             TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote || locatorForPrompt || goalNote)
@@ -19625,6 +19670,20 @@ export function VoiceTutorRealtime({
               ...openerCtx,
               agendaItemCount: pendingAgendaItemCountRef.current ?? 0,
             });
+            // Continuity clause (spec §C.6) — ONE deterministic callback:
+            // homework result → next-time intent → recap offer. Only the
+            // returning-subscribed journeys get it; diagnostic / trial / new /
+            // resume-live / resume-stale never do (a first meeting has no
+            // continuity to speak of, and resume-stale already spends its one
+            // opening move on the re-orient clause — hence the two branches
+            // below can never co-occur).
+            const continuity = TUTOR_RECAP_OFFER
+              && learnerExtrasRef.current
+              && (beh.journey === 'subscribed-returning' || beh.journey === 'node-revisit' || beh.journey === 'course-complete')
+              ? pickContinuityClause(learnerExtrasRef.current)
+              : null;
+            if (continuity?.recapOffer) armSessionStartRecap(continuity.recapOffer);
+            continuityClauseRef.current = continuity?.clause ?? null;
             // Resume-stale nuance: the student HAD started this lesson but
             // the checkpoint was too old to restore — prepend the one-line
             // re-orient instruction to the same directive (no new machinery;
@@ -19632,7 +19691,9 @@ export function VoiceTutorRealtime({
             const baseDirective =
               beh.journey === 'resume-stale' && openerClause
                 ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${openerClause}`
-                : openerClause;
+                : continuity && openerClause
+                  ? `${continuity.clause} ${openerClause}`
+                  : openerClause;
             // Teacher persona: the one-sentence introduce-yourself directive
             // is stashed SEPARATELY (rides the first brain turn only — see
             // the attach site) and ONLY for first-meeting journeys. Pickups,
@@ -19989,9 +20050,16 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
                 agendaItemCount,
               });
               if (rebuilt) {
+                // Task 20: re-prepend the SAME continuity clause the seed
+                // chose (stashed in continuityClauseRef) — the rebuild would
+                // otherwise silently drop it. Mutually exclusive with the
+                // stale-reorient branch: resume-stale is excluded from the
+                // continuity journeys, so the ref is null on that path.
                 openingDirectiveRef.current = openerStaleReorientRef.current
                   ? `${STALE_CHECKPOINT_REORIENT_CLAUSE} ${rebuilt}`
-                  : rebuilt;
+                  : continuityClauseRef.current
+                    ? `${continuityClauseRef.current} ${rebuilt}`
+                    : rebuilt;
               }
             }
           }
