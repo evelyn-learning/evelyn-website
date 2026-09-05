@@ -28,7 +28,7 @@ import { generateSessionRecap, type SessionSummaryInput } from '@/lib/tutor/stud
 import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
-import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
+import { getLearnerContext } from '@/lib/tutor/learner-model/context-block';
 import { assignPractice } from '@/lib/tutor/practice-assign/assign';
 import { findAssignmentBySession, acknowledgeAssignments } from '@/lib/tutor/practice-assign/store';
 
@@ -82,7 +82,26 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   // byte-identical to the pre-Task-17 shape for every existing caller.
   const lessonPlanId = new URL(req.url).searchParams.get('lessonPlanId');
   if (process.env.TUTOR_LEARNER_CONTEXT === 'on' && lessonPlanId) {
-    responseBody.learnerContext = await getLearnerContextBlock(profileId, lessonPlanId);
+    // Task 15 — `goals` carries the client's `Goal:`-prefixed social-thread
+    // notes (pipe-separated, at most 2) and `subject` scopes the ability-band
+    // hint read. Both are optional; absent ⇒ those lines simply don't render.
+    // `learnerExtras` is the STRUCTURED twin of the block (recap candidate,
+    // homework, intent) for the orchestrator, which has to act on those facts
+    // rather than just speak from them.
+    const params = new URL(req.url).searchParams;
+    const goalNotes = (params.get('goals') ?? '')
+      .split('|')
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 2);
+    const lc = await getLearnerContext(profileId, lessonPlanId, {
+      partnerId: partnerIdForInternalRoute(auth),
+      externalStudentId: id,
+      subject: params.get('subject') ?? undefined,
+      socialGoalNotes: goalNotes,
+    });
+    responseBody.learnerContext = lc.block;
+    responseBody.learnerExtras = lc.extras;
   }
   return NextResponse.json(responseBody);
 }
