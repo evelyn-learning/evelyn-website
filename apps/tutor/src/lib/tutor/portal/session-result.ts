@@ -326,7 +326,18 @@ export async function emitSessionResult(
   const assignedPractice = assignment && assignment.locator
     ? assignment.los.map((l) => ({ loId: l.loId, title: l.title, itemIds: l.items.map((i) => i.id), reason: l.reason, assignedAt: assignment.assignedAt.toISOString() }))
     : undefined;
-  const nextSessionIntent = assignment?.nextTimeIntent ?? profile.nextSessionIntent?.text;
+  // Fix round 2 (Important I1) — the profile's `nextSessionIntent` is
+  // whatever session last wrote it, which can be months old and unrelated
+  // to this emit (e.g. a later session that closed with no new intent).
+  // The renderer's own `<learner_context>` guard scopes by recency
+  // (`context-block.ts`'s INTENT_MAX_AGE_DAYS); this wire echo instead
+  // scopes by IDENTITY — only surface the profile fallback when it was
+  // this very session's final commit that wrote it (`sessionId` stamped in
+  // `student-profile/[id]/route.ts`). Otherwise the profile note is stale
+  // for THIS emit and must not be echoed as if it were.
+  const nextSessionIntent =
+    assignment?.nextTimeIntent ??
+    (profile.nextSessionIntent?.sessionId === req.sessionId ? profile.nextSessionIntent.text : undefined);
 
   const base: Omit<SessionResult, 'learningStateDelta'> = {
     sessionId: req.sessionId,

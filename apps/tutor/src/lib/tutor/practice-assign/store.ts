@@ -40,21 +40,47 @@ export function courseIdFilter(courseId?: string): { $or: Array<Record<string, u
   return { $or: [{ courseId }, { courseId: { $exists: false } }, { courseId: '' }] };
 }
 
-/** Open = not acknowledged, assigned within `withinDays` (default 21). With
- *  `requireLocator` (default true) only records the academy can render.
- *  `courseId` (fix round 1, Important I2) is applied INSIDE the query so
- *  Mongo filters before `.limit()` — a JS post-filter after `.limit(5)`
- *  could silently drop a matching assignment that didn't make the cut. */
-export async function findOpenAssignments(
+/**
+ * Query shape for `findOpenAssignments`, factored out (like `courseIdFilter`)
+ * so it is unit-testable without a live Mongo connection — see
+ * `scripts/test-practice-assign.ts`.
+ *
+ * `ignoreAcknowledged` (fix round 2, Critical C1) drops the
+ * `acknowledgedAt: { $exists: false }` clause. `acknowledgedAt` is the
+ * TUTOR's "have I mentioned this yet" bookkeeping — set the moment the
+ * opener's continuity clause is *spoken*, not when the student actually
+ * does the homework (see `learner-model/context-block.ts`'s caller, which
+ * leaves this option unset on purpose). The student-facing read
+ * (`assigned-practice` route) has a different notion of "open": within the
+ * window and has a locator, full stop — a card the tutor already mentioned
+ * must not vanish from the student's own Practice tab before it's done.
+ */
+export function openAssignmentsQuery(
   studentId: string,
-  opts?: { withinDays?: number; requireLocator?: boolean; courseId?: string },
-): Promise<IPracticeAssignment[]> {
-  await connectDB();
+  opts?: { withinDays?: number; requireLocator?: boolean; courseId?: string; ignoreAcknowledged?: boolean },
+): Record<string, unknown> {
   const since = new Date(Date.now() - (opts?.withinDays ?? 21) * MS_PER_DAY);
-  const q: Record<string, unknown> = { studentId, assignedAt: { $gte: since }, acknowledgedAt: { $exists: false } };
+  const q: Record<string, unknown> = { studentId, assignedAt: { $gte: since } };
+  if (!opts?.ignoreAcknowledged) q.acknowledgedAt = { $exists: false };
   if (opts?.requireLocator !== false) q.locator = { $exists: true, $ne: '' };
   const courseQ = courseIdFilter(opts?.courseId);
   if (courseQ) Object.assign(q, courseQ);
+  return q;
+}
+
+/** Open = not acknowledged (unless `ignoreAcknowledged`), assigned within
+ *  `withinDays` (default 21). With `requireLocator` (default true) only
+ *  records the academy can render. `courseId` (fix round 1, Important I2)
+ *  is applied INSIDE the query so Mongo filters before `.limit()` — a JS
+ *  post-filter after `.limit(5)` could silently drop a matching assignment
+ *  that didn't make the cut. See `openAssignmentsQuery` for the query shape
+ *  itself and `ignoreAcknowledged`'s semantics (fix round 2, Critical C1). */
+export async function findOpenAssignments(
+  studentId: string,
+  opts?: { withinDays?: number; requireLocator?: boolean; courseId?: string; ignoreAcknowledged?: boolean },
+): Promise<IPracticeAssignment[]> {
+  await connectDB();
+  const q = openAssignmentsQuery(studentId, opts);
   return (await PracticeAssignmentModel.find(q).sort({ assignedAt: -1 }).limit(5).lean()) as IPracticeAssignment[];
 }
 

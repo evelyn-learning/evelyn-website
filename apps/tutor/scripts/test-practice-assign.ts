@@ -1,6 +1,6 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
-import { courseIdFilter } from '../src/lib/tutor/practice-assign/store';
+import { courseIdFilter, openAssignmentsQuery } from '../src/lib/tutor/practice-assign/store';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) { if (cond) { passed++; console.log(`  ✓ ${name}`); } else { failed++; console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); } }
@@ -42,6 +42,24 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
   check('courseIdFilter — an empty-string-stamped assignment matches any requested courseId', matchesOrClause({ courseId: '' }, or));
   check('courseIdFilter — an assignment stamped for the SAME course matches', matchesOrClause({ courseId: 'B' }, or));
   check('courseIdFilter — an assignment stamped for a DIFFERENT course does not match', !matchesOrClause({ courseId: 'A' }, or));
+}
+
+// Fix round 2 (Critical C1) — `ignoreAcknowledged` must drop the
+// `acknowledgedAt: { $exists: false }` clause from findOpenAssignments'
+// query, while leaving the window/locator/courseId/studentId clauses
+// untouched. This is the option the assigned-practice route's DEFAULT
+// (non-includeAcknowledged) path now passes, so an acknowledged-but-
+// untouched assignment still shows up on the student's Practice tab.
+{
+  const withDefault = openAssignmentsQuery('s1', { withinDays: 21, requireLocator: true, courseId: 'c1' });
+  const withIgnore = openAssignmentsQuery('s1', { withinDays: 21, requireLocator: true, courseId: 'c1', ignoreAcknowledged: true });
+  check('default query includes the acknowledgedAt clause', 'acknowledgedAt' in withDefault);
+  check('ignoreAcknowledged:true drops the acknowledgedAt clause', !('acknowledgedAt' in withIgnore));
+  check('ignoreAcknowledged leaves studentId untouched', withIgnore.studentId === 's1' && withDefault.studentId === 's1');
+  check('ignoreAcknowledged leaves the window clause untouched', JSON.stringify(withIgnore.assignedAt) === JSON.stringify(withDefault.assignedAt));
+  check('ignoreAcknowledged leaves the locator clause untouched', JSON.stringify(withIgnore.locator) === JSON.stringify(withDefault.locator));
+  check('ignoreAcknowledged leaves the courseId clause untouched', JSON.stringify(withIgnore.$or) === JSON.stringify(withDefault.$or));
+  check('ignoreAcknowledged omitted (falsy) behaves like false', 'acknowledgedAt' in openAssignmentsQuery('s1', {}));
 }
 
 (async () => {
