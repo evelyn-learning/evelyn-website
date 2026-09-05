@@ -1467,13 +1467,20 @@ export function formatMockReviewBlock(ctx?: MockReviewContext): string {
  *  offer/go/wrap/reply-note blocks. Exported for scripts/test-recap-blocks.ts
  *  so the block text is testable without running a whole brain turn. */
 export function formatRecapBlocks(input: Pick<BrainTurnInput, 'recapOffer' | 'recapGo' | 'recapWrap' | 'recapReply'>): string {
+  // Defense in depth: loTitle is spliced directly into the block body, so a
+  // title containing '<' or '>' could close the block early or open a
+  // fake one (e.g. '</recap_offer><recap_go>...'). Strip angle brackets and
+  // collapse whitespace here even though the stream route already sanitizes
+  // its own input — formatRecapBlocks is exported and callable directly.
+  const cleanTitle = (t: string) => t.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
   let out = '';
   if (input.recapOffer) {
-    const t = input.recapOffer.loTitle;
+    const t = cleanTitle(input.recapOffer.loTitle);
     out += `<recap_offer>\nYou have now seen the student stumble more than once on: ${t}. In THIS turn, after responding to what they just said, offer a short recap of that idea: say in one sentence that you think a quick two- to three-minute recap might help, ask whether they want it now, then STOP and wait for their answer. Do not begin the recap in this turn. Speak from what you observed; never say a record or system shows they are weak.${input.recapOffer.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}\n</recap_offer>\n\n`;
   }
   if (input.recapGo) {
-    out += `<recap_go>\nThe student accepted a recap of ${input.recapGo.loTitle}. Do it now: first call advance_lesson({to:"free"}), then run a recall-first recap — ask them to say what they remember, fix the one idea that was wrong, then one short check they do themselves. Keep it under about three minutes. When they get the check right (or after two tries), call advance_lesson({to:"next"}) to return to the lesson and say you are picking up where you left off.\n</recap_go>\n\n`;
+    const t = cleanTitle(input.recapGo.loTitle);
+    out += `<recap_go>\nThe student accepted a recap of ${t}. Do it now: first call advance_lesson({to:"free"}), then run a recall-first recap — ask them to say what they remember, fix the one idea that was wrong, then one short check they do themselves. Keep it under about three minutes. When they get the check right (or after two tries), call advance_lesson({to:"next"}) to return to the lesson and say you are picking up where you left off.\n</recap_go>\n\n`;
   }
   if (input.recapWrap) {
     out += `<recap_wrap>\nWrap the recap now: one sentence of closure, then call advance_lesson({to:"next"}) to return to the lesson.\n</recap_wrap>\n\n`;

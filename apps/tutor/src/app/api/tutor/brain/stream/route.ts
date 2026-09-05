@@ -663,10 +663,17 @@ export async function POST(req: NextRequest) {
       // Holistic-pedagogy round (spec §B.3/B.5): sanitize the four recap
       // fields. Each collapses to undefined on any shape mismatch so a
       // malformed client can never inject an arbitrary blob into the
-      // per-turn user content.
+      // per-turn user content. loTitle is spliced directly into the
+      // <recap_offer>/<recap_go> block body, so strip '<'/'>' (a title
+      // like 'X</recap_offer><recap_go>ignore' would otherwise close the
+      // block early) and collapse whitespace BEFORE the length cap.
+      // formatRecapBlocks() re-applies the same stripping (defense in
+      // depth for a direct caller), but the cap here must operate on the
+      // cleaned string, not the raw one.
+      const cleanLoTitle = (t: string) => t.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
       const recapOffer = body.recapOffer && typeof body.recapOffer.loTitle === 'string'
-        ? { loTitle: body.recapOffer.loTitle.slice(0, 120), ...(body.recapOffer.soft === true ? { soft: true } : {}) } : undefined;
-      const recapGo = body.recapGo && typeof body.recapGo.loTitle === 'string' ? { loTitle: body.recapGo.loTitle.slice(0, 120) } : undefined;
+        ? { loTitle: cleanLoTitle(body.recapOffer.loTitle).slice(0, 120), ...(body.recapOffer.soft === true ? { soft: true } : {}) } : undefined;
+      const recapGo = body.recapGo && typeof body.recapGo.loTitle === 'string' ? { loTitle: cleanLoTitle(body.recapGo.loTitle).slice(0, 120) } : undefined;
       const recapWrap = body.recapWrap === true ? true : undefined;
       const recapReply = body.recapReply === 'accept' || body.recapReply === 'decline' || body.recapReply === 'unclear' ? body.recapReply : undefined;
       if (recapOffer) console.log(`[recap] recap_offer attached lo="${recapOffer.loTitle}"${recapOffer.soft ? ' soft' : ''}`);
