@@ -647,10 +647,14 @@ test('bookkeeping-only merges recap counters and the recurrence tally', () => {
   assert.strictEqual(g.evidence?.recurrenceCount, 2);
 });
 
-test('bookkeeping-only adds the sessionId and bumps lastSeenAt', () => {
+// Scoped re-review: the merge must not touch lastSeenAt or sessionIds either.
+// Adding the sessionId would make applyCrossSessionPromotion's dedup guard skip
+// this session for that gap; freshening lastSeenAt would un-stale a gap on the
+// strength of a counter rather than on the student struggling with it again.
+test('bookkeeping-only leaves sessionIds and lastSeenAt untouched', () => {
   const g = bookkept.gaps[0];
-  assert.deepStrictEqual(g.sessionIds, ['s1', 's2']);
-  assert.ok(g.lastSeenAt > '2026-05-08T00:00:00.000Z', 'lastSeenAt should advance');
+  assert.deepStrictEqual(g.sessionIds, ['s1']);
+  assert.strictEqual(g.lastSeenAt, '2026-05-08T00:00:00.000Z');
 });
 
 console.log(`\n${passed} passed, ${failed} failed\n`);

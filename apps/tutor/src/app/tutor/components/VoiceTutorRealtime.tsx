@@ -2109,8 +2109,10 @@ export function VoiceTutorRealtime({
       if (Array.isArray(data.assigned) && data.assigned.length && assignedPracticeRef.current === null) {
         const detail = (data.assigned as Array<{ loId: string; count: number }>).map((a) => `${a.loId}:${a.count}`).join(',');
         // Fix round 1 (spec §C.6) — same locator gate as the in-session path:
-        // no locator ⇒ the record exists but nothing announces it.
-        if (practiceLocator) {
+        // no locator ⇒ the record exists but nothing announces it. Reads the
+        // flag-gated derivation, not the raw prop, so the summary card and the
+        // record the route wrote agree under TUTOR_CLOSE_NOTES=off.
+        if (locatorForPrompt) {
           assignedPracticeRef.current = data.assigned as Array<{ loId: string; title: string; count: number }>;
           onDebugEventRef.current?.('practice_assigned_auto', detail);
         } else {
@@ -2548,7 +2550,13 @@ export function VoiceTutorRealtime({
     if (!d) return;
     const accum = sessionAccumRef.current;
     const isPrereq = loId.startsWith('prereq:');
-    const existing = accum.gaps.find((g) => (isPrereq
+    // `!g.bookkeepingOnly` — a bookkeeping entry is a COUNTER, not the gap.
+    // Treating one as `existing` made this branch bump its `recurrences` and
+    // return before the inferred push, so the LO's FIRST real detection was
+    // recorded nowhere: the server drops a bookkeeping-only record that has no
+    // gap to merge onto. Skipping them lets the real push happen alongside; the
+    // commit route merges both entries by loId.
+    const existing = accum.gaps.find((g) => !g.bookkeepingOnly && (isPrereq
       ? g.kind === 'prerequisite' && prereqKey(g.conceptLabel ?? '') === loId
       : g.kind === 'lo' && g.loId === loId));
     // A brain_gap event that produced this LO's FIRST detection is not a
@@ -6638,7 +6646,9 @@ export function VoiceTutorRealtime({
             : typeof c.loId === 'string' && c.loId !== '');
           const key: string | null = !valid ? null
             : isPrereqCmd ? prereqKey(c.conceptLabel) : String(c.loId);
-          const priorEntry = key === null ? undefined : sessionAccumRef.current.gaps.find((g) => (isPrereqCmd
+          // `!g.bookkeepingOnly` for the same reason as feedLedger's lookup:
+          // bumping a counter-only entry would swallow this brain-declared gap.
+          const priorEntry = key === null ? undefined : sessionAccumRef.current.gaps.find((g) => !g.bookkeepingOnly && (isPrereqCmd
             ? g.kind === 'prerequisite' && prereqKey(g.conceptLabel ?? '') === key
             : g.kind === 'lo' && g.loId === key));
           if (key) {

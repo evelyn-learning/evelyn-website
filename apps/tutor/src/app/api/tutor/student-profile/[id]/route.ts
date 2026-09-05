@@ -303,7 +303,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   // evidence, which is the right behavior.
   profile = resolveSettledGaps(profile);
   if (Array.isArray(body.gaps)) {
-    for (const g of body.gaps) {
+    // Stable partition: every REAL gap entry is recorded before any
+    // bookkeeping-only one. Within a single commit the recap offer can be
+    // pushed before the gap it annotates exists on the profile; processed in
+    // wire order, that offer would hit "no active match" and be dropped.
+    const orderedGaps = [
+      ...body.gaps.filter((g) => g.bookkeepingOnly !== true),
+      ...body.gaps.filter((g) => g.bookkeepingOnly === true),
+    ];
+    for (const g of orderedGaps) {
       const observation = g.observation ?? g.description ?? '';
       if (!observation) continue; // skip malformed entries
       // Default kind for legacy callers that only sent loId+description.

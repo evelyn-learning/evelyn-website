@@ -218,8 +218,9 @@ export interface RecordGapInput {
    *  surface a phantom candidate to parents via /api/portal/v1/gaps and to
    *  the brain via <student_profile>) and must never overwrite the real
    *  observation/signals/quotes of an existing one. When true, recordGap
-   *  merges ONLY recap + recurrences (plus lastSeenAt/sessionIds) into an
-   *  EXISTING active match, and is a no-op when there is no active match. */
+   *  merges ONLY `recap` + `recurrenceCount` into an EXISTING active match —
+   *  lastSeenAt and sessionIds are left alone too — and is a no-op when there
+   *  is no active match. */
   bookkeepingOnly?: boolean;
 }
 
@@ -294,10 +295,15 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
   const idx = profile.gaps.findIndex((g) => activeMatch(g, input));
   if (idx >= 0) {
     const existing = profile.gaps[idx];
-    // Bookkeeping-only: merge recap + recurrences and touch lastSeenAt /
-    // sessionIds. Deliberately leaves observation, signals, studentQuotes,
-    // confidence and status exactly as they are — this record carries no
-    // new evidence about the gap, only counters about how we handled it.
+    // Bookkeeping-only: merge recap + recurrences and NOTHING else. The
+    // record carries no evidence about the gap, only counters about how we
+    // handled it, so observation, signals, studentQuotes, confidence and
+    // status are left alone — and so are `lastSeenAt` and `sessionIds`.
+    // Those two are load-bearing elsewhere: adding the sessionId here would
+    // make applyCrossSessionPromotion's dedup guard skip this session (it
+    // skips any gap whose sessionIds already contains the current one), and
+    // freshening lastSeenAt would un-stale a gap on the strength of a
+    // counter rather than on the student struggling with it again.
     if (input.bookkeepingOnly) {
       const bookkeepingRecap = mergeRecap(existing.evidence?.recap, input.recap, now);
       const bookkeepingRecurrences = (existing.evidence?.recurrenceCount ?? 0) + (input.recurrences ?? 0);
@@ -306,12 +312,7 @@ export function recordGap(profile: StudentProfile, input: RecordGapInput): Stude
         ...(bookkeepingRecurrences > 0 ? { recurrenceCount: bookkeepingRecurrences } : {}),
         ...(bookkeepingRecap ? { recap: bookkeepingRecap } : {}),
       };
-      const bookkept: GapEntry = {
-        ...existing,
-        lastSeenAt: now,
-        sessionIds: Array.from(new Set([...(existing.sessionIds ?? []), input.sessionId])),
-        evidence: bookkeepingEvidence,
-      };
+      const bookkept: GapEntry = { ...existing, evidence: bookkeepingEvidence };
       return { ...profile, gaps: profile.gaps.map((g, i) => (i === idx ? bookkept : g)) };
     }
     const mergedSignals: GapSignalCode[] = Array.from(new Set([

@@ -21,4 +21,8 @@ check('accept (final review): "sure why not"', c('sure why not') === 'accept');
 // The "why not" exemption is remainder-scoped only — a long or marker-bearing
 // reply that happens to contain it stays unclear.
 check('why-not exemption does not widen: "sure, why not after this problem?"', c('sure, why not after this problem?') === 'unclear');
+// Scoped re-review: the unanchored decline must be those four shapes only.
+// "let's just start THE RECAP" is an accept-shaped request, not a decline —
+// and decline is tested first, so a loose alternation would have stolen it.
+check('unanchored decline stays narrow: "yeah, let\'s just start the recap"', c("yeah, let's just start the recap") === 'unclear', `got ${c("yeah, let's just start the recap")}`);
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);

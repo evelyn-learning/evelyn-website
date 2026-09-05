@@ -13,14 +13,25 @@ const DECLINE_RE = /^(?:no+|nah|nope|not (?:now|right now|today)|(?:maybe )?late
 const ACCEPT_RE = /^(?:sure|yes+|yeah|yep|yup|ok|okay|alright|go ahead|please|why not|sounds good|let'?s do (?:it|that)|that would help|a quick one|quick one|yes please|do it|i'?d like that)\b/i;
 
 /** Spec-listed declines whose decline word is NOT the first token, so the
- *  anchored DECLINE_RE above can never see them: "go straight in", "I'd
- *  rather go straight in", "let's just start", "let's just get going".
- *  Unanchored ON PURPOSE — each phrase is unambiguous wherever it lands in a
- *  recap reply (a student who says "straight in" anywhere is declining the
- *  detour), and decline is tested before accept, so a mixed "yeah, let's just
- *  start" still reads as the decline it is. */
+ *  anchored DECLINE_RE above can never see them: "go straight in", "I'd rather
+ *  go straight in", "let's just start", "let's just get going".
+ *
+ *  EXACTLY those four shapes and no synonyms. A wider alternation
+ *  (begin|get started|dive in, or a bare `let's just start` with any tail)
+ *  turned "yeah, let's just start the recap" — an ACCEPT — into a decline,
+ *  because decline is tested first. The trailing `(?![\w])` boundary plus the
+ *  absence of a tail-swallowing suffix is what keeps the phrase a whole reply
+ *  rather than a prefix of some other request. */
 const DECLINE_UNANCHORED_RE =
-  /\bstraight\s+in\b|\blet'?s\s+just\s+(?:start|begin|get\s+going|get\s+started|dive\s+in)\b/i;
+  /(?:go\s+|i'?d\s+rather\s+(?:go\s+)?)?\bstraight\s+in\s*$|\blet'?s\s+(?:just\s+)?(?:start|get\s+going)\s*$/i;
+
+/** The same shapes with something AFTER them. "let's just start" declines the
+ *  detour; "let's just start the recap" asks for it — the phrase alone does not
+ *  decide, and decline is tested before accept, so without this the tail would
+ *  be swallowed and the reply mis-read as a decline (or, via the ≤5-word accept
+ *  remainder, as a bare accept). An ambiguous reply is 'unclear' by design: the
+ *  brain re-asks rather than guessing which way the student meant it. */
+const AMBIGUOUS_START_RE = /\blet'?s\s+(?:just\s+)?(?:start|get\s+going)\b|\bstraight\s+in\b/i;
 
 /** "why not" is an idiomatic ACCEPT, but its "why" trips UNCLEAR_MARKERS when
  *  it lands in an accept token's remainder ("sure why not"). Exempted only
@@ -47,6 +58,9 @@ export function classifyRecapReply(text: string): RecapReply {
 
   // Check decline first (negation takes precedence)
   if (DECLINE_RE.test(t) || DECLINE_UNANCHORED_RE.test(t)) return 'decline';
+
+  // …then the same shapes carrying a tail: ambiguous, never a decline.
+  if (AMBIGUOUS_START_RE.test(t)) return 'unclear';
 
   // Check accept, validating remainder
   const acceptMatch = t.match(ACCEPT_RE);
