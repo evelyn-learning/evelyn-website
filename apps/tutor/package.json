@@ -46,6 +46,7 @@
     "test:mock-service": "npx tsx src/lib/tutor/mock-exam/service.test.ts",
     "test:mock-report": "npx tsx src/lib/tutor/mock-exam/report.test.ts",
     "test:portal-mock": "npx tsx scripts/test-portal-mock-endpoints.ts",
+    "test:practice-assign": "npx tsx scripts/test-practice-assign.ts",
     "test:embed-token": "npx tsx scripts/test-embed-token.ts",
     "test:partner-token-secrets": "npx tsx scripts/test-partner-token-secrets.ts",
     "test:material-classify": "npx tsx scripts/test-material-classify.ts",
