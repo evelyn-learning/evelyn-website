@@ -6,4 +6,11 @@ for (const s of ['no', 'nah', 'not now', 'maybe later', 'skip it', 'let\'s keep 
 for (const s of ['what do you mean by recap', 'twelve', 'um', 'can you explain the vertex again', 'I think it is x equals 4']) check(`unclear: "${s}"`, c(s) === 'unclear');
 check('accept with filler', c('um, yeah sure') === 'accept');
 check('negated accept is decline', c('no, I\'m good') === 'decline');
+check('first-clause anchoring: yes but…', c('yes but can we do it after this problem') === 'unclear');
+check("first-clause anchoring: sure, what's…", c('sure, what\'s a recap?') === 'unclear');
+check('first-clause anchoring: okay so number', c('okay so the answer is twelve') === 'unclear');
+check("decline: don't think so", c('I don\'t think so') === 'decline');
+check("decline: well + don't think so", c('well, I don\'t think so') === 'decline');
+check('accept: yes please (short remainder)', c('yes please') === 'accept');
+check("accept: sure let's do it (short remainder)", c('sure let\'s do it') === 'accept');
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
