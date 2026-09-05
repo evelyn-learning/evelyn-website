@@ -25,6 +25,9 @@ import { decideStage2CancelAction, isDuplicateTranscript, type Stage2Verdict } f
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
 import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
+// Holistic-pedagogy round (spec §B.4): deterministic accept/decline/unclear
+// classification of the student's reply to a recap OFFER.
+import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -253,6 +256,7 @@ import {
   TUTOR_STRUGGLE_LEDGER,
   TUTOR_FALSE_PRAISE_OPENER,
   TUTOR_CLOSE_NOTES,
+  TUTOR_RECAP_OFFER,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -2467,6 +2471,17 @@ export function VoiceTutorRealtime({
   // The recap state machine registers itself here (recap arming listens
   // for recurrences). Null until then — the ledger never depends on it.
   const recurrenceListenerRef = useRef<((d: LedgerDetection & { loTitle: string }) => void) | null>(null);
+  // ── Holistic-pedagogy round (spec §B): consent-gated recap ──────────
+  // One offer per LO per session. `recapRef` is the session's offer
+  // ledger (outcome 'pending' until the student's next real utterance is
+  // classified); the three `pending*` refs are ONE-TURN carriers consumed
+  // where the brain body is assembled; `activeRecapRef` tracks the recap
+  // detour itself (free mode → wrap nudge → return on the next advance).
+  const recapRef = useRef<Map<string, { source: 'recurrence' | 'session-start'; offeredAtMs: number; outcome: 'pending' | 'accepted' | 'declined' | 'unclear'; loTitle: string }>>(new Map());
+  const pendingRecapOfferRef = useRef<{ loId: string; loTitle: string; source: 'recurrence' | 'session-start'; soft: boolean } | null>(null);
+  const pendingRecapGoRef = useRef<{ loId: string; loTitle: string } | null>(null);
+  const activeRecapRef = useRef<{ loId: string; loTitle: string; startedAtMs: number; turns: number; wrapNudged: boolean; overrunLogged: boolean; goSeen: boolean } | null>(null);
+  const RECAP_WRAP_TURNS = 6, RECAP_WRAP_MS = 4 * 60_000, RECAP_OVERRUN_TURNS = 2;
   /** Segment → LO, using the SAME resolution the mastery-delta /
    *  segment-evidence sites use: the segment's own LO group when it
    *  resolves to one of the plan's LOs (generated AND review plans mint
@@ -2549,6 +2564,34 @@ export function VoiceTutorRealtime({
       onDebugEvent?.('gap_inferred', `lo="${loId}" signals=${d.signals.join('+')}`);
       scheduleProfileFlush();
     }
+  };
+  // ── Recap: arm on recurrence (spec §B.2) ────────────────────────────
+  // The ledger calls recurrenceListenerRef on every RECURRENCE. Arming
+  // only stages the offer — the `<recap_offer>` block rides the next
+  // brain turn, and the offer is recorded 'pending' at that moment (see
+  // the brain-input assembly), so a session that ends first leaves no
+  // phantom offer in the profile. Flag off ⇒ the listener returns before
+  // touching any ref.
+  useEffect(() => {
+    recurrenceListenerRef.current = (d) => {
+      if (!TUTOR_RECAP_OFFER || !d.recurrence) return;
+      // One offer per LO per session; never interrupt a running recap.
+      if (recapRef.current.has(d.loId) || activeRecapRef.current) return;
+      pendingRecapOfferRef.current = { loId: d.loId, loTitle: d.loTitle, source: 'recurrence', soft: false };
+      onDebugEvent?.('recap_offer_armed', `lo="${d.loId}" source=recurrence`);
+    };
+    return () => { recurrenceListenerRef.current = null; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  /** Session-start recap arming (Task 20 calls this). Unlike a recurrence
+   *  offer, the session-start offer rides the OPENING directive rather
+   *  than a `<recap_offer>` block — the opener already asks the question,
+   *  so the entry goes straight to 'pending' and the student's first real
+   *  utterance is classified as the reply. */
+  const armSessionStartRecap = (c: { loId: string; loTitle: string; soft: boolean }) => {
+    if (!TUTOR_RECAP_OFFER || recapRef.current.has(c.loId)) return;
+    recapRef.current.set(c.loId, { source: 'session-start', offeredAtMs: Date.now(), outcome: 'pending', loTitle: c.loTitle });
+    onDebugEvent?.('recap_offer_armed', `lo="${c.loId}" source=session-start${c.soft ? ' soft' : ''}`);
   };
   // Serialization for brain calls. When a student utterance arrives while
   // a brain call is in flight, the second call's speakText would interrupt
@@ -6045,6 +6088,13 @@ export function VoiceTutorRealtime({
               currentProblemRef.current = null;
               catalogRef.current.setCurrentSegment('');
             }
+            // Recap (spec §B): the brain going free is the recap detour
+            // actually starting. Logged once — a second {to:"free"} while
+            // the same recap runs is a no-op.
+            if (activeRecapRef.current && !activeRecapRef.current.goSeen) {
+              activeRecapRef.current.goSeen = true;
+              onDebugEvent?.('recap_started', `lo="${activeRecapRef.current.loId}"`);
+            }
             continue;
           }
           // Round-15 Issue 1: a show_segment_card earlier in this turn
@@ -6112,6 +6162,24 @@ export function VoiceTutorRealtime({
             // crossing. Reverted in favor of the route.ts wiring,
             // which delivers the beat mid-generation with zero extra
             // round-trips and zero UI side effects.
+            // Recap (spec §B.6): leaving free mode for a real segment ends
+            // the detour. Outcome is the LEDGER's verdict on the LO, not the
+            // brain's opinion: recovered ⇒ 'improved', else 'still_struggling'.
+            // `offered: 0` — the offer was already counted at reply time
+            // (mergeRecap counts an accept exactly once).
+            if (activeRecapRef.current) {
+              const a = activeRecapRef.current;
+              const recovered = ledgerRef.current.get(a.loId)?.recovered === true;
+              const outcome = recovered ? 'improved' as const : 'still_struggling' as const;
+              const g = sessionAccumRef.current.gaps.find((x) => x.kind === 'lo' && x.loId === a.loId);
+              if (g) g.recap = { offered: g.recap?.offered ?? 0, outcome };
+              else sessionAccumRef.current.gaps.push({ kind: 'lo', loId: a.loId, observation: `Recap ${outcome === 'improved' ? 'helped' : 'did not settle it'} this session.`, studentQuotes: [], signals: [], recap: { offered: 0, outcome } });
+              console.log(`[VoiceTutorRealtime] recap returned lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
+              onDebugEvent?.('recap_returned', `lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
+              activeRecapRef.current = null;
+              activeLedgerLoRef.current = null;
+              scheduleProfileFlush();
+            }
             applyResolvedAdvance(plan, fromSegId, next);
           } else {
             console.warn(`[VoiceTutorRealtime] lesson advance failed: cannot resolve "${to}" from "${fromSegId || '(empty cursor / free-conversation)'}"`);
@@ -9957,6 +10025,37 @@ export function VoiceTutorRealtime({
       }
       const studentMarksForTurn = TUTOR_STUDENT_MARKS ? drainStudentMarks() : undefined;
 
+      // ── Recap: classify the student's reply to a standing offer ──────
+      // (spec §B.4). Runs exactly once per turn, and only for a REAL
+      // student utterance — a bracket-marked marker ("[the student
+      // clicked …]") is orchestrator narration, not consent. Deliberately
+      // OUTSIDE the validator-retry loop below: classification consumes
+      // the pending offer, so running it per attempt would either
+      // re-classify or (once consumed) drop the verdict from the retry
+      // that actually reaches the brain. Flag off ⇒ no ref is read and
+      // `recapReply` stays undefined ⇒ the field is absent from the body.
+      let recapReply: 'accept' | 'decline' | 'unclear' | undefined;
+      if (TUTOR_RECAP_OFFER) {
+        const pendingEntry = [...recapRef.current.entries()].find(([, e]) => e.outcome === 'pending');
+        if (pendingEntry && transcript && !/^\s*\[/.test(transcript)) {
+          const [loId, entry] = pendingEntry;
+          const verdict = classifyRecapReply(transcript);
+          entry.outcome = verdict === 'accept' ? 'accepted' : verdict === 'decline' ? 'declined' : 'unclear';
+          console.log(`[VoiceTutorRealtime] recap offer reply lo="${loId}" verdict=${verdict}`);
+          onDebugEvent?.('recap_offer_reply', `lo="${loId}" ${verdict}`);
+          const accum = sessionAccumRef.current;
+          const g = accum.gaps.find((x) => x.kind === 'lo' && x.loId === loId);
+          const rec = { offered: 1, outcome: verdict === 'accept' ? 'accepted' as const : verdict === 'decline' ? 'declined' as const : undefined };
+          if (g) g.recap = rec;
+          else if (verdict !== 'unclear') accum.gaps.push({ kind: 'lo', loId, observation: 'Recap offered this session.', studentQuotes: [], signals: [], recap: rec });
+          // Accept ⇒ stage the GO block for this turn; decline/unclear ⇒
+          // the brain is told the verdict so it acknowledges and moves on.
+          if (verdict === 'accept') pendingRecapGoRef.current = { loId, loTitle: entry.loTitle };
+          else recapReply = verdict;
+          scheduleProfileFlush();
+        }
+      }
+
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
         // CORRECTED tool call (e.g. show_collision with proper momentum)
@@ -10132,14 +10231,13 @@ export function VoiceTutorRealtime({
         // Fresh attempt — clear the aborted flag; only an AbortError this
         // attempt re-sets it (see the RESTORE-after-noise guard).
         brainTurnAbortedRef.current = false;
-        const brainFetchInit: RequestInit = {
-          method: 'POST',
-          // Demo gate (2026-08-29): thread the partner embed token so gated
-          // brain turns pass for cross-origin partner embeds; retail/demo
-          // surfaces pass via the demo-grant cookie instead.
-          headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
-          signal: brainAbort.signal,
-          body: JSON.stringify({
+        // Holistic-pedagogy round (spec §B): the per-turn brain body is
+        // built as a named object BEFORE it is serialized so the recap
+        // bookkeeping immediately below can stamp `recapWrap` on it. Every
+        // field is otherwise unchanged — undefined fields are dropped by
+        // JSON.stringify, so with TUTOR_RECAP_OFFER off the request is
+        // byte-identical to pre-round.
+        const input = {
             systemPrompt: claudeSystemPromptRef.current,
             conversationHistory: runHistory,
             studentTranscript: runTranscript,
@@ -10301,7 +10399,60 @@ export function VoiceTutorRealtime({
                   },
                 }
               : undefined,
-          }),
+            // ── Recap blocks (spec §B) ──────────────────────────────────
+            // One-turn carriers: the OFFER staged by the ledger listener,
+            // the GO staged by an accept classification, the WRAP nudge
+            // stamped just below, and the decline/unclear verdict.
+            recapOffer: TUTOR_RECAP_OFFER && pendingRecapOfferRef.current
+              ? { loTitle: pendingRecapOfferRef.current.loTitle, ...(pendingRecapOfferRef.current.soft ? { soft: true } : {}) }
+              : undefined,
+            recapGo: TUTOR_RECAP_OFFER && pendingRecapGoRef.current
+              ? { loTitle: pendingRecapGoRef.current.loTitle }
+              : undefined,
+            // Stamped by the block below (the wrap decision needs this
+            // turn's counter bump, which must not run before the offer /
+            // go refs above are read).
+            recapWrap: undefined as true | undefined,
+            recapReply,
+        };
+        // ── Recap: consume the one-turn refs + run the detour clock ─────
+        if (TUTOR_RECAP_OFFER) {
+          if (pendingRecapOfferRef.current) {
+            // The offer is only RECORDED once it actually rides a turn —
+            // an armed-but-never-sent offer leaves no pending entry.
+            const o = pendingRecapOfferRef.current;
+            recapRef.current.set(o.loId, { source: o.source, offeredAtMs: Date.now(), outcome: 'pending', loTitle: o.loTitle });
+            pendingRecapOfferRef.current = null;
+          }
+          if (pendingRecapGoRef.current) {
+            // Consent given: the recap runs in free mode, and ledger events
+            // with no segment LO attribute to the recap's LO until it returns.
+            activeRecapRef.current = { ...pendingRecapGoRef.current, startedAtMs: Date.now(), turns: 0, wrapNudged: false, overrunLogged: false, goSeen: false };
+            activeLedgerLoRef.current = pendingRecapGoRef.current.loId;
+            pendingRecapGoRef.current = null;
+          } else if (activeRecapRef.current) {
+            const a = activeRecapRef.current;
+            a.turns += 1;
+            const over = a.turns >= RECAP_WRAP_TURNS || Date.now() - a.startedAtMs >= RECAP_WRAP_MS;
+            if (over && !a.wrapNudged) {
+              a.wrapNudged = true;
+              input.recapWrap = true;
+              onDebugEvent?.('recap_wrap_nudged', `lo="${a.loId}" turns=${a.turns}`);
+            } else if (a.wrapNudged && a.turns >= RECAP_WRAP_TURNS + RECAP_OVERRUN_TURNS && !a.overrunLogged) {
+              // Telemetry only — the recap has outstayed its nudge.
+              a.overrunLogged = true;
+              onDebugEvent?.('recap_overrun', `lo="${a.loId}" turns=${a.turns}`);
+            }
+          }
+        }
+        const brainFetchInit: RequestInit = {
+          method: 'POST',
+          // Demo gate (2026-08-29): thread the partner embed token so gated
+          // brain turns pass for cross-origin partner embeds; retail/demo
+          // surfaces pass via the demo-grant cookie instead.
+          headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
+          signal: brainAbort.signal,
+          body: JSON.stringify(input),
         };
         let res = await fetch('/api/tutor/brain/stream', brainFetchInit);
         pacingTelemetryRef.current = [];

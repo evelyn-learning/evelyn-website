@@ -534,6 +534,24 @@ test('second merge adds to counters (recurrenceCount=3, recap offers=2 accepts=1
   assert.strictEqual(g.evidence?.recap?.accepts, 1);
 });
 
+// Task 18 ruling 1: the recap state machine writes 'accepted' at REPLY
+// time and the return-time outcome ('improved' / 'still_struggling') on a
+// later increment. A flush between the two must not count the accept
+// twice — the second increment carries offered:0 and only moves
+// lastOutcome.
+gapProfile = recordGap(gapProfile, {
+  kind: 'lo', loId: 'lo1', observation: 'recap returned', studentQuotes: [], signals: [], sessionId: 's2',
+  recap: { offered: 0, outcome: 'improved' },
+});
+
+test('return-time outcome does not double-count the accept (accepts=1, lastOutcome=improved)', () => {
+  const r = gapProfile.gaps[0].evidence?.recap;
+  assert.ok(r, 'expected a recap record');
+  assert.strictEqual(r!.offers, 2);
+  assert.strictEqual(r!.accepts, 1);
+  assert.strictEqual(r!.lastOutcome, 'improved');
+});
+
 test('two sessions still promote (unchanged rule)', () => {
   assert.strictEqual(gapProfile.gaps[0].status, 'confirmed');
 });

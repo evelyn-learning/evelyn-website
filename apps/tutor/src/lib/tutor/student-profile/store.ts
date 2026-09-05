@@ -247,7 +247,13 @@ function mergeRecap(prev: RecapRecord | undefined, input: RecordGapInput['recap'
   const base: RecapRecord = prev ?? { offers: 0, accepts: 0, declines: 0, lastOfferAt: now };
   return {
     offers: base.offers + input.offered,
-    accepts: base.accepts + (input.outcome === 'accepted' || input.outcome === 'improved' || input.outcome === 'still_struggling' ? 1 : 0),
+    // Count an ACCEPT exactly once, at the moment consent was given.
+    // 'improved' / 'still_struggling' are the RETURN-time outcome of a
+    // recap that was already counted as accepted (the orchestrator writes
+    // 'accepted' at reply time and the outcome when the detour returns; a
+    // profile flush can land between the two) — they only move
+    // lastOutcome, never the accept counter, or one recap counts twice.
+    accepts: base.accepts + (input.outcome === 'accepted' ? 1 : 0),
     declines: base.declines + (input.outcome === 'declined' ? 1 : 0),
     lastOfferAt: input.offered > 0 ? now : base.lastOfferAt,
     lastOutcome: input.outcome ?? base.lastOutcome,
