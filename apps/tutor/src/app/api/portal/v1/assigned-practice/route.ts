@@ -5,7 +5,7 @@ import { AssignedPracticeRequestSchema, AssignedPracticeResponseSchema } from '@
 import connectDB from '@core/db';
 import { EvidenceEventModel, PracticeAssignmentModel } from '@/models';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
-import { findOpenAssignments } from '@/lib/tutor/practice-assign/store';
+import { findOpenAssignments, courseIdFilter } from '@/lib/tutor/practice-assign/store';
 import { computeHomeworkStatus } from '@/lib/tutor/practice-assign/status';
 
 export const runtime = 'nodejs';
@@ -17,8 +17,8 @@ export const POST = withPortalAuth(async (_req, auth) => {
   const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
   await connectDB();
   const records = includeAcknowledged
-    ? await PracticeAssignmentModel.find({ studentId: profileId, locator: { $exists: true, $ne: '' }, ...(courseId ? { courseId } : {}) }).sort({ assignedAt: -1 }).limit(10).lean()
-    : (await findOpenAssignments(profileId, { withinDays: 21, requireLocator: true })).filter((a) => !courseId || a.courseId === courseId);
+    ? await PracticeAssignmentModel.find({ studentId: profileId, locator: { $exists: true, $ne: '' }, ...(courseIdFilter(courseId) ?? {}) }).sort({ assignedAt: -1 }).limit(10).lean()
+    : await findOpenAssignments(profileId, { withinDays: 21, requireLocator: true, courseId });
   const itemIds = records.flatMap((a) => a.los.flatMap((l) => l.items.map((i) => i.id)));
   const rows = itemIds.length ? await EvidenceEventModel.find({ studentId: profileId, itemId: { $in: itemIds } }).select('itemId outcome occurredAt').lean() : [];
   const assignments = records.map((a) => {

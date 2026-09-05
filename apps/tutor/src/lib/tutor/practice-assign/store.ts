@@ -23,16 +23,38 @@ export async function findAssignmentBySession(sessionId: string): Promise<IPract
   return (await PracticeAssignmentModel.findOne({ sessionId }).lean()) as IPracticeAssignment | null;
 }
 
+/**
+ * Fix round 1 (Critical C1) — course-id wildcard for the assigned-practice
+ * read. Neither author path (tool-time `practice-assign` route, commit-time
+ * fallback) currently stamps `courseId` on every record, so a strict-equals
+ * `courseId` filter would return `[]` for every unstamped assignment even
+ * though the academy BFF always supplies one. An unstamped (or empty-
+ * string) `courseId` therefore matches ANY requested courseId; a stamped
+ * record matches only its own. Exported as a pure function (rather than
+ * inlined) so the exact match semantics are unit-testable without a live
+ * Mongo connection — see `scripts/test-practice-assign.ts`, which evaluates
+ * this `$or` clause against representative documents.
+ */
+export function courseIdFilter(courseId?: string): { $or: Array<Record<string, unknown>> } | undefined {
+  if (!courseId) return undefined;
+  return { $or: [{ courseId }, { courseId: { $exists: false } }, { courseId: '' }] };
+}
+
 /** Open = not acknowledged, assigned within `withinDays` (default 21). With
- *  `requireLocator` (default true) only records the academy can render. */
+ *  `requireLocator` (default true) only records the academy can render.
+ *  `courseId` (fix round 1, Important I2) is applied INSIDE the query so
+ *  Mongo filters before `.limit()` — a JS post-filter after `.limit(5)`
+ *  could silently drop a matching assignment that didn't make the cut. */
 export async function findOpenAssignments(
   studentId: string,
-  opts?: { withinDays?: number; requireLocator?: boolean },
+  opts?: { withinDays?: number; requireLocator?: boolean; courseId?: string },
 ): Promise<IPracticeAssignment[]> {
   await connectDB();
   const since = new Date(Date.now() - (opts?.withinDays ?? 21) * MS_PER_DAY);
   const q: Record<string, unknown> = { studentId, assignedAt: { $gte: since }, acknowledgedAt: { $exists: false } };
   if (opts?.requireLocator !== false) q.locator = { $exists: true, $ne: '' };
+  const courseQ = courseIdFilter(opts?.courseId);
+  if (courseQ) Object.assign(q, courseQ);
   return (await PracticeAssignmentModel.find(q).sort({ assignedAt: -1 }).limit(5).lean()) as IPracticeAssignment[];
 }
 

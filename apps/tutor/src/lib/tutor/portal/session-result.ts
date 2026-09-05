@@ -313,7 +313,16 @@ export async function emitSessionResult(
     (opts.loadArtifacts ? extractRenderedArtifacts(await opts.loadArtifacts(req.sessionId)) : { quizzes: [], conceptMaps: [] });
 
   // v1.15.0 — best-effort homework echo (authoritative read = assigned-practice route).
-  const assignment = await findAssignmentBySession(req.sessionId).catch(() => null);
+  // Fix round 1 (Important I1) — sessionId is a bare partner-supplied
+  // string (SessionEmitRequestSchema has no format constraint), and a
+  // session-id collision across students/partners is a known, OBSERVED
+  // prod behaviour (see the 2026-09-04 triage's log-only ruling). Scope to
+  // the resolved profileId — the same id every other student-keyed store
+  // touched by this function uses — so a colliding sessionId can never
+  // echo another student's homework (LOs, free-text reason, item ids) or
+  // nextSessionIntent back to the caller.
+  const rawAssignment = await findAssignmentBySession(req.sessionId).catch(() => null);
+  const assignment = rawAssignment && rawAssignment.studentId === profileId ? rawAssignment : null;
   const assignedPractice = assignment && assignment.locator
     ? assignment.los.map((l) => ({ loId: l.loId, title: l.title, itemIds: l.items.map((i) => i.id), reason: l.reason, assignedAt: assignment.assignedAt.toISOString() }))
     : undefined;

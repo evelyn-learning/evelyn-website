@@ -1,5 +1,6 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
+import { courseIdFilter } from '../src/lib/tutor/practice-assign/store';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) { if (cond) { passed++; console.log(`  ✓ ${name}`); } else { failed++; console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); } }
@@ -14,6 +15,34 @@ const sources: PracticeSources = {
 };
 
 check('band → difficulty', difficultyForBand('building') === 1 && difficultyForBand('steady') === 2 && difficultyForBand('strong') === 3);
+
+// Fix round 1 (Critical C1 / Important I2) — courseId wildcard semantics for
+// the assigned-practice read. Neither author path stamps `courseId` on
+// every PracticeAssignment yet, so a strict-equals filter would hide every
+// unstamped record from a caller that (like the academy BFF) always sends
+// one. Evaluates the EXACT `$or` clause findOpenAssignments/the
+// assigned-practice route send to Mongo against representative documents,
+// replicating Mongo's own `$exists`/equality semantics for these three
+// clause shapes — no live DB connection required.
+{
+  function matchesOrClause(doc: { courseId?: string }, or: Array<Record<string, unknown>>): boolean {
+    return or.some((clause) => {
+      const v = clause.courseId;
+      if (v && typeof v === 'object' && '$exists' in (v as object)) {
+        const wantsAbsent = (v as { $exists: boolean }).$exists === false;
+        return wantsAbsent ? doc.courseId === undefined : doc.courseId !== undefined;
+      }
+      return doc.courseId === v;
+    });
+  }
+  check('courseIdFilter — no clause when courseId omitted', courseIdFilter(undefined) === undefined);
+  const clause = courseIdFilter('B');
+  const or = clause?.$or ?? [];
+  check('courseIdFilter — an UNSTAMPED assignment matches any requested courseId', matchesOrClause({}, or));
+  check('courseIdFilter — an empty-string-stamped assignment matches any requested courseId', matchesOrClause({ courseId: '' }, or));
+  check('courseIdFilter — an assignment stamped for the SAME course matches', matchesOrClause({ courseId: 'B' }, or));
+  check('courseIdFilter — an assignment stamped for a DIFFERENT course does not match', !matchesOrClause({ courseId: 'A' }, or));
+}
 
 (async () => {
   const out = await resolveAssignmentItems({ los: [{ loId: 'A', title: 'Alpha' }], band: 'steady', seenItemIds: [], studentId: 's', courseId: 'c' }, sources);
