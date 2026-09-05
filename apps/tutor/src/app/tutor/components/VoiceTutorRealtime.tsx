@@ -373,6 +373,22 @@ import {
 // producing a negative diff. A negative latency is never a genuine
 // measurement — skip the misleading emit and publish a lightweight note
 // instead so the corruption itself stays visible in telemetry.
+// Holistic-pedagogy round: the CLOSED GapSignalCode set (student-profile/
+// types.ts). The brain's `signalsObserved` arrives as free-form strings, so
+// anything crossing into a typed GapSignalCode[] — e.g. the struggle
+// ledger's recurrence listener — is filtered through this guard first; an
+// unknown code must never reach a consumer that trusts the enum.
+const GAP_SIGNAL_CODES: ReadonlySet<string> = new Set([
+  'MISCONCEPTION_DETECTED',
+  'STUDENT_VERBALIZED_CONFUSION',
+  'INCORRECT_AFTER_HINT',
+  'NO_RECOVERY',
+  'INCORRECT_STREAK_2_PLUS',
+  'STUCK_CUE',
+  'SLOW_SEGMENT',
+]);
+const isGapSignalCode = (s: string): s is LedgerDetection['signals'][number] => GAP_SIGNAL_CODES.has(s);
+
 const emitTurnLatencyEvent = (
   onDebugEvent: ((type: string, message: string, data?: Record<string, unknown>) => void) | undefined,
   lat: ReturnType<TurnLatencyLedger['summarize']>,
@@ -6400,29 +6416,53 @@ export function VoiceTutorRealtime({
         // Union — preserves order, dedupes.
         const signals = Array.from(new Set([...brainSignals, ...objectiveSignals]));
         // Holistic-pedagogy round (spec §A.5): the brain can mark a gap it
-        // has ALREADY recorded this session as recurring. Never push a
-        // second accumulator entry for it — bump the existing entry's
-        // recurrence count (the store sums them into
-        // evidence.recurrenceCount) and notify the recap listener.
+        // has ALREADY recorded this session as recurring.
+        // INVARIANT: one brain recurrence ⇒ exactly ONE `recurrences`
+        // increment and exactly ONE gap_recurred event + listener call.
+        // Both sub-cases below therefore `continue` and do NOT call
+        // feedLedger: a brain_gap fed here would, on the second such call
+        // for the same LO, produce its own detection (count >= 2 ⇒
+        // recurrence) and bump/announce the SAME recurrence a second time.
         const brainRecurrence = TUTOR_STRUGGLE_LEDGER && c.recurrence === true;
         if (brainRecurrence) {
           const isPrereqCmd = cmd.action !== 'recordGap';
-          const key: string | null = isPrereqCmd
-            ? (typeof c.conceptLabel === 'string' && c.conceptLabel.trim() ? prereqKey(c.conceptLabel) : null)
-            : (typeof c.loId === 'string' && c.loId ? c.loId : null);
+          // Same validity gate as the ordinary push below — a malformed
+          // call falls through and is dropped there, exactly as before.
+          const valid = observation !== '' && (isPrereqCmd
+            ? typeof c.conceptLabel === 'string' && c.conceptLabel.trim() !== ''
+            : typeof c.loId === 'string' && c.loId !== '');
+          const key: string | null = !valid ? null
+            : isPrereqCmd ? prereqKey(c.conceptLabel) : String(c.loId);
           const priorEntry = key === null ? undefined : sessionAccumRef.current.gaps.find((g) => (isPrereqCmd
             ? g.kind === 'prerequisite' && prereqKey(g.conceptLabel ?? '') === key
             : g.kind === 'lo' && g.loId === key));
-          if (key && priorEntry) {
-            priorEntry.recurrences = (priorEntry.recurrences ?? 0) + 1;
-            const count = priorEntry.recurrences + 1;
+          if (key) {
+            if (priorEntry) {
+              // Still un-flushed — bump in place; never a second entry.
+              priorEntry.recurrences = (priorEntry.recurrences ?? 0) + 1;
+            } else {
+              // The first sighting was already flushed. Push the gap as
+              // usual but carrying recurrences:1, so the commit route
+              // merges the count onto the committed entry.
+              sessionAccumRef.current.gaps.push({
+                ...(isPrereqCmd
+                  ? { kind: 'prerequisite' as const, conceptLabel: String(c.conceptLabel) }
+                  : { kind: 'lo' as const, loId: String(c.loId) }),
+                observation,
+                studentQuotes,
+                signals,
+                recurrences: 1,
+              });
+              if (!isPrereqCmd) sessionAccumRef.current.losTouched.add(String(c.loId));
+            }
+            const count = (priorEntry?.recurrences ?? 1) + 1;
             console.log(`[VoiceTutorRealtime] gap recurred (brain) key="${key}" count=${count} signals=[${signals.join(',')}]`);
             onDebugEvent?.('gap_recurred', `lo="${key}" count=${count}`);
             recurrenceListenerRef.current?.({
               loId: key,
               count,
               recurrence: true,
-              signals: signals as LedgerDetection['signals'],
+              signals: signals.filter(isGapSignalCode),
               sawBrainGapThisSegment: true,
               loTitle: isPrereqCmd ? String(c.conceptLabel) : loTitleFor(key),
             });
@@ -6438,10 +6478,6 @@ export function VoiceTutorRealtime({
               observation,
               studentQuotes,
               signals,
-              // recurrence:true with no accumulator entry ⇒ the gap was
-              // already flushed; carry the count so the store merges it
-              // onto the committed entry instead of losing it.
-              ...(brainRecurrence ? { recurrences: 1 } : {}),
             });
             sessionAccumRef.current.losTouched.add(c.loId);
             console.log(`[VoiceTutorRealtime] gap recorded: kind=lo loId="${c.loId}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
@@ -6460,7 +6496,6 @@ export function VoiceTutorRealtime({
               observation,
               studentQuotes,
               signals,
-              ...(brainRecurrence ? { recurrences: 1 } : {}),
             });
             console.log(`[VoiceTutorRealtime] gap recorded: kind=prerequisite concept="${c.conceptLabel}" signals=[${signals.join(',')}] obs="${observation.slice(0, 80)}"`);
             scheduleProfileFlush();
@@ -9318,6 +9353,14 @@ export function VoiceTutorRealtime({
         // brain affirmation in response false-increments the streak.
         // Observed 2026-05-06 lines session.
         const isHelpRequest = /\b(i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|don'?t\s+(?:know|understand|get)|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i.test(lower);
+        // Struggle ledger (spec §A): THIS is the stuck signal, not the
+        // boredom-cue site — boredomCueRegex ∩ STUCK_CUE_RE is only "skip",
+        // and the I'm-stuck BUTTON's prose is suppressed there entirely by
+        // hasButtonMarker. Fire on the help-request classifier and, belt-and-
+        // braces, on the button marker itself (read off originalTranscript
+        // because FIX B may have rewritten the visible transcript).
+        const stuckButtonClick = /\[I'?m-stuck-button-clicked/i.test(originalTranscript);
+        if (isHelpRequest || stuckButtonClick) feedLedger('stuck_cue');
         // Round-22 (2026-07-17, session portal-cbd93b08): a single-letter
         // MCQ answer ("d") failed every verification signal — no digits, no
         // math language, 1 word, length < 3 — so two correct MCQ answers
@@ -9415,9 +9458,6 @@ export function VoiceTutorRealtime({
           studentCueRef.current = { cue: cueMatch[0], turn: pacingTurnCounterRef.current };
           logPacing(`student-cue cue="${cueMatch[0]}" turn=${pacingTurnCounterRef.current}`);
           onDebugEvent?.('pacing_cue', `cue="${cueMatch[0]}"`);
-          // Struggle ledger (spec §A): only the STUCK-shaped cues are a
-          // struggle signal — a "faster"/"boring" pacing cue is not.
-          if (STUCK_CUE_RE.test(cueMatch[0])) feedLedger('stuck_cue');
           // Phase 3: pace-direction cues additionally step paceBias.
           // "slow down" / "slower" → -1 (more depth). "faster" / "speed
           // up" → +1 (less depth). Other cues (skip/easy/boring/etc.)
