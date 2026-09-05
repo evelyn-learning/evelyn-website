@@ -5,7 +5,7 @@ import type { Scenario } from '../types';
 const scenario: Scenario = {
   name: 'pedagogy-recap-decline',
   description: 'struggle ledger → in-session recap offer → DECLINE → tutor continues, no recap_started, offer dropped for the session',
-  start: { subject: 'math', level: 'AP', topic: 'ap-calcbc', lessonPlanId: 'evelyn.ap.calcbc.derivative-definition.v1', studentName: 'Probe Student', studentId: 'e2e-probe-pedagogy-b' },
+  start: { subject: 'math', level: 'AP', topic: 'ap-calcbc', lessonPlanId: 'evelyn.ap.calcbc.derivative-definition.v1', studentName: 'Probe Student', studentId: 'e2e-probe-pedagogy-d' },
   seedTurns: [{ say: 'derivatives' }],
   testTurns: [
     { say: "I'm stuck, I don't get it", watchFor: 'ledger: stuck_cue+confusion ⇒ gap_inferred on the current LO' },

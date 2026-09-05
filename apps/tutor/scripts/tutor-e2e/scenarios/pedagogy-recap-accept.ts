@@ -5,7 +5,7 @@ import type { Scenario } from '../types';
 const scenario: Scenario = {
   name: 'pedagogy-recap-accept',
   description: 'struggle ledger → in-session recap offer → ACCEPT → recap → return → close_session_notes at the goodbye (practice assignment written)',
-  start: { subject: 'math', level: 'AP', topic: 'ap-calcbc', lessonPlanId: 'evelyn.ap.calcbc.derivative-definition.v1', studentName: 'Probe Student', studentId: 'e2e-probe-pedagogy-a' },
+  start: { subject: 'math', level: 'AP', topic: 'ap-calcbc', lessonPlanId: 'evelyn.ap.calcbc.derivative-definition.v1', studentName: 'Probe Student', studentId: 'e2e-probe-pedagogy-c' },
   seedTurns: [{ say: 'derivatives' }],
   endSession: true,
   testTurns: [

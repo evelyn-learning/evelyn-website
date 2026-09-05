@@ -5,7 +5,7 @@ import type { Scenario } from '../types';
 const scenario: Scenario = {
   name: 'pedagogy-homework-check',
   description: 'second session for the SAME student as pedagogy-recap-accept: opener should check the assigned homework (homework_checked) and/or offer a session-start recap',
-  start: { subject: 'math', level: 'AP', topic: 'ap-calcbc', lessonPlanId: 'evelyn.ap.calcbc.derivative-definition.v1', studentName: 'Probe Student', studentId: 'e2e-probe-pedagogy-a' },
+  start: { subject: 'math', level: 'AP', topic: 'ap-calcbc', lessonPlanId: 'evelyn.ap.calcbc.derivative-definition.v1', studentName: 'Probe Student', studentId: 'e2e-probe-pedagogy-c' },
   seedTurns: [],
   testTurns: [
     { say: 'hi, ready to start', timeoutMs: 120_000, watchFor: 'opener mentions the assigned practice ⇒ homework_checked; or recap_offer_armed source=session-start' },
