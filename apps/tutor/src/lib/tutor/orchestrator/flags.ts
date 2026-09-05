@@ -123,6 +123,23 @@ export const TUTOR_VERDICT_REPLANT_ON_KILL =
  *  Default ON; NEXT_PUBLIC_TUTOR_KILL_WITHHOLDS_ADVANCE=off is the switch. */
 export const TUTOR_KILL_WITHHOLDS_ADVANCE =
   process.env.NEXT_PUBLIC_TUTOR_KILL_WITHHOLDS_ADVANCE !== 'off';
+/** Holistic-pedagogy round (2026-09-05, spec §A.8): per-LO struggle ledger —
+ *  inferred gaps + in-session recurrence. Default ON;
+ *  NEXT_PUBLIC_TUTOR_STRUGGLE_LEDGER=off is the switch. */
+export const TUTOR_STRUGGLE_LEDGER =
+  process.env.NEXT_PUBLIC_TUTOR_STRUGGLE_LEDGER !== 'off';
+/** Spec §B.8: consent-gated recap offers (mid-session recurrence + session
+ *  start). Default ON; NEXT_PUBLIC_TUTOR_RECAP_OFFER=off is the switch. */
+export const TUTOR_RECAP_OFFER =
+  process.env.NEXT_PUBLIC_TUTOR_RECAP_OFFER !== 'off';
+/** Spec §C.10: close_session_notes tool, practice-assign call, fallback,
+ *  summary line. Default ON; NEXT_PUBLIC_TUTOR_CLOSE_NOTES=off is the switch. */
+export const TUTOR_CLOSE_NOTES =
+  process.env.NEXT_PUBLIC_TUTOR_CLOSE_NOTES !== 'off';
+/** Spec §D.5: false-praise-opener guard + praise-contradiction widening.
+ *  Default ON; NEXT_PUBLIC_TUTOR_FALSE_PRAISE_OPENER=off is the switch. */
+export const TUTOR_FALSE_PRAISE_OPENER =
+  process.env.NEXT_PUBLIC_TUTOR_FALSE_PRAISE_OPENER !== 'off';
 // R58 student-declared hold (live, portal-2f23ece4: "ignore everything I
 // say until I say candle" — the tutor kept answering every overheard
 // utterance and the private aside landed in the transcript). While

@@ -207,6 +207,13 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // portal-704e3e01 (2026-09-04): page retitled from the problem that actually
   // renders instead of the authored one from segment advance time.
   'auto_newpage_retitled_from_render',
+  // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
+  'gap_inferred', 'gap_recurred',
+  'recap_offer_armed', 'recap_offer_reply', 'recap_started', 'recap_returned',
+  'recap_wrap_nudged', 'recap_overrun',
+  'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed',
+  'homework_checked',
+  'false_praise_opener_kill', 'false_praise_opener_advisory',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
