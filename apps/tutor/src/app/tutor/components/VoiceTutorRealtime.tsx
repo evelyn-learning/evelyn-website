@@ -108,6 +108,7 @@ import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-chec
 import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
 import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
+import { checkFalsePraiseOpener } from '@/lib/tutor/voice/false-praise-opener';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
 import { getSharedMicLabel, switchSharedMicDevice } from '@/lib/tutor/voice/shared-mic';
@@ -250,6 +251,7 @@ import {
   TUTOR_SUBSTITUTE_GATE,
   TUTOR_PAGE_TITLE_FROM_RENDER,
   TUTOR_STRUGGLE_LEDGER,
+  TUTOR_FALSE_PRAISE_OPENER,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -11058,7 +11060,18 @@ export function VoiceTutorRealtime({
                   // no false-positive class — so it may kill.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES) {
                     const praiseContradictionTextSoFar = (attemptText ? attemptText + ' ' : '') + updatedSentence;
-                    const praiseContradiction = detectPraiseContradiction(praiseContradictionTextSoFar);
+                    // Spec §D.3: the student's utterance scopes the widened
+                    // bare-praise branch to the SAME claim (a denial naming a
+                    // DIFFERENT value must stay quiet). With the flag OFF the
+                    // widening is switched off at the detector — this is a
+                    // KILL path, so flag-off must be byte-identical to the
+                    // pre-widening detector, not merely unscoped.
+                    const praiseContradiction = detectPraiseContradiction(
+                      praiseContradictionTextSoFar,
+                      TUTOR_FALSE_PRAISE_OPENER
+                        ? { studentUtterance: transcript }
+                        : { bareDenialWidening: false },
+                    );
                     if (praiseContradiction) {
                       const { affirmed } = praiseContradiction;
                       const reason =
@@ -11128,6 +11141,96 @@ export function VoiceTutorRealtime({
                       }
                     }
                   }
+                  // Grading-truth derivations, HOISTED here from the
+                  // inverse-verdict block below (spec §D.4): the false-praise
+                  // guard immediately after needs the same three, and there
+                  // must be exactly ONE copy of the 2-minute freshness logic.
+                  // Pure ref reads, no side effects, and no `await` runs
+                  // between here and the inverse-verdict site (every kill
+                  // branch in between `continue`s), so the values the
+                  // inverse-verdict check sees are unchanged.
+                  const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
+                    ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
+                    : undefined;
+                  // 2026-08-17 (portal-e3af265a): with NO active problem
+                  // card, a recent computable board expression's value is a
+                  // deterministically-verified expected answer for the
+                  // pending "what does that equal?" — the exact hole the
+                  // "Not quite" to a correct 13 fell through. An active
+                  // card always wins; the value expires after 2 minutes
+                  // (see pendingComputableEquationRef's doc).
+                  const pendingEq = !currentProblemRef.current
+                    && pendingComputableEquationRef.current
+                    && Date.now() - pendingComputableEquationRef.current.armedAtMs < 120_000
+                    ? pendingComputableEquationRef.current
+                    : null;
+                  // R58b (live, portal-14e07a20): a SPEECH-posed problem
+                  // ("work out $2x - y$ when x = -4, y = 3", no card ever
+                  // rendered) blind-solve-verified its answer into
+                  // pendingGeneratedAnswerRef — where it sat unconsumed
+                  // while the student's correct "-11" was denied against
+                  // a stale card. The student answers the most recently
+                  // POSED problem: when the staged answer is NEWER than
+                  // the tracked card (or there is no card), it is the
+                  // grading truth. Same 2-minute freshness bound as
+                  // pendingEq.
+                  const pendingSpoken = pendingGeneratedAnswerRef.current?.expectedAnswer
+                    && typeof pendingGeneratedAnswerRef.current.atMs === 'number'
+                    && Date.now() - pendingGeneratedAnswerRef.current.atMs < 120_000
+                    && (pendingGeneratedAnswerRef.current.atMs > (currentProblemRef.current?.trackedAtMs ?? 0))
+                    ? pendingGeneratedAnswerRef.current
+                    : null;
+                  // False-praise-opener check (spec §D.2/§D.4, third live
+                  // praise-then-reverse instance, 2026-09-05 QA turn 5): the
+                  // opener is BARE praise ("Right, let's check the reasoning
+                  // behind it…") over an answer the verified key already
+                  // disagrees with — praise-contradiction needs a later
+                  // walk-back and praise-echo needs a value IN the opener, so
+                  // neither can see it, but the ground truth was on the table
+                  // before any later text streamed. Exact mirror of the
+                  // inverse-verdict gate below (`!attemptText` = this
+                  // attempt's FIRST sentence, plus `attempt === 0` so a retry
+                  // never re-kills on the same evidence), and the same tier
+                  // split: a VERIFIED expected answer may kill, an unverified
+                  // card answer is advisory (correction note, never a kill).
+                  if (TUTOR_FALSE_PRAISE_OPENER && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText && attempt === 0) {
+                    const fp = checkFalsePraiseOpener({
+                      sentence: updatedSentence,
+                      studentUtterance: transcript,
+                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
+                      unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
+                      choices: mcqChoices,
+                      spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
+                      problemContext: pendingSpoken?.statement ?? currentProblemRef.current?.statement ?? pendingEq?.latex,
+                    });
+                    if (fp.verdict === 'false_praise') {
+                      const reason =
+                        `The student answered "${(transcript ?? '').slice(0, 80)}", but the verified answer is ${fp.expected}; your opener affirmed it. ` +
+                        `Re-emit: open with the TRUE verdict for what they said, then guide them toward the right answer without revealing it outright.`;
+                      rejectionsThisAttempt.push({ action: 'false_praise_opener', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] false-praise-opener: "${updatedSentence.slice(0, 60)}" after student "${(transcript ?? '').slice(0, 40)}" vs verified ${fp.expected} — kill + retry`);
+                      onDebugEvent?.('false_praise_opener_kill', `student=${(transcript ?? '').slice(0, 40)} verified=${fp.expected?.slice(0, 40)} (${fp.matchReason})`);
+                      continue;
+                    }
+                    if (fp.verdict === 'advisory_false_praise') {
+                      onDebugEvent?.('false_praise_opener_advisory', `student=${(transcript ?? '').slice(0, 40)} card=${fp.expected?.slice(0, 40)}`);
+                      // Correction note, never a kill (the card answer is
+                      // brain-claimed, not verified — it might itself be
+                      // wrong). Same ref, same "never clobber a kill-class
+                      // note" rule and same safety-valve wording as the
+                      // advisory_false_denial tier below.
+                      if (!pendingJudgeCorrectionNoteRef.current) {
+                        pendingJudgeCorrectionNoteRef.current =
+                          `[correction note — not from the student] The student's earlier answer "${(transcript ?? '').slice(0, 80)}" may NOT match the intended answer "${fp.expected}" — re-check and, if they were wrong, correct them rather than leaving the praise standing. ` +
+                          `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
+                          `Either way, NEVER narrate the act of checking ("re-checking my last correction", "that check was correct", "nothing to walk back") — the student must never learn a check happened.`;
+                        armCorrectionNoteDeadline();   // same deadline as every other plant site
+                        onDebugEvent?.('false_praise_opener_correction_note_planted', `card=${fp.expected?.slice(0, 40)}`);
+                      }
+                    }
+                  }
                   // Praise-echo check (verdict-detector round, session portal-cb2addf5):
                   // the opener affirms a value that DISAGREES with what the student
                   // actually said ("Right — $2x$." after the student said "3x").
@@ -11174,37 +11277,6 @@ export function VoiceTutorRealtime({
                   // could match the denial pattern and kill an otherwise-good turn that never
                   // denied the student's actual answer at all.
                   if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText) {
-                    const mcqChoices = currentProblemRef.current?.hasChoices && currentProblemRef.current.choiceLetters?.length
-                      ? currentProblemRef.current.choiceLetters.map((l) => ({ letter: l, text: l }))
-                      : undefined;
-                    // 2026-08-17 (portal-e3af265a): with NO active problem
-                    // card, a recent computable board expression's value is a
-                    // deterministically-verified expected answer for the
-                    // pending "what does that equal?" — the exact hole the
-                    // "Not quite" to a correct 13 fell through. An active
-                    // card always wins; the value expires after 2 minutes
-                    // (see pendingComputableEquationRef's doc).
-                    const pendingEq = !currentProblemRef.current
-                      && pendingComputableEquationRef.current
-                      && Date.now() - pendingComputableEquationRef.current.armedAtMs < 120_000
-                      ? pendingComputableEquationRef.current
-                      : null;
-                    // R58b (live, portal-14e07a20): a SPEECH-posed problem
-                    // ("work out $2x - y$ when x = -4, y = 3", no card ever
-                    // rendered) blind-solve-verified its answer into
-                    // pendingGeneratedAnswerRef — where it sat unconsumed
-                    // while the student's correct "-11" was denied against
-                    // a stale card. The student answers the most recently
-                    // POSED problem: when the staged answer is NEWER than
-                    // the tracked card (or there is no card), it is the
-                    // grading truth. Same 2-minute freshness bound as
-                    // pendingEq.
-                    const pendingSpoken = pendingGeneratedAnswerRef.current?.expectedAnswer
-                      && typeof pendingGeneratedAnswerRef.current.atMs === 'number'
-                      && Date.now() - pendingGeneratedAnswerRef.current.atMs < 120_000
-                      && (pendingGeneratedAnswerRef.current.atMs > (currentProblemRef.current?.trackedAtMs ?? 0))
-                      ? pendingGeneratedAnswerRef.current
-                      : null;
                     const inv = checkInverseVerdict({
                       sentence: updatedSentence,
                       studentUtterance: transcript,

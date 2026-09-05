@@ -129,5 +129,54 @@ function check(name: string, cond: boolean, detail?: string) {
   check('multi $-pair capture → benign, no fire', r === null, JSON.stringify(r));
 }
 
+// ---------- spec §D.3 — bare praise opener + bare/same-claim denial ----------
+// Third live instance of praise-then-reverse (2026-09-05 QA session, turn 5):
+// the opener is BARE praise followed by prose ("Right, let's check the
+// reasoning behind it…"), so neither the `not <affirmed phrase>` branch nor
+// the math value-substitution branch above can see it — the affirmed capture
+// is a whole prose clause, not a value. The widened branch fires when a LATER
+// sentence denies, and the denial either names the student's OWN value or
+// names no value at all (a denial naming a DIFFERENT value is the two-part
+// "roots right, vertex wrong" shape and must stay silent).
+{
+  const inst3 = "Right, let's check the reasoning behind it. If we substitute x = 9 we get 27 + 6, which is 33. Right, that gives x = 21 on the other side, so x=9 isn't quite it here.";
+  check('instance 3 (bare praise + "isn\'t quite it" naming the student value) fires', detectPraiseContradiction(inst3, { studentUtterance: 'x equals nine' }) !== null, JSON.stringify(detectPraiseContradiction(inst3, { studentUtterance: 'x equals nine' })));
+  const bare = "Right, let's look at this together. Not quite — let's recheck the second step.";
+  check('bare praise + bare denial (no value named) fires', detectPraiseContradiction(bare) !== null, JSON.stringify(detectPraiseContradiction(bare)));
+  const twoPart = 'Right on the roots — two and three. Not quite on the vertex: it should be (1, -4), not (1, 4).';
+  check('two-part: denial names a DIFFERENT value → does not fire', detectPraiseContradiction(twoPart, { studentUtterance: 'two and three' }) === null, JSON.stringify(detectPraiseContradiction(twoPart, { studentUtterance: 'two and three' })));
+  const legit = "Right. Here's the next one: what is 7 times 8?";
+  check('bare praise + no denial → null', detectPraiseContradiction(legit) === null, JSON.stringify(detectPraiseContradiction(legit)));
+  const aside = "Right. Not quite the same thing happens with negatives, so watch that. Your answer of 12 is correct.";
+  check('denial-shaped aside that names a different value (negatives/12) → null', detectPraiseContradiction(aside, { studentUtterance: 'twelve' }) === null, JSON.stringify(detectPraiseContradiction(aside, { studentUtterance: 'twelve' })));
+}
+
+// The exclusion above must not be defeated by a dash-form opener that leaves
+// the "not quite the same…" aside in the REST of the turn (the exact aside
+// class VoiceTutorRealtime's inverse-verdict gate documents at its
+// `!attemptText` comment) — no value named there, so without the exclusion
+// this would fire.
+{
+  const dashAside = "Right — good. Not quite the same thing happens with negatives, so watch that.";
+  check('dash-form opener leaving the aside in the rest → still null', detectPraiseContradiction(dashAside) === null, JSON.stringify(detectPraiseContradiction(dashAside)));
+}
+
+// ---------- Flag-off proof: bareDenialWidening:false restores the OLD detector ----------
+// TUTOR_FALSE_PRAISE_OPENER is this branch's kill switch too (task-1 report:
+// "false-praise-opener guard + praise-contradiction widening"). This is a KILL
+// path, so "off" has to mean byte-identical pre-widening behaviour — both
+// shapes that the widening added must go back to null, while the two branches
+// that shipped before it must still fire.
+{
+  const inst3 = "Right, let's check the reasoning behind it. If we substitute x = 9 we get 27 + 6, which is 33. Right, that gives x = 21 on the other side, so x=9 isn't quite it here.";
+  check('flag off: instance 3 → null (pre-widening behaviour)', detectPraiseContradiction(inst3, { studentUtterance: 'x equals nine', bareDenialWidening: false }) === null);
+  const bare = "Right, let's look at this together. Not quite — let's recheck the second step.";
+  check('flag off: bare praise + bare denial → null', detectPraiseContradiction(bare, { bareDenialWidening: false }) === null);
+  const live = 'Right — one half. …you\'ve gone one third of the way, not one half.';
+  check('flag off: the ORIGINAL "not <affirmed>" branch still fires', detectPraiseContradiction(live, { bareDenialWidening: false })?.affirmed === 'one half');
+  const subst = 'Right. $2x$. The derivative of $3x^2$ is $3 \\cdot 2x = 6x$ — so $f\'\'(x) = 6x$.';
+  check('flag off: the value-substitution branch still fires', detectPraiseContradiction(subst, { bareDenialWidening: false })?.affirmed === '$2x$');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) process.exit(1);

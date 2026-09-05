@@ -214,6 +214,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed',
   'homework_checked',
   'false_praise_opener_kill', 'false_praise_opener_advisory',
+  // Task 8: the advisory tier's note only lands when the slot is free — this
+  // is what separates "advisory fired" from "the brain was actually told".
+  'false_praise_opener_correction_note_planted',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

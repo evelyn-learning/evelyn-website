@@ -50,8 +50,32 @@
  * the affirmed token ("$f'(x) = 2x$") is a restatement, not a
  * contradiction.
  *
- * Pure module — no imports, no side effects. Never throws.
+ * BARE-PRAISE SHAPE (spec §D.3, 2026-09-05 QA session turn 5 — the third
+ * live praise-then-reverse instance): the opener praised with NO value at
+ * all ("Right, let's check the reasoning behind it.") and a later sentence
+ * denied the student's answer ("…so x=9 isn't quite it here."). Both
+ * branches above are blind to it — there is no `not <affirmed phrase>` (the
+ * affirmed capture is a prose clause, never re-negated verbatim) and no math
+ * token to run the substitution scan on. The third branch below therefore
+ * fires on a PROSE opener capture only (`isMathValueToken` false, so the two
+ * branches above are untouched) when a later sentence carries a denial that
+ * is about the SAME claim: it either names a value matching the student's own
+ * utterance, or names no value at all (a bare "Not quite —" can only be about
+ * what the student just said).
+ *
+ * Same-claim scoping is what keeps the two-part shape quiet: "Right on the
+ * roots — two and three. Not quite on the vertex: it should be (1, -4)…"
+ * denies a DIFFERENT value than the one praised, so it never enters. And a
+ * denial-SHAPED rhetorical aside ("Not quite the same thing happens with
+ * negatives…") is excluded by continuation word, not by value — it names no
+ * value, so the "no value named" arm would otherwise swallow it. Exclusions
+ * are the only lever this branch tunes on: the fire conditions are fixed.
+ *
+ * Imports are pure sibling modules only (a regex constant and a string
+ * normalizer) — no side effects. Never throws.
  */
+import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
+import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 
 export const PRAISE_OPENER_RE =
   /^\s*(?:right|yes|exactly|correct|perfect|spot on|that'?s (?:right|correct|it))\s*[—–,.:!-]\s*([^!?\n]{1,120}?)[.!?](?:\s|$)/i;
@@ -115,7 +139,45 @@ function findEqualitiesInMath(text: string): Array<{ lhs: string; rhsNorm: strin
   return out;
 }
 
-export function detectPraiseContradiction(turnText: string): { affirmed: string } | null {
+/** Denials the shared DENIAL_RE (anchored, opener-shaped) does not carry —
+ *  the clause-final forms the live instance used ("…so x=9 isn't quite it
+ *  here."). Unanchored on purpose: in this shape the denial lands mid-sentence
+ *  after the substitution, not at the start of one. */
+const BARE_DENIAL_RE = /\b(?:isn'?t\s+(?:quite\s+)?(?:it|right|correct)|not\s+quite\s+(?:it|right)|that'?s\s+not\s+(?:it|right|correct))\b/i;
+
+/** A denial-shaped opening that is actually a rhetorical COMPARISON ("not
+ *  quite the same thing happens with negatives…", "not quite like the last
+ *  one") — it denies nothing the student said. Excluded before the value test
+ *  because such an aside typically names no value, which the "no value named"
+ *  arm would otherwise read as a bare denial of the student's answer. This is
+ *  the exact aside class VoiceTutorRealtime's inverse-verdict gate documents. */
+const DENIAL_ASIDE_RE = /\b(?:not\s+quite|isn'?t\s+quite)\s+(?:the\s+same|similar|like|as)\b/i;
+
+/** Digits, decimals, fractions, or a $…$ span — "a value was named". */
+const VALUE_TOKEN_RE = /\d+(?:[./]\d+)?|\$[^$]+\$/g;
+
+function splitSentences(text: string): string[] {
+  return text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean);
+}
+
+/** Spoken numerals → digits, then strip currency/whitespace and a leading
+ *  "x=" style variable label, so "x equals nine" and "x=9" compare. */
+function normValue(s: string): string {
+  return spokenNumbersToDigits(s).toLowerCase().replace(/[$\s]/g, '').replace(/^[a-z]'?=/, '');
+}
+
+/** @param opts.studentUtterance  the utterance the turn is grading — scopes
+ *   the §D.3 branch to the SAME claim.
+ *  @param opts.bareDenialWidening  set FALSE to disable the §D.3 branch
+ *   entirely and get byte-identical pre-widening behaviour. Defaults to true
+ *   (the module's spec behaviour); the orchestrator passes false when
+ *   `TUTOR_FALSE_PRAISE_OPENER` is off, so that flag is a true kill switch for
+ *   the widening as well as for the false-praise-opener guard — a kill path
+ *   whose switch only half-disables it is the trap this repo keeps re-learning. */
+export function detectPraiseContradiction(
+  turnText: string,
+  opts?: { studentUtterance?: string; bareDenialWidening?: boolean },
+): { affirmed: string } | null {
   const m = turnText.match(PRAISE_OPENER_RE);
   if (!m) return null;
   const affirmed = m[1].replace(/\*/g, '').trim().replace(/\s+/g, ' ');
@@ -143,6 +205,22 @@ export function detectPraiseContradiction(turnText: string): { affirmed: string 
     }
     if (qualifies && finalRhsNorm !== null && finalRhsNorm !== affirmedNorm) {
       return { affirmed };
+    }
+  }
+
+  // Spec §D.3 — bare praise opener (prose capture, not a math token) followed
+  // by a denial that either names the student's own value or names NO value.
+  if (opts?.bareDenialWidening !== false && !isMathValueToken(affirmed)) {
+    const sentences = splitSentences(rest);
+    const studentVal = opts?.studentUtterance ? normValue(opts.studentUtterance) : '';
+    for (const s of sentences) {
+      const denial = DENIAL_RE.test(s) || BARE_DENIAL_RE.test(s);
+      if (!denial) continue;
+      // Exclusion (never a fire condition): a comparison aside, not a verdict.
+      if (DENIAL_ASIDE_RE.test(s)) continue;
+      const named = (s.match(VALUE_TOKEN_RE) ?? []).map(normValue);
+      if (named.length === 0) return { affirmed };
+      if (studentVal && named.some((v) => v === studentVal || (v.length > 0 && studentVal.endsWith(v)))) return { affirmed };
     }
   }
 
