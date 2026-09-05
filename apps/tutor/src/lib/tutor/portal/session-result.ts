@@ -51,6 +51,7 @@ import {
 import { extractSocialThreads } from './extract-social-threads';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
+import { findAssignmentBySession } from '@/lib/tutor/practice-assign/store';
 
 /** Loose shape for a logged whiteboard command. */
 interface LoggedCommand {
@@ -311,6 +312,13 @@ export async function emitSessionResult(
     req.renderedArtifacts ??
     (opts.loadArtifacts ? extractRenderedArtifacts(await opts.loadArtifacts(req.sessionId)) : { quizzes: [], conceptMaps: [] });
 
+  // v1.15.0 — best-effort homework echo (authoritative read = assigned-practice route).
+  const assignment = await findAssignmentBySession(req.sessionId).catch(() => null);
+  const assignedPractice = assignment && assignment.locator
+    ? assignment.los.map((l) => ({ loId: l.loId, title: l.title, itemIds: l.items.map((i) => i.id), reason: l.reason, assignedAt: assignment.assignedAt.toISOString() }))
+    : undefined;
+  const nextSessionIntent = assignment?.nextTimeIntent ?? profile.nextSessionIntent?.text;
+
   const base: Omit<SessionResult, 'learningStateDelta'> = {
     sessionId: req.sessionId,
     studentId: req.studentId,
@@ -319,6 +327,8 @@ export async function emitSessionResult(
     milestone: req.milestone ?? 'none',
     notesTouched: req.notesTouched,
     renderedArtifacts: artifacts,
+    ...(assignedPractice ? { assignedPractice } : {}),
+    ...(nextSessionIntent ? { nextSessionIntent } : {}),
   };
 
   // Checkpoint mode — no mutation, just a current-state snapshot.

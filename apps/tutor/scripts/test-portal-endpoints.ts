@@ -34,6 +34,7 @@ import { POST as gradePOST } from '@/app/api/portal/v1/grade/route';
 import { POST as sessionPOST } from '@/app/api/portal/v1/session-result/route';
 import { GET as sessionProgressGET } from '@/app/api/portal/v1/session-progress/route';
 import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
+import { POST as assignedPracticePOST } from '@/app/api/portal/v1/assigned-practice/route';
 
 const SECRET = 'secret-a';
 const PARTNER = 'portalA';
@@ -221,6 +222,17 @@ const ctxBody = (studentId: string) => ({
   await test('review-plan POST empty los array → 400', async () => {
     const body = { studentId: 'portalA:reviewer', los: [] };
     const { status } = await call(reviewPlanPOST, signed('POST', '/api/portal/v1/review-plan', body));
+    assert.strictEqual(status, 400);
+  });
+
+  console.log('\nAssigned-practice (v1.15.0 — auth + validation only; 200 path needs a DB):\n');
+  await test('assigned-practice POST without signature → 401', async () => {
+    const { status } = await call(assignedPracticePOST, unsigned('POST', '/api/portal/v1/assigned-practice'));
+    assert.strictEqual(status, 401);
+  });
+  await test('assigned-practice POST malformed (missing studentId) → 400', async () => {
+    const body = { courseId: 'ap-statistics' };
+    const { status } = await call(assignedPracticePOST, signed('POST', '/api/portal/v1/assigned-practice', body));
     assert.strictEqual(status, 400);
   });
 
