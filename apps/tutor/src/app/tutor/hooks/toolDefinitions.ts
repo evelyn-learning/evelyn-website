@@ -1979,7 +1979,7 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
   },
   {
     name: 'record_gap',
-    description: 'Record a learning gap on a learning objective from THIS lesson plan. Fires silently — the student does not hear or see this. Populates the student\'s persistent profile, feeds back into future sessions, and surfaces between sessions as a "weak areas" practice section. Fire when the student\'s error reveals a genuine misconception or missing piece — not a slip, mishearing, or one-off calculation error they self-corrected. FIRE WHEN: (a) the student gets a problem wrong and the wrong reasoning shows real misunderstanding of the LO, (b) the student verbally states they don\'t understand a concept tied to the current LO, (c) the student couldn\'t recover after a hint, (d) the student made the same kind of error twice within the segment. DO NOT FIRE ON: a single wrong answer the student self-corrected; misheard / mistyped responses; questions about the wording of the problem; mid-thought hesitation that resolves on its own. Per session, fire at most once per (loId, distinct issue) pair. **CROSS-SESSION RE-FIRE:** if a gap already exists in `<student_profile>` for this LO and the student re-demonstrates the same misconception in THIS session, DO fire `record_gap` again — re-firing across sessions is how the system promotes a candidate gap to "confirmed" status (the store layer merges signals and increments the session count). Re-firing is encouraged, not duplicate. Use `flag_prerequisite_gap` instead when the missing piece is a foundational concept this plan does NOT itself teach.',
+    description: 'Record a learning gap on a learning objective from THIS lesson plan. Fires silently — the student does not hear or see this. Populates the student\'s persistent profile, feeds back into future sessions, and surfaces between sessions as a "weak areas" practice section. Fire when the student\'s error reveals a genuine misconception or missing piece — not a slip, mishearing, or one-off calculation error they self-corrected. FIRE WHEN: (a) the student gets a problem wrong and the wrong reasoning shows real misunderstanding of the LO, (b) the student verbally states they don\'t understand a concept tied to the current LO, (c) the student couldn\'t recover after a hint, (d) the student made the same kind of error twice within the segment. DO NOT FIRE ON: a single wrong answer the student self-corrected; misheard / mistyped responses; questions about the wording of the problem; mid-thought hesitation that resolves on its own. Fire once per distinct issue; if the SAME issue returns later in this session, fire again with recurrence:true (re-firing on recurrence is encouraged, not duplicate). **CROSS-SESSION RE-FIRE:** if a gap already exists in `<student_profile>` for this LO and the student re-demonstrates the same misconception in THIS session, DO fire `record_gap` again — re-firing across sessions is how the system promotes a candidate gap to "confirmed" status (the store layer merges signals and increments the session count). Re-firing is encouraged, not duplicate. Use `flag_prerequisite_gap` instead when the missing piece is a foundational concept this plan does NOT itself teach.',
     parameters: {
       type: 'object',
       properties: {
@@ -2000,13 +2000,17 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
           minItems: 1,
           description: 'At least one structured signal you observed. MISCONCEPTION_DETECTED = student\'s reasoning revealed a wrong mental model; STUDENT_VERBALIZED_CONFUSION = student said they don\'t understand a concept; INCORRECT_AFTER_HINT = wrong answer after you provided a hint; NO_RECOVERY = repeated attempts in segment with no progress. Combined with orchestrator-stamped objective signals at write time; total signal count drives the gap\'s confidence score.',
         },
+        recurrence: {
+          type: 'boolean',
+          description: 'Set true when this SAME issue already fired earlier in THIS session and has now come back. A recurrence is the strongest sign a gap is real rather than a slip.',
+        },
       },
       required: ['loId', 'observation', 'signalsObserved'],
     },
   },
   {
     name: 'flag_prerequisite_gap',
-    description: 'Record a gap on a foundational concept the student lacks but the active plan does NOT directly teach. Fires silently AND in addition to your normal teaching response (do not skip just because you are also explaining). Use when the student\'s error or confusion is rooted in something that\'s a prerequisite to (or upstream of) the current LO, but isn\'t one of this plan\'s LOs. **GUARANTEED-FIRE TRIGGERS (fire every time, no exceptions):** (i) the student EXPLICITLY admits a prerequisite weakness — phrases like "I don\'t know my times tables", "I forget how to subtract", "I can\'t read this word", "I always mix up [foundational concept]" — these are unambiguous signals and MUST be flagged; (ii) the student fails on a sub-step that\'s pure rote / fact-fluency (basic arithmetic, sight-word reading, vocabulary recognition) when the active LO assumes mastery of it. STRUCTURAL SHAPES (subject-agnostic, additional to the guaranteed triggers): the student in an advanced session struggles with a procedure introduced in an earlier grade; an arithmetic / reading / vocabulary weakness blocks the conceptual step the current LO targets; the student demonstrates absence of a fact-fluency the current LO assumes. The `conceptLabel` is free-form English, 3–6 words, the way a teacher would describe the missing concept. Same per-session dedup: fire at most once per concept_label.',
+    description: 'Record a gap on a foundational concept the student lacks but the active plan does NOT directly teach. Fires silently AND in addition to your normal teaching response (do not skip just because you are also explaining). Use when the student\'s error or confusion is rooted in something that\'s a prerequisite to (or upstream of) the current LO, but isn\'t one of this plan\'s LOs. **GUARANTEED-FIRE TRIGGERS (fire every time, no exceptions):** (i) the student EXPLICITLY admits a prerequisite weakness — phrases like "I don\'t know my times tables", "I forget how to subtract", "I can\'t read this word", "I always mix up [foundational concept]" — these are unambiguous signals and MUST be flagged; (ii) the student fails on a sub-step that\'s pure rote / fact-fluency (basic arithmetic, sight-word reading, vocabulary recognition) when the active LO assumes mastery of it. STRUCTURAL SHAPES (subject-agnostic, additional to the guaranteed triggers): the student in an advanced session struggles with a procedure introduced in an earlier grade; an arithmetic / reading / vocabulary weakness blocks the conceptual step the current LO targets; the student demonstrates absence of a fact-fluency the current LO assumes. The `conceptLabel` is free-form English, 3–6 words, the way a teacher would describe the missing concept. Fire once per distinct issue; if the SAME issue returns later in this session, fire again with recurrence:true (re-firing on recurrence is encouraged, not duplicate).',
     parameters: {
       type: 'object',
       properties: {
@@ -2026,6 +2030,10 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
           },
           minItems: 1,
           description: 'At least one structured signal you observed (same enum as record_gap). Drives confidence.',
+        },
+        recurrence: {
+          type: 'boolean',
+          description: 'Set true when this SAME issue already fired earlier in THIS session and has now come back. A recurrence is the strongest sign a gap is real rather than a slip.',
         },
       },
       required: ['conceptLabel', 'observation', 'signalsObserved'],
@@ -2945,6 +2953,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       signalsObserved: Array.isArray(funcArgs.signalsObserved)
         ? funcArgs.signalsObserved.filter((s: unknown): s is string => typeof s === 'string')
         : [],
+      recurrence: funcArgs.recurrence === true,
     };
   }
   if (funcName === 'flag_prerequisite_gap') {
@@ -2958,6 +2967,7 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
       signalsObserved: Array.isArray(funcArgs.signalsObserved)
         ? funcArgs.signalsObserved.filter((s: unknown): s is string => typeof s === 'string')
         : [],
+      recurrence: funcArgs.recurrence === true,
     };
   }
   if (funcName === 'expand_topic_notes_theory') {

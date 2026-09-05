@@ -819,8 +819,8 @@ export type WhiteboardCommand =
   | { action: 'markSegmentComplete'; segmentId: string; masteryDelta?: number; notes?: string }
   | { action: 'proposePlanSwap'; targetSubTopic: string; reason?: string }
   | { action: 'confirmPlanLos'; pickedLoIds: string[] }
-  | { action: 'recordGap'; loId: string; observation: string; studentQuotes: string[]; signalsObserved: string[] }
-  | { action: 'flagPrerequisiteGap'; conceptLabel: string; observation: string; studentQuotes: string[]; signalsObserved: string[] }
+  | { action: 'recordGap'; loId: string; observation: string; studentQuotes: string[]; signalsObserved: string[]; recurrence?: boolean }
+  | { action: 'flagPrerequisiteGap'; conceptLabel: string; observation: string; studentQuotes: string[]; signalsObserved: string[]; recurrence?: boolean }
   | {
       action: 'expandTopicNotesTheory';
       loId: string | null;
