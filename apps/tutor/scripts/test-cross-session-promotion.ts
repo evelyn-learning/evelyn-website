@@ -552,6 +552,31 @@ test('return-time outcome does not double-count the accept (accepts=1, lastOutco
   assert.strictEqual(r!.lastOutcome, 'improved');
 });
 
+// Task 18 fix round 1 (Important 3): the recap state machine pushes TWO
+// accumulator entries for the same loId when the recap opens and returns
+// inside ONE commit window — the reply-time accept and the return-time
+// outcome. The commit route calls recordGap once per entry with the same
+// sessionId; the pair must merge to one offer and one accept.
+let sameCommit = makeProfile();
+sameCommit = recordGap(sameCommit, {
+  kind: 'lo', loId: 'loX', observation: 'Recap offered this session.', studentQuotes: [], signals: [], sessionId: 'sX',
+  recap: { offered: 1, outcome: 'accepted' },
+});
+sameCommit = recordGap(sameCommit, {
+  kind: 'lo', loId: 'loX', observation: 'Recap helped this session.', studentQuotes: [], signals: [], sessionId: 'sX',
+  recap: { offered: 0, outcome: 'improved' },
+});
+
+test('two entries for one loId in ONE commit merge to offers 1 / accepts 1 / lastOutcome improved', () => {
+  assert.strictEqual(sameCommit.gaps.length, 1);
+  const r = sameCommit.gaps[0].evidence?.recap;
+  assert.ok(r, 'expected a recap record');
+  assert.strictEqual(r!.offers, 1);
+  assert.strictEqual(r!.accepts, 1);
+  assert.strictEqual(r!.declines, 0);
+  assert.strictEqual(r!.lastOutcome, 'improved');
+});
+
 test('two sessions still promote (unchanged rule)', () => {
   assert.strictEqual(gapProfile.gaps[0].status, 'confirmed');
 });
