@@ -1568,6 +1568,10 @@ function TutorPage() {
       pendingTestStartRef.current = true;
       console.warn('[tutor-e2e] __tutorTestStart', JSON.stringify(cfg).slice(0, 400));
     };
+    // Ends the session through the SAME path as the End button (final profile
+    // commit → onEndSession), so the harness can exercise close-of-session
+    // behaviour (close_session_notes, auto-assign fallback, nextSessionIntent).
+    w.__tutorEndSession = () => { realtimeHandleRef.current?.endSession?.(); };
     w.__tutorSendText = (text: string) => {
       if (!realtimeHandleRef.current) { console.warn('[tutor-e2e] __tutorSendText: handle not ready'); return; }
       console.warn('[tutor-e2e] __tutorSendText', JSON.stringify(text).slice(0, 120));

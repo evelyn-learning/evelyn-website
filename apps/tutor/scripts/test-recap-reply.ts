@@ -18,6 +18,11 @@ check("accept: sure let's do it (short remainder)", c('sure let\'s do it') === '
 // soft/excluded logic in pickRecapCandidate).
 for (const s of ['go straight in', "I'd rather go straight in", "let's just start", "let's just get going"]) check(`decline (final review): "${s}"`, c(s) === 'decline');
 for (const s of ["let's just start.", 'go straight in!', "Let's just get going..."]) check(`decline survives trailing punctuation: "${s}"`, c(s) === 'decline', `got ${c(s)}`);
+// Live probe 2026-09-05: chained accept tokens. "a quick one" is itself an
+// accept shape, but its "one" tripped the number-word marker when it sat in
+// another accept token's remainder.
+for (const s of ['yes please, a quick one', 'sure, a quick one', 'yes, a quick one please', 'yeah quick one', 'ok sure, go ahead']) check(`accept (chained accept tokens): "${s}"`, c(s) === 'accept', `got ${c(s)}`);
+for (const s of ['yes, but after this one', 'sure, why not after this problem?', 'yes please, but what is a recap?']) check(`chained-accept peel does not widen: "${s}"`, c(s) === 'unclear', `got ${c(s)}`);
 check('accept (final review): "sure why not"', c('sure why not') === 'accept');
 // The "why not" exemption is remainder-scoped only — a long or marker-bearing
 // reply that happens to contain it stays unclear.

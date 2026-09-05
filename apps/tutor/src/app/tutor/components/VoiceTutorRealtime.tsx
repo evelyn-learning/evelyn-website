@@ -28,6 +28,7 @@ import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
 // Holistic-pedagogy round (spec §B.4): deterministic accept/decline/unclear
 // classification of the student's reply to a recap OFFER.
 import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
+import { isRecapOfferVoiced, RECAP_OFFER_MAX_ATTEMPTS } from '@/lib/tutor/voice/recap-offer-voiced';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -2517,6 +2518,12 @@ export function VoiceTutorRealtime({
   const recapRef = useRef<Map<string, { source: 'recurrence' | 'session-start'; offeredAtMs: number; outcome: 'pending' | 'accepted' | 'declined' | 'unclear'; loTitle: string }>>(new Map());
   const pendingRecapOfferRef = useRef<{ loId: string; loTitle: string; source: 'recurrence' | 'session-start'; soft: boolean } | null>(null);
   const pendingRecapGoRef = useRef<{ loId: string; loTitle: string } | null>(null);
+  /** The offer that rode THIS turn's `<recap_offer>` block, checked at turn
+   *  ok against the tutor's spoken text (isRecapOfferVoiced). Unvoiced ⇒ the
+   *  pending entry is withdrawn (the next utterance is NOT a reply) and the
+   *  offer is re-armed, up to RECAP_OFFER_MAX_ATTEMPTS per LO. */
+  const recapOfferSentThisTurnRef = useRef<{ loId: string; loTitle: string; source: 'recurrence' | 'session-start'; soft: boolean } | null>(null);
+  const recapOfferAttemptsRef = useRef<Map<string, number>>(new Map());
   const activeRecapRef = useRef<{ loId: string; loTitle: string; startedAtMs: number; turns: number; wrapNudged: boolean; wrapNudgedAtTurn: number; overrunLogged: boolean; goSeen: boolean } | null>(null);
   /** Segment → LO, using the SAME resolution the mastery-delta /
    *  segment-evidence sites use: the segment's own LO group when it
@@ -10221,6 +10228,7 @@ export function VoiceTutorRealtime({
             // an armed-but-never-sent offer leaves no pending entry.
             recapRef.current.set(armed.loId, { source: armed.source, offeredAtMs: Date.now(), outcome: 'pending', loTitle: armed.loTitle });
             recapOfferForTurn = { loTitle: armed.loTitle, ...(armed.soft ? { soft: true as const } : {}) };
+            recapOfferSentThisTurnRef.current = { loId: armed.loId, loTitle: armed.loTitle, source: armed.source, soft: armed.soft };
           }
         }
       }
@@ -14635,6 +14643,27 @@ export function VoiceTutorRealtime({
 
       const ms = Date.now() - t0;
       const fullText = aggregatedFullText.trim();
+      // ── Recap: was the offer actually voiced? (live probes 2026-09-05) ──
+      // The block asked for an offer; the brain may have answered the
+      // student's "I'm stuck" with a sub-question instead. An unvoiced offer
+      // must not sit 'pending' — the next utterance would be consumed as a
+      // reply to a question nobody heard. Withdraw it and re-arm (bounded).
+      {
+        const sent = recapOfferSentThisTurnRef.current;
+        recapOfferSentThisTurnRef.current = null;
+        if (sent) {
+          const entry = recapRef.current.get(sent.loId);
+          if (entry && entry.outcome === 'pending' && !isRecapOfferVoiced(fullText)) {
+            const attempts = (recapOfferAttemptsRef.current.get(sent.loId) ?? 0) + 1;
+            recapOfferAttemptsRef.current.set(sent.loId, attempts);
+            recapRef.current.delete(sent.loId);
+            const reArm = attempts < RECAP_OFFER_MAX_ATTEMPTS && !activeRecapRef.current && !pendingRecapOfferRef.current;
+            if (reArm) pendingRecapOfferRef.current = { loId: sent.loId, loTitle: sent.loTitle, source: sent.source, soft: sent.soft };
+            console.log(`[VoiceTutorRealtime] recap offer unvoiced lo="${sent.loId}" attempt=${attempts} ${reArm ? 're-armed' : 'dropped'}`);
+            onDebugEvent?.('recap_offer_unvoiced', `lo="${sent.loId}" attempt=${attempts} ${reArm ? 're-armed' : 'dropped'}`);
+          }
+        }
+      }
       console.log(
         `[brain-orchestrator] turn ok in ${ms}ms · ${totalToolNamesSeen.length} tool call(s) · ${totalSentenceCount} sentence(s) · ` +
         `first_sentence=${firstSentenceMs}ms · text="${fullText.slice(0, 80)}${fullText.length > 80 ? '…' : ''}" · ` +

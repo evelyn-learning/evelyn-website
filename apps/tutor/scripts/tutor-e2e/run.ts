@@ -285,6 +285,15 @@ async function main() {
       for (const t of scenario.testTurns) { await runTurn(t, 'test', i++); }
     }
 
+    if (scenario.endSession) {
+      log('ending session via __tutorEndSession (End-button path)');
+      await page.evaluate(() => (window as unknown as { __tutorEndSession?: () => void }).__tutorEndSession?.());
+      // The final commit is a POST the page fires on the way out; give it and
+      // the route's auto-assign fallback time to land before the dump.
+      await sleep(10_000);
+      await shot('session-ended');
+    }
+
     if (typeof scenario.reloadAfterTurn === 'number') {
       log('resume check: hard reload');
       await page.reload({ waitUntil: 'domcontentloaded' });

@@ -42,7 +42,10 @@ export interface Scenario {
   description: string;
   /** Picker selections — selecting a lessonPlanId flips the engine to
    *  claude-brain automatically (page.tsx voiceEngine). */
-  start: { subject: string; level: string; topic: string; lessonPlanId: string; studentName?: string };
+  /** `studentId` (optional) is passed straight through to __tutorTestStart as a
+   *  STABLE subscribed-session identity, so two scenarios can share one student
+   *  profile (homework assigned in one session, checked in the next). */
+  start: { subject: string; level: string; topic: string; lessonPlanId: string; studentName?: string; studentId?: string };
   /** Turns that fast-forward into the testable state (navigation / building
    *  the session). Captured but usually not the focus. */
   seedTurns?: ScenarioTurn[];
@@ -68,4 +71,8 @@ export interface Scenario {
    *  turns complete, regardless of which N is set here. Kept as a field for
    *  when mid-loop reload support is added. */
   reloadAfterTurn?: number;
+  /** After the last test turn, end the session through the End-button path
+   *  (window.__tutorEndSession) and wait for the final profile commit, so
+   *  close-of-session behaviour lands in debug-events.json. */
+  endSession?: boolean;
 }

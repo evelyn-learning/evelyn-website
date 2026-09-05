@@ -1476,7 +1476,7 @@ export function formatRecapBlocks(input: Pick<BrainTurnInput, 'recapOffer' | 're
   let out = '';
   if (input.recapOffer) {
     const t = cleanTitle(input.recapOffer.loTitle);
-    out += `<recap_offer>\nYou have now seen the student stumble more than once on: ${t}. In THIS turn, after responding to what they just said, offer a short recap of that idea: say in one sentence that you think a quick two- to three-minute recap might help, ask whether they want it now, then STOP and wait for their answer. Do not begin the recap in this turn. Speak from what you observed; never say a record or system shows they are weak.${input.recapOffer.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}\n</recap_offer>\n\n`;
+    out += `<recap_offer>\nYou have now seen the student stumble more than once on: ${t}. In THIS turn, after responding to what they just said, offer a short recap of that idea: say in one sentence that you think a quick two- to three-minute recap might help, ask whether they want it now, then STOP and wait for their answer. Do not begin the recap in this turn. This offer outranks the one-sub-question rule for THIS turn: do not pose a new lesson question — acknowledge what they said in one sentence, make the offer, ask, stop. Speak from what you observed; never say a record or system shows they are weak.${input.recapOffer.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}\n</recap_offer>\n\n`;
   }
   if (input.recapGo) {
     const t = cleanTitle(input.recapGo.loTitle);

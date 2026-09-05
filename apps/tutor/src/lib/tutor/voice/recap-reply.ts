@@ -80,15 +80,29 @@ export function classifyRecapReply(text: string): RecapReply {
     // Empty after cleaning → accept
     if (cleanRemainder === '') return 'accept';
 
-    // Count words
-    const words = cleanRemainder.split(/\s+/).length;
+    // Chained accept tokens: "yes please, a quick one", "sure, a quick one",
+    // "yeah quick one". Each piece is itself an accept shape, but left in the
+    // remainder the number word in "a quick one" trips UNCLEAR_MARKERS
+    // (live probe 2026-09-05: "yes please, a quick one" ⇒ unclear). Peel
+    // leading accept tokens off the remainder before the marker test; a
+    // remainder that is nothing but accept tokens is an accept.
+    let rest = cleanRemainder;
+    for (let guard = 0; guard < 4; guard++) {
+      const m = rest.match(ACCEPT_RE);
+      if (!m) break;
+      rest = rest.slice(m[0].length).replace(/^[,\s]+/, '').trim();
+    }
+    if (rest === '') return 'accept';
+
+    // Count words (on the peeled remainder)
+    const words = rest.split(/\s+/).length;
 
     // "sure why not" — drop the idiom before the marker test, but only when
     // the WHOLE reply is short: the length gate below still runs on the
     // untouched remainder, so a long why-not reply cannot sneak through.
-    const markerText = words <= 5 && WHY_NOT_IDIOM_RE.test(cleanRemainder)
-      ? cleanRemainder.replace(WHY_NOT_IDIOM_RE, ' ').trim()
-      : cleanRemainder;
+    const markerText = words <= 5 && WHY_NOT_IDIOM_RE.test(rest)
+      ? rest.replace(WHY_NOT_IDIOM_RE, ' ').trim()
+      : rest;
 
     // Accept only if ≤ 5 words AND no unclear markers
     if (words <= 5 && !UNCLEAR_MARKERS.test(markerText)) {

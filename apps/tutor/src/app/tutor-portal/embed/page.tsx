@@ -210,7 +210,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Holistic-pedagogy round (2026-09-05): ledger / recap / homework / guard.
   'gap_inferred', 'gap_recurred',
   'recap_offer_armed', 'recap_offer_reply', 'recap_started', 'recap_returned',
-  'recap_wrap_nudged', 'recap_overrun',
+  'recap_wrap_nudged', 'recap_overrun', 'recap_offer_unvoiced',
   'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed',
   'homework_checked',
   'false_praise_opener_kill', 'false_praise_opener_advisory',
