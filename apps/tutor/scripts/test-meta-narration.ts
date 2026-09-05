@@ -19,6 +19,13 @@ check('"The student already solved this one."', isMetaNarration('The student alr
 check('"Let me check — the active problem is …"', isMetaNarration('Let me check — the active problem is the dataset.'));
 check('"Let me mark this segment complete."', isMetaNarration('Let me mark this segment complete.'));
 check('"Since the student answered, …"', isMetaNarration('Since the student answered, we advance.'));
+// 2026-09-05 live: correction-note re-check spoken aloud
+check('"Let me re-derive this myself before responding."', isMetaNarration('Let me re-derive this myself before responding.'));
+check('"Let me re-verify that prior problem silently: …"', isMetaNarration('Let me re-verify that prior problem silently: 2(x-3)+3x = 4(x+2)+7.'));
+check('"Okay, let me double-check my earlier claim first, then answer."', isMetaNarration('Okay, let me double-check my earlier claim first, then answer.'));
+check('teaching survives: "Let me verify this with you step by step."', !isMetaNarration('Let me verify this with you step by step.'));
+check('teaching survives: "Let me check your work on the second line."', !isMetaNarration('Let me check your work on the second line.'));
+check('teaching survives: "Let me re-derive the formula on the board so we both see it."', !isMetaNarration('Let me re-derive the formula on the board so we both see it.'));
 check('"that\'s a greenlight to advance"', isMetaNarration("That's a greenlight to advance."));
 check('tool_result leak', isMetaNarration('The tool_result came back empty.'));
 

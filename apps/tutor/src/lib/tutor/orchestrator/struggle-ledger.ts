@@ -49,6 +49,46 @@ export const STUCK_CUE_RE = /\b(stuck|skip|don't know|dont know|i don't get|help
 /** Generic verbalized-confusion shapes (no subject terms). */
 export const CONFUSION_RE = /\b(i don'?t get (it|this)|i'?m confused|confusing|doesn'?t make sense|makes no sense|i'?m lost|what do you mean|i don'?t understand)\b/i;
 
+/** Explicit help-request shapes: a struggle signal wherever they land. */
+const EXPLICIT_STUCK_RE = /\b(?:i'?m\s+stuck|i\s+am\s+stuck|can\s+you\s+(?:break|walk|explain|help|show\s+me)|break\s+(?:it|this)\s+down|walk\s+me\s+through|step[\s-]by[\s-]step|need\s+(?:a\s+)?(?:hint|help)|how\s+do\s+i)\b/i;
+/** "don't know / understand / get" — load-bearing only when it IS the reply. */
+const SOFT_STUCK_RE = /\b(?:i\s+)?(?:don'?t|do\s+not)\s+(?:know|understand|get(?:\s+it|\s+this)?)\b/i;
+/** The same words as a HEDGE or discourse filler, never a struggle:
+ *  "I don't know if this comes up later", "maybe they just, I don't know,
+ *  study more", "you never know". */
+const HEDGE_RE = /\b(?:don'?t|do\s+not)\s+know\s+(?:if|whether|how\s+(?:much|many|long|far)|why|what|when|where|which|about|exactly)\b|\byou\s+never\s+know\b|\bwho\s+knows\b/i;
+const SOFT_STUCK_MAX_WORDS = 12;
+const SOFT_STUCK_LEAD_WORDS = 5;
+const SOFT_STUCK_LEAD_MAX_WORDS = 25;
+
+/**
+ * Is this utterance a stuck cue the LEDGER should count?
+ *
+ * Live session 2026-09-05 (portal-51b667f1): all four ledger detections on a
+ * student who was acing the lesson came from "I don't know" used as a filler
+ * or hedge inside long, correct answers — the help-request classifier matches
+ * "don't know" anywhere. That classifier still drives the pedagogy (Socratic
+ * breakdown); this predicate is the ledger's stricter gate:
+ *   - explicit shapes ("I'm stuck", "walk me through") count anywhere;
+ *   - soft shapes ("I don't know / get it") count only when they ARE the
+ *     reply: a short utterance, or the cue leads a medium-length one;
+ *   - hedge objects ("don't know if/whether/why …") never count.
+ */
+export function isLedgerStuckCue(text: string): boolean {
+  const t = (text || '').trim();
+  if (!t) return false;
+  if (EXPLICIT_STUCK_RE.test(t)) return true;
+  const m = SOFT_STUCK_RE.exec(t);
+  if (!m) return false;
+  // Hedge anywhere in the utterance disqualifies a soft cue — the same
+  // words are doing hedging work, not asking for help.
+  if (HEDGE_RE.test(t)) return false;
+  const words = t.split(/\s+/).filter(Boolean).length;
+  if (words <= SOFT_STUCK_MAX_WORDS) return true;
+  const leadWords = t.slice(0, m.index).split(/\s+/).filter(Boolean).length;
+  return leadWords <= SOFT_STUCK_LEAD_WORDS && words <= SOFT_STUCK_LEAD_MAX_WORDS;
+}
+
 export function prereqKey(conceptLabel: string): string {
   return `prereq:${conceptLabel.trim().toLowerCase()}`;
 }

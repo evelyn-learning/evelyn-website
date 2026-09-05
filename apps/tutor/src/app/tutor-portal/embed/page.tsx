@@ -211,7 +211,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'gap_inferred', 'gap_recurred',
   'recap_offer_armed', 'recap_offer_reply', 'recap_started', 'recap_returned',
   'recap_wrap_nudged', 'recap_overrun', 'recap_offer_unvoiced',
-  'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed',
+  'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed', 'practice_assign_skipped',
+  'homework_announce_dropped', 'stuck_cue_ignored', 'stuck_cue_vetoed', 'opener_retry',
+  'profile_commit_final', 'profile_commit_keepalive_skipped',
   'homework_checked',
   'false_praise_opener_kill', 'false_praise_opener_advisory',
   // Task 8: the advisory tier's note only lands when the slot is free — this

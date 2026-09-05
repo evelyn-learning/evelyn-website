@@ -29,6 +29,13 @@ import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
 // classification of the student's reply to a recap OFFER.
 import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
 import { isRecapOfferVoiced, RECAP_OFFER_MAX_ATTEMPTS } from '@/lib/tutor/voice/recap-offer-voiced';
+import { isHomeworkAnnouncement } from '@/lib/tutor/voice/homework-announce';
+/** End button: how long the final profile commit may hold the exit. */
+const FINAL_COMMIT_MAX_WAIT_MS = 3000;
+/** Chromium rejects keepalive bodies over 64 KiB; stay under with margin. */
+const KEEPALIVE_MAX_BYTES = 60_000;
+/** Opener retry after a client-side fetch failure. */
+const OPENER_RETRY_DELAY_MS = 1500;
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { buildSystemPrompt, buildOpenerClause, getInitialGreetingPrompt, pickContinuityClause, STALE_CHECKPOINT_REORIENT_CLAUSE, type SystemPromptContext } from '@/lib/tutor/ai/system-prompt-builder';
 import { renderTeacherIntroDirective, renderTeacherStyleReminder, CATCHPHRASE_TURN_INTERVAL, type TeacherPersonaWire } from '@core/ai/teacher-persona';
@@ -85,6 +92,7 @@ import {
   type LedgerState,
   type LedgerDetection,
   type LedgerEventKind,
+  isLedgerStuckCue,
 } from '@/lib/tutor/orchestrator/struggle-ledger';
 import { getSegment, type LessonPlan, type SegmentRecap } from '@/lib/tutor/lesson-plan/types';
 import { railJumpCandidates } from '@/lib/tutor/lesson-plan/rail-labels';
@@ -2088,13 +2096,26 @@ export function VoiceTutorRealtime({
     };
     profileFlushCountRef.current += 1;
     try {
+      const payload = JSON.stringify(body);
+      // keepalive bodies are capped (64 KiB in Chromium); a request over the
+      // cap REJECTS outright, which would lose the commit entirely. Above
+      // the cap send it plain — the End path awaits the commit, the
+      // pagehide path gets its best effort.
+      const useKeepalive = opts?.keepalive === true && payload.length < KEEPALIVE_MAX_BYTES;
+      if (opts?.keepalive === true && !useKeepalive) {
+        onDebugEvent?.('profile_commit_keepalive_skipped', `bytes=${payload.length} final=${isFinal}`);
+      }
       const res = await fetch(`/api/tutor/student-profile/${encodeURIComponent(studentId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
-        body: JSON.stringify(body),
-        // pagehide path: let the request outlive the page teardown.
-        ...(opts?.keepalive ? { keepalive: true } : {}),
+        body: payload,
+        // pagehide/End path: let the request outlive the page teardown.
+        ...(useKeepalive ? { keepalive: true } : {}),
       });
+      if (isFinal) {
+        console.log(`[VoiceTutorRealtime] final profile commit status=${res.status} bytes=${payload.length} keepalive=${useKeepalive}`);
+        onDebugEvent?.('profile_commit_final', `status=${res.status} bytes=${payload.length} keepalive=${useKeepalive}`);
+      }
       if (!res.ok) {
         console.warn('[VoiceTutorRealtime] profile commit failed:', res.status);
         return;
@@ -2524,6 +2545,11 @@ export function VoiceTutorRealtime({
    *  offer is re-armed, up to RECAP_OFFER_MAX_ATTEMPTS per LO. */
   const recapOfferSentThisTurnRef = useRef<{ loId: string; loTitle: string; source: 'recurrence' | 'session-start'; soft: boolean } | null>(null);
   const recapOfferAttemptsRef = useRef<Map<string, number>>(new Map());
+  /** A soft stuck cue heard this turn, fed to the ledger at turn ok unless
+   *  the verdict layer credited the same turn as correct. */
+  const pendingStuckCueRef = useRef<{ segId?: string } | null>(null);
+  /** The opener's single network-failure retry (F6, 2026-09-05). */
+  const openerRetryUsedRef = useRef(false);
   const activeRecapRef = useRef<{ loId: string; loTitle: string; startedAtMs: number; turns: number; wrapNudged: boolean; wrapNudgedAtTurn: number; overrunLogged: boolean; goSeen: boolean } | null>(null);
   /** Segment → LO, using the SAME resolution the mastery-delta /
    *  segment-evidence sites use: the segment's own LO group when it
@@ -6745,6 +6771,13 @@ export function VoiceTutorRealtime({
         const planLos = new Set((lessonPlanRef.current?.los ?? []).map((l) => l.id));
         const ledgerLos = new Set([...ledgerRef.current.keys()].filter((k) => !k.startsWith('prereq:')));
         const loIds = c.assignLoIds.filter((id) => planLos.has(id) || ledgerLos.has(id));
+        // Live 2026-09-05 (portal-51b667f1): the tool call reached this
+        // handler and NOTHING followed — no assigned, no failed — because a
+        // refused gate emitted no telemetry. Every refusal now says why.
+        if (!loIds.length || !studentId || closeNotesFiredRef.current) {
+          const reason = closeNotesFiredRef.current ? 'already-fired' : !studentId ? 'no-student' : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
+          onDebugEvent?.('practice_assign_skipped', `${reason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}]`);
+        }
         if (loIds.length && studentId && !closeNotesFiredRef.current) {
           const reason = (c.reason ?? '').trim() || 'Your tutor picked these to follow up on today\'s lesson.';
           void (async () => {
@@ -9696,7 +9729,17 @@ export function VoiceTutorRealtime({
         // braces, on the button marker itself (read off originalTranscript
         // because FIX B may have rewritten the visible transcript).
         const stuckButtonClick = /\[I'?m-stuck-button-clicked/i.test(originalTranscript);
-        if (isHelpRequest || stuckButtonClick) feedLedger('stuck_cue');
+        // Live 2026-09-05 (portal-51b667f1): four false detections from "I
+        // don't know" as filler/hedge inside long CORRECT answers. Two gates:
+        // the ledger's stricter cue predicate, and a deferral to turn ok so a
+        // turn the verdict layer credits as correct feeds no stuck cue at all.
+        // The button is explicit and feeds immediately.
+        if (stuckButtonClick) feedLedger('stuck_cue');
+        else if (isHelpRequest && isLedgerStuckCue(lower)) {
+          pendingStuckCueRef.current = { segId: segIdNow || undefined };
+        } else if (isHelpRequest) {
+          onDebugEvent?.('stuck_cue_ignored', `filler-or-hedge "${lower.slice(0, 60)}"`);
+        }
         // Round-22 (2026-07-17, session portal-cbd93b08): a single-letter
         // MCQ answer ("d") failed every verification signal — no digits, no
         // math language, 1 word, length < 3 — so two correct MCQ answers
@@ -12004,6 +12047,15 @@ export function VoiceTutorRealtime({
                   if (metaNarrationRe) {
                     console.warn('[brain-orchestrator] dropped meta-narration sentence:', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('meta_narration_dropped', updatedSentence.slice(0, 80));
+                    continue;
+                  }
+                  // Homework announcement with nowhere to send them (live
+                  // 2026-09-05): no practice locator ⇒ the prompt says
+                  // "do not mention homework"; when the brain does anyway
+                  // the student is promised a card that does not exist.
+                  if (!locatorForPrompt && isHomeworkAnnouncement(updatedSentence)) {
+                    console.warn('[brain-orchestrator] dropped homework announcement (no locator):', JSON.stringify(updatedSentence.slice(0, 100)));
+                    onDebugEvent?.('homework_announce_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }
                   // Ghost-step filter. If the brain narrates "Step N"
@@ -14643,6 +14695,15 @@ export function VoiceTutorRealtime({
 
       const ms = Date.now() - t0;
       const fullText = aggregatedFullText.trim();
+      // ── Ledger: deferred soft stuck cue, vetoed by a correct verdict ──
+      {
+        const pendingStuck = pendingStuckCueRef.current;
+        pendingStuckCueRef.current = null;
+        if (pendingStuck) {
+          if (objectiveCorrectThisTurnRef.current) onDebugEvent?.('stuck_cue_vetoed', 'turn credited correct');
+          else feedLedger('stuck_cue', undefined, pendingStuck.segId);
+        }
+      }
       // ── Recap: was the offer actually voiced? (live probes 2026-09-05) ──
       // The block asked for an offer; the brain may have answered the
       // student's "I'm stuck" with a sub-question instead. An unvoiced offer
@@ -15522,7 +15583,18 @@ export function VoiceTutorRealtime({
         // line and called abort() itself — if that abort somehow lands
         // here (non-AbortError-shaped) instead of the isAbort branch above,
         // don't double-speak a second "repeat that?" on top of it.
-        if (escalationGaveUpRef.current) {
+        // Live 2026-09-05 (portal-620a92a4): the OPENER's fetch failed
+        // client-side ("Failed to fetch" — a network blip at t+1.5s), nothing
+        // was spoken, a fallback card rendered, and the student sat for five
+        // minutes before restarting. Retry the opener exactly once.
+        const isNetworkFailure = err instanceof TypeError && /failed to fetch|load failed|network/i.test(err.message);
+        if (transcript === '[start lesson]' && isNetworkFailure && !openerRetryUsedRef.current && audibleSentenceCount === 0) {
+          openerRetryUsedRef.current = true;
+          onDebugEvent?.('opener_retry', `after ${err.message}`);
+          setTimeout(() => {
+            void handleStudentTranscriptForBrainRef.current?.('[start lesson]', { silent: true, bypassMidUtteranceGuard: true });
+          }, OPENER_RETRY_DELAY_MS);
+        } else if (escalationGaveUpRef.current) {
           onDebugEvent?.('cover_giveup_abort_swallowed', `t0=${t0}`);
         } else if (audibleSentenceCount > 0) {
           // R47 Task 3d (live incident portal-1349716e, 2:49 PM): the
@@ -20561,7 +20633,19 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     }
     // final: carries the transcript + generates the session summary
     // (intermediate flushes already persisted deltas incrementally).
-    void commitSessionToProfile({ final: true });
+    // Live 2026-09-05 (portal-51b667f1, 36 min): the final commit fired
+    // fire-and-forget and the embed host tore the iframe down on the
+    // session_ended signal that followed — the profile's last write was an
+    // intermediate flush three minutes earlier (no summary, no next-time
+    // intent, no auto-assign). Await it, bounded, so a normal commit lands
+    // before the exit and a wedged one cannot hold the End button hostage.
+    // keepalive is requested too; the commit drops it when the payload is
+    // over the browser's keepalive cap (a long transcript) — see the size
+    // guard inside commitSessionToProfile.
+    await Promise.race([
+      commitSessionToProfile({ final: true, keepalive: true }).catch(() => {}),
+      new Promise<void>((resolve) => setTimeout(resolve, FINAL_COMMIT_MAX_WAIT_MS)),
+    ]);
     onEndSession?.();
   };
   // Expose "ensure muted" to the brain orchestrator (defined above toggleMicMute)

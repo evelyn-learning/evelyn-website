@@ -36,6 +36,15 @@ const SELF_REFERENCE_RE =
 const SELF_AUDIT_RE =
   /^\s*i need to check\b|\blet me compute:\s|\bmy (?:prior|previous|last) turn\b|\bmy ["'“”]?not quite["'“”]? was\b/i;
 
+// 2026-09-05 (live, portal-51b667f1): the correction-note re-check narrated
+// as a sentence — "Let me re-derive this myself before responding." and
+// "Let me re-verify that prior problem silently:". The note text already
+// forbids it; this is the spoken-text backstop. Anchored to a re-*/verify
+// verb AND a private-act marker (myself / silently / before responding /
+// first / that prior …) so "Let me verify this with you" survives.
+const RE_DERIVE_RE =
+  /^\s*(?:ok(?:ay)?,?\s+)?let me (?:re-?derive|re-?verify|re-?check|re-?do|re-?examine|double-?check|verify|check)\b[^.!?]{0,60}?\b(?:myself|silently|quietly|before (?:responding|answering|replying)|first,?\s+then|that prior|my prior|my earlier|my previous|my last)\b/i;
+
 /** A tag-shaped run: '<' + a letter or '/', a tag name, then '>'. Requires
  *  BOTH delimiters AND an '=' in any attribute section (so unspaced algebra
  *  like "3<n and n>10" or "a<b and c>d" survives — prose between brackets
@@ -49,7 +58,7 @@ export function isMetaNarration(
   opts?: { structural?: boolean },
 ): boolean {
   const s = sentence ?? '';
-  if (PHRASE_START_RE.test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s)) return true;
+  if (PHRASE_START_RE.test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s)) return true;
   if (opts?.structural === false) return false;
   return MARKUP_RE.test(s);
 }

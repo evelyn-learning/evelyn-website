@@ -24,6 +24,7 @@
  * about board content.
  */
 import { NextRequest } from 'next/server';
+import { repairJudgeJson } from '@/lib/tutor/voice/judge-json-repair';
 import { getModelClient, prepareParams } from '@/lib/tutor/ai/model-registry';
 import { JUDGE_SYSTEM_PROMPT, buildJudgeUserContent } from '@/lib/tutor/judge-prompt';
 
@@ -177,7 +178,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       const jsonStr = extractFirstJsonObject(raw);
       if (jsonStr) parsed = JSON.parse(jsonStr);
     } catch {
-      console.warn('[tutor/judge] failed to parse JSON; raw=', raw.slice(0, 200));
+      // Live 2026-09-05: unescaped inner quotes in a claim string. Repair
+      // before failing open — a flagged issue was lost that way.
+      const repaired = repairJudgeJson(raw);
+      if (repaired) {
+        parsed = { ...(repaired.grounded !== undefined ? { grounded: repaired.grounded } : {}), issues: repaired.issues as JudgeIssue[] | undefined };
+        console.warn(`[tutor/judge] parse failed; repaired via ${repaired.method} (issues=${repaired.issues?.length ?? 0})`);
+      } else {
+        console.warn('[tutor/judge] failed to parse JSON; raw=', raw.slice(0, 200));
+      }
     }
     const grounded = parsed?.grounded === false ? false : true;
     const issues = Array.isArray(parsed?.issues) ? parsed!.issues!.filter(
