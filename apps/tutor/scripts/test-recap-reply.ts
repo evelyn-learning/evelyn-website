@@ -13,4 +13,12 @@ check("decline: don't think so", c('I don\'t think so') === 'decline');
 check("decline: well + don't think so", c('well, I don\'t think so') === 'decline');
 check('accept: yes please (short remainder)', c('yes please') === 'accept');
 check("accept: sure let's do it (short remainder)", c('sure let\'s do it') === 'accept');
+// Final review, Important 6 — spec-listed phrases that used to classify
+// 'unclear', so a real decline was never counted as one (declines gate the
+// soft/excluded logic in pickRecapCandidate).
+for (const s of ['go straight in', "I'd rather go straight in", "let's just start", "let's just get going"]) check(`decline (final review): "${s}"`, c(s) === 'decline');
+check('accept (final review): "sure why not"', c('sure why not') === 'accept');
+// The "why not" exemption is remainder-scoped only — a long or marker-bearing
+// reply that happens to contain it stays unclear.
+check('why-not exemption does not widen: "sure, why not after this problem?"', c('sure, why not after this problem?') === 'unclear');
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
