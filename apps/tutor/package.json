@@ -240,6 +240,7 @@
     "test:pedagogy-resume": "npx tsx scripts/test-portal-resume.ts",
     "test:pedagogy-teacher": "npx tsx scripts/test-teacher-persona.ts",
     "test:recap-reply": "npx tsx scripts/test-recap-reply.ts",
+    "test:recap-blocks": "npx tsx scripts/test-recap-blocks.ts",
     "voice:discover": "npx tsx scripts/tutor/voice-harness/discover-voices.ts",
     "voice:localize": "npx tsx scripts/tutor/voice-harness/localize-voices.ts",
     "voice:tts": "npx tsx scripts/tutor/voice-harness/tts-generate.ts",

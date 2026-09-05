@@ -103,6 +103,13 @@ interface BrainStreamRequestBody {
    *  whose embed context fetch succeeded. Surfaces as the durable
    *  `<mock_review>` block. See BrainTurnInput.mockReview. */
   mockReview?: BrainTurnInput['mockReview'];
+  /** Holistic-pedagogy round (spec §B.3/B.5): one-turn recap directives.
+   *  Shape-checked below; malformed input collapses to undefined.
+   *  See BrainTurnInput.recapOffer/recapGo/recapWrap/recapReply. */
+  recapOffer?: BrainTurnInput['recapOffer'];
+  recapGo?: BrainTurnInput['recapGo'];
+  recapWrap?: boolean;
+  recapReply?: BrainTurnInput['recapReply'];
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   /** Configured session subject (UI `selectedSubject`). Used ONLY by the
@@ -653,6 +660,20 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      // Holistic-pedagogy round (spec §B.3/B.5): sanitize the four recap
+      // fields. Each collapses to undefined on any shape mismatch so a
+      // malformed client can never inject an arbitrary blob into the
+      // per-turn user content.
+      const recapOffer = body.recapOffer && typeof body.recapOffer.loTitle === 'string'
+        ? { loTitle: body.recapOffer.loTitle.slice(0, 120), ...(body.recapOffer.soft === true ? { soft: true } : {}) } : undefined;
+      const recapGo = body.recapGo && typeof body.recapGo.loTitle === 'string' ? { loTitle: body.recapGo.loTitle.slice(0, 120) } : undefined;
+      const recapWrap = body.recapWrap === true ? true : undefined;
+      const recapReply = body.recapReply === 'accept' || body.recapReply === 'decline' || body.recapReply === 'unclear' ? body.recapReply : undefined;
+      if (recapOffer) console.log(`[recap] recap_offer attached lo="${recapOffer.loTitle}"${recapOffer.soft ? ' soft' : ''}`);
+      if (recapGo) console.log(`[recap] recap_go attached lo="${recapGo.loTitle}"`);
+      if (recapWrap) console.log('[recap] recap_wrap attached');
+      if (recapReply) console.log(`[recap] recap_offer_reply attached reply=${recapReply}`);
+
       // Task X10: the turn input is pure, byte-stable data (no per-attempt
       // mutation), so the SAME object is safely reused on every retry.
       const turnInput = {
@@ -689,6 +710,13 @@ export async function POST(req: NextRequest) {
           // Task WS3: durable mock-review context, forwarded verbatim. Absent
           // for non-mock-review sessions ⇒ `<mock_review>` block omitted.
           mockReview: body.mockReview,
+          // Holistic-pedagogy round: sanitized above (shape-checked, else
+          // undefined). Surfaces as `<recap_offer>`/`<recap_go>`/
+          // `<recap_wrap>`/`<recap_offer_reply>` in the user content.
+          recapOffer,
+          recapGo,
+          recapWrap,
+          recapReply,
           activeProblem: body.activeProblem,
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,

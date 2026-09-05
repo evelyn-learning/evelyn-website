@@ -249,6 +249,13 @@ export interface BrainTurnInput {
    *  arrived from a completed full-length mock to review their misses.
    *  Absent ⇒ `<mock_review>` block omitted ⇒ userContent byte-identical. */
   mockReview?: MockReviewContext;
+  /** Holistic-pedagogy round (spec §B.3/B.5): one-turn recap directives.
+   *  All volatile per-turn user content, never the cached system prefix.
+   *  Absent ⇒ no block ⇒ userContent byte-identical. */
+  recapOffer?: { loTitle: string; soft?: boolean };
+  recapGo?: { loTitle: string };
+  recapWrap?: boolean;
+  recapReply?: 'accept' | 'decline' | 'unclear';
   /** Teacher-persona mid-session style salience (flag
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact distilled style markers
    *  (renderTeacherStyleReminder output — pace / catchphrases / analogy
@@ -1456,6 +1463,29 @@ export function formatMockReviewBlock(ctx?: MockReviewContext): string {
   return `<mock_review>\n${body}\n</mock_review>\n\n`;
 }
 
+/** Holistic-pedagogy round (spec §B.3/B.5): one-turn recap directives —
+ *  offer/go/wrap/reply-note blocks. Exported for scripts/test-recap-blocks.ts
+ *  so the block text is testable without running a whole brain turn. */
+export function formatRecapBlocks(input: Pick<BrainTurnInput, 'recapOffer' | 'recapGo' | 'recapWrap' | 'recapReply'>): string {
+  let out = '';
+  if (input.recapOffer) {
+    const t = input.recapOffer.loTitle;
+    out += `<recap_offer>\nYou have now seen the student stumble more than once on: ${t}. In THIS turn, after responding to what they just said, offer a short recap of that idea: say in one sentence that you think a quick two- to three-minute recap might help, ask whether they want it now, then STOP and wait for their answer. Do not begin the recap in this turn. Speak from what you observed; never say a record or system shows they are weak.${input.recapOffer.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}\n</recap_offer>\n\n`;
+  }
+  if (input.recapGo) {
+    out += `<recap_go>\nThe student accepted a recap of ${input.recapGo.loTitle}. Do it now: first call advance_lesson({to:"free"}), then run a recall-first recap — ask them to say what they remember, fix the one idea that was wrong, then one short check they do themselves. Keep it under about three minutes. When they get the check right (or after two tries), call advance_lesson({to:"next"}) to return to the lesson and say you are picking up where you left off.\n</recap_go>\n\n`;
+  }
+  if (input.recapWrap) {
+    out += `<recap_wrap>\nWrap the recap now: one sentence of closure, then call advance_lesson({to:"next"}) to return to the lesson.\n</recap_wrap>\n\n`;
+  }
+  if (input.recapReply === 'decline') {
+    out += `<recap_offer_reply>\nThe student declined the recap you offered. Do not ask again this session; carry on with the lesson and keep weaving quick checks of that idea into the material as it comes up.\n</recap_offer_reply>\n\n`;
+  } else if (input.recapReply === 'unclear') {
+    out += `<recap_offer_reply>\nThe student's reply to your recap offer was unclear. Do not re-ask; respond to what they actually said and continue the lesson.\n</recap_offer_reply>\n\n`;
+  }
+  return out;
+}
+
 /**
  * Run one turn of the brain. The caller passes the latest student utterance
  * plus context, gets back a structured response with all text + tool calls
@@ -1563,6 +1593,8 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
   if (mockReviewBlock) {
     console.log('[mock-review] mock_review block attached');
   }
+  // Holistic-pedagogy round: one-turn recap directives. '' when none set.
+  const recapBlocks = formatRecapBlocks(input);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1610,6 +1642,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
     demoStopBlock +
     practiceSessionBlock +
     mockReviewBlock +
+    recapBlocks +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
     lessonBlock +
@@ -1768,6 +1801,8 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
   if (mockReviewBlock) {
     console.log('[mock-review] mock_review block attached');
   }
+  // Holistic-pedagogy round: one-turn recap directives. '' when none set.
+  const recapBlocks = formatRecapBlocks(input);
   const lessonBlock = input.lessonPlanContext
     ? `<lesson_plan>\n${formatLessonPlanContext(input.lessonPlanContext)}\n</lesson_plan>\n\n`
     : '';
@@ -1809,6 +1844,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
     demoStopBlock +
     practiceSessionBlock +
     mockReviewBlock +
+    recapBlocks +
     pacePreferenceBlock +
     difficultyPreferenceBlock +
     lessonBlock +
