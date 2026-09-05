@@ -821,6 +821,10 @@ export type WhiteboardCommand =
   | { action: 'confirmPlanLos'; pickedLoIds: string[] }
   | { action: 'recordGap'; loId: string; observation: string; studentQuotes: string[]; signalsObserved: string[]; recurrence?: boolean }
   | { action: 'flagPrerequisiteGap'; conceptLabel: string; observation: string; studentQuotes: string[]; signalsObserved: string[]; recurrence?: boolean }
+  // Holistic-pedagogy round (spec §C.1-C.2): silent close-of-session notes.
+  // Carries the objectives that earned homework (≤2) plus what the tutor
+  // intends to open with next time. Orchestrator-handled; never rendered.
+  | { action: 'closeSessionNotes'; assignLoIds: string[]; reason?: string; nextTimeIntent?: string }
   | {
       action: 'expandTopicNotesTheory';
       loId: string | null;

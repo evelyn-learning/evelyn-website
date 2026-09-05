@@ -3166,7 +3166,11 @@ function TutorPage() {
 
   // Render summary stage
   // Pull what was covered + how far the lesson plan got + minutes used.
-  const sessionSummary = realtimeHandleRef.current?.getSessionSummary?.() ?? { topicsCovered: [], conceptsCovered: [], weakTopics: [] };
+  const sessionSummary = realtimeHandleRef.current?.getSessionSummary?.() ?? ({
+    topicsCovered: [],
+    conceptsCovered: [],
+    weakTopics: [],
+  } as ReturnType<NonNullable<NonNullable<typeof realtimeHandleRef.current>['getSessionSummary']>>);
   const segmentsCompletedIdx = lessonProgress.plan
     ? lessonProgress.plan.segments.findIndex((s) => s.id === lessonProgress.currentSegmentId)
     : -1;
@@ -3234,6 +3238,15 @@ function TutorPage() {
             </ul>
           </div>
         )}
+
+        {/* Holistic-pedagogy round (spec §C.1) — homework the tutor assigned
+            during the session. Absent unless a practice-assign succeeded. */}
+        {sessionSummary.assignedPractice?.length ? (
+          <div className="mt-4 text-sm">
+            <span className="font-medium">Homework:</span>{' '}
+            {sessionSummary.assignedPractice.map((a) => `${a.count} questions on ${a.title}`).join(' · ')} — find them in your Practice tab.
+          </div>
+        ) : null}
 
         {/* Areas to revisit (only when present) */}
         {sessionSummary.weakTopics.length > 0 && (

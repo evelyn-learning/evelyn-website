@@ -252,6 +252,7 @@ import {
   TUTOR_PAGE_TITLE_FROM_RENDER,
   TUTOR_STRUGGLE_LEDGER,
   TUTOR_FALSE_PRAISE_OPENER,
+  TUTOR_CLOSE_NOTES,
 } from '@/lib/tutor/orchestrator/flags';
 import {
   shouldFireBargeInKill,
@@ -506,6 +507,17 @@ interface VoiceTutorRealtimeProps {
    *  NEVER persisted engine-side. Only consumed when TUTOR_PEDAGOGY_OPENER is
    *  on. */
   readinessNote?: string;
+  /** Holistic-pedagogy round (spec §C.7) — where tutor-assigned practice
+   *  lands in the HOST's UI ("Unit 2 · Practice"), composed by the academy.
+   *  Two uses: it is named to the brain in <student_context_transient> so
+   *  the closing sentence can point at a real place, and it rides out on
+   *  the final profile commit. ABSENT ⇒ the brain is told nothing and says
+   *  nothing about homework (a standalone /tutor session has no such UI). */
+  practiceLocator?: string;
+  /** Holistic-pedagogy round (spec §C.7) — the student's stated goal, prose,
+   *  composed by the academy. Transient session-scoped context, same carrier
+   *  semantics as readinessNote: never persisted engine-side. */
+  goalNote?: string;
   /** Opener-recency (part A) — fires at most ONCE per session, when this
    *  session's OWN opener record is captured (the opener turn's finalized
    *  tutor text + the resolved opener kind). Dev/e2e consumer today (the
@@ -946,6 +958,8 @@ export function VoiceTutorRealtime({
   progressDigest,
   lastOpener,
   readinessNote,
+  practiceLocator,
+  goalNote,
   onOpenerRecord,
   isTrial = false,
   targetKind,
@@ -1977,7 +1991,11 @@ export function VoiceTutorRealtime({
     }
     const accum = sessionAccumRef.current;
     const accumEmpty = accum.masteryDeltas.length === 0 && accum.gaps.length === 0 && accum.losTouched.size === 0
-      && accum.segmentOutcomes.length === 0;
+      && accum.segmentOutcomes.length === 0
+      // Holistic-pedagogy round (spec §C.2): a session whose ONLY new signal
+      // is the tutor's next-time intent must still commit it. Only ever set
+      // under TUTOR_CLOSE_NOTES ⇒ flag-off this term is always false.
+      && !accum.nextTimeIntent;
     // Content variety (phase 1): a FINAL commit must still post to CAPTURE the
     // fillings shown, even on a session that accumulated nothing gradeable
     // (e.g. a hook-only session the student didn't finish) — otherwise the
@@ -2018,6 +2036,13 @@ export function VoiceTutorRealtime({
       // Only stamp when at least one overlay tool fired — keeps SessionMemory
       // entries lean on sessions that didn't touch topic-notes.
       notesOverlaysAddedThisSession: totalNotesOverlays > 0 ? notesCount : undefined,
+      // Holistic-pedagogy round (spec §C.2) — FINAL commit only. The intent
+      // is a whole-session statement, not an increment, and the locator +
+      // acknowledgements only matter once the session is over. Absent
+      // fields ⇒ the route's body is byte-identical to pre-round.
+      ...(isFinal && accum.nextTimeIntent ? { nextSessionIntent: accum.nextTimeIntent } : {}),
+      ...(isFinal && practiceLocator ? { practiceLocator } : {}),
+      ...(isFinal && homeworkAckIdsRef.current.length ? { homeworkAcknowledged: homeworkAckIdsRef.current } : {}),
     };
     sessionAccumRef.current = {
       losTouched: new Set(),
@@ -2025,6 +2050,12 @@ export function VoiceTutorRealtime({
       gaps: [],
       topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
       segmentOutcomes: [],
+      // Holistic-pedagogy round (spec §C.2): these two are NOT increments —
+      // they are session-scoped latches only the FINAL commit consumes. An
+      // intermediate flush must carry them forward or a close_session_notes
+      // that fired before the last debounced flush would lose its intent
+      // and the commit route would re-assign practice it already assigned.
+      ...(isFinal ? {} : { nextTimeIntent: accum.nextTimeIntent, assignmentMade: accum.assignmentMade }),
     };
     profileFlushCountRef.current += 1;
     try {
@@ -2043,10 +2074,18 @@ export function VoiceTutorRealtime({
       if (data.summary) {
         console.log('[VoiceTutorRealtime] session summary generated:', data.summary);
       }
+      // Holistic-pedagogy round (spec §C.3): the commit route's fallback
+      // auto-assign fired (the brain never called close_session_notes, or
+      // its call failed). Adopt its result for the summary card — but never
+      // overwrite an assignment the in-session tool call already made.
+      if (Array.isArray(data.assigned) && data.assigned.length && assignedPracticeRef.current === null) {
+        assignedPracticeRef.current = data.assigned as Array<{ loId: string; title: string; count: number }>;
+        onDebugEventRef.current?.('practice_assigned_auto', (data.assigned as Array<{ loId: string; count: number }>).map((a) => `${a.loId}:${a.count}`).join(','));
+      }
     } catch (err) {
       console.warn('[VoiceTutorRealtime] profile commit error:', err);
     }
-  }, [studentId, subject, topic, level, lessonPlanId, embedToken]);
+  }, [studentId, subject, topic, level, lessonPlanId, embedToken, practiceLocator]);
   // Count of commits already posted this session — lets the final commit
   // post transcript+summary even when its own accumulator increment is
   // empty (everything already flushed incrementally).
@@ -2294,8 +2333,8 @@ export function VoiceTutorRealtime({
   if (!transientContextComputedRef.current) {
     transientContextComputedRef.current = true;
     transientContextBlockRef.current =
-      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener || readinessNote)
-        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote })
+      TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || progressDigest || lastOpener || readinessNote || practiceLocator || goalNote)
+        ? renderTransientContextBlock({ socialMemory, progressDigest, lastOpener, readinessNote, practiceLocator, goalNote })
         : null;
   }
   // Task 17 — learner-context boot block (flag TUTOR_LEARNER_CONTEXT,
@@ -2372,6 +2411,18 @@ export function VoiceTutorRealtime({
       streakAtComplete?: number;
       turns?: number;
     }>;
+    /** Holistic-pedagogy round (spec §C.2): what the tutor said it would
+     *  open with next session (from `close_session_notes`). Unlike every
+     *  other field here this is NOT an increment-since-last-flush value —
+     *  it is a single latest-wins string that only the FINAL commit sends
+     *  (as `nextSessionIntent`), so the intermediate reset below carries it
+     *  forward instead of clearing it. */
+    nextTimeIntent?: string;
+    /** Holistic-pedagogy round (spec §C.2): true once the in-session
+     *  practice-assign call succeeded, so the commit route's fallback
+     *  auto-assign does not double-assign. Carried across intermediate
+     *  flushes for the same reason as nextTimeIntent. */
+    assignmentMade?: boolean;
   }>({
     losTouched: new Set(),
     masteryDeltas: [],
@@ -2379,6 +2430,19 @@ export function VoiceTutorRealtime({
     topicNotesCount: { theory: 0, methods: 0, pointers: 0 },
     segmentOutcomes: [],
   });
+  // ── Holistic-pedagogy round (spec §C.1-C.2): close-of-session notes ──
+  // `close_session_notes` may legitimately fire more than once (the brain
+  // re-wraps after a "wait, one more thing"). The ASSIGN call is one-shot
+  // per session — a second call still refreshes nextTimeIntent.
+  const closeNotesFiredRef = useRef(false);
+  // What the practice-assign route actually created, for the end-of-session
+  // summary card. Null until an assign succeeds (either the in-session tool
+  // call or the commit-route fallback).
+  const assignedPracticeRef = useRef<Array<{ loId: string; title: string; count: number }> | null>(null);
+  // Task 20 fills this: ids of homework items the student acknowledged
+  // out loud this session. Declared now so the final commit body can carry
+  // `homeworkAcknowledged` without a second edit to that call site.
+  const homeworkAckIdsRef = useRef<string[]>([]);
   // ── Holistic-pedagogy round (spec §A): per-LO struggle ledger ────────
   // One LedgerState per session (fresh via the key={sessionId} remount).
   // Fed from sites the orchestrator already owns (streak increments, cue
@@ -6504,6 +6568,61 @@ export function VoiceTutorRealtime({
         }
         continue;
       }
+      // Holistic-pedagogy round (spec §C.1-C.2) — silent close-of-session
+      // notes. Two independent outputs: (a) a one-shot practice assignment
+      // for the objectives the brain says earned homework, (b) the tutor's
+      // stated intent for next session, which rides out on the FINAL
+      // profile commit. Flag off ⇒ dropped silently (the render filter
+      // above already excludes the action unconditionally, so flag-off
+      // behaviour is byte-identical to pre-round).
+      if (cmd.action === 'closeSessionNotes') {
+        if (!TUTOR_CLOSE_NOTES) continue;
+        const c = cmd as { assignLoIds: string[]; reason?: string; nextTimeIntent?: string };
+        // Latest-wins: a second wrap-up call refreshes the intent even
+        // though it can no longer assign.
+        if (c.nextTimeIntent) sessionAccumRef.current.nextTimeIntent = c.nextTimeIntent;
+        // Only ids the brain could legitimately have seen: this plan's LOs,
+        // or an LO the struggle ledger touched. Prereq ledger keys are not
+        // assignable (they name concepts, not bank-addressable objectives).
+        const planLos = new Set((lessonPlanRef.current?.los ?? []).map((l) => l.id));
+        const ledgerLos = new Set([...ledgerRef.current.keys()].filter((k) => !k.startsWith('prereq:')));
+        const loIds = c.assignLoIds.filter((id) => planLos.has(id) || ledgerLos.has(id));
+        if (loIds.length && studentId && !closeNotesFiredRef.current) {
+          closeNotesFiredRef.current = true;
+          const reason = (c.reason ?? '').trim() || 'Your tutor picked these to follow up on today\'s lesson.';
+          void (async () => {
+            try {
+              const res = await fetch('/api/tutor/practice-assign', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
+                body: JSON.stringify({
+                  studentId,
+                  sessionId: sessionIdRef.current,
+                  lessonPlanId,
+                  subject,
+                  loIds,
+                  reason,
+                  locator: practiceLocator,
+                  nextTimeIntent: c.nextTimeIntent,
+                }),
+              });
+              if (res.status === 200) {
+                const data = await res.json() as { assigned: Array<{ loId: string; title: string; count: number }> };
+                assignedPracticeRef.current = data.assigned;
+                sessionAccumRef.current.assignmentMade = true;
+                onDebugEvent?.('practice_assigned', data.assigned.map((a) => `${a.loId}:${a.count}`).join(','));
+              } else if (res.status !== 204) {
+                onDebugEvent?.('practice_assign_failed', `status=${res.status}`);
+              }
+            } catch (e) {
+              onDebugEvent?.('practice_assign_failed', String((e as Error).message).slice(0, 80));
+            }
+          })();
+        }
+        console.log(`[VoiceTutorRealtime] close_session_notes assign=[${loIds.join(',')}] intent="${(c.nextTimeIntent ?? '').slice(0, 60)}"`);
+        scheduleProfileFlush();
+        continue;
+      }
       // Topic-notes overlay tools — fire silently to the per-student
       // overlay store. Three guardrails before async dispatch:
       //   1. Active-topic binding: baselineId == lessonPlanId; no plan → drop.
@@ -6950,6 +7069,7 @@ export function VoiceTutorRealtime({
       'proposePlanSwap', 'confirmPlanLos',
       'recordGap', 'flagPrerequisiteGap',
       'expandTopicNotesTheory', 'addTopicNotesMethod', 'addTopicNotesPointer',
+      'closeSessionNotes',
     ]);
     // Running page title used to stamp catalog entries with the page
     // they were rendered on. Updated whenever we see a newPage in the
@@ -7729,7 +7849,11 @@ export function VoiceTutorRealtime({
         c.action !== 'flagPrerequisiteGap' &&
         c.action !== 'expandTopicNotesTheory' &&
         c.action !== 'addTopicNotesMethod' &&
-        c.action !== 'addTopicNotesPointer',
+        c.action !== 'addTopicNotesPointer' &&
+        // Holistic-pedagogy round (spec §C.1): filtered UNCONDITIONALLY —
+        // flag-off drops the action in the handler, so it must never reach
+        // the canvas either way.
+        c.action !== 'closeSessionNotes',
     );
 
     // Render↔speech sync: on the brain-stream path this BUFFERS the visual
@@ -8502,8 +8626,8 @@ export function VoiceTutorRealtime({
         learnerContextBlockRef.current = data.learnerContext ?? null;
         if (learnerContextBlockRef.current !== null) {
           transientContextBlockRef.current =
-            TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote)
-              ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote })
+            TUTOR_PEDAGOGY_OPENER && (socialMemory?.length || lastOpener || readinessNote || practiceLocator || goalNote)
+              ? renderTransientContextBlock({ socialMemory, lastOpener, readinessNote, practiceLocator, goalNote })
               : null;
         }
         if (TUTOR_PEDAGOGY_OPENER) {
@@ -19091,6 +19215,10 @@ export function VoiceTutorRealtime({
           weakTopics: Array.from(weaknessesRef.current.entries())
             .map(([topic, count]) => ({ topic, count }))
             .sort((a, b) => b.count - a.count),
+          // Holistic-pedagogy round (spec §C.1): homework the tutor assigned
+          // this session (in-session tool call, or the commit-route fallback).
+          // Undefined when nothing was assigned ⇒ the summary card is absent.
+          assignedPractice: assignedPracticeRef.current ?? undefined,
         }),
         stepPaceBias: (delta: -1 | 1) => stepPaceBias(delta, 'button'),
         setSpeakingRate,

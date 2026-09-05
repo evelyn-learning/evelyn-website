@@ -2040,6 +2040,19 @@ export const WHITEBOARD_TOOLS: ToolDefinition[] = [
     },
   },
   {
+    name: 'close_session_notes',
+    description: 'Silent close-of-session notes — the student does not hear or see this. Call it ONCE when the session is wrapping up: the student signals they are done, you reach the recap segment, the time budget is nearly used, or they say goodbye. It records (a) which objectives deserve homework and (b) what you intend to open with next time. Assign practice ONLY for objectives where you saw real difficulty this session (a recorded gap, repeated errors, a recap that was needed) — never for slips, and never more than two. After calling it, tell the student in ONE sentence where the practice is waiting, naming the practice location given in your context if there is one; if no location was given, say nothing about homework.',
+    parameters: {
+      type: 'object',
+      properties: {
+        assignLoIds: { type: 'array', items: { type: 'string' }, maxItems: 2, description: 'LO ids from <lesson_plan> that need practice before next session. Omit or empty when none.' },
+        reason: { type: 'string', description: 'One plain sentence the student will read on their homework card, e.g. why these questions help. ≤ 30 words.' },
+        nextTimeIntent: { type: 'string', description: 'What you plan to open with next session, in ≤ 20 words — a real intention you will honor, not a platitude.' },
+      },
+      required: [],
+    },
+  },
+  {
     name: 'expand_topic_notes_theory',
     description: 'Add a theory-bucket entry to the student\'s persistent topic-notes for the active plan\'s CED topic. Fires SILENTLY — the student does not hear or see this. The new entry surfaces in the student\'s revision notes OUTSIDE this session (one notes doc per CED topic; revisable later). Three kinds: (i) `expansion` — adds depth to a baseline LO entry the student needed extra context on. Set `loId` to an LO id from the active `<lesson_plan>`; orchestrator silent-drops loIds that don\'t exist in the baseline. (ii) `prereq-refresher` — cross-LO refresher on a prerequisite concept that surfaced as weak (typically paired with a same-turn `flag_prerequisite_gap`). Set `loId=null` and `conceptLabel` to the prereq label. (iii) `student-add` — cross-LO addition that doesn\'t anchor to one LO (rare). Set `loId=null`. **FIRE WHEN:** the student demonstrably benefited from explanation that is NOT already in the baseline, AND the explanation is worth remembering for revision. DO NOT FIRE FOR: rote restatement of existing baseline content, transient slips the student self-corrected, generic encouragement, or content that only makes sense in this exact session\'s flow. The first 3 segments of a fresh session are warmup; calls before then are silent-dropped (be patient — let the student show their range first). Per session, the orchestrator caps theory expansions at ~5 per topic and silent-drops over-firing. Content that already exists (in baseline or in your prior overlays) is silent-deduped — re-firing the same idea across sessions just bumps a "reinforced" counter, which is desirable, not a problem.',
     parameters: {
@@ -2968,6 +2981,16 @@ export function mapFunctionCallToCommand(funcName: string, funcArgs: Record<stri
         ? funcArgs.signalsObserved.filter((s: unknown): s is string => typeof s === 'string')
         : [],
       recurrence: funcArgs.recurrence === true,
+    };
+  }
+  if (funcName === 'close_session_notes') {
+    return {
+      action: 'closeSessionNotes',
+      assignLoIds: Array.isArray(funcArgs.assignLoIds)
+        ? funcArgs.assignLoIds.filter((x: unknown): x is string => typeof x === 'string').slice(0, 2)
+        : [],
+      reason: typeof funcArgs.reason === 'string' ? funcArgs.reason.slice(0, 240) : undefined,
+      nextTimeIntent: typeof funcArgs.nextTimeIntent === 'string' ? funcArgs.nextTimeIntent.slice(0, 200) : undefined,
     };
   }
   if (funcName === 'expand_topic_notes_theory') {

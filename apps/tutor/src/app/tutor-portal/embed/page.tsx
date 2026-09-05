@@ -311,6 +311,11 @@ interface EmbedConfig {
    *  field existed. Only consumed when NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is
    *  on. */
   readiness_note?: string;
+  /** Spec §C.7 — where tutor-assigned practice lands in the academy UI
+   *  ("Unit 2 · Practice"). Presence = the academy renders the homework card. */
+  practice_locator?: string;
+  /** Spec §C.7 — the student's stated goal, composed by the academy. */
+  goal_note?: string;
   /** Task WS3 — the completed mock attempt to review. When session_goal is
    *  'mock-review' the engine fetches the missed-item review context for this
    *  attempt and threads it to the brain. Absent ⇒ plain mock-review greeting
@@ -1259,6 +1264,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         progressDigest={config.progress_digest}
         lastOpener={config.last_opener}
         readinessNote={config.readiness_note}
+        practiceLocator={config.practice_locator}
+        goalNote={config.goal_note}
         onOpenerRecord={handleOpenerRecord}
         onBrainUsage={handleBrainUsage}
         onDebugEvent={addDebugEvent}

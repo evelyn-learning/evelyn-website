@@ -53,6 +53,15 @@ export interface TransientContextInput {
    *  read for THIS session only, never persisted engine-side. A
    *  whitespace-only note is treated as absent. */
   readinessNote?: string;
+  /** Holistic-pedagogy round (spec §C.7): where tutor-assigned practice lands
+   *  in the HOST's UI ("Unit 2 · Practice"). Named to the brain so the closing
+   *  sentence can point at a real place; absent ⇒ the brain is told nothing
+   *  and (per the close-of-session prompt rule) says nothing about homework.
+   *  Whitespace-only is treated as absent. */
+  practiceLocator?: string;
+  /** Holistic-pedagogy round (spec §C.7): the student's stated goal, prose,
+   *  composed by the host. Whitespace-only is treated as absent. */
+  goalNote?: string;
 }
 
 /** `2026-06-20T10:00:00Z` → `2026-06-20`; passes through date-only strings. */
@@ -127,7 +136,9 @@ export function renderTransientContextBlock(input: TransientContextInput): strin
   const digest = input.progressDigest;
   const lastOpener = input.lastOpener?.digest.trim() ? input.lastOpener : undefined;
   const readiness = input.readinessNote?.trim() ? input.readinessNote.trim() : undefined;
-  if (!digest && threads.length === 0 && !lastOpener && !readiness) return null;
+  const practiceLocator = input.practiceLocator?.trim() ? input.practiceLocator.trim() : undefined;
+  const goalNote = input.goalNote?.trim() ? input.goalNote.trim() : undefined;
+  if (!digest && threads.length === 0 && !lastOpener && !readiness && !practiceLocator && !goalNote) return null;
 
   const lines: string[] = ['<student_context_transient>'];
   if (digest) lines.push(renderProgressLine(digest));
@@ -137,6 +148,8 @@ export function renderTransientContextBlock(input: TransientContextInput): strin
   }
   if (lastOpener) lines.push(renderLastOpenerLine(lastOpener));
   if (readiness) lines.push(`prerequisite readiness (from a diagnostic before this course): ${readiness}`);
+  if (practiceLocator) lines.push(`practice location for homework: ${practiceLocator}`);
+  if (goalNote) lines.push(`goal: ${goalNote}`);
   lines.push('', lastOpener ? `${USAGE_INSTRUCTION} ${LAST_OPENER_INSTRUCTION}` : USAGE_INSTRUCTION);
   lines.push('</student_context_transient>');
   return lines.join('\n');
