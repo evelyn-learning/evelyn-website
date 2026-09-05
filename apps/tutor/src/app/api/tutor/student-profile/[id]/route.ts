@@ -29,6 +29,8 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/store';
 import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 import { getLearnerContextBlock } from '@/lib/tutor/learner-model/context-block';
+import { assignPractice } from '@/lib/tutor/practice-assign/assign';
+import { findAssignmentBySession, acknowledgeAssignments } from '@/lib/tutor/practice-assign/store';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -322,6 +324,37 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     };
   }
 
+  // Spec §C.3 fallback: FINAL commit, nothing assigned this session, and the
+  // session produced a recurrence or a well-signalled gap → auto-assign the
+  // top LO. Best-effort: a failure here never fails the commit.
+  let autoAssigned: Array<{ loId: string; title: string; count: number }> | undefined;
+  if (body.generateNotes !== false && Array.isArray(body.gaps) && body.gaps.length) {
+    const candidates = body.gaps
+      .filter((g) => (g.kind ?? 'lo') === 'lo' && g.loId && ((g.recurrences ?? 0) >= 1 || (g.signals?.length ?? 0) >= 2))
+      .sort((a, b) => ((b.recurrences ?? 0) - (a.recurrences ?? 0)) || ((b.signals?.length ?? 0) - (a.signals?.length ?? 0)));
+    if (candidates.length) {
+      try {
+        const existing = await findAssignmentBySession(body.sessionId);
+        if (!existing) {
+          const plan = body.lessonPlanId ? await getLessonPlan(body.lessonPlanId) : null;
+          const lo = plan?.los.find((l) => l.id === candidates[0].loId);
+          const title = lo?.shortTitle ?? lo?.description ?? candidates[0].loId!;
+          const out = await assignPractice({
+            profileId, partnerId: partnerIdForInternalRoute(auth), externalStudentId: id, sessionId: body.sessionId,
+            lessonPlanId: body.lessonPlanId, loIds: [candidates[0].loId!],
+            reason: `Your tutor noticed ${title} needed more practice this session.`,
+            locator: body.practiceLocator, nextTimeIntent: body.nextSessionIntent, subject: body.subject, auto: true,
+          });
+          if (out) { autoAssigned = out.assigned; console.log(`[student-profile] auto-assigned homework session=${body.sessionId} ${JSON.stringify(out.assigned)}`); }
+        }
+      } catch (e) { console.error('[student-profile] auto-assign failed', e); }
+    }
+  }
+  if (Array.isArray(body.homeworkAcknowledged) && body.homeworkAcknowledged.length) {
+    acknowledgeAssignments(body.homeworkAcknowledged.filter((x): x is string => typeof x === 'string').slice(0, 10))
+      .catch((e) => console.error('[student-profile] acknowledge failed', e));
+  }
+
   let summaryError: string | undefined;
   let summary: string | undefined;
   if (body.generateNotes !== false && Array.isArray(body.transcript) && body.transcript.length > 0) {
@@ -374,5 +407,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     profile: saved,
     summary,
     summaryError,
+    ...(autoAssigned ? { assigned: autoAssigned } : {}),
   });
 }
