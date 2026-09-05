@@ -27,12 +27,21 @@ export function pickRecapCandidate(input: RecapCandidateInput): RecapCandidate |
   const eligibleGaps = input.gaps.filter((g) =>
     g.kind !== 'prerequisite' && !!g.loId && titles.has(g.loId)
     && (g.status === 'confirmed' || g.status === 'open') && !isGapStale(g, nowMs));
+  // Falls back to `input.gaps` (any status/staleness) rather than just
+  // `eligibleGaps`: a recorded decline is a decline regardless of whether
+  // the underlying gap has since decayed or changed status — softness
+  // (declines/soft) is about respecting the student's prior response to
+  // being offered a recap, not about the gap's own surfacing eligibility.
   const gapFor = (loId: string) => eligibleGaps.find((g) => g.loId === loId) ?? input.gaps.find((g) => g.loId === loId);
 
-  // 1. homework partial/weak/untouched on a plan LO
+  // 1. homework partial/weak/untouched on a plan LO. Check each LO's own
+  // `status`, not just the assignment's `overall` — `overall` is a summary
+  // across all LOs on the assignment, so a partial/weak assignment can
+  // still contain individual LOs that are already done.
   for (const h of input.homework) {
     if (h.overall === 'done') continue;
     for (const lo of h.los) {
+      if (lo.status === 'done') continue;
       if (!titles.has(lo.loId)) continue;
       const s = softness(gapFor(lo.loId));
       if (s.excluded) continue;

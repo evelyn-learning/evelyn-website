@@ -27,4 +27,17 @@ check('declined once → soft', pickRecapCandidate({ ...base, gaps: [gap('lo1', 
 check('declined twice → excluded', pickRecapCandidate({ ...base, gaps: [gap('lo1', { evidence: { recap: { offers: 2, accepts: 0, declines: 2, lastOfferAt: iso(2), lastOutcome: 'declined' } } })] }) === null);
 check('stale confirmed gap (>90d) excluded', pickRecapCandidate({ ...base, gaps: [gap('lo1', { lastSeenAt: iso(120) })] }) === null);
 check('title comes from the plan', pickRecapCandidate({ ...base, gaps: [gap('lo3')] })?.title === 'Three');
+const hwDoneUntouched: HomeworkStatus = { assignmentId: 'a', sessionId: 's', assignedAt: iso(3), overall: 'partial', los: [
+  { loId: 'lo1', title: 'One', total: 4, attempted: 4, correct: 4, status: 'done' },
+  { loId: 'lo2', title: 'Two', total: 4, attempted: 0, correct: 0, status: 'untouched' },
+] };
+{
+  const r = pickRecapCandidate({ ...base, homework: [hwDoneUntouched] });
+  check('per-LO status: done LO skipped, untouched LO offered', r?.loId === 'lo2' && r?.reason === 'homework-weak');
+}
+const hwBothDoneOverallStale: HomeworkStatus = { assignmentId: 'a', sessionId: 's', assignedAt: iso(3), overall: 'partial', los: [
+  { loId: 'lo1', title: 'One', total: 4, attempted: 4, correct: 4, status: 'done' },
+  { loId: 'lo2', title: 'Two', total: 4, attempted: 4, correct: 4, status: 'done' },
+] };
+check('per-LO status: both LOs done despite stale overall → falls through, null', pickRecapCandidate({ ...base, homework: [hwBothDoneOverallStale] }) === null);
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
