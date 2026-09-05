@@ -35,3 +35,4 @@ export {
   type ILearnerStateSnapshotLo,
 } from "./LearnerStateSnapshot";
 export { EloRatingModel, type IEloRating, type IEloRatingDoc } from "./EloRating";
+export { PracticeAssignmentModel, type IPracticeAssignment, type IPracticeAssignmentLo } from './PracticeAssignment';
