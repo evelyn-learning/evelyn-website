@@ -86,6 +86,7 @@ function buildSystemPrompt(existingThreads: SocialThread[]): string {
     '- "interest": things they enjoy (hobbies, sports, shows, games).',
     '- "event": an upcoming happening in their life (a test, a game, a trip, a recital).',
     '- "context": stable personal context (a sibling, a pet, a class situation).',
+    '- a GOAL or target the student stated (a grade, a score, an exam date, a skill they want): emit it as kind "context" with the note starting exactly "Goal: " — e.g. "Goal: <what they said>". One goal thread at most.',
     '',
     'STRICT RULES for new threads:',
     '- ONLY include what the student ACTUALLY SAID about themselves. Never infer, never include things the tutor said or guessed.',

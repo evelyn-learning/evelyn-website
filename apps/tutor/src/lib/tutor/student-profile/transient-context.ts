@@ -82,9 +82,11 @@ function renderProgressLine(d: ProgressDigest): string {
 }
 
 function renderThreadLine(t: SocialThread): string {
-  const kind = t.kind ? `[${t.kind}] ` : '';
+  const isGoal = /^goal:\s*/i.test(t.note);
+  const kind = isGoal ? '[goal] ' : t.kind ? `[${t.kind}] ` : '';
+  const note = isGoal ? t.note.replace(/^goal:\s*/i, '') : t.note;
   const lastUsed = t.lastReferencedAt ? ` (last used ${dateOnly(t.lastReferencedAt)})` : '';
-  return `- ${kind}${t.note}${lastUsed}`;
+  return `- ${kind}${note}${lastUsed}`;
 }
 
 /** Usage guidance for the brain — generic wording only (no topic-specific

@@ -234,6 +234,7 @@
     "test:adapters-passage": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/adapters.test.ts",
     "test:practice-gen": "TS_NODE_BASEURL=./ npx ts-node -r tsconfig-paths/register --compiler-options '{\"module\":\"commonjs\",\"baseUrl\":\"./\"}' src/lib/tutor/portal/practice-gen.test.ts",
     "test:pedagogy-d1": "npx tsx scripts/test-transient-context.ts",
+    "test:goal-threads": "npx tsx scripts/test-goal-threads.ts",
     "test:pedagogy-d3": "npx tsx scripts/test-session-result-social.ts",
     "test:pedagogy-e1": "npx tsx scripts/test-demo-stop.ts",
     "test:pedagogy-e2": "npx tsx scripts/test-demo-cta.ts",
