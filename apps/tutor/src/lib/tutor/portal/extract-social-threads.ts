@@ -82,7 +82,7 @@ function buildSystemPrompt(existingThreads: SocialThread[]): string {
     'You extract light social/rapport memory from a finished 1-on-1 tutoring session transcript.',
     'You have TWO jobs. Output STRICT JSON only (no prose, no markdown fences).',
     '',
-    'JOB 1 — NEW threads: find things the STUDENT volunteered about THEMSELVES this session, in three kinds:',
+    'JOB 1 — NEW threads: find things the STUDENT volunteered about THEMSELVES this session:',
     '- "interest": things they enjoy (hobbies, sports, shows, games).',
     '- "event": an upcoming happening in their life (a test, a game, a trip, a recital).',
     '- "context": stable personal context (a sibling, a pet, a class situation).',
