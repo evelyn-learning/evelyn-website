@@ -41,7 +41,11 @@ export function pickRecapCandidate(input: RecapCandidateInput): RecapCandidate |
   for (const h of input.homework) {
     if (h.overall === 'done') continue;
     for (const lo of h.los) {
-      if (lo.status === 'done') continue;
+      // A per-LO 'done' means every item on it was ATTEMPTED — not that the
+      // student got them right. On a 'weak' assignment (mostly wrong) those
+      // attempts are exactly the evidence a recap should act on, so 'done'
+      // only skips when the assignment as a whole is not weak.
+      if (lo.status === 'done' && h.overall !== 'weak') continue;
       if (!titles.has(lo.loId)) continue;
       const s = softness(gapFor(lo.loId));
       if (s.excluded) continue;

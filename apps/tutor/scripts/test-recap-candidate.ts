@@ -40,4 +40,19 @@ const hwBothDoneOverallStale: HomeworkStatus = { assignmentId: 'a', sessionId: '
   { loId: 'lo2', title: 'Two', total: 4, attempted: 4, correct: 4, status: 'done' },
 ] };
 check('per-LO status: both LOs done despite stale overall → falls through, null', pickRecapCandidate({ ...base, homework: [hwBothDoneOverallStale] }) === null);
+// Final review, Important 3: 'done' at the per-LO level means every item was
+// ATTEMPTED, not that they were right. On a WEAK assignment those attempts are
+// the strongest recap evidence there is, so a fully-attempted-but-weak LO must
+// still yield a candidate.
+const hwAllAttemptedWeak: HomeworkStatus = { assignmentId: 'a', sessionId: 's', assignedAt: iso(3), overall: 'weak', los: [
+  { loId: 'lo1', title: 'One', total: 4, attempted: 4, correct: 1, status: 'done' },
+] };
+{
+  const r = pickRecapCandidate({ ...base, homework: [hwAllAttemptedWeak] });
+  check('fully attempted but weak (1/4 correct) → homework-weak candidate', r?.loId === 'lo1' && r?.reason === 'homework-weak', `got ${JSON.stringify(r)}`);
+}
+// The narrowing must not widen the non-weak case: 'partial' overall with every
+// per-LO status 'done' still falls through (the pin above, restated for the
+// new condition).
+check('all-done LOs on a non-weak assignment still fall through', pickRecapCandidate({ ...base, homework: [hwBothDoneOverallStale] }) === null);
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
