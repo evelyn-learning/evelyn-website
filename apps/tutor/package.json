@@ -103,6 +103,7 @@
     "test:graph-js-expr": "npx tsx scripts/test-graph-js-expr.ts",
     "test:choice-label": "npx tsx scripts/test-choice-label.ts",
     "test:continuity": "npx tsx scripts/test-continuity.ts",
+    "test:continuity-clauses": "npx tsx scripts/test-continuity-clauses.ts",
     "test:feature-slug": "npx tsx scripts/test-feature-slug.ts",
     "test:gap-manifest": "npx tsx scripts/test-gap-manifest.ts",
     "test:brain-retry": "npx tsx scripts/test-brain-retry.ts",

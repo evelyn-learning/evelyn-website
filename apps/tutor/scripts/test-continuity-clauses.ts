@@ -1,0 +1,21 @@
+import { pickContinuityClause } from '../src/lib/tutor/ai/system-prompt-builder';
+let passed = 0, failed = 0;
+function check(name: string, cond: boolean, detail?: string) { if (cond) { passed++; console.log(`  ✓ ${name}`); } else { failed++; console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); } }
+const hw = (overall: 'untouched' | 'partial' | 'done' | 'weak') => [{ assignmentId: 'a', sessionId: 's', assignedAt: '2026-09-03T00:00:00Z', los: [{ loId: 'lo1', title: 'Fractions', total: 4, attempted: overall === 'untouched' ? 0 : 4, correct: overall === 'weak' ? 1 : 3, status: overall === 'untouched' ? 'untouched' as const : 'done' as const }], overall }];
+const cand = { loId: 'lo1', title: 'Fractions', reason: 'confirmed' as const, soft: false };
+check('nothing → null', pickContinuityClause({}) === null);
+const done = pickContinuityClause({ homework: hw('done'), recapCandidate: cand })!;
+check('homework done → acknowledge clause, no recap offer', /done well/.test(done.clause) && done.recapOffer === undefined);
+const weak = pickContinuityClause({ homework: hw('weak'), recapCandidate: cand })!;
+check('homework weak → check + recap offer in one clause', /homework/.test(weak.clause) && /two-minute recap/.test(weak.clause) && weak.recapOffer?.loId === 'lo1');
+const untouched = pickContinuityClause({ homework: hw('untouched'), recapCandidate: cand })!;
+check('untouched → no guilt + recap offer', /no guilt/.test(untouched.clause) && untouched.recapOffer !== undefined);
+const intent = pickContinuityClause({ nextTimeIntent: 'start with vertex form' })!;
+check('next-time intent alone', /start with vertex form/.test(intent.clause) && intent.recapOffer === undefined);
+const both = pickContinuityClause({ nextTimeIntent: 'start with vertex form', recapCandidate: cand })!;
+check('intent + candidate → intent wins, still offers recap', /start with vertex form/.test(both.clause) && /two-minute recap/.test(both.clause) && both.recapOffer?.loId === 'lo1');
+const recap = pickContinuityClause({ recapCandidate: { ...cand, soft: true } })!;
+check('recap alone (soft) → offer clause with easy-to-decline', /easy to decline/.test(recap.clause) && recap.recapOffer?.soft === true);
+check('every clause says this is the ONE continuity move', [done, weak, untouched, intent, both, recap].every((c) => /ONE continuity/.test(c.clause)));
+check('no subject words leak', ![done, weak, untouched, intent, both, recap].some((c) => /fraction|algebra|vertex/i.test(c.clause.replace(/Fractions|vertex form/g, ''))));
+console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);
