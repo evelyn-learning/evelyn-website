@@ -24,7 +24,7 @@ import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/
 import { decideStage2CancelAction, isDuplicateTranscript, type Stage2Verdict } from '@/lib/tutor/voice/stage2-cancel-policy';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
 import { stripWbEmphasisText } from '@/lib/tutor/whiteboard/wb-emphasis-strip';
-import { shouldClientRequestRepair } from '@/lib/tutor/voice/rule8-client';
+import { shouldClientRequestRepair, countBoardRenderTools } from '@/lib/tutor/voice/rule8-client';
 // Holistic-pedagogy round (spec §B.4): deterministic accept/decline/unclear
 // classification of the student's reply to a recap OFFER.
 import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
@@ -4367,7 +4367,8 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         e.processed.map((c) => (c as any).id).filter((id: unknown): id is string => typeof id === 'string'),
       );
-      onDebugEvent('render_sync_flush', `${ready.length} render(s) painted${flushedIds.length ? ` (${flushedIds.join(',')})` : ''}`);
+      const boardRenders = ready.reduce((n, e) => n + e.processed.filter(isBoardRenderCommand).length, 0);
+      onDebugEvent('render_sync_flush', `${boardRenders} render(s) painted${ready.length !== boardRenders ? ` batches=${ready.length}` : ''}${flushedIds.length ? ` (${flushedIds.join(',')})` : ''}`);
     }
     // Nothing left to hold → cancel the stall timer.
     if (renderBufferRef.current.length === 0 && renderStallTimerRef.current) {
@@ -4519,6 +4520,16 @@ export function VoiceTutorRealtime({
         try { turnRenderPayloadTextRef.current += ' ' + JSON.stringify(c); }
         catch { /* a non-serializable command is simply not counted */ }
       }
+    }
+    // R1 telemetry (2026-09-07): a batch that lost every command during
+    // processing must not enter the sync buffer — it would flush as
+    // "1 render(s) painted" with no id and Rule 8 would ask for a repair of
+    // ink nobody requested. Meta-only batches (advance_lesson etc.) are the
+    // routine case; a rejected sole render is the interesting one and is
+    // already reported by its own `tool_call`/`render_dropped` event.
+    if (processed.length === 0) {
+      onDebugEvent?.('render_sync_empty_batch', 'no command survived processing');
+      return;
     }
     if (!TUTOR_RENDER_SYNC || !renderSyncActiveRef.current) {
       onWhiteboardCommand(processed);
@@ -15491,14 +15502,14 @@ export function VoiceTutorRealtime({
       if (
         TUTOR_CLIENT_RULE8_REPAIR &&
         shouldClientRequestRepair({
-          serverToolCount: totalToolNamesSeen.length,
+          serverToolCount: countBoardRenderTools(totalToolNamesSeen),
           paintedCount: totalPaintedCount,
           sentenceCount: turnNarrationRef.current.length,
         })
       ) {
         const repairTurn = pageTurnRef.current;
         const repairSentences = [...turnNarrationRef.current];
-        const repairToolCount = totalToolNamesSeen.length;
+        const repairToolCount = countBoardRenderTools(totalToolNamesSeen);
         onDebugEvent?.('rule8_client_repair', `requesting: sent=${repairToolCount} painted=0 sentences=${repairSentences.length}`);
         void (async () => {
           try {
