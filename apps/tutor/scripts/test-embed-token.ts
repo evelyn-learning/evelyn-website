@@ -30,6 +30,7 @@ const ENV_KEYS = [
   'PORTAL_PARTNER_SECRETS',
   'EMBED_TOKEN_ENFORCE',
   'EMBED_TOKEN_EXP_GRACE_MINUTES',
+  'TUTOR_DEMO_GATE',
 ] as const;
 const savedEnv: Record<string, string | undefined> = {};
 for (const k of ENV_KEYS) savedEnv[k] = process.env[k];
@@ -537,6 +538,19 @@ async function runSessionUsageDemoTokenAcceptedTest() {
     academy: 'test-secret',
   });
   process.env.EMBED_TOKEN_ENFORCE = 'on';
+  // This fixture predates the demo-grant-cookie requirement the demo-token
+  // route grew on 2026-08-29 (cc3fdf16): with TUTOR_DEMO_GATE defaulting
+  // 'on' and a marketing secret configured, the route now demands a signed
+  // grant cookie before it will mint, which this fixture's plain (cookie-less)
+  // Request can never satisfy — that cookie jar only exists on a real
+  // NextRequest. That gate mechanism (mode/limits/grant verify, including
+  // the enforce-order contract for evelyn-marketing tokens with/without
+  // demo_gate) is covered on its own in test-demo-gate.ts; what THIS test
+  // exercises is downstream of minting — that a demo-token-minted token
+  // clears session-usage's embed-token gate — so turn the unrelated grant
+  // gate off here rather than fabricate a signed grant cookie and a real
+  // NextRequest just to satisfy it.
+  process.env.TUTOR_DEMO_GATE = 'off';
 
   const tokenReq = new Request('https://engine.test/api/tutor-portal/demo-token', {
     method: 'POST',
@@ -597,6 +611,13 @@ async function runDemoTokenRouteTests() {
       'evelyn-marketing': 'mkt-secret',
       academy: 'test-secret',
     });
+    // Same reasoning as runSessionUsageDemoTokenAcceptedTest above: with a
+    // marketing secret configured, TUTOR_DEMO_GATE defaults 'on' and the
+    // route now requires a signed grant cookie this plain (cookie-less)
+    // Request can't carry. That gate is covered on its own in
+    // test-demo-gate.ts; this block is only exercising the forced-claim
+    // minting logic.
+    process.env.TUTOR_DEMO_GATE = 'off';
 
     const res = await demoTokenPOST(
       postReq({
@@ -658,6 +679,7 @@ async function runDemoTokenRouteTests() {
   {
     clearEnv();
     process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ 'evelyn-marketing': 'mkt-secret' });
+    process.env.TUTOR_DEMO_GATE = 'off'; // see reasoning above — not under test here
 
     const resNoConfig = await demoTokenPOST(postReq({}) as never);
     assert(resNoConfig.status === 400, 'demo-token: missing config object → 400');
@@ -754,6 +776,7 @@ async function runParseEmbedConfigTests() {
   // success path and the embed page's parse path actually agree.
   {
     process.env.PORTAL_PARTNER_SECRETS = JSON.stringify({ 'evelyn-marketing': 'mkt-secret' });
+    process.env.TUTOR_DEMO_GATE = 'off'; // see reasoning in runDemoTokenRouteTests above
     const { POST: demoTokenPOST } = await import('../src/app/api/tutor-portal/demo-token/route');
     const req = new Request('https://engine.test/api/tutor-portal/demo-token', {
       method: 'POST',

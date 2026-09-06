@@ -61,7 +61,13 @@ check('names hedged/question-form answers', /hedged|question-form/i.test(block))
 check('hedged-correct is still correct', /hedged.*correct|uncertainty/i.test(block));
 check('praise branch', block.includes('ONLY if it is correct'));
 check('wrong branch', block.includes('do NOT state the correct value'));
-check('non-answer branch → respond normally, no verdict word', block.includes('NO verdict word') && /respond normally/i.test(block));
+// Pin updated 2026-09-06: c2db7f65 (2026-08-07 session-triage) reworded this
+// branch from "NO verdict word — just respond normally." to "NO verdict or
+// praise word anywhere in the turn — respond to what they actually said."
+// (tightened to also forbid praise, and to respond to the actual utterance
+// rather than a generic "normally") without updating this pin. Intent is
+// unchanged and, if anything, stricter, so re-pin to the current text.
+check('non-answer branch → respond normally, no verdict word', block.includes('NO verdict or praise word') && /respond to what they actually said/i.test(block));
 check('closes tag', block.trimEnd().endsWith('</verdict_guard>'));
 
 // ─── Continuation guard (live round 6, 2026-07-23, session-1784782504324):
