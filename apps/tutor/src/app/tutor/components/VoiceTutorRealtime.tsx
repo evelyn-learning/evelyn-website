@@ -30,6 +30,7 @@ import { shouldClientRequestRepair, countBoardRenderTools } from '@/lib/tutor/vo
 import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
 import { isRecapOfferVoiced, RECAP_OFFER_MAX_ATTEMPTS } from '@/lib/tutor/voice/recap-offer-voiced';
 import { isHomeworkAnnouncement } from '@/lib/tutor/voice/homework-announce';
+import { buildHomeworkPointerSentence } from '@/lib/tutor/voice/homework-pointer';
 /** End button: how long the final profile commit may hold the exit. */
 const FINAL_COMMIT_MAX_WAIT_MS = 3000;
 /** Chromium rejects keepalive bodies over 64 KiB; stay under with margin. */
@@ -394,6 +395,13 @@ const TUTOR_AUTHORED_ENDING_GUARD = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_ENDIN
  *  incorrect streak ≥ 2) rather than waiting on a brain tool call at the
  *  goodbye. Default ON per the standing flag rule. */
 const TUTOR_HOMEWORK_DRAFTS = process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_DRAFTS !== 'off';
+/** Bounded fetch signal. `AbortSignal.timeout` is not universal (older
+ *  WebViews / embedded browsers); where it is missing the call is simply
+ *  unbounded rather than throwing a TypeError at the call site. */
+const signalFor = (ms: number): AbortSignal | undefined =>
+  typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+    ? AbortSignal.timeout(ms)
+    : undefined;
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -2059,7 +2067,15 @@ export function VoiceTutorRealtime({
     // with an empty accumulator still posts when prior flushes committed data
     // this session (transcript → summary on the upserted SessionMemory) OR
     // when it needs to capture content fillings.
-    if (accumEmpty && !(opts?.final && profileFlushCountRef.current > 0) && !finalCapture) return;
+    // Task 13 fix round 1 (Important 1): an EXIT commit that has a drafted
+    // but unfinalized homework must post even with an empty accumulator —
+    // otherwise a tab close after everything was already flushed silently
+    // drops the draft, which is exactly the exit this round exists for.
+    const pendingFinalize = TUTOR_HOMEWORK_DRAFTS
+      && !homeworkFinalizedRef.current
+      && draftedLosRef.current.size > 0
+      && (opts?.final === true || opts?.keepalive === true);
+    if (accumEmpty && !(opts?.final && profileFlushCountRef.current > 0) && !finalCapture && !pendingFinalize) return;
     const isFinal = opts?.final === true;
     const transcript = isFinal
       ? transcriptRef.current
@@ -6930,32 +6946,57 @@ export function VoiceTutorRealtime({
         // (draft + finalize) ⇒ ~8s worst case; each leg fails closed to
         // "nothing was assigned".
         let note = 'close_session_notes: nothing was assigned — do not mention homework or practice.';
-        if (studentId && !closeNotesFiredRef.current) {
+        // Fix round 1 (Important 4): flag-off, an empty loIds would POST
+        // `loIds: []` to the legacy route and log a false
+        // practice_assign_failed status=400. With drafts ON there is always
+        // something to ask the finalize about (an evidence draft); with them
+        // OFF there is nothing to do without brain LOs.
+        if (studentId && !closeNotesFiredRef.current && (loIds.length > 0 || TUTOR_HOMEWORK_DRAFTS)) {
           try {
             const headers = { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) };
             // No brain LOs ⇒ skip the draft POST but STILL finalize: an
             // evidence draft (recurrence / still-struggling recap /
             // incorrect streak) may already be waiting to be promoted.
+            // Fix round 1 (Important 3 + minor 5): the draft's own answer is
+            // reported with the same three events draftHomework uses, and it
+            // owns its try/catch — a draft timeout must never cost us the
+            // finalize leg, which is what actually creates the homework.
             if (loIds.length && TUTOR_HOMEWORK_DRAFTS) {
-              await fetch('/api/tutor/practice-assign/draft', {
-                method: 'POST',
-                headers,
-                signal: AbortSignal.timeout(4000),
-                body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds, trigger: 'close_tool', locator: practiceLocator }),
-              });
+              try {
+                const dres = await fetch('/api/tutor/practice-assign/draft', {
+                  method: 'POST',
+                  headers,
+                  signal: signalFor(4000),
+                  body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds, trigger: 'close_tool', locator: practiceLocator }),
+                });
+                if (dres.status === 200) {
+                  const ddata = await dres.json() as { status: string; los: Array<{ loId: string; count: number }> };
+                  onDebugEvent?.('practice_draft_upserted', `lo=[${loIds.join(',')}] trigger=close_tool status=${ddata.status} counts=${ddata.los.map((l) => `${l.loId}:${l.count}`).join(',')}`);
+                  // Record them as drafted so a later exit commit knows a
+                  // draft is pending (Important 1's `pendingFinalize`) even
+                  // when the finalize leg below times out.
+                  for (const id of loIds) draftedLosRef.current.add(id);
+                } else if (dres.status === 204) {
+                  onDebugEvent?.('practice_draft_empty', `lo=[${loIds.join(',')}] trigger=close_tool (no bank items)`);
+                } else {
+                  onDebugEvent?.('practice_draft_failed', `lo=[${loIds.join(',')}] trigger=close_tool status=${dres.status}`);
+                }
+              } catch (e) {
+                onDebugEvent?.('practice_draft_failed', `lo=[${loIds.join(',')}] trigger=close_tool ${String((e as Error).message).slice(0, 60)}`);
+              }
             }
             const reason = (c.reason ?? '').trim() || 'Your tutor picked these to follow up on today\'s lesson.';
             const res = TUTOR_HOMEWORK_DRAFTS
               ? await fetch('/api/tutor/practice-assign/finalize', {
                   method: 'POST',
                   headers,
-                  signal: AbortSignal.timeout(4000),
+                  signal: signalFor(4000),
                   body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, source: 'close_tool', reason, nextTimeIntent: c.nextTimeIntent, locator: practiceLocator }),
                 })
               : await fetch('/api/tutor/practice-assign', {
                   method: 'POST',
                   headers,
-                  signal: AbortSignal.timeout(4000),
+                  signal: signalFor(4000),
                   body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds, reason, locator: practiceLocator, nextTimeIntent: c.nextTimeIntent }),
                 });
             // Fix round 1 (minor 2) — the once-latch closes only on a
@@ -6978,15 +7019,42 @@ export function VoiceTutorRealtime({
                 onHomeworkAssignedRef.current?.({ los: data.assigned, locator: practiceLocator });
                 note = `close_session_notes: assigned practice on ${data.assigned.map((a) => a.title).join(' and ')} — it is waiting in "${practiceLocator}". You may tell the student that, once.`;
                 onDebugEvent?.('practice_assigned', detail);
+                // Fix round 1 (Important 2): the CLIENT speaks the pointer.
+                // On the production brain path the tool_result is resolved
+                // server-side, so the brain never learns what was assigned
+                // or where — it would be guessing at the count and the
+                // location. The runtime knows both, exactly, and only now.
+                // One deterministic sentence, through the same queue the
+                // brain's sentences use, mirrored into the transcript.
+                const pointer = buildHomeworkPointerSentence({ los: data.assigned, locator: practiceLocator });
+                if (pointer) {
+                  speakTextRef.current?.(pointer);
+                  transcriptRef.current = [
+                    ...transcriptRef.current,
+                    {
+                      id: `tutor-${Date.now()}-homework-pointer`,
+                      timestamp: new Date(),
+                      role: 'tutor',
+                      text: pointer,
+                    } as TranscriptEntry,
+                  ];
+                  onTranscriptUpdate([...transcriptRef.current]);
+                  onTrackInteraction?.('message', pointer, undefined, 'tutor');
+                  onDebugEvent?.('homework_pointer_spoken', pointer.slice(0, 120));
+                }
               } else {
                 onDebugEvent?.('practice_assigned', `silent=${practiceLocator ? 'empty' : 'no-locator'} ${detail}`);
               }
             } else if (res.status !== 204) {
               onDebugEvent?.('practice_assign_failed', `status=${res.status}`);
-            } else if (!loIds.length) {
-              // 204 with no brain LOs: no draft existed to promote either —
-              // the outcome the old pre-flight gate used to report.
-              const skipReason = c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
+            } else {
+              // 204 — nothing to promote. With no brain LOs that is the
+              // outcome the old pre-flight gate used to report; WITH brain
+              // LOs it means the draft leg produced no bank items, which is
+              // a different (and more interesting) failure.
+              const skipReason = loIds.length
+                ? 'finalize-204-with-los'
+                : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
               onDebugEvent?.('practice_assign_skipped', `${skipReason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}] finalize=204`);
             }
           } catch (e) {

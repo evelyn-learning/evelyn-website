@@ -236,6 +236,11 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // practice_draft_empty / practice_draft_failed — homework drafted DURING
   // the session on recurrence / recap still-struggling / incorrect streak.
   'practice_draft',
+  // Task 13 fix round 1 (2026-09-07): homework_pointer_spoken — the ONE
+  // runtime-spoken sentence that tells the student what was assigned and
+  // where. The brain never says it (it cannot see the close tool's result on
+  // the brain path), so this event is the only record that it was said.
+  'homework_pointer',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
