@@ -45,7 +45,7 @@ import { getLessonPlan } from '../lesson-plan/store';
 import { getOrCreateStudentProfile, isGapStale } from '../student-profile/store';
 import { TUNING, trendOf } from './estimator';
 import { getLearnerHints, type LearnerHints } from './hints';
-import { findOpenAssignments } from '../practice-assign/store';
+import { findOpenAssignments, sweepStaleDrafts } from '../practice-assign/store';
 import { computeHomeworkStatus, describeHomework, type HomeworkStatus } from '../practice-assign/status';
 import { pickRecapCandidate, type RecapCandidate } from './recap-candidate';
 
@@ -500,6 +500,11 @@ export async function getLearnerContext(
     const homework = await optionalRead<HomeworkStatus[]>(
       'open-homework read',
       async () => {
+        // Task 11 — lazy 2h sweep: promote any of this student's drafts the
+        // session never finalized (tab killed, network gone) before this
+        // continuity read. Best-effort: a sweep failure must not cost the
+        // caller the homework line (it's already inside `optionalRead`).
+        await sweepStaleDrafts(profileId, 2 * 60 * 60 * 1000).catch((e) => console.error('[practice-assign] sweep failed', e));
         const open = await findOpenAssignments(profileId, { withinDays: HOMEWORK_WINDOW_DAYS, requireLocator: true });
         const hwItemIds = open.flatMap((a) => a.los.flatMap((l) => l.items.map((i) => i.id)));
         const hwRows =

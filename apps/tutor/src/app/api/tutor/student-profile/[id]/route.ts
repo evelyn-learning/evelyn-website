@@ -31,7 +31,7 @@ import { appendEvidence, type EvidenceInput } from '@/lib/tutor/learner-model/st
 import { checkEmbedAuthAsync, partnerIdForInternalRoute, embedTokenRejectionReason } from '@/lib/tutor/portal/embed-token';
 import { getLearnerContext } from '@/lib/tutor/learner-model/context-block';
 import { assignPractice } from '@/lib/tutor/practice-assign/assign';
-import { findAssignmentBySession, acknowledgeAssignments } from '@/lib/tutor/practice-assign/store';
+import { findAssignmentBySession, acknowledgeAssignments, finalizeDraft, summarizeAssignmentLos } from '@/lib/tutor/practice-assign/store';
 
 export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -179,6 +179,12 @@ interface CommitBody {
   /** Spec §C.4 — assignment ids whose homework line rendered at boot; the
    *  final commit acknowledges them (Task 10). */
   homeworkAcknowledged?: string[];
+  /** Task 11 — present on the FINAL commit of a session that ends via one
+   *  of these three exits (never `close_tool`, which finalizes through its
+   *  own `practice-assign/finalize` route call, not the profile commit).
+   *  When present, this commit finalizes the session's draft homework
+   *  (if any) BEFORE the Spec §C.3 fallback runs. */
+  finalizeHomework?: { source: 'end' | 'pagehide' | 'time_cap' };
 }
 
 /** Task 11 — client-supplied cap so a runaway/misbehaving client can't
@@ -359,11 +365,37 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     };
   }
 
-  // Spec §C.3 fallback: FINAL commit, nothing assigned this session, and the
-  // session produced a recurrence or a well-signalled gap → auto-assign the
-  // top LO. Best-effort: a failure here never fails the commit.
+  // Task 11 — final-commit draft finalize. Runs BEFORE the Spec §C.3
+  // fallback below: an exit via `end` / `pagehide` / `time_cap` (never
+  // `close_tool`, which finalizes through its own
+  // `practice-assign/finalize` route call) promotes THIS session's drafted
+  // homework (if any) to 'assigned'. Best-effort: a failure here never
+  // fails the commit, and falls through to the §C.3 fallback below exactly
+  // as if `finalizeHomework` had been absent.
   let autoAssigned: Array<{ loId: string; title: string; count: number }> | undefined;
-  if (body.generateNotes !== false && Array.isArray(body.gaps) && body.gaps.length) {
+  let finalizedLocator: string | undefined;
+  if (body.finalizeHomework && ['end', 'pagehide', 'time_cap'].includes(body.finalizeHomework.source)) {
+    try {
+      const rec = await finalizeDraft(body.sessionId, {
+        nextTimeIntent: body.nextSessionIntent,
+        locator: body.practiceLocator,
+        source: body.finalizeHomework.source,
+      });
+      if (rec) {
+        autoAssigned = summarizeAssignmentLos(rec.los);
+        finalizedLocator = rec.locator;
+        console.log(`[student-profile] finalized draft homework session=${body.sessionId} source=${body.finalizeHomework.source}`);
+      }
+    } catch (e) {
+      console.error('[student-profile] finalize draft failed', e);
+    }
+  }
+
+  // Spec §C.3 fallback: FINAL commit, nothing assigned this session (either
+  // by a brain tool call OR the finalize-draft step above), and the session
+  // produced a recurrence or a well-signalled gap → auto-assign the top LO.
+  // Best-effort: a failure here never fails the commit.
+  if (!autoAssigned && body.generateNotes !== false && Array.isArray(body.gaps) && body.gaps.length) {
     const candidates = body.gaps
       .filter((g) => (g.kind ?? 'lo') === 'lo' && g.loId && ((g.recurrences ?? 0) >= 1 || (g.signals?.length ?? 0) >= 2))
       .sort((a, b) => ((b.recurrences ?? 0) - (a.recurrences ?? 0)) || ((b.signals?.length ?? 0) - (a.signals?.length ?? 0)));
@@ -460,6 +492,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     profile: saved,
     summary,
     summaryError,
-    ...(autoAssigned ? { assigned: autoAssigned } : {}),
+    ...(autoAssigned ? { assigned: autoAssigned, assignedPractice: autoAssigned } : {}),
+    ...(finalizedLocator ? { practiceLocator: finalizedLocator } : {}),
   });
 }

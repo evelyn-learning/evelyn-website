@@ -47,6 +47,7 @@
     "test:mock-report": "npx tsx src/lib/tutor/mock-exam/report.test.ts",
     "test:portal-mock": "npx tsx scripts/test-portal-mock-endpoints.ts",
     "test:practice-assign": "npx tsx scripts/test-practice-assign.ts",
+    "test:practice-assign-routes": "npx tsx scripts/test-practice-assign-routes.ts",
     "test:homework-status": "npx tsx scripts/test-homework-status.ts",
     "test:recap-candidate": "npx tsx scripts/test-recap-candidate.ts",
     "test:embed-token": "npx tsx scripts/test-embed-token.ts",

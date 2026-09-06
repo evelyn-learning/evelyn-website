@@ -5,7 +5,7 @@ import { AssignedPracticeRequestSchema, AssignedPracticeResponseSchema } from '@
 import connectDB from '@core/db';
 import { EvidenceEventModel, PracticeAssignmentModel } from '@/models';
 import { resolveProfileIdOrRaw } from '@/lib/tutor/student-profile/store';
-import { findOpenAssignments, courseIdFilter, draftStatusClause } from '@/lib/tutor/practice-assign/store';
+import { findOpenAssignments, courseIdFilter, draftStatusClause, sweepStaleDrafts } from '@/lib/tutor/practice-assign/store';
 import { computeHomeworkStatus } from '@/lib/tutor/practice-assign/status';
 
 export const runtime = 'nodejs';
@@ -15,6 +15,10 @@ export const POST = withPortalAuth(async (_req, auth) => {
   if (!parsed.success) return NextResponse.json({ error: 'invalid_request', issues: parsed.error.issues }, { status: 400 });
   const { studentId, courseId, includeAcknowledged } = parsed.data;
   const profileId = await resolveProfileIdOrRaw({ partnerId: auth.partnerId, externalStudentId: studentId });
+  // Task 11 — lazy 2h sweep: promote any of this student's drafts the
+  // session never finalized (tab killed, network gone) before reading.
+  // Best-effort: a sweep failure must never fail the homework read.
+  await sweepStaleDrafts(profileId, 2 * 60 * 60 * 1000).catch((e) => console.error('[practice-assign] sweep failed', e));
   await connectDB();
   const records = includeAcknowledged
     ? await PracticeAssignmentModel.find({ studentId: profileId, locator: { $exists: true, $ne: '' }, ...draftStatusClause(), ...(courseIdFilter(courseId) ?? {}) }).sort({ assignedAt: -1 }).limit(10).lean()
