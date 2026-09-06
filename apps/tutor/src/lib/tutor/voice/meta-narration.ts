@@ -42,6 +42,16 @@ const SELF_AUDIT_RE =
 // forbids it; this is the spoken-text backstop. Anchored to a re-*/verify
 // verb AND a private-act marker (myself / silently / before responding /
 // first / that prior …) so "Let me verify this with you" survives.
+// 2026-09-05 (live probes + portal-51b667f1): the brain classifying the
+// student's turn aloud ("That's a request, not an attempt at this one yet",
+// "That's session-end, no math needed here") and third-person planning about
+// the student ("Let me support them concretely"). Both are the verdict
+// layer's reasoning leaking into speech.
+const TURN_CLASSIFYING_RE =
+  /^\s*that'?s (?:a |an )?(?:request|question|greeting|statement|session-?end|non-?answer|meta)\b[^.!?]{0,40}\bnot (?:an? )?(?:attempt|answer)\b|^\s*that'?s session-?end\b|\bno (?:math|grading|verdict) needed\b/i;
+const THIRD_PERSON_PLAN_RE =
+  /^\s*let me (?:support|help|guide|redirect|steer|reassure|encourage) them\b/i;
+
 const RE_DERIVE_RE =
   /^\s*(?:ok(?:ay)?,?\s+)?let me (?:re-?derive|re-?verify|re-?check|re-?do|re-?examine|double-?check|verify|check)\b[^.!?]{0,60}?\b(?:myself|silently|quietly|before (?:responding|answering|replying)|first,?\s+then|that prior|my prior|my earlier|my previous|my last)\b/i;
 
@@ -58,7 +68,7 @@ export function isMetaNarration(
   opts?: { structural?: boolean },
 ): boolean {
   const s = sentence ?? '';
-  if (PHRASE_START_RE.test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s)) return true;
+  if (PHRASE_START_RE.test(s) || PHRASE_ANYWHERE_RE.test(s) || SELF_REFERENCE_RE.test(s) || SELF_AUDIT_RE.test(s) || RE_DERIVE_RE.test(s) || TURN_CLASSIFYING_RE.test(s) || THIRD_PERSON_PLAN_RE.test(s)) return true;
   if (opts?.structural === false) return false;
   return MARKUP_RE.test(s);
 }

@@ -26,6 +26,13 @@ check('"Okay, let me double-check my earlier claim first, then answer."', isMeta
 check('teaching survives: "Let me verify this with you step by step."', !isMetaNarration('Let me verify this with you step by step.'));
 check('teaching survives: "Let me check your work on the second line."', !isMetaNarration('Let me check your work on the second line.'));
 check('teaching survives: "Let me re-derive the formula on the board so we both see it."', !isMetaNarration('Let me re-derive the formula on the board so we both see it.'));
+// 2026-09-05 live: turn-classifying and third-person planning spoken aloud
+check('"That\'s a request, not an attempt at this one yet."', isMetaNarration("That's a request, not an attempt at this one yet — happy to give a quick example first."));
+check('"That\'s session-end, no math needed here."', isMetaNarration("That's session-end, no math needed here."));
+check('"Let me support them concretely."', isMetaNarration('Let me support them concretely.'));
+check('teaching survives: "That\'s a great question."', !isMetaNarration("That's a great question — let's look at it."));
+check('teaching survives: "Let me support that with an example."', !isMetaNarration('Let me support that with an example.'));
+check('teaching survives: "No rush at all."', !isMetaNarration('No rush at all — take your time.'));
 check('"that\'s a greenlight to advance"', isMetaNarration("That's a greenlight to advance."));
 check('tool_result leak', isMetaNarration('The tool_result came back empty.'));
 
