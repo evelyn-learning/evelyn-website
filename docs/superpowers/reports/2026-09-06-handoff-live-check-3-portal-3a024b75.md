@@ -97,3 +97,49 @@ Today all three creation paths are end-anchored (brain `close_session_notes` at 
 4. **Announce only what exists** — spoken homework references only after finalize returned an assignment this session; otherwise the card just appears ("from your last session") and the next opener acknowledges it.
 5. **Resume rehydrates** — the client reloads ledger state + drafts from the server on resume.
 Contract impact: `assigned-practice` read gains a `status` filter (`draft` excluded by default); the academy card reads `assigned` only. Supersedes the "ledger/profile-backed fallback" item in the ranked list.
+
+---
+
+## Design note (Praveen, 2026-09-07): overhaul the academy "Practice & Quizzes" tab
+
+Today the tab shows Unit quiz cards first and bare objective rows (title + Practice button) below; Plan 2 wedged the homework card above the quizzes, which is confusing. Target layout — three sections in the order the student should act (homework → practice → prove it), unit selector kept, "All units" option added:
+
+```
+Algebra 1  ────────────────────────────────────────────  0% complete
+Overview | Lessons | [Practice] | Notes & History | Gaps | Mock Exams
+
+UNIT  (1) 2 3 4 5 6 7 8 9 10                    [ All units ▾ ]
+
+┌─ FROM YOUR TUTOR ─────────────────────────────────────────────────┐
+│ 🎯 Classifying solutions (no / one / infinitely many)             │
+│    "This tripped you up twice today — a few reps to make it stick"│
+│    Assigned Sep 6 · Unit 2 · 4 questions        [ Start ]  0/4    │
+│ ✓ Distributive property & like terms                              │
+│    Assigned Sep 5 · Unit 1 · 4 questions       Done · 3/4  [Redo] │
+└───────────────────────────────────────────────────────────────────┘
+   empty state: "Nothing assigned yet — your tutor adds practice here
+   when something needs another look."
+
+┌─ PRACTICE BY OBJECTIVE ────────────────────────────── Unit 1 ─────┐
+│ ▸ Real Numbers & Operations                    ●●○  2/3  [Practice]│
+│ ▸ Order of Operations & Evaluating Expressions ○○○  —    [Practice]│
+│ ▾ Simplifying Expressions: Distributive …      ●○○  1/3  [Practice]│
+│     last attempt Sep 5 · 60% · review due ⚠                       │
+│     ┌ drill (same PracticeDrill) ─────────────────────────┐        │
+│     └────────────────────────────────────────────────────┘        │
+│ ▸ Translating Words into Algebraic Expressions ○○○  —    [Practice]│
+└───────────────────────────────────────────────────────────────────┘
+
+┌─ QUIZZES & UNIT TEST ──────────────────────────────── Unit 1 ─────┐
+│ Quiz A   first half · ≈4 q · ~6 min     not attempted  ☑ Timed [Take]│
+│ Quiz B   second half · ≈4 q · ~6 min    not attempted  ☑ Timed [Take]│
+│ Unit Test  all objectives · ≈8 q · ~12m  🔒 unlocks after Quiz A+B  │
+└───────────────────────────────────────────────────────────────────┘
+```
+
+Rules:
+- **From your tutor** leads; each card shows assigner, date, unit, the tutor's reason verbatim, count, and the same status pill as objective rows. "All units" (default) shows homework from any unit; the unit selector filters everything. The locator string the engine mints ("Unit 2 · Practice") must point at THIS section, so the tutor's spoken pointer and the tab agree. Only `assigned` records (never drafts — see the homework design note above).
+- **Practice by objective** rows carry state: mastery dots (from `/me/mastery`), last attempt + score (practice history), and a "review due ⚠" flag from learner-state `reviewDueAt`. Expanding a row opens the existing `PracticeDrill`; a homework card's Start opens the same drill with the assigned preset (already built in Plan 2 Task 4).
+- **Quizzes & Unit Test** move to the bottom; the unit test unlocks after both quizzes (gate on quiz history).
+- Open decisions: (a) review-due objectives stay in the objective section with the ⚠ flag (top section = only what the tutor explicitly assigned); (b) consider folding the Gaps tab into this one later — a gap and a practice recommendation are nearly the same object.
+- Files: `apps/web/components/PracticeView.tsx` (+ `.module.css`), `apps/web/app/app/courses/[courseKey]/page.tsx` `PracticeTab` (already fetches quiz history, practice history, mastery, assigned; add learner-state review-due), sessions chip unchanged. Academy-only; no contract change.
