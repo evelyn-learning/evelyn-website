@@ -1,7 +1,8 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
-import { courseIdFilter, openAssignmentsQuery } from '../src/lib/tutor/practice-assign/store';
+import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause } from '../src/lib/tutor/practice-assign/store';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
+import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) { if (cond) { passed++; console.log(`  ✓ ${name}`); } else { failed++; console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); } }
 
@@ -60,6 +61,56 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
   check('ignoreAcknowledged leaves the locator clause untouched', JSON.stringify(withIgnore.locator) === JSON.stringify(withDefault.locator));
   check('ignoreAcknowledged leaves the courseId clause untouched', JSON.stringify(withIgnore.$or) === JSON.stringify(withDefault.$or));
   check('ignoreAcknowledged omitted (falsy) behaves like false', 'acknowledgedAt' in openAssignmentsQuery('s1', {}));
+}
+
+// Task 10 — homework draft lifecycle. Open reads exclude drafts;
+// mergeDraftLos/finalizePatch are pure and unit-testable without Mongo.
+{
+  check('draftStatusClause — excludes drafts', JSON.stringify(draftStatusClause()) === JSON.stringify({ status: { $ne: 'draft' } }));
+  check('openAssignmentsQuery — status clause excludes drafts', JSON.stringify(openAssignmentsQuery('s1').status) === JSON.stringify({ $ne: 'draft' }));
+
+  // matches() reuses the same shape the assigned-practice route's
+  // `includeAcknowledged` branch and findOpenAssignments both send to
+  // Mongo — a status-less doc is a LEGACY assigned record and must still
+  // match; a status:'draft' doc must not.
+  function matchesStatusClause(doc: { status?: string }, clause: { status: { $ne: string } }): boolean {
+    return doc.status !== clause.status.$ne;
+  }
+  const clause = openAssignmentsQuery('s1');
+  check('a status:"draft" doc does NOT match openAssignmentsQuery', !matchesStatusClause({ status: 'draft' }, clause as { status: { $ne: string } }));
+  check('a status-less legacy doc DOES match openAssignmentsQuery', matchesStatusClause({}, clause as { status: { $ne: string } }));
+
+  const lo = (id: string): IPracticeAssignmentLo => ({ loId: id, title: id, reason: 'r', items: [] });
+  check(
+    'mergeDraftLos — keeps earlier LOs, caps at 2, dedups by loId (existing a, incoming a+b → a,b)',
+    JSON.stringify(mergeDraftLos([lo('a')], [lo('a'), lo('b')]).map((l) => l.loId)) === JSON.stringify(['a', 'b']),
+  );
+  check(
+    'mergeDraftLos — already at cap: new LOs dropped (existing a,b, incoming c → a,b)',
+    JSON.stringify(mergeDraftLos([lo('a'), lo('b')], [lo('c')]).map((l) => l.loId)) === JSON.stringify(['a', 'b']),
+  );
+
+  // finalizePatch promotes + stamps + applies the brain's reason to every LO
+  const rec = {
+    _id: 'x',
+    studentId: 's1',
+    sessionId: 'sess',
+    los: [lo('a')],
+    status: 'draft',
+    draftedAt: new Date(0),
+    auto: true,
+    assignedAt: new Date(0),
+    createdAt: new Date(0),
+  } as unknown as IPracticeAssignment;
+  const now = new Date('2026-09-07T10:00:00Z');
+  const patch = finalizePatch(rec, { reason: 'This tripped you up twice today.', nextTimeIntent: 'start with a warm-up', locator: 'Unit 2 · Practice', source: 'close_tool', now });
+  check('finalizePatch — status promoted to assigned', patch.status === 'assigned');
+  check('finalizePatch — finalizeSource stamped', patch.finalizeSource === 'close_tool');
+  check('finalizePatch — assignedAt stamped to now', patch.assignedAt?.toISOString() === now.toISOString());
+  check('finalizePatch — finalizedAt stamped to now', patch.finalizedAt?.toISOString() === now.toISOString());
+  check('finalizePatch — reason applied to every LO', patch.los?.[0].reason === 'This tripped you up twice today.');
+  check('finalizePatch — locator carried', patch.locator === 'Unit 2 · Practice');
+  check('finalizePatch — no reason ⇒ the draft\'s default reason survives', finalizePatch(rec, { source: 'end', now }).los?.[0].reason === 'r');
 }
 
 (async () => {

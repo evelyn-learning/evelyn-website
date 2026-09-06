@@ -26,6 +26,13 @@ export interface IPracticeAssignment {
   assignedAt: Date;
   acknowledgedAt?: Date;
   createdAt: Date;
+  /** 'draft' while the session runs (drafted on evidence), 'assigned' after finalize. Absent ⇒ legacy assigned record. */
+  status?: 'draft' | 'assigned';
+  draftedAt?: Date;
+  finalizedAt?: Date;
+  finalizeSource?: 'close_tool' | 'end' | 'pagehide' | 'time_cap' | 'sweep';
+  /** Evidence that drafted each LO (e.g. "recurrence:alg1.x", "incorrect_streak:alg1.y"). */
+  triggers?: string[];
 }
 
 const PracticeAssignmentSchema = new Schema<IPracticeAssignment>(
@@ -44,10 +51,16 @@ const PracticeAssignmentSchema = new Schema<IPracticeAssignment>(
     assignedAt: { type: Date, required: true },
     acknowledgedAt: Date,
     createdAt: { type: Date, required: true, default: () => new Date() },
+    status: { type: String, enum: ['draft', 'assigned'] },
+    draftedAt: Date,
+    finalizedAt: Date,
+    finalizeSource: String,
+    triggers: { type: [String], default: undefined },
   },
   { _id: false },
 );
 PracticeAssignmentSchema.index({ studentId: 1, assignedAt: -1 });
+PracticeAssignmentSchema.index({ status: 1, draftedAt: 1 });
 
 export const PracticeAssignmentModel =
   (mongoose.models.PracticeAssignment as mongoose.Model<IPracticeAssignment>) ||

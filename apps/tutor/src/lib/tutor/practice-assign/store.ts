@@ -1,8 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import connectDB from '@core/db';
-import { PracticeAssignmentModel, type IPracticeAssignment } from '@/models';
+import { PracticeAssignmentModel, type IPracticeAssignment, type IPracticeAssignmentLo } from '@/models';
 
 const MS_PER_DAY = 86_400_000;
+
+export type FinalizeSource = 'close_tool' | 'end' | 'pagehide' | 'time_cap' | 'sweep';
+export const DRAFT_MAX_LOS = 2;
 
 export async function upsertAssignment(
   a: Omit<IPracticeAssignment, '_id' | 'createdAt'> & { _id?: string },
@@ -63,9 +66,19 @@ export function openAssignmentsQuery(
   const q: Record<string, unknown> = { studentId, assignedAt: { $gte: since } };
   if (!opts?.ignoreAcknowledged) q.acknowledgedAt = { $exists: false };
   if (opts?.requireLocator !== false) q.locator = { $exists: true, $ne: '' };
+  Object.assign(q, draftStatusClause());
   const courseQ = courseIdFilter(opts?.courseId);
   if (courseQ) Object.assign(q, courseQ);
   return q;
+}
+
+/** Query clause excluding drafted-but-not-finalized records from any
+ *  student-facing or continuity read. A draft is provisional — evidence
+ *  from LATER in the same session can still change which LOs it names —
+ *  so it must never appear on the Practice tab or in the opener's
+ *  continuity clause until `finalizeDraft` promotes it. */
+export function draftStatusClause(): { status: { $ne: 'draft' } } {
+  return { status: { $ne: 'draft' } };
 }
 
 /** Open = not acknowledged (unless `ignoreAcknowledged`), assigned within
@@ -89,4 +102,103 @@ export async function acknowledgeAssignments(ids: string[], at = new Date()): Pr
   await connectDB();
   const r = await PracticeAssignmentModel.updateMany({ _id: { $in: ids }, acknowledgedAt: { $exists: false } }, { $set: { acknowledgedAt: at } });
   return r.modifiedCount ?? 0;
+}
+
+/** Merge incoming drafted LOs into the existing draft's LOs: earlier LOs
+ *  are kept (the session's evidence arrived first), duplicates by `loId`
+ *  are dropped, and the result is capped at `max` (default `DRAFT_MAX_LOS`)
+ *  so a long session doesn't balloon the homework card. Pure. */
+export function mergeDraftLos(
+  existing: IPracticeAssignmentLo[],
+  incoming: IPracticeAssignmentLo[],
+  max = DRAFT_MAX_LOS,
+): IPracticeAssignmentLo[] {
+  const out = [...existing];
+  for (const lo of incoming) {
+    if (out.length >= max) break;
+    if (!out.some((e) => e.loId === lo.loId)) out.push(lo);
+  }
+  return out;
+}
+
+/** Patch that promotes a draft to 'assigned' at finalize time (any exit —
+ *  the close tool, page-hide, the time cap, or a lazy sweep). Pure: the
+ *  brain's own closing `reason` (when given) overwrites every LO's
+ *  drafted-at-the-time reason uniformly, since it reflects the FULL
+ *  session's evidence, not just the moment the LO was first drafted.
+ *  `auto` follows the source — only an explicit close-tool call is
+ *  non-auto, matching `assignPractice`'s existing convention. */
+export function finalizePatch(
+  rec: IPracticeAssignment,
+  p: { reason?: string; nextTimeIntent?: string; locator?: string; source: FinalizeSource; now?: Date },
+): Partial<IPracticeAssignment> {
+  const now = p.now ?? new Date();
+  const reason = p.reason?.trim().slice(0, 240);
+  return {
+    status: 'assigned',
+    assignedAt: now,
+    finalizedAt: now,
+    finalizeSource: p.source,
+    auto: p.source !== 'close_tool',
+    los: reason ? rec.los.map((l) => ({ ...l, reason })) : rec.los,
+    ...(p.nextTimeIntent?.trim() ? { nextTimeIntent: p.nextTimeIntent.trim().slice(0, 200) } : {}),
+    ...(p.locator?.trim() ? { locator: p.locator.trim().slice(0, 80) } : {}),
+  };
+}
+
+export async function findDraftBySession(sessionId: string): Promise<IPracticeAssignment | null> {
+  await connectDB();
+  return (await PracticeAssignmentModel.findOne({ sessionId, status: 'draft' }).lean()) as IPracticeAssignment | null;
+}
+
+export async function finalizeDraft(
+  sessionId: string,
+  p: { reason?: string; nextTimeIntent?: string; locator?: string; source: FinalizeSource },
+): Promise<IPracticeAssignment | null> {
+  await connectDB();
+  const rec = await findDraftBySession(sessionId);
+  if (!rec) return null;
+  await PracticeAssignmentModel.updateOne({ _id: rec._id, status: 'draft' }, { $set: finalizePatch(rec, p) });
+  return (await PracticeAssignmentModel.findById(rec._id).lean()) as IPracticeAssignment;
+}
+
+/** Drafts the session never finalized (tab killed, network gone): promote
+ *  after `olderThanMs` with the draft's default reason. Called lazily from
+ *  the student-facing reads, so "nightly" is whenever the student next looks. */
+export async function sweepStaleDrafts(studentId: string, olderThanMs: number): Promise<number> {
+  await connectDB();
+  const cutoff = new Date(Date.now() - olderThanMs);
+  const stale = (await PracticeAssignmentModel.find({ studentId, status: 'draft', draftedAt: { $lte: cutoff } }).lean()) as IPracticeAssignment[];
+  for (const rec of stale) {
+    await PracticeAssignmentModel.updateOne({ _id: rec._id, status: 'draft' }, { $set: finalizePatch(rec, { source: 'sweep' }) });
+  }
+  return stale.length;
+}
+
+/** Upsert a DRAFT keyed by `sessionId` (like `upsertAssignment`, but never
+ *  demotes). If a record for this session already exists and is not a
+ *  draft (i.e. it's 'assigned', or legacy status-less — which counts as
+ *  assigned), the finalize already happened (or this is a legacy path):
+ *  return the existing record untouched rather than overwriting it. When
+ *  merging into an existing draft, LOs are combined via `mergeDraftLos`
+ *  and triggers are unioned; `draftedAt`/`assignedAt` are pinned to the
+ *  FIRST draft write so the sweep's staleness clock starts there. */
+export async function upsertDraft(
+  a: Omit<IPracticeAssignment, '_id' | 'createdAt' | 'assignedAt'> & { _id?: string },
+): Promise<{ rec: IPracticeAssignment; alreadyAssigned: boolean }> {
+  await connectDB();
+  const existing = (await PracticeAssignmentModel.findOne({ sessionId: a.sessionId }).lean()) as IPracticeAssignment | null;
+  if (existing && existing.status !== 'draft') return { rec: existing, alreadyAssigned: true }; // never demote (legacy = assigned)
+  const _id = existing?._id ?? a._id ?? randomUUID();
+  const los = existing ? mergeDraftLos(existing.los, a.los) : a.los.slice(0, DRAFT_MAX_LOS);
+  const triggers = [...new Set([...(existing?.triggers ?? []), ...(a.triggers ?? [])])];
+  await PracticeAssignmentModel.updateOne(
+    { _id },
+    {
+      $set: { ...a, _id, los, triggers, status: 'draft', draftedAt: existing?.draftedAt ?? new Date(), assignedAt: existing?.assignedAt ?? new Date() },
+      $setOnInsert: { createdAt: new Date() },
+    },
+    { upsert: true },
+  );
+  return { rec: (await PracticeAssignmentModel.findById(_id).lean()) as IPracticeAssignment, alreadyAssigned: false };
 }

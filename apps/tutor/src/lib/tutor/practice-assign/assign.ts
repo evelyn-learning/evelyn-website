@@ -12,7 +12,7 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { resolveAssignmentItems } from './resolve';
-import { upsertAssignment } from './store';
+import { upsertAssignment, upsertDraft } from './store';
 
 const MAX_LOS = 2;
 
@@ -29,7 +29,9 @@ export async function assignPractice(input: {
   nextTimeIntent?: string;
   subject?: string;
   auto: boolean;
-}): Promise<{ assigned: Array<{ loId: string; title: string; count: number }>; assignmentId: string } | null> {
+  status?: 'draft' | 'assigned';
+  trigger?: string;
+}): Promise<{ assigned: Array<{ loId: string; title: string; count: number }>; assignmentId: string; status: 'draft' | 'assigned' } | null> {
   const plan = input.lessonPlanId ? await getLessonPlan(input.lessonPlanId) : null;
   const titleFor = (loId: string): string => {
     const lo = plan?.los.find((l) => l.id === loId);
@@ -52,6 +54,22 @@ export async function assignPractice(input: {
   const reason = input.reason.trim().slice(0, 240);
   const locator = input.locator?.trim().slice(0, 80) || undefined;
   const nextTimeIntent = input.nextTimeIntent?.trim().slice(0, 200) || undefined;
+  const assigned = los.map((l) => ({ loId: l.loId, title: l.title, count: l.items.length }));
+  if (input.status === 'draft') {
+    const { rec, alreadyAssigned } = await upsertDraft({
+      studentId: input.profileId,
+      partnerId: input.partnerId,
+      sessionId: input.sessionId,
+      lessonPlanId: input.lessonPlanId,
+      courseId: input.courseId,
+      los: los.map((l) => ({ ...l, reason })),
+      nextTimeIntent,
+      locator,
+      auto: true,
+      triggers: input.trigger ? [input.trigger] : [],
+    });
+    return { assignmentId: rec._id, assigned, status: alreadyAssigned ? 'assigned' : 'draft' };
+  }
   const rec = await upsertAssignment({
     studentId: input.profileId,
     partnerId: input.partnerId,
@@ -64,5 +82,5 @@ export async function assignPractice(input: {
     auto: input.auto,
     assignedAt: new Date(),
   });
-  return { assignmentId: rec._id, assigned: los.map((l) => ({ loId: l.loId, title: l.title, count: l.items.length })) };
+  return { assignmentId: rec._id, assigned, status: 'assigned' };
 }
