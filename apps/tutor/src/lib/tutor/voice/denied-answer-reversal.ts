@@ -90,6 +90,30 @@ const VERDICT_OPENER = String.raw`exactly|right|correct|precisely|yes|nice|perfe
 const OPENER_SHAPE_RE = (p: string) => new RegExp(
   `^\\s*(?:${VERDICT_OPENER})\\b[\\s.,!]*\\b${p}\\b\\s*(?:[—–-]|[.!?]|$)`, 'i');
 
+/** Contrast / conditional markers that turn a mention of X into commentary
+ *  ABOUT X rather than an assertion OF X. Checked in the clause before the
+ *  phrase and in the few words right after it. */
+const MENTION_BEFORE_RE = /\b(?:only\s+when|only\s+if|when|if|unless|whereas|while|versus|vs\.?|compared\s+(?:to|with)|as\s+opposed\s+to|rather\s+than|instead\s+of|unlike|would|could|might|not|never)\b/;
+const MENTION_AFTER_RE = /^\s*(?:only\s+(?:when|if)|when|if|unless|would|could|might|versus|vs\.?|whereas)\b/;
+
+/** `sentence` and `phrase` are already normalized the same way (Task 6 calls
+ *  this with its own normalized text). A conditional/contrastive mention of
+ *  the phrase — "infinite solutions only when the two sides were identical",
+ *  "unlike infinite solutions", "if both sides matched, the answer is
+ *  infinite solutions" — is commentary ABOUT the denied answer, not an
+ *  assertion OF it (2026-09-06, portal-3a024b75: this killed a correct
+ *  denial-reaffirming explanation as a reversal). */
+export function isExplanatoryMention(sentence: string, phrase: string): boolean {
+  const m = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).exec(sentence);
+  if (!m) return false;
+  const before = sentence.slice(0, m.index);
+  const clauseStart = Math.max(before.lastIndexOf('. '), before.lastIndexOf('; '), before.lastIndexOf(': '), before.lastIndexOf(' - '), before.lastIndexOf(' — '));
+  const clause = before.slice(clauseStart + 1).slice(-80);
+  if (MENTION_BEFORE_RE.test(clause)) return true;
+  const after = sentence.slice(m.index + m[0].length, m.index + m[0].length + 40);
+  return MENTION_AFTER_RE.test(after);
+}
+
 /** Stable key for "the problem this denial was about": the statement's
  *  first 80 normalised chars. Undefined when no problem is active, which
  *  keeps the pre-existing (unscoped) behaviour for problem-less turns. */
@@ -128,6 +152,9 @@ export function checkDeniedAnswerReversal(args: {
     // Negation anywhere adjacent to the phrase → a denial re-statement, not
     // a reversal ("it's not the central executive").
     if (new RegExp(`\\b(?:not|isn'?t|wasn'?t|instead of|rather than|unlike|never)\\s+(?:the\\s+|a\\s+|an\\s+)?${p}\\b`).test(sentence)) continue;
+    // A conditional/contrastive mention of the phrase is commentary ABOUT
+    // it, not an assertion OF it (2026-09-06, portal-3a024b75).
+    if (isExplanatoryMention(sentence, phrase)) continue;
     // Test the verdict-opener shape against lighter normalization that preserves
     // dashes and terminators — they signal the value terminates the opening clause.
     if (args.normalizeSpokenWords === true) {

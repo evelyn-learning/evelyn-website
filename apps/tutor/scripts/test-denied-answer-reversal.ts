@@ -219,6 +219,36 @@ check(
   { verdict: 'ok' },
 );
 
+// 2026-09-06 live check 3 (portal-3a024b75): "Right — no solution… infinite
+// solutions only when the two sides were identical from the start" MENTIONS
+// the denied phrase inside a conditional clause; it does not assert it.
+{
+  const denied = [{ phrase: 'infinite solutions', turn: 3 }];
+  check(
+    'conditional mention after the phrase is not a reversal',
+    checkDeniedAnswerReversal({
+      sentence: 'Right — no solution here. Infinite solutions only when the two sides were identical from the start, like our phone-bill trap.',
+      denied, currentTurn: 5,
+    }).verdict,
+    'ok',
+  );
+  check(
+    'contrast before the phrase is not a reversal',
+    checkDeniedAnswerReversal({ sentence: "Unlike infinite solutions, this one leaves a false statement.", denied, currentTurn: 5 }).verdict,
+    'ok',
+  );
+  check(
+    'a real reversal still fires',
+    checkDeniedAnswerReversal({ sentence: "Exactly — it's infinite solutions after all.", denied, currentTurn: 5 }).verdict,
+    'reversal',
+  );
+  check(
+    'hypothetical clause is not a reversal',
+    checkDeniedAnswerReversal({ sentence: 'If both sides matched, the answer is infinite solutions.', denied, currentTurn: 5 }).verdict,
+    'ok',
+  );
+}
+
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);
   process.exit(1);
