@@ -39,26 +39,51 @@ function numericTokens(text: string): NumTok[] {
 
 const POSED_RE = /(-?\s*\(?\s*-?\d+(?:\.\d+)?\s*\)?)\s*(?:\\times|×|·|\*|times|multiplied by|÷|\\div|divided by)\s*(\(?\s*-?\d+(?:\.\d+)?\s*\)?)/i;
 const QUESTION_RE = /\?\s*$|^\s*(?:what|how much|how many|so what|now what)\b/i;
+const DISTRIBUTE_RE = /\bdistribut(?:e|es|ed|ing)\s+(?:the\s+|that\s+|this\s+|a\s+)?(negative\s+|minus\s+|-\s*|−\s*)?(\d+(?:\.\d+)?)\b/i;
 
 function parseOperand(raw: string): { value: string; sign: '+' | '-' } {
   const t = raw.replace(/[\s()]/g, '');
   return { value: t.replace(/^-/, ''), sign: t.startsWith('-') ? '-' : '+' };
 }
 
+/** Coefficients that sit directly in front of a parenthesis in `text`, sign-aware. */
+function parenthesisCoefficients(text: string): Array<{ value: string; sign: '+' | '-' }> {
+  const s = (text ?? '').replace(/\\left/g, '').replace(/[−–]/g, '-').replace(/\\cdot|\\times|×|·/g, '*');
+  const out: Array<{ value: string; sign: '+' | '-' }> = [];
+  const re = /(-?)\s*(\d+(?:\.\d+)?)\s*\*?\s*\(/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(s))) {
+    const before = s.slice(0, m.index + m[1].length).replace(/\s+$/, '');
+    out.push({ value: m[2], sign: m[1] === '-' || /-$/.test(before) ? '-' : '+' });
+  }
+  return out;
+}
+
+function findUngroundedDistribution(s: string, grounding: string): UngroundedComputation | null {
+  const m = DISTRIBUTE_RE.exec(s);
+  if (!m) return null;
+  const sign: '+' | '-' = m[1] ? '-' : '+';
+  const value = m[2];
+  const coeffs = parenthesisCoefficients(grounding);
+  if (coeffs.some((c) => c.value === value && c.sign === sign)) return null;
+  const a = (sign === '-' ? '-' : '') + value;
+  return { a, b: '', op: 'distribute', missing: [a] };
+}
+
 export function findUngroundedComputation(sentence: string, groundingTexts: string[]): UngroundedComputation | null {
   const s = (sentence ?? '').replace(/\$/g, ' ');
   if (!QUESTION_RE.test(s)) return null;
-  const m = POSED_RE.exec(s.replace(/\\times|×|·/g, '*'));
-  if (!m) return null;
   const grounding = groundingTexts.filter(Boolean).join(' \n ');
   if (!grounding.trim()) return null;
+  const posed = POSED_RE.exec(s.replace(/\\times|×|·/g, '*'));
+  if (!posed) return findUngroundedDistribution(s, grounding);
   const toks = numericTokens(grounding);
   const isGrounded = (o: { value: string; sign: '+' | '-' }) =>
     toks.some((t) => t.value === o.value && t.sign === o.sign && !t.coeff);
-  const a = parseOperand(m[1]); const b = parseOperand(m[2]);
+  const a = parseOperand(posed[1]); const b = parseOperand(posed[2]);
   const missing: string[] = [];
   if (!isGrounded(a)) missing.push((a.sign === '-' ? '-' : '') + a.value);
   if (!isGrounded(b)) missing.push((b.sign === '-' ? '-' : '') + b.value);
   if (!missing.length) return null;
-  return { a: (a.sign === '-' ? '-' : '') + a.value, b: (b.sign === '-' ? '-' : '') + b.value, op: /÷|div/i.test(m[0]) ? '÷' : '×', missing };
+  return { a: (a.sign === '-' ? '-' : '') + a.value, b: (b.sign === '-' ? '-' : '') + b.value, op: /÷|div/i.test(posed[0]) ? '÷' : '×', missing };
 }

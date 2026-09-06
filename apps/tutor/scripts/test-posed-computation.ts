@@ -15,5 +15,17 @@ check('division: 21 ÷ 7 grounded', findUngroundedComputation('how many groups �
 check('division: 64 ÷ 4 ungrounded when the problem is 64 ÷ 16', !!findUngroundedComputation('what is 64 ÷ 4?', ['64 ÷ 16 =']));
 check('addition is out of scope', findUngroundedComputation('what is 9 + 6?', [stmt]) === null);
 check('board summary grounds derived values', findUngroundedComputation('what is 6 × 4?', [stmt, 'board: 6x + 4x = 10x; 6 and 4 shown']) === null);
+
+// DISTRIBUTE shape (live 2026-09-06 addendum A1)
+const P = '10 - 2(x - 3) = 4';
+const d1 = findUngroundedComputation('What happens when we distribute that negative 3 across both terms inside?', [P]);
+check('distribute: negative 3 ungrounded against 10 - 2(x-3)', !!d1 && d1.op === 'distribute' && d1.a === '-3' && d1.missing.join() === '-3', JSON.stringify(d1));
+check('distribute: negative 2 grounded (matches -2(x-3))', findUngroundedComputation('What happens when we distribute that negative 2 across both terms inside?', [P]) === null);
+check('distribute: 3 grounded in 3(2x-4)', findUngroundedComputation('What do we get distributing the 3?', ['3(2x - 4) = 4x + 10']) === null);
+check('distribute: -3 grounded in -3(x+1)', findUngroundedComputation('What do we get distributing the -3?', ['-3(x + 1) = 9']) === null);
+check('distribute: 5 ungrounded (only 3 in problem)', !!findUngroundedComputation('What do we get distributing the 5?', ['3(2x - 4) = 4x + 10']));
+check('distribute: not a question ⇒ null', findUngroundedComputation('Distribute the 7 first.', [P]) === null);
+check('distribute: coefficient not glued to parenthesis does not ground', !!findUngroundedComputation('What happens when we distribute the 4?', ['4 + 2(x - 3) = 10']));
+
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

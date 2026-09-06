@@ -11793,14 +11793,16 @@ export function VoiceTutorRealtime({
                       turnEquationsRef.current.join(' \n '),
                     ]);
                     if (ungrounded) {
-                      const reason =
-                        `You posed ${ungrounded.a} ${ungrounded.op} ${ungrounded.b}, but ${ungrounded.missing.join(' and ')} ${ungrounded.missing.length === 1 ? 'does' : 'do'} not appear in the problem on the board (${currentProblemRef.current.statement.slice(0, 120)}). ` +
-                        `Re-emit: pose the sub-step using ONLY the numbers actually in that problem.`;
+                      const reason = ungrounded.op === 'distribute'
+                        ? `You asked the student to distribute ${ungrounded.a}, but no coefficient ${ungrounded.a} sits in front of a parenthesis in the problem on the board (${currentProblemRef.current.statement.slice(0, 120)}). ` +
+                          `Re-emit: name the coefficient that is actually there, with its sign.`
+                        : `You posed ${ungrounded.a} ${ungrounded.op} ${ungrounded.b}, but ${ungrounded.missing.join(' and ')} ${ungrounded.missing.length === 1 ? 'does' : 'do'} not appear in the problem on the board (${currentProblemRef.current.statement.slice(0, 120)}). ` +
+                          `Re-emit: pose the sub-step using ONLY the numbers actually in that problem.`;
                       rejectionsThisAttempt.push({ action: 'posed_computation_ungrounded', reason });
                       judgeRetriesUsed++;
                       await performKill();
                       console.warn(`[brain-orchestrator] posed computation ungrounded: "${updatedSentence.slice(0, 80)}" missing=${ungrounded.missing.join(',')}`);
-                      onDebugEvent?.('posed_computation_kill', `${ungrounded.a} ${ungrounded.op} ${ungrounded.b} missing=${ungrounded.missing.join(',')}`);
+                      onDebugEvent?.('posed_computation_kill', `${ungrounded.op === 'distribute' ? `distribute ${ungrounded.a}` : `${ungrounded.a} ${ungrounded.op} ${ungrounded.b}`} missing=${ungrounded.missing.join(',')}`);
                       continue;
                     }
                   }
