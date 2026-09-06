@@ -2719,12 +2719,15 @@ export function VoiceTutorRealtime({
   // touching any ref.
   useEffect(() => {
     recurrenceListenerRef.current = (d) => {
+      // Homework drafting on recurrence must NOT depend on the recap flag —
+      // fixed after review: this used to sit after the TUTOR_RECAP_OFFER
+      // early-return below, so recap-off silently killed recurrence drafts.
+      if (d.recurrence && !d.loId.startsWith('prereq:')) draftHomeworkRef.current(d.loId, 'recurrence');
       if (!TUTOR_RECAP_OFFER || !d.recurrence) return;
       // Recaps are LO-scoped this round: the ledger also keys prerequisite
       // concepts as `prereq:<label>`, and letting one through would
       // fabricate a kind:'lo' gap whose loId is that synthetic key.
       if (d.loId.startsWith('prereq:')) return;
-      draftHomeworkRef.current(d.loId, 'recurrence');
       // One offer per LO per session; never interrupt a running recap; and
       // never stack a second offer while one is still awaiting its reply —
       // the classifier consumes the FIRST pending entry it finds, so a
