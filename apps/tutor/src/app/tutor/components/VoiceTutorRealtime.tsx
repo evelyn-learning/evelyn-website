@@ -14362,10 +14362,30 @@ export function VoiceTutorRealtime({
             const questionContext = studentAnswer
               ? [...runHistory].reverse().find((m) => m.role === 'assistant')?.content?.slice(-1200)
               : undefined;
+            // authoredSolution = the lesson author's ground truth for the
+            // tracked problem, when the board's current problem matches
+            // the authored segment. Without this the judge grounds every
+            // claim against the whiteboard even when the whiteboard
+            // itself carries the tutor's own wrong derivation (2026-09-06
+            // live check 3, portal-3a024b75: board showed "x = 5.5" and
+            // the judge passed every later claim against it).
+            const judgeSeg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+            const judgeTruth = judgeSeg ? getSegmentTruth(judgeSeg) : null;
+            const authoredSolution = judgeTruth && problemMatchesAuthored(currentProblemRef.current?.statement, judgeTruth.problemText)
+              ? [
+                  `Problem: ${judgeTruth.problemText}`,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  ...(Array.isArray((judgeSeg as any)?.steps) ? [`Steps: ${((judgeSeg as any).steps as string[]).join(' | ')}`] : []),
+                  ...(judgeTruth.expectedAnswer ? [`Answer: ${judgeTruth.expectedAnswer}`] : []),
+                ].join('\n').slice(0, 1500)
+              : undefined;
+            if (authoredSolution) {
+              onDebugEvent?.('judge_authored_solution', authoredSolution.slice(0, 80));
+            }
             const judgeRes = await fetch('/api/tutor/judge', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}) }),
+              body: JSON.stringify({ boardSummary: judgeBoardSummary, spokenText: attemptText, focus, studentAnswer, ...(questionContext ? { questionContext } : {}), ...(authoredSolution ? { authoredSolution } : {}) }),
             });
             if (judgeRes.ok) {
               const judgeJson = await judgeRes.json() as { grounded: boolean; issues: Array<{ claim: string; why: string; severity?: 'kill' | 'advisory' }> };

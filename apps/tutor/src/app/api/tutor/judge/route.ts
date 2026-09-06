@@ -66,6 +66,12 @@ interface JudgeRequestBody {
    *  judge passed a false "Not quite" on a correct answer — it had no
    *  way to know what was asked. */
   questionContext?: string;
+  /** Optional AUTHORED_SOLUTION — the lesson author's ground truth for
+   *  the problem the student is working. When present it outranks the
+   *  whiteboard: the board may carry the tutor's own wrong derivation
+   *  (2026-09-06 live check 3, portal-3a024b75), and the judge must not
+   *  treat board content as true when it contradicts this. */
+  authoredSolution?: string;
 }
 
 interface JudgeIssue {
@@ -138,6 +144,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     return badRequest('Invalid JSON body');
   }
   if (typeof body.boardSummary !== 'string') return badRequest('boardSummary must be a string');
+  if (body.authoredSolution !== undefined && (typeof body.authoredSolution !== 'string' || body.authoredSolution.length > 1500)) {
+    return badRequest('authoredSolution must be a string ≤ 1500 chars');
+  }
   if (typeof body.spokenText !== 'string' || body.spokenText.trim().length === 0) {
     // Nothing to judge → trivially grounded.
     return new Response(JSON.stringify({ grounded: true, issues: [] } satisfies JudgeResponse), {

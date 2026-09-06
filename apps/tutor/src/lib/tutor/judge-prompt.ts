@@ -27,6 +27,12 @@ export interface JudgeUserContentInput {
    *  question the student's answer responds to. Without it the judge
    *  cannot re-derive correctness for affirmation/denial cross-checks. */
   questionContext?: string;
+  /** Optional AUTHORED_SOLUTION — the lesson author's ground truth for
+   *  the problem currently being worked. When present it outranks the
+   *  whiteboard: the whiteboard may carry the tutor's own wrong
+   *  derivation, and the judge must not treat board content as true
+   *  when it contradicts this block. */
+  authoredSolution?: string;
 }
 
 export function buildJudgeUserContent(body: JudgeUserContentInput): string {
@@ -39,8 +45,12 @@ export function buildJudgeUserContent(body: JudgeUserContentInput): string {
   const studentAnswerBlock = (typeof body.studentAnswer === 'string' && body.studentAnswer.trim().length > 0)
     ? `<student_answer>\n${body.studentAnswer.trim()}\n</student_answer>\n\n`
     : '';
+  const authoredSolutionBlock = (typeof body.authoredSolution === 'string' && body.authoredSolution.trim().length > 0)
+    ? `<authored_solution>\n${body.authoredSolution.trim()}\n</authored_solution>\n\n`
+    : '';
   return (
     `<whiteboard_state>\n${body.boardSummary || '(whiteboard is empty)'}\n</whiteboard_state>\n\n` +
+    authoredSolutionBlock +
     focusBlock +
     questionBlock +
     studentAnswerBlock +
@@ -56,6 +66,8 @@ You check THREE kinds of factual claims:
     - "The first equation is 3x + 2y = 12" (about an equation card)
     - "The triangle has a 90-degree angle at C" (about a geometry diagram)
     - Flag if the claim contradicts or is unsupported by the WHITEBOARD STATE.
+
+(1b) AUTHORED SOLUTION — when an <authored_solution> block is present it is the lesson author's ground truth for the problem the student is working, and it outranks the whiteboard. If the whiteboard contradicts the authored solution, the whiteboard is the tutor's own error: do NOT treat board content as true. A claim that matches the board but contradicts the authored solution's answer or a listed step is NOT grounded — flag it as "advisory" with why beginning "contradicts authored solution:". Never derive the authored answer yourself; use only what the block states.
 
 (2) SELF-CONTAINED CLAIMS — claims the tutor makes about content they
     introduced in their own speech (an example sentence, a list, a year,
