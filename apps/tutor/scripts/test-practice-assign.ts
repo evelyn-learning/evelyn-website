@@ -1,6 +1,6 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
-import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause } from '../src/lib/tutor/practice-assign/store';
+import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos } from '../src/lib/tutor/practice-assign/store';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
 let passed = 0, failed = 0;
@@ -111,6 +111,19 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
   check('finalizePatch — reason applied to every LO', patch.los?.[0].reason === 'This tripped you up twice today.');
   check('finalizePatch — locator carried', patch.locator === 'Unit 2 · Practice');
   check('finalizePatch — no reason ⇒ the draft\'s default reason survives', finalizePatch(rec, { source: 'end', now }).los?.[0].reason === 'r');
+
+  // summarizeAssignmentLos — the shape assignPractice's `alreadyAssigned`
+  // branch must build from the EXISTING persisted record (rec.los), not
+  // from freshly re-resolved items that were never written.
+  const losWithItems: IPracticeAssignmentLo[] = [
+    { loId: 'a', title: 'Alpha', reason: 'r', items: [{ id: 'a-1' }, { id: 'a-2' }] as never },
+    { loId: 'b', title: 'Beta', reason: 'r', items: [] },
+  ];
+  check(
+    'summarizeAssignmentLos — maps loId/title/count from items.length',
+    JSON.stringify(summarizeAssignmentLos(losWithItems)) === JSON.stringify([{ loId: 'a', title: 'Alpha', count: 2 }, { loId: 'b', title: 'Beta', count: 0 }]),
+  );
+  check('summarizeAssignmentLos — empty in, empty out', summarizeAssignmentLos([]).length === 0);
 }
 
 (async () => {

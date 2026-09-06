@@ -104,6 +104,16 @@ export async function acknowledgeAssignments(ids: string[], at = new Date()): Pr
   return r.modifiedCount ?? 0;
 }
 
+/** Summarize a record's (or freshly resolved) LOs into the
+ *  `{ loId, title, count }` shape callers of `assignPractice` see. Pure —
+ *  used both for a newly written record's LOs and for an EXISTING record's
+ *  `los` (the `alreadyAssigned` branch of `upsertDraft`/`assignPractice`,
+ *  which must summarize what was actually persisted, not freshly
+ *  re-resolved items that were never written). */
+export function summarizeAssignmentLos(los: IPracticeAssignmentLo[]): Array<{ loId: string; title: string; count: number }> {
+  return los.map((l) => ({ loId: l.loId, title: l.title, count: l.items.length }));
+}
+
 /** Merge incoming drafted LOs into the existing draft's LOs: earlier LOs
  *  are kept (the session's evidence arrived first), duplicates by `loId`
  *  are dropped, and the result is capped at `max` (default `DRAFT_MAX_LOS`)

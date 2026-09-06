@@ -12,7 +12,7 @@ import { getLessonPlan } from '@/lib/tutor/lesson-plan/store';
 import { mongoPracticeSources } from '@/lib/tutor/portal/adapters';
 import { getLearnerHints } from '@/lib/tutor/learner-model/hints';
 import { resolveAssignmentItems } from './resolve';
-import { upsertAssignment, upsertDraft } from './store';
+import { upsertAssignment, upsertDraft, summarizeAssignmentLos } from './store';
 
 const MAX_LOS = 2;
 
@@ -54,7 +54,6 @@ export async function assignPractice(input: {
   const reason = input.reason.trim().slice(0, 240);
   const locator = input.locator?.trim().slice(0, 80) || undefined;
   const nextTimeIntent = input.nextTimeIntent?.trim().slice(0, 200) || undefined;
-  const assigned = los.map((l) => ({ loId: l.loId, title: l.title, count: l.items.length }));
   if (input.status === 'draft') {
     const { rec, alreadyAssigned } = await upsertDraft({
       studentId: input.profileId,
@@ -68,7 +67,11 @@ export async function assignPractice(input: {
       auto: true,
       triggers: input.trigger ? [input.trigger] : [],
     });
-    return { assignmentId: rec._id, assigned, status: alreadyAssigned ? 'assigned' : 'draft' };
+    // alreadyAssigned ⇒ upsertDraft wrote nothing and returned the
+    // EXISTING record untouched — summarize what was actually persisted
+    // (rec.los), never the items just re-resolved locally, which were
+    // never written and may no longer match.
+    return { assignmentId: rec._id, assigned: summarizeAssignmentLos(rec.los), status: alreadyAssigned ? 'assigned' : 'draft' };
   }
   const rec = await upsertAssignment({
     studentId: input.profileId,
@@ -82,5 +85,5 @@ export async function assignPractice(input: {
     auto: input.auto,
     assignedAt: new Date(),
   });
-  return { assignmentId: rec._id, assigned, status: 'assigned' };
+  return { assignmentId: rec._id, assigned: summarizeAssignmentLos(rec.los), status: 'assigned' };
 }
