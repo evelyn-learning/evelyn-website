@@ -19,6 +19,10 @@ const no = [
   "The problem asks for the mean, so add them up first.",
   "Which questions are you unsure about?",
   "We'll wait for the assignment of treatments to be random.",
+  // Fix round 3: the classifier must NOT fire on ordinary in-session speech
+  // about a board problem — the reason the round-2 `set|left` widening was
+  // reverted and the runtime pointer was reworded instead.
+  "I've set a practice problem on the board for you.",
 ];
 // Task 13 fix round 2: the runtime speaks the pointer itself. If the model
 // then echoes that sentence, the announce gate must catch it — so the

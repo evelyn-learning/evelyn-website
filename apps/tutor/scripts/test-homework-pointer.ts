@@ -9,7 +9,7 @@ import { buildHomeworkPointerSentence } from '../src/lib/tutor/voice/homework-po
 // 1. one question, one objective — singular, no "and"
 assert.equal(
   buildHomeworkPointerSentence({ los: [{ loId: 'alg1.multi-step', title: 'Variables on both sides', count: 1 }], locator: 'Unit 2 · Practice' }),
-  "I've set 1 practice question on Variables on both sides for you — you'll find it under Unit 2 · Practice.",
+  "I've set 1 practice question on Variables on both sides for you — it's waiting under Unit 2 · Practice.",
 );
 
 // 2. two objectives — counts summed, titles joined with " and "
@@ -21,7 +21,7 @@ assert.equal(
     ],
     locator: 'Unit 2 · Practice',
   }),
-  "I've set 5 practice questions on Variables on both sides and Classifying solutions for you — you'll find them under Unit 2 · Practice.",
+  "I've set 5 practice questions on Variables on both sides and Classifying solutions for you — they're waiting under Unit 2 · Practice.",
 );
 
 // 3. no locator ⇒ nothing may be said

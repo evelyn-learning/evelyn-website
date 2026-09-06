@@ -23,5 +23,11 @@ export function buildHomeworkPointerSentence(input: HomeworkPointerInput): strin
   const n = los.reduce((sum, l) => sum + l.count, 0);
   if (n <= 0) return null;
   const titles = los.map((l) => l.title).join(' and ');
-  return `I've set ${n} practice question${n === 1 ? '' : 's'} on ${titles} for you — you'll find ${n === 1 ? 'it' : 'them'} under ${locator}.`;
+  // Wording note (fix round 3): "…are waiting under X" is deliberate. The
+  // announce gate's classifier (isHomeworkAnnouncement) matches a practice
+  // noun followed by a waiting/assigned verb — phrasing the pointer that way
+  // means a model that echoes it verbatim is caught by the EXISTING rules,
+  // with no widening of a classifier that must not fire on ordinary
+  // in-session speech ("I've set a practice problem on the board").
+  return `I've set ${n} practice question${n === 1 ? '' : 's'} on ${titles} for you — ${n === 1 ? "it's" : "they're"} waiting under ${locator}.`;
 }
