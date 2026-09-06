@@ -225,6 +225,13 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Task 6, live-check-3 fixes round (2026-09-07): authored_ending_kill — the
   // seed's authored solution-count verdict contradiction guard's trail.
   'authored_ending',
+  // Task 7, live-check-3 fixes round (2026-09-07): pacing_credit_withheld —
+  // the judge-flagged-denial withhold that keeps the tutor's own mis-grading
+  // out of the student's incorrect streak / struggle ledger. Already covered
+  // by the broader 'pacing_' prefix above; named explicitly per-family so the
+  // coverage gate documents the decision rather than relying on that prefix's
+  // breadth.
+  'pacing_credit',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

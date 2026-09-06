@@ -2557,6 +2557,12 @@ export function VoiceTutorRealtime({
    *  offer is re-armed, up to RECAP_OFFER_MAX_ATTEMPTS per LO. */
   const recapOfferSentThisTurnRef = useRef<{ loId: string; loTitle: string; source: 'recurrence' | 'session-start'; soft: boolean } | null>(null);
   const recapOfferAttemptsRef = useRef<Map<string, number>>(new Map());
+  /** Set when the judge flagged THIS turn's denial as ungrounded (and the
+   *  deterministic gate did not overrule it). The post-stream pacing block
+   *  then withholds the incorrect-streak increment and the ledger event:
+   *  live 2026-09-06 the tutor's mis-gradings became the student's
+   *  "incorrect streak", a gap, a recurrence and a recap blaming them. */
+  const judgeFlaggedDenialThisTurnRef = useRef(false);
   /** A soft stuck cue heard this turn, fed to the ledger at turn ok unless
    *  the verdict layer credited the same turn as correct. */
   const pendingStuckCueRef = useRef<{ segId?: string } | null>(null);
@@ -9477,6 +9483,10 @@ export function VoiceTutorRealtime({
     // may set this DURING this turn's retry loop; must not carry a signal
     // stashed by a PRIOR turn (or a prior turn's attempt) into this one.
     objectiveCorrectThisTurnRef.current = null;
+    // Task 7: fresh per-turn judge-flagged-denial withhold flag — a kill or
+    // advisory signal stashed by a PRIOR turn must not withhold THIS turn's
+    // credit.
+    judgeFlaggedDenialThisTurnRef.current = false;
     // R47 Task 2: fresh per-turn "completed THIS turn" list — see
     // segmentsCompletedThisTurnRef's declaration. A mark_segment_complete
     // from a PRIOR turn must not count as "predates this turn" evidence
@@ -14556,6 +14566,7 @@ export function VoiceTutorRealtime({
                   const denialFlagged = noteworthyAdvisoryIssues.some((i) => DENIAL_RE.test(i.claim));
                   const denialVerifiedRight = denialFlagged && !!judgeVerifiedKey
                     && studentDisagreesWithVerified(transcript ?? '', judgeVerifiedKey, currentProblemRef.current?.choiceOptions);
+                  if (denialFlagged && !denialVerifiedRight) judgeFlaggedDenialThisTurnRef.current = true;
                   if (denialVerifiedRight) {
                     onDebugEvent?.('judge_advisory_suppressed', `denial flagged but student ≠ verified key ("${(transcript ?? '').slice(0, 40)}" vs ${String(judgeVerifiedKey).slice(0, 30)})`);
                   }
@@ -14569,6 +14580,7 @@ export function VoiceTutorRealtime({
                   }
                 }
                 if (killIssues.length > 0) {
+                  if (killIssues.some((i) => DENIAL_RE.test(i.claim))) judgeFlaggedDenialThisTurnRef.current = true;
                   const summary = killIssues.map((i, idx) =>
                     `(${idx + 1}) Claim: "${i.claim.slice(0, 120)}" — ${i.why.slice(0, 200)}`
                   ).join(' ');
@@ -15308,6 +15320,12 @@ export function VoiceTutorRealtime({
               logPacing(`segment-mastered seg="${segId}" streakAtComplete=${studentStreakRef.current.count} (post-stream late-fire)`);
               onDebugEvent?.('pacing_segment_mastered', `seg="${segId}" streak=${studentStreakRef.current.count}`);
             }
+          } else if (decision.credit === 'incorrect' && judgeFlaggedDenialThisTurnRef.current) {
+            // Task 7 (live 2026-09-06, portal-4bbe5d91-adjacent): the judge
+            // flagged THIS turn's denial as ungrounded (and the deterministic
+            // gate did not overrule it) — the tutor's own mis-grading must
+            // not become the student's incorrect streak or a ledger entry.
+            onDebugEvent?.('pacing_credit_withheld', 'judge flagged this denial — not counted against the student');
           } else if (decision.credit === 'incorrect') {
             const priorIncCount = studentIncorrectStreakRef.current.segId === segId
               ? studentIncorrectStreakRef.current.count : 0;
