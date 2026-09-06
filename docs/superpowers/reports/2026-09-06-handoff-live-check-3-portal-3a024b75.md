@@ -51,3 +51,37 @@ Chain of errors (all the brain's own):
 6. **Step-result keys**: for worked examples, expose the seed's step results as verifiable keys so "5 = −2"-type intermediate answers can be checked deterministically (would have made Images 4/5 an instant kill instead of a 47-s note).
 7. **Ledger blame**: do not count an incorrect-streak increment toward the struggle ledger when the judge flagged that denial (or retract it when the correction note fires).
 8. Validator-retry quality: a retry after a mid-turn self-correction must restart from the student's move, not mid-routine (prompt the retry with the student's exact move and the current equation).
+
+---
+
+## Addendum — the session was RESUMED (18:13–18:23 UTC) and taken to the end to test homework
+
+Same session id, fresh page load (`embed_config practice_locator=yes` re-fired at 18:13:02). Praveen's observations, with what the data says:
+
+### A1 — "distribute the negative 3" while the problem has −2 (Image 7)
+18:17:59: the brain marked the segment complete, advanced to `misconception-distribute-negative` (`10 − 2(x − 3)` simplified wrongly as `8(x − 3)`), rendered the check card, and asked "what happens when we distribute that negative 3 across both terms inside?" — the coefficient is −2. Q-pin captured the wrong question (18:18:10). Praveen answered correctly anyway (18:20:15 "10−2x+6 … −2x+16") and the brain praised "distributing that negative 2" — the −3 was never acknowledged as its own slip.
+Not caught: the posed-computation guard (`findUngroundedComputation`) only covers `A × B` / `A ÷ B` with two numeric operands; "distribute the (negative) N" is a one-operand shape. **Fix: extend it with a DISTRIBUTE pattern — the named coefficient (sign-aware) must be the coefficient adjacent to a parenthesis in the active problem statement.** Same kill+retry path.
+
+### A2 — No homework card anywhere (correct — none exists)
+18:21:11 `practice_assign_skipped — no-lo-requested requested=[]`: the brain called `close_session_notes` with NO objectives for the second session running. The ledger-backed fallback shipped this morning (`practice_assign_fallback`, ≥2 detections) did not fire because **the struggle ledger is page memory (`ledgerRef = useRef(createLedger())`); this was a resumed page, so the 17:33/17:46 detections were gone.** The server-side auto-assign fallback also saw nothing: it reads only the final commit's gap DELTA, which was empty after the resume. Result: `practiceassignments` has no row for Praveen; the academy Session row carries no `assignedPractice`; no tutor-assigned PracticeSet.
+**Fixes:** (a) the close-notes fallback must also read the PROFILE's gaps for this session (`recurrenceCount ≥ 1` on an LO of this plan, sessionIds includes this session) — or rehydrate the ledger from the profile on resume; (b) the server auto-assign fallback must consider the profile's session gaps, not just the delta; (c) tell the brain, in the close tool's description or a `<session_struggles>` line, which objectives the ledger flagged — it said "all locked in" twice while the ledger disagreed.
+
+### A3 — The tutor announced a homework card that does not exist
+18:21:02 "…a bit more practice on that classifying piece is waiting for you in Unit 2 Practice…" and 18:23:18 "The Unit 2 · Practice link on your homework card is the spot — clicking that opens the classifying-solutions problems waiting there." The `isHomeworkAnnouncement` guard only drops these sentences when there is NO locator (`if (!locatorForPrompt && …)`, VTR ~12122). Here the locator existed but nothing was assigned. **Fix: gate the announcement on an actual successful assignment this session (`assignedPracticeRef.current` set, or the practice-assign POST returned 200 with items), not on the locator alone; and the prompt's "tell the student where the practice is waiting" must be conditional on the tool having assigned something.**
+
+### A4 — Praveen's UX ask: put the homework action item on the board
+"The tutor did end talking about the unit practice; it would have been better to put that action item on the board, like the Q-pin (even though it's not a question)." **Feature: an "action pin" (next-step pin) rendered at close — `Homework: Unit 2 · Practice — 4 questions on classifying solutions` — driven by the assignment result, same pin primitive as the Q-pin.** Only when an assignment actually exists (A3).
+
+### A5 — UI: lessons-tab progress chips collide with Resume/Discard (Image 8)
+Academy web, course lessons list (`apps/web/components/CourseLessons.tsx` row): with 9+ segment chips the chip row runs under the Resume/Discard buttons. The row needs the actions in their own fixed-width column (`shrink-0`) and the chips in a wrapping or horizontally scrolling container with `min-w-0`. Also shown: "In progress — Recap · 0/5 practiced" — the lesson never reached the authored `recap` segment (the tutor wrapped from the misconception check), so the node stays in progress; and the academy Session row is `in_progress` after End by design (resumable), which is what the row reflects.
+
+### A6 — Resume-specific breakage
+18:13:10 `brain_validator_retry: tutor_scroll_whiteboard: No feature matching "Example: Solve: (1/2)(6x + 8) = 3x + 4"` then `rule8_client_repair sent=2 painted=0`: the resumed board did not restore the example card the brain remembered (the pre-resume render at 17:53:57 was `showProblem-4`), so its first move after resume was a scroll to a missing feature and another silent render drop (R1 again, on the resume path). **Add to R1's reproduction: resume a session after a `showProblem` and watch the first turn.**
+
+## Updated ranked list (adds A-items)
+1. R1 silent render drops (incl. the resume case A6) — telemetry first.
+2. F4 judge-gate regression (stale key; verbal move treated as an answer).
+3. Homework loop: ledger/profile-backed assignment on resume (A2) + announcement gated on a real assignment (A3) + brain told the ledger's flagged objectives.
+4. Posed-computation guard: DISTRIBUTE shape (A1).
+5. Judge grounds on authored truth; authored-ending contradiction guard; reversal-guard explanatory mention; step-result keys; ledger must not count judge-flagged denials; retry-after-self-correction restarts from the student's move (all from the main report).
+6. Action pin at close (A4). 7. Lessons-tab chip overflow (A5, academy web).
