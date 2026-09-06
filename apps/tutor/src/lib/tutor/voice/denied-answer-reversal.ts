@@ -93,7 +93,12 @@ const OPENER_SHAPE_RE = (p: string) => new RegExp(
 /** Contrast / conditional markers that turn a mention of X into commentary
  *  ABOUT X rather than an assertion OF X. Checked in the clause before the
  *  phrase and in the few words right after it. */
-const MENTION_BEFORE_RE = /\b(?:only\s+when|only\s+if|when|if|unless|whereas|while|versus|vs\.?|compared\s+(?:to|with)|as\s+opposed\s+to|rather\s+than|instead\s+of|unlike|would|could|might|not|never)\b/;
+// Bare "not|never|would|could|might" were dropped from the BEFORE regex
+// (2026-09-07 review): tested against up to 80 chars of the whole preceding
+// clause, a hedge word anywhere earlier in the clause suppressed a genuine
+// reversal — "That's not confusing, it's the central executive after all."
+// The adjacent-negation check above already handles "not the X" directly.
+const MENTION_BEFORE_RE = /\b(?:only\s+when|only\s+if|when|if|unless|whereas|while|versus|vs\.?|compared\s+(?:to|with)|as\s+opposed\s+to|rather\s+than|instead\s+of|unlike)\b/;
 const MENTION_AFTER_RE = /^\s*(?:only\s+(?:when|if)|when|if|unless|would|could|might|versus|vs\.?|whereas)\b/;
 
 /** `sentence` and `phrase` are already normalized the same way (Task 6 calls
@@ -104,7 +109,7 @@ const MENTION_AFTER_RE = /^\s*(?:only\s+(?:when|if)|when|if|unless|would|could|m
  *  assertion OF it (2026-09-06, portal-3a024b75: this killed a correct
  *  denial-reaffirming explanation as a reversal). */
 export function isExplanatoryMention(sentence: string, phrase: string): boolean {
-  const m = new RegExp(`\\b${phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`).exec(sentence);
+  const m = new RegExp(`\\b${escapeRe(phrase)}\\b`).exec(sentence);
   if (!m) return false;
   const before = sentence.slice(0, m.index);
   const clauseStart = Math.max(before.lastIndexOf('. '), before.lastIndexOf('; '), before.lastIndexOf(': '), before.lastIndexOf(' - '), before.lastIndexOf(' — '));

@@ -249,9 +249,32 @@ check(
   );
 }
 
-if (failures > 0) {
-  console.error(`\n${failures} failure(s)`);
-  process.exit(1);
+// 2026-09-07 review: MENTION_BEFORE_RE's bare "not|never|would|could|might"
+// were too broad — a hedge word ANYWHERE earlier in the (up to 80-char)
+// preceding clause suppressed a genuine reversal, even when it had nothing
+// to do with the denied phrase. These must still fire as reversals.
+{
+  const denied = [{ phrase: 'central executive', turn: 13 }];
+  check(
+    '"not" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "That's not confusing, it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
+  check(
+    '"never" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "Never mind the distractor, it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
+  check(
+    '"would" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "It would help to review, but it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
+  check(
+    '"might" earlier in the clause does not suppress a real reversal',
+    checkDeniedAnswerReversal({ sentence: "This might seem odd, but it's the central executive after all.", denied, currentTurn: 14 }).verdict,
+    'reversal',
+  );
 }
 
 // 2026-09-06 live (Noah): the same phrase on a DIFFERENT problem is not a reversal.
@@ -261,5 +284,10 @@ if (failures > 0) {
   check('same problem ⇒ reversal', checkDeniedAnswerReversal({ sentence: "Actually the answer is 4.", denied, currentTurn: 10, problemKey: k1 }).verdict, 'reversal');
   check('different problem ⇒ ok', checkDeniedAnswerReversal({ sentence: "Right — the answer is 4.", denied, currentTurn: 10, problemKey: k2 }).verdict, 'ok');
   check('no key on the denial ⇒ unscoped (legacy)', checkDeniedAnswerReversal({ sentence: "Actually the answer is 4.", denied: [{ phrase: '4', turn: 8 }], currentTurn: 10, problemKey: k2 }).verdict, 'reversal');
+}
+
+if (failures > 0) {
+  console.error(`\n${failures} failure(s)`);
+  process.exit(1);
 }
 console.log('\nAll denied-answer-reversal checks passed.');
