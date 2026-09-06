@@ -119,6 +119,7 @@ import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { checkSimplificationVerdict, DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
 import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer, problemKeyForDenial } from '@/lib/tutor/voice/denied-answer-reversal';
+import { findAuthoredEndingContradiction, problemMatchesAuthored } from '@/lib/tutor/voice/authored-ending';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
@@ -380,6 +381,12 @@ import { resolveConceptsCovered } from '@/lib/tutor/topic-concepts';
  *  tutor flag defaults on (`!== 'off'`), never off, because R49 shipped two
  *  severe fixes dark and production kept the bugs. */
 const CONCEPT_TAGGING_ON = process.env.NEXT_PUBLIC_TUTOR_CONCEPT_TAGGING !== 'off';
+
+/** Task 6, live-check-3 fixes round (2026-09-07, portal-3a024b75): kill+retry
+ *  when the tutor's spoken solution-count verdict contradicts the seed's
+ *  authored answer (e.g. affirming "no solution" on an authored identity).
+ *  Default ON per the standing flag rule. */
+const TUTOR_AUTHORED_ENDING_GUARD = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_ENDING_GUARD !== 'off';
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -11803,6 +11810,29 @@ export function VoiceTutorRealtime({
                       await performKill();
                       console.warn(`[brain-orchestrator] posed computation ungrounded: "${updatedSentence.slice(0, 80)}" missing=${ungrounded.missing.join(',')}`);
                       onDebugEvent?.('posed_computation_kill', `${ungrounded.op === 'distribute' ? `distribute ${ungrounded.a}` : `${ungrounded.a} ${ungrounded.op} ${ungrounded.b}`} missing=${ungrounded.missing.join(',')}`);
+                      continue;
+                    }
+                  }
+                  // Authored-ending contradiction guard (live 2026-09-06,
+                  // portal-3a024b75): "105 = 105 → no solution" affirmed
+                  // against an authored "Infinitely many solutions
+                  // (identity)". Deterministic and subject-free — compare
+                  // the tutor's stated solution-count class against the
+                  // authored answer's class.
+                  if (TUTOR_AUTHORED_ENDING_GUARD && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt === 0) {
+                    const seg = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current);
+                    const truth = seg ? getSegmentTruth(seg) : null;
+                    const authoredAnswer = truth?.expectedAnswer && problemMatchesAuthored(currentProblemRef.current?.statement, truth.problemText)
+                      ? truth.expectedAnswer : undefined;
+                    const contra = findAuthoredEndingContradiction({ sentence: updatedSentence, authoredAnswer });
+                    if (contra) {
+                      const reason =
+                        `The authored answer for this problem is "${authoredAnswer}" (${contra.authored} solution(s)); your sentence classified it as "${contra.stated}". ` +
+                        `Re-derive from the authored answer and re-speak the verdict — and if the student's classification was actually right, say so plainly.`;
+                      rejectionsThisAttempt.push({ action: 'authored_ending_contradiction', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      onDebugEvent?.('authored_ending_kill', `stated=${contra.stated} authored=${contra.authored} · ${updatedSentence.slice(0, 80)}`);
                       continue;
                     }
                   }

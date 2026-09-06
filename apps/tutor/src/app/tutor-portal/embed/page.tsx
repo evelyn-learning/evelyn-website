@@ -222,6 +222,9 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'false_praise_opener_correction_note_planted',
   // R1 2026-09-07: the label-duplicate drop was invisible in embed sessions for months
   'show_equation_label',
+  // Task 6, live-check-3 fixes round (2026-09-07): authored_ending_kill — the
+  // seed's authored solution-count verdict contradiction guard's trail.
+  'authored_ending',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
