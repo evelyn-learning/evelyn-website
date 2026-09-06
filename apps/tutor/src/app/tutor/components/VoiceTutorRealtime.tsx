@@ -173,6 +173,7 @@ import type { FeatureManifestEntry } from '@/lib/tutor/diagrams/layout';
 import { buildManifestForCommand } from '@/lib/tutor/diagrams/manifests';
 import { solveDiagram } from '@/lib/tutor/diagrams/catalog/manifest';
 import { WhiteboardCatalog, buildShowSignature, extractCommandTitle, computeAnchorKey, isPrimaryFigure, computeFigureCategory } from '@/lib/tutor/whiteboard/catalog';
+import { normalizeEquationLabel, decideLabelDuplicate, type SeenEquationLabel } from '@/lib/tutor/whiteboard/equation-label-dedup';
 import { shouldScrollToDedupedItem } from '@/lib/tutor/whiteboard/dedup-scroll';
 import type { WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { createReactionState, recordReactionEvent, NOISE_INTERRUPTION_REACTION } from '@/lib/tutor/voice/tutor-reactions';
@@ -2802,7 +2803,7 @@ export function VoiceTutorRealtime({
   // original card or pick a structurally different label, instead of
   // decorating with ✓ / ✗ / (final) / (1) and producing duplicate
   // cards. Observed 2026-05-02 session.
-  const equationLabelsThisSessionRef = useRef<Map<string, { originalLabel: string; originalLatex: string; latexNormalized: string }>>(new Map());
+  const equationLabelsThisSessionRef = useRef<Map<string, SeenEquationLabel>>(new Map());
 
   // Set of step indices already emitted on the CURRENT page via a
   // showEquation labeled "Step N: …" or "Step N — …". Used to drop
@@ -4272,7 +4273,9 @@ export function VoiceTutorRealtime({
     // for "0.15×80=12". The runtime silently dropped the linear
     // equation, but the brain narrated as if it rendered. Per-segment
     // scoping eliminates the false collision without changing intra-
-    // segment dedup behavior.
+    // segment dedup behavior. Since 2026-09-07 the map is ALSO
+    // page-scoped and prior-on-board-gated (equation-label-dedup.ts);
+    // this clear remains as the segment boundary.
     equationLabelsThisSessionRef.current.clear();
     // Auto-newPage for visual freshness: every segment transition starts
     // the student on a fresh whiteboard page. Page title: for generated
@@ -5334,45 +5337,42 @@ export function VoiceTutorRealtime({
         // ✗, " (final)", etc. — observed 2026-05-02 session: emitted
         // "Step 1: Sum" with `=?` then "Step 1: Sum ✓" with `=400` as
         // separate cards. Strip common decorations before comparing
-        // labels; if two equations have label-equivalent identifiers
-        // emitted in the same session, drop the new one with feedback
-        // telling the brain to either pick a unique label or avoid the
-        // redundant emission.
+        // labels (equation-label-dedup.ts).
+        //
+        // R1 (2026-09-07, portal-3a024b75 "silent render drop"): a
+        // same-label collision used to be dropped SILENTLY whenever it
+        // fell within one segment, regardless of page or whether the
+        // prior equation was still on the board. A segment spanning
+        // several problems (e.g. 27 min in "hook") reused labels like
+        // "Final answer" per problem, so the runtime ate one equation
+        // per repeat — six times in one session — while the brain
+        // narrated as if it rendered. The guard is now page-scoped and
+        // only fires when the prior labeled equation is STILL on the
+        // board; it rejects with a reason instead of dropping silently
+        // (see decideLabelDuplicate's doc comment for the full rule).
         const rawLabel = (cmdAny.label?.trim() || '');
         if (rawLabel) {
-          const normalizedLabel = rawLabel
-            .toLowerCase()
-            // Strip decorative suffixes / annotations.
-            .replace(/[✓✗✔✘☐☑]/g, '')
-            .replace(/\s*\(final\)\s*$/i, '')
-            .replace(/\s*\(corrected\)\s*$/i, '')
-            .replace(/\s*\(updated\)\s*$/i, '')
-            .replace(/\s*\(\d+\)\s*$/i, '')
-            .replace(/\s+/g, ' ')
-            .trim();
+          const normalizedLabel = normalizeEquationLabel(rawLabel);
           if (normalizedLabel) {
             const seen = equationLabelsThisSessionRef.current.get(normalizedLabel);
-            if (seen && seen.latexNormalized !== normalized) {
-              // Round-7+ Fix: silently drop label-duplicate equations.
-              // Previously this pushed a rejection that triggered a
-              // validator-feedback retry cascade — observed 2026-05-03
-              // session: brain emitted show_equation(label="Final
-              // Answer", new latex), runtime pushed rejection, brain on
-              // retry MISINTERPRETED the rejection and emitted a fresh
-              // show_problem({old dataset}) instead of fixing the
-              // label, regressing the student to the FIRST mean problem.
-              // The label-dup is purely cosmetic (the math may even be
-              // identical or a refinement); surfacing it as a rejection
-              // is more harmful than just dropping the duplicate.
-              console.warn(`[VoiceTutorRealtime] Dropping label-duplicate equation: "${rawLabel}" (normalizes to "${normalizedLabel}", clashes with prior "${seen.originalLabel}") — silent drop, no retry`);
-              onDebugEvent?.('show_equation_label_duplicate_silent', `"${rawLabel}" ~= "${seen.originalLabel}"`);
+            const signature = buildShowSignature('showEquation', cmd);
+            const currentPageKey = catalogRef.current.getCurrentPageTitle() ?? '';
+            const priorOnBoard = !!seen && !!catalogRef.current.findBySignature(seen.signature);
+            const decision = decideLabelDuplicate({ normalizedLabel, normalizedLatex: normalized, seen, currentPageKey, priorOnBoard });
+            if (decision.kind === 'reject') {
+              // R1 (2026-09-07): a real same-page collision is a REJECTION the
+              // brain can act on, never a silent drop — see the module header.
+              console.warn(`[VoiceTutorRealtime] Rejecting label-duplicate equation: "${rawLabel}" clashes with prior "${seen!.originalLabel}" on this page`);
+              onDebugEvent?.('tool_call', `Dropped label-duplicate equation: "${rawLabel}" ~= "${seen!.originalLabel}" (same page, prior on board)`);
+              onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen!.originalLabel}"`);
+              rejected.push({ action: 'show_equation', reason: decision.reason });
               return [];
             }
-            equationLabelsThisSessionRef.current.set(normalizedLabel, {
-              originalLabel: rawLabel,
-              originalLatex: latex,
-              latexNormalized: normalized,
-            });
+            if (decision.kind === 'register') {
+              equationLabelsThisSessionRef.current.set(normalizedLabel, {
+                originalLabel: rawLabel, originalLatex: latex, latexNormalized: normalized, signature, pageKey: currentPageKey,
+              });
+            }
             // If the label looks like "Step N…" or "Step N: …",
             // record N so any future spoken reference to step N is
             // grounded. Generic — doesn't care about subject content.

@@ -53,7 +53,7 @@ const DELIBERATELY_EXCLUDED = new Set<string>([
   'show_dedup_skip', 'visual_dedup_drop', 'within_batch_dual_emit_dedup',
   'duplicate_sentence_dropped', 'duplicate_newpage_strip', 'link_dropped',
   'equation_duplicate_definition', 'equation_prose_filler',
-  'show_equation_label_duplicate_silent', 'scribble_reject_empty_silent',
+  'scribble_reject_empty_silent',
   'scribble_reject_no_match_silent', 'scribble_page_fallback',
   'scrollTo_page_fallback', 'scrollTo_reject_no_match',
   'continuation_guard_strip_newpage', 'tutor_context_strip_newpage',

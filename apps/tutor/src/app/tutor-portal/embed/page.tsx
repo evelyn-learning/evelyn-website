@@ -220,6 +220,8 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Task 8: the advisory tier's note only lands when the slot is free — this
   // is what separates "advisory fired" from "the brain was actually told".
   'false_praise_opener_correction_note_planted',
+  // R1 2026-09-07: the label-duplicate drop was invisible in embed sessions for months
+  'show_equation_label',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
