@@ -163,6 +163,10 @@ export interface SessionMemory {
   losTouched: string[];
   /** A short narrative summary the brain produced at end-of-session. */
   summary?: string;
+  /** Too few real student turns for anything to have been taught (see
+   *  thin-session.ts). Kept for accounting; skipped by the prior-sessions
+   *  block so "last time" never points at it. */
+  thin?: boolean;
   /** Time the student spent in the session, minutes. */
   durationMinutes?: number;
   /** Mastery deltas applied during this session. */

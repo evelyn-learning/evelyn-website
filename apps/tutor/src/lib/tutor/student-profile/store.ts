@@ -90,7 +90,7 @@ function computeConfidence(signals: GapSignalCode[]): number {
 /** Ephemeral fallback when DB is unavailable (demo / unauthenticated). */
 const ephemeralStore = new Map<string, StudentProfile>();
 
-function emptyProfile(id: string): StudentProfile {
+export function emptyProfile(id: string): StudentProfile {
   const now = new Date().toISOString();
   return {
     id,

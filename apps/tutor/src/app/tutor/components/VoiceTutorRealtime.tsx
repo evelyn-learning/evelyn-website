@@ -289,6 +289,8 @@ import { shouldKillNonAnswerPraise, nonAnswerPraiseFeedback } from '@/lib/tutor/
 import { buildJudgeCorrectionNote, hasMathExpression, shouldConsumeJudgeCorrectionNote, CORRECTION_DUE_DIRECTIVE } from '@/lib/tutor/voice/judge-correction-note';
 import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
+import { extractChoiceOptions, reconcileMcqLetterWithContent, type ChoiceOption } from '@/lib/tutor/voice/mcq-letter-content';
+import { isBareArithmeticRecheck } from '@/lib/tutor/voice/arithmetic-recheck';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -2821,7 +2823,7 @@ export function VoiceTutorRealtime({
   // problem staged in pendingGeneratedAnswerRef (see the inverse-verdict
   // call site) — the student always answers the most recently POSED
   // problem, which is not necessarily the most recently RENDERED card.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; trackedAtMs?: number } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; choiceOptions?: ChoiceOption[]; trackedAtMs?: number } | null>(null);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -6072,6 +6074,7 @@ export function VoiceTutorRealtime({
             // ("See." → "C") — must be the ACTUAL letters this problem
             // offers, not a blind A-E guess.
             choiceLetters: extractChoiceLetters(p.answerChoices),
+            choiceOptions: extractChoiceOptions(p.answerChoices),
             ...(genMatch ? { source: 'generated' as const, expectedAnswer: genMatch.expectedAnswer } : {}),
           };
           if (genMatch) {
@@ -6113,6 +6116,7 @@ export function VoiceTutorRealtime({
             source: 'card',
             hasChoices: Array.isArray(tyAny.choices) && tyAny.choices.length > 0,
             choiceLetters: extractChoiceLetters(tyAny.choices),
+            choiceOptions: extractChoiceOptions(tyAny.choices),
             ...(declared ? { expectedAnswer: declared } : {}),
           };
           walkThroughInsistenceRef.current = 0;
@@ -9014,6 +9018,7 @@ export function VoiceTutorRealtime({
             source: 'card',
             hasChoices: Array.isArray(cmd.choices) && cmd.choices.length > 0,
             choiceLetters: extractChoiceLetters(cmd.choices),
+            choiceOptions: extractChoiceOptions(cmd.choices),
             ...(declared ? { expectedAnswer: declared } : {}),
           };
           servedProblemStatementsRef.current.add(statement.replace(/\s+/g, ' ').trim());
@@ -9502,6 +9507,8 @@ export function VoiceTutorRealtime({
     // per-call consts (not refs) — callBrainOnce's internal kill/retry
     // loop re-attempts the SAME logical turn, so one snapshot at the top
     // correctly stays fixed across retries.
+    // Set when this turn carries a judge correction note (arithmetic-recheck drop below).
+    let correctionNoteThisTurn = false;
     const turnStartSegmentId = currentSegmentIdRef.current;
     const turnStartCompletedSegmentIds = new Set(completedSegmentIdsRef.current);
     // Number of sentences actually dispatched to TTS this turn. Tracks
@@ -9964,6 +9971,7 @@ export function VoiceTutorRealtime({
       if (pendingJudgeCorrectionNoteRef.current && shouldConsumeJudgeCorrectionNote(transcript)) {
         runTranscript = `${pendingJudgeCorrectionNoteRef.current}\n\n${runTranscript}`;
         pendingJudgeCorrectionNoteRef.current = null;
+        correctionNoteThisTurn = true;
         // R50 T3: the note is spent — cancel its deadline so the timeout
         // path cannot dispatch a second, now-pointless correction turn.
         if (correctionNoteTimerRef.current) { clearTimeout(correctionNoteTimerRef.current); correctionNoteTimerRef.current = null; }
@@ -11320,6 +11328,15 @@ export function VoiceTutorRealtime({
                   // greeting-only sentence got voiced. The student then
                   // replied "hello" thinking the session had restarted.
                   const isFirstSentenceOfTurn = totalSentenceCount === 0;
+                  // Correction-note re-check spoken as bare arithmetic (live
+                  // 2026-09-05: "20% of 120 is 24; 20% of 15 is 3." opened the
+                  // turn). Only on a note-carrying turn's FIRST sentence, so
+                  // ordinary number talk is never touched.
+                  if (isFirstSentenceOfTurn && correctionNoteThisTurn && isBareArithmeticRecheck(sentence)) {
+                    console.warn('[brain-orchestrator] dropped bare arithmetic re-check:', JSON.stringify(sentence.slice(0, 100)));
+                    onDebugEvent?.('correction_recheck_dropped', sentence.slice(0, 80));
+                    continue;
+                  }
                   if (isFirstSentenceOfTurn && hasPriorTutorTurn) {
                     // \b after the greeting word so "Heyo" / "Hilarious" /
                     // "Howdoyou" don't get falsely stripped as "Hey" / "Hi" /
@@ -16011,6 +16028,16 @@ export function VoiceTutorRealtime({
         console.log(`[brain-orchestrator] MCQ letter homophone normalized: ${JSON.stringify(transcript)} → "${normalized}"`);
         onDebugEvent?.('mcq_letter_normalized', `"${transcript.trim()}" → "${normalized}"`);
         transcript = normalized;
+      }
+      // Letter ↔ content reconciliation (live 2026-09-05, portal-51b667f1):
+      // "…stratified sampling, so option B" with B misheard for D. When the
+      // utterance names BOTH a letter and one choice's content and they
+      // disagree, the content wins — the letter is the fragile channel.
+      const reconciled = reconcileMcqLetterWithContent(transcript, currentProblemRef.current.choiceOptions ?? []);
+      if (reconciled) {
+        console.log(`[brain-orchestrator] MCQ letter reconciled with named content: ${reconciled.from} → ${reconciled.to} (${JSON.stringify(reconciled.content)})`);
+        onDebugEvent?.('mcq_letter_reconciled', `${reconciled.from}→${reconciled.to} content="${reconciled.content.slice(0, 40)}" said="${transcript.trim().slice(0, 60)}"`);
+        transcript = reconciled.rewritten;
       }
     }
     // Task X10: stamp this turn's input modality for the honest fallback.

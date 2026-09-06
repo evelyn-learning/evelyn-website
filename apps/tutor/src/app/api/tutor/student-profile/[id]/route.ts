@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { isThinSession, countRealStudentTurns } from '@/lib/tutor/student-profile/thin-session';
 import {
   getOrCreateStudentProfile,
   saveStudentProfile,
@@ -400,7 +401,15 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
 
   let summaryError: string | undefined;
   let summary: string | undefined;
-  if (body.generateNotes !== false && Array.isArray(body.transcript) && body.transcript.length > 0) {
+  // Thin session (live 2026-09-05): one real student utterance in five
+  // minutes got a full narrative summary, and the NEXT opener built "last
+  // time we looked at…" on it. Under the floor: no summary (no LLM spend
+  // either) and the row is flagged so the prior-sessions block skips it.
+  const thin = Array.isArray(body.transcript) && isThinSession(body.transcript);
+  if (thin && Array.isArray(body.transcript) && body.transcript.length > 0) {
+    console.log(`[student-profile] thin session ${body.sessionId}: ${countRealStudentTurns(body.transcript)} real student turn(s) — no summary`);
+  }
+  if (body.generateNotes !== false && !thin && Array.isArray(body.transcript) && body.transcript.length > 0) {
     try {
       const lessonPlan = body.lessonPlanId ? await getLessonPlan(body.lessonPlanId) : null;
       const summaryInput: SessionSummaryInput = {
@@ -438,6 +447,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     lessonPlanId: body.lessonPlanId,
     losTouched: body.losTouched ?? [],
     summary,
+    ...(thin && Array.isArray(body.transcript) ? { thin: true } : {}),
     durationMinutes: body.durationMinutes,
     masteryDeltas: body.masteryDeltas,
     notesOverlaysAddedThisSession: body.notesOverlaysAddedThisSession,

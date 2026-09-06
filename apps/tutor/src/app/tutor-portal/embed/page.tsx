@@ -213,6 +213,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'recap_wrap_nudged', 'recap_overrun', 'recap_offer_unvoiced',
   'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed', 'practice_assign_skipped',
   'homework_announce_dropped', 'stuck_cue_ignored', 'stuck_cue_vetoed', 'opener_retry',
+  'mcq_letter_reconciled', 'correction_recheck_dropped',
   'profile_commit_final', 'profile_commit_keepalive_skipped',
   'homework_checked',
   'false_praise_opener_kill', 'false_praise_opener_advisory',
