@@ -1,4 +1,4 @@
-# SDD ledger — holistic-pedagogy Plan 2 (contract v1.15.0 + academy) — copied from the git-ignored workspace; Tasks 1–4 complete, Task 5 rollout Praveen-gated
+# SDD ledger — holistic-pedagogy Plan 2 (contract v1.15.0 + academy) — copied from the git-ignored workspace; Tasks 1–5 done except the live check on a real session
 
 # SDD ledger — plan: docs/superpowers/plans/2026-09-05-holistic-pedagogy-plan2-contract-academy.md
 Spec: docs/superpowers/specs/2026-09-05-tutor-holistic-pedagogy-round-design.md (§C.7 academy, §C.8, §C.9, §8). Plan 1 merged + deployed (main 49ff5ab1 → six-fix round d74762d7 pending deploy).
@@ -55,3 +55,7 @@ Fix wave (academy) re-review: all addressed, no new findings.
 - Rollout checklist for Praveen: docs/superpowers/reports/2026-09-06-holistic-pedagogy-plan2-rollout-checklist.md (tag → pin+lock → engine gate/deploy/push → academy env-drift/deploy ×2 → live check with a positive 200).
 - Workspace kept (Task 5 open).
 Engine gate on 0a4415e4: tsc 0; test:all 229 PASS / 4 known reds.
+Task 5 step 1-2: contract v1.15.0 tagged+pushed (78231c0); engine pin 4e7c92c4, deployed BUILD_ID T5G_eM_Neo7CcjdFAOU-g (pm2 online restarts=0; assigned-practice unsigned→401, /zzz→404; server node_modules contract 1.15.0), pushed tutor-rounds:main. Academy: pins 168f9d7, typecheck + 4740 tests green, env drift check clean (keys+values identical) for both apps; deploy-crimsora running.
+Task 5 step 2 positive check: signed crimsora POST /api/portal/v1/assigned-practice (synthetic studentId) → 200 {"assignments":[]}; garbage signature → 401 (allowlist covers the route). Crimsora deployed: api/web online, server node_modules contract 1.15.0, api /api/health 200 internal, site 200. evelyntutor deploy running.
+Task 5 step 3: evelyntutor.com deployed (api/web online, server contract 1.15.0, /api/health 200, site 200, IndexNow 321 URLs). Academy branch pushed to origin/main. env drift: none (manual key+value compare; `deploy/env-drift-check.sh` lives only on the unmerged `evelyn-ai-copy` branch, f1f4059).
+Task 5 step 4 (live check): NOT runnable read-only — needs a real Crimsora session. Verify on the next real session: tutorsessions.debugEvents carries `practice_assigned` WITHOUT `silent=no-locator`, the goodbye names "Unit N · Practice", the Practice tab shows the "From your tutor" card, and the following session on that course shows `homework_checked`.

@@ -1,4 +1,8 @@
-# Plan 2 rollout checklist (Task 5) — Praveen-gated
+# Plan 2 rollout checklist (Task 5) — EXECUTED 2026-09-06 on Praveen's go (steps 1–3 done; step 4 live check pending a real session)
+
+**Done:** contract v1.15.0 tagged+pushed (`78231c0`); engine pinned (`4e7c92c4`), deployed BUILD_ID `T5G_eM_Neo7CcjdFAOU-g`, pushed to main; academy pinned (`168f9d7`), env drift none, Crimsora + evelyntutor.com deployed (contract 1.15.0 on both servers, health 200), branch pushed to origin/main. Positive signed check on the live engine route: 200 `{assignments: []}`; garbage signature 401.
+
+**Pending (step 4):** first real Crimsora session — `practice_assigned` without `silent=no-locator`, goodbye names "Unit N · Practice", the card on the Practice tab, `homework_checked` next session.
 
 Built 2026-09-06 while you were away; nothing outward-facing has been done. State at handoff:
 
