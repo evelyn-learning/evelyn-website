@@ -85,3 +85,15 @@ Academy web, course lessons list (`apps/web/components/CourseLessons.tsx` row): 
 4. Posed-computation guard: DISTRIBUTE shape (A1).
 5. Judge grounds on authored truth; authored-ending contradiction guard; reversal-guard explanatory mention; step-result keys; ledger must not count judge-flagged denials; retry-after-self-correction restarts from the student's move (all from the main report).
 6. Action pin at close (A4). 7. Lessons-tab chip overflow (A5, academy web).
+
+---
+
+## Design note (Praveen, 2026-09-07): homework must be DRAFTED during the session, not created at the end
+
+Today all three creation paths are end-anchored (brain `close_session_notes` at the goodbye; the client ledger fallback inside that handler; the server auto-assign on the final End commit's gap delta). Early exit, tab close, time cap, or resume-on-a-fresh-page defeats all three (twice on 2026-09-06). Replace with one server-side record that accumulates:
+1. **Draft on evidence** — on ledger recurrence / recap still_struggling / incorrect streak ≥2 on an objective, the client upserts `PracticeAssignment{sessionId, loId}` with status `draft` and the bank items chosen then (rides the profile flush cadence).
+2. **Finalize on ANY exit** — End, pagehide keepalive, time cap, resumed End: one finalize step promotes drafts to `assigned`, attaching the brain's reason + next-time intent when the close tool ran, else a default reason. No exit depends on the brain calling a tool.
+3. **Sweep the abandoned** — drafts with no finalize after ~2 h are finalized by the nightly job or lazily at the next session start.
+4. **Announce only what exists** — spoken homework references only after finalize returned an assignment this session; otherwise the card just appears ("from your last session") and the next opener acknowledges it.
+5. **Resume rehydrates** — the client reloads ledger state + drafts from the server on resume.
+Contract impact: `assigned-practice` read gains a `status` filter (`draft` excluded by default); the academy card reads `assigned` only. Supersedes the "ledger/profile-backed fallback" item in the ranked list.
