@@ -125,7 +125,7 @@ import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-chec
 import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verdict-preservation';
 import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
-import { checkFalsePraiseOpener } from '@/lib/tutor/voice/false-praise-opener';
+import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
 import { getSharedMicLabel, switchSharedMicDevice } from '@/lib/tutor/voice/shared-mic';
@@ -6774,7 +6774,25 @@ export function VoiceTutorRealtime({
         // assignable (they name concepts, not bank-addressable objectives).
         const planLos = new Set((lessonPlanRef.current?.los ?? []).map((l) => l.id));
         const ledgerLos = new Set([...ledgerRef.current.keys()].filter((k) => !k.startsWith('prereq:')));
-        const loIds = c.assignLoIds.filter((id) => planLos.has(id) || ledgerLos.has(id));
+        let loIds = c.assignLoIds.filter((id) => planLos.has(id) || ledgerLos.has(id));
+        // Live 2026-09-06 (portal-4bbe5d91): the brain called the tool with NO
+        // objectives after a session where the ledger had a recurrence and an
+        // accepted recap ended "still struggling" — the goodbye said "all
+        // locked in". The ledger is the deterministic record; when the brain
+        // assigns nothing but the ledger saw the same objective recur, assign
+        // that objective (up to two, most detections first).
+        if (!loIds.length && studentId && !closeNotesFiredRef.current) {
+          const recurring = [...ledgerRef.current.entries()]
+            .filter(([k, v]) => !k.startsWith('prereq:') && v.detections >= 2 && planLos.has(k))
+            .sort((a, b) => b[1].detections - a[1].detections)
+            .map(([k]) => k)
+            .slice(0, 2);
+          if (recurring.length) {
+            loIds = recurring;
+            c.reason = c.reason?.trim() || 'This one tripped you up more than once today — a few reps to make it stick.';
+            onDebugEvent?.('practice_assign_fallback', `ledger-recurrence lo=[${recurring.join(',')}] brain-requested=[${c.assignLoIds.join(',')}]`);
+          }
+        }
         // Live 2026-09-05 (portal-51b667f1): the tool call reached this
         // handler and NOTHING followed — no assigned, no failed — because a
         // refused gate emitted no telemetry. Every refusal now says why.
@@ -14448,7 +14466,21 @@ export function VoiceTutorRealtime({
                   const noteworthyAdvisoryIssues = advisoryIssues.filter(
                     (i) => hasMathExpression(i.claim) || DENIAL_RE.test(i.claim),
                   );
-                  if (noteworthyAdvisoryIssues.length > 0) {
+                  // Live 2026-09-06 (portal-4bbe5d91): the judge flagged a
+                  // CORRECT "Not quite" (the student had a sign error against a
+                  // verified generated-problem key); the note was delivered and
+                  // the brain retracted a right verdict ("you had the setup
+                  // exactly right, my mistake"). When the flagged claim is a
+                  // denial and the deterministic key says the student really
+                  // disagreed with it, the judge is the one that is wrong.
+                  const judgeVerifiedKey = pendingGeneratedAnswerRef.current?.expectedAnswer ?? currentProblemRef.current?.expectedAnswer;
+                  const denialFlagged = noteworthyAdvisoryIssues.some((i) => DENIAL_RE.test(i.claim));
+                  const denialVerifiedRight = denialFlagged && !!judgeVerifiedKey
+                    && studentDisagreesWithVerified(transcript ?? '', judgeVerifiedKey, currentProblemRef.current?.choiceOptions);
+                  if (denialVerifiedRight) {
+                    onDebugEvent?.('judge_advisory_suppressed', `denial flagged but student ≠ verified key ("${(transcript ?? '').slice(0, 40)}" vs ${String(judgeVerifiedKey).slice(0, 30)})`);
+                  }
+                  if (noteworthyAdvisoryIssues.length > 0 && !denialVerifiedRight) {
                     const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim));
                     if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;

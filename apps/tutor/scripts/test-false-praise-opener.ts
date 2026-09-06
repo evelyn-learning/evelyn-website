@@ -207,4 +207,27 @@ check('semicolon list is not single-valued', !isSingleValued('x = 2; y = 5'));
   check('throwing comparator input never throws, resolves to ok', !threw && r?.verdict === 'ok', JSON.stringify(r));
 }
 
+
+// 2026-09-06 live (portal-4bbe5d91): partial answer to a scaffolding sub-question
+{
+  const { isTermOfExpression } = require('../src/lib/tutor/voice/false-praise-opener');
+  check('partial: "30p" is a term of "100 + 30p"', isTermOfExpression('30p', '100 + 30p') === true);
+  check('partial: "$30p$" vs "$100+30p$"', isTermOfExpression('$30p$', '$100+30p$') === true);
+  check('not partial: "3 - 4x" vs "15 - 3x"', isTermOfExpression('3 - 4x', '15 - 3x') === false);
+  check('not partial: "12" vs "12" (single term ⇒ not a partial)', isTermOfExpression('12', '12') === false);
+  check('not partial: "7x" vs "10x - 2"', isTermOfExpression('7x', '10x - 2') === false);
+  const r = checkFalsePraiseOpener({ sentence: 'Exactly. $5 \\times 6p = 30p$.', studentUtterance: '30p', verifiedExpectedAnswer: '100 + 30p', finalAnswerTurn: true });
+  check('live: partial-term answer is advisory, never a kill', r.verdict === 'advisory_false_praise' && r.matchReason === 'partial-term', JSON.stringify(r));
+}
+
+
+// 2026-09-06 live: judge-advisory gate helper
+{
+  const { studentDisagreesWithVerified } = require('../src/lib/tutor/voice/false-praise-opener');
+  check('gate: "3 - 4x" disagrees with verified "15 - 3x"', studentDisagreesWithVerified('so it\'ll be 9 - 4x -6 + x so answer is 3 - 4x', '15 - 3x') === true);
+  check('gate: "15 - 3x" agrees with "15 - 3x"', studentDisagreesWithVerified('15 - 3x', '15 - 3x') === false);
+  check('gate: partial term is not a disagreement', studentDisagreesWithVerified('30p', '100 + 30p') === false);
+  check('gate: no key ⇒ false', studentDisagreesWithVerified('7', '') === false);
+}
+
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);

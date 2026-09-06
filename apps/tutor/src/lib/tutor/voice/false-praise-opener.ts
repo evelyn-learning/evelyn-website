@@ -142,6 +142,95 @@ function selfCorrectsByWhQuestion(remainder: string): boolean {
 }
 
 /** No list separators, at most one '=', short. */
+/** Normalise a math fragment for term comparison: strip $, spaces, ×→*,
+ *  unicode minus, trailing punctuation; lower-case. */
+function normTerm(s: string): string {
+  return (s ?? '')
+    .replace(/\$/g, '')
+    .replace(/[×·]/g, '*')
+    .replace(/[−–]/g, '-')
+    .replace(/\\(?:cdot|times)/g, '*')
+    .replace(/[.,!?;:]+$/g, '')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+/** Split an expression into its top-level additive terms (sign-attached),
+ *  ignoring signs inside parentheses. */
+function topLevelTerms(expr: string): string[] {
+  const s = normTerm(expr);
+  const terms: string[] = [];
+  let depth = 0, cur = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i];
+    if (c === '(') depth++;
+    if (c === ')') depth--;
+    if ((c === '+' || c === '-') && depth === 0 && cur !== '' && !/[*\/^(]$/.test(cur)) {
+      terms.push(cur); cur = c === '-' ? '-' : '';
+      continue;
+    }
+    cur += c;
+  }
+  if (cur !== '') terms.push(cur);
+  return terms.map((t) => t.replace(/^\+/, ''));
+}
+
+/** Is the student's value one of the verified expression's own additive
+ *  terms (or the whole of it)? "30p" vs "100+30p" → true; "3-4x" vs "15-3x"
+ *  → false. Sign-insensitive on the student side ("-3x" vs "3x" both count)
+ *  because a partial answer is about WHICH piece, not its sign. */
+export function isTermOfExpression(studentUtterance: string, expression: string): boolean {
+  const student = normTerm(studentUtterance).replace(/^(?:itis|its|theansweris|answeris|so)/, '').replace(/^-/, '');
+  if (!student) return false;
+  const terms = topLevelTerms(expression);
+  if (terms.length < 2) return false;
+  return terms.some((t) => t.replace(/^-/, '') === student);
+}
+
+/** Deterministic check used by the judge-advisory gate: does the student's
+ *  utterance DISAGREE with a verified single-valued key? True only when the
+ *  key is single-valued and the matcher says disagree; a partial-term answer
+ *  is not a disagreement. */
+export function studentDisagreesWithVerified(
+  utterance: string,
+  verified: string,
+  choices?: Array<{ letter: string; text: string }>,
+): boolean {
+  try {
+    const v = (verified ?? '').trim();
+    if (!v || !isSingleValued(v) || !isAnswerShaped(utterance)) return false;
+    if (isTermOfExpression(utterance, v)) return false;
+    const m = matchUtteranceToAnswer(utterance, v, choices, { monetary: false });
+    if (m.verdict === 'disagree') return true;
+    if (m.verdict === 'agree') return false;
+    // The matcher is built for single values; an algebraic key ("15 - 3x")
+    // against a sentence that ENDS in the student's expression ("… so
+    // answer is 3 - 4x") comes back unparseable. Compare the student's final
+    // stated expression to the key as term multisets.
+    if (!/[a-z]/i.test(v)) return false;
+    const frag = finalExpressionFragment(utterance);
+    if (!frag) return false;
+    const a = topLevelTerms(frag).map((t) => t.replace(/^\+/, '')).sort();
+    const b = topLevelTerms(v).map((t) => t.replace(/^\+/, '')).sort();
+    if (a.length === 0 || b.length === 0) return false;
+    return a.join('|') !== b.join('|');
+  } catch { return false; }
+}
+
+/** The student's final stated expression: the run of math characters after
+ *  the last "answer is" / "so" / "=" / "is", when it looks like an
+ *  expression (a variable or an operator) rather than a sentence. */
+function finalExpressionFragment(utterance: string): string | null {
+  const u = (utterance ?? '').trim();
+  if (!u) return null;
+  const cut = u.split(/\b(?:answer\s+is|so\s+(?:the\s+)?(?:answer\s+is|it'?s|its)|=|\bis\b|\bso\b|\bgives\b|\bequals\b)\s*/i).pop() ?? '';
+  const frag = cut.replace(/[.!?]+$/, '').trim();
+  if (!frag || frag.length > 40) return null;
+  if (!/^[\s0-9a-z+\-*/^().$\\]+$/i.test(frag)) return null;
+  if (!/[a-z]/i.test(frag) && !/[+\-*/^]/.test(frag)) return null;
+  return frag;
+}
+
 export function isSingleValued(expected: string): boolean {
   const e = expected.trim();
   if (!e || e.length > 40) return false;
@@ -213,6 +302,15 @@ export function checkFalsePraiseOpener(args: {
       if (!isSingleValued(verified)) return OK;
       const m = matchUtteranceToAnswer(args.studentUtterance, verified, args.choices, { monetary });
       if (m.verdict !== 'disagree') return OK;
+      // Live 2026-09-06 (portal-4bbe5d91): the student answered a scaffolding
+      // sub-question ("5 × 6p?" → "30p") while the verified key was the whole
+      // expression (100 + 30p); the turn read as a final-answer turn and a
+      // CORRECT affirmation was killed. A student value that is one of the
+      // verified expression's own terms is a partial answer, never a
+      // contradiction — advisory at most.
+      if (isTermOfExpression(args.studentUtterance, verified)) {
+        return { verdict: 'advisory_false_praise', expected: verified, matchReason: 'partial-term' };
+      }
       const mcqResolved = !!(args.choices && args.choices.length > 0) && isMcqResolvedReason(m.reason);
       if (mcqResolved) {
         // Fix round 2: the MCQ-letter kill checks ONLY the strong signal —

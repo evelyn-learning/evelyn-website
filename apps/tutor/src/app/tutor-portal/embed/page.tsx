@@ -213,7 +213,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'recap_wrap_nudged', 'recap_overrun', 'recap_offer_unvoiced',
   'practice_assigned', 'practice_assigned_auto', 'practice_assign_failed', 'practice_assign_skipped',
   'homework_announce_dropped', 'stuck_cue_ignored', 'stuck_cue_vetoed', 'opener_retry',
-  'mcq_letter_reconciled', 'correction_recheck_dropped',
+  'mcq_letter_reconciled', 'correction_recheck_dropped', 'embed_config', 'practice_assign_fallback', 'judge_advisory_suppressed',
   'profile_commit_final', 'profile_commit_keepalive_skipped',
   'homework_checked',
   'false_praise_opener_kill', 'false_praise_opener_advisory',
@@ -577,6 +577,13 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // Mutually exclusive with a non-null resumeState (resolveResumeOutcome
   // never returns both). Only consumed when the pedagogy flag is on.
   const [checkpointStale, setCheckpointStale] = useState(false);
+  // Boot telemetry (live check 2026-09-06): which of the Plan 2 claims the
+  // host actually minted. Presence only — never the values.
+  useEffect(() => {
+    if (!config) return;
+    addDebugEvent('embed_config', `practice_locator=${config.practice_locator ? 'yes' : 'no'} goal_note=${config.goal_note ? 'yes' : 'no'} readiness_note=${config.readiness_note ? 'yes' : 'no'}`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config?.practice_locator, config?.goal_note]);
   useEffect(() => {
     if (!wantsResume) return;
     let cancelled = false;

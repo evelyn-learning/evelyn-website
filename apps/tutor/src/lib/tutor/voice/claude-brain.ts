@@ -1549,8 +1549,15 @@ function buildBrainMessages(
   conversationHistory: BrainTurnInput['conversationHistory'],
   userContent: string,
 ): Anthropic.MessageParam[] {
-  const lastIdx = conversationHistory.length - 1;
-  const history: Anthropic.MessageParam[] = conversationHistory.map((m, i) =>
+  // Live 2026-09-06 (portal-4bbe5d91): a killed-and-retried assistant turn
+  // left an EMPTY transcript entry; it became the last history message, got
+  // the cache_control marker, and the API refused the whole turn with 400
+  // "cache_control cannot be set for empty text blocks" — the student saw
+  // "trouble reaching my brain". Empty messages carry nothing worth
+  // sending; drop them before choosing where the cache marker lands.
+  const nonEmpty = conversationHistory.filter((m) => typeof m.content === 'string' && m.content.trim().length > 0);
+  const lastIdx = nonEmpty.length - 1;
+  const history: Anthropic.MessageParam[] = nonEmpty.map((m, i) =>
     i === lastIdx
       ? {
           role: m.role,
