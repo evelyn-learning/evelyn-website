@@ -98,7 +98,12 @@ const OPENER_SHAPE_RE = (p: string) => new RegExp(
 // clause, a hedge word anywhere earlier in the clause suppressed a genuine
 // reversal — "That's not confusing, it's the central executive after all."
 // The adjacent-negation check above already handles "not the X" directly.
-const MENTION_BEFORE_RE = /\b(?:only\s+when|only\s+if|when|if|unless|whereas|while|versus|vs\.?|compared\s+(?:to|with)|as\s+opposed\s+to|rather\s+than|instead\s+of|unlike)\b/;
+// 2026-09-07 (Task 6 fix round): generalization markers — "remember that an
+// identity always has infinitely many solutions", "whenever both sides
+// simplify to the same thing" — state a general rule ABOUT the class, not a
+// verdict on THIS problem, and were false-killing correct teaching turns in
+// the authored-ending guard (authored-ending.ts, which shares this check).
+const MENTION_BEFORE_RE = /\b(?:only\s+when|only\s+if|when|if|unless|whereas|while|versus|vs\.?|compared\s+(?:to|with)|as\s+opposed\s+to|rather\s+than|instead\s+of|unlike|whenever|remember|recall|in\s+general|generally|usually|typically|by\s+definition)\b/;
 const MENTION_AFTER_RE = /^\s*(?:only\s+(?:when|if)|when|if|unless|would|could|might|versus|vs\.?|whereas)\b/;
 
 /** `sentence` and `phrase` are already normalized the same way (Task 6 calls

@@ -25,8 +25,20 @@ export function classifySolutionCount(text: string): SolutionClass | null {
   return hits.length === 1 ? hits[0] : null;
 }
 
-/** The class phrase must be PRESENTED as this problem's verdict. */
-const VERDICT_CUE_RE = /\b(?:so|therefore|thus|that\s+means|which\s+means|meaning|there(?:'s|\s+is|\s+are)|it\s+has|we\s+have|this\s+has|the\s+answer\s+is|it'?s|that'?s|gives|leaves\s+us\s+with|right|exactly|correct|yes|nailed\s+it)\b/i;
+/**
+ * The class phrase must be PRESENTED as this problem's verdict — the cue
+ * must sit immediately before the phrase (at most one article/determiner
+ * between them), not merely anywhere in a flat lookback window. The earlier
+ * flat-window version false-killed correct teaching turns where the cue and
+ * the phrase were in the same sentence but different clauses: "Right,
+ * remember that an identity always has infinitely many solutions" put
+ * "right" and "infinitely many solutions" in the same 80-char window with
+ * no verdict relationship between them (2026-09-07 review).
+ */
+// `norm()` strips apostrophes ("there's" → "theres"), so every contraction
+// cue must tolerate the stripped form too, not just the literal apostrophe.
+const VERDICT_CUE_SRC = String.raw`so|therefore|thus|that\s+means|which\s+means|meaning|there(?:'?s|\s+is|\s+are)|it\s+has|we\s+have|this\s+has|the\s+answer\s+is|it'?s|that'?s|gives|leaves\s+us\s+with|right|exactly|correct|yes|nailed\s+it`;
+const VERDICT_CUE_ADJACENT_RE = new RegExp(`(?:${VERDICT_CUE_SRC})\\s+(?:the\\s+|a\\s+|an\\s+|this\\s+|that\\s+|just\\s+)?$`, 'i');
 
 const norm = (s: string) => (s ?? '').toLowerCase().replace(/[*_`"'’‘“”]/g, '').replace(/[—–]/g, ' - ').replace(/\s+/g, ' ').trim();
 
@@ -34,6 +46,15 @@ function classPhrase(sentence: string, cls: SolutionClass): string | null {
   const re = cls === 'none' ? NONE_RE : cls === 'infinite' ? INFINITE_RE : ONE_RE;
   const m = re.exec(sentence);
   return m ? m[0] : null;
+}
+
+/** The same-clause text immediately before `idx` — clause boundaries are the
+ *  last '. ', '; ', ': ' or ' - ' (the em/en dash forms `norm` already
+ *  rewrote to ' - ') before that index. */
+function clauseBefore(s: string, idx: number): string {
+  const before = s.slice(0, idx);
+  const clauseStart = Math.max(before.lastIndexOf('. '), before.lastIndexOf('; '), before.lastIndexOf(': '), before.lastIndexOf(' - '));
+  return before.slice(clauseStart + 1);
 }
 
 export function findAuthoredEndingContradiction(args: { sentence: string; authoredAnswer: string | undefined }): { stated: SolutionClass; authored: SolutionClass } | null {
@@ -46,9 +67,9 @@ export function findAuthoredEndingContradiction(args: { sentence: string; author
   const phrase = classPhrase(s, stated);
   if (!phrase) return null;
   if (isExplanatoryMention(s, norm(phrase))) return null;
-  const idx = s.indexOf(norm(phrase));
-  const clause = s.slice(Math.max(0, idx - 80), idx);
-  if (!VERDICT_CUE_RE.test(clause)) return null;
+  const idx = s.indexOf(phrase);
+  const clause = clauseBefore(s, idx);
+  if (!VERDICT_CUE_ADJACENT_RE.test(clause)) return null;
   return { stated, authored };
 }
 
