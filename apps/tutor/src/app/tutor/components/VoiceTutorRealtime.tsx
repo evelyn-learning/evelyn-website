@@ -9281,6 +9281,23 @@ export function VoiceTutorRealtime({
           });
         } catch { /* a bad command shouldn't abort the whole seed */ }
       });
+      // A6 (live 2026-09-06 addendum, portal-3a024b75): after a resume the
+      // brain scrolled to a card it remembered while the catalog it queries
+      // offered only one feature — nothing recorded what the seed above
+      // actually rebuilt. Log-only investigation hook. The catalog mirror
+      // above (the forEach's catalogRef.current.append calls) is synchronous,
+      // so getItems()/getPages() already reflect the full seed here — no
+      // await needed.
+      {
+        const items = catalogRef.current.getItems();
+        const pages = catalogRef.current.getPages();
+        const last = items[items.length - 1]?.itemId ?? '(none)';
+        onDebugEvent?.('resume_board_seeded', `persisted=${resumeState.whiteboardCommands.length} catalog=${items.length} pages=${pages.length} last=${last}`);
+        const persistedRenders = resumeState.whiteboardCommands.filter(isBoardRenderCommand).length;
+        if (items.length < persistedRenders) {
+          onDebugEvent?.('resume_board_seed_mismatch', `persisted_renders=${persistedRenders} catalog=${items.length}`);
+        }
+      }
       // R36 (live 2026-07-30, SAT session portal-fdee5b34): rehydrate the
       // ACTIVE problem from the restored board. currentProblemRef was only
       // ever set on live tool dispatch, so after a resume the brain's

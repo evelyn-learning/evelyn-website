@@ -1309,25 +1309,20 @@ export default function SessionStage(props: SessionStageProps) {
         </div>
       )}
 
-      {/* ===== Voice-hiccup captions pin (round-28b) — board bottom, just
-              above the floating tutor bar: the sentence NEITHER voice
-              engine could speak, readable where the student is already
-              looking. Transient; host clears it when audio resumes. ===== */}
-      {hiccupPin && (
+      {/* ===== Voice-hiccup captions pin (round-28b) + Homework action pin
+              (Task 15) — board bottom, just above the floating tutor bar:
+              the hiccup pin is the sentence NEITHER voice engine could speak
+              (transient; host clears it when audio resumes), the action pin
+              is set once a homework assignment is finalized this session
+              (stays until the student dismisses it or the session ends).
+              Both may show at once, so they share ONE container at this
+              offset and stack vertically instead of overlapping (Task 16
+              fix, live-check-3 addendum: both rendered at the same absolute
+              bottom offset). ===== */}
+      {(hiccupPin || actionPin) && (
         <div className="absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none">
-          <div className="max-w-[min(88vw,560px)] pointer-events-auto">
+          <div className="max-w-[min(88vw,560px)] pointer-events-auto flex flex-col items-center gap-2">
             {hiccupPin}
-          </div>
-        </div>
-      )}
-
-      {/* ===== Homework action pin (Task 15) — board bottom, same wrapper as
-              the voice-hiccup pin above (both may show at once). Set once a
-              homework assignment is finalized this session; stays until the
-              student dismisses it or the session ends. ===== */}
-      {actionPin && (
-        <div className="absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none">
-          <div className="max-w-[min(88vw,560px)] pointer-events-auto">
             {actionPin}
           </div>
         </div>

@@ -248,6 +248,12 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // Task 15, live-check-3 fixes round (2026-09-07): action_pin_set — the
   // homework action pin landing on the board at close.
   'action_pin',
+  // Task 16, live-check-3 fixes round (2026-09-07): resume_board_seeded /
+  // resume_board_seed_mismatch — addendum A6 investigation hook: what the
+  // resume-seed replay actually rebuilt into the catalog (persisted commands
+  // vs catalog items/pages), so a resume that scrolls to a remembered card
+  // while the catalog offers only one feature leaves a record.
+  'resume_board',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package
