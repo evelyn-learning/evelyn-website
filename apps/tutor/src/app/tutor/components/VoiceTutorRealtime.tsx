@@ -2098,6 +2098,20 @@ export function VoiceTutorRealtime({
       // stamp a locator onto the route's fallback auto-assignment either, or a
       // killed feature still writes locator-labelled homework nobody announced.
       ...(isFinal && locatorForPrompt ? { practiceLocator: locatorForPrompt } : {}),
+      // Task 13 (Praveen 2026-09-07): homework is finalized on ANY exit. The
+      // close tool may never have fired (student closed the tab, time cap,
+      // brain never called it) — the exit commit promotes whatever draft
+      // the session accumulated. Skipped once a finalize already returned
+      // this session, so an End after a close-tool finalize is a no-op.
+      // BOTH exit commits carry it: the End button commits
+      // {final:true, keepalive:true} and the pagehide handler commits
+      // {keepalive:true} WITHOUT final — gating on `isFinal` alone would
+      // leave tab-close, the exit this whole round exists for, unfinalized.
+      // `isFinal` is what names the source, not `keepalive` (the End path
+      // asks for keepalive too).
+      ...((isFinal || opts?.keepalive === true) && TUTOR_HOMEWORK_DRAFTS && !homeworkFinalizedRef.current
+        ? { finalizeHomework: { source: isFinal ? 'end' as const : 'pagehide' as const } }
+        : {}),
       ...(isFinal && homeworkAckIdsRef.current.length ? { homeworkAcknowledged: homeworkAckIdsRef.current } : {}),
     };
     sessionAccumRef.current = {
@@ -2147,6 +2161,20 @@ export function VoiceTutorRealtime({
       // auto-assign fired (the brain never called close_session_notes, or
       // its call failed). Adopt its result for the summary card — but never
       // overwrite an assignment the in-session tool call already made.
+      // Task 13: the commit route finalized a homework draft on this exit.
+      // Adopt it exactly as the in-session finalize does — refs + the
+      // summary-card/pin callback (Task 15) — so an End-time or pagehide
+      // finalize surfaces the same card an in-session one does.
+      // (Not gated on isFinal: the route only ever answers with
+      // assignedPractice when it honoured a finalizeHomework this request,
+      // and the pagehide commit sends one too.)
+      if (Array.isArray(data.assignedPractice) && data.assignedPractice.length && typeof data.practiceLocator === 'string' && data.practiceLocator) {
+        const los = data.assignedPractice as Array<{ loId: string; title: string; count: number }>;
+        assignedPracticeRef.current = los;
+        homeworkFinalizedRef.current = true;
+        onHomeworkAssignedRef.current?.({ los, locator: data.practiceLocator as string });
+        onDebugEventRef.current?.('practice_assigned', `finalize-on-exit ${los.map((a) => `${a.loId}:${a.count}`).join(',')}`);
+      }
       if (Array.isArray(data.assigned) && data.assigned.length && assignedPracticeRef.current === null) {
         const detail = (data.assigned as Array<{ loId: string; count: number }>).map((a) => `${a.loId}:${a.count}`).join(',');
         // Fix round 1 (spec §C.6) — same locator gate as the in-session path:
@@ -2547,6 +2575,16 @@ export function VoiceTutorRealtime({
   // summary card. Null until an assign succeeds (either the in-session tool
   // call or the commit-route fallback).
   const assignedPracticeRef = useRef<Array<{ loId: string; title: string; count: number }> | null>(null);
+  // Task 13 — the tool-result note for close_session_notes. The close
+  // handler is dispatched through handleWhiteboardCommand, whose return value
+  // is what the tool-result payload is built from; a ref is the only way to
+  // get a per-command string out of that batch loop. Read-and-cleared by the
+  // handler's return so a later, unrelated command can never inherit it.
+  const closeNotesResultNoteRef = useRef<string | null>(null);
+  // Task 13 — assigned by Task 15 (the session-summary card + action pin).
+  // Called ONLY on a finalize that actually created an assignment AND has a
+  // locator to send the student to.
+  const onHomeworkAssignedRef = useRef<((a: { los: Array<{ loId: string; title: string; count: number }>; locator?: string }) => void) | undefined>(undefined);
   // Task 20 fills this: ids of the homework assignments the tutor is
   // instructed to raise out loud this session. Filled at the opener-seed
   // site and ONLY when the homework continuity clause actually landed in
@@ -6877,57 +6915,85 @@ export function VoiceTutorRealtime({
         // Live 2026-09-05 (portal-51b667f1): the tool call reached this
         // handler and NOTHING followed — no assigned, no failed — because a
         // refused gate emitted no telemetry. Every refusal now says why.
-        if (!loIds.length || !studentId || closeNotesFiredRef.current) {
+        // (Kept for the gates that still refuse outright; the no-LO case is
+        // now decided by the finalize's own answer below, because a draft
+        // built from in-session evidence can still be promoted.)
+        if (!studentId || closeNotesFiredRef.current || (!loIds.length && !TUTOR_HOMEWORK_DRAFTS)) {
           const reason = closeNotesFiredRef.current ? 'already-fired' : !studentId ? 'no-student' : c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
           onDebugEvent?.('practice_assign_skipped', `${reason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}]`);
         }
-        if (loIds.length && studentId && !closeNotesFiredRef.current) {
-          const reason = (c.reason ?? '').trim() || 'Your tutor picked these to follow up on today\'s lesson.';
-          void (async () => {
-            try {
-              const res = await fetch('/api/tutor/practice-assign', {
+        // Task 13 (Praveen 2026-09-07): the assignment must EXIST before the
+        // brain's goodbye sentence, or the tutor announces a card that was
+        // never created. So this is AWAITED — the handler is already async
+        // and the brain's turn holds here — and every call is bounded so a
+        // slow route can never hang the goodbye. Two bounded round-trips
+        // (draft + finalize) ⇒ ~8s worst case; each leg fails closed to
+        // "nothing was assigned".
+        let note = 'close_session_notes: nothing was assigned — do not mention homework or practice.';
+        if (studentId && !closeNotesFiredRef.current) {
+          try {
+            const headers = { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) };
+            // No brain LOs ⇒ skip the draft POST but STILL finalize: an
+            // evidence draft (recurrence / still-struggling recap /
+            // incorrect streak) may already be waiting to be promoted.
+            if (loIds.length && TUTOR_HOMEWORK_DRAFTS) {
+              await fetch('/api/tutor/practice-assign/draft', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
-                body: JSON.stringify({
-                  studentId,
-                  sessionId: sessionIdRef.current,
-                  lessonPlanId,
-                  subject,
-                  loIds,
-                  reason,
-                  locator: practiceLocator,
-                  nextTimeIntent: c.nextTimeIntent,
-                }),
+                headers,
+                signal: AbortSignal.timeout(4000),
+                body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds, trigger: 'close_tool', locator: practiceLocator }),
               });
-              // Fix round 1 (minor 2) — the once-latch closes only on a
-              // REACHED route (200 assigned / 204 nothing-to-assign). A 5xx
-              // or a thrown fetch leaves it open so a second
-              // close_session_notes can retry; the route's sessionId-keyed
-              // upsert makes that retry idempotent.
-              if (res.status === 200 || res.status === 204) closeNotesFiredRef.current = true;
-              if (res.status === 200) {
-                const data = await res.json() as { assigned: Array<{ loId: string; title: string; count: number }> };
-                const detail = data.assigned.map((a) => `${a.loId}:${a.count}`).join(',');
-                // Fix round 1 (spec §C.6) — the STUDENT-FACING surface is
-                // gated on a locator: with no place to send them, the /tutor
-                // summary must not announce homework. The assignment record
-                // is still created (it is real data the host can surface
-                // later); only the announcement is suppressed, and the debug
-                // event says so.
-                if (practiceLocator) {
-                  assignedPracticeRef.current = data.assigned;
-                  onDebugEvent?.('practice_assigned', detail);
-                } else {
-                  onDebugEvent?.('practice_assigned', `silent=no-locator ${detail}`);
-                }
-              } else if (res.status !== 204) {
-                onDebugEvent?.('practice_assign_failed', `status=${res.status}`);
-              }
-            } catch (e) {
-              onDebugEvent?.('practice_assign_failed', String((e as Error).message).slice(0, 80));
             }
-          })();
+            const reason = (c.reason ?? '').trim() || 'Your tutor picked these to follow up on today\'s lesson.';
+            const res = TUTOR_HOMEWORK_DRAFTS
+              ? await fetch('/api/tutor/practice-assign/finalize', {
+                  method: 'POST',
+                  headers,
+                  signal: AbortSignal.timeout(4000),
+                  body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, source: 'close_tool', reason, nextTimeIntent: c.nextTimeIntent, locator: practiceLocator }),
+                })
+              : await fetch('/api/tutor/practice-assign', {
+                  method: 'POST',
+                  headers,
+                  signal: AbortSignal.timeout(4000),
+                  body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds, reason, locator: practiceLocator, nextTimeIntent: c.nextTimeIntent }),
+                });
+            // Fix round 1 (minor 2) — the once-latch closes only on a
+            // REACHED route (200 assigned / 204 nothing-to-assign). A 5xx
+            // or a thrown fetch leaves it open so a second
+            // close_session_notes can retry; the route's sessionId-keyed
+            // upsert makes that retry idempotent.
+            if (res.status === 200 || res.status === 204) closeNotesFiredRef.current = true;
+            if (res.status === 200) {
+              const data = await res.json() as { assigned: Array<{ loId: string; title: string; count: number }> };
+              const detail = data.assigned.map((a) => `${a.loId}:${a.count}`).join(',');
+              // Fix round 1 (spec §C.6) — the STUDENT-FACING surface is
+              // gated on a locator: with no place to send them, nothing may
+              // announce homework. The assignment record still exists (real
+              // data the host can surface later); only the announcement is
+              // suppressed, and the debug event says so.
+              if (practiceLocator && data.assigned.length) {
+                assignedPracticeRef.current = data.assigned;
+                homeworkFinalizedRef.current = true;
+                onHomeworkAssignedRef.current?.({ los: data.assigned, locator: practiceLocator });
+                note = `close_session_notes: assigned practice on ${data.assigned.map((a) => a.title).join(' and ')} — it is waiting in "${practiceLocator}". You may tell the student that, once.`;
+                onDebugEvent?.('practice_assigned', detail);
+              } else {
+                onDebugEvent?.('practice_assigned', `silent=${practiceLocator ? 'empty' : 'no-locator'} ${detail}`);
+              }
+            } else if (res.status !== 204) {
+              onDebugEvent?.('practice_assign_failed', `status=${res.status}`);
+            } else if (!loIds.length) {
+              // 204 with no brain LOs: no draft existed to promote either —
+              // the outcome the old pre-flight gate used to report.
+              const skipReason = c.assignLoIds.length ? 'no-valid-lo' : 'no-lo-requested';
+              onDebugEvent?.('practice_assign_skipped', `${skipReason} requested=[${c.assignLoIds.join(',')}] plan=[${[...planLos].join(',')}] finalize=204`);
+            }
+          } catch (e) {
+            onDebugEvent?.('practice_assign_failed', String((e as Error).message).slice(0, 80));
+          }
         }
+        closeNotesResultNoteRef.current = note;
         console.log(`[VoiceTutorRealtime] close_session_notes assign=[${loIds.join(',')}] intent="${(c.nextTimeIntent ?? '').slice(0, 60)}"`);
         scheduleProfileFlush();
         continue;
@@ -8233,7 +8299,12 @@ export function VoiceTutorRealtime({
     // command (the per-site events above are heterogeneous; this is the
     // grep-able / embed-persisted roll-up — see EMBED_DEBUG_EVENT_PREFIXES).
     for (const r of rejected) onDebugEvent?.('render_dropped', `${r.action} — ${r.reason.slice(0, 120)}`);
-    return { rejected, assignedIds, manifests, duplicates, boardSnapshot };
+    // Task 13: close_session_notes' own report (assigned / nothing) rides
+    // out on the result so the tool_result the model reads carries it.
+    // Read-and-cleared: a later, unrelated command must never inherit it.
+    const note = closeNotesResultNoteRef.current;
+    closeNotesResultNoteRef.current = null;
+    return { rejected, assignedIds, manifests, duplicates, boardSnapshot, ...(note ? { note } : {}) };
   }, [onWhiteboardCommand, onTranscriptUpdate, onTrackInteraction, validateToolCalls, validateToolCallViaClaude, onDebugEvent, applyResolvedAdvance]);
 
   // Build a context summary from the current transcript
@@ -10742,6 +10813,19 @@ export function VoiceTutorRealtime({
             // Flag off ⇒ all four are undefined ⇒ JSON.stringify drops
             // them ⇒ the request is byte-identical to pre-round.
             recapOffer: recapOfferForTurn,
+            // Task 13 (2026-09-07): what the deterministic ledger holds for
+            // this session — the brain's close_session_notes call was
+            // grounded only in its own recollection ("all locked in" while
+            // the ledger had two detections, live 2026-09-06). Same
+            // TUTOR_CLOSE_NOTES gate as the rest of the close-notes path, so
+            // flag-off is byte-identical. Recovered LOs are excluded.
+            ledgerFlags: TUTOR_CLOSE_NOTES
+              ? [...ledgerRef.current.entries()]
+                  .filter(([k, v]) => !k.startsWith('prereq:') && v.detections >= 1 && !v.recovered)
+                  .sort((a, b) => b[1].detections - a[1].detections)
+                  .slice(0, 3)
+                  .map(([loId, v]) => ({ loId, title: loTitleFor(loId), detections: v.detections }))
+              : undefined,
             recapGo: recapGoForTurn,
             recapWrap: recapWrapForTurn,
             recapReply,
@@ -12225,12 +12309,14 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('meta_narration_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }
-                  // Homework announcement with nowhere to send them (live
-                  // 2026-09-05): no practice locator ⇒ the prompt says
-                  // "do not mention homework"; when the brain does anyway
-                  // the student is promised a card that does not exist.
-                  if (!locatorForPrompt && isHomeworkAnnouncement(updatedSentence)) {
-                    console.warn('[brain-orchestrator] dropped homework announcement (no locator):', JSON.stringify(updatedSentence.slice(0, 100)));
+                  // Homework announcement with nothing behind it (live
+                  // 2026-09-05: no practice locator; live 2026-09-06: a
+                  // locator existed but nothing was ever assigned).
+                  // 2026-09-07: gated on an assignment finalized THIS
+                  // session, not on the locator — live 2026-09-06 the tutor
+                  // announced a card that did not exist.
+                  if (!assignedPracticeRef.current && isHomeworkAnnouncement(updatedSentence)) {
+                    console.warn('[brain-orchestrator] dropped homework announcement (nothing assigned this session):', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('homework_announce_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }

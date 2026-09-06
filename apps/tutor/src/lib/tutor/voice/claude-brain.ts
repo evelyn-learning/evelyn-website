@@ -34,6 +34,7 @@ const scrubTutorText = (t: string): string =>
   TUTOR_META_NARRATION_STRIP ? stripMetaNarration(stripStageDirections(t)) : stripStageDirections(t);
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
+import { formatSessionStrugglesBlock, type LedgerFlag } from './session-struggles-block';
 
 // Brain model, env-selectable for A/B without a deploy (TUTOR_BRAIN_MODEL).
 // Default is the known-good Sonnet 4.6; prod ships claude-sonnet-5 via env.
@@ -256,6 +257,13 @@ export interface BrainTurnInput {
   recapGo?: { loTitle: string };
   recapWrap?: boolean;
   recapReply?: 'accept' | 'decline' | 'unclear';
+  /** Task 13 (2026-09-07): the deterministic struggle ledger's top flags for
+   *  THIS session, rendered as `<session_struggles>` in the per-turn user
+   *  content so close_session_notes is grounded in evidence, not in the
+   *  brain's recollection. Absent/empty ⇒ no block ⇒ userContent
+   *  byte-identical. Suppressed on a turn that already carries a
+   *  `<recap_offer>` — that offer owns the turn. */
+  ledgerFlags?: LedgerFlag[];
   /** Teacher-persona mid-session style salience (flag
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER): compact distilled style markers
    *  (renderTeacherStyleReminder output — pace / catchphrases / analogy
@@ -1466,7 +1474,7 @@ export function formatMockReviewBlock(ctx?: MockReviewContext): string {
 /** Holistic-pedagogy round (spec §B.3/B.5): one-turn recap directives —
  *  offer/go/wrap/reply-note blocks. Exported for scripts/test-recap-blocks.ts
  *  so the block text is testable without running a whole brain turn. */
-export function formatRecapBlocks(input: Pick<BrainTurnInput, 'recapOffer' | 'recapGo' | 'recapWrap' | 'recapReply'>): string {
+export function formatRecapBlocks(input: Pick<BrainTurnInput, 'recapOffer' | 'recapGo' | 'recapWrap' | 'recapReply' | 'ledgerFlags'>): string {
   // Defense in depth: loTitle is spliced directly into the block body, so a
   // title containing '<' or '>' could close the block early or open a
   // fake one (e.g. '</recap_offer><recap_go>...'). Strip angle brackets and
@@ -1478,6 +1486,11 @@ export function formatRecapBlocks(input: Pick<BrainTurnInput, 'recapOffer' | 're
     const t = cleanTitle(input.recapOffer.loTitle);
     out += `<recap_offer>\nPRIORITY THIS TURN. You have now seen the student stumble more than once on: ${t}. In THIS turn, after responding to what they just said, offer a short recap of that idea: say in one sentence that you think a quick two- to three-minute recap might help, ask whether they want it now, then STOP and wait for their answer. Do not begin the recap in this turn. This offer outranks the one-sub-question rule for THIS turn: do not pose a new lesson question — acknowledge what they said in one sentence, make the offer, ask, stop. Speak from what you observed; never say a record or system shows they are weak.${input.recapOffer.soft ? ' They said no to this once before — make the offer light and easy to decline.' : ''}\n</recap_offer>\n\n`;
   }
+  // Task 13: the ledger's own view of the session. Only on turns WITHOUT a
+  // recap offer — the offer is a PRIORITY-THIS-TURN directive and already
+  // owns the objective it names; two competing mandates in one turn is how
+  // the goodbye turn loses the offer.
+  if (!input.recapOffer) out += formatSessionStrugglesBlock(input.ledgerFlags);
   if (input.recapGo) {
     const t = cleanTitle(input.recapGo.loTitle);
     out += `<recap_go>\nThe student accepted a recap of ${t}. Do it now: first call advance_lesson({to:"free"}), then run a recall-first recap — ask them to say what they remember, fix the one idea that was wrong, then one short check they do themselves. Keep it under about three minutes. When they get the check right (or after two tries), call advance_lesson({to:"next"}) to return to the lesson and say you are picking up where you left off.\n</recap_go>\n\n`;

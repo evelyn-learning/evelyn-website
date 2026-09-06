@@ -94,6 +94,13 @@ export interface WhiteboardCommandResult {
    */
   manifests?: Array<FeatureManifestEntry[] | undefined>;
   /**
+   * Task 13 (2026-09-07): a free-text line the handler wants the model to
+   * read in the tool_result — currently only close_session_notes, which
+   * reports whether an assignment was actually created and where it landed.
+   * The model may not speak about homework unless this says one exists.
+   */
+  note?: string;
+  /**
    * If a show_* call was a duplicate of an existing item (same args),
    * the entry at the matching index carries the existing itemId + the
    * already-registered features. The Realtime hook surfaces this as a
@@ -1879,6 +1886,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
               existingItemId: string;
               existingFeatures: Array<{ target: string; canonical: string; kind: string; description?: string }>;
             } | null = null;
+            let note: string | null = null;
             let boardSnapshot: Array<{
               itemId: string;
               action: string;
@@ -1907,6 +1915,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                   }
                   if (Array.isArray(result.boardSnapshot)) {
                     boardSnapshot = result.boardSnapshot;
+                  }
+                  if (typeof result.note === 'string' && result.note) {
+                    note = result.note;
                   }
                 }
               } catch (err) {
@@ -1974,6 +1985,9 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
                         success: true,
                         message: `Displayed ${funcName.replace('show_', '')} on whiteboard`,
                         ...(assignedId ? { id: assignedId } : {}),
+                        // Task 13: the handler's own word on what the tool
+                        // did (close_session_notes: assigned / nothing).
+                        ...(note ? { note } : {}),
                         ...(manifest
                           ? {
                               features: manifest.map((f) => ({

@@ -110,6 +110,9 @@ interface BrainStreamRequestBody {
   recapGo?: BrainTurnInput['recapGo'];
   recapWrap?: boolean;
   recapReply?: BrainTurnInput['recapReply'];
+  /** Task 13: struggle-ledger flags for this session. Shape-checked below;
+   *  malformed entries are dropped. See BrainTurnInput.ledgerFlags. */
+  ledgerFlags?: unknown;
   /** Configured grade — drives pedagogy pacing knobs. */
   grade?: string;
   /** Configured session subject (UI `selectedSubject`). Used ONLY by the
@@ -676,6 +679,25 @@ export async function POST(req: NextRequest) {
       const recapGo = body.recapGo && typeof body.recapGo.loTitle === 'string' ? { loTitle: cleanLoTitle(body.recapGo.loTitle).slice(0, 120) } : undefined;
       const recapWrap = body.recapWrap === true ? true : undefined;
       const recapReply = body.recapReply === 'accept' || body.recapReply === 'decline' || body.recapReply === 'unclear' ? body.recapReply : undefined;
+      // Task 13: the client's ledger flags. Same defensive shape as the
+      // recap fields — an array of {loId,title,detections}, each field
+      // type-checked and bounded, capped at 3, and titles stripped of
+      // '<'/'>' (they are spliced into the <session_struggles> body).
+      const ledgerFlags = Array.isArray(body.ledgerFlags)
+        ? (body.ledgerFlags as unknown[])
+            .filter((f): f is { loId: string; title: string; detections: number } =>
+              !!f && typeof f === 'object'
+              && typeof (f as { loId?: unknown }).loId === 'string'
+              && typeof (f as { title?: unknown }).title === 'string'
+              && typeof (f as { detections?: unknown }).detections === 'number'
+              && Number.isFinite((f as { detections: number }).detections))
+            .slice(0, 3)
+            .map((f) => ({
+              loId: cleanLoTitle(f.loId).slice(0, 120),
+              title: cleanLoTitle(f.title).slice(0, 120),
+              detections: Math.max(0, Math.min(99, Math.round(f.detections))),
+            }))
+        : undefined;
       if (recapOffer) console.log(`[recap] recap_offer attached lo="${recapOffer.loTitle}"${recapOffer.soft ? ' soft' : ''}`);
       if (recapGo) console.log(`[recap] recap_go attached lo="${recapGo.loTitle}"`);
       if (recapWrap) console.log('[recap] recap_wrap attached');
@@ -724,6 +746,9 @@ export async function POST(req: NextRequest) {
           recapGo,
           recapWrap,
           recapReply,
+          // Task 13: sanitized above. Surfaces as `<session_struggles>` in
+          // the per-turn user content (suppressed when recapOffer is set).
+          ledgerFlags: ledgerFlags?.length ? ledgerFlags : undefined,
           activeProblem: body.activeProblem,
           unrealizedMarks: body.unrealizedMarks,
           deduplicatedShows: body.deduplicatedShows,
