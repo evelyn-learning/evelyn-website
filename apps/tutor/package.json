@@ -241,6 +241,7 @@
     "test:pedagogy-e3": "npx tsx scripts/test-demo-intent.ts",
     "test:pedagogy-resume": "npx tsx scripts/test-portal-resume.ts",
     "test:pedagogy-teacher": "npx tsx scripts/test-teacher-persona.ts",
+    "test:posed-computation": "npx tsx scripts/test-posed-computation.ts",
     "test:mcq-letter-content": "npx tsx scripts/test-mcq-letter-content.ts",
     "test:arithmetic-recheck": "npx tsx scripts/test-arithmetic-recheck.ts",
     "test:thin-session": "npx tsx scripts/test-thin-session.ts",

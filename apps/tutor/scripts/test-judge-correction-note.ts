@@ -80,4 +80,12 @@ check('leading-whitespace bracketed dispatch does NOT consume', !shouldConsumeJu
 check('a real transcript that merely mentions a bracket mid-sentence still consumes', shouldConsumeJudgeCorrectionNote('I think [x] should be 4'));
 
 if (failed > 0) { console.error(`\n${failed} failure(s)`); process.exit(1); }
+
+// 2026-09-06 live (Noah): the note names the graded answer
+{
+  const n = buildJudgeCorrectionNote(['Not quite.'], 'Uh, 2.') ?? '';
+  check('note pins the graded answer', /The answer you graded was "Uh, 2\."/.test(n));
+  check('note still forbids narration', /NEVER narrate/.test(n));
+  check('no answer ⇒ no pin sentence', !/The answer you graded/.test(buildJudgeCorrectionNote(['Not quite.']) ?? ''));
+}
 console.log(`\nAll ${passed} judge-correction-note tests passed.`);

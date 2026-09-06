@@ -118,7 +118,7 @@ import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
 import { checkArithmeticClaims } from '@/lib/tutor/voice/arithmetic-claim-check';
 import { checkSimplificationVerdict, DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
-import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer } from '@/lib/tutor/voice/denied-answer-reversal';
+import { extractDeniableAnswer, checkDeniedAnswerReversal, type DeniedAnswer, problemKeyForDenial } from '@/lib/tutor/voice/denied-answer-reversal';
 import { detectPraiseContradiction } from '@/lib/tutor/voice/praise-contradiction';
 import { checkPraiseEcho } from '@/lib/tutor/voice/praise-echo-check';
 import { checkFalseFinalAssertion } from '@/lib/tutor/voice/false-assertion-check';
@@ -291,6 +291,7 @@ import { extractStudentEcho } from '@/lib/tutor/voice/marker-student-echo';
 import { normalizeMcqLetterUtterance, extractChoiceLetters } from '@/lib/tutor/voice/mcq-letter-homophone';
 import { extractChoiceOptions, reconcileMcqLetterWithContent, type ChoiceOption } from '@/lib/tutor/voice/mcq-letter-content';
 import { isBareArithmeticRecheck } from '@/lib/tutor/voice/arithmetic-recheck';
+import { findUngroundedComputation } from '@/lib/tutor/voice/posed-computation';
 import {
   WHITEBOARD_INTENT_PATTERNS,
   MATH_CONTENT_PATTERN,
@@ -8674,7 +8675,12 @@ export function VoiceTutorRealtime({
     // Pre-emptive session rotation — surfaces a UI prompt so the user
     // can choose to continue (rotates the underlying realtime session)
     // or wrap up. See thresholds comment above.
-    if (sessionMinutes >= rotationThreshold && !sessionRotationFiredRef.current) {
+    // Rotation exists for the OpenAI Realtime WebSocket's ~60-min cap. The
+    // Claude-brain path has no such cap (Cartesia TTS, per-turn HTTP), so the
+    // "almost an hour — keep going?" banner and the silent auto-rotation are
+    // pure noise there (live 2026-09-06: a 64-min session got the banner at
+    // 55 min and simply carried on). The 45-min SPOKEN check-in above stays.
+    if (sessionMinutes >= rotationThreshold && !sessionRotationFiredRef.current && !claudeBrainMode) {
       sessionRotationFiredRef.current = true;
       console.log(`[VoiceTutorRealtime] rotation prompt shown at ${sessionMinutes.toFixed(1)} min (threshold ${rotationThreshold.toFixed(1)})`);
       onDebugEvent?.('session_rotation_prompt', `Session at ${sessionMinutes.toFixed(1)} min (T=${T})`);
@@ -8682,7 +8688,7 @@ export function VoiceTutorRealtime({
     }
 
     // Silent auto-rotation fallback.
-    if (sessionMinutes >= autoRotationThreshold && sessionRotationPrompt && !autoRotationFiredRef.current) {
+    if (sessionMinutes >= autoRotationThreshold && sessionRotationPrompt && !autoRotationFiredRef.current && !claudeBrainMode) {
       autoRotationFiredRef.current = true;
       console.warn(`[VoiceTutorRealtime] silent auto-rotation at ${sessionMinutes.toFixed(1)} min (threshold ${autoRotationThreshold.toFixed(1)}) — user ignored banner`);
       onDebugEvent?.('session_auto_rotation', `Silent rotation at ${sessionMinutes.toFixed(1)} min (T=${T})`);
@@ -11545,6 +11551,7 @@ export function VoiceTutorRealtime({
                       denied: deniedAnswersRef.current,
                       currentTurn: studentTurnCounterRef.current,
                       normalizeSpokenWords: TUTOR_SPOKEN_NUMBER_GUARDS,
+                      problemKey: problemKeyForDenial(currentProblemRef.current?.statement),
                     });
                     if (rev.verdict === 'reversal') {
                       deniedAnswersRef.current = deniedAnswersRef.current.filter(
@@ -11761,6 +11768,30 @@ export function VoiceTutorRealtime({
                   // never re-kills on the same evidence), and the same tier
                   // split: a VERIFIED expected answer may kill, an unverified
                   // card answer is advisory (correction note, never a kill).
+                  // Posed-computation grounding (live 2026-09-06, portal-4bbe5d91):
+                  // after a show_problem → segment-card substitution the brain
+                  // asked "what is -2 × (-4)?" against a board showing
+                  // 8 - 3(2x-4) + 5x. A × / ÷ question whose operands do not
+                  // exist in the problem, the student's words, or this
+                  // session's equations is killed and re-asked against the board.
+                  if (!attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && attempt === 0 && currentProblemRef.current?.statement) {
+                    const ungrounded = findUngroundedComputation(updatedSentence, [
+                      currentProblemRef.current.statement,
+                      transcript ?? '',
+                      turnEquationsRef.current.join(' \n '),
+                    ]);
+                    if (ungrounded) {
+                      const reason =
+                        `You posed ${ungrounded.a} ${ungrounded.op} ${ungrounded.b}, but ${ungrounded.missing.join(' and ')} ${ungrounded.missing.length === 1 ? 'does' : 'do'} not appear in the problem on the board (${currentProblemRef.current.statement.slice(0, 120)}). ` +
+                        `Re-emit: pose the sub-step using ONLY the numbers actually in that problem.`;
+                      rejectionsThisAttempt.push({ action: 'posed_computation_ungrounded', reason });
+                      judgeRetriesUsed++;
+                      await performKill();
+                      console.warn(`[brain-orchestrator] posed computation ungrounded: "${updatedSentence.slice(0, 80)}" missing=${ungrounded.missing.join(',')}`);
+                      onDebugEvent?.('posed_computation_kill', `${ungrounded.a} ${ungrounded.op} ${ungrounded.b} missing=${ungrounded.missing.join(',')}`);
+                      continue;
+                    }
+                  }
                   if (TUTOR_FALSE_PRAISE_OPENER && !attemptKilled && judgeRetriesUsed < MAX_JUDGE_RETRIES && !attemptText && attempt === 0) {
                     const fp = checkFalsePraiseOpener({
                       sentence: updatedSentence,
@@ -11932,7 +11963,7 @@ export function VoiceTutorRealtime({
                         const turnNow = studentTurnCounterRef.current;
                         deniedAnswersRef.current = [
                           ...deniedAnswersRef.current.filter((d) => d.phrase !== deniedPhrase && turnNow - d.turn <= 6),
-                          { phrase: deniedPhrase, turn: turnNow },
+                          { phrase: deniedPhrase, turn: turnNow, problemKey: problemKeyForDenial(currentProblemRef.current?.statement) },
                         ].slice(-3);
                         onDebugEvent?.('denied_answer_stashed', `"${deniedPhrase}" turn=${turnNow}`);
                       }
@@ -14481,7 +14512,7 @@ export function VoiceTutorRealtime({
                     onDebugEvent?.('judge_advisory_suppressed', `denial flagged but student ≠ verified key ("${(transcript ?? '').slice(0, 40)}" vs ${String(judgeVerifiedKey).slice(0, 30)})`);
                   }
                   if (noteworthyAdvisoryIssues.length > 0 && !denialVerifiedRight) {
-                    const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim));
+                    const advisoryCorrectionNote = buildJudgeCorrectionNote(noteworthyAdvisoryIssues.map((i) => i.claim), transcript);
                     if (advisoryCorrectionNote) {
                       pendingJudgeCorrectionNoteRef.current = advisoryCorrectionNote;
                       armCorrectionNoteDeadline();   // R50 T3
@@ -14512,7 +14543,7 @@ export function VoiceTutorRealtime({
                   // hand and can own a false reject. Advisory stays advisory:
                   // no kill, no re-narration; the note itself instructs
                   // silent continue when the brain stands by its claim.
-                  const correctionNote = buildJudgeCorrectionNote(killIssues.map((i) => i.claim));
+                  const correctionNote = buildJudgeCorrectionNote(killIssues.map((i) => i.claim), transcript);
                   if (correctionNote) {
                     pendingJudgeCorrectionNoteRef.current = correctionNote;
                     armCorrectionNoteDeadline();   // R50 T3

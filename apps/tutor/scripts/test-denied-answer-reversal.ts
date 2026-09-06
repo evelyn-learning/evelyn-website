@@ -10,7 +10,7 @@
  * turn N, assert X as the answer at a later turn → provable
  * self-contradiction → kill + credit the student.
  */
-import {
+import { problemKeyForDenial,
   extractDeniableAnswer,
   checkDeniedAnswerReversal,
 } from '../src/lib/tutor/voice/denied-answer-reversal';
@@ -222,5 +222,14 @@ check(
 if (failures > 0) {
   console.error(`\n${failures} failure(s)`);
   process.exit(1);
+}
+
+// 2026-09-06 live (Noah): the same phrase on a DIFFERENT problem is not a reversal.
+{
+  const k1 = problemKeyForDenial('64 ÷ 16'); const k2 = problemKeyForDenial('24 ÷ 6');
+  const denied = [{ phrase: '4', turn: 8, problemKey: k1 }];
+  check('same problem ⇒ reversal', checkDeniedAnswerReversal({ sentence: "Actually the answer is 4.", denied, currentTurn: 10, problemKey: k1 }).verdict, 'reversal');
+  check('different problem ⇒ ok', checkDeniedAnswerReversal({ sentence: "Right — the answer is 4.", denied, currentTurn: 10, problemKey: k2 }).verdict, 'ok');
+  check('no key on the denial ⇒ unscoped (legacy)', checkDeniedAnswerReversal({ sentence: "Actually the answer is 4.", denied: [{ phrase: '4', turn: 8 }], currentTurn: 10, problemKey: k2 }).verdict, 'reversal');
 }
 console.log('\nAll denied-answer-reversal checks passed.');

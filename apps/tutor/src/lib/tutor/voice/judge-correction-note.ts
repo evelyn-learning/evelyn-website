@@ -109,7 +109,7 @@ export function shouldConsumeJudgeCorrectionNote(transcript: string): boolean {
   return !/^\s*\[/.test(transcript);
 }
 
-export function buildJudgeCorrectionNote(claims: string[]): string | null {
+export function buildJudgeCorrectionNote(claims: string[], studentAnswer?: string): string | null {
   const quoted = claims
     .slice(0, MAX_CLAIMS)
     .map((c) => `"${c.slice(0, MAX_CLAIM_CHARS).replace(/\s+/g, ' ').trim()}"`)
@@ -118,6 +118,13 @@ export function buildJudgeCorrectionNote(claims: string[]): string | null {
   return (
     `[correction note — not from the student] An automated review flagged your previous turn as likely mis-grading or contradicting the facts: ${quoted.join(' and ')}. ` +
     `Silently re-check that claim against the question you actually asked and the student's exact words. ` +
+    // Live 2026-09-06 (Noah): the note rode the student's NEXT utterance and the
+    // brain "owned the correction" about that new (correct) answer — "you were
+    // right: 3 groups of 7" to a student whose flagged answer had been "2".
+    // Pin the note to the answer that was actually graded.
+    (studentAnswer && studentAnswer.trim()
+      ? `The answer you graded was "${studentAnswer.trim().slice(0, 80).replace(/\s+/g, ' ')}" — re-check THAT answer, not whatever they say next. `
+      : '') +
     `If you were wrong — especially if you rejected a correct answer — open this turn by briefly owning the correction ("Actually, hold on — you were right: …") before continuing. ` +
     `If on re-checking you stand by what you said, continue naturally and do not mention this review. ` +
     // R58 (live, two evelyntutor sessions): the brain narrated the re-check

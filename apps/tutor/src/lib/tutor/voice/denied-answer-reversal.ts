@@ -30,6 +30,11 @@ import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 export interface DeniedAnswer {
   phrase: string;
   turn: number;
+  /** The active problem the denial was about (statement prefix). A later
+   *  assertion of the same phrase on a DIFFERENT problem is not a reversal
+   *  (live 2026-09-06, Noah: "4" denied on 64÷16, then "4" was the correct
+   *  answer to 24÷6 and the guard killed the affirmation). */
+  problemKey?: string;
 }
 
 const DEFAULT_MAX_AGE_TURNS = 6;
@@ -85,12 +90,22 @@ const VERDICT_OPENER = String.raw`exactly|right|correct|precisely|yes|nice|perfe
 const OPENER_SHAPE_RE = (p: string) => new RegExp(
   `^\\s*(?:${VERDICT_OPENER})\\b[\\s.,!]*\\b${p}\\b\\s*(?:[—–-]|[.!?]|$)`, 'i');
 
+/** Stable key for "the problem this denial was about": the statement's
+ *  first 80 normalised chars. Undefined when no problem is active, which
+ *  keeps the pre-existing (unscoped) behaviour for problem-less turns. */
+export function problemKeyForDenial(statement: string | undefined | null): string | undefined {
+  const s = (statement ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+  return s ? s.slice(0, 80) : undefined;
+}
+
 export function checkDeniedAnswerReversal(args: {
   sentence: string;
   denied: DeniedAnswer[];
   currentTurn: number;
   maxAgeTurns?: number;
   normalizeSpokenWords?: boolean;
+  /** The active problem NOW; a denial recorded on another problem is skipped. */
+  problemKey?: string;
 }): { verdict: 'ok' } | { verdict: 'reversal'; phrase: string; turn: number } {
   const maxAge = args.maxAgeTurns ?? DEFAULT_MAX_AGE_TURNS;
   const sentence = normalize(
@@ -101,6 +116,7 @@ export function checkDeniedAnswerReversal(args: {
     if (!d.phrase) continue;
     if (d.turn >= args.currentTurn) continue;             // the denial's own turn
     if (args.currentTurn - d.turn > maxAge) continue;     // stale — student moved on
+    if (d.problemKey && args.problemKey && d.problemKey !== args.problemKey) continue; // different problem
     // The stash holds the STUDENT's text (usually digits) and the tutor
     // reverses in words; normalize the phrase the same way as the sentence.
     const phrase = normalize(
