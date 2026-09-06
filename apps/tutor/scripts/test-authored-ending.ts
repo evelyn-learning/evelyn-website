@@ -31,11 +31,25 @@ assert.deepEqual(
   { stated: 'none', authored: 'infinite' },
 );
 
+// 2026-09-07 fix round 2 — VERDICT_CUE_ADJACENT_RE regressed a leading \b:
+// a bare cue word matched as the SUFFIX of an unrelated word ("Also" ends in
+// "so", "espresso" ends in "so", "eyes" ends in "yes"), firing false
+// contradictions with no real cue present.
+assert.equal(findAuthoredEndingContradiction({ sentence: 'Also no solution works for this one.', authoredAnswer: 'Infinitely many solutions (identity)' }), null);
+assert.equal(findAuthoredEndingContradiction({ sentence: 'That was espresso no solution needed.', authoredAnswer: 'Infinitely many solutions (identity)' }), null);
+assert.equal(findAuthoredEndingContradiction({ sentence: 'Keep your eyes no solution needed here.', authoredAnswer: 'Infinitely many solutions (identity)' }), null);
+
 // 2026-09-07 fix round — the original "explanatory contrast" case above
 // never reached isExplanatoryMention because its class already agreed with
-// the authored one. These two exercise MISMATCHED classes: one a genuine
-// explanatory mention (null), one a genuine contradiction (still fires).
-assert.equal(findAuthoredEndingContradiction({ sentence: 'Unlike infinitely many solutions, this one leaves a false statement.', authoredAnswer: 'No solution' }), null);
+// the authored one. round-2 replacement: "Unlike infinitely many solutions,
+// this one leaves a false statement." was ALSO wrong — classifySolutionCount
+// finds it ambiguous (INFINITE_RE + NONE_RE via "false statement"), so it
+// short-circuits on `!stated`, never reaching the mention check either. This
+// sentence is unambiguous ('infinite' only) and mismatched vs. authored
+// 'none', and null comes ONLY from isExplanatoryMention's "if" conditional
+// marker (verified: without the isExplanatoryMention call, the cue-adjacent
+// "the answer is" immediately before the phrase would otherwise fire).
+assert.equal(findAuthoredEndingContradiction({ sentence: 'If both sides matched, the answer is infinite solutions.', authoredAnswer: 'No solution' }), null);
 assert.deepEqual(
   findAuthoredEndingContradiction({ sentence: 'So the answer is infinitely many solutions.', authoredAnswer: 'No solution' }),
   { stated: 'infinite', authored: 'none' },

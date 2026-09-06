@@ -38,7 +38,11 @@ export function classifySolutionCount(text: string): SolutionClass | null {
 // `norm()` strips apostrophes ("there's" → "theres"), so every contraction
 // cue must tolerate the stripped form too, not just the literal apostrophe.
 const VERDICT_CUE_SRC = String.raw`so|therefore|thus|that\s+means|which\s+means|meaning|there(?:'?s|\s+is|\s+are)|it\s+has|we\s+have|this\s+has|the\s+answer\s+is|it'?s|that'?s|gives|leaves\s+us\s+with|right|exactly|correct|yes|nailed\s+it`;
-const VERDICT_CUE_ADJACENT_RE = new RegExp(`(?:${VERDICT_CUE_SRC})\\s+(?:the\\s+|a\\s+|an\\s+|this\\s+|that\\s+|just\\s+)?$`, 'i');
+// 2026-09-07 (fix round 2): the alternation needs its OWN leading \b — a
+// bare `(?:${SRC})$`-style match let a short cue match as the SUFFIX of an
+// unrelated word ("Also" ends in "so", "espresso" ends in "so", "eyes" ends
+// in "yes"), firing false contradictions with no real cue present.
+const VERDICT_CUE_ADJACENT_RE = new RegExp(`(?:^|\\b)(?:${VERDICT_CUE_SRC})\\s+(?:the\\s+|a\\s+|an\\s+|this\\s+|that\\s+|just\\s+)?$`, 'i');
 
 const norm = (s: string) => (s ?? '').toLowerCase().replace(/[*_`"'’‘“”]/g, '').replace(/[—–]/g, ' - ').replace(/\s+/g, ' ').trim();
 
