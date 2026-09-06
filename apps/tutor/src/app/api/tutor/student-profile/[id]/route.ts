@@ -376,11 +376,18 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   let finalizedLocator: string | undefined;
   if (body.finalizeHomework && ['end', 'pagehide', 'time_cap'].includes(body.finalizeHomework.source)) {
     try {
-      const rec = await finalizeDraft(body.sessionId, {
-        nextTimeIntent: body.nextSessionIntent,
-        locator: body.practiceLocator,
-        source: body.finalizeHomework.source,
-      });
+      // Fix round 1 (Important — ownership check) — scope to `profileId`
+      // (already resolved above) so this commit can only finalize ITS OWN
+      // session's draft: see `store.ts`'s `sessionScopeFilter` doc comment.
+      const rec = await finalizeDraft(
+        body.sessionId,
+        {
+          nextTimeIntent: body.nextSessionIntent,
+          locator: body.practiceLocator,
+          source: body.finalizeHomework.source,
+        },
+        profileId,
+      );
       if (rec) {
         autoAssigned = summarizeAssignmentLos(rec.los);
         finalizedLocator = rec.locator;

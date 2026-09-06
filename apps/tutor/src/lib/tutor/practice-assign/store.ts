@@ -7,6 +7,18 @@ const MS_PER_DAY = 86_400_000;
 export type FinalizeSource = 'close_tool' | 'end' | 'pagehide' | 'time_cap' | 'sweep';
 export const DRAFT_MAX_LOS = 2;
 
+/** Fix round 1 (Important — ownership check) — every read/write keyed by
+ *  client-supplied `sessionId` alone is an IDOR: a validly authenticated
+ *  student can read or promote another student's draft by guessing/reusing
+ *  a `sessionId`. Pure filter-shape builder (unit-tested without a live
+ *  Mongo connection, like `courseIdFilter`/`openAssignmentsQuery`) so every
+ *  caller that supplies a `studentId` gets the SAME scoping. `studentId`
+ *  omitted keeps the pre-fix behavior for callers that don't have (or
+ *  don't need) an authenticated identity to scope by. */
+export function sessionScopeFilter(sessionId: string, studentId?: string): { sessionId: string; studentId?: string } {
+  return studentId ? { sessionId, studentId } : { sessionId };
+}
+
 export async function upsertAssignment(
   a: Omit<IPracticeAssignment, '_id' | 'createdAt'> & { _id?: string },
 ): Promise<IPracticeAssignment> {
@@ -21,9 +33,16 @@ export async function upsertAssignment(
   return (await PracticeAssignmentModel.findById(_id).lean()) as IPracticeAssignment;
 }
 
-export async function findAssignmentBySession(sessionId: string): Promise<IPracticeAssignment | null> {
+/** `studentId` (fix round 1) scopes the lookup to that owner: a record for
+ *  this `sessionId` that belongs to a DIFFERENT student behaves exactly
+ *  like "not found" — never distinguished from a genuinely absent record,
+ *  so a caller can't probe for another student's session id. Omitted for
+ *  callers that intentionally look up cross-identity (e.g. the internal
+ *  §C.3 dedup check, which runs under the SAME session it's about to
+ *  write). */
+export async function findAssignmentBySession(sessionId: string, studentId?: string): Promise<IPracticeAssignment | null> {
   await connectDB();
-  return (await PracticeAssignmentModel.findOne({ sessionId }).lean()) as IPracticeAssignment | null;
+  return (await PracticeAssignmentModel.findOne(sessionScopeFilter(sessionId, studentId)).lean()) as IPracticeAssignment | null;
 }
 
 /**
@@ -156,17 +175,23 @@ export function finalizePatch(
   };
 }
 
-export async function findDraftBySession(sessionId: string): Promise<IPracticeAssignment | null> {
+/** `studentId` scoping — see `findAssignmentBySession`'s doc comment. */
+export async function findDraftBySession(sessionId: string, studentId?: string): Promise<IPracticeAssignment | null> {
   await connectDB();
-  return (await PracticeAssignmentModel.findOne({ sessionId, status: 'draft' }).lean()) as IPracticeAssignment | null;
+  return (await PracticeAssignmentModel.findOne({ ...sessionScopeFilter(sessionId, studentId), status: 'draft' }).lean()) as IPracticeAssignment | null;
 }
 
+/** `studentId` (fix round 1) scopes the draft lookup to that owner — see
+ *  `findAssignmentBySession`'s doc comment. A draft belonging to a
+ *  different student is treated exactly like "no draft for this session":
+ *  `finalizeDraft` returns `null`, never someone else's record. */
 export async function finalizeDraft(
   sessionId: string,
   p: { reason?: string; nextTimeIntent?: string; locator?: string; source: FinalizeSource },
+  studentId?: string,
 ): Promise<IPracticeAssignment | null> {
   await connectDB();
-  const rec = await findDraftBySession(sessionId);
+  const rec = await findDraftBySession(sessionId, studentId);
   if (!rec) return null;
   await PracticeAssignmentModel.updateOne({ _id: rec._id, status: 'draft' }, { $set: finalizePatch(rec, p) });
   return (await PracticeAssignmentModel.findById(rec._id).lean()) as IPracticeAssignment;
@@ -192,12 +217,23 @@ export async function sweepStaleDrafts(studentId: string, olderThanMs: number): 
  *  return the existing record untouched rather than overwriting it. When
  *  merging into an existing draft, LOs are combined via `mergeDraftLos`
  *  and triggers are unioned; `draftedAt`/`assignedAt` are pinned to the
- *  FIRST draft write so the sweep's staleness clock starts there. */
+ *  FIRST draft write so the sweep's staleness clock starts there.
+ *
+ *  Fix round 1 (Important — ownership check): `sessionId` is a unique
+ *  index, so a record for this session belonging to a DIFFERENT
+ *  `studentId` than `a.studentId` means this session id belongs to
+ *  someone else — merging into it (or blindly upserting a second record,
+ *  which would throw on the unique index anyway) would either leak or
+ *  corrupt another student's homework. That case returns
+ *  `{ ownerMismatch: true }` instead of writing anything; callers must
+ *  treat it exactly like "nothing to assign" (204), never surface the
+ *  other student's record. */
 export async function upsertDraft(
   a: Omit<IPracticeAssignment, '_id' | 'createdAt' | 'assignedAt'> & { _id?: string },
-): Promise<{ rec: IPracticeAssignment; alreadyAssigned: boolean }> {
+): Promise<{ rec: IPracticeAssignment; alreadyAssigned: boolean } | { ownerMismatch: true }> {
   await connectDB();
   const existing = (await PracticeAssignmentModel.findOne({ sessionId: a.sessionId }).lean()) as IPracticeAssignment | null;
+  if (existing && existing.studentId !== a.studentId) return { ownerMismatch: true };
   if (existing && existing.status !== 'draft') return { rec: existing, alreadyAssigned: true }; // never demote (legacy = assigned)
   const _id = existing?._id ?? a._id ?? randomUUID();
   const los = existing ? mergeDraftLos(existing.los, a.los) : a.los.slice(0, DRAFT_MAX_LOS);

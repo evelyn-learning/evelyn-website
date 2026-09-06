@@ -55,7 +55,7 @@ export async function assignPractice(input: {
   const locator = input.locator?.trim().slice(0, 80) || undefined;
   const nextTimeIntent = input.nextTimeIntent?.trim().slice(0, 200) || undefined;
   if (input.status === 'draft') {
-    const { rec, alreadyAssigned } = await upsertDraft({
+    const result = await upsertDraft({
       studentId: input.profileId,
       partnerId: input.partnerId,
       sessionId: input.sessionId,
@@ -67,6 +67,11 @@ export async function assignPractice(input: {
       auto: true,
       triggers: input.trigger ? [input.trigger] : [],
     });
+    // Fix round 1 (Important — ownership check): this `sessionId` belongs
+    // to a DIFFERENT student's record. Never surface it — behave exactly
+    // like "nothing to assign" (the draft route turns this into a 204).
+    if ('ownerMismatch' in result) return null;
+    const { rec, alreadyAssigned } = result;
     // alreadyAssigned ⇒ upsertDraft wrote nothing and returned the
     // EXISTING record untouched — summarize what was actually persisted
     // (rec.los), never the items just re-resolved locally, which were

@@ -26,13 +26,21 @@ export async function POST(req: NextRequest) {
   if (rejection) return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
   const partnerId = partnerIdForInternalRoute(auth);
   const profileId = await resolveProfileIdOrRaw({ partnerId, externalStudentId: studentId });
-  void profileId; // identity resolved for auth-preamble parity; findAssignmentBySession keys by sessionId
-  const rec = await findAssignmentBySession(sessionId);
-  if (!rec) return new NextResponse(null, { status: 204 });
-  return NextResponse.json({
-    assignmentId: rec._id,
-    status: rec.status ?? 'assigned',
-    locator: rec.locator,
-    los: summarizeAssignmentLos(rec.los),
-  });
+  try {
+    // Fix round 1 (Important — ownership check) — scoped to `profileId` so
+    // a `sessionId` belonging to a different student is indistinguishable
+    // from "no such session": see `store.ts`'s `sessionScopeFilter` doc
+    // comment.
+    const rec = await findAssignmentBySession(sessionId, profileId);
+    if (!rec) return new NextResponse(null, { status: 204 });
+    return NextResponse.json({
+      assignmentId: rec._id,
+      status: rec.status ?? 'assigned',
+      locator: rec.locator,
+      los: summarizeAssignmentLos(rec.los),
+    });
+  } catch (e) {
+    console.error('[practice-assign:state] failed', e);
+    return NextResponse.json({ error: 'state_failed' }, { status: 500 });
+  }
 }

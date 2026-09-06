@@ -27,11 +27,14 @@ export async function POST(req: NextRequest) {
   if (rejection) return NextResponse.json({ error: 'unauthorized', reason: rejection }, { status: 401 });
   const partnerId = partnerIdForInternalRoute(auth);
   const profileId = await resolveProfileIdOrRaw({ partnerId, externalStudentId: studentId });
-  void profileId; // identity resolved for auth-preamble parity; finalizeDraft/findAssignmentBySession key by sessionId
   try {
-    const rec = await finalizeDraft(sessionId, { reason, nextTimeIntent, locator, source });
+    // Fix round 1 (Important — ownership check) — scope both lookups to
+    // `profileId` so a `sessionId` belonging to a different student is
+    // indistinguishable from "no such session": see `store.ts`'s
+    // `sessionScopeFilter` doc comment.
+    const rec = await finalizeDraft(sessionId, { reason, nextTimeIntent, locator, source }, profileId);
     if (!rec) {
-      const existing = await findAssignmentBySession(sessionId);
+      const existing = await findAssignmentBySession(sessionId, profileId);
       if (existing && existing.status !== 'draft') {
         return NextResponse.json({
           assignmentId: existing._id,

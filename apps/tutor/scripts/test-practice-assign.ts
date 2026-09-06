@@ -1,6 +1,6 @@
 /** Spec §C.3 — pure homework resolver over injected PracticeSources. Usage: npx tsx scripts/test-practice-assign.ts */
 import { resolveAssignmentItems, difficultyForBand, ASSIGN_TUNING } from '../src/lib/tutor/practice-assign/resolve';
-import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos } from '../src/lib/tutor/practice-assign/store';
+import { courseIdFilter, openAssignmentsQuery, mergeDraftLos, finalizePatch, draftStatusClause, summarizeAssignmentLos, sessionScopeFilter } from '../src/lib/tutor/practice-assign/store';
 import type { PracticeSources, BankLite } from '../src/lib/tutor/portal/practice';
 import type { IPracticeAssignment, IPracticeAssignmentLo } from '../src/models';
 let passed = 0, failed = 0;
@@ -124,6 +124,14 @@ check('band → difficulty', difficultyForBand('building') === 1 && difficultyFo
     JSON.stringify(summarizeAssignmentLos(losWithItems)) === JSON.stringify([{ loId: 'a', title: 'Alpha', count: 2 }, { loId: 'b', title: 'Beta', count: 0 }]),
   );
   check('summarizeAssignmentLos — empty in, empty out', summarizeAssignmentLos([]).length === 0);
+
+  // Fix round 1 (Important — ownership check) — sessionScopeFilter is the
+  // single filter-shape builder every sessionId-keyed store function now
+  // routes through, so an authenticated caller can never read/promote a
+  // DIFFERENT student's record by sessionId alone.
+  check('sessionScopeFilter — no studentId ⇒ sessionId-only clause', JSON.stringify(sessionScopeFilter('sess-1')) === JSON.stringify({ sessionId: 'sess-1' }));
+  check('sessionScopeFilter — studentId supplied ⇒ scoped clause', JSON.stringify(sessionScopeFilter('sess-1', 'stu-1')) === JSON.stringify({ sessionId: 'sess-1', studentId: 'stu-1' }));
+  check('sessionScopeFilter — omits the studentId KEY entirely when absent (not studentId: undefined)', !('studentId' in sessionScopeFilter('sess-1')));
 }
 
 (async () => {
