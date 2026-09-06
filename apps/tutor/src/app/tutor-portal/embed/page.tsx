@@ -232,6 +232,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // coverage gate documents the decision rather than relying on that prefix's
   // breadth.
   'pacing_credit',
+  // Task 12, live-check-3 fixes round (2026-09-07): practice_draft_upserted /
+  // practice_draft_empty / practice_draft_failed — homework drafted DURING
+  // the session on recurrence / recap still-struggling / incorrect streak.
+  'practice_draft',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

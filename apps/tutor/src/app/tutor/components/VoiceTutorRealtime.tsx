@@ -388,6 +388,12 @@ const CONCEPT_TAGGING_ON = process.env.NEXT_PUBLIC_TUTOR_CONCEPT_TAGGING !== 'of
  *  authored answer (e.g. affirming "no solution" on an authored identity).
  *  Default ON per the standing flag rule. */
 const TUTOR_AUTHORED_ENDING_GUARD = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_ENDING_GUARD !== 'off';
+
+/** Task 12, live-check-3 fixes round (2026-09-07): draft homework DURING the
+ *  session on deterministic evidence (recurrence / recap still-struggling /
+ *  incorrect streak ≥ 2) rather than waiting on a brain tool call at the
+ *  goodbye. Default ON per the standing flag rule. */
+const TUTOR_HOMEWORK_DRAFTS = process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_DRAFTS !== 'off';
 import {
   resolveStudentMark,
   formatStudentMarks,
@@ -2176,6 +2182,35 @@ export function VoiceTutorRealtime({
       void commitSessionToProfile();
     }, PROFILE_FLUSH_DEBOUNCE_MS);
   }, [studentId, commitSessionToProfile]);
+  /** LOs already drafted as homework this page (server merges; this only saves round-trips). */
+  const draftedLosRef = useRef<Set<string>>(new Set());
+  /** True once a finalize returned an assignment THIS session — the only licence to speak about homework. */
+  const homeworkFinalizedRef = useRef(false);
+  // Homework drafts (Praveen 2026-09-07 ruling): homework is DRAFTED during
+  // the session on deterministic evidence and FINALIZED on any exit — no
+  // creation path depends on the brain calling a tool at the goodbye.
+  const draftHomework = useCallback((loId: string, trigger: 'recurrence' | 'recap_still_struggling' | 'incorrect_streak') => {
+    if (!TUTOR_HOMEWORK_DRAFTS || !studentId || !lessonPlanId) return;
+    if (loId.startsWith('prereq:')) return;
+    if (!(lessonPlanRef.current?.los ?? []).some((l) => l.id === loId)) return;
+    if (draftedLosRef.current.has(loId) || homeworkFinalizedRef.current) return;
+    draftedLosRef.current.add(loId);
+    void fetch('/api/tutor/practice-assign/draft', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
+      body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds: [loId], trigger: `${trigger}:${loId}`, locator: practiceLocator }),
+    }).then(async (res) => {
+      if (res.status === 200) {
+        const data = await res.json() as { status: string; los: Array<{ loId: string; count: number }> };
+        onDebugEvent?.('practice_draft_upserted', `lo=${loId} trigger=${trigger} status=${data.status} count=${data.los.find((l) => l.loId === loId)?.count ?? 0}`);
+      } else if (res.status === 204) {
+        onDebugEvent?.('practice_draft_empty', `lo=${loId} trigger=${trigger} (no bank items)`);
+      } else {
+        draftedLosRef.current.delete(loId);
+        onDebugEvent?.('practice_draft_failed', `lo=${loId} status=${res.status}`);
+      }
+    }).catch((e) => { draftedLosRef.current.delete(loId); onDebugEvent?.('practice_draft_failed', `lo=${loId} ${String((e as Error).message).slice(0, 60)}`); });
+  }, [studentId, lessonPlanId, subject, embedToken, practiceLocator, onDebugEvent]);
   // Abnormal-exit coverage: pagehide fires on tab close / navigation /
   // mobile background-then-kill (more reliably than beforeunload on iOS).
   // keepalive lets the POST complete after teardown. Cheap no-op when the
@@ -2537,6 +2572,13 @@ export function VoiceTutorRealtime({
   // either pushes an INFERRED gap (the student never named the
   // difficulty) or marks a RECURRENCE on an existing one.
   const ledgerRef = useRef<LedgerState>(createLedger());
+  // `draftHomework` (declared above, after scheduleProfileFlush) is called
+  // from `feedLedger` and the recurrence listener below — both defined
+  // BEFORE it would otherwise be in scope. Held in a ref (typed, seeded with
+  // a no-op) so those earlier sites can call `draftHomeworkRef.current(...)`
+  // safely; the real callback is assigned here, after its own declaration.
+  const draftHomeworkRef = useRef<(loId: string, trigger: 'recurrence' | 'recap_still_struggling' | 'incorrect_streak') => void>(() => {});
+  draftHomeworkRef.current = draftHomework;
   // Set by the recap state machine while a recap runs in free mode, so
   // events with no segment LO still attribute to the recap's LO.
   const activeLedgerLoRef = useRef<string | null>(null);
@@ -2599,6 +2641,13 @@ export function VoiceTutorRealtime({
     const loId = explicitLoId ?? (segId ? loForSegment(segId) : activeLedgerLoRef.current);
     if (!loId) return;
     const d = applyLedgerEvent(ledgerRef.current, { kind, loId, segId: segId || 'free', atMs: Date.now() });
+    // Incorrect-streak homework trigger: counts regardless of whether this
+    // event produced a ledger detection (`d` can be null) — two wrong/
+    // no_recovery events on the same LO is evidence on its own.
+    if (kind === 'wrong' || kind === 'no_recovery') {
+      const wrongs = ledgerRef.current.get(loId)?.events.filter((e) => e.kind === 'wrong' || e.kind === 'no_recovery').length ?? 0;
+      if (wrongs >= 2) draftHomeworkRef.current(loId, 'incorrect_streak');
+    }
     if (!d) return;
     const accum = sessionAccumRef.current;
     const isPrereq = loId.startsWith('prereq:');
@@ -2675,6 +2724,7 @@ export function VoiceTutorRealtime({
       // concepts as `prereq:<label>`, and letting one through would
       // fabricate a kind:'lo' gap whose loId is that synthetic key.
       if (d.loId.startsWith('prereq:')) return;
+      draftHomeworkRef.current(d.loId, 'recurrence');
       // One offer per LO per session; never interrupt a running recap; and
       // never stack a second offer while one is still awaiting its reply —
       // the classifier consumes the FIRST pending entry it finds, so a
@@ -6310,6 +6360,7 @@ export function VoiceTutorRealtime({
               sessionAccumRef.current.gaps.push({ kind: 'lo', loId: a.loId, observation: `Recap ${outcome === 'improved' ? 'helped' : 'did not settle it'} this session.`, studentQuotes: [], signals: [], recap: { offered: 0, outcome }, bookkeepingOnly: true });
               console.log(`[VoiceTutorRealtime] recap returned lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
               onDebugEvent?.('recap_returned', `lo="${a.loId}" turns=${a.turns} outcome=${outcome}`);
+              if (outcome === 'still_struggling') draftHomeworkRef.current(a.loId, 'recap_still_struggling');
               activeRecapRef.current = null;
               activeLedgerLoRef.current = null;
               scheduleProfileFlush();
