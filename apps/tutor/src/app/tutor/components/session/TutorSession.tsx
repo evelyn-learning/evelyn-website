@@ -33,6 +33,7 @@ import { AgendaRail } from './AgendaRail';
 import { resolveStartWatchdog, START_WATCHDOG_MS } from './start-tap';
 import { buildRailModel, type SegmentLabels } from '@/lib/tutor/lesson-plan/rail-labels';
 import { getQuickActions } from '@/lib/tutor/quick-actions';
+import { homeworkPinText } from '@/lib/tutor/action-pin-text';
 import { gradeBandFor } from '@/lib/tutor/pedagogy/grade-profile';
 import { useStudentPreferences } from '@/hooks/useStudentPreferences';
 import type { StudentPreferences } from '@/lib/tutor/student-profile/types';
@@ -66,6 +67,12 @@ const TUTOR_QUESTION_PIN = process.env.NEXT_PUBLIC_TUTOR_QUESTION_PIN !== 'off';
 // ON by default per the standing rule — R49 shipped two severe fixes dark and
 // prod kept the bugs.
 const TUTOR_QPIN_CLEAR_ON_ANSWER = process.env.NEXT_PUBLIC_TUTOR_QPIN_CLEAR_ON_ANSWER !== 'off';
+// Task 15: homework action pin — board-bottom sibling of the Q-pin, shown
+// when a homework assignment is finalized this session with a locator to
+// send the student to. Kill switch, same pattern as above. Default ON per
+// the standing rule (R49 shipped two severe fixes dark and prod kept the
+// bugs).
+const TUTOR_ACTION_PIN = process.env.NEXT_PUBLIC_TUTOR_ACTION_PIN !== 'off';
 
 /** Loose normalization for matching the caption-sync reveal against the
  *  question sentence (display text and spoken text differ in punctuation
@@ -1010,6 +1017,12 @@ export default function TutorSession(props: TutorSessionProps) {
       setVoiceHiccup(null);
     }
   }, [voiceState, voiceHiccup]);
+  // Task 15: homework action pin — set once when a homework assignment is
+  // finalized this session with a locator (see `onHomeworkAssigned` on the
+  // VTR element below). Unlike the Q-pin/hiccup-pin above, this does NOT
+  // clear on segment or transcript changes — it stays on the board until
+  // the student dismisses it or the session ends.
+  const [homeworkPin, setHomeworkPin] = useState<string | null>(null);
   // Streaming entries update text sentence-by-sentence; only fetch once the
   // turn is finalized so the gist sees the whole turn. Finalization is the
   // `streaming` flag flipping false — the entry KEEPS its `tutor-streaming-*`
@@ -1176,6 +1189,23 @@ export default function TutorSession(props: TutorSessionProps) {
     </div>
   ) : undefined;
 
+  // Task 15: homework action pin — board-bottom sibling of the Q-pin, shown
+  // once a homework assignment is finalized this session with a locator.
+  const actionPinEl = homeworkPin ? (
+    <div className="ss-cap w-full flex items-center gap-2 rounded-xl bg-emerald-50/95 border border-emerald-200 shadow-md px-3 py-1.5" data-testid="action-pin">
+      <span className="shrink-0 grid place-items-center w-5 h-5 rounded-md bg-emerald-500 text-white text-[10px] font-bold">H</span>
+      <span className="min-w-0 text-sm font-medium leading-snug text-emerald-900">{homeworkPin}</span>
+      <button
+        type="button"
+        aria-label="Dismiss homework pin"
+        onClick={() => setHomeworkPin(null)}
+        className="shrink-0 grid place-items-center w-5 h-5 rounded-md text-emerald-700/70 hover:bg-emerald-100 hover:text-emerald-900"
+      >
+        ✕
+      </button>
+    </div>
+  ) : undefined;
+
   // R1: End/Pause in the header. MUST run VTR's full teardown (handleRef
   // endSession = TTS hard-stop + recording finalize + final profile commit)
   // — calling onEndSession directly would skip the final transcript commit.
@@ -1260,6 +1290,13 @@ export default function TutorSession(props: TutorSessionProps) {
         onUsageUpdate={handleUsage}
         onBrainUsage={onBrainUsage}
         onDebugEvent={onDebugEvent}
+        onHomeworkAssigned={(a) => {
+          const t = homeworkPinText(a);
+          if (TUTOR_ACTION_PIN && t) {
+            setHomeworkPin(t);
+            onDebugEvent?.('action_pin_set', t.slice(0, 80));
+          }
+        }}
         onError={(err) => setError(err.message)}
         onTranscriptionStatus={handleTranscriptionStatus}
         onEndSession={handleEndSession}
@@ -1663,6 +1700,7 @@ export default function TutorSession(props: TutorSessionProps) {
         questionPin={questionPinEl}
         questionPinKey={questionPinEl && questionPin ? questionPin.turnId : undefined}
         hiccupPin={hiccupPinEl}
+        actionPin={actionPinEl}
         voiceState={voiceState}
         warmupOverlay={warmupOverlay}
         micLevelRef={micLevelRef}

@@ -639,6 +639,11 @@ interface VoiceTutorRealtimeProps {
    *  consumer tracks the furthest reached. See `TutorMilestone`. */
   onMilestone?: (milestone: TutorMilestone) => void;
   onDebugEvent?: (type: string, message: string, data?: Record<string, unknown>) => void;
+  /** Task 15 — fires whenever a homework assignment is finalized this
+   *  session with a locator to send the student to (see
+   *  `onHomeworkAssignedRef` below for the exact call sites). Additive +
+   *  optional; absent ⇒ no-op. */
+  onHomeworkAssigned?: (a: { los: Array<{ loId: string; title: string; count: number }>; locator?: string }) => void;
   handleRef?: React.MutableRefObject<RealtimeHandle | null>;
   validateToolCalls?: boolean;
   /**
@@ -1028,6 +1033,7 @@ export function VoiceTutorRealtime({
   onBrainUsage,
   onMilestone,
   onDebugEvent,
+  onHomeworkAssigned,
   handleRef,
   validateToolCalls = false,
   claudeBrainMode = false,
@@ -2606,6 +2612,10 @@ export function VoiceTutorRealtime({
   // Called ONLY on a finalize that actually created an assignment AND has a
   // locator to send the student to.
   const onHomeworkAssignedRef = useRef<((a: { los: Array<{ loId: string; title: string; count: number }>; locator?: string }) => void) | undefined>(undefined);
+  // Task 15 — assigned from the prop every render (not gated behind a
+  // useEffect + deps array) so a caller that changes the callback identity
+  // never races a finalize that fires between renders.
+  onHomeworkAssignedRef.current = onHomeworkAssigned;
   // Task 20 fills this: ids of the homework assignments the tutor is
   // instructed to raise out loud this session. Filled at the opener-seed
   // site and ONLY when the homework continuity clause actually landed in

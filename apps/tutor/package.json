@@ -136,6 +136,7 @@
     "test:statement-dollars": "npx tsx scripts/test-statement-dollar-sanitizer.ts",
     "test:question-gist-text": "npx tsx scripts/test-question-gist-text.ts",
     "test:qpin": "npx tsx scripts/test-qpin-behavior.ts",
+    "test:action-pin-text": "npx tsx scripts/test-action-pin-text.ts",
     "test:wb-markdown-strip": "npx tsx scripts/test-wb-markdown-strip.ts",
     "test:tryyourself-mcq-verdict": "npx tsx scripts/test-tryyourself-mcq-verdict.ts",
     "test:show-passage": "npx tsx scripts/test-show-passage.ts",

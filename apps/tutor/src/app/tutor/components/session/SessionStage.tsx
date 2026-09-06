@@ -84,6 +84,11 @@ export interface SessionStageProps {
   /** Round-28b: transient voice-hiccup captions pin — board bottom, just
    *  above the floating tutor bar (both voice engines failed a sentence). */
   hiccupPin?: ReactNode;
+  /** Task 15: homework action pin — board bottom, same wrapper as
+   *  `hiccupPin` (both may show at once). Composed by TutorSession; unlike
+   *  the hiccup pin, this does NOT auto-clear — it stays until dismissed
+   *  or the session ends. */
+  actionPin?: ReactNode;
   // presence
   voiceState: VoiceState;
   /** R35 T-A (demo-polish): show the full-stage "joining" overlay — board +
@@ -223,7 +228,7 @@ const TITLE_REVEAL_MS = 4000;
 
 export default function SessionStage(props: SessionStageProps) {
   const {
-    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin,
+    lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
     voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,
     mockAgenda, mockAgendaRemaining, mockDrawer, mockCorrectDrawer, onPickAgendaItem, agendaEngaged = false,
@@ -1312,6 +1317,18 @@ export default function SessionStage(props: SessionStageProps) {
         <div className="absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none">
           <div className="max-w-[min(88vw,560px)] pointer-events-auto">
             {hiccupPin}
+          </div>
+        </div>
+      )}
+
+      {/* ===== Homework action pin (Task 15) — board bottom, same wrapper as
+              the voice-hiccup pin above (both may show at once). Set once a
+              homework assignment is finalized this session; stays until the
+              student dismisses it or the session ends. ===== */}
+      {actionPin && (
+        <div className="absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none">
+          <div className="max-w-[min(88vw,560px)] pointer-events-auto">
+            {actionPin}
           </div>
         </div>
       )}
