@@ -241,6 +241,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // where. The brain never says it (it cannot see the close tool's result on
   // the brain path), so this event is the only record that it was said.
   'homework_pointer',
+  // Task 14, live-check-3 fixes round (2026-09-07): homework_state_rehydrated /
+  // homework_state_rehydrate_failed — a resumed page reloading the drafted-LO
+  // set + struggle ledger from the server (page memory is lost on resume).
+  'homework_state',
 ];
 
 /** The contract's milestone enum (derived from SessionResult — the package

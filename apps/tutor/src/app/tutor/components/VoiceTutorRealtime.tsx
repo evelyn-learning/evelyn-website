@@ -2631,6 +2631,34 @@ export function VoiceTutorRealtime({
   // either pushes an INFERRED gap (the student never named the
   // difficulty) or marks a RECURRENCE on an existing one.
   const ledgerRef = useRef<LedgerState>(createLedger());
+  // Resume rehydrate (Praveen 2026-09-07 ruling §5): the struggle ledger and
+  // the drafted-LO set are page memory; a resumed page must reload them or
+  // the close-tool fallback sees nothing (live 2026-09-06 addendum A2).
+  useEffect(() => {
+    if (!TUTOR_HOMEWORK_DRAFTS || !resumeState || !studentId) return;
+    let cancelled = false;
+    void fetch('/api/tutor/practice-assign/state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
+      body: JSON.stringify({ studentId, sessionId: sessionIdRef.current }),
+    }).then(async (res) => {
+      if (cancelled || res.status !== 200) { if (res.status !== 204) onDebugEvent?.('homework_state_rehydrate_failed', `status=${res.status}`); return; }
+      const data = await res.json() as { status: 'draft' | 'assigned'; locator?: string; los: Array<{ loId: string; title: string; count: number }> };
+      for (const lo of data.los) {
+        draftedLosRef.current.add(lo.loId);
+        if (!ledgerRef.current.has(lo.loId)) {
+          ledgerRef.current.set(lo.loId, { score: 0, events: [], detections: 1, inferredPushed: true, recovered: false });
+        }
+      }
+      if (data.status === 'assigned') {
+        homeworkFinalizedRef.current = true;
+        if (data.locator && data.los.length) { assignedPracticeRef.current = data.los; onHomeworkAssignedRef.current?.({ los: data.los, locator: data.locator }); }
+      }
+      onDebugEvent?.('homework_state_rehydrated', `status=${data.status} los=[${data.los.map((l) => l.loId).join(',')}]`);
+    }).catch((e) => onDebugEvent?.('homework_state_rehydrate_failed', String((e as Error).message).slice(0, 60)));
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resumeState, studentId, embedToken]);
   // `draftHomework` (declared above, after scheduleProfileFlush) is called
   // from `feedLedger` and the recurrence listener below — both defined
   // BEFORE it would otherwise be in scope. Held in a ref (typed, seeded with
