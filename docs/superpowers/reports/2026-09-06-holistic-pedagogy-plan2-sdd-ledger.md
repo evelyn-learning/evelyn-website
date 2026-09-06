@@ -1,4 +1,4 @@
-# SDD ledger — holistic-pedagogy Plan 2 (contract v1.15.0 + academy) — copied from the git-ignored workspace; Tasks 1–5 done except the live check on a real session
+# SDD ledger — holistic-pedagogy Plan 2 (contract v1.15.0 + academy) — copied from the git-ignored workspace (rollout + follow-through done; live check on a real session pending)
 
 # SDD ledger — plan: docs/superpowers/plans/2026-09-05-holistic-pedagogy-plan2-contract-academy.md
 Spec: docs/superpowers/specs/2026-09-05-tutor-holistic-pedagogy-round-design.md (§C.7 academy, §C.8, §C.9, §8). Plan 1 merged + deployed (main 49ff5ab1 → six-fix round d74762d7 pending deploy).
@@ -59,3 +59,4 @@ Task 5 step 1-2: contract v1.15.0 tagged+pushed (78231c0); engine pin 4e7c92c4, 
 Task 5 step 2 positive check: signed crimsora POST /api/portal/v1/assigned-practice (synthetic studentId) → 200 {"assignments":[]}; garbage signature → 401 (allowlist covers the route). Crimsora deployed: api/web online, server node_modules contract 1.15.0, api /api/health 200 internal, site 200. evelyntutor deploy running.
 Task 5 step 3: evelyntutor.com deployed (api/web online, server contract 1.15.0, /api/health 200, site 200, IndexNow 321 URLs). Academy branch pushed to origin/main. env drift: none (manual key+value compare; `deploy/env-drift-check.sh` lives only on the unmerged `evelyn-ai-copy` branch, f1f4059).
 Task 5 step 4 (live check): NOT runnable read-only — needs a real Crimsora session. Verify on the next real session: tutorsessions.debugEvents carries `practice_assigned` WITHOUT `silent=no-locator`, the goodbye names "Unit N · Practice", the Practice tab shows the "From your tutor" card, and the following session on that course shows `homework_checked`.
+2026-09-06 follow-through (Praveen: "complete all"): academy 8d96d6d goal_note on freeform starts + dd956a7 route-level tests (7 cases, incl. free-tier 201) + 7c23fb0 env-drift-check cherry-pick; drift check script run: no drift both tenants; Crimsora + evelyntutor.com redeployed (health 200, code present), pushed to origin/main.
