@@ -282,6 +282,7 @@
     "test:page-title": "npx tsx scripts/test-page-title.ts",
     "test:flush-policy": "npx tsx scripts/test-flush-policy.ts",
     "test:session-id-reuse": "npx tsx scripts/test-session-id-reuse.ts",
-    "test:struggle-ledger": "npx tsx scripts/test-struggle-ledger.ts"
+    "test:struggle-ledger": "npx tsx scripts/test-struggle-ledger.ts",
+    "test:self-correction-retry": "npx tsx scripts/test-self-correction-retry.ts"
   }
 }

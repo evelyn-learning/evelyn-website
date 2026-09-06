@@ -113,6 +113,7 @@ import {
 } from '@/lib/tutor/whiteboard/board-anchor-assist';
 import { rewriteForTTS } from '@/lib/tutor/voice/tts-pronunciation';
 import { isMetaNarration } from '@/lib/tutor/voice/meta-narration';
+import { buildSelfCorrectionRetryReason } from '@/lib/tutor/voice/self-correction-retry';
 import { setDrawOnPaceHint } from './whiteboard/useDrawOn';
 import type { SpokenProgress } from '@/lib/tutor/voice/caption-sync';
 import { clauseTailFromFraction } from '@/lib/tutor/voice/resume-from-cut';
@@ -11491,11 +11492,12 @@ export function VoiceTutorRealtime({
                   // the FIRST attempt of a turn; retries are already
                   // corrections, not confused walkbacks.
                   if (!attemptKilled && attempt === 0 && judgeRetriesUsed < MAX_JUDGE_RETRIES && selfCorrectionHit) {
-                    const reason =
-                      `You started self-correcting mid-turn ("${updatedSentence.slice(0, 120)}"). ` +
-                      `That's confusing for the student to hear. Re-emit your response cleanly: ` +
-                      `recompute the answer first, then speak ONLY the correct version. ` +
-                      `Do not narrate your own confusion or backtrack out loud.`;
+                    const reason = buildSelfCorrectionRetryReason({
+                      sentence: updatedSentence,
+                      studentUtterance: transcript ?? '',
+                      problemStatement: currentProblemRef.current?.statement,
+                      lastBoardEquation: turnEquationsRef.current[turnEquationsRef.current.length - 1],
+                    });
                     rejectionsThisAttempt.push({ action: 'mid_turn_self_correction', reason });
                     judgeRetriesUsed++;
                     await performKill();
