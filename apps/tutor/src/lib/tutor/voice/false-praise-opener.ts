@@ -96,6 +96,7 @@ import { matchUtteranceToAnswer } from '@/lib/tutor/voice/utterance-answer-match
 import { isPureAcknowledgment } from '@/lib/tutor/voice/nonanswer-praise';
 import { looksMonetary } from '@/lib/tutor/voice/spoken-money';
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
+import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 
 export interface FalsePraiseResult { verdict: 'ok' | 'false_praise' | 'advisory_false_praise'; expected?: string; matchReason?: string }
 const OK: FalsePraiseResult = { verdict: 'ok' };
@@ -199,6 +200,7 @@ export function studentDisagreesWithVerified(
   try {
     const v = (verified ?? '').trim();
     if (!v || !isSingleValued(v) || !isAnswerShaped(utterance)) return false;
+    if (!utteranceStatesValue(utterance, choices)) return false;
     if (isTermOfExpression(utterance, v)) return false;
     const m = matchUtteranceToAnswer(utterance, v, choices, { monetary: false });
     if (m.verdict === 'disagree') return true;
@@ -252,6 +254,22 @@ export function isAnswerShaped(utterance: string): boolean {
   if (/\?\s*$/.test(u)) return false;
   if (isPureAcknowledgment(u)) return false;
   return true;
+}
+
+const MOVE_IMPERATIVE_RE = /^\s*(?:(?:i(?:'d|'ll|\s+would|\s+will|\s+think\s+we|\s+guess\s+we)?\s+)?(?:take|move|bring|subtract|add|divide|multiply|distribute|combine|collect|isolate|flip|swap|cancel|get\s+rid\s+of|put|shift)\b)/i;
+
+/** Does the utterance STATE a value (a number, an expression, an equation,
+ *  or an MCQ letter) rather than describe a move? The judge-advisory gate
+ *  must never treat "take 4x to left" as an answer to compare with a key
+ *  (live 2026-09-06). */
+export function utteranceStatesValue(utterance: string, choices?: Array<{ letter: string; text: string }>): boolean {
+  const u = (utterance ?? '').trim();
+  if (!u) return false;
+  if (MOVE_IMPERATIVE_RE.test(u) && !/=/.test(u)) return false;
+  if (/=/.test(u)) return true;
+  if (/\d/.test(spokenNumbersToDigits(u))) return true;
+  if (choices?.length && /^[a-z]$/i.test(u.replace(/[.!?\s]/g, ''))) return true;
+  return false;
 }
 
 /** True when `reason` came from matchUtteranceToAnswer's MCQ letter-

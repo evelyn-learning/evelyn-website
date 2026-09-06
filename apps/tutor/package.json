@@ -185,6 +185,7 @@
     "test:praise-echo": "npx tsx scripts/test-praise-echo-check.ts",
     "test:inverse-verdict": "npx tsx scripts/test-inverse-verdict-check.ts",
     "test:false-praise-opener": "npx tsx scripts/test-false-praise-opener.ts",
+    "test:judge-gate-key": "npx tsx scripts/test-judge-gate-key.ts",
     "test:objective-credit": "npx tsx scripts/test-objective-credit.ts",
     "test:card-narration": "npx tsx scripts/test-card-narration.ts",
     "test:meta-narration": "npx tsx scripts/test-meta-narration.ts",

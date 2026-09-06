@@ -52,6 +52,7 @@
  *  Ruling: the wh-question signal only exempts the value-disagree branch,
  *  never the MCQ-letter kill branch; only DENIAL_RE/contrast exempts MCQ.
  */
+import { strict as assert } from 'node:assert';
 import { checkFalsePraiseOpener, isSingleValued, isAnswerShaped, PRAISE_OPENER_STRICT_RE } from '../src/lib/tutor/voice/false-praise-opener';
 let passed = 0, failed = 0;
 function check(name: string, cond: boolean, detail?: string) { if (cond) { passed++; console.log(`  ✓ ${name}`); } else { failed++; console.log(`  ✗ ${name}${detail ? ` — ${detail}` : ''}`); } }
@@ -228,6 +229,23 @@ check('semicolon list is not single-valued', !isSingleValued('x = 2; y = 5'));
   check('gate: "15 - 3x" agrees with "15 - 3x"', studentDisagreesWithVerified('15 - 3x', '15 - 3x') === false);
   check('gate: partial term is not a disagreement', studentDisagreesWithVerified('30p', '100 + 30p') === false);
   check('gate: no key ⇒ false', studentDisagreesWithVerified('7', '') === false);
+}
+
+// 2026-09-06 live (F4): the judge-advisory gate's key must belong to a
+// problem the student can see, and the utterance must STATE A VALUE — a
+// move description like "take 4x to left" is not an answer.
+{
+  const { utteranceStatesValue, studentDisagreesWithVerified } = require('../src/lib/tutor/voice/false-praise-opener');
+  assert.equal(utteranceStatesValue('take 4x to left'), false);              // a move, not a value
+  assert.equal(utteranceStatesValue('subtract 2x from both sides'), false);
+  assert.equal(utteranceStatesValue("it'll be 4x=2x+22"), true);
+  assert.equal(utteranceStatesValue('x is 11'), true);
+  assert.equal(utteranceStatesValue('eleven'), true);                        // spoken number
+  assert.equal(utteranceStatesValue('c', [{ letter: 'C', text: '11' }]), true); // MCQ letter
+  assert.equal(utteranceStatesValue('I think we move the smaller one'), false);
+  assert.equal(studentDisagreesWithVerified('take 4x to left', 'x=7'), false);
+  passed += 8;
+  console.log('  ✓ F4: utteranceStatesValue + studentDisagreesWithVerified move-guard (8 assertions)');
 }
 
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);

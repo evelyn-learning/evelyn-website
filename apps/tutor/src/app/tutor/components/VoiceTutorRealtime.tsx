@@ -126,6 +126,7 @@ import { hasVerdictOpener, VERDICT_REPLANT_CLAUSE } from '@/lib/tutor/voice/verd
 import { detectHoldRequest, checkResume } from '@/lib/tutor/voice/student-hold';
 import { checkInverseVerdict } from '@/lib/tutor/voice/inverse-verdict-check';
 import { checkFalsePraiseOpener, studentDisagreesWithVerified } from '@/lib/tutor/voice/false-praise-opener';
+import { verifiedKeyForJudgeGate } from '@/lib/tutor/voice/judge-gate-key';
 import { evaluateComputableLatex } from '@/lib/tutor/voice/computable-equation';
 import { pickFallbackMicDevice } from '@/lib/tutor/voice/mic-devices';
 import { getSharedMicLabel, switchSharedMicDevice } from '@/lib/tutor/voice/shared-mic';
@@ -14515,7 +14516,11 @@ export function VoiceTutorRealtime({
                   // exactly right, my mistake"). When the flagged claim is a
                   // denial and the deterministic key says the student really
                   // disagreed with it, the judge is the one that is wrong.
-                  const judgeVerifiedKey = pendingGeneratedAnswerRef.current?.expectedAnswer ?? currentProblemRef.current?.expectedAnswer;
+                  const judgeVerifiedKey = verifiedKeyForJudgeGate({
+                    pending: pendingGeneratedAnswerRef.current,
+                    current: currentProblemRef.current,
+                    boardText: boardSummary,
+                  });
                   const denialFlagged = noteworthyAdvisoryIssues.some((i) => DENIAL_RE.test(i.claim));
                   const denialVerifiedRight = denialFlagged && !!judgeVerifiedKey
                     && studentDisagreesWithVerified(transcript ?? '', judgeVerifiedKey, currentProblemRef.current?.choiceOptions);
