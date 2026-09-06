@@ -2597,6 +2597,11 @@ export function VoiceTutorRealtime({
   // get a per-command string out of that batch loop. Read-and-cleared by the
   // handler's return so a later, unrelated command can never inherit it.
   const closeNotesResultNoteRef = useRef<string | null>(null);
+  // Task 13 fix round 2 — latched the moment the RUNTIME speaks the homework
+  // pointer. After that, any model sentence that announces homework is a
+  // duplicate of a line the student just heard, so the announce gate drops
+  // it (the prompt already forbids it; this is the deterministic half).
+  const homeworkPointerSpokenRef = useRef(false);
   // Task 13 — assigned by Task 15 (the session-summary card + action pin).
   // Called ONLY on a finalize that actually created an assignment AND has a
   // locator to send the student to.
@@ -7017,7 +7022,7 @@ export function VoiceTutorRealtime({
                 assignedPracticeRef.current = data.assigned;
                 homeworkFinalizedRef.current = true;
                 onHomeworkAssignedRef.current?.({ los: data.assigned, locator: practiceLocator });
-                note = `close_session_notes: assigned practice on ${data.assigned.map((a) => a.title).join(' and ')} — it is waiting in "${practiceLocator}". You may tell the student that, once.`;
+                note = `close_session_notes: practice on ${data.assigned.map((a) => a.title).join(' and ')} was assigned and the runtime has already told the student where it is — do not mention homework or practice again; just say goodbye.`;
                 onDebugEvent?.('practice_assigned', detail);
                 // Fix round 1 (Important 2): the CLIENT speaks the pointer.
                 // On the production brain path the tool_result is resolved
@@ -7029,6 +7034,7 @@ export function VoiceTutorRealtime({
                 const pointer = buildHomeworkPointerSentence({ los: data.assigned, locator: practiceLocator });
                 if (pointer) {
                   speakTextRef.current?.(pointer);
+                  homeworkPointerSpokenRef.current = true;
                   transcriptRef.current = [
                     ...transcriptRef.current,
                     {
@@ -12382,9 +12388,12 @@ export function VoiceTutorRealtime({
                   // locator existed but nothing was ever assigned).
                   // 2026-09-07: gated on an assignment finalized THIS
                   // session, not on the locator — live 2026-09-06 the tutor
-                  // announced a card that did not exist.
-                  if (!assignedPracticeRef.current && isHomeworkAnnouncement(updatedSentence)) {
-                    console.warn('[brain-orchestrator] dropped homework announcement (nothing assigned this session):', JSON.stringify(updatedSentence.slice(0, 100)));
+                  // announced a card that did not exist. Two reasons to
+                  // drop: nothing is assigned, OR the runtime already spoke
+                  // the pointer itself (the model repeating it would tell
+                  // the student the same thing twice).
+                  if ((!assignedPracticeRef.current || homeworkPointerSpokenRef.current) && isHomeworkAnnouncement(updatedSentence)) {
+                    console.warn('[brain-orchestrator] dropped homework announcement (nothing assigned, or the runtime already announced it):', JSON.stringify(updatedSentence.slice(0, 100)));
                     onDebugEvent?.('homework_announce_dropped', updatedSentence.slice(0, 80));
                     continue;
                   }

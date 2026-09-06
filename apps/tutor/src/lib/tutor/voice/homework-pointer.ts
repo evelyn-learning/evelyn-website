@@ -23,5 +23,5 @@ export function buildHomeworkPointerSentence(input: HomeworkPointerInput): strin
   const n = los.reduce((sum, l) => sum + l.count, 0);
   if (n <= 0) return null;
   const titles = los.map((l) => l.title).join(' and ');
-  return `I've set ${n} practice question${n === 1 ? '' : 's'} on ${titles} for you — you'll find them under ${locator}.`;
+  return `I've set ${n} practice question${n === 1 ? '' : 's'} on ${titles} for you — you'll find ${n === 1 ? 'it' : 'them'} under ${locator}.`;
 }

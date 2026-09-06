@@ -1,4 +1,5 @@
 import { isHomeworkAnnouncement } from '../src/lib/tutor/voice/homework-announce';
+import { buildHomeworkPointerSentence } from '../src/lib/tutor/voice/homework-pointer';
 
 let pass = 0, fail = 0;
 function check(name: string, ok: boolean) { if (ok) pass++; else { fail++; console.log(`  ✗ ${name}`); } }
@@ -19,6 +20,18 @@ const no = [
   "Which questions are you unsure about?",
   "We'll wait for the assignment of treatments to be random.",
 ];
+// Task 13 fix round 2: the runtime speaks the pointer itself. If the model
+// then echoes that sentence, the announce gate must catch it — so the
+// runtime's OWN wording has to be matched by this classifier.
+for (const n of [1, 5] as const) {
+  const pointer = buildHomeworkPointerSentence({
+    los: n === 1
+      ? [{ loId: 'alg1.multi-step', title: 'Variables on both sides', count: 1 }]
+      : [{ loId: 'alg1.multi-step', title: 'Variables on both sides', count: 3 }, { loId: 'alg1.classify', title: 'Classifying solutions', count: 2 }],
+    locator: 'Unit 2 · Practice',
+  });
+  check(`runtime pointer (n=${n}) is matched: "${(pointer ?? '').slice(0, 50)}"`, !!pointer && isHomeworkAnnouncement(pointer) === true);
+}
 for (const s of yes) check(`announce: "${s.slice(0, 50)}"`, isHomeworkAnnouncement(s) === true);
 for (const s of no) check(`not: "${s.slice(0, 50)}"`, isHomeworkAnnouncement(s) === false);
 console.log(`${pass} passed, ${fail} failed`);
