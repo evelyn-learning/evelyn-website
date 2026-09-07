@@ -7,7 +7,7 @@ Ledger: `.superpowers/sdd/2026-09-07-live-check-3-fixes-and-homework-drafts/prog
 
 - Branch: `tutor-rounds`
 - Worktree: `.claude/worktrees/tutor-rounds`
-- HEAD: `56c4094d` (`chore(tutor): resume-board seeding telemetry (A6 investigation hook); stack hiccup + homework pins`)
+- HEAD: `2b0b5c84` (`fix(tutor): final-review wave — spoken locator, close-notes kill switch, wrap-gated struggles block, page-key reject guard, atomic draft upsert`); the task commits end at `56c4094d`, `307df0e0` adds the harness scenario + this doc.
 - Plan base commit: `8ca33484`
 - `origin/main`: unchanged since the branch base (0 behind) at the time of this task — no merge was needed.
 
@@ -53,7 +53,33 @@ Fix (T1): a label collision is only rejected (with a reason the brain can act on
 - **Task 13 (fix round 2/5):** the isHomeworkAnnouncement widening (set|left near a practice noun) would drop in-session "I've set a practice problem on the board". Ruling: revert the widening; reword the runtime pointer to "…for you — they're waiting under <locator>." so the EXISTING noun-then-verb rule matches it. Cost if wrong: none beyond wording.
 - **Task 15:** the plan-mandated pin overlap (actionPin + hiccupPin same offset) is fixed in Task 16 by rendering both pins in one bottom container as a vertical stack (small, same file).
 
-## Gate output
+## Final whole-branch review → one fix wave (`2b0b5c84`)
+
+Reviewer (opus, range `9c401b91..307df0e0`): "Ready to merge: with fixes" — 1 Critical, 4 Important, 9 minor. Rulings and fixes, all in `2b0b5c84` (scoped re-review: all addressed, no new breakage):
+
+- **Critical — the spoken pointer said "Unit 2 times Practice":** every TTS route runs `rewriteForTTS`, whose unconditional rule rewrites `·` as " times ". Fix: `buildHomeworkPointerSentence` normalises the SPOKEN locator (`·×÷|›»–—` → ", "); the action pin keeps the middot (rendered, not spoken); test asserts no such glyph survives.
+- **Important — `TUTOR_CLOSE_NOTES` no longer killed homework:** drafting, exit finalize and resume rehydrate were gated only on `TUTOR_HOMEWORK_DRAFTS`. Ruling: `TUTOR_CLOSE_NOTES` stays the master switch; all three paths require it and `draftHomework` sends `locatorForPrompt`.
+- **Important — `<session_struggles>` rode every turn from the first detection:** Ruling: attach only on a wrap signal (recap wrap/return active, current segment kind `recap`, elapsed ≥ 75 % of the session cap, or a goodbye-shaped utterance via `isWrapUtterance`); event `session_struggles_attached` carries the reason. Cost if wrong: the brain passes no LOs on an early goodbye — the evidence drafts still finalize on exit.
+- **Important — label-dedup page key read before a same-batch synthetic newPage** ⇒ a false REJECT on a batch that opens a page. Fix: `decideLabelDuplicate({ pageOpenPending })` turns that reject into a register; VTR passes `pendingAdvanceNewPageRef` / the topic-shift next-batch flag.
+- **Important — `upsertDraft` upserted on `{_id}`:** two concurrent drafts for one session minted two ids and the second hit the `sessionId` unique index (500). Fix: upsert on `{ sessionId }` with `$setOnInsert: { _id, createdAt }`.
+- Minors folded in: prompt absolute scoped to "this session's practice"; sweep index `{ studentId, status, draftedAt }`; the assigned-case tool-result note is written only after the pointer null-check.
+- Deferred by the reviewer's triage: `time_cap` is a dead enum value (no client caller); `\big(`-style delimiters in `parenthesisCoefficients`; the reversal/authored-ending guards share one marker list (comment it); route response keys differ (`los` vs `assigned`); legacy `upsertAssignment` unscoped by studentId (pre-existing write path); resume-rehydrate has no once-latch (safe: `resumeState` identity is stable); ownership behaviour has no Mongo-backed test; pin/pointer formatting duplicated.
+
+### Live-check watch list (ruled-accepted behaviours with no live evidence yet)
+1. Up to ~8 s of silence on the goodbye turn while the close handler awaits draft + finalize.
+2. The runtime-spoken pointer: wording, and whether its transcript bubble lands after the goodbye text it was spoken before.
+3. Premature wrap-up pressure from `<session_struggles>` (now wrap-gated).
+4. The re-armed label-duplicate REJECTION cascade (the old code documented the brain misreading exactly this rejection) — and the harness never exercised the reject branch.
+5. `resume_board_seed_mismatch` (A6) has not been observed live.
+
+## Gate output (re-run after the fix wave, at `2b0b5c84`)
+
+- `npx tsc --noEmit -p tsconfig.json` → **0 errors**.
+- `npm run test:all` → **247/247 passed** (identical set to the pre-wave gate).
+- `npm run build` → completed (route manifest printed, fresh `.next/BUILD_ID` `Evy38Gtp9iYTUkjGKiSjj` at 2026-09-07T01:09Z; no error lines in the log). Log: session scratchpad `gate2.log`.
+- Scoped re-review of the fix wave (`307df0e0..2b0b5c84`): all 5 findings + 3 minors ADDRESSED, no new breakage.
+
+## Gate output (at `307df0e0`, before the fix wave)
 
 - `npx tsc --noEmit -p tsconfig.json` → **0 errors** (empty output).
 - `npm run test:all` → **247/247 passed** (baseline was 237/237; +10 new batteries: `test:equation-label-dedup`, `test:rule8-client`, `test:judge-gate-key`, `test:authored-ending`, `test:judge-authored-solution`, `test:self-correction-retry`, `test:practice-assign-routes`, `test:session-struggles-block`, `test:homework-pointer`, `test:action-pin-text` — all confirmed PASS in the log, no reds).
