@@ -31,6 +31,7 @@ import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
 import { isRecapOfferVoiced, RECAP_OFFER_MAX_ATTEMPTS } from '@/lib/tutor/voice/recap-offer-voiced';
 import { isHomeworkAnnouncement } from '@/lib/tutor/voice/homework-announce';
 import { buildHomeworkPointerSentence } from '@/lib/tutor/voice/homework-pointer';
+import { isWrapUtterance } from '@/lib/tutor/voice/session-struggles-block';
 /** End button: how long the final profile commit may hold the exit. */
 const FINAL_COMMIT_MAX_WAIT_MS = 3000;
 /** Chromium rejects keepalive bodies over 64 KiB; stay under with margin. */
@@ -2004,6 +2005,15 @@ export function VoiceTutorRealtime({
   // would have the tutor promise practice nothing ever creates. Withholding the
   // locator is the safe flag-off state; the tool + prompt section stay live
   // (silent tools are never flag-gated in this codebase).
+  //
+  // FINAL REVIEW 2026-09-07 (Important) — TUTOR_CLOSE_NOTES is the MASTER KILL
+  // SWITCH for the whole homework feature, not just for the close tool. The
+  // draft-during-session path (`draftHomework`), the finalize-on-any-exit path
+  // (`pendingFinalize` + the `finalizeHomework` body field), and the resume
+  // rehydrate effect all honour it too, and every one of them sends
+  // `locatorForPrompt` rather than the raw `practiceLocator` prop. Otherwise
+  // flag-off still WRITES locator-labelled homework that nothing is allowed to
+  // announce — a killed feature quietly creating student-visible records.
   const locatorForPrompt = TUTOR_CLOSE_NOTES ? practiceLocator : undefined;
 
   // Learning-gaps blending (2026-07-05): commits are now INCREMENTAL, not
@@ -2078,6 +2088,7 @@ export function VoiceTutorRealtime({
     // otherwise a tab close after everything was already flushed silently
     // drops the draft, which is exactly the exit this round exists for.
     const pendingFinalize = TUTOR_HOMEWORK_DRAFTS
+      && TUTOR_CLOSE_NOTES
       && !homeworkFinalizedRef.current
       && draftedLosRef.current.size > 0
       && (opts?.final === true || opts?.keepalive === true);
@@ -2131,7 +2142,7 @@ export function VoiceTutorRealtime({
       // leave tab-close, the exit this whole round exists for, unfinalized.
       // `isFinal` is what names the source, not `keepalive` (the End path
       // asks for keepalive too).
-      ...((isFinal || opts?.keepalive === true) && TUTOR_HOMEWORK_DRAFTS && !homeworkFinalizedRef.current
+      ...((isFinal || opts?.keepalive === true) && TUTOR_HOMEWORK_DRAFTS && TUTOR_CLOSE_NOTES && !homeworkFinalizedRef.current
         ? { finalizeHomework: { source: isFinal ? 'end' as const : 'pagehide' as const } }
         : {}),
       ...(isFinal && homeworkAckIdsRef.current.length ? { homeworkAcknowledged: homeworkAckIdsRef.current } : {}),
@@ -2240,7 +2251,10 @@ export function VoiceTutorRealtime({
   // the session on deterministic evidence and FINALIZED on any exit — no
   // creation path depends on the brain calling a tool at the goodbye.
   const draftHomework = useCallback((loId: string, trigger: 'recurrence' | 'recap_still_struggling' | 'incorrect_streak') => {
-    if (!TUTOR_HOMEWORK_DRAFTS || !studentId || !lessonPlanId) return;
+    // TUTOR_CLOSE_NOTES is the feature's master kill switch (see the
+    // `locatorForPrompt` invariant above): flag-off, nothing may announce
+    // homework, so nothing may create it either.
+    if (!TUTOR_HOMEWORK_DRAFTS || !TUTOR_CLOSE_NOTES || !studentId || !lessonPlanId) return;
     if (loId.startsWith('prereq:')) return;
     if (!(lessonPlanRef.current?.los ?? []).some((l) => l.id === loId)) return;
     if (draftedLosRef.current.has(loId) || homeworkFinalizedRef.current) return;
@@ -2248,7 +2262,7 @@ export function VoiceTutorRealtime({
     void fetch('/api/tutor/practice-assign/draft', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(embedToken ? { 'x-embed-token': embedToken } : {}) },
-      body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds: [loId], trigger: `${trigger}:${loId}`, locator: practiceLocator }),
+      body: JSON.stringify({ studentId, sessionId: sessionIdRef.current, lessonPlanId, subject, loIds: [loId], trigger: `${trigger}:${loId}`, locator: locatorForPrompt }),
     }).then(async (res) => {
       if (res.status === 200) {
         const data = await res.json() as { status: string; los: Array<{ loId: string; count: number }> };
@@ -2260,7 +2274,7 @@ export function VoiceTutorRealtime({
         onDebugEvent?.('practice_draft_failed', `lo=${loId} status=${res.status}`);
       }
     }).catch((e) => { draftedLosRef.current.delete(loId); onDebugEvent?.('practice_draft_failed', `lo=${loId} ${String((e as Error).message).slice(0, 60)}`); });
-  }, [studentId, lessonPlanId, subject, embedToken, practiceLocator, onDebugEvent]);
+  }, [studentId, lessonPlanId, subject, embedToken, practiceLocator, locatorForPrompt, onDebugEvent]);
   // Abnormal-exit coverage: pagehide fires on tab close / navigation /
   // mobile background-then-kill (more reliably than beforeunload on iOS).
   // keepalive lets the POST complete after teardown. Cheap no-op when the
@@ -2645,7 +2659,10 @@ export function VoiceTutorRealtime({
   // the drafted-LO set are page memory; a resumed page must reload them or
   // the close-tool fallback sees nothing (live 2026-09-06 addendum A2).
   useEffect(() => {
-    if (!TUTOR_HOMEWORK_DRAFTS || !resumeState || !studentId) return;
+    // Same master kill switch as the draft/finalize paths (see the
+    // `locatorForPrompt` invariant above) — flag-off must not rehydrate a
+    // homework state the session is not allowed to create or announce.
+    if (!TUTOR_HOMEWORK_DRAFTS || !TUTOR_CLOSE_NOTES || !resumeState || !studentId) return;
     let cancelled = false;
     void fetch('/api/tutor/practice-assign/state', {
       method: 'POST',
@@ -5534,7 +5551,13 @@ export function VoiceTutorRealtime({
             const signature = buildShowSignature('showEquation', cmd);
             const currentPageKey = catalogRef.current.getCurrentPageTitle() ?? '';
             const priorOnBoard = !!seen && !!catalogRef.current.findBySignature(seen.signature);
-            const decision = decideLabelDuplicate({ normalizedLabel, normalizedLatex: normalized, seen, currentPageKey, priorOnBoard });
+            // FINAL REVIEW 2026-09-07 (Important): this runs BEFORE the batch's
+            // synthetic newPage is prepended (deferred segment-advance page, or
+            // an armed topic shift — both flushed further down this flush), so
+            // `currentPageKey` names the page being LEFT. Rejecting a reused
+            // label against it is the false-drop class this guard exists to end.
+            const pageOpenPending = !!pendingAdvanceNewPageRef.current || !!topicShiftPendingRef.current;
+            const decision = decideLabelDuplicate({ normalizedLabel, normalizedLatex: normalized, seen, currentPageKey, priorOnBoard, pageOpenPending });
             if (decision.kind === 'reject') {
               // R1 (2026-09-07): a real same-page collision is a REJECTION the
               // brain can act on, never a silent drop — see the module header.
@@ -5545,8 +5568,20 @@ export function VoiceTutorRealtime({
               return [];
             }
             if (decision.kind === 'register') {
+              if (decision.pageOpenPending) {
+                // Rescued reject: recorded (not silent) so a live session shows
+                // the guard fired and chose to register instead of drop.
+                onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen!.originalLabel}" (page-open pending — registered instead)`);
+              }
+              // Key it to the page the equation will actually land on when that
+              // page's title is already known (the deferred advance carries it);
+              // otherwise the current key, which fails toward registering later
+              // collisions rather than dropping them.
+              const registerPageKey = decision.pageOpenPending
+                ? (pendingAdvanceNewPageRef.current?.title ?? currentPageKey)
+                : currentPageKey;
               equationLabelsThisSessionRef.current.set(normalizedLabel, {
-                originalLabel: rawLabel, originalLatex: latex, latexNormalized: normalized, signature, pageKey: currentPageKey,
+                originalLabel: rawLabel, originalLatex: latex, latexNormalized: normalized, signature, pageKey: registerPageKey,
               });
             }
             // If the label looks like "Step N…" or "Step N: …",
@@ -7060,7 +7095,6 @@ export function VoiceTutorRealtime({
                 assignedPracticeRef.current = data.assigned;
                 homeworkFinalizedRef.current = true;
                 onHomeworkAssignedRef.current?.({ los: data.assigned, locator: practiceLocator });
-                note = `close_session_notes: practice on ${data.assigned.map((a) => a.title).join(' and ')} was assigned and the runtime has already told the student where it is — do not mention homework or practice again; just say goodbye.`;
                 onDebugEvent?.('practice_assigned', detail);
                 // Fix round 1 (Important 2): the CLIENT speaks the pointer.
                 // On the production brain path the tool_result is resolved
@@ -7085,6 +7119,14 @@ export function VoiceTutorRealtime({
                   onTranscriptUpdate([...transcriptRef.current]);
                   onTrackInteraction?.('message', pointer, undefined, 'tutor');
                   onDebugEvent?.('homework_pointer_spoken', pointer.slice(0, 120));
+                  // Final review 2026-09-07 (minor m3): the note is written
+                  // HERE, after the null-check — it claims the runtime already
+                  // announced the practice, and that is only true when a
+                  // pointer sentence actually went out. A `pointer === null`
+                  // case (every count 0 / no titles) keeps the default
+                  // nothing-was-assigned note, so the brain is never told an
+                  // announcement happened that never did.
+                  note = `close_session_notes: practice on ${data.assigned.map((a) => a.title).join(' and ')} was assigned and the runtime has already told the student where it is — do not mention homework or practice again; just say goodbye.`;
                 }
               } else {
                 onDebugEvent?.('practice_assigned', `silent=${practiceLocator ? 'empty' : 'no-locator'} ${detail}`);
@@ -10592,6 +10634,37 @@ export function VoiceTutorRealtime({
         }
       }
 
+      // ── <session_struggles>: WRAP-GATED (final review 2026-09-07) ────
+      // The ledger block instructs the brain to call close_session_notes with
+      // these ids. Attached on EVERY turn (the shipped behaviour) it is a
+      // wrap-up instruction sitting in the middle of a lesson, tens of turns
+      // before anything is wrapping — the brain can act on it early and end a
+      // session that was not ending. It now rides only a turn that carries a
+      // wrap signal. Computed ONCE per turn, like the recap carriers above, so
+      // every validator-retry attempt of this turn sends the same block.
+      const wrapByRecap = !!recapWrapForTurn;
+      const wrapBySegment = lessonPlanRef.current?.segments.find((sg) => sg.id === currentSegmentIdRef.current)?.kind === 'recap';
+      const wrapElapsedMin = Math.max(0, (Date.now() - (voiceSessionStartedAtMsRef.current ?? sessionStartMsRef.current)) / 60000);
+      const wrapByTime = wrapElapsedMin >= sessionMaxMinutes * 0.75;
+      const wrapByUtterance = isWrapUtterance(transcript);
+      const wrapSignal = wrapByRecap || wrapBySegment || wrapByTime || wrapByUtterance;
+      const ledgerFlagsForTurn = TUTOR_CLOSE_NOTES && wrapSignal
+        ? [...ledgerRef.current.entries()]
+            .filter(([k, v]) => !k.startsWith('prereq:') && v.detections >= 1 && !v.recovered)
+            .sort((a, b) => b[1].detections - a[1].detections)
+            .slice(0, 3)
+            .map(([loId, v]) => ({ loId, title: loTitleFor(loId), detections: v.detections }))
+        : undefined;
+      if (ledgerFlagsForTurn?.length) {
+        const wrapReason = [
+          wrapByUtterance ? 'utterance' : '',
+          wrapBySegment ? 'recap-segment' : '',
+          wrapByRecap ? 'recap-wrap' : '',
+          wrapByTime ? `time>=75% (${wrapElapsedMin.toFixed(1)}/${sessionMaxMinutes}m)` : '',
+        ].filter(Boolean).join('+');
+        onDebugEvent?.('session_struggles_attached', `reason=${wrapReason} los=[${ledgerFlagsForTurn.map((f) => `${f.loId}:${f.detections}`).join(',')}]`);
+      }
+
       for (let attempt = 0; attempt <= MAX_VALIDATOR_RETRIES; attempt++) {
         // On retry attempts, clear the per-turn dedup set so the brain's
         // CORRECTED tool call (e.g. show_collision with proper momentum)
@@ -10948,13 +11021,10 @@ export function VoiceTutorRealtime({
             // the ledger had two detections, live 2026-09-06). Same
             // TUTOR_CLOSE_NOTES gate as the rest of the close-notes path, so
             // flag-off is byte-identical. Recovered LOs are excluded.
-            ledgerFlags: TUTOR_CLOSE_NOTES
-              ? [...ledgerRef.current.entries()]
-                  .filter(([k, v]) => !k.startsWith('prereq:') && v.detections >= 1 && !v.recovered)
-                  .sort((a, b) => b[1].detections - a[1].detections)
-                  .slice(0, 3)
-                  .map(([loId, v]) => ({ loId, title: loTitleFor(loId), detections: v.detections }))
-              : undefined,
+            // FINAL REVIEW 2026-09-07: wrap-gated — decided once per turn
+            // above the retry loop (`ledgerFlagsForTurn`). Undefined on an
+            // ordinary mid-lesson turn ⇒ the field is absent from the body.
+            ledgerFlags: ledgerFlagsForTurn,
             recapGo: recapGoForTurn,
             recapWrap: recapWrapForTurn,
             recapReply,

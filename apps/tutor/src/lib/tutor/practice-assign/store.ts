@@ -238,13 +238,30 @@ export async function upsertDraft(
   const _id = existing?._id ?? a._id ?? randomUUID();
   const los = existing ? mergeDraftLos(existing.los, a.los) : a.los.slice(0, DRAFT_MAX_LOS);
   const triggers = [...new Set([...(existing?.triggers ?? []), ...(a.triggers ?? [])])];
+  // FINAL REVIEW 2026-09-07 (Important — atomic upsert). The filter used to be
+  // `{ _id }`, with the id minted from a NON-atomic `findOne` above. Two drafts
+  // racing for one session (the recurrence trigger and the incorrect-streak
+  // trigger fire from the same turn) both read "absent", both minted a fresh
+  // uuid, and the second upsert inserted a SECOND document for the session —
+  // which the `sessionId` unique index rejects, so the student's draft request
+  // 500s. Upserting on `sessionId` itself makes the index the arbiter: the
+  // loser of the race updates the winner's document instead of inserting.
+  // `_id` moves to `$setOnInsert` (it must not appear in `$set` — immutable —
+  // and a genuinely new record still gets the minted id).
+  const { _id: _providedId, ...fields } = a;
   await PracticeAssignmentModel.updateOne(
-    { _id },
+    { sessionId: a.sessionId },
     {
-      $set: { ...a, _id, los, triggers, status: 'draft', draftedAt: existing?.draftedAt ?? new Date(), assignedAt: existing?.assignedAt ?? new Date() },
-      $setOnInsert: { createdAt: new Date() },
+      $set: { ...fields, los, triggers, status: 'draft', draftedAt: existing?.draftedAt ?? new Date(), assignedAt: existing?.assignedAt ?? new Date() },
+      $setOnInsert: { _id, createdAt: new Date() },
     },
     { upsert: true },
   );
-  return { rec: (await PracticeAssignmentModel.findById(_id).lean()) as IPracticeAssignment, alreadyAssigned: false };
+  // Re-read by sessionId (not by the minted `_id`, which the race may have
+  // discarded), scoped to this student — the same ownership scoping every
+  // other read in this module uses.
+  return {
+    rec: (await PracticeAssignmentModel.findOne(sessionScopeFilter(a.sessionId, a.studentId)).lean()) as IPracticeAssignment,
+    alreadyAssigned: false,
+  };
 }

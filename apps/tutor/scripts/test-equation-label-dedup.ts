@@ -32,4 +32,26 @@ assert.deepEqual(decideLabelDuplicate({ normalizedLabel: 'final answer', normali
 // prior was killed/retracted (not on the board any more) ⇒ register
 assert.deepEqual(decideLabelDuplicate({ normalizedLabel: 'final answer', normalizedLatex: 'x=11', seen: seen(), currentPageKey: 'Solving for x', priorOnBoard: false }), { kind: 'register' });
 
+// FINAL REVIEW 2026-09-07 — a page open is PENDING for this batch (deferred
+// segment-advance newPage, or an armed topic shift): `currentPageKey` names
+// the page being left, so the same-page reject would be a false drop.
+assert.deepEqual(
+  decideLabelDuplicate({ normalizedLabel: 'final answer', normalizedLatex: 'x=11', seen: seen(), currentPageKey: 'Solving for x', priorOnBoard: true, pageOpenPending: true }),
+  { kind: 'register', pageOpenPending: true },
+);
+// …and the flag never turns a PASS or an ordinary register into anything else.
+assert.deepEqual(
+  decideLabelDuplicate({ normalizedLabel: 'final answer', normalizedLatex: 'x=5', seen: seen(), currentPageKey: 'Solving for x', priorOnBoard: true, pageOpenPending: true }),
+  { kind: 'pass' },
+);
+assert.deepEqual(
+  decideLabelDuplicate({ normalizedLabel: 'final answer', normalizedLatex: 'x=11', seen: undefined, currentPageKey: 'p1', priorOnBoard: false, pageOpenPending: true }),
+  { kind: 'register' },
+);
+// …and with NO page open pending the reject still stands (control).
+assert.equal(
+  decideLabelDuplicate({ normalizedLabel: 'final answer', normalizedLatex: 'x=11', seen: seen(), currentPageKey: 'Solving for x', priorOnBoard: true, pageOpenPending: false }).kind,
+  'reject',
+);
+
 console.log('equation-label-dedup: all assertions passed');

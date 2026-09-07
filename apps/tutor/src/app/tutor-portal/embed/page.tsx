@@ -86,6 +86,11 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   //   check_in) + first-session tip + noise-floor nudge:
   'student_hold_', 'first_session_tip', 'noise_floor_',
   'scribble_dedup', 'queue_drain', 'student_echo', 'vbs_',
+  // Final review 2026-09-07: session_struggles_attached — the <session_struggles>
+  // ledger block is now WRAP-GATED, so this row is the record of WHY it rode a
+  // given turn (utterance / recap segment / recap wrap / ≥75% of the budget).
+  // Without it a close_session_notes call has no visible trigger.
+  'session_struggles',
   // Agenda rail (2026-08-10): agenda_rail_active — one line per fresh plan
   // start, proves the opener resolved a non-zero agenda item count (rail
   // preview clause armed). No card is ever dispatched.

@@ -60,7 +60,10 @@ const PracticeAssignmentSchema = new Schema<IPracticeAssignment>(
   { _id: false },
 );
 PracticeAssignmentSchema.index({ studentId: 1, assignedAt: -1 });
-PracticeAssignmentSchema.index({ status: 1, draftedAt: 1 });
+// Final review 2026-09-07: prefixed with `studentId` to match the only query
+// that uses it — `sweepStaleDrafts({ studentId, status, draftedAt })`. Without
+// the leading field the index could not serve that query's equality prefix.
+PracticeAssignmentSchema.index({ studentId: 1, status: 1, draftedAt: 1 });
 
 export const PracticeAssignmentModel =
   (mongoose.models.PracticeAssignment as mongoose.Model<IPracticeAssignment>) ||
