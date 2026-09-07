@@ -98,7 +98,15 @@ import { looksMonetary } from '@/lib/tutor/voice/spoken-money';
 import { DENIAL_RE } from '@/lib/tutor/voice/simplification-verdict-check';
 import { spokenNumbersToDigits } from '@/lib/tutor/voice/spoken-numbers';
 
-export interface FalsePraiseResult { verdict: 'ok' | 'false_praise' | 'advisory_false_praise'; expected?: string; matchReason?: string }
+export interface FalsePraiseResult {
+  verdict: 'ok' | 'false_praise' | 'advisory_false_praise'; expected?: string; matchReason?: string;
+  /** Live check 6 (2026-09-07): the opener praised AND the student's
+   *  utterance AGREES with the verified key — the posed problem is settled.
+   *  The caller retires that key so later answers to NEWER questions are
+   *  never graded against it (the stale-key kill: a correct "x - .75x"
+   *  killed against a recipe's "6" answered three minutes earlier). */
+  agreed?: boolean;
+}
 const OK: FalsePraiseResult = { verdict: 'ok' };
 
 /** Affirmation-class openers only. Partial verdicts ("right idea", "close",
@@ -295,6 +303,17 @@ function isMcqResolvedReason(reason: string): boolean {
  * blind spot for the "affirm-then-immediately-correct-with-a-hedge-word"
  * shape; left as a follow-up rather than fixed now.
  */
+/** Does the utterance END by stating `key` ("… so x = 6", "… equals 6.")?
+ *  Whitespace/`$`-insensitive; the key must be the final token run. */
+export function utteranceConcludesWith(utterance: string, key: string): boolean {
+  const norm = (s: string) => spokenNumbersToDigits((s || '')).replace(/\$/g, '').replace(/\s+/g, '').replace(/[.!?]+$/, '').toLowerCase();
+  const u = norm(utterance); const k = norm(key);
+  if (!u || !k || k.length > 24) return false;
+  if (!u.endsWith(k)) return false;
+  const before = u.slice(0, u.length - k.length);
+  return before === '' || /(?:=|is|equals|gives|get|so|be|are|answer:?|→)$/.test(before);
+}
+
 export function checkFalsePraiseOpener(args: {
   sentence: string; studentUtterance: string;
   verifiedExpectedAnswer?: string; unverifiedCardAnswer?: string;
@@ -319,6 +338,12 @@ export function checkFalsePraiseOpener(args: {
     if (verified) {
       if (!isSingleValued(verified)) return OK;
       const m = matchUtteranceToAnswer(args.studentUtterance, verified, args.choices, { monetary });
+      if (m.verdict === 'agree') return { verdict: 'ok', agreed: true, expected: verified, matchReason: m.reason };
+      // A worked utterance ("2/3 = x/9, 3x = 18, x = 6") is multi-valued for
+      // the comparator, but it CONCLUDES with the key — settled all the same.
+      if (m.verdict === 'unknown' && utteranceConcludesWith(args.studentUtterance, verified)) {
+        return { verdict: 'ok', agreed: true, expected: verified, matchReason: 'concludes-with-key' };
+      }
       if (m.verdict !== 'disagree') return OK;
       // Live 2026-09-06 (portal-4bbe5d91): the student answered a scaffolding
       // sub-question ("5 × 6p?" → "30p") while the verified key was the whole

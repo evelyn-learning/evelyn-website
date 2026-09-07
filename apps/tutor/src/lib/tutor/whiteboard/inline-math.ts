@@ -398,10 +398,25 @@ export function decodeHtmlEntities(s: string): string {
 // Split a string into alternating plain-text and math segments.
 // Math is anything between matched single $...$ that doesn't include whitespace-only
 // content, doesn't span across a newline, and passes the looksLikeMath check.
-/** `forceMath` (2026-07-15, Q pin): skip the currency guard — every balanced
- *  $...$ pair is math. For contexts where the text comes from a prompt that
- *  guarantees $...$ means LaTeX (the question-gist route), where the guard's
- *  conservatism otherwise leaves simple math like "$2 - x$" as literal text. */
+/** A $…$ span whose inner text reads as PROSE that opened with a money
+ *  amount — "$120 give a different result than on $100" pairs the two
+ *  currency signs into one bogus math span. Shape: a bare amount, then
+ *  whitespace, then a real word (3+ letters) somewhere, and no LaTeX
+ *  command (a `\text{…}` or `\times` span is math however it starts).
+ *  Live check 6 (2026-09-07, portal-63ee9f2c): the Q-pin gist echoed the
+ *  tutor's spoken prices and `forceMath` rendered them as math. */
+export function looksLikeCurrencySpan(inner: string): boolean {
+  return /^\s*\d[\d,]*(?:\.\d+)?\s+\S/.test(inner)
+    && /[A-Za-z]{3,}/.test(inner)
+    && !/\\[A-Za-z]+/.test(inner);
+}
+
+/** `forceMath` (2026-07-15, Q pin): relax the currency guard — a balanced
+ *  $...$ pair is math even when `looksLikeMath` is unsure ("$2 - x$"), for
+ *  contexts where the text comes from a prompt that says $...$ means LaTeX
+ *  (the question-gist route). Since 2026-09-07 it still yields to a span
+ *  that is unmistakably two currency amounts around prose
+ *  (`looksLikeCurrencySpan`) — the gist echoes spoken prices verbatim. */
 export function segment(text: string, forceMath = false): Array<{ kind: 'text' | 'math'; body: string }> {
   if (!text) return [];
   const out: Array<{ kind: 'text' | 'math'; body: string }> = [];
@@ -435,7 +450,7 @@ export function segment(text: string, forceMath = false): Array<{ kind: 'text' |
     // opening $ as a literal character and resume scanning AFTER it (do
     // NOT consume the closing $, which may pair legitimately with a
     // later $ later in the string).
-    if (!forceMath && !looksLikeMath(inner)) {
+    if (!looksLikeMath(inner) && (!forceMath || looksLikeCurrencySpan(inner))) {
       out.push({ kind: 'text', body: text.slice(i, dollar + 1) });
       i = dollar + 1;
       continue;

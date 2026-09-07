@@ -248,4 +248,25 @@ check('semicolon list is not single-valued', !isSingleValued('x = 2; y = 5'));
   console.log('  ✓ F4: utteranceStatesValue + studentDisagreesWithVerified move-guard (8 assertions)');
 }
 
+// Live check 6 (2026-09-07, portal-63ee9f2c): praise + agreement reports
+// `agreed` so the orchestrator retires the settled key.
+{
+  const { checkFalsePraiseOpener } = require('../src/lib/tutor/voice/false-praise-opener');
+  const agree = checkFalsePraiseOpener({ sentence: 'Exactly. 2 over 3 equals x over 9, so x is 6.', studentUtterance: 'x = 6', verifiedExpectedAnswer: '6', finalAnswerTurn: true });
+  assert.equal(agree.verdict, 'ok'); assert.equal(agree.agreed, true); assert.equal(agree.expected, '6');
+  const worked = checkFalsePraiseOpener({ sentence: 'Exactly. 2 over 3 equals x over 9, so x is 6.', studentUtterance: '2/3 = x/9 so 3x = 18 and x = 6', verifiedExpectedAnswer: '6', finalAnswerTurn: true });
+  assert.equal(worked.verdict, 'ok'); assert.equal(worked.agreed, true);
+  const { utteranceConcludesWith } = require('../src/lib/tutor/voice/false-praise-opener');
+  assert.equal(utteranceConcludesWith('so 3x = 18 and x = 6', '6'), true);
+  assert.equal(utteranceConcludesWith('x - .75x', '6'), false);
+  assert.equal(utteranceConcludesWith('16', '6'), false);          // "16" ends with "6" but is not "= 6"
+  assert.equal(utteranceConcludesWith('x equals sixty', '60'), true);
+  const disagree = checkFalsePraiseOpener({ sentence: 'Exactly. Five is right.', studentUtterance: 'five', verifiedExpectedAnswer: '6', finalAnswerTurn: true });
+  assert.equal(disagree.verdict, 'false_praise'); assert.equal(disagree.agreed, undefined);
+  const noOpener = checkFalsePraiseOpener({ sentence: 'Let us look at that again.', studentUtterance: '6', verifiedExpectedAnswer: '6', finalAnswerTurn: true });
+  assert.equal(noOpener.agreed, undefined);
+  passed += 12;
+  console.log('  ✓ LC6: agreed flag on praise + agreement (6 assertions)');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);

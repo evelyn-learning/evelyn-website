@@ -30,6 +30,7 @@ import { shouldClientRequestRepair, countBoardRenderTools } from '@/lib/tutor/vo
 import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
 import { isRecapOfferVoiced, RECAP_OFFER_MAX_ATTEMPTS } from '@/lib/tutor/voice/recap-offer-voiced';
 import { isHomeworkAnnouncement } from '@/lib/tutor/voice/homework-announce';
+import { detectSpokenProblem } from '@/lib/tutor/voice/spoken-problem-board';
 import { buildHomeworkPointerSentence } from '@/lib/tutor/voice/homework-pointer';
 import { isWrapUtterance } from '@/lib/tutor/voice/session-struggles-block';
 /** End button: how long the final profile commit may hold the exit. */
@@ -396,6 +397,29 @@ const TUTOR_AUTHORED_ENDING_GUARD = process.env.NEXT_PUBLIC_TUTOR_AUTHORED_ENDIN
  *  incorrect streak ≥ 2) rather than waiting on a brain tool call at the
  *  goodbye. Default ON per the standing flag rule. */
 const TUTOR_HOMEWORK_DRAFTS = process.env.NEXT_PUBLIC_TUTOR_HOMEWORK_DRAFTS !== 'off';
+/** Live check 6 (2026-09-07, portal-63ee9f2c). Three runtime nets, default ON
+ *  per the standing flag rule:
+ *  - SPOKEN_PROBLEM_BOARD: a numeric problem posed in speech whose numbers
+ *    are not on the board is rendered as a problem card at stream end.
+ *  - AUTO_SEGMENT_CARD: an advance_lesson into a segment with an authored
+ *    card, with no card rendered that turn, renders the authored card.
+ *  - SEGMENT_OVERLONG_NOTE: after 6 tutor turns in a hook/concept segment a
+ *    runtime note tells the brain to advance and render the next card. */
+const TUTOR_SPOKEN_PROBLEM_BOARD = process.env.NEXT_PUBLIC_TUTOR_SPOKEN_PROBLEM_BOARD !== 'off';
+const TUTOR_AUTO_SEGMENT_CARD = process.env.NEXT_PUBLIC_TUTOR_AUTO_SEGMENT_CARD !== 'off';
+const TUTOR_SEGMENT_OVERLONG_NOTE = process.env.NEXT_PUBLIC_TUTOR_SEGMENT_OVERLONG_NOTE !== 'off';
+const SEGMENT_OVERLONG_NOTE_TURNS = 6;
+
+/** Live check 6: a tracked problem the student has already answered and the
+ *  tutor affirmed is SETTLED — its key must not grade later answers to newer
+ *  questions (a correct "x − .75x" was killed against a recipe's "6"
+ *  answered three minutes earlier). */
+function liveCardKey(p: { expectedAnswer?: string; resolvedAtMs?: number } | null): string | undefined {
+  return p && !p.resolvedAtMs ? p.expectedAnswer : undefined;
+}
+function liveUnverifiedKey(p: { unverifiedCardAnswer?: string; resolvedAtMs?: number } | null): string | undefined {
+  return p && !p.resolvedAtMs ? p.unverifiedCardAnswer : undefined;
+}
 /** Bounded fetch signal. `AbortSignal.timeout` is not universal (older
  *  WebViews / embedded browsers); where it is missing the call is simply
  *  unbounded rather than throwing a TypeError at the call site. */
@@ -3007,7 +3031,25 @@ export function VoiceTutorRealtime({
   // problem staged in pendingGeneratedAnswerRef (see the inverse-verdict
   // call site) — the student always answers the most recently POSED
   // problem, which is not necessarily the most recently RENDERED card.
-  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; choiceOptions?: ChoiceOption[]; trackedAtMs?: number } | null>(null);
+  const currentProblemRef = useRef<{ statement: string; kind: 'integral' | 'generic'; source?: 'student' | 'generated' | 'card'; expectedAnswer?: string; unverifiedCardAnswer?: string; hasChoices?: boolean; choiceLetters?: string[]; choiceOptions?: ChoiceOption[]; trackedAtMs?: number; resolvedAtMs?: number } | null>(null);
+  // Live check 6 (2026-09-07) runtime nets — see the TUTOR_SPOKEN_PROBLEM_BOARD
+  // flag block for the design. Rolling window of recent board text (problem
+  // statements, equation latex) so the spoken-problem net can tell "numbers
+  // already on the board" from "numbers that exist only in speech".
+  const recentBoardTextsRef = useRef<string[]>([]);
+  // The most recent resolved lesson advance — consumed at stream end to
+  // render the authored card the brain advanced into but never painted.
+  const lastAdvanceRef = useRef<{ segId: string; atMs: number } | null>(null);
+  // Set when a tutor turn ended on a question; cleared by the next real
+  // student turn. The correction-note deadline must not volunteer a brain turn
+  // while the student is still expected to answer (the volunteer answered the
+  // tutor's own misconception question in portal-63ee9f2c).
+  const openTutorQuestionRef = useRef<number | null>(null);
+  // Substantive tutor turns since the segment cursor last moved.
+  const turnsInSegmentRef = useRef<{ segId: string; turns: number; noted: boolean }>({ segId: '', turns: 0, noted: false });
+  // Runtime pedagogy note for the next brain turn (same prepend convention as
+  // the cadence / board-anchor / judge notes; own ref, own concern).
+  const pendingRuntimeNoteRef = useRef<string | null>(null);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -3879,6 +3921,21 @@ export function VoiceTutorRealtime({
         correctionNoteTimerRef.current = setTimeout(fire, CORRECTION_NOTE_TIMEOUT_MS);
         return;
       }
+      // Live check 6 (portal-63ee9f2c, 07:07:13Z): the tutor had just asked
+      // the misconception question and the student was reading; the deadline
+      // fired, the brain took the note as its turn and ANSWERED ITS OWN
+      // QUESTION ("Below where it started. Let's check it…"). While a tutor
+      // question is open, hold the note for the student's real reply — it is
+      // consumed there with full context. No re-arm: the next real student
+      // turn spends it, and the idle nudge (which does not consume notes)
+      // remains the mechanism for a student who never answers.
+      if (openTutorQuestionRef.current) {
+        onDebugEvent?.(
+          'judge_correction_note_timeout_held',
+          `open tutor question since ${Date.now() - openTutorQuestionRef.current}ms ago — note held for the student's reply`,
+        );
+        return;
+      }
       onDebugEvent?.(
         'judge_correction_note_timeout',
         `undelivered ${CORRECTION_NOTE_TIMEOUT_MS}ms — volunteering the correction`,
@@ -4342,6 +4399,10 @@ export function VoiceTutorRealtime({
   // regardless of `opts`.
   const applyResolvedAdvance = useCallback((plan: LessonPlan, fromSegId: string, next: string, opts?: { seamMode?: boolean }) => {
     console.log(`[VoiceTutorRealtime] lesson advance: "${currentSegmentIdRef.current}" → "${next}"`);
+    // Live check 6 nets: remember the advance for the stream-end auto-card
+    // and restart the per-segment turn counter.
+    lastAdvanceRef.current = { segId: next, atMs: Date.now() };
+    turnsInSegmentRef.current = { segId: next, turns: 0, noted: false };
     // Auto-mark "visited" segments: every segment from the outgoing
     // index (inclusive) up to the target index (exclusive) is added to
     // completedSegmentIdsRef. Keeps the progress strip advancing even
@@ -6262,6 +6323,19 @@ export function VoiceTutorRealtime({
     // --- Track declarations + integrands + current problem for next turn ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const cmd of processed) {
+      {
+        // Live check 6: rolling window of board text for the spoken-problem net.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // The whole command payload (statement, latex, diagram labels…), capped.
+        try {
+          const boardTxt = JSON.stringify(cmd).slice(0, 2000);
+          if (boardTxt && boardTxt.length > 2 && /\d/.test(boardTxt)) {
+            const arr = recentBoardTextsRef.current;
+            arr.push(boardTxt);
+            if (arr.length > 12) arr.splice(0, arr.length - 12);
+          }
+        } catch { /* unserialisable command — skip */ }
+      }
       if (cmd.action === 'showProblem') {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const p = (cmd as any).problem;
@@ -10061,6 +10135,8 @@ export function VoiceTutorRealtime({
       // handleResponseDone reads to decide whether to update streak.
       if (!silent && !isBracketed) {
         pacingTurnCounterRef.current += 1;
+        // Live check 6: a real student turn answers (or moves past) the open question.
+        openTutorQuestionRef.current = null;
         const segIdNow = currentSegmentIdRef.current;
         // Clear stale cue from prior turn before evaluating this one
         studentCueRef.current = null;
@@ -10310,6 +10386,12 @@ export function VoiceTutorRealtime({
       if (pendingBoardAnchorNoteRef.current) {
         runTranscript = `${pendingBoardAnchorNoteRef.current}\n\n${runTranscript}`;
         pendingBoardAnchorNoteRef.current = null;
+      }
+      // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
+      if (pendingRuntimeNoteRef.current) {
+        runTranscript = `${pendingRuntimeNoteRef.current}\n\n${runTranscript}`;
+        pendingRuntimeNoteRef.current = null;
+        onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
       }
       // Judge correction note (2026-08-07) — same convention, own concern.
       // R42 (2026-08-10, session portal-cb2addf5): synthetic/nudge
@@ -11111,6 +11193,17 @@ export function VoiceTutorRealtime({
         const toolNamesThisAttempt: string[] = [];
         const toolArgsThisAttempt: Array<Record<string, unknown>> = [];
         const rejectionsThisAttempt: Array<{ action: string; reason: string }> = [];
+        // Live check 6 nets (per attempt): which authored segment cards
+        // rendered, whether a PROBLEM card came from show_segment_card (the
+        // generate_problem-unrendered guard downgrades to a drop when it did),
+        // the text of every render (for spoken-number coverage), the attempt
+        // start (so only THIS turn's advance can trigger the auto-card), and
+        // the one-shot latch for the synthetic tail.
+        const segmentCardsRenderedThisAttempt: string[] = [];
+        let segmentCardRenderedThisAttempt = false;
+        const renderedTextsThisAttempt: string[] = [];
+        const attemptStartMs = Date.now();
+        let syntheticTailDrained = false;
         // Stamped ids of every render this attempt actually dispatched.
         // If the attempt is killed, these are rolled back so no orphaned
         // figure survives the dropped narration (see rollbackKilledRenders).
@@ -11672,14 +11765,67 @@ export function VoiceTutorRealtime({
           await performKill();
         };
 
+        // Live check 6 (2026-09-07, portal-63ee9f2c): synthetic tail. When the
+        // brain's stream is fully drained and the attempt is alive, the runtime
+        // may append tool calls of its own, processed by the SAME branch as
+        // brain tool calls (validators, catalog, render-sync, telemetry):
+        //  (a) auto card on advance — the brain advanced into a segment with an
+        //      authored card (try_yourself / misconception_check /
+        //      worked_example / extension) and rendered nothing for it, so the
+        //      question lived only in speech (the misconception check at
+        //      07:06:27Z painted nothing; the deferred new page never fired);
+        //  (b) spoken problem boarded — the turn posed a numeric problem in
+        //      speech and its numbers are not on the board (three word
+        //      problems over numberless templates, 06:47–06:55Z).
+        // Never a kill: the audio has played; a late card beats no card.
+        const buildSyntheticTail = (): Array<{ type: string; [k: string]: unknown }> => {
+          const out: Array<{ type: string; [k: string]: unknown }> = [];
+          if (attemptKilled) return out;
+          try {
+            const plan = lessonPlanRef.current;
+            const adv = lastAdvanceRef.current;
+            const normWs = (t: string) => t.replace(/\s+/g, ' ').trim();
+            if (TUTOR_AUTO_SEGMENT_CARD && plan && adv && adv.atMs >= attemptStartMs
+                && !segmentCardsRenderedThisAttempt.includes(adv.segId)
+                && !completedSegmentIdsRef.current.has(adv.segId)) {
+              const seg = plan.segments.find((sg) => sg.id === adv.segId);
+              const truth = seg ? getSegmentTruth(seg) : null;
+              const alreadyRendered = !!truth?.problemText && renderedTextsThisAttempt.some((t) => normWs(t) === normWs(truth.problemText ?? ''));
+              if (truth?.problemText && !alreadyRendered) {
+                out.push({ type: 'tool-call', name: 'show_segment_card', args: { segmentId: adv.segId }, synthetic: 'auto_card_on_advance' });
+                onDebugEvent?.('auto_card_on_advance', `${adv.segId} (${truth.kind}) — advanced without rendering the authored card`);
+              }
+            }
+            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0) {
+              const boardTexts = [...renderedTextsThisAttempt, ...recentBoardTextsRef.current, currentProblemRef.current?.statement ?? ''];
+              const hit = detectSpokenProblem(attemptSentences, boardTexts);
+              if (hit) {
+                out.push({ type: 'tool-call', name: 'show_problem', args: { statement: hit.statement, title: 'Question', format: 'free-response' }, synthetic: 'spoken_problem_boarded' });
+                onDebugEvent?.('spoken_problem_boarded', `${hit.numbers.length} number(s), ${hit.covered.length} on board — "${hit.statement.slice(0, 80)}"`);
+              }
+            }
+          } catch (err) {
+            console.warn('[brain-orchestrator] synthetic tail failed:', err);
+          }
+          return out;
+        };
         try {
           while (true) {
             await tryForceKill();
             const { done, value } = await reader.read();
             // R49: any frame — even a keepalive — proves the stream is alive.
             stallState.lastFrameAt = Date.now();
-            if (done) break;
-            buf += decoder.decode(value, { stream: true });
+            if (done) {
+              if (syntheticTailDrained) break;
+              syntheticTailDrained = true;
+              const tail = buildSyntheticTail();
+              if (tail.length === 0) break;
+              // Re-enter the frame parser with runtime-authored frames; the
+              // next read() returns done again and the latch breaks the loop.
+              buf += tail.map((ev) => `data: ${JSON.stringify(ev)}\n\n`).join('');
+            } else {
+              buf += decoder.decode(value, { stream: true });
+            }
             let idx;
             while ((idx = buf.indexOf('\n\n')) >= 0) {
               const block = buf.slice(0, idx);
@@ -12048,7 +12194,7 @@ export function VoiceTutorRealtime({
                     const fa = checkFalseFinalAssertion({
                       sentence: updatedSentence,
                       problemStatement: currentProblemRef.current?.statement,
-                      verifiedExpectedAnswer: currentProblemRef.current?.expectedAnswer,
+                      verifiedExpectedAnswer: liveCardKey(currentProblemRef.current),
                       spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
                       choices: faChoices,
                     });
@@ -12189,8 +12335,8 @@ export function VoiceTutorRealtime({
                     const fp = checkFalsePraiseOpener({
                       sentence: updatedSentence,
                       studentUtterance: transcript,
-                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
-                      unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
+                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? liveCardKey(currentProblemRef.current) ?? pendingEq?.display,
+                      unverifiedCardAnswer: liveUnverifiedKey(currentProblemRef.current),
                       choices: mcqChoices,
                       spokenMoneyEnabled: TUTOR_SPOKEN_MONEY,
                       problemContext: pendingSpoken?.statement ?? currentProblemRef.current?.statement ?? pendingEq?.latex,
@@ -12205,6 +12351,15 @@ export function VoiceTutorRealtime({
                       finalAnswerTurn: lastStudentVerificationRef.current?.isVerification === true
                         && lastStudentVerificationRef.current.turn === pacingTurnCounterRef.current,
                     });
+                    // Live check 6: praise + agreement on a final-answer turn
+                    // settles the tracked problem — retire its key so later
+                    // answers to NEWER questions are never graded against it.
+                    if (fp.agreed && !pendingSpoken && currentProblemRef.current?.expectedAnswer && !currentProblemRef.current.resolvedAtMs
+                        && lastStudentVerificationRef.current?.isVerification === true
+                        && lastStudentVerificationRef.current.turn === pacingTurnCounterRef.current) {
+                      currentProblemRef.current.resolvedAtMs = Date.now();
+                      onDebugEvent?.('active_problem_resolved', `key "${(fp.expected ?? '').slice(0, 30)}" settled by "${(transcript ?? '').slice(0, 40)}" (${fp.matchReason ?? ''})`);
+                    }
                     if (fp.verdict === 'false_praise') {
                       const reason =
                         `The student answered "${(transcript ?? '').slice(0, 80)}", but the verified answer is ${fp.expected}; your opener affirmed it. ` +
@@ -12282,8 +12437,8 @@ export function VoiceTutorRealtime({
                     const inv = checkInverseVerdict({
                       sentence: updatedSentence,
                       studentUtterance: transcript,
-                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? currentProblemRef.current?.expectedAnswer ?? pendingEq?.display,
-                      unverifiedCardAnswer: currentProblemRef.current?.unverifiedCardAnswer,
+                      verifiedExpectedAnswer: pendingSpoken?.expectedAnswer ?? liveCardKey(currentProblemRef.current) ?? pendingEq?.display,
+                      unverifiedCardAnswer: liveUnverifiedKey(currentProblemRef.current),
                       choices: mcqChoices,
                       // R49: currency context for the spoken-money
                       // reconciliation. Sourced from the LIVE problem
@@ -12897,6 +13052,12 @@ export function VoiceTutorRealtime({
                   }
                   toolNamesThisAttempt.push(name);
                   toolArgsThisAttempt.push(args);
+                  // Live check 6: text of this attempt's renders, for spoken-number
+                  // coverage. The whole args payload, not just statement/latex —
+                  // a sketch's labels ("AB = 6") are board numbers too.
+                  if (/^(?:show_|draw_|plot_|render_)/.test(name)) {
+                    try { renderedTextsThisAttempt.push(JSON.stringify(args).slice(0, 2000)); } catch { /* unserialisable args — skip */ }
+                  }
                   // Round-17 (2026-07-17): improvised / student-brought
                   // answer verification. The tool contract has the brain
                   // declare its derived answer on any free-form
@@ -13638,6 +13799,24 @@ export function VoiceTutorRealtime({
                         // the snapshot filter would hide it on the
                         // next turn. Idempotent — same segId is fine.
                         catalogRef.current.setCurrentSegment(segId);
+                        // Live check 6 (§6): an authored MCQ try_yourself rendered
+                        // as a stem with no choices, and the brain said "That's
+                        // option B" about options the student never saw. Carry
+                        // the authored choices as answerChoices (letter = id).
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        const segAny = seg as any;
+                        const authoredChoices: Array<{ letter: string; text: string }> | null =
+                          truth.kind === 'try_yourself' && segAny.responseFormat === 'mcq'
+                            && Array.isArray(segAny.choices) && segAny.choices.length > 0
+                            ? segAny.choices.map((c: { id?: string; text?: string }, i: number) => ({
+                                letter: String(c.id ?? String.fromCharCode(65 + i)).toUpperCase(),
+                                text: stripWbEmphasisText(String(c.text ?? '')),
+                              }))
+                            : null;
+                        segmentCardRenderedThisAttempt = true;
+                        segmentCardsRenderedThisAttempt.push(segId);
+                        renderedTextsThisAttempt.push(truth.problemText);
+                        if (authoredChoices) onDebugEvent?.('show_segment_card_mcq_choices', `${segId}: ${authoredChoices.map((c) => c.letter).join('')}`);
                         resolvedCmd = {
                           action: 'showProblem',
                           problem: {
@@ -13645,7 +13824,8 @@ export function VoiceTutorRealtime({
                             // (cmd = resolvedCmd ?? map(...)), so authored text
                             // needs its own emphasis strip.
                             statement: stripWbEmphasisText(truth.problemText),
-                            format: 'free-response',
+                            format: authoredChoices ? 'multiple-choice' : 'free-response',
+                            ...(authoredChoices ? { answerChoices: authoredChoices } : {}),
                             title: truth.kind === 'try_yourself' ? 'Try Yourself'
                               : truth.kind === 'worked_example' ? 'Worked Example'
                               : truth.kind === 'misconception_check' ? 'Check'
@@ -13745,6 +13925,7 @@ export function VoiceTutorRealtime({
                           } as unknown as any;
                           console.log(`[brain-orchestrator] show_segment_card resolved (${seg.kind}): ${segId} → "${body.slice(0, 60)}…"`);
                           onDebugEvent?.('show_segment_card_resolved', `${segId} (${seg.kind})`);
+                          segmentCardsRenderedThisAttempt.push(segId);
                         } else {
                           console.warn(`[brain-orchestrator] show_segment_card: segment "${segId}" (kind=${seg.kind}) has no renderable content; ignoring.`);
                           onDebugEvent?.('show_segment_card_no_truth', segId);
@@ -14189,6 +14370,18 @@ export function VoiceTutorRealtime({
         // what I have for you." → stop=end_turn → frozen session). Surface
         // as a rejection so the retry renders the canonicalText.
         if (!attemptKilled
+            && generatedProblemReceivedThisAttempt
+            && !toolNamesThisAttempt.includes('show_problem')
+            && segmentCardRenderedThisAttempt) {
+          // Live check 6 (§2, 07:04:25Z): the brain fetched a bank problem AND
+          // rendered the authored try card in the same turn; the student saw a
+          // correct card and heard the first sentences. Killing the turn cut
+          // the audio and repainted the same card 11 s later. The generated
+          // problem is simply unused — drop its staged answer so it can never
+          // grade the authored card, and let the turn stand.
+          if (pendingGeneratedAnswerRef.current) pendingGeneratedAnswerRef.current = null;
+          onDebugEvent?.('generate_problem_unused_dropped', `authored card rendered (${segmentCardsRenderedThisAttempt.join(',')}) — generated problem discarded, no kill`);
+        } else if (!attemptKilled
             && generatedProblemReceivedThisAttempt
             && !toolNamesThisAttempt.includes('show_problem')) {
           rejectionsThisAttempt.push({
@@ -14885,7 +15078,7 @@ export function VoiceTutorRealtime({
                 if (advisoryIssues.length > 0) {
                   console.warn(`[brain-orchestrator] judge ADVISORY (no kill) — ${advisoryIssues.length} flagged claim(s):`,
                     advisoryIssues.map((i) => i.claim.slice(0, 80)));
-                  onDebugEvent?.('judge_advisory_flag', `${advisoryIssues.length} issue(s): ${advisoryIssues[0].claim.slice(0, 60)}…`);
+                  onDebugEvent?.('judge_advisory_flag', `${advisoryIssues.length} issue(s): ${advisoryIssues[0].claim.slice(0, 60)}… · why: ${(advisoryIssues[0].why ?? '').slice(0, 120)}`);
                   // Fix C (2026-08-10 root cause, session portal-7cfa226c):
                   // advisories used to dead-end here — logged and dropped,
                   // no student-visible effect at all, even when the flagged
@@ -15376,6 +15569,40 @@ export function VoiceTutorRealtime({
       // R2 E2: substantive final question + zero content board writes →
       // plant a board-anchor note for the next turn. Independent of the
       // cadence triggers (own ref) — both can fire on the same turn.
+      // Live check 6: does this turn leave a question open for the student?
+      // (Read by the correction-note deadline; cleared by the next real
+      // student turn.) A pure nudge/cover turn ends in a question too — the
+      // hold is still right: the student is expected to speak next.
+      openTutorQuestionRef.current = /\?\s*$/.test(fullText.trim()) || !!lastQuestionSentence(fullText) ? Date.now() : null;
+      // Live check 6 (§1): the brain sat in `hook` for 12 minutes and six
+      // substantive turns, improvised three worked examples in speech, then
+      // jumped over both authored worked_example segments. The parent's
+      // `segment_overlong` telemetry saw it and could do nothing. Plant one
+      // runtime note per hook/concept segment at the same threshold.
+      if (TUTOR_SEGMENT_OVERLONG_NOTE && totalSentenceCount > 0) {
+        const segIdNow = currentSegmentIdRef.current;
+        const st = turnsInSegmentRef.current;
+        if (st.segId !== segIdNow) turnsInSegmentRef.current = { segId: segIdNow, turns: 0, noted: false };
+        const cur = turnsInSegmentRef.current;
+        cur.turns += 1;
+        const segNow = lessonPlanRef.current?.segments.find((sg) => sg.id === segIdNow);
+        const kindNow = (segNow?.kind ?? '').toLowerCase();
+        if (!cur.noted && cur.turns >= SEGMENT_OVERLONG_NOTE_TURNS && (kindNow === 'hook' || kindNow === 'concept')) {
+          cur.noted = true;
+          const plan = lessonPlanRef.current;
+          const idx = plan ? plan.segments.findIndex((sg) => sg.id === segIdNow) : -1;
+          const nextSeg = plan && idx >= 0 ? plan.segments[idx + 1] : undefined;
+          const nextHint = nextSeg
+            ? `The next segment is "${nextSeg.id}" (${nextSeg.kind}); call advance_lesson({to: "next"}) and show_segment_card({segmentId: "${nextSeg.id}"}) in the same turn.`
+            : `Call advance_lesson({to: "next"}) and render the new segment's card with show_segment_card in the same turn.`;
+          pendingRuntimeNoteRef.current =
+            `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
+            `Move the lesson forward THIS turn: ${nextHint} ` +
+            `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. ` +
+            `Apply this silently; never mention this note.`;
+          onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);
+        }
+      }
       if (TUTOR_BOARD_ANCHOR_NET) {
         const finalQuestion = lastQuestionSentence(fullText);
         const paintedContent = totalToolNamesSeen.some((n) => isBoardContentTool(n));

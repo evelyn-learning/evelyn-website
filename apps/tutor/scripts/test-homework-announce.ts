@@ -10,6 +10,11 @@ const yes = [
   "Do the three exercises in your practice tab before next time.",
   "Those are waiting in your homework list.",
   "Try the stratified ones as homework tonight.",
+  // Live check 6 (2026-09-07, portal-63ee9f2c): goodbye pointed at a practice
+  // set that did not exist — noun phrase + deferral.
+  "Go crush that practice set whenever you're ready.",
+  "Knock out those practice problems later tonight.",
+  "Work through your practice questions on your own before next time.",
 ];
 const no = [
   "Let's practice this one more time together.",
@@ -23,6 +28,10 @@ const no = [
   // about a board problem — the reason the round-2 `set|left` widening was
   // reverted and the runtime pointer was reworded instead.
   "I've set a practice problem on the board for you.",
+  // Deferral rule: a practice noun phrase WITHOUT a deferral is in-session talk.
+  "Let's do that practice set now, together.",
+  "Look at this practice problem on the board.",
+  "Whenever you're ready, tell me the answer.",
 ];
 // Task 13 fix round 2: the runtime speaks the pointer itself. If the model
 // then echoes that sentence, the announce gate must catch it — so the
