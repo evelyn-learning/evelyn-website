@@ -133,3 +133,56 @@ export function detectSpokenProblem(
     return null;
   }
 }
+
+
+/** Live check 7 (portal-8ed0fb65, 11:05:50Z): "That matches the board. So the
+ *  full equation now reads $5x - 15 = 2x + 9$." — the board showed only the
+ *  distribution step; the full equation existed in speech alone, and the
+ *  judge flagged the turn for the wrong reason. A board CLAIM about an
+ *  equation that is not on the board is boarded by the runtime. */
+const EQUATION_CLAIM_CUE =
+  /\b(?:now reads|reads|on the board|board (?:now )?(?:shows|reads|has)|matches the board|we (?:now )?have|so we have|now have|becomes|the (?:full |whole )?equation (?:is|now|becomes)|leaves us with|that leaves|simplifies to|gives us|we get|we're left with)\b/i;
+
+export function normalizeLatexForMatch(latex: string): string {
+  return (latex || '')
+    .replace(/\\d?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, '($1)/($2)')
+    .replace(/\\(?:left|right|,|;|!|quad|qquad|displaystyle)/g, '')
+    .replace(/\\(?:cdot|times)/g, '*')
+    .replace(/\\implies|\\Rightarrow|⟹|⇒/g, '=>')
+    .replace(/[−–]/g, '-')
+    .replace(/\s+/g, '')
+    .toLowerCase();
+}
+
+/** A hypothetical, deliberately wrong, or counterfactual equation is not a
+ *  board claim — the prod control surfaced "Say instead the formula reads
+ *  $P = 2l + 2lw$, weird made-up formula" (a wrong formula used as a foil). */
+const EQUATION_CLAIM_NEGATIVE =
+  /\b(?:say instead|instead of|made[- ]up|suppose|imagine|pretend|wrong|incorrect|mistake|shouldn'?t|would be wrong|if you (?:had|wrote|did)|had written|not the|isn'?t|is not|don'?t|doesn'?t)\b/i;
+
+export interface SpokenEquationClaim { latex: string; sentence: string }
+
+/** The LAST spoken equation (`$…=…$`, with a variable) in a sentence that
+ *  claims it is on the board, when no board text contains it. */
+export function detectSpokenEquationClaim(sentences: string[], boardTexts: string[]): SpokenEquationClaim | null {
+  try {
+    const board = (boardTexts ?? []).map(normalizeLatexForMatch).join('\n');
+    const clean = (sentences ?? []).map((x) => (x ?? '').trim()).filter(Boolean);
+    for (let i = clean.length - 1; i >= 0; i--) {
+      const sent = clean[i];
+      if (!EQUATION_CLAIM_CUE.test(sent) || EQUATION_CLAIM_NEGATIVE.test(sent)) continue;
+      const spans = [...sent.matchAll(/\$([^$\n]{3,80})\$/g)].map((m) => m[1]);
+      for (let k = spans.length - 1; k >= 0; k--) {
+        const latex = spans[k].trim();
+        if (!/=/.test(latex) || !/[a-z]/i.test(latex.replace(/\\[a-zA-Z]+/g, ''))) continue;
+        if (/[<>≤≥≠]|\\(?:le|ge|neq|approx)\b/.test(latex)) continue;
+        const norm = normalizeLatexForMatch(latex);
+        if (norm.length < 5 || board.includes(norm)) continue;
+        return { latex, sentence: sent };
+      }
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}

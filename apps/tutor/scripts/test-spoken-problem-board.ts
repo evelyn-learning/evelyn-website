@@ -2,7 +2,7 @@
  * Spoken-problem board net (live check 6, portal-63ee9f2c). Run:
  *   npm run test:spoken-problem-board
  */
-import { detectSpokenProblem, numericTokens } from '../src/lib/tutor/voice/spoken-problem-board';
+import { detectSpokenProblem, numericTokens, detectSpokenEquationClaim } from '../src/lib/tutor/voice/spoken-problem-board';
 
 let pass = 0, fail = 0;
 function check(name: string, ok: boolean, detail?: string) {
@@ -99,5 +99,20 @@ check('setup decimal context: null', detectSpokenProblem(['$x = 0.1$, and since 
 // A small coincidental integer alone does not fire ("2" and "3" are on any algebra board).
 check('two small covered ints: null', detectSpokenProblem(['Which is bigger, 2 or 3?'], ['2x + 3']) === null);
 
+// ---- Live check 7: spoken equation claims ----
+{
+  const hit = detectSpokenEquationClaim(
+    ["Right. $5 \\times 3$ is $15$, and with the sign it's $5x - 15$.", 'That matches the board.', "So the full equation now reads $5x - 15 = 2x + 9$.", "What's your move to collect the $x$ terms onto one side?"],
+    ['5(x-3) = 5x - 5\\times 3', '5(x-3) = 5x - 15', 'Solve: 5(x − 3) = 2x + 9'],
+  );
+  check('LC7 equation claim: fires', !!hit && hit.latex === '5x - 15 = 2x + 9', JSON.stringify(hit));
+  check('equation on board (spacing differs): null', detectSpokenEquationClaim(["So the full equation now reads $5x - 15 = 2x + 9$."], ['5x - 15 = 2x + 9']) === null);
+  check('numeric-only equation: null', detectSpokenEquationClaim(["That leaves $6 \\cdot 3 = 18$."], ['6 \\times 3 = 18']) === null);
+  check('no board-claim cue: null', detectSpokenEquationClaim(["Try $5x - 15 = 2x + 9$ on your own."], []) === null);
+  check('inequality: null', detectSpokenEquationClaim(["So we have $x \\le -4$."], []) === null);
+  check('no equation: null', detectSpokenEquationClaim(["What do you get when you simplify both sides down?"], []) === null);
+  check('hypothetical wrong formula: null', detectSpokenEquationClaim(["Say instead the formula reads $P = 2l + 2l w$, weird made-up formula, but l shows up twice."], []) === null);
+  check('frac forms match: null', detectSpokenEquationClaim(["Look at that proportion on the board: $\\frac{12}{2.40} = \\frac{20}{x}$."], ['\\dfrac{12}{2.40} = \\dfrac{20}{x}']) === null);
+}
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);

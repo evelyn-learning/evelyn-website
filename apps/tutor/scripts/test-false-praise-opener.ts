@@ -269,4 +269,20 @@ check('semicolon list is not single-valued', !isSingleValued('x = 2; y = 5'));
   console.log('  ✓ LC6: agreed flag on praise + agreement (6 assertions)');
 }
 
+// Live check 7 (portal-8ed0fb65, 11:11:08Z): a correct step "2x+60" was killed against the card key "10".
+{
+  const { checkFalsePraiseOpener, isPlainNumber, isAlgebraicStep } = require('../src/lib/tutor/voice/false-praise-opener');
+  const step = checkFalsePraiseOpener({ sentence: 'Exactly. That is the right side cleared.', studentUtterance: '2x+60', verifiedExpectedAnswer: '10', finalAnswerTurn: true });
+  assert.equal(step.verdict, 'advisory_false_praise'); assert.equal(step.matchReason, 'step-expression');
+  const lc6 = checkFalsePraiseOpener({ sentence: 'Right idea on the setup — now the numbers.', studentUtterance: 'x-.75x', verifiedExpectedAnswer: '6', finalAnswerTurn: true });
+  assert.notEqual(lc6.verdict, 'false_praise');
+  const stillKills = checkFalsePraiseOpener({ sentence: 'Exactly. Five is right.', studentUtterance: 'five', verifiedExpectedAnswer: '6', finalAnswerTurn: true });
+  assert.equal(stillKills.verdict, 'false_praise');
+  assert.equal(isPlainNumber('10'), true); assert.equal(isPlainNumber('$4.50'), true); assert.equal(isPlainNumber('x = 8'), false);
+  assert.equal(isAlgebraicStep('2x+60'), true); assert.equal(isAlgebraicStep('x-.75x'), true); assert.equal(isAlgebraicStep('3x - 2 = 2x + 5'), true);
+  assert.equal(isAlgebraicStep('twenty-one'), false); assert.equal(isAlgebraicStep('five'), false); assert.equal(isAlgebraicStep('12'), false);
+  passed += 12;
+  console.log('  ✓ LC7: step-expression shape gate (12 assertions)');
+}
+
 console.log(`\n${passed} passed, ${failed} failed`); process.exit(failed ? 1 : 0);

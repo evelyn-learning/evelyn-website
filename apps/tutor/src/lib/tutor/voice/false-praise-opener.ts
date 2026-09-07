@@ -305,6 +305,20 @@ function isMcqResolvedReason(reason: string): boolean {
  */
 /** Does the utterance END by stating `key` ("… so x = 6", "… equals 6.")?
  *  Whitespace/`$`-insensitive; the key must be the final token run. */
+/** "6", "-3.5", "$4.50", "25%" — a key with no variable. */
+export function isPlainNumber(key: string): boolean {
+  return /^\s*[-−]?\$?\d[\d,]*(?:\.\d+)?\s*%?\s*$/.test(key || '');
+}
+
+/** An algebraic expression or equation with a variable — a derivation step,
+ *  not a final numeric answer. Needs a digit or an "=" so spelled compound
+ *  numbers ("twenty-one") never qualify. */
+export function isAlgebraicStep(utterance: string): boolean {
+  const u = (utterance || '').trim();
+  if (!u || !(/\d/.test(u) || /=/.test(u))) return false;
+  return /(?:\d\s*[a-z]\b|\b[a-z]\s*[-+=*/×÷^]|[-+=*/×÷^]\s*\.?\d*[a-z]\b|\b[a-z]\s*=)/i.test(u);
+}
+
 export function utteranceConcludesWith(utterance: string, key: string): boolean {
   const norm = (s: string) => spokenNumbersToDigits((s || '')).replace(/\$/g, '').replace(/\s+/g, '').replace(/[.!?]+$/, '').toLowerCase();
   const u = norm(utterance); const k = norm(key);
@@ -353,6 +367,14 @@ export function checkFalsePraiseOpener(args: {
       // contradiction — advisory at most.
       if (isTermOfExpression(args.studentUtterance, verified)) {
         return { verdict: 'advisory_false_praise', expected: verified, matchReason: 'partial-term' };
+      }
+      // Live checks 6 + 7: a bare-number key ("6", "10") versus an ALGEBRAIC
+      // STEP ("x - .75x", "2x + 60") is not a disagreement about the answer —
+      // the student is mid-derivation, answering a scaffolding question. The
+      // kill in portal-8ed0fb65 (11:11:08Z) cut a correct "2x + 60" against
+      // the card's final "10". Advisory at most.
+      if (isPlainNumber(verified) && isAlgebraicStep(args.studentUtterance)) {
+        return { verdict: 'advisory_false_praise', expected: verified, matchReason: 'step-expression' };
       }
       const mcqResolved = !!(args.choices && args.choices.length > 0) && isMcqResolvedReason(m.reason);
       if (mcqResolved) {

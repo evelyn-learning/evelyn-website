@@ -55,3 +55,14 @@ assert.equal(
 );
 
 console.log('equation-label-dedup: all assertions passed');
+
+// Live check 7 (portal-8ed0fb65): same page, prior on board, but a NEW problem card was served since ⇒ register
+assert.deepEqual(
+  decideLabelDuplicate({ normalizedLabel: 'clearing with the lcd', normalizedLatex: '10(x/2)=5x', seen: seen({ originalLabel: 'Clearing with the LCD (6)', latexNormalized: '6(x/2+3)', problemEpoch: 1 }), currentPageKey: 'Solving for x', priorOnBoard: true, problemEpochNow: 2 }),
+  { kind: 'register', newProblemSince: true },
+);
+assert.equal(
+  decideLabelDuplicate({ normalizedLabel: 'clearing with the lcd', normalizedLatex: '10(x/2)=5x', seen: seen({ latexNormalized: '6(x/2+3)', problemEpoch: 2 }), currentPageKey: 'Solving for x', priorOnBoard: true, problemEpochNow: 2 }).kind,
+  'reject',
+);
+console.log('equation-label-dedup: problem-epoch cases passed');

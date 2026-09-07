@@ -35,12 +35,16 @@ export interface SeenEquationLabel {
   signature: string;
   /** Catalog page title the equation was registered on ('' for the untitled first page). */
   pageKey: string;
+  /** Number of distinct problem cards served when this label was registered
+   *  (live check 7: a second problem on the SAME page reused "Clearing with
+   *  the LCD (…)" and the reject killed a correct turn). */
+  problemEpoch?: number;
 }
 
 export type LabelDedupDecision =
   | { kind: 'pass' }
   /** `pageOpenPending` ⇒ this registration is a rescued reject (see the module header). */
-  | { kind: 'register'; pageOpenPending?: true }
+  | { kind: 'register'; pageOpenPending?: true; newProblemSince?: true }
   | { kind: 'reject'; reason: string };
 
 export function normalizeEquationLabel(raw: string): string {
@@ -64,6 +68,9 @@ export function decideLabelDuplicate(args: {
   /** True when a newPage for THIS batch has not been applied yet — the
    *  equation is bound for a page the catalog cannot report yet. */
   pageOpenPending?: boolean;
+  /** Distinct problem cards served so far; a prior registered under an
+   *  earlier epoch belongs to a different problem (register, never reject). */
+  problemEpochNow?: number;
 }): LabelDedupDecision {
   const { seen } = args;
   if (!args.normalizedLabel) return { kind: 'pass' };
@@ -71,6 +78,14 @@ export function decideLabelDuplicate(args: {
   if (seen.latexNormalized === args.normalizedLatex) return { kind: 'pass' };
   if (seen.pageKey !== args.currentPageKey) return { kind: 'register' };
   if (!args.priorOnBoard) return { kind: 'register' };
+  // Live check 7 (portal-8ed0fb65, 11:09:28Z): generate_problem put a second
+  // problem on the same page; its "Clearing with the LCD (10)" collided with
+  // the first problem's "(6)" and the reject killed a turn that was affirming
+  // the student's valid "multiply by 20". Two problems, one page: a label
+  // reused under a NEWER problem card is a fresh step, not a duplicate heading.
+  if (seen.problemEpoch !== undefined && args.problemEpochNow !== undefined && seen.problemEpoch !== args.problemEpochNow) {
+    return { kind: 'register', newProblemSince: true };
+  }
   // A page open is queued for this batch: `currentPageKey` names the page the
   // equation is LEAVING, not the one it lands on. Never reject on that.
   if (args.pageOpenPending) return { kind: 'register', pageOpenPending: true };

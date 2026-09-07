@@ -1601,7 +1601,7 @@ export function CaptionTicker({ text, getSpoken }: { text: string; getSpoken?: (
 
   return (
     <div ref={ref} className="flex-1 min-w-0 overflow-hidden whitespace-nowrap text-sm text-slate-700">
-      <InlineMathText text={capText} />
+      <InlineMathText text={capText} nowrap />
     </div>
   );
 }

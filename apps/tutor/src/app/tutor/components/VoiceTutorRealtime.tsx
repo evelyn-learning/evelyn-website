@@ -30,7 +30,7 @@ import { shouldClientRequestRepair, countBoardRenderTools } from '@/lib/tutor/vo
 import { classifyRecapReply } from '@/lib/tutor/voice/recap-reply';
 import { isRecapOfferVoiced, RECAP_OFFER_MAX_ATTEMPTS } from '@/lib/tutor/voice/recap-offer-voiced';
 import { isHomeworkAnnouncement } from '@/lib/tutor/voice/homework-announce';
-import { detectSpokenProblem } from '@/lib/tutor/voice/spoken-problem-board';
+import { detectSpokenProblem, detectSpokenEquationClaim } from '@/lib/tutor/voice/spoken-problem-board';
 import { buildHomeworkPointerSentence } from '@/lib/tutor/voice/homework-pointer';
 import { isWrapUtterance } from '@/lib/tutor/voice/session-struggles-block';
 /** End button: how long the final profile commit may hold the exit. */
@@ -3050,6 +3050,12 @@ export function VoiceTutorRealtime({
   // Runtime pedagogy note for the next brain turn (same prepend convention as
   // the cadence / board-anchor / judge notes; own ref, own concern).
   const pendingRuntimeNoteRef = useRef<string | null>(null);
+  // Live check 7: the note must not land while the student is answering an
+  // open question (portal-8ed0fb65 10:53:48Z — delivered with "12", the brain
+  // advanced mid-problem and rendered the next card under the wrong problem).
+  // Captured at turn start, before openTutorQuestionRef is cleared.
+  const openQuestionAtTurnStartRef = useRef(false);
+  const runtimeNoteHeldTurnsRef = useRef(0);
   // R33: whitespace-collapsed statements of every problem card served this
   // session (showProblem + try-yourself). The show_problem divergence guard
   // consults it: substituting the authored segment card is WRONG when that
@@ -5618,7 +5624,8 @@ export function VoiceTutorRealtime({
             // `currentPageKey` names the page being LEFT. Rejecting a reused
             // label against it is the false-drop class this guard exists to end.
             const pageOpenPending = !!pendingAdvanceNewPageRef.current || !!topicShiftPendingRef.current;
-            const decision = decideLabelDuplicate({ normalizedLabel, normalizedLatex: normalized, seen, currentPageKey, priorOnBoard, pageOpenPending });
+            const problemEpochNow = servedProblemStatementsRef.current.size;
+            const decision = decideLabelDuplicate({ normalizedLabel, normalizedLatex: normalized, seen, currentPageKey, priorOnBoard, pageOpenPending, problemEpochNow });
             if (decision.kind === 'reject') {
               // R1 (2026-09-07): a real same-page collision is a REJECTION the
               // brain can act on, never a silent drop — see the module header.
@@ -5629,6 +5636,9 @@ export function VoiceTutorRealtime({
               return [];
             }
             if (decision.kind === 'register') {
+              if (decision.newProblemSince) {
+                onDebugEvent?.('show_equation_label_duplicate', `"${rawLabel}" ~= "${seen!.originalLabel}" (new problem card since — registered instead)`);
+              }
               if (decision.pageOpenPending) {
                 // Rescued reject: recorded (not silent) so a live session shows
                 // the guard fired and chose to register instead of drop.
@@ -5642,7 +5652,7 @@ export function VoiceTutorRealtime({
                 ? (pendingAdvanceNewPageRef.current?.title ?? currentPageKey)
                 : currentPageKey;
               equationLabelsThisSessionRef.current.set(normalizedLabel, {
-                originalLabel: rawLabel, originalLatex: latex, latexNormalized: normalized, signature, pageKey: registerPageKey,
+                originalLabel: rawLabel, originalLatex: latex, latexNormalized: normalized, signature, pageKey: registerPageKey, problemEpoch: problemEpochNow,
               });
             }
             // If the label looks like "Step N…" or "Step N: …",
@@ -7812,9 +7822,14 @@ export function VoiceTutorRealtime({
         // page is not (session-1783693044096: the tutor described the
         // photosynthesis diagram while the student sat two pages away).
         // Scroll to it — but never yank the view for a same-page repeat.
+        // Live check 7: how buried is the existing item on its own page?
+        const itemsAfterOnPage = existing.pageId
+          ? catalogRef.current.getItems().filter((it) => it.pageId === existing.pageId && it.order > existing.order).length
+          : 0;
         if (shouldScrollToDedupedItem({
           itemPageTitle: existing.pageTitle,
           currentPageTitle: catalogRef.current.getCurrentPageTitle(),
+          itemsAfterOnPage,
         })) {
           onWhiteboardCommand([{
             action: 'scrollTo',
@@ -10136,6 +10151,7 @@ export function VoiceTutorRealtime({
       if (!silent && !isBracketed) {
         pacingTurnCounterRef.current += 1;
         // Live check 6: a real student turn answers (or moves past) the open question.
+        openQuestionAtTurnStartRef.current = !!openTutorQuestionRef.current;
         openTutorQuestionRef.current = null;
         const segIdNow = currentSegmentIdRef.current;
         // Clear stale cue from prior turn before evaluating this one
@@ -10389,9 +10405,21 @@ export function VoiceTutorRealtime({
       }
       // Live check 6: runtime pedagogy note (segment overlong) — same convention, own concern.
       if (pendingRuntimeNoteRef.current) {
-        runTranscript = `${pendingRuntimeNoteRef.current}\n\n${runTranscript}`;
-        pendingRuntimeNoteRef.current = null;
-        onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
+        // Live check 7: deliver only on a turn where the student is NOT mid-answer —
+        // no tutor question was open, or the utterance is a bare ack / move-on.
+        // Held at most 3 turns, then delivered regardless (the note itself now says
+        // "finish the problem in play first").
+        const ackOrMoveOn = /^(?:ok(?:ay)?|yes|yeah|yep|sure|ready|next|go|continue|done|move on|let'?s (?:go|move on|continue)|got it|alright)[!.\s]*$/i.test(transcript.trim());
+        const deliver = !openQuestionAtTurnStartRef.current || ackOrMoveOn || runtimeNoteHeldTurnsRef.current >= 3;
+        if (deliver) {
+          runTranscript = `${pendingRuntimeNoteRef.current}\n\n${runTranscript}`;
+          pendingRuntimeNoteRef.current = null;
+          runtimeNoteHeldTurnsRef.current = 0;
+          onDebugEvent?.('segment_overlong_note_consumed', 'delivered with this turn');
+        } else {
+          runtimeNoteHeldTurnsRef.current += 1;
+          onDebugEvent?.('segment_overlong_note_held', `student is answering an open question (${runtimeNoteHeldTurnsRef.current}/3)`);
+        }
       }
       // Judge correction note (2026-08-07) — same convention, own concern.
       // R42 (2026-08-10, session portal-cb2addf5): synthetic/nudge
@@ -11802,6 +11830,19 @@ export function VoiceTutorRealtime({
               if (hit) {
                 out.push({ type: 'tool-call', name: 'show_problem', args: { statement: hit.statement, title: 'Question', format: 'free-response' }, synthetic: 'spoken_problem_boarded' });
                 onDebugEvent?.('spoken_problem_boarded', `${hit.numbers.length} number(s), ${hit.covered.length} on board — "${hit.statement.slice(0, 80)}"`);
+              }
+            }
+            // (c) Live check 7: a spoken equation the tutor CLAIMS is on the board
+            // ("the full equation now reads $5x - 15 = 2x + 9$") but is not.
+            if (TUTOR_SPOKEN_PROBLEM_BOARD && out.length === 0) {
+              const boardTexts = [...renderedTextsThisAttempt, ...recentBoardTextsRef.current, currentProblemRef.current?.statement ?? ''];
+              const claim = detectSpokenEquationClaim(attemptSentences, boardTexts);
+              if (claim) {
+                // Label from the equation itself: a fixed label ("Equation") would
+                // collide with itself on the next claim and be rejected.
+                const plain = claim.latex.replace(/\\[a-zA-Z]+/g, ' ').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim().slice(0, 40);
+                out.push({ type: 'tool-call', name: 'show_equation', args: { latex: claim.latex, label: `Now: ${plain}` }, synthetic: 'spoken_equation_boarded' });
+                onDebugEvent?.('spoken_equation_boarded', `"${claim.latex.slice(0, 60)}" — claimed on the board, was not`);
               }
             }
           } catch (err) {
@@ -15597,7 +15638,7 @@ export function VoiceTutorRealtime({
             : `Call advance_lesson({to: "next"}) and render the new segment's card with show_segment_card in the same turn.`;
           pendingRuntimeNoteRef.current =
             `[runtime note — not from the student] You have spent ${cur.turns} turns in the "${segIdNow}" (${kindNow}) segment without advancing. ` +
-            `Move the lesson forward THIS turn: ${nextHint} ` +
+            `First finish the problem in play — give the student the verdict on what they just said and close that problem out. Then move the lesson forward: ${nextHint} ` +
             `Do not pose another problem in speech — every problem you pose must be on the board via show_segment_card or show_problem carrying its exact numbers. ` +
             `Apply this silently; never mention this note.`;
           onDebugEvent?.('segment_overlong_note_planted', `${segIdNow} (${kindNow}) after ${cur.turns} turns → ${nextSeg?.id ?? 'next'}`);

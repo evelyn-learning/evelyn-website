@@ -61,3 +61,9 @@ if (failures > 0) {
   process.exit(1);
 }
 console.log('\nAll dedup-scroll checks passed.');
+
+// Live check 7: same page, but the item is buried under later renders ⇒ scroll
+check('same page, 2 later items ⇒ scroll', shouldScrollToDedupedItem({ itemPageTitle: 'Example', currentPageTitle: 'Example', itemsAfterOnPage: 2 }), true);
+check('same page, 1 later item ⇒ no scroll', shouldScrollToDedupedItem({ itemPageTitle: 'Example', currentPageTitle: 'Example', itemsAfterOnPage: 1 }), false);
+check('same page, count omitted ⇒ no scroll (old rule)', shouldScrollToDedupedItem({ itemPageTitle: 'Example', currentPageTitle: 'Example' }), false);
+if (failures) process.exit(1);

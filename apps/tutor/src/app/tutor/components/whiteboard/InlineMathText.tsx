@@ -42,6 +42,9 @@ interface InlineMathTextProps {
   /** Skip the currency guard — every balanced $...$ pair renders as math.
    *  For trusted-source contexts (Q pin gists) where $ always means LaTeX. */
   forceMath?: boolean;
+  /** Single-line contexts (the caption ticker): never wrap. The default
+   *  `whitespace-pre-wrap` overrides a parent's nowrap (live check 7). */
+  nowrap?: boolean;
 }
 
 function Math({ latex }: { latex: string }) {
@@ -64,10 +67,10 @@ function Math({ latex }: { latex: string }) {
   return <span ref={ref} className="inline-block align-baseline" />;
 }
 
-export function InlineMathText({ text, className = '', forceMath = false }: InlineMathTextProps) {
+export function InlineMathText({ text, className = '', forceMath = false, nowrap = false }: InlineMathTextProps) {
   const parts = segment(autoWrapLatex(autoWrapUnicodeMath(decodeHtmlEntities(text))), forceMath);
   return (
-    <span className={`whitespace-pre-wrap ${className}`}>
+    <span className={`${nowrap ? 'whitespace-nowrap' : 'whitespace-pre-wrap'} ${className}`}>
       {parts.map((p, i) =>
         p.kind === 'math'
           ? <Math key={i} latex={p.body} />

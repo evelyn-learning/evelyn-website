@@ -236,7 +236,7 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   // MCQ choices on authored cards.
   'spoken_problem_boarded', 'auto_card_on_advance', 'active_problem_resolved',
   'generate_problem_unused_dropped', 'judge_correction_note_timeout_held',
-  'segment_overlong_note', 'show_segment_card_mcq_choices',
+  'segment_overlong_note', 'show_segment_card_mcq_choices', 'spoken_equation_boarded',
   // Task 7, live-check-3 fixes round (2026-09-07): pacing_credit_withheld —
   // the judge-flagged-denial withhold that keeps the tutor's own mis-grading
   // out of the student's incorrect streak / struggle ledger. Already covered
