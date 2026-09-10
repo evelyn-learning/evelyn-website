@@ -50,12 +50,23 @@ async function isAdminEmail(email: string): Promise<boolean> {
   }
 }
 
+// Which OAuth client: the "Evelyn Learning Web Client 2" credentials (the
+// GOOGLE_CLASSROOM_* pair) already carry the evelynlearning.com JavaScript
+// origins and are the client Praveen manages, so admin sign-in rides them;
+// next-auth's callback path (/api/auth/callback/google) must be added to that
+// client's authorized redirect URIs. GOOGLE_CLIENT_ID/SECRET (the GA/GSC
+// tooling client) is only a fallback when the Classroom pair is absent.
+const googleClientId = process.env.GOOGLE_CLASSROOM_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret = process.env.GOOGLE_CLASSROOM_CLIENT_ID
+  ? process.env.GOOGLE_CLASSROOM_CLIENT_SECRET
+  : process.env.GOOGLE_CLIENT_SECRET;
+
 const googleProvider =
-  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+  googleClientId && googleClientSecret
     ? [
         GoogleProvider({
-          clientId: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          clientId: googleClientId,
+          clientSecret: googleClientSecret,
           authorization: {
             params: {
               // Plain sign-in; no offline access, no consent re-prompt.

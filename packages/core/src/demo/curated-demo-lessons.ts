@@ -28,14 +28,16 @@ export interface CuratedDemoLesson {
 // projectile trajectories + vectors, the unit circle, Punnett squares, Lewis
 // structures, maps/timelines — so a first-time visitor SEES the whiteboard
 // working, not just hears the voice.
+// 2026-09-10 (Praveen): rotated — Projectile Motion now leads (index 0 is the
+// widget's default-selected chip); Area & Perimeter moved to its old slot.
 export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
   {
-    planId: 'evelyn.g3.math.area-perimeter.v1',
-    title: 'Area & Perimeter',
-    subjectLabel: 'Math',
-    levelLabel: 'Grade 3',
-    hook: 'Shapes drawn & measured live',
-    tone: 'indigo',
+    planId: 'evelyn.hs.science.physics.kinematics-2d-projectile.v1',
+    title: 'Projectile Motion',
+    subjectLabel: 'Physics',
+    levelLabel: 'High school',
+    hook: 'Trajectories, vectors & motion graphs',
+    tone: 'rose',
   },
   {
     planId: 'evelyn.g68.science.cell-structure.v1',
@@ -46,12 +48,12 @@ export const CURATED_DEMO_LESSONS: CuratedDemoLesson[] = [
     tone: 'emerald',
   },
   {
-    planId: 'evelyn.hs.science.physics.kinematics-2d-projectile.v1',
-    title: 'Projectile Motion',
-    subjectLabel: 'Physics',
-    levelLabel: 'High school',
-    hook: 'Trajectories, vectors & motion graphs',
-    tone: 'rose',
+    planId: 'evelyn.g3.math.area-perimeter.v1',
+    title: 'Area & Perimeter',
+    subjectLabel: 'Math',
+    levelLabel: 'Grade 3',
+    hook: 'Shapes drawn & measured live',
+    tone: 'indigo',
   },
   {
     planId: 'evelyn.ap.precalc.trigonometric-polar.v1',
