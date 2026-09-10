@@ -71,7 +71,9 @@ const DELIBERATELY_EXCLUDED = new Set<string>([
   // Dev/manual/authoring surfaces that never run for a student.
   'dev_forced_kill', 'manual_buffered', 'manual_mode_toggled',
   'manual_send_armed', 'manual_sent', 'rt2_lesson_plan_injected',
-  'confirm_plan_los', 'propose_plan_swap', 'sketch_request', 'sketch_resolved',
+  // 'propose_plan_swap' left this list 2026-09-10: the embed now persists it
+  // (prefix added alongside the wired swap handler).
+  'confirm_plan_los', 'sketch_request', 'sketch_resolved',
   'sketch_dropped', 'sketch_fallback_card', 'student_mark', 'student_mark_dropped',
   'student_mark_idle_send',
   // Routine scroll/page bookkeeping — fires on ordinary navigation, says
