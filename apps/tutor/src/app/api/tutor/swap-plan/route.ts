@@ -39,6 +39,15 @@ interface SwapPlanRequestBody {
   grade: string;
   topic?: string;
   locale?: string;
+  /** Open-scope demo (2026-09-10): the session may leave its configured
+   *  subject/topic. The curated search runs across the WHOLE catalog (no
+   *  subject/grade/topic filter — the demo's "Middle school"/"physics"
+   *  vocabulary never matched plan tags anyway) and generation is seeded
+   *  with `targetSubject` when the brain named one. Absent/false ⇒ the
+   *  scoped behaviour below, byte-for-byte. */
+  openScope?: boolean;
+  /** Open-scope only: subject the new topic belongs to, from the brain. */
+  targetSubject?: string;
   /** Telemetry only. */
   reason?: string;
 }
@@ -89,15 +98,29 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'subject and grade are required' }, { status: 400 });
   }
 
+  const openScope = body.openScope === true;
+  const targetSubject = openScope && typeof body.targetSubject === 'string' && body.targetSubject.trim()
+    ? body.targetSubject.trim().toLowerCase()
+    : undefined;
+  // The subject generation is seeded with. Open-scope: the brain's
+  // targetSubject wins over the session's starting subject.
+  const effectiveSubject = targetSubject ?? body.subject;
+
   // Step 1: scoped curated lookup. Topic is the session boundary; we
   // pass it through if present so the catalog filter honors it.
+  // Open-scope: no filter at all — title/LO scoring across the whole
+  // curated catalog decides, and anything without signal generates.
   let candidates: LessonPlan[] = [];
   try {
-    candidates = await listLessonPlans({
-      subject: body.subject,
-      grade: body.grade,
-      topic: body.topic,
-    });
+    candidates = await listLessonPlans(
+      openScope
+        ? {}
+        : {
+            subject: body.subject,
+            grade: body.grade,
+            topic: body.topic,
+          },
+    );
   } catch (err) {
     console.warn('[swap-plan] catalog list failed:', err);
   }
@@ -116,7 +139,7 @@ export async function POST(request: NextRequest) {
   // generation, which is correct.
   if (bestCurated && bestCurated.score >= 3) {
     console.log(
-      `[swap-plan] curated match plan=${bestCurated.plan.id} title="${bestCurated.plan.title}" score=${bestCurated.score} for target="${targetSubTopic}"`,
+      `[swap-plan] curated match plan=${bestCurated.plan.id} title="${bestCurated.plan.title}" score=${bestCurated.score} for target="${targetSubTopic}"${openScope ? ' openScope=1' : ''}`,
     );
     return NextResponse.json({
       plan: bestCurated.plan,
@@ -132,9 +155,9 @@ export async function POST(request: NextRequest) {
   const startedAt = Date.now();
   const generation = await generatePlanFromText({
     text: targetSubTopic,
-    subject: body.subject,
+    subject: effectiveSubject,
     grade: body.grade,
-    topic: body.topic,
+    topic: openScope ? undefined : body.topic,
     locale: body.locale,
   });
   const generationMs = Date.now() - startedAt;
@@ -146,7 +169,7 @@ export async function POST(request: NextRequest) {
   }
 
   console.log(
-    `[swap-plan] generated plan=${generation.plan.id} ok=${generation.ok} reason="${generation.reason}" target="${targetSubTopic}" ms=${generationMs}`,
+    `[swap-plan] generated plan=${generation.plan.id} ok=${generation.ok} reason="${generation.reason}" target="${targetSubTopic}" subject=${effectiveSubject}${openScope ? ' openScope=1' : ''} ms=${generationMs}`,
   );
 
   return NextResponse.json({

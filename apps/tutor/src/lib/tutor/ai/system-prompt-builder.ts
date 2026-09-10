@@ -110,6 +110,12 @@ export interface SystemPromptContext {
   subject?: string;
   topic?: string;
   level?: string;
+  /** Open-scope session (2026-09-10, marketing demo embed): the configured
+   *  subject/topic is a STARTING POINT, not a boundary. Renders an override
+   *  block after the scope stamp so Rule 7(b)'s off-domain deflection is
+   *  replaced by "honor every switch via propose_plan_swap". Absent/false
+   *  ⇒ prompt byte-identical to before. */
+  openScope?: boolean;
   /** Deployment branding (D2C / B2B / white-label). Defaults to Evelyn
    *  when omitted. Pass a different record to swap product identity,
    *  contact info, scope statement, etc. without touching the engine. */
@@ -1830,6 +1836,14 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
   }
   if (context.subject || context.topic) {
     prompt += `(This is the authoritative session scope. Apply Rule 7 against THESE values, not against any topic that appears in the <student_profile> block — that block is historical only.)\n`;
+  }
+  if (context.openScope) {
+    // Open-scope demo (2026-09-10): the student may take the session
+    // anywhere. Overrides Rule 7(b) explicitly — the rule text above still
+    // says "note the scope and offer to end"; this block wins because it is
+    // later in the prompt and names the rule it supersedes.
+    prompt += `\n### Open-scope session — OVERRIDES Rule 7(b)\n`;
+    prompt += `This is an open demo session. The configured subject/topic above is only where the session STARTED — it is NOT a boundary. The student may switch to ANY subject or topic at ANY time, and every such request is an in-scope Rule 7 path (a) switch: call propose_plan_swap with a 3-8 word targetSubTopic and, when the new topic belongs to a different subject, also pass targetSubject (a plain subject word such as "math", "physics", "chemistry", "biology", "history", "english"). Never deflect, never say the session is scoped to something else, never offer to end the session so they can start another. Keep teaching the new topic right away from your own knowledge while the new plan loads; the plan's first segment becomes active on the next turn. Off-topic chatter that is not a learning request (shopping, personal questions) is still redirected to learning as usual.\n`;
   }
 
   if (context.studentName) {

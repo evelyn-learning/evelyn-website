@@ -159,6 +159,10 @@ async function startGatedDemo(
     wrap_at_minutes: 8,
     input_mode: 'voice',
     target_kind: 'lessonNode',
+    // 2026-09-10: the demo is a showcase, not an enrolled lesson — let the
+    // visitor take it anywhere (engine honors propose_plan_swap across
+    // subjects and drops the Rule 7(b) "this session is scoped to…" reply).
+    open_scope: true,
     teacher,
     features: { voice_mode: true, text_mode: true, homework_upload: false },
     metadata: { source },

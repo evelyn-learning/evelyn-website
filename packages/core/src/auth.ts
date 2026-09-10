@@ -1,5 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { connectDB, isDBConfigured } from "./db";
 import { AdminUser } from "./models/AdminUser";
@@ -18,8 +19,57 @@ import { AdminUser } from "./models/AdminUser";
 // `npx tsx scripts/seed-admin-user.ts` (ADMIN_EMAIL + ADMIN_PASSWORD) —
 // that script is the only supported way to create the first admin.
 
+// Google OAuth sign-in for the /admin surfaces (2026-09-10). The provider is
+// only registered when GOOGLE_CLIENT_ID + GOOGLE_CLIENT_SECRET are set, so an
+// environment without them keeps the password-only behaviour and never 500s
+// on /api/auth/providers. Authorisation is separate from authentication: a
+// Google account is admitted ONLY if its (verified) email is an existing
+// AdminUser row, or is listed in ADMIN_GOOGLE_EMAILS (comma-separated). A
+// signed-in Google account that matches neither is rejected with
+// AccessDenied — Google verifying the identity does not make it an admin.
+function googleAllowedEmails(): Set<string> {
+  return new Set(
+    (process.env.ADMIN_GOOGLE_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean)
+  );
+}
+
+async function isAdminEmail(email: string): Promise<boolean> {
+  const normalized = email.trim().toLowerCase();
+  if (googleAllowedEmails().has(normalized)) return true;
+  if (!isDBConfigured()) return false;
+  try {
+    await connectDB();
+    const row = await AdminUser.findOne({ email: normalized }).select("_id").lean();
+    return !!row;
+  } catch (error) {
+    console.error("[auth] database error during Google admin lookup — denying:", error);
+    return false;
+  }
+}
+
+const googleProvider =
+  process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+    ? [
+        GoogleProvider({
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          authorization: {
+            params: {
+              // Plain sign-in; no offline access, no consent re-prompt.
+              prompt: "select_account",
+              scope: "openid email profile",
+            },
+          },
+        }),
+      ]
+    : [];
+
 export const authOptions: NextAuthOptions = {
   providers: [
+    ...googleProvider,
     CredentialsProvider({
       name: "Credentials",
       credentials: {
@@ -74,6 +124,13 @@ export const authOptions: NextAuthOptions = {
     signIn: "/admin/login",
   },
   callbacks: {
+    async signIn({ account, profile }) {
+      if (account?.provider !== "google") return true;
+      const email = (profile as { email?: string } | undefined)?.email;
+      const verified = (profile as { email_verified?: boolean } | undefined)?.email_verified;
+      if (!email || verified === false) return false;
+      return isAdminEmail(email);
+    },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;

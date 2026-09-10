@@ -50,6 +50,10 @@ const EMBED_DEBUG_EVENT_PREFIXES = [
   'perception_', 'ink_', 'error', 'MicSilentWarning', 'mic_',
   'brain_watchdog', 'dispatch_', 'production_ws_', 'session_mint',
   'try_alone',
+  // 2026-09-10: mid-session topic switch in the embed. 'propose_plan_swap'
+  // is the brain's tool call (now emitted even when dropped); 'plan_swap_'
+  // covers the embed handler's applied/failed outcomes.
+  'propose_plan_swap', 'plan_swap_',
   // Round-6e: the round-6b AEC/route diagnostics never persisted for portal
   // sessions — this whitelist silently ate them, so the app-switch reverb
   // investigation ran blind. stage3_ covers the timeout-resume recovery.
@@ -338,6 +342,13 @@ interface EmbedConfig {
    *  token; absent/false = not a trial. Only consumed when
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER is on. */
   is_trial?: boolean;
+  /** Open-scope session (2026-09-10). When true the student may change the
+   *  subject/topic at any point: the brain's propose_plan_swap is honored
+   *  (it was silently dropped in the embed before — no handler was wired),
+   *  the swap may cross subjects, and the prompt's Rule 7(b) off-domain
+   *  deflection is overridden. The marketing demo widget sets it; enrolled
+   *  academy sessions do not, and stay scoped to their lesson node. */
+  open_scope?: boolean;
   /** Explicit session-target kind for the opening behavior. 'diagnostic'
    *  makes the opener/calibration no-op AND keeps the completion-gate/
    *  demo-stop machinery off the session — the academy's diagnostic
@@ -454,7 +465,12 @@ function EmbedSession() {
 }
 
 function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedToken?: string }) {
-  const subject = config.subject;
+  const openScope = config.open_scope === true;
+  // Open-scope (2026-09-10): subject + lessonPlanId become STATE so a
+  // mid-session plan swap can move both. For every non-open-scope token
+  // neither setter is ever called and the values equal the old consts.
+  const [subject, setSubject] = useState(config.subject);
+  const [lessonPlanId, setLessonPlanId] = useState<string | undefined>(config.curriculum_module || undefined);
   const level = config.level;
   const topic = config.topic || '';
   const studentName = config.student_name || '';
@@ -1286,6 +1302,57 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     </div>
   ) : undefined;
 
+  // Mid-session plan swap (2026-09-10). Mirrors /tutor's
+  // handleProposePlanSwap: the brain emits propose_plan_swap, the server
+  // resolves a plan (curated match → generated), and we route the new id
+  // into the lessonPlanId prop so VoiceTutorRealtime's existing effect
+  // loads it. Before this the embed passed no handler and every swap was
+  // dropped on the floor (embed-1788926441238 and every demo before it).
+  // In open-scope sessions the swap may cross subjects, so `subject` state
+  // follows the resolved plan — the progress strip, tool filter and any
+  // later mint see the subject the student is actually studying.
+  const handleProposePlanSwap = useCallback(
+    async ({ targetSubTopic, targetSubject, reason }: { targetSubTopic: string; targetSubject?: string; reason?: string }): Promise<void> => {
+      try {
+        const res = await fetch('/api/tutor/swap-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetSubTopic,
+            subject,
+            grade: level,
+            // Scoped sessions keep their topic boundary; open-scope drops it.
+            topic: openScope ? undefined : (topic || undefined),
+            openScope,
+            targetSubject: openScope ? targetSubject : undefined,
+            reason,
+          }),
+        });
+        if (!res.ok) {
+          addDebugEvent('plan_swap_failed', `status=${res.status} target="${targetSubTopic}"`);
+          return;
+        }
+        const data = await res.json();
+        const newPlanId = data?.plan?.id;
+        if (typeof newPlanId !== 'string' || !newPlanId) {
+          addDebugEvent('plan_swap_failed', `missing plan id target="${targetSubTopic}"`);
+          return;
+        }
+        const newPlanSubject = typeof data?.plan?.subject === 'string' ? data.plan.subject : '';
+        const newPlanTitle = typeof data?.plan?.title === 'string' ? data.plan.title : '';
+        addDebugEvent(
+          'plan_swap_applied',
+          `plan=${newPlanId} source=${data?.source ?? '?'} title="${newPlanTitle}" subject=${newPlanSubject || subject}`,
+        );
+        if (openScope && newPlanSubject && newPlanSubject !== subject) setSubject(newPlanSubject);
+        setLessonPlanId(newPlanId);
+      } catch (err) {
+        addDebugEvent('plan_swap_failed', `threw: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    },
+    [subject, level, topic, openScope, addDebugEvent],
+  );
+
   return (
     <div style={brandStyle}>
       <TutorSession
@@ -1307,7 +1374,9 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         sessionGoal={sessionGoal}
         mockReview={mockReview}
         refetchMockReview={refetchMockReview}
-        lessonPlanId={config.curriculum_module || undefined}
+        lessonPlanId={lessonPlanId}
+        onProposePlanSwap={handleProposePlanSwap}
+        openScope={openScope}
         voice={openAIVoice}
         voiceEngine="claude-brain"
         ttsProvider={ttsProvider}

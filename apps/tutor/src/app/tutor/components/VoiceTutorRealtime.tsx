@@ -602,6 +602,13 @@ interface VoiceTutorRealtimeProps {
    *  Only consumed when TUTOR_PEDAGOGY_OPENER is on. Default false — the
    *  main /tutor page has no trial concept and omits it. */
   isTrial?: boolean;
+  /** Open-scope session (2026-09-10): the embed's `open_scope` token field.
+   *  When true the system prompt carries the Rule 7(b) override (student may
+   *  switch to any subject/topic) and the per-turn `subject` is withheld from
+   *  the brain request so the Lever-A tool filter fails OPEN instead of
+   *  pinning whiteboard tools to the starting subject. Default false ⇒ every
+   *  existing session is byte-identical. */
+  openScope?: boolean;
   /** Explicit session-target kind for the opening-behavior resolution
    *  (OpeningSignals.targetKind). When omitted, derived exactly as before:
    *  lessonPlanId present ⇒ 'lessonNode', else 'freestyle'. 'diagnostic'
@@ -857,7 +864,7 @@ interface VoiceTutorRealtimeProps {
    *  lessonPlanId prop flow. The child has already logged the event
    *  and emitted the debug telemetry; the parent's responsibility is
    *  state + UX (chat notice, progress-strip update). */
-  onProposePlanSwap?: (args: { targetSubTopic: string; reason?: string }) => Promise<void>;
+  onProposePlanSwap?: (args: { targetSubTopic: string; targetSubject?: string; reason?: string }) => Promise<void>;
   /** Fires when the brain emits confirm_plan_los in response to a
    *  picker segment. Parent calls /api/tutor/expand-plan-los which
    *  upserts the same plan id with expanded segments; the child's
@@ -1090,6 +1097,7 @@ export function VoiceTutorRealtime({
   onInterruptedChange,
   onBeforeTypedSubmit,
   onProposePlanSwap,
+  openScope = false,
   onConfirmPlanLos,
   onCompletedSegmentsChange,
   sessionMaxMinutes = 30,
@@ -6913,7 +6921,13 @@ export function VoiceTutorRealtime({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const c = cmd as any;
         const targetSubTopic: string = typeof c.targetSubTopic === 'string' ? c.targetSubTopic : '';
+        const targetSubject: string | undefined = typeof c.targetSubject === 'string' && c.targetSubject.trim() ? c.targetSubject.trim() : undefined;
         const reason: string | undefined = typeof c.reason === 'string' ? c.reason : undefined;
+        // 2026-09-10: emit the debug event BEFORE either early return. The
+        // embed dropped every swap for months (handler never wired) with
+        // zero telemetry under this event name because the emit sat below
+        // the `continue`s.
+        onDebugEvent?.('propose_plan_swap', `target="${targetSubTopic}"${targetSubject ? ` subject="${targetSubject}"` : ''}${reason ? ` reason="${reason}"` : ''}${onProposePlanSwap ? '' : ' DROPPED=no-handler'}`);
         if (!targetSubTopic) {
           console.warn('[VoiceTutorRealtime] proposePlanSwap missing targetSubTopic, dropping');
           continue;
@@ -6928,13 +6942,12 @@ export function VoiceTutorRealtime({
         // existing useEffect and lessonPlanContext reflects it.
         void (async () => {
           try {
-            await onProposePlanSwap({ targetSubTopic, reason });
+            await onProposePlanSwap({ targetSubTopic, targetSubject, reason });
           } catch (err) {
             console.warn('[VoiceTutorRealtime] onProposePlanSwap threw:', err);
           }
         })();
-        console.log(`[VoiceTutorRealtime] propose_plan_swap target="${targetSubTopic}"${reason ? ` reason="${reason}"` : ''}`);
-        onDebugEvent?.('propose_plan_swap', `target="${targetSubTopic}"${reason ? ` reason="${reason}"` : ''}`);
+        console.log(`[VoiceTutorRealtime] propose_plan_swap target="${targetSubTopic}"${targetSubject ? ` subject="${targetSubject}"` : ''}${reason ? ` reason="${reason}"` : ''}`);
         continue;
       }
       if (cmd.action === 'recordGap' || cmd.action === 'flagPrerequisiteGap') {
@@ -11020,7 +11033,9 @@ export function VoiceTutorRealtime({
             // When a future mid-session subject-change feature ships,
             // STOP sending this on/after the change (⇒ sticky fail open)
             // — see project_lever_a_tools_filter.md.
-            subject,
+            // Open-scope demo (2026-09-10): the subject changes mid-session,
+            // so withhold it ⇒ resolveToolSubjects(undefined) ⇒ fail open.
+            subject: openScope ? undefined : subject,
             // Adaptive-pacing v1 dedup state. Empty arrays for sessions
             // that haven't shown any generated problems yet — fine,
             // pipeline treats absent + empty identically.
@@ -20730,6 +20745,8 @@ export function VoiceTutorRealtime({
           level,
           studentPreferences,
           realtimeV2: useRealtimeV2,
+          // Open-scope demo (2026-09-10): appends the Rule 7(b) override.
+          ...(openScope ? { openScope: true } : {}),
           // R49: withdraw the bare-board licence for the OPENING turn only.
           // Additive + gated — flag off ⇒ field absent ⇒ prompt unchanged.
           ...(TUTOR_FIRST_TURN_V2 ? { firstTurnV2: true } : {}),
