@@ -33,6 +33,9 @@ import { POST as practicePOST } from '@/app/api/portal/v1/practice/route';
 import { POST as gradePOST } from '@/app/api/portal/v1/grade/route';
 import { POST as sessionPOST } from '@/app/api/portal/v1/session-result/route';
 import { GET as sessionProgressGET } from '@/app/api/portal/v1/session-progress/route';
+import { GET as sessionsSummaryGET } from '@/app/api/portal/v1/sessions/summary/route';
+import { parseSummaryIds, summarizeTutorSession } from '@/lib/tutor/portal/session-summary';
+import { SessionSummarySchema } from '@evelyn/portal-contract/v1';
 import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
 import { POST as assignedPracticePOST } from '@/app/api/portal/v1/assigned-practice/route';
 
@@ -207,6 +210,51 @@ const ctxBody = (studentId: string) => ({
     const { status, json } = await call(sessionProgressGET, signed('GET', '/api/portal/v1/session-progress'));
     assert.strictEqual(status, 400);
     assert.strictEqual(json.reason, 'sessionId required');
+  });
+
+  console.log('\nSessions summary read (v1.16.0 — auth + validation + pure summarizer; 200 path needs a DB):\n');
+  await test('sessions/summary GET without signature → 401', async () => {
+    const { status } = await call(sessionsSummaryGET, unsigned('GET', '/api/portal/v1/sessions/summary?ids=x'));
+    assert.strictEqual(status, 401);
+  });
+  await test('sessions/summary GET signed but no ids → 400', async () => {
+    const { status, json } = await call(sessionsSummaryGET, signed('GET', '/api/portal/v1/sessions/summary'));
+    assert.strictEqual(status, 400);
+    assert.ok(String(json.reason).startsWith('ids required'));
+  });
+  await test('sessions/summary GET with 51 ids → 400 (contract cap)', async () => {
+    const ids = Array.from({ length: 51 }, (_, i) => `s${i}`).join(',');
+    const { status } = await call(sessionsSummaryGET, signed('GET', `/api/portal/v1/sessions/summary?ids=${ids}`));
+    assert.strictEqual(status, 400);
+  });
+  await test('parseSummaryIds trims, de-dupes, caps at 50, rejects empty', async () => {
+    assert.deepStrictEqual(parseSummaryIds(' a, b ,a,,'), ['a', 'b']);
+    assert.strictEqual(parseSummaryIds(''), null);
+    assert.strictEqual(parseSummaryIds(null), null);
+    assert.strictEqual(parseSummaryIds(Array.from({ length: 51 }, (_, i) => `s${i}`).join(',')), null);
+    assert.strictEqual(parseSummaryIds(Array.from({ length: 50 }, (_, i) => `s${i}`).join(','))?.length, 50);
+  });
+  await test('summarizeTutorSession counts roles, never emits clientIp, tolerates sparse rows', async () => {
+    const full = summarizeTutorSession({
+      sessionId: 'portal-a', status: 'completed', startedAt: new Date('2026-09-04T03:47:36.007Z'), endedAt: new Date('2026-09-04T04:01:37.630Z'),
+      duration: 842, transcript: [{ role: 'tutor' }, { role: 'student' }, { role: 'system' }, { role: 'student' }],
+      whiteboardItemCount: 26, estimatedCost: 1.9946, location: { city: 'Brentwood', region: 'California', country: 'US' },
+      ...({ clientIp: '107.205.15.119' } as object),
+    });
+    assert.ok(SessionSummarySchema.safeParse(full).success);
+    assert.strictEqual(full.studentTurns, 2);
+    assert.strictEqual(full.tutorTurns, 1);
+    assert.strictEqual(full.boardItems, 26);
+    assert.strictEqual(full.durationSec, 842);
+    assert.strictEqual(full.endedAt, '2026-09-04T04:01:37.630Z');
+    assert.deepStrictEqual(full.location, { city: 'Brentwood', region: 'California', country: 'US' });
+    assert.ok(!('clientIp' in full));
+    const sparse = summarizeTutorSession({ sessionId: 'portal-b', status: 'abandoned', startedAt: '2026-08-30T23:20:09.100Z', whiteboardCommands: [{}, {}] });
+    assert.ok(SessionSummarySchema.safeParse(sparse).success);
+    assert.strictEqual(sparse.studentTurns, 0);
+    assert.strictEqual(sparse.boardItems, 2);
+    assert.strictEqual(sparse.estimatedCostUsd, 0);
+    assert.ok(!('endedAt' in sparse) && !('durationSec' in sparse) && !('location' in sparse));
   });
 
   console.log('\nReview-plan (auth + validation only — 200 path composes via an LLM-backed expander):\n');
