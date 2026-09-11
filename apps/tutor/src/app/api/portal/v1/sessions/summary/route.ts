@@ -35,6 +35,7 @@ export const GET = withPortalAuth(async (req, auth) => {
       endedAt: 1,
       duration: 1,
       'transcript.role': 1,
+      'transcript.timestamp': 1,
       whiteboardItemCount: 1,
       estimatedCost: 1,
       location: 1,

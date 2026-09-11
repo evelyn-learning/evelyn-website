@@ -16,7 +16,7 @@ export interface SummarizableSession {
   startedAt: Date | string;
   endedAt?: Date | string | null;
   duration?: number | null;
-  transcript?: Array<{ role: string }> | null;
+  transcript?: Array<{ role: string; timestamp?: Date | string | null }> | null;
   whiteboardItemCount?: number | null;
   whiteboardCommands?: unknown[] | null;
   estimatedCost?: number | null;
@@ -34,6 +34,26 @@ export function parseSummaryIds(raw: string | null): string[] | null {
 }
 
 const iso = (d: Date | string): string => (d instanceof Date ? d : new Date(d)).toISOString();
+
+/** Longest silence still counted as tutoring. Beyond this the student is
+ *  presumed gone (tab left open, or the partner reused the session id on a
+ *  later day — both seen on prod). */
+export const ACTIVE_GAP_CAP_SEC = 10 * 60;
+
+/** Active tutoring seconds: the sum of gaps between consecutive transcript
+ *  messages, each capped. Immune to idle tabs (no messages ⇒ 0), to a resume
+ *  that overwrote `duration` with its last leg (every message counts), and to
+ *  a session id reused days later (the day-long gap counts as ten minutes). */
+export function activeSeconds(transcript: Array<{ timestamp?: Date | string | null }>): number {
+  const ts = transcript
+    .map((m) => (m.timestamp ? new Date(m.timestamp).getTime() : NaN))
+    .filter((t) => Number.isFinite(t))
+    .sort((a, b) => a - b);
+  if (ts.length < 2) return 0;
+  let total = 0;
+  for (let i = 1; i < ts.length; i += 1) total += Math.min(Math.max(0, (ts[i]! - ts[i - 1]!) / 1000), ACTIVE_GAP_CAP_SEC);
+  return Math.round(total);
+}
 
 export function summarizeTutorSession(s: SummarizableSession): SessionSummary {
   const transcript = s.transcript ?? [];
@@ -56,7 +76,14 @@ export function summarizeTutorSession(s: SummarizableSession): SessionSummary {
     status: s.status,
     startedAt: iso(s.startedAt),
     ...(s.endedAt ? { endedAt: iso(s.endedAt) } : {}),
-    ...(typeof s.duration === 'number' && s.duration >= 0 ? { durationSec: Math.round(s.duration) } : {}),
+    // durationSec = ACTIVE seconds from the transcript when it has ≥ 2 stamped
+    // messages; the raw `duration` field only when there is no transcript to
+    // measure from (and never for an empty session).
+    ...(transcript.length >= 2
+      ? { durationSec: activeSeconds(transcript) }
+      : typeof s.duration === 'number' && s.duration >= 0 && transcript.length > 0
+        ? { durationSec: Math.round(s.duration) }
+        : {}),
     studentTurns,
     tutorTurns,
     boardItems,

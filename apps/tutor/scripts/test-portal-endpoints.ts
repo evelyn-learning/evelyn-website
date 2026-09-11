@@ -34,7 +34,7 @@ import { POST as gradePOST } from '@/app/api/portal/v1/grade/route';
 import { POST as sessionPOST } from '@/app/api/portal/v1/session-result/route';
 import { GET as sessionProgressGET } from '@/app/api/portal/v1/session-progress/route';
 import { GET as sessionsSummaryGET } from '@/app/api/portal/v1/sessions/summary/route';
-import { parseSummaryIds, summarizeTutorSession } from '@/lib/tutor/portal/session-summary';
+import { parseSummaryIds, summarizeTutorSession, activeSeconds } from '@/lib/tutor/portal/session-summary';
 import { SessionSummarySchema } from '@evelyn/portal-contract/v1';
 import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
 import { POST as assignedPracticePOST } from '@/app/api/portal/v1/assigned-practice/route';
@@ -234,10 +234,20 @@ const ctxBody = (studentId: string) => ({
     assert.strictEqual(parseSummaryIds(Array.from({ length: 51 }, (_, i) => `s${i}`).join(',')), null);
     assert.strictEqual(parseSummaryIds(Array.from({ length: 50 }, (_, i) => `s${i}`).join(','))?.length, 50);
   });
+  await test('activeSeconds sums capped gaps — immune to idle tabs, last-leg overwrites and reused ids', async () => {
+    assert.strictEqual(activeSeconds([]), 0);
+    assert.strictEqual(activeSeconds([{ timestamp: '2026-09-06T23:13:32Z' }]), 0);
+    // 3-minute first leg, then a resume 30 minutes later (real gap 27 min → capped 10), then 20 min of work
+    assert.strictEqual(activeSeconds([{ timestamp: '2026-09-06T23:13:32Z' }, { timestamp: '2026-09-06T23:16:32Z' }, { timestamp: '2026-09-06T23:43:32Z' }, { timestamp: '2026-09-07T00:03:32Z' }]), 180 + 600 + 600);
+    // session id reused two days later: the 2-day gap counts as 10 minutes
+    assert.strictEqual(activeSeconds([{ timestamp: '2026-08-26T00:31:00Z' }, { timestamp: '2026-08-26T00:41:00Z' }, { timestamp: '2026-08-28T02:00:00Z' }, { timestamp: '2026-08-28T02:05:00Z' }]), 600 + 600 + 300);
+    const s = summarizeTutorSession({ sessionId: 'x', status: 'abandoned', startedAt: '2026-08-27T00:58:00Z', duration: 21571, transcript: [] });
+    assert.ok(!('durationSec' in s)); // idle abandoned tab: no transcript ⇒ no duration at all
+  });
   await test('summarizeTutorSession counts roles, never emits clientIp, tolerates sparse rows', async () => {
     const full = summarizeTutorSession({
       sessionId: 'portal-a', status: 'completed', startedAt: new Date('2026-09-04T03:47:36.007Z'), endedAt: new Date('2026-09-04T04:01:37.630Z'),
-      duration: 842, transcript: [{ role: 'tutor' }, { role: 'student' }, { role: 'system' }, { role: 'student' }],
+      duration: 842, transcript: [{ role: 'tutor', timestamp: '2026-09-04T03:47:43Z' }, { role: 'student', timestamp: '2026-09-04T03:48:21Z' }, { role: 'system', timestamp: '2026-09-04T03:48:30Z' }, { role: 'student', timestamp: '2026-09-04T04:00:56Z' }],
       whiteboardItemCount: 26, estimatedCost: 1.9946, location: { city: 'Brentwood', region: 'California', country: 'US' },
       ...({ clientIp: '107.205.15.119' } as object),
     });
@@ -245,7 +255,7 @@ const ctxBody = (studentId: string) => ({
     assert.strictEqual(full.studentTurns, 2);
     assert.strictEqual(full.tutorTurns, 1);
     assert.strictEqual(full.boardItems, 26);
-    assert.strictEqual(full.durationSec, 842);
+    assert.strictEqual(full.durationSec, 38 + 9 + 600); // gaps 38s, 9s, 746s (capped at 600)
     assert.strictEqual(full.endedAt, '2026-09-04T04:01:37.630Z');
     assert.deepStrictEqual(full.location, { city: 'Brentwood', region: 'California', country: 'US' });
     assert.ok(!('clientIp' in full));
