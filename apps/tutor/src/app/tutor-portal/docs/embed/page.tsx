@@ -32,42 +32,6 @@ export default function EmbedPage() {
       </p>
       <ParamTable params={configParams} showRequired showExample />
 
-      <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Engine Selection</h2>
-      <p className="mb-4 text-sm text-slate-600">
-        The <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">engine</code> parameter
-        selects the voice engine tier:
-      </p>
-      <div className="mb-4 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b-2 border-slate-200 text-left">
-              <th className="pb-3 pr-4 font-medium text-slate-500">Value</th>
-              <th className="pb-3 pr-4 font-medium text-slate-500">Name</th>
-              <th className="pb-3 pr-4 font-medium text-slate-500">Latency</th>
-              <th className="pb-3 font-medium text-slate-500">Price/Min</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr className="border-b border-slate-100">
-              <td className="py-2.5 pr-4"><code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">standard</code></td>
-              <td className="py-2.5 pr-4 text-slate-700">Standard</td>
-              <td className="py-2.5 pr-4 text-slate-500">~1.5s</td>
-              <td className="py-2.5 text-slate-700">$0.06</td>
-            </tr>
-            <tr className="border-b border-slate-100">
-              <td className="py-2.5 pr-4"><code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">premium</code></td>
-              <td className="py-2.5 pr-4 text-slate-700">Premium</td>
-              <td className="py-2.5 pr-4 text-slate-500">&lt;400ms</td>
-              <td className="py-2.5 text-slate-700">$0.25</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <Callout type="info">
-        Sandbox environments are limited to the Standard engine. Premium is available in production.
-      </Callout>
-
       <h2 className="mb-3 mt-10 text-xl font-semibold text-slate-900">Branding Object</h2>
       <p className="mb-4 text-sm text-slate-600">
         The optional <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">branding</code> object
@@ -104,7 +68,6 @@ export default function EmbedPage() {
   "topic": "algebra-2",
   "level": "11-12",
   "session_goal": "test-prep",
-  "engine": "standard",
   "locale": "ar-DZ",
   "branding": {
     "primary_color": "#1E40AF",

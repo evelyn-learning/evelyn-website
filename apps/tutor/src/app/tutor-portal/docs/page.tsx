@@ -3,7 +3,7 @@ import { Callout } from './components/Callout';
 
 const sections = [
   { href: '/docs/quickstart', title: 'Getting Started', description: 'Generate a JWT, embed the iframe, and run your first tutoring session in minutes.' },
-  { href: '/docs/embed', title: 'Embed Configuration', description: 'Full reference for all embed parameters — subject, level, engine, branding, and more.' },
+  { href: '/docs/embed', title: 'Embed Configuration', description: 'Full reference for all embed parameters — subject, level, topic, branding, and more.' },
   { href: '/docs/api', title: 'API Reference', description: 'REST endpoints for sessions, students, curriculum modules, usage, and webhooks.' },
   { href: '/docs/webhooks', title: 'Webhooks', description: '15 real-time events for session lifecycle, usage, content generation, and errors.' },
   { href: '/docs/modules', title: 'Curriculum Modules', description: 'Upload your national curriculum as JSON or PDF. The tutor grounds instruction in your standards.' },

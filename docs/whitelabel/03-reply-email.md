@@ -56,34 +56,12 @@ Integration is self-service — we provide sandbox API keys and documentation, a
 
 ### Pricing
 
-We offer usage-based pricing for white-label partners:
+Simple usage pricing, no fixed fees:
 
-**Launch Partner Program (50% off)**
-
-As one of our first integration partners, you qualify for our Launch Partner pricing:
-
-- One-time setup: ~~$2,500~~ **$1,250** (includes sandbox access and integration support)
-- Monthly platform fee: ~~$500/month~~ **$250/month for your first 12 months** (then $500/month)
-
-**Usage (per tutoring minute)**
-
-We offer three tiers to match different market segments:
-
-| Engine | Per Minute | Typical 30-Min Session | Best For |
-|---|---|---|---|
-| Text Only | $0.02 | ~$0.60 | Budget-conscious, text-based markets |
-| Standard Voice | $0.06 | ~$1.80 | Cost-effective at scale, ~1.5s response time |
-| Premium Voice | $0.25 | ~$7.50 | Sub-400ms latency, natural interruptions, most conversational |
-
-All tiers include full whiteboard support (all 19 visual types), 50+ languages, and session analytics. For your Algerian BAC market, the Standard engine at $0.06/minute is likely the right starting point — a 30-minute tutoring session costs just $1.80, making it accessible at scale. You can offer Premium as an upgrade tier for students preparing for competitive exam streams.
-
-Volume discounts are available:
-
-| Monthly Volume | Discount |
-|---|---|
-| 10,000 - 50,000 minutes | 10% |
-| 50,000 - 200,000 minutes | 20% |
-| 200,000+ minutes | Custom pricing |
+- **$0.10 per tutoring minute** (voice or text) — a 30-minute session costs $3.00
+- **No setup fee, no monthly platform fee, no minimum commitment**
+- Every minute includes the full whiteboard (all 19 visual types), 50+ languages, session analytics and the partner API
+- Minutes are metered per session and billed monthly in arrears; volume pricing is available from 50,000 minutes/month
 
 ---
 
@@ -95,7 +73,7 @@ Your October 2026 launch target is well within reach. Our onboarding is self-ser
 
 ### Next Steps
 
-1. **Sandbox access**: I can provision your sandbox API keys immediately so your team can start exploring the embed, API, and webhook system (sandbox uses the Standard voice engine; Premium is available in production)
+1. **Sandbox access**: I can provision your sandbox API keys immediately so your team can start exploring the embed, API, and webhook system (the sandbox runs the same engine as production, with 300 free minutes)
 2. **Curriculum upload**: Once you have a sample of your target BAC syllabus (even 1-2 subjects), you can upload it via the module API or PDF ingestion endpoint and see it reflected in the tutor immediately
 3. **Questions**: I'm available by email for any technical questions during integration
 

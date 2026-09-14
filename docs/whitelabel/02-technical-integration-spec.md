@@ -77,7 +77,6 @@ https://tutor.evelynlearning.com/embed?token={SESSION_TOKEN}
   "topic": "algebra-2",
   "level": "11-12",
   "session_goal": "test-prep",
-  "engine": "standard",
   "locale": "ar-DZ",
   "branding": {
     "primary_color": "#1E40AF",
@@ -101,7 +100,6 @@ https://tutor.evelynlearning.com/embed?token={SESSION_TOKEN}
 | `level` | string | Yes | Grade level (K-2, 3-5, 6-8, 9-10, 11-12, AP, college) |
 | `session_goal` | string | No | practice, homework-help, concept-review, test-prep, catch-up, challenge |
 | `locale` | string | No | BCP 47 locale code for voice language (default: en-US) |
-| `engine` | string | No | Voice engine tier: "standard" or "premium" (default: "standard") |
 | `input_mode` | string | No | "voice" (default) or "text" |
 | `voice` | string | No | Voice selection (coral, shimmer, alloy, ash, ballad, echo, sage, verse) |
 | `curriculum_module` | string | No | ID of custom knowledge module to load |
@@ -228,47 +226,14 @@ Uploaded modules are processed, indexed, and available for use within 15 minutes
 
 ## 5. Voice Engine
 
-The Voice Tutor offers two voice engine tiers. Both support the full whiteboard (all 19 visual types), 50+ languages, and session analytics. Partners select the engine via the `engine` embed parameter.
+The Voice Tutor ships ONE engine at ONE rate: **$0.10 per tutoring minute** (voice or text), no setup fee, no monthly platform fee, no minimum commitment. Every minute includes the full whiteboard (all visual types), 50+ languages, adaptive pedagogy, per-student learning gaps and the partner API. Minutes are metered per session and billed monthly in arrears; volume pricing is available from 50,000 minutes/month.
 
-### Standard Engine
-
-| Attribute | Specification |
-|-----------|--------------|
-| **Response latency** | ~1.5 seconds between student speech and tutor response |
-| **Architecture** | Turn-by-turn pipeline: speech recognition, AI reasoning (Claude Sonnet 4), speech synthesis |
-| **Speech quality** | Natural speech synthesis with 4 voice options |
-| **Languages supported** | 50+ languages including Arabic, French, English, Spanish, Hindi, Urdu, Turkish, Mandarin, Portuguese, German, and many more |
-| **Code-switching** | Supports different languages for speech vs. whiteboard notation |
-| **Audio format** | High-fidelity PCM audio at 24kHz sample rate |
-| **Best for** | Cost-sensitive deployments, large student populations, structured tutoring |
-| **Price** | $0.06/minute |
-
-### Premium Engine
-
-| Attribute | Specification |
-|-----------|--------------|
-| **Response latency** | Sub-400ms from end of student speech to start of tutor audio |
-| **Architecture** | Single streaming connection handling speech recognition, reasoning, and synthesis simultaneously |
-| **Speech quality** | Natural prosody, emotional expressiveness, 8 voice options |
-| **Turn-taking** | Intelligent voice activity detection; handles mid-sentence interruptions gracefully |
-| **Languages supported** | 50+ languages including Arabic, French, English, Spanish, Hindi, Urdu, Turkish, Mandarin, Portuguese, German, Japanese, Korean, and many more |
-| **Code-switching** | Seamless mid-sentence switching between languages (e.g., Darja speech with French mathematical terms) |
-| **Audio format** | High-fidelity PCM audio at 24kHz sample rate |
-| **Best for** | Premium tutoring experiences, competitive exam prep, conversational fluency |
-| **Price** | $0.25/minute |
-
-### Shared Characteristics
-
-- **Concurrent sessions**: Horizontally scalable — no per-partner concurrency limits
-- **Uptime SLA**: 99.9% availability
-- **Automatic reconnection** on network interruptions
-- **Graceful degradation** to text mode if voice connection is lost
-- **Noise filtering** and echo cancellation
-- **Duplicate response prevention**
-- **Multi-stage content validation** for whiteboard accuracy
-- **Text-only mode**: Available at $0.02/minute with full whiteboard support (no voice)
-
----
+| | Voice Tutor |
+|---|---|
+| **Latency** | <400ms response, natural interruptions |
+| **Price** | $0.10 / minute |
+| **30-minute session** | $3.00 |
+| **Fixed fees** | None |
 
 ## 6. Branding & Customization
 
@@ -401,7 +366,7 @@ Partners receive a sandbox environment for development and testing:
 
 - **Sandbox URL**: `https://tutor-sandbox.evelynlearning.com/embed`
 - **Sandbox API**: `https://api-sandbox.evelynlearning.com/v1`
-- **Voice engine**: Standard engine (Premium available in production)
+- **Voice engine**: same engine as production; 300 free tutoring minutes, 30 min max per session
 - **Rate limits**: 100 sessions/month, 30 minutes/session, 10 concurrent sessions
 - **API keys**: Separate sandbox keys provided on approval
 - **Webhook testing**: Sandbox events sent to your configured endpoint

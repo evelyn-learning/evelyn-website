@@ -40,7 +40,6 @@ const token = jwt.sign({
   student_name: 'Ahmed',
   subject: 'math',
   level: '11-12',
-  engine: 'standard',        // 'standard' or 'premium'
   locale: 'ar-DZ',
   session_goal: 'test-prep',
   branding: {
@@ -57,7 +56,6 @@ token = jwt.encode({
     "student_name": "Ahmed",
     "subject": "math",
     "level": "11-12",
-    "engine": "standard",
     "locale": "ar-DZ",
     "session_goal": "test-prep",
     "branding": {

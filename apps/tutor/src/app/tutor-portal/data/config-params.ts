@@ -14,7 +14,6 @@ export const configParams: ConfigParam[] = [
   { name: 'topic', type: 'string', required: false, description: 'Topic ID from taxonomy or custom curriculum module', example: '"algebra-2"' },
   { name: 'level', type: 'string', required: true, description: 'Grade level (K-2, 3-5, 6-8, 9-10, 11-12, AP, college)', example: '"11-12"' },
   { name: 'session_goal', type: 'string', required: false, description: 'practice, homework-help, concept-review, test-prep, catch-up, challenge', example: '"test-prep"' },
-  { name: 'engine', type: 'string', required: false, description: 'Voice engine tier: "standard" or "premium" (default: "standard")', example: '"standard"' },
   { name: 'locale', type: 'string', required: false, description: 'BCP 47 locale code for voice language (default: en-US)', example: '"ar-DZ"' },
   { name: 'input_mode', type: 'string', required: false, description: '"voice" (default) or "text"', example: '"voice"' },
   { name: 'voice', type: 'string', required: false, description: 'Voice selection (coral, shimmer, alloy, ash, ballad, echo, sage, verse)', example: '"coral"' },

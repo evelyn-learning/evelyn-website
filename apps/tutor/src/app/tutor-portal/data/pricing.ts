@@ -1,76 +1,54 @@
-export interface PricingTier {
-  name: string;
-  costPerMinute: number;
-  description: string;
-}
+/**
+ * Portal pricing — ONE product, ONE per-minute rate (Praveen ruling 2026-09-14).
+ *
+ * The earlier Text / Standard / Premium tiers, the $2,500 setup fee, the
+ * $500/mo platform fee and the "Launch Partner" promo are all retired. Every
+ * partner pays the same usage rate on tutoring minutes actually used, with no
+ * fixed fees, so a first partner can start small. Volume terms are negotiated,
+ * not published.
+ */
 
-export const pricingTiers: PricingTier[] = [
-  {
-    name: 'Text Only',
-    costPerMinute: 0.02,
-    description: 'Text-based chat with full whiteboard support — no voice',
-  },
-  {
-    name: 'Standard Voice',
-    costPerMinute: 0.06,
-    description: 'Turn-by-turn voice tutoring with ~1.5s response time',
-  },
-  {
-    name: 'Premium Voice',
-    costPerMinute: 0.25,
-    description: 'Ultra-low-latency voice with sub-400ms response and natural interruptions',
-  },
-];
-
-export const volumeDiscounts = [
-  { minMinutes: 0, maxMinutes: 9_999, discount: 0, label: 'Up to 10,000 minutes' },
-  { minMinutes: 10_000, maxMinutes: 49_999, discount: 0.1, label: '10,000 - 50,000 minutes' },
-  { minMinutes: 50_000, maxMinutes: 199_999, discount: 0.2, label: '50,000 - 200,000 minutes' },
-  { minMinutes: 200_000, maxMinutes: Infinity, discount: null, label: '200,000+ minutes' },
-];
-
-export const platformFees = {
-  setup: 2_500,
-  monthly: 500,
+export const pricing = {
+  productName: 'Voice Tutor',
+  /** Partner list price, USD per tutoring minute (voice or text, whiteboard included). */
+  perMinuteUsd: 0.1,
+  tagline: 'One product. One rate. No fixed fees.',
+  description:
+    'Voice + interactive-whiteboard AI tutor, embedded in your platform under your brand. ' +
+    'Billed monthly on the minutes your students actually use.',
+  includes: [
+    'Voice and text tutoring with the full interactive whiteboard',
+    'Structured pedagogy engine with adaptive pacing',
+    '50+ spoken languages',
+    'Homework photo upload',
+    'Per-student learning gaps, mastery and topic notes',
+    'Session transcript, progress and summary data through the partner API',
+    'Your branding, your student IDs, your lesson context',
+    'All AI inference, speech recognition and speech synthesis costs',
+  ],
+  billing: [
+    'No setup fee, no monthly platform fee, no minimum commitment',
+    'Minutes are metered per session and billed monthly in arrears',
+    'Volume pricing available for 50,000+ minutes per month — contact us',
+  ],
 };
 
-export const launchPromo = {
-  name: 'Launch Partner Program',
-  setupDiscount: 0.5,       // 50% off setup
-  monthlyDiscount: 0.5,     // 50% off monthly platform fee
-  monthlyDiscountMonths: 12, // for 12 months
-  setupPrice: 1_250,        // $2,500 * 0.5
-  monthlyPrice: 250,        // $500 * 0.5
-};
-
+/** What a free sandbox comes with. Same engine as production. */
 export const sandboxLimits = {
-  engine: 'standard' as const,
-  maxSessionsPerMonth: 100,
+  freeMinutes: 300,
   maxSessionDurationMinutes: 30,
-  maxConcurrentSessions: 10,
-  maxModuleUploads: 5,
-  homeworkUploadEnabled: false,
-  webhookTestingEnabled: true,
-  estimatedMonthlyCostUsd: 45,
+  maxConcurrentSessions: 5,
 };
 
-export function calculateMonthlyCost(
+/** A 30-minute session at list price — used wherever we quote "per session". */
+export const perSessionUsd = (minutes: number) => minutes * pricing.perMinuteUsd;
+
+export function estimateMonthlyCost(
   studentsPerMonth: number,
   sessionsPerStudent: number,
   avgSessionMinutes: number,
-  tier: PricingTier,
-  usePromo = false
-): { totalMinutes: number; grossCost: number; discount: number; netCost: number; platformFee: number } {
+): { totalMinutes: number; cost: number; perStudent: number } {
   const totalMinutes = studentsPerMonth * sessionsPerStudent * avgSessionMinutes;
-  const grossCost = totalMinutes * tier.costPerMinute;
-
-  const bracket = volumeDiscounts.find(
-    (d) => totalMinutes >= d.minMinutes && totalMinutes <= d.maxMinutes
-  );
-  const discountRate = bracket?.discount ?? 0;
-  const discount = grossCost * discountRate;
-  const netCost = grossCost - discount;
-  const platformFee = usePromo ? launchPromo.monthlyPrice : platformFees.monthly;
-
-  return { totalMinutes, grossCost, discount, netCost, platformFee };
+  const cost = totalMinutes * pricing.perMinuteUsd;
+  return { totalMinutes, cost, perStudent: studentsPerMonth > 0 ? cost / studentsPerMonth : 0 };
 }

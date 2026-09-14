@@ -63,7 +63,6 @@ const token = jwt.sign(
     student_id: 'stu_abc123',
     subject: 'math',
     level: '11-12',
-    engine: 'standard',
     exp: Math.floor(Date.now() / 1000) + 7200 // 2 hours
   },
   process.env.EVELYN_API_SECRET,
@@ -78,7 +77,6 @@ token = jwt.encode(
         "student_id": "stu_abc123",
         "subject": "math",
         "level": "11-12",
-        "engine": "standard",
         "exp": int(time.time()) + 7200
     },
     os.environ["EVELYN_API_SECRET"],
@@ -92,7 +90,6 @@ $token = JWT::encode([
     'student_id' => 'stu_abc123',
     'subject' => 'math',
     'level' => '11-12',
-    'engine' => 'standard',
     'exp' => time() + 7200
 ], $_ENV['EVELYN_API_SECRET'], 'HS256');`}</CodeBlock>
 
