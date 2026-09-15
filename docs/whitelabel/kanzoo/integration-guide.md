@@ -1,7 +1,7 @@
 # Voice Tutor — Partner Integration Guide
 
 **Prepared for:** Kanzoo Global Private Limited / DUC Academy
-**Version:** 1.0 · 15 September 2026 · portal contract v1.16.0
+**Version:** 1.1 · 16 September 2026 · portal contract v1.16.0
 **Support:** info@evelynlearning.com (technical questions welcome by email; WhatsApp for urgent items)
 
 This document describes the integration surface exactly as it runs in production today. Where a capability is planned but not yet live, it says so explicitly (§10).
