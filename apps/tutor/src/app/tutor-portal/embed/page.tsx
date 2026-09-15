@@ -501,6 +501,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // instead of the OpenAI Realtime fallback. An explicit openai persona voice
   // is still honored. Flag TUTOR_EMBED_CARTESIA_DEFAULT ('off' = old behavior).
   const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice;
+  if (useCartesiaDefault && typeof window !== 'undefined') {
+    // Served-artifact marker for this behavior (Rule 4) + a breadcrumb when a
+    // partner token arrives without a persona.
+    console.info('[embed] tts-default-cartesia: no teacher persona in token');
+  }
   const ttsProvider: 'realtime' | 'cartesia' = useCartesiaVoice || useCartesiaDefault ? 'cartesia' : 'realtime';
   const cartesiaVoiceId = useCartesiaVoice
     ? teacherVoice.voiceId
