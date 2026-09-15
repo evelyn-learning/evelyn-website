@@ -39,7 +39,7 @@ DUC student browser                      Evelyn engine (hosted)
 1. Student opens a lesson/assignment in DUC. Your backend mints a signed embed token carrying the student and lesson context.
 2. Your page loads the iframe with that token. The tutor runs the session (voice, whiteboard, Socratic practice).
 3. The iframe posts `evelyn:session_started`, `evelyn:progress` (per lesson segment) and `evelyn:session_ended` to the parent window.
-4. On `session_ended`, your backend pulls structured results: `GET /sessions/summary`, `GET /gaps`, `GET /mastery`, `GET /learner-state`, `GET /assigned-practice`.
+4. On `session_ended`, your backend pulls structured results: `GET /sessions/summary`, `GET /gaps`, `GET /mastery`, `GET /learner-state`, `POST /assigned-practice`.
 5. Optionally, before the next session, `POST /context` gives the tutor continuity (name, grade, preferences, what happened last time).
 
 The engine stores session facts (transcript, board, active minutes) keyed to your `partner_id` and your own `student_id`. Student ids are scoped to your partner, so you can use your internal ids as-is.
@@ -173,12 +173,12 @@ Base: `https://www.evelynlearning.com/api/portal/v1`. All partner-scoped: you on
 
 | Method · path | Request | Response |
 |---|---|---|
-| `GET /sessions/summary?ids=a,b,c` | up to 50 session ids | `{ sessions: [{ sessionId, status: active\|completed\|abandoned, startedAt, endedAt?, durationSec?, studentTurns, tutorTurns, boardItems, estimatedCostUsd, location? }] }` — **`durationSec` is active tutoring seconds** (gaps between turns, each capped at 10 min). This is the number we bill on. `estimatedCostUsd` is an internal engine estimate and is not the invoice; ignore it. |
+| `GET /sessions/summary?ids=a,b,c` | up to 50 session ids | `{ sessions: [{ sessionId, status: active\|completed\|abandoned, startedAt, endedAt?, durationSec?, studentTurns, tutorTurns, boardItems, location? }] }` — **`durationSec` is active tutoring seconds** (gaps between turns, each capped at 10 min). This is the number we bill on. |
 | `GET /session-progress?sessionId=` | | `{ lessonProgress \| null, resumable, updatedAt }` |
 | `GET /gaps?studentId=` | | `[{ id, kind: lo\|prerequisite, loId?, conceptLabel?, status: candidate\|confirmed\|resolved\|open, confidence?, evidence?: { signals[], observation, studentQuotes[] }, firstSeenAt, lastSeenAt }]` |
 | `GET /mastery?studentId=` | | `{ [loId]: { loId, score, exposures, lastTouchedAt, confidence? } }` |
 | `GET or POST /learner-state` | `{ studentId, loIds?, courseTopic? }` | `{ los: [{ loId, estimate 0–1\|null, confidence, trend up\|flat\|down, nEff, reviewDueAt?, lastEvidenceAt? }], gaps[], projection?, reviewDueCount }` |
-| `GET /assigned-practice?studentId=&courseId?` | | `{ assignments: [{ assignmentId, sessionId, assignedAt, locator?, los: [{ loId, title?, reason, items[], status: { attempted, correct, total } }] }] }` — homework the tutor set at the end of a session, with answer keys so you can grade locally. |
+| `POST /assigned-practice` | `{ studentId, courseId?, includeAcknowledged? }` | `{ assignments: [{ assignmentId, sessionId, assignedAt, locator?, los: [{ loId, title?, reason, items[], status: { attempted, correct, total } }] }] }` — homework the tutor set at the end of a session, with answer keys so you can grade locally. |
 
 ### 8.2 Context in (optional, before a session)
 
