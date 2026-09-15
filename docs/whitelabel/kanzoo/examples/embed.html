@@ -1,0 +1,60 @@
+<!doctype html>
+<!--
+  embed.html — minimal host page for the Voice Tutor iframe.
+  Your backend mints the token (sign-embed-token.js) and injects it into the
+  iframe src. The page below listens for the tutor's postMessage events and
+  forwards session_ended to your backend.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DUC Academy — AI Tutor</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0b1020; font-family: system-ui, sans-serif; }
+    #tutor { width: 100%; height: 100vh; border: 0; display: block; }
+  </style>
+</head>
+<body>
+  <iframe
+    id="tutor"
+    src="https://tutor.evelynlearning.com/embed?token=PASTE_SIGNED_TOKEN_HERE"
+    allow="microphone; camera; autoplay; clipboard-write"
+    allowfullscreen
+  ></iframe>
+
+  <script>
+    const TUTOR_ORIGIN = 'https://tutor.evelynlearning.com';
+
+    window.addEventListener('message', (event) => {
+      if (event.origin !== TUTOR_ORIGIN) return;              // only trust the tutor frame
+      const msg = event.data;
+      if (!msg || typeof msg.type !== 'string' || !msg.type.startsWith('evelyn:')) return;
+
+      switch (msg.type) {
+        case 'evelyn:session_started':
+          // { session_id, started_at_ms? }
+          console.log('session started', msg.data);
+          break;
+        case 'evelyn:progress':
+          // { session_id, lesson_progress: { percent, currentSegmentLabel, segments[], ... }, practice? }
+          console.log('progress', msg.data.lesson_progress && msg.data.lesson_progress.percent);
+          break;
+        case 'evelyn:session_ended':
+          // { session_id, duration (seconds), message_count, whiteboard_items, milestone,
+          //   lesson_progress?, ended_reason?: 'time_limit', end_intent?: 'finish'|'discard', ... }
+          fetch('/api/tutor-session-ended', {            // YOUR endpoint
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(msg.data),
+          });
+          break;
+        case 'evelyn:expand':
+        case 'evelyn:collapse':
+          // optional: resize the host container when the tutor asks for more/less room
+          break;
+      }
+    });
+  </script>
+</body>
+</html>
