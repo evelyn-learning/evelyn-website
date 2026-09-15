@@ -1,7 +1,7 @@
 # Voice Tutor — Partner Integration Guide
 
 **Prepared for:** Kanzoo Global Private Limited / DUC Academy
-**Version:** 1.1 · 16 September 2026 · portal contract v1.16.0
+**Version:** 1.1 · 16 September 2026 · portal contract v1.17.0
 **Support:** info@evelynlearning.com (technical questions welcome by email; WhatsApp for urgent items)
 
 This document describes the integration surface exactly as it runs in production today. Where a capability is planned but not yet live, it says so explicitly (§10).
@@ -82,7 +82,7 @@ A JWT, `alg: HS256`, signed with your partner secret. The payload IS the session
 | `subject` | ✓ | string | `math`, `science`, `ela`, `social-studies` (also `cs`, `languages`). |
 | `level` | ✓ | string | Grade label, e.g. `"Grade 6"`. |
 | `student_name` | | string | First name; the tutor uses it in conversation. |
-| `teacher` | ✓* | object | The tutor's persona and **voice**. Copy an entry from `examples/teachers.json` verbatim (see §5.1). *Without it the engine falls back to a generic synthetic voice, so always send one. |
+| `teacher` | ✓* | object | The tutor's persona and **voice**. Copy an entry from `examples/teachers.json` verbatim (see §5.1). *Without it the engine uses its default persona voice; send one so each course has a consistent teacher. |
 | `target_kind` | | enum | `lessonNode` when `curriculum_module` is set, otherwise `freestyle`. |
 | `topic` | | string | Free text, e.g. `"Ratios and unit rates"`. If no `curriculum_module`, the tutor builds a just-in-time lesson on this topic. |
 | `curriculum_module` | | string | A lesson plan id: one returned by `POST /plan-generate` (your material) or one of ours. Locks the session to that plan. |
@@ -243,7 +243,7 @@ Put the returned `planId` in the embed token as `curriculum_module` and the tuto
 - **Partner dashboard** with self-service metering, invoices and secret rotation. Until then: usage on request, rotation by messaging us.
 - **Branding parameters** (logo, colours) in the token. The embed is already unbranded (no Evelyn name in the student UI); custom colours/logo on request.
 - **Non-English voices.** English is production-proven, including Indian-English personas (§5.1). Hindi-language tutoring can be enabled per partner; validate in the sandbox before committing.
-- Older pages under `tutor.evelynlearning.com/docs` describe a REST API with `X-API-Key` and 34 endpoints. Those pages are being replaced. **This document is the contract.**
+- The developer site at `tutor.evelynlearning.com/docs` now matches this document; either is safe to build from.
 
 ## 11. Go-live checklist
 
