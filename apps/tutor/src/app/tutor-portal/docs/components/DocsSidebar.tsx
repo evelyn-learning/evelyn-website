@@ -8,8 +8,8 @@ const sections = [
   { href: '/docs/quickstart', label: 'Getting Started' },
   { href: '/docs/embed', label: 'Embed Configuration' },
   { href: '/docs/api', label: 'API Reference' },
-  { href: '/docs/webhooks', label: 'Webhooks' },
-  { href: '/docs/modules', label: 'Curriculum Modules' },
+  { href: '/docs/webhooks', label: 'Events' },
+  { href: '/docs/modules', label: 'Your Curriculum' },
   { href: '/docs/authentication', label: 'Authentication' },
   { href: '/docs/whiteboard', label: 'Whiteboard Types' },
 ];

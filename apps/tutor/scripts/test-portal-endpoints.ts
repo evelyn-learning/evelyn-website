@@ -34,7 +34,7 @@ import { POST as gradePOST } from '@/app/api/portal/v1/grade/route';
 import { POST as sessionPOST } from '@/app/api/portal/v1/session-result/route';
 import { GET as sessionProgressGET } from '@/app/api/portal/v1/session-progress/route';
 import { GET as sessionsSummaryGET } from '@/app/api/portal/v1/sessions/summary/route';
-import { parseSummaryIds, summarizeTutorSession, activeSeconds } from '@/lib/tutor/portal/session-summary';
+import { parseSummaryIds, summarizeTutorSession, activeSeconds, isCostVisiblePartner } from '@/lib/tutor/portal/session-summary';
 import { SessionSummarySchema } from '@evelyn/portal-contract/v1';
 import { POST as reviewPlanPOST } from '@/app/api/portal/v1/review-plan/route';
 import { POST as assignedPracticePOST } from '@/app/api/portal/v1/assigned-practice/route';
@@ -265,6 +265,17 @@ const ctxBody = (studentId: string) => ({
     assert.strictEqual(sparse.boardItems, 2);
     assert.strictEqual(sparse.estimatedCostUsd, 0);
     assert.ok(!('endedAt' in sparse) && !('durationSec' in sparse) && !('location' in sparse));
+    // v1.17.0: third-party partners never receive the internal cost estimate.
+    const hidden = summarizeTutorSession({ sessionId: 'portal-c', status: 'completed', startedAt: '2026-09-15T06:50:00.000Z', estimatedCost: 1.99 }, { includeCost: false });
+    assert.ok(!('estimatedCostUsd' in hidden));
+    assert.ok(SessionSummarySchema.safeParse(hidden).success);
+    assert.strictEqual(summarizeTutorSession({ sessionId: 'portal-d', status: 'completed', startedAt: '2026-09-15T06:50:00.000Z', estimatedCost: 1.99 }).estimatedCostUsd, 1.99);
+    // Partner allowlist: first-party tenants by default, env override, negative control.
+    assert.strictEqual(isCostVisiblePartner('crimsora', {}), true);
+    assert.strictEqual(isCostVisiblePartner('evelyntutor', {}), true);
+    assert.strictEqual(isCostVisiblePartner('kanzoo', {}), false);
+    assert.strictEqual(isCostVisiblePartner('kanzoo', { PORTAL_SESSION_COST_PARTNERS: 'kanzoo, crimsora' }), true);
+    assert.strictEqual(isCostVisiblePartner('crimsora', { PORTAL_SESSION_COST_PARTNERS: 'kanzoo' }), false);
   });
 
   console.log('\nReview-plan (auth + validation only — 200 path composes via an LLM-backed expander):\n');

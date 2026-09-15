@@ -15,7 +15,7 @@ import { withPortalAuth } from '@/lib/tutor/portal/auth';
 import { connectDB } from '@core/db';
 import { TutorSession, type ITutorSession } from '@/models/TutorSession';
 import { SessionSummaryReadSchema, SESSION_SUMMARY_MAX_IDS } from '@evelyn/portal-contract/v1';
-import { parseSummaryIds, summarizeTutorSession } from '@/lib/tutor/portal/session-summary';
+import { parseSummaryIds, summarizeTutorSession, isCostVisiblePartner } from '@/lib/tutor/portal/session-summary';
 
 export const GET = withPortalAuth(async (req, auth) => {
   const ids = parseSummaryIds(new URL(req.url).searchParams.get('ids'));
@@ -42,6 +42,9 @@ export const GET = withPortalAuth(async (req, auth) => {
     })
     .lean<Pick<ITutorSession, 'sessionId' | 'status' | 'startedAt' | 'endedAt' | 'duration' | 'transcript' | 'whiteboardItemCount' | 'estimatedCost' | 'location'>[]>();
 
-  const body = SessionSummaryReadSchema.parse({ sessions: docs.map((d) => summarizeTutorSession(d)) });
+  // `estimatedCostUsd` is the engine's INTERNAL cost estimate — first-party
+  // tenants only (contract v1.17.0 made it optional for this).
+  const includeCost = isCostVisiblePartner(auth.partnerId);
+  const body = SessionSummaryReadSchema.parse({ sessions: docs.map((d) => summarizeTutorSession(d, { includeCost })) });
   return NextResponse.json(body);
 });

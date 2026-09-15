@@ -69,8 +69,8 @@ function HowItWorks() {
     {
       step: '1',
       title: 'Generate a Session Token',
-      description: 'Your backend creates a signed JWT with the student\'s subject, level, and your branding.',
-      code: '{ "student_id": "stu_123", "subject": "math", "level": "11-12" }',
+      description: 'Your backend signs a JWT with the student, the lesson and the teacher persona. One secret, HS256.',
+      code: '{ "partner_id": "your-id", "student_id": "stu_123", "subject": "math", "level": "Grade 6", "teacher": { ... } }',
     },
     {
       step: '2',
@@ -80,9 +80,9 @@ function HowItWorks() {
     },
     {
       step: '3',
-      title: 'Receive Webhooks',
-      description: 'We send session data, transcripts, and usage metrics to your endpoint in real-time.',
-      code: '{ "event": "session.ended", "data": { "duration": 1847, "cost": 1.23 } }',
+      title: 'Get the Results',
+      description: 'The iframe posts session events to your page; your backend pulls minutes, mastery and gaps from the signed API.',
+      code: '{ "type": "evelyn:session_ended", "data": { "session_id": "…", "duration": 1847, "milestone": "recap_reached" } }',
     },
   ];
 
@@ -91,7 +91,7 @@ function HowItWorks() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 text-center">
           <h2 className="text-3xl font-bold text-slate-900">Integrate in Three Steps</h2>
-          <p className="mt-3 text-slate-600">From API keys to live tutoring in your platform.</p>
+          <p className="mt-3 text-slate-600">From partner credentials to live tutoring in your platform.</p>
         </div>
         <div className="grid gap-8 lg:grid-cols-3">
           {steps.map((step) => (

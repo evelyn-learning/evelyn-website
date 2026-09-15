@@ -55,7 +55,34 @@ export function activeSeconds(transcript: Array<{ timestamp?: Date | string | nu
   return Math.round(total);
 }
 
-export function summarizeTutorSession(s: SummarizableSession): SessionSummary {
+/** Partners that may read `estimatedCostUsd` (the engine's INTERNAL model +
+ *  voice cost estimate). First-party tenants only — a third-party partner
+ *  billed per minute could derive our margin from it. Override with a
+ *  comma-separated `PORTAL_SESSION_COST_PARTNERS`. Contract v1.17.0 made the
+ *  field optional for exactly this. */
+export const DEFAULT_COST_VISIBLE_PARTNERS = ['academy', 'crimsora', 'evelyntutor', 'evelyn-marketing'];
+
+export function isCostVisiblePartner(
+  partnerId: string,
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const raw = env.PORTAL_SESSION_COST_PARTNERS;
+  const list = raw && raw.trim()
+    ? raw.split(',').map((s) => s.trim()).filter(Boolean)
+    : DEFAULT_COST_VISIBLE_PARTNERS;
+  return list.includes(partnerId);
+}
+
+export interface SummarizeOptions {
+  /** Include `estimatedCostUsd`. Default true (first-party callers/tests). */
+  includeCost?: boolean;
+}
+
+export function summarizeTutorSession(
+  s: SummarizableSession,
+  opts: SummarizeOptions = {},
+): SessionSummary {
+  const includeCost = opts.includeCost !== false;
   const transcript = s.transcript ?? [];
   const studentTurns = transcript.filter((m) => m.role === 'student').length;
   const tutorTurns = transcript.filter((m) => m.role === 'tutor').length;
@@ -87,7 +114,8 @@ export function summarizeTutorSession(s: SummarizableSession): SessionSummary {
     studentTurns,
     tutorTurns,
     boardItems,
-    estimatedCostUsd: Math.max(0, s.estimatedCost ?? 0),
+    // Internal cost estimate: first-party tenants only (v1.17.0 optional).
+    ...(includeCost ? { estimatedCostUsd: Math.max(0, s.estimatedCost ?? 0) } : {}),
     ...(location ? { location } : {}),
   };
 }

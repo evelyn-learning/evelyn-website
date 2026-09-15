@@ -88,11 +88,12 @@ export default function WhiteboardPage() {
         whiteboard rendering — it is handled entirely within the embed.
       </p>
       <p className="text-sm text-slate-600">
-        If you need whiteboard data for analytics (e.g., which visual types are most used), the{' '}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">whiteboard.generated</code>{' '}
-        webhook event fires each time a visual is created, and the full whiteboard history is
-        available via{' '}
-        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /sessions/:id/whiteboard</code>.
+        For analytics, the{' '}
+        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">evelyn:session_ended</code>{' '}
+        browser event carries <code className="text-xs">whiteboard_items</code>, and{' '}
+        <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs">GET /sessions/summary</code>{' '}
+        returns <code className="text-xs">boardItems</code> per session. See{' '}
+        <a href="/docs/webhooks" className="text-blue-600 underline">Events</a>.
       </p>
     </div>
   );

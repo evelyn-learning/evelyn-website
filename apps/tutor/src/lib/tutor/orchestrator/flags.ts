@@ -50,6 +50,14 @@ export const TUTOR_SKIP_DETERMINISTIC =
 // project_tutor_render_speech_sync.
 export const TUTOR_RENDER_SYNC =
   process.env.NEXT_PUBLIC_TUTOR_RENDER_SYNC !== 'off';
+// Partner embed voice default (2026-09-15, Kanzoo sandbox finding): a token
+// with NO teacher persona used to fall back to the OpenAI Realtime voice, so
+// a partner that simply omitted `teacher` got a different (synthetic) voice
+// from every first-party surface. Default ON: such tokens now speak with
+// Cartesia + CARTESIA_DEFAULT_VOICE_ID. A persona that explicitly declares an
+// openai voice still gets it. 'off' restores the pre-2026-09-15 fallback.
+export const TUTOR_EMBED_CARTESIA_DEFAULT =
+  process.env.NEXT_PUBLIC_TUTOR_EMBED_CARTESIA_DEFAULT !== 'off';
 // Student whiteboard marks (Phase 1, 2026-07-05): tap-to-point. Default
 // OFF — new student-facing input surface. See student-marks design spec.
 export const TUTOR_STUDENT_MARKS =

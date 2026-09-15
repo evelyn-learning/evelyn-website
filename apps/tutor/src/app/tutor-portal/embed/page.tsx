@@ -27,10 +27,10 @@ import { resolveResumeOutcome } from '@/lib/tutor/portal/resume';
 import { acceptWhiteboardBatch, createSeedGuard } from '@/lib/tutor/whiteboard/resume-seed';
 import { parseEmbedConfig } from '@/lib/tutor/portal/parse-embed-config';
 import { isPedagogyOpenerFlagValue } from '@/lib/tutor/ai/opening-behavior';
-import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC } from '@/lib/tutor/orchestrator/flags';
+import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA_DEFAULT } from '@/lib/tutor/orchestrator/flags';
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
-import { cartesiaSpeedForVoiceId } from '@core/voice/cartesia-voice-registry';
+import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -495,8 +495,18 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // that prior behavior exactly — backward-compatible for existing partners.
   const teacherVoice = config.teacher?.voice;
   const useCartesiaVoice = teacherVoice?.provider === 'cartesia' && !!teacherVoice.voiceId;
-  const ttsProvider: 'realtime' | 'cartesia' = useCartesiaVoice ? 'cartesia' : 'realtime';
-  const cartesiaVoiceId = useCartesiaVoice ? teacherVoice.voiceId : undefined;
+  // 2026-09-15 (Kanzoo sandbox): a token with NO teacher voice at all now
+  // defaults to Cartesia with the registry's default voice, so a partner that
+  // omits `teacher` hears the same natural voice as every first-party surface
+  // instead of the OpenAI Realtime fallback. An explicit openai persona voice
+  // is still honored. Flag TUTOR_EMBED_CARTESIA_DEFAULT ('off' = old behavior).
+  const useCartesiaDefault = TUTOR_EMBED_CARTESIA_DEFAULT && !teacherVoice;
+  const ttsProvider: 'realtime' | 'cartesia' = useCartesiaVoice || useCartesiaDefault ? 'cartesia' : 'realtime';
+  const cartesiaVoiceId = useCartesiaVoice
+    ? teacherVoice.voiceId
+    : useCartesiaDefault
+      ? CARTESIA_DEFAULT_VOICE_ID
+      : undefined;
   // R38 Task 6 fix round: the embed supplies a raw voiceId (not a
   // teacherId), so resolveCartesiaVoice()'s teacher-keyed lookup never runs
   // here — cartesiaSpeedForVoiceId scans by id instead. Elena/Katie is the
