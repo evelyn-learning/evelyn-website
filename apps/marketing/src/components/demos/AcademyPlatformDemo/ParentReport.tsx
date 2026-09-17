@@ -1,21 +1,22 @@
 'use client';
 
 import { Mail } from 'lucide-react';
+import { DEMO_BRAND } from './brand';
 import { COURSE, PARENT_REPORT } from './data';
 
-export default function ParentReport({ brandName }: { brandName: string }) {
+export default function ParentReport() {
   const r = PARENT_REPORT;
   return (
     <div className="max-w-xl mx-auto">
       <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
         <Mail className="w-4 h-4" />
         <span className="truncate">
-          reports@{brandName.toLowerCase().replace(/[^a-z0-9]+/g, '') || 'academy'}.com → {r.to}
+          reports@{DEMO_BRAND.domain} → {r.to}
         </span>
       </div>
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-5 py-4" style={{ background: 'var(--ab-primary)', color: 'var(--ab-primary-fg)' }}>
-          <p className="text-xs opacity-80">{brandName} · Weekly progress</p>
+          <p className="text-xs opacity-80">{DEMO_BRAND.name} · Weekly progress</p>
           <p className="text-lg font-bold">
             {COURSE.learner}&apos;s week in {COURSE.title}
           </p>

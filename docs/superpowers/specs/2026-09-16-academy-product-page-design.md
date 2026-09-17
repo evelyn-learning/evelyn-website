@@ -69,6 +69,8 @@ Location: `apps/marketing/src/components/demos/AcademyPlatformDemo/` (folder, be
 | `ParentReport.tsx` | Weekly progress email preview (minutes, days active, lessons, "you nailed", stuck vs resolved gaps, teacher's note). |
 | `AdminRoster.tsx` | Students table: funnel-stage pill, sessions/hours, last seen, access; one row expands to a session list with "replay" chips. |
 
+> **Revision 2026-09-17 (Praveen, after seeing it live):** the brand switcher is REMOVED. The demo is a single neutral brand — header "Your Brand", URL `https://yourbrand.com/…`, `reports@yourbrand.com` — so the visitor reads it as their own academy. `brand.ts` is now one `DEMO_BRAND` + `BRAND_STYLE` token set (components still theme through the `--ab-*` CSS variables); the `academy_demo_brand_change` event is gone. The brand-switcher bullets below are historical.
+
 Behaviour:
 - **Brand switcher** — presets + "Your brand": institution-name input (≤ 40 chars, rendered as text only) and a colour input. Re-themes the whole frame instantly. This is the white-label moment and the first thing the visitor is nudged to try.
 - **Role switcher** — Student / Parent / Admin.

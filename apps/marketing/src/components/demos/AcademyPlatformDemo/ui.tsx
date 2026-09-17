@@ -9,7 +9,7 @@ import type { Mastery } from './data';
  * without touching core (core is bundled into the tutor app too).
  */
 export function trackAcademyDemo(
-  name: 'academy_demo_brand_change' | 'academy_demo_role_change' | 'academy_demo_tab_view' | 'academy_demo_live_lesson_open',
+  name: 'academy_demo_role_change' | 'academy_demo_tab_view' | 'academy_demo_live_lesson_open',
   params?: Record<string, string>,
 ): void {
   if (typeof window === 'undefined') return;

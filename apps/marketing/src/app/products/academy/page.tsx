@@ -166,7 +166,7 @@ function DemoSection() {
           </span>
           <h2 className="text-3xl font-bold text-slate-900 mb-2">Step Inside the Academy</h2>
           <p className="text-slate-600 max-w-2xl mx-auto">
-            Put your institution&apos;s name and colour on it, then look around as a student, a parent and an admin. Click{' '}
+            This is your academy, under your brand. Look around as a student, a parent and an admin — then click{' '}
             <span className="font-medium text-slate-900">Study</span> on any lesson to talk to the real tutor.
           </p>
         </div>

@@ -2,25 +2,17 @@
 
 /**
  * Interactive demo for /products/academy#demo — a simulated Evelyn Academy
- * course workspace (sample data, no backend, no login) with a live brand
- * switcher and a role switcher. The one real thing inside it is the tutor:
- * "Study" mounts the existing gated VoiceTutorLiveDemo, so this adds no new
- * engine surface and no new cost exposure.
+ * course workspace (sample data, no backend, no login), framed as the
+ * visitor's own academy at yourbrand.com, with a role switcher. The one real
+ * thing inside it is the tutor: "Study" mounts the existing gated
+ * VoiceTutorLiveDemo, so this adds no new engine surface and no new cost
+ * exposure.
  */
 
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { ArrowLeft, GraduationCap, Palette, Radio, ShieldCheck, Users } from 'lucide-react';
-import {
-  BRAND_PRESETS,
-  CUSTOM_BRAND_ID,
-  DEFAULT_CUSTOM_BRAND,
-  MAX_BRAND_NAME,
-  brandInitials,
-  brandStyle,
-  isHexColor,
-  type DemoBrand,
-} from './brand';
+import { ArrowLeft, GraduationCap, Radio, ShieldCheck, Users } from 'lucide-react';
+import { BRAND_STYLE, DEMO_BRAND } from './brand';
 import { COURSE, UNITS } from './data';
 import { trackAcademyDemo } from './ui';
 import Overview from './student/Overview';
@@ -67,27 +59,10 @@ function lessonTitle(lessonId: string | null): string {
 }
 
 export default function AcademyPlatformDemo() {
-  const [brand, setBrand] = useState<DemoBrand>(BRAND_PRESETS[0]!);
-  const [custom, setCustom] = useState<DemoBrand>(DEFAULT_CUSTOM_BRAND);
   const [role, setRole] = useState<Role>('student');
   const [tab, setTab] = useState<StudentTab>('overview');
   // undefined = no live pane; null = opened from "Review with your tutor".
   const [liveLesson, setLiveLesson] = useState<string | null | undefined>(undefined);
-
-  const isCustom = brand.id === CUSTOM_BRAND_ID;
-  const displayName = brand.name.trim() || DEFAULT_CUSTOM_BRAND.name;
-  const domain = `${displayName.toLowerCase().replace(/[^a-z0-9]+/g, '') || 'academy'}.com`;
-
-  const pickPreset = (next: DemoBrand) => {
-    setBrand(next);
-    trackAcademyDemo('academy_demo_brand_change', { brand: next.id });
-  };
-
-  const updateCustom = (patch: Partial<DemoBrand>) => {
-    const next = { ...custom, ...patch };
-    setCustom(next);
-    setBrand(next);
-  };
 
   const openLive = (lessonId: string | null) => {
     setLiveLesson(lessonId);
@@ -96,79 +71,15 @@ export default function AcademyPlatformDemo() {
 
   return (
     <div>
-      {/* Brand switcher — sits OUTSIDE the frame: it is the visitor's control, not part of the product. */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 mb-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Palette className="w-4 h-4 text-slate-500" />
-          <p className="text-sm font-semibold text-slate-900">Make it yours — switch the brand</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {BRAND_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              aria-pressed={brand.id === preset.id}
-              onClick={() => pickPreset(preset)}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${
-                brand.id === preset.id ? 'border-slate-900 bg-slate-50 font-semibold' : 'border-slate-200 hover:border-slate-300'
-              }`}
-            >
-              <span className="w-3 h-3 rounded-full" style={{ background: preset.primary }} />
-              {preset.name}
-            </button>
-          ))}
-          <button
-            type="button"
-            aria-pressed={isCustom}
-            onClick={() => {
-              setBrand(custom);
-              trackAcademyDemo('academy_demo_brand_change', { brand: CUSTOM_BRAND_ID });
-            }}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-sm transition ${
-              isCustom ? 'border-slate-900 bg-slate-50 font-semibold' : 'border-dashed border-slate-300 hover:border-slate-400'
-            }`}
-          >
-            <span className="w-3 h-3 rounded-full" style={{ background: custom.primary }} />
-            Your brand
-          </button>
-        </div>
-
-        {isCustom && (
-          <div className="flex flex-wrap items-end gap-3 mt-3">
-            <label className="flex-1 min-w-[200px]">
-              <span className="block text-xs font-medium text-slate-500 mb-1">Institution name</span>
-              <input
-                type="text"
-                value={custom.name}
-                maxLength={MAX_BRAND_NAME}
-                onChange={(e) => updateCustom({ name: e.target.value })}
-                placeholder="e.g. Northfield Business School"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
-              />
-            </label>
-            <label>
-              <span className="block text-xs font-medium text-slate-500 mb-1">Brand colour</span>
-              <input
-                type="color"
-                value={custom.primary}
-                onChange={(e) => isHexColor(e.target.value) && updateCustom({ primary: e.target.value })}
-                className="h-[38px] w-16 rounded-lg border border-slate-200 bg-white p-1 cursor-pointer"
-                aria-label="Brand colour"
-              />
-            </label>
-          </div>
-        )}
-      </div>
-
       {/* The product frame */}
-      <div style={brandStyle(brand)} className="rounded-2xl border border-slate-200 shadow-xl overflow-hidden bg-slate-50">
+      <div style={BRAND_STYLE} className="rounded-2xl border border-slate-200 shadow-xl overflow-hidden bg-slate-50">
         {/* Browser chrome */}
         <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-200/70 border-b border-slate-200">
           <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
           <span className="w-2.5 h-2.5 rounded-full bg-amber-400" />
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
           <span className="ml-2 flex-1 min-w-0 truncate text-xs text-slate-500 bg-white rounded-md px-3 py-1">
-            https://{domain}/app/courses/business-communication
+            https://{DEMO_BRAND.domain}/app/courses/business-communication
           </span>
         </div>
 
@@ -179,9 +90,9 @@ export default function AcademyPlatformDemo() {
         >
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-xs font-bold shrink-0">
-              {brandInitials(displayName)}
+              {DEMO_BRAND.initials}
             </span>
-            <span className="font-bold truncate">{displayName}</span>
+            <span className="font-bold truncate">{DEMO_BRAND.name}</span>
           </div>
           <div className="inline-flex rounded-lg bg-black/15 p-0.5" role="tablist" aria-label="View as">
             {ROLES.map(({ id, label, icon: Icon }) => (
@@ -277,7 +188,7 @@ export default function AcademyPlatformDemo() {
             </>
           )}
 
-          {role === 'parent' && <ParentReport brandName={displayName} />}
+          {role === 'parent' && <ParentReport />}
           {role === 'admin' && <AdminRoster />}
         </div>
       </div>
