@@ -17,14 +17,15 @@
     },
     {
       "file": "<work-dir>/session/lesson-voiced.mkv",
-      "start": 74.0,
-      "dur": 13.0,
+      "start": 73.9,
+      "dur": 16.2,
       "speed": 1,
       "useAudio": true,
-      "audioDur": 12.4,
-      "audioGain": 0.75,
+      "audioDur": 14.5,
+      "audioGain": 0.8,
       "label": "Live lesson",
-      "labelImage": "<work-dir>/labels/label-1.png"
+      "labelImage": "<work-dir>/labels/label-1.png",
+      "audioLead": -1.0
     },
     {
       "file": "<work-dir>/ui/practice.webm",
@@ -106,31 +107,31 @@
     },
     {
       "file": "<work-dir>/vo/fast/a3-handoff.mp3",
-      "at": 9.3
+      "at": 9.2
     },
     {
       "file": "<work-dir>/vo/fast/a4-practice.mp3",
-      "at": 22.2
+      "at": 25.4
     },
     {
       "file": "<work-dir>/vo/fast/a5-mock.mp3",
-      "at": 29.9
+      "at": 33.1
     },
     {
       "file": "<work-dir>/vo/fast/a6-progress.mp3",
-      "at": 36.8
+      "at": 40.0
     },
     {
       "file": "<work-dir>/vo/fast/a7-brand.mp3",
-      "at": 42.2
+      "at": 45.4
     },
     {
       "file": "<work-dir>/vo/fast/a8-admin.mp3",
-      "at": 46.6
+      "at": 49.8
     },
     {
       "file": "<work-dir>/vo/fast/a9-cta.mp3",
-      "at": 51.1
+      "at": 54.3
     }
   ],
   "music": {

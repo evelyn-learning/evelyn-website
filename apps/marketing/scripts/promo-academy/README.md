@@ -65,6 +65,28 @@ pipeline scripts into the work dir and put OUR script beside them:
 - **Verified:** `ebur128` integrated −16.9 LUFS; Deepgram transcript of the master = narrator lines + the tutor
   slice only (no mic was granted to the capture browser, so no student audio can exist); contact sheet checked for PII.
 
+## v2 (2026-09-17, same day) — Praveen's notes on v1
+
+`academy-tour-v2.mp4` — 58.4 s, −17.2 LUFS, 5.4 MB. Three changes:
+
+1. **Breathing room around the tutor slice.** ~2 s of silence between the narrator's "Here's the tutor,
+   mid-lesson." and the tutor's first word, and ~2 s after his last. Done with a NEGATIVE `audioLead` on the
+   lesson scene (`start 73.9`, `audioLead -1.0`, `audioDur 14.5`, `dur 16.2`): the picture starts earlier than
+   the audio, which also keeps the tail of the previous utterance out. The slice is ONE complete sentence
+   (source 78.06 → 88.15 s) chosen from a Deepgram word-timed transcript, so it starts and ends cleanly.
+2. **Male US tutor voice.** Narrator (Sophie) and the v1 tutor (Kiara) were both female and hard to tell
+   apart. Re-captured the same lesson with **Mr. Cole** (Cartesia "Cole – Clear Communicator", a shipped
+   Crimsora persona): `seed-teachers.ts` against the LOCAL `academy_portal`, then `GEOMETRY.defaultTeacherId`
+   → Mr. Cole for the run and back to the seed mapping after. Voice confirmed by pitch, not by ear:
+   median F0 ≈ 120 Hz (v1 ≈ 179 Hz). Use a FRESH capture account — a resumed session keeps its old persona.
+3. **Burned-in captions.** `captions.json` (cue times from the Deepgram transcript of the assembled master,
+   text from the scripts — never the ASR text) → `gen-captions.mjs` renders transparent PNG cards →
+   one ffmpeg pass overlays them with `enable='between(t,a,b)'` (this ffmpeg has no drawtext/libass).
+   Tutor cues carry a "MR. COLE · AI TUTOR" pill. Scene label chips moved to the TOP-RIGHT
+   (`overlay=W-w-64:56` in the work-dir copy of `assemble.mjs`) so they never collide with captions.
+
+New file name on purpose (`-v2`): the v1 URL may be cached by browsers/CDN.
+
 ## Hard rules
 
 - **No real student's voice, name, email or session in any frame.** Tutor-only TTS
