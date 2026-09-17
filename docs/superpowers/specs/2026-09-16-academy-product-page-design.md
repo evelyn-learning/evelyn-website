@@ -53,6 +53,7 @@ Registration (single source of truth = `src/data/products.ts`):
 - New `Product` `{ id: 'academy', title: 'Evelyn Academy', tagline: 'White-label AI learning platform with a voice tutor in every lesson', demoStatus: 'live', … }` as the **first item of "Tutoring AI"**, with 7–8 FAQs. This feeds the sitemap, `/products` listing, chat-widget KB and FAQ JSON-LD automatically.
 - `src/lib/seo/keywords.ts` — `academy` keyword set (white-label LMS, AI learning platform, AI tutor LMS, video course alternative, corporate/professional training platform).
 - Product-count copy **24 → 25**: `src/models/SiteSettings.ts:77,83`, `src/lib/chat/knowledge-base.ts:50,53,144,202`, and the `sitemap.ts:39` comment. ⚠ `SiteSettings.ts` is a Mongoose default — check whether a live `sitesettings` doc overrides it before assuming the copy changes in prod; if it does, that DB edit is a separate, announced step (not part of this deploy).
+- **PageVault → Academy (Praveen, 2026-09-16):** the homepage flagship hero card (`src/app/page.tsx`) and the `/products#flagship` grid (`FLAGSHIP_IDS` + the removed `PageVaultCard` in `src/app/products/page.tsx`) now feature Evelyn Academy instead of the external PageVault card. `/industries/publishers` keeps its PageVault section (not in scope). Product `gradient` classes must already appear in a scanned file — Tailwind `content` does not include `src/data/`.
 - Cross-links: add Academy to `RelatedProductsSection` on `/products/voice-tutor`; homepage product strip only if it is data-driven from `products.ts` (no bespoke homepage work in this spec).
 
 ## 5. Demo — `AcademyPlatformDemo`
@@ -77,7 +78,7 @@ Behaviour:
 
 Constraints: no new npm dependencies (root `package-lock.json` is shared with the tutor); Tailwind + lucide only; no network calls except the embedded live demo; works at 360 px (tabs collapse to a scroll strip, heatmap scrolls inside its card, no page-level horizontal scroll); keyboard-reachable tabs with `aria-selected`.
 
-Analytics (`trackEvent`, existing helper): `academy_demo_brand_change {preset|custom}`, `academy_demo_role_change`, `academy_demo_tab_view`, `academy_demo_live_lesson_open`. Custom institution names are **not** sent.
+Analytics (a LOCAL `trackAcademyDemo` gtag helper in `ui.tsx` — the shared `trackEvent` has a closed event-name union in `packages/core`, which this work must not touch): `academy_demo_brand_change {preset|custom}`, `academy_demo_role_change`, `academy_demo_tab_view`, `academy_demo_live_lesson_open`. Custom institution names are **not** sent.
 
 ## 6. Copy guardrails
 

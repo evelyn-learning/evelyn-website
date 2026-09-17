@@ -1,0 +1,16 @@
+{
+  "_note": "Storyboard for academy-tour-v1 (spec 2026-09-16 §7). <work-dir> = ~/.evelyn/promo/academy-v1. start/dur are PLACEHOLDERS until footage is captured and contact-sheeted; keep the scene ORDER and the rules in README.md.",
+  "fade": 0.4,
+  "scenes": [
+    { "file": "<work-dir>/introcard.png", "dur": 3, "label": "Intro card" },
+    { "file": "<work-dir>/ui/lessons.webm", "start": 1.5, "dur": 8, "speed": 1.4, "label": "Your courses" },
+    { "file": "<work-dir>/session/lesson-voiced.mkv", "start": 0, "dur": 14, "speed": 1, "useAudio": true, "audioDur": 12.5, "audioGain": 0.7, "label": "Live lesson" },
+    { "file": "<work-dir>/ui/practice.webm", "start": 1.5, "dur": 8, "speed": 1.4, "label": "Practice & homework" },
+    { "file": "<work-dir>/ui/mock.webm", "start": 1.5, "dur": 8, "speed": 1.5, "label": "Mock exams" },
+    { "file": "<work-dir>/ui/overview.webm", "start": 1.5, "dur": 6, "speed": 1.3, "label": "Progress" },
+    { "file": "<work-dir>/ui/brand-swap.webm", "start": 0, "dur": 5, "speed": 1, "label": "Your brand" },
+    { "file": "<work-dir>/ui/admin.webm", "start": 1.5, "dur": 5, "speed": 1.4, "label": "Admin" },
+    { "file": "<work-dir>/endcard.png", "dur": 3, "label": "End card" }
+  ],
+  "music": { "file": "<work-dir>/music/bed.mp3", "gain": 0.09, "_note": "OPEN ITEM: needs a separately licensed track; omit the key to ship v1 without music." }
+}

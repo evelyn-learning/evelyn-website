@@ -212,6 +212,56 @@ export const productCategories: ProductCategory[] = [
     description: "Scale personalized learning support",
     products: [
       {
+        id: "academy",
+        title: "Evelyn Academy",
+        tagline: "White-label AI learning platform with a voice tutor in every lesson",
+        icon: "🏫",
+        gradient: "from-indigo-600 to-violet-700",
+        demoStatus: "live",
+        faqs: [
+          {
+            question: "What is Evelyn Academy?",
+            answer:
+              "Evelyn Academy is a white-label AI learning platform. It gives an institution, training provider or ed-tech company a complete branded academy — courses, lessons, practice and quizzes, mock exams, notes, progress tracking, parent or sponsor reports and an admin console — with an AI voice tutor teaching every lesson one-to-one on a live whiteboard.",
+          },
+          {
+            question: "How is a voice-tutor academy different from a video-based e-learning course?",
+            answer:
+              "A video course is passive: every learner watches the same recording at the same pace. In Evelyn Academy each lesson is a live conversation — the tutor explains, asks questions, listens to the learner's answers and adapts. The platform records what each learner has mastered and where they are stuck, assigns follow-up practice, and updating a lesson means editing its plan rather than re-shooting a video.",
+          },
+          {
+            question: "Can the academy run under our own brand and domain?",
+            answer:
+              "Yes. The platform is built so that a brand is configuration — name, domain, colour palette and feature switches — rather than custom code. The same codebase already runs more than one live brand. Your learners see your name and your colours.",
+          },
+          {
+            question: "Can you build courses from our own syllabus?",
+            answer:
+              "Yes. Courses are built from your syllabus or content outline: it is broken down into units and learning objectives, reviewed and approved by you, and turned into lesson plans the tutor teaches from. A self-serve course builder that drafts this structure from an uploaded outline is available on request.",
+          },
+          {
+            question: "Is Evelyn Academy live anywhere today?",
+            answer:
+              "Yes. Crimsora (crimsora.com), a structured learning academy with full courses, and Evelyn Tutor (evelyntutor.com), a direct-to-student tutoring platform, both run on Evelyn Academy with the AI voice tutor teaching the lessons.",
+          },
+          {
+            question: "What do parents, sponsors and administrators see?",
+            answer:
+              "Parents or sponsors can receive a weekly progress email written from the learner's actual sessions — time spent, lessons covered, what was mastered and what is still in progress. Administrators get a learner dashboard showing sign-ups, engagement stage, sessions and tutoring hours, with a replay of any session.",
+          },
+          {
+            question: "Does it work for professional and higher-education courses, not just school subjects?",
+            answer:
+              "Yes. The tutor teaches from lesson plans, so any subject that can be broken into learning objectives can be delivered — including business communication, professional development, management subjects and certification prep, alongside school and test-prep courses.",
+          },
+          {
+            question: "How do we get started?",
+            answer:
+              "Try the interactive demo on this page, then book a short call. We scope your courses and branding, set up your academy, and can provide a sandbox for your team to evaluate before launch.",
+          },
+        ],
+      },
+      {
         id: "voice-tutor",
         title: "AI Voice Tutor",
         tagline: "Real-time voice tutoring with visual whiteboard",

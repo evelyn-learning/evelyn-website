@@ -295,7 +295,7 @@ function CTASection() {
 
 function RelatedProductsSection() {
   const related = [
-    { title: '24/7 Homework Helper', href: '/products/homework-bot', icon: '🤖' },
+    { title: 'Evelyn Academy', href: '/products/academy', icon: '🏫' },
     { title: 'AI Math Solver', href: '/products/math-solver', icon: '🔢' },
     { title: 'Tutoring Co-Pilot', href: '/products/tutor-copilot', icon: '👨‍🏫' }
   ];

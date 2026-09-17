@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { ArrowRight, ExternalLink } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import {
   getAllProducts,
   productCategories,
@@ -8,7 +8,7 @@ import {
   type DemoStatus,
 } from '@/data/products';
 
-const FLAGSHIP_IDS = ['voice-tutor', 'virtual-labs', 'plagiarism-detection', 'essay-ai'];
+const FLAGSHIP_IDS = ['voice-tutor', 'academy', 'virtual-labs', 'plagiarism-detection', 'essay-ai'];
 
 function getProductsByIds(ids: string[]): Product[] {
   const all = getAllProducts();
@@ -152,37 +152,6 @@ function ProductCard({ product }: { product: Product }) {
   );
 }
 
-// PageVault Card (Tier 1 - external link)
-function PageVaultCard() {
-  return (
-    <a
-      href="https://pagevault.us"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group bg-white rounded-2xl border border-slate-100 hover:border-slate-200 transition-all hover:shadow-xl overflow-hidden"
-    >
-      {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-white">
-        <span className="text-4xl mb-3 block">📚</span>
-        <h3 className="text-xl font-bold mb-1 group-hover:underline">PageVault</h3>
-        <p className="text-white/80 text-sm">Secure digital library platform for publishers</p>
-      </div>
-
-      {/* Footer */}
-      <div className="p-4 flex items-center justify-between">
-        <span className="inline-flex items-center gap-1.5 text-xs font-medium text-teal-600 bg-teal-50 px-2.5 py-1 rounded-full">
-          <ExternalLink className="w-3 h-3" />
-          Visit Site
-        </span>
-        <span className="text-sm text-slate-500 group-hover:text-primary-600 flex items-center gap-1">
-          pagevault.us
-          <ExternalLink className="w-3 h-3" />
-        </span>
-      </div>
-    </a>
-  );
-}
-
 // Medium Product Card (category sections - card grid)
 function MediumProductCard({ product }: { product: Product }) {
   return (
@@ -249,7 +218,6 @@ function ProductsSection() {
             {flagship.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
-            <PageVaultCard />
           </div>
         </div>
 
@@ -301,7 +269,7 @@ function ProductsSection() {
 // Stats Section
 function StatsSection() {
   const stats = [
-    { value: '24', label: 'AI Products' },
+    { value: String(getAllProducts().length), label: 'AI Products' },
     { value: '100%', label: 'White-label ready' },
     { value: '<1 week', label: 'To deployment' },
     { value: '24/7', label: 'Support' }

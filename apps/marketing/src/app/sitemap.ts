@@ -36,7 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  // Products: listing + 24 individual pages, generated from @/data/products
+  // Products: listing + one page per product, generated from @/data/products
   // (prevents sitemap drift — products.ts is the single source of truth)
   const productPages: MetadataRoute.Sitemap = [
     { url: `${SITE_URL}/products`,          lastModified: now, changeFrequency: "weekly",  priority: 0.9 },
