@@ -1,16 +1,140 @@
 {
-  "_note": "Storyboard for academy-tour-v1 (spec 2026-09-16 §7). <work-dir> = ~/.evelyn/promo/academy-v1. start/dur are PLACEHOLDERS until footage is captured and contact-sheeted; keep the scene ORDER and the rules in README.md.",
   "fade": 0.4,
+  "voGain": 1.3,
   "scenes": [
-    { "file": "<work-dir>/introcard.png", "dur": 3, "label": "Intro card" },
-    { "file": "<work-dir>/ui/lessons.webm", "start": 1.5, "dur": 8, "speed": 1.4, "label": "Your courses" },
-    { "file": "<work-dir>/session/lesson-voiced.mkv", "start": 0, "dur": 14, "speed": 1, "useAudio": true, "audioDur": 12.5, "audioGain": 0.7, "label": "Live lesson" },
-    { "file": "<work-dir>/ui/practice.webm", "start": 1.5, "dur": 8, "speed": 1.4, "label": "Practice & homework" },
-    { "file": "<work-dir>/ui/mock.webm", "start": 1.5, "dur": 8, "speed": 1.5, "label": "Mock exams" },
-    { "file": "<work-dir>/ui/overview.webm", "start": 1.5, "dur": 6, "speed": 1.3, "label": "Progress" },
-    { "file": "<work-dir>/ui/brand-swap.webm", "start": 0, "dur": 5, "speed": 1, "label": "Your brand" },
-    { "file": "<work-dir>/ui/admin.webm", "start": 1.5, "dur": 5, "speed": 1.4, "label": "Admin" },
-    { "file": "<work-dir>/endcard.png", "dur": 3, "label": "End card" }
+    {
+      "file": "<work-dir>/introcard.png",
+      "dur": 3.0,
+      "label": "Intro card"
+    },
+    {
+      "file": "<work-dir>/ui/lessons.webm",
+      "start": 0.4,
+      "dur": 7.0,
+      "speed": 1.2,
+      "label": "Your courses",
+      "labelImage": "<work-dir>/labels/label-0.png"
+    },
+    {
+      "file": "<work-dir>/session/lesson-voiced.mkv",
+      "start": 74.0,
+      "dur": 13.0,
+      "speed": 1,
+      "useAudio": true,
+      "audioDur": 12.4,
+      "audioGain": 0.75,
+      "label": "Live lesson",
+      "labelImage": "<work-dir>/labels/label-1.png"
+    },
+    {
+      "file": "<work-dir>/ui/practice.webm",
+      "start": 1.0,
+      "dur": 8.0,
+      "speed": 1.15,
+      "label": "Practice & quizzes",
+      "labelImage": "<work-dir>/labels/label-2.png"
+    },
+    {
+      "file": "<work-dir>/ui/mock.webm",
+      "start": 4.6,
+      "dur": 4.5,
+      "speed": 1.5,
+      "label": "Timed mock exams",
+      "labelImage": "<work-dir>/labels/label-3.png"
+    },
+    {
+      "file": "<work-dir>/ui/mock.webm",
+      "start": 23.0,
+      "dur": 3.2,
+      "speed": 1,
+      "label": "Score report",
+      "labelImage": "<work-dir>/labels/label-4.png"
+    },
+    {
+      "file": "<work-dir>/ui/overview.webm",
+      "start": 0.8,
+      "dur": 6.0,
+      "speed": 1.15,
+      "label": "Mastery & progress",
+      "labelImage": "<work-dir>/labels/label-5.png"
+    },
+    {
+      "file": "<work-dir>/ui/brand-academy.webm",
+      "start": 1.6,
+      "dur": 1.8,
+      "speed": 1,
+      "label": "Brand A",
+      "labelImage": "<work-dir>/labels/label-6.png"
+    },
+    {
+      "file": "<work-dir>/ui/brand-crimsora.webm",
+      "start": 2.2,
+      "dur": 1.8,
+      "speed": 1,
+      "label": "Brand B",
+      "labelImage": "<work-dir>/labels/label-7.png"
+    },
+    {
+      "file": "<work-dir>/ui/brand-evelyn.webm",
+      "start": 2.2,
+      "dur": 1.8,
+      "speed": 1,
+      "label": "Brand C",
+      "labelImage": "<work-dir>/labels/label-8.png"
+    },
+    {
+      "file": "<work-dir>/ui/admin.webm",
+      "start": 1.0,
+      "dur": 5.0,
+      "speed": 1.1,
+      "label": "Admin dashboard",
+      "labelImage": "<work-dir>/labels/label-9.png"
+    }
   ],
-  "music": { "file": "<work-dir>/music/bed.mp3", "gain": 0.09, "_note": "OPEN ITEM: needs a separately licensed track; omit the key to ship v1 without music." }
+  "endcard": {
+    "image": "<work-dir>/endcard.png",
+    "dur": 4.5
+  },
+  "vo": [
+    {
+      "file": "<work-dir>/vo/fast/a1-hook.mp3",
+      "at": 0.4
+    },
+    {
+      "file": "<work-dir>/vo/fast/a2-study.mp3",
+      "at": 5.6
+    },
+    {
+      "file": "<work-dir>/vo/fast/a3-handoff.mp3",
+      "at": 9.3
+    },
+    {
+      "file": "<work-dir>/vo/fast/a4-practice.mp3",
+      "at": 22.2
+    },
+    {
+      "file": "<work-dir>/vo/fast/a5-mock.mp3",
+      "at": 29.9
+    },
+    {
+      "file": "<work-dir>/vo/fast/a6-progress.mp3",
+      "at": 36.8
+    },
+    {
+      "file": "<work-dir>/vo/fast/a7-brand.mp3",
+      "at": 42.2
+    },
+    {
+      "file": "<work-dir>/vo/fast/a8-admin.mp3",
+      "at": 46.6
+    },
+    {
+      "file": "<work-dir>/vo/fast/a9-cta.mp3",
+      "at": 51.1
+    }
+  ],
+  "music": {
+    "file": "<work-dir>/music/bed.mp3",
+    "gain": 0.09
+  }
 }

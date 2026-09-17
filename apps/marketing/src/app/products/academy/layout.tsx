@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { SoftwareApplicationJsonLd, FAQPageJsonLd, BreadcrumbJsonLd } from '@/components/seo/JsonLd';
+import { SoftwareApplicationJsonLd, FAQPageJsonLd, BreadcrumbJsonLd, VideoObjectJsonLd } from '@/components/seo/JsonLd';
 import { productFAQs } from '@/data/faqs/products';
 import { getKeywordsForProduct } from '@/lib/seo/keywords';
 
@@ -51,6 +51,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         ]}
       />
       <FAQPageJsonLd faqs={faqs} />
+      <VideoObjectJsonLd
+        name="Evelyn Academy — 55-second product tour"
+        description="A walkthrough of Evelyn Academy, the white-label AI learning platform: course lessons, a live AI voice tutor lesson, practice and quizzes, timed mock exams, mastery tracking, brand theming and the admin dashboard."
+        contentPath="/videos/academy-tour-v1.mp4"
+        thumbnailPath="/videos/academy-tour-v1-poster.jpg"
+        pagePath="/products/academy"
+        uploadDate="2026-09-17"
+        duration="PT55S"
+      />
       <BreadcrumbJsonLd
         items={[
           { name: 'Products', url: '/products' },

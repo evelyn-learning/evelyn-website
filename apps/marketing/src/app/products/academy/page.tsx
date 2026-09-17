@@ -14,11 +14,15 @@ const AcademyPlatformDemo = dynamic(() => import('@/components/demos/AcademyPlat
 });
 
 /**
- * Video walkthrough (spec 2026-09-16 §7). null until the asset ships in
- * public/videos — the section and the hero CTA render only when it is set,
- * so the page never points at a missing file.
+ * Video walkthrough (spec 2026-09-16 §7; sources + recipe in
+ * scripts/promo-academy). Set to null to hide the section and the hero CTA —
+ * they render only when this is set, so the page never points at a missing file.
  */
-const ACADEMY_TOUR_VIDEO: { src: string; poster: string; label: string } | null = null;
+const ACADEMY_TOUR_VIDEO: { src: string; poster: string; label: string } | null = {
+  src: '/videos/academy-tour-v1.mp4',
+  poster: '/videos/academy-tour-v1-poster.jpg',
+  label: '55-Second',
+};
 
 function ProductHero() {
   return (
@@ -194,7 +198,7 @@ function TourSection() {
         </div>
         <div className="max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-xl bg-slate-900 aspect-video">
           {playing ? (
-            <video src={video.src} poster={video.poster} controls autoPlay playsInline className="w-full h-full" />
+            <video src={video.src} poster={video.poster} controls autoPlay playsInline preload="none" className="w-full h-full" />
           ) : (
             <button
               type="button"
