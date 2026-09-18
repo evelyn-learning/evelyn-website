@@ -10,7 +10,7 @@
  *
  * Run: npm run test:inline-math
  */
-import { segment, autoWrapLatex, normalizeSentenceGaps } from '../src/lib/tutor/whiteboard/inline-math';
+import { segment, autoWrapLatex, normalizeSentenceGaps, isProseNotLatex } from '../src/lib/tutor/whiteboard/inline-math';
 
 let pass = 0;
 let fail = 0;
@@ -431,6 +431,32 @@ console.log('\n=== Known 3-letter fn names + comma args are math ===');
   check('currencySpan: "5 and " yes', looksLikeCurrencySpan('5 and ') === true);
   check('currencySpan: "2 - x" no', looksLikeCurrencySpan('2 - x') === false);
   check('currencySpan: "\\text{price} per 12" no', looksLikeCurrencySpan('\\text{price} per 12') === false);
+}
+
+// isProseNotLatex — live 2026-09-18 (portal-7cefb23d, pharmacy-tech worked
+// example): showSolution step `result` = "Less waiting at the counter" went
+// through the display-math renderer and painted as "Lesswaitingatthecounter".
+{
+  const prose = [
+    'Less waiting at the counter',
+    'Technicians handle routine tasks, freeing pharmacists for clinical review.',
+    '150 prescriptions daily',
+    'Lipitor is the brand name for atorvastatin',
+  ];
+  for (const t of prose) check(`prose: "${t}"`, isProseNotLatex(t) === true);
+  const math = [
+    'x = 2y + 3',
+    '\\frac{a}{b} = c',
+    '2x',
+    '3 \\times 4 = 12',
+    'F = ma',
+    'sin x',
+    'v_0 t + \\frac{1}{2} a t^2',
+    '\\text{Total} = 150 \\text{ prescriptions}',
+    '$5 + $3 = $8',
+    '',
+  ];
+  for (const t of math) check(`not prose: "${t}"`, isProseNotLatex(t) === false);
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

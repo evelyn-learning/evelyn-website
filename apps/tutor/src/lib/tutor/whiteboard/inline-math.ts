@@ -126,6 +126,32 @@ function looksLikeMath(inner: string): boolean {
  *  the left class covers the period-right-after-closing-math shape; the
  *  [A-Z][a-z] right side keeps decimals ("3.14") and initialisms ("U.S.A.")
  *  untouched. */
+/**
+ * Is this "latex" field actually a plain-prose sentence? Live 2026-09-18
+ * (portal-7cefb23d, a pharmacy-technician worked example): the brain filled a
+ * showSolution step's `result` with "Less waiting at the counter", the card
+ * handed it to the display-math renderer, and KaTeX painted
+ * "Lesswaitingatthecounter" — math mode drops spaces and italicises. Callers
+ * that receive brain-authored equation fields for non-STEM lessons use this
+ * to route prose to the text renderer instead.
+ *
+ * Prose = no LaTeX/math signal at all (no `\ ^ _ { } $`, no relation
+ * `= < > ≤ ≥ ≠`, no arithmetic operator between operands) AND at least
+ * three whitespace-separated words AND a real word of 4+ letters. Anything
+ * with a math signal stays math; short fragments like "2x" or "sin x" stay
+ * math (a 3-letter function name is not a prose word).
+ */
+export function isProseNotLatex(latex: string): boolean {
+  const t = (latex ?? '').trim();
+  if (!t) return false;
+  if (/[\\^_{}$]/.test(t)) return false;
+  if (/[=<>≤≥≠±×÷]/.test(t)) return false;
+  if (/\S\s*[+\-*/]\s*\S/.test(t) && /\d/.test(t) && !/[a-zA-Z]{4,}/.test(t)) return false;
+  const words = t.split(/\s+/).filter(Boolean);
+  if (words.length < 3) return false;
+  return /[A-Za-z]{4,}/.test(t);
+}
+
 export function normalizeSentenceGaps(text: string): string {
   return text.replace(/([\w$])\.([A-Z][a-z])/g, '$1. $2');
 }

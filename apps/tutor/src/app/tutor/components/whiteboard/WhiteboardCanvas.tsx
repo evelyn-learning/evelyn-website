@@ -93,6 +93,7 @@ import CellDiagramRenderer from './CellDiagramRenderer';
 import DnaRenderer from './DnaRenderer';
 import FoodWebRenderer from './FoodWebRenderer';
 import { InlineMathText } from './InlineMathText';
+import { isProseNotLatex } from '@/lib/tutor/whiteboard/inline-math';
 import { CellContent } from './CellContent';
 import { stripRedundantChoiceLabel, stripEmbeddedChoiceBlock } from './choiceLabel';
 import dynamic from 'next/dynamic';
@@ -309,6 +310,16 @@ const MAX_INK_STROKES = 40;
 export const WhiteboardCallbackContext = React.createContext<{
   onTryYourselfAnswer?: WhiteboardCanvasProps['onTryYourselfAnswer'];
 }>({});
+
+/** A showSolution step field the brain labels as "latex" but may fill with a
+ *  sentence in non-STEM lessons — prose renders as text (inline $…$ still
+ *  typesets), anything with a math signal renders as display math. */
+function SolutionStepField({ latex, className }: { latex: string; className?: string }) {
+  if (isProseNotLatex(latex)) {
+    return <p className={`text-gray-800 ${className ?? ''}`}><InlineMathText text={latex} /></p>;
+  }
+  return <EquationRenderer latex={latex} className={className} />;
+}
 
 export function WhiteboardCanvas({
   commands,
@@ -2863,19 +2874,23 @@ function CommandRendererInner({ command }: CommandRendererProps) {
                 </div>
                 <div className="flex-1">
                   <p className="text-gray-700" data-feature={`step-${stepNum}-description`}>{step.description}</p>
+                  {/* Prose-or-math (live 2026-09-18, portal-7cefb23d): in a non-STEM
+                      lesson the brain fills these "latex" fields with sentences
+                      ("Less waiting at the counter"); KaTeX math mode drops the
+                      spaces. Route plain prose to the text renderer instead. */}
                   {step.equation && (
                     <div data-feature={`step-${stepNum}-equation`}>
-                      <EquationRenderer latex={step.equation} className="mt-2" />
+                      <SolutionStepField latex={step.equation} className="mt-2" />
                     </div>
                   )}
                   {step.substitution && (
                     <div data-feature={`step-${stepNum}-substitution`}>
-                      <EquationRenderer latex={step.substitution} className="mt-1 text-gray-600" />
+                      <SolutionStepField latex={step.substitution} className="mt-1 text-gray-600" />
                     </div>
                   )}
                   {step.result && (
                     <div data-feature={`step-${stepNum}-result`}>
-                      <EquationRenderer latex={step.result} className="mt-1 font-medium" />
+                      <SolutionStepField latex={step.result} className="mt-1 font-medium" />
                     </div>
                   )}
                   {step.explanation && (

@@ -1277,46 +1277,6 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     return () => clearInterval(t);
   }, [sessionEnded]);
 
-  // Session ended view
-  if (sessionEnded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50" style={brandStyle}>
-        <div className="max-w-md text-center p-8">
-          <div className="mb-4 text-4xl">&#10003;</div>
-          <h1 className="mb-2 text-xl font-bold text-gray-900">Session Complete</h1>
-          <p className="text-sm text-gray-600">
-            {transcript.length} messages exchanged, {whiteboardCommands.length} visuals generated.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Resume boot in flight — hold the first render until the checkpoint read
-  // resolves so the runtime seeds once, cleanly. Only reached when the token
-  // asked to resume; a normal start has resumeReady=true from the outset.
-  if (!resumeReady) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50" style={brandStyle}>
-        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
-
-  // Partner brand lockup shown in the new UI's top bar (keeps branding while
-  // matching the /tutor look). primary_color rides the --brand-color var below.
-  const headerBrand = (branding?.logo_url || branding?.product_name) ? (
-    <div className="flex items-center gap-2">
-      {branding?.logo_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={branding.logo_url} alt="" className="h-5" />
-      )}
-      {branding?.product_name && (
-        <span className="text-sm font-semibold text-slate-800 truncate max-w-[38vw]">{branding.product_name}</span>
-      )}
-    </div>
-  ) : undefined;
-
   // Mid-session plan swap (2026-09-10). Mirrors /tutor's
   // handleProposePlanSwap: the brain emits propose_plan_swap, the server
   // resolves a plan (curated match → generated), and we route the new id
@@ -1326,6 +1286,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // In open-scope sessions the swap may cross subjects, so `subject` state
   // follows the resolved plan — the progress strip, tool filter and any
   // later mint see the subject the student is actually studying.
+  //
+  // HOOK ORDER (live 2026-09-18, Crimsora resume → "This page couldn't
+  // load"): this useCallback used to sit BELOW the `sessionEnded` /
+  // `!resumeReady` early returns. On a resume, resumeReady starts false,
+  // the first render exited before this hook, and the render after it
+  // flipped true called one more hook than before — React #310 — and the
+  // whole embed died on Next's error page. Every resume since 9a70301a hit
+  // it. All hooks must precede the early returns; keep this one here.
   const handleProposePlanSwap = useCallback(
     async ({ targetSubTopic, targetSubject, reason }: { targetSubTopic: string; targetSubject?: string; reason?: string }): Promise<void> => {
       try {
@@ -1367,6 +1335,47 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     },
     [subject, level, topic, openScope, addDebugEvent],
   );
+
+  // Session ended view
+  if (sessionEnded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50" style={brandStyle}>
+        <div className="max-w-md text-center p-8">
+          <div className="mb-4 text-4xl">&#10003;</div>
+          <h1 className="mb-2 text-xl font-bold text-gray-900">Session Complete</h1>
+          <p className="text-sm text-gray-600">
+            {transcript.length} messages exchanged, {whiteboardCommands.length} visuals generated.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Resume boot in flight — hold the first render until the checkpoint read
+  // resolves so the runtime seeds once, cleanly. Only reached when the token
+  // asked to resume; a normal start has resumeReady=true from the outset.
+  if (!resumeReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50" style={brandStyle}>
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
+
+  // Partner brand lockup shown in the new UI's top bar (keeps branding while
+  // matching the /tutor look). primary_color rides the --brand-color var below.
+  const headerBrand = (branding?.logo_url || branding?.product_name) ? (
+    <div className="flex items-center gap-2">
+      {branding?.logo_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={branding.logo_url} alt="" className="h-5" />
+      )}
+      {branding?.product_name && (
+        <span className="text-sm font-semibold text-slate-800 truncate max-w-[38vw]">{branding.product_name}</span>
+      )}
+    </div>
+  ) : undefined;
+
 
   return (
     <div style={brandStyle}>

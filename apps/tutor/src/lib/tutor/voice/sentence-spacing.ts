@@ -82,6 +82,22 @@ export function normalizeSentenceSpacing(text: string): string {
 const STAGE_DIRECTION_RE =
   /\(\s*(?:a\s+|the\s+)?(?:waiting|waits?|awaiting|awaits?|paus(?:e|es|ing)|beat\b|silence|silent(?:ly)?|listen(?:s|ing)?|no\s+(?:response|answer)|student\s+(?:answers?|responds?|replies|thinks?|works?))\b[^()]*\)/gi;
 
+/**
+ * HTML break/paragraph tag leak defense (live 2026-09-18, portal-7cefb23d):
+ * the brain opened a turn with a literal "<br>" on its own line, which
+ * reached the transcript ("<br>" as the first line of the tutor bubble) and
+ * TTS. Only structural tags are stripped — <br>, <p>, <div>, <span> — and
+ * only in tag form, so a real comparison like "3 < 5 and x > 2" is untouched.
+ * Cheap early exit when there is no "<" at all (the overwhelming case).
+ */
+const HTML_BREAK_TAG_RE = /<\s*\/?\s*(?:br|p|div|span)\b[^<>]*\/?\s*>/gi;
+export function stripHtmlBreakTags(text: string): string {
+  if (!text || !text.includes('<')) return text;
+  const stripped = text.replace(HTML_BREAK_TAG_RE, ' ');
+  if (stripped === text) return text;
+  return stripped.replace(/\s*\n\s*/g, ' ').replace(/[ \t]{2,}/g, ' ').trim();
+}
+
 export function stripStageDirections(text: string): string {
   if (!text || !text.includes('(')) return text;
   const stripped = text.replace(STAGE_DIRECTION_RE, '');

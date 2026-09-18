@@ -23,15 +23,18 @@ import type { PlanContentSeen } from '@/lib/tutor/student-profile/types';
 import { buildWhiteboardSummary } from '../whiteboard/summary';
 import { lastQuestionSentence } from '../question-gist-text';
 import { validateToolCall } from '../whiteboard/validate-tool-call';
-import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, ABBREV_TAIL_RE } from './sentence-spacing';
+import { normalizeSentenceSpacing, stripStageDirections, stripMetaNarration, stripHtmlBreakTags, ABBREV_TAIL_RE } from './sentence-spacing';
 import { TUTOR_META_NARRATION_STRIP } from '@/lib/tutor/orchestrator/flags';
 
 /** R49b: stage directions (parentheticals) then third-person adjudication
  *  narration. Both are the brain talking to itself; neither may reach TTS or
  *  the stored transcript. The meta pass is flag-gated — off ⇒ identical to
  *  the pre-R49b single strip. */
-const scrubTutorText = (t: string): string =>
-  TUTOR_META_NARRATION_STRIP ? stripMetaNarration(stripStageDirections(t)) : stripStageDirections(t);
+const scrubTutorText = (raw: string): string => {
+  // HTML tag leak (2026-09-18) runs first and unconditionally — see sentence-spacing.ts.
+  const t = stripHtmlBreakTags(raw);
+  return TUTOR_META_NARRATION_STRIP ? stripMetaNarration(stripStageDirections(t)) : stripStageDirections(t);
+};
 import type { DemoStopPayload } from './demo-stop-mode';
 import type { MockReviewContext } from '@/lib/tutor/mock-exam/review-focus';
 import { formatSessionStrugglesBlock, type LedgerFlag } from './session-struggles-block';
