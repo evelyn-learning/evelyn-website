@@ -226,13 +226,13 @@ Uploaded modules are processed, indexed, and available for use within 15 minutes
 
 ## 5. Voice Engine
 
-The Voice Tutor ships ONE engine at ONE rate: **$0.10 per tutoring minute** (voice or text), no setup fee, no monthly platform fee, no minimum commitment. Every minute includes the full whiteboard (all visual types), 50+ languages, adaptive pedagogy, per-student learning gaps and the partner API. Minutes are metered per session and billed monthly in arrears; volume pricing is available from 50,000 minutes/month.
+The Voice Tutor ships ONE engine at ONE rate: **$0.15 per tutoring minute** (voice or text), no setup fee, no monthly platform fee, no minimum commitment. Every minute includes the full whiteboard (all visual types), 50+ languages, adaptive pedagogy, per-student learning gaps and the partner API. Minutes are metered per session and billed monthly in arrears; volume pricing is available from 50,000 minutes/month.
 
 | | Voice Tutor |
 |---|---|
 | **Latency** | <400ms response, natural interruptions |
-| **Price** | $0.10 / minute |
-| **30-minute session** | $3.00 |
+| **Price** | $0.15 / minute |
+| **30-minute session** | $4.50 |
 | **Fixed fees** | None |
 
 ## 6. Branding & Customization

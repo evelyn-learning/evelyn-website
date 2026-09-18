@@ -11,7 +11,7 @@
 export const pricing = {
   productName: 'Voice Tutor',
   /** Partner list price, USD per tutoring minute (voice or text, whiteboard included). */
-  perMinuteUsd: 0.1,
+  perMinuteUsd: 0.15,
   tagline: 'One product. One rate. No fixed fees.',
   description:
     'Voice + interactive-whiteboard AI tutor, embedded in your platform under your brand. ' +
