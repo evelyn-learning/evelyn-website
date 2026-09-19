@@ -10922,8 +10922,12 @@ export function VoiceTutorRealtime({
             // AND demo embeds).
             if (TUTOR_FIRST_SESSION_TIP && firstSessionTipPendingRef.current) {
               firstSessionTipPendingRef.current = false;
-              openingDirective +=
-                ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to arrive, and that a quiet spot helps you hear them clearly. Once, briefly, then never mention it again.';
+              // Text mode has no mic and no "quiet spot" — that's voice
+              // advice. Same one-shot latch/debug event, typed-reply wording.
+              const tipText = sessionMode === 'text'
+                ? ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to appear and that they can type at any time.'
+                : ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to arrive, and that a quiet spot helps you hear them clearly. Once, briefly, then never mention it again.';
+              openingDirective += tipText;
               try {
                 window.localStorage.setItem('evelyn-first-session-tip-done', 'yes');
               } catch { /* storage unavailable — tip may repeat next session */ }
