@@ -1186,7 +1186,12 @@ export default function SessionStage(props: SessionStageProps) {
             TITLE_REVEAL_MS; tapping it again dismisses early. */}
         {titleRevealed && (
           <div
-            className="absolute left-2 right-2 top-full z-40 mt-1 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md"
+            // Text mode: this banner spans the header's full width (the
+            // panel floats independently below the header), so it can run
+            // under the pinned transcript panel (panel is z-50) exactly
+            // like the "Adjust the lesson" menu (owner desktop test,
+            // re-review 2026-09-19) — z-[60] clears it. Voice keeps z-40.
+            className={`absolute left-2 right-2 top-full mt-1 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-md ${sessionMode === 'text' ? 'z-[60]' : 'z-40'}`}
             role="status"
             onClick={hideTitle}
             data-testid="lesson-title-reveal"

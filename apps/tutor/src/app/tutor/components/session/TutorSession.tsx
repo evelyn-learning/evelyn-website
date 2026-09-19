@@ -1473,7 +1473,14 @@ export default function TutorSession(props: TutorSessionProps) {
       </button>
       <button onClick={() => setPacingMenuOpen((o) => !o)} className="grid place-items-center w-9 h-9 rounded-full hover:bg-slate-100 text-slate-600 text-lg leading-none">⋯</button>
       {pacingMenuOpen && (
-        <div className="absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 z-50 text-sm">
+        // Text mode: the "Adjust the lesson" menu (opened via the Pace pill
+        // or the ⋯ button — both toggle this one menu) was rendering at the
+        // SAME z-50 as the pinned transcript panel; since the panel mounts
+        // later in SessionStage's JSX, equal z-index ties resolve to DOM
+        // order and the panel painted on top, opening the menu "under" it
+        // (owner desktop test, re-review 2026-09-19). z-[60] in text mode
+        // clears the panel; voice keeps the original z-50 untouched.
+        <div className={`absolute right-0 top-full mt-2 w-52 max-h-[70dvh] overflow-y-auto rounded-2xl bg-white border border-slate-200 shadow-xl p-1.5 text-sm ${sessionMode === 'text' ? 'z-[60]' : 'z-50'}`}>
           <p className="px-3 pt-1 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Adjust the lesson</p>
           {/* #7 hybrid (2026-07-17): Harder/Easier are now a STANDING
               preference, not a one-shot "give me a harder one" utterance.
@@ -1572,7 +1579,12 @@ export default function TutorSession(props: TutorSessionProps) {
               correctable without reopening). setManualMic (imperative
               handle) sends any buffered turn when leaving Manual — see
               VoiceTutorRealtime. */}
-          {TUTOR_MANUAL_MIC && (
+          {/* Text mode has no mic at all — TUTOR_MANUAL_MIC's Auto/Manual
+              toggle would be pure dead chrome there (owner desktop test,
+              re-review 2026-09-19). Voice: byte-identical (the added check
+              is `sessionMode !== 'text'`, which is always true for voice
+              since sessionMode defaults to 'voice'). */}
+          {TUTOR_MANUAL_MIC && sessionMode !== 'text' && (
             <>
               <div className="my-1 border-t border-slate-100" />
               <div className="px-3 pt-1 pb-1.5 flex items-center justify-between">
