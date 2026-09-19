@@ -818,7 +818,7 @@ export default function TutorSession(props: TutorSessionProps) {
     text: preStartDockCaption({ started, muted: voiceState === 'muted' }),
     cls: voiceState === 'muted' ? 'text-slate-500' : started ? 'text-slate-400' : 'text-slate-500',
   };
-  const dockCaptionEl = statusOverride ? (
+  const dockCaptionEl = sessionMode === 'text' ? null : statusOverride ? (
     <span className={`block truncate text-xs font-medium ${statusOverride.cls}`}>{statusOverride.text}</span>
   ) : liveCaption ? (
     // R42 (2026-08-10): click target shrunk to the caption text itself —

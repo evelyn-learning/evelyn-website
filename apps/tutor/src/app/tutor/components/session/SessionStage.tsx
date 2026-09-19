@@ -297,7 +297,9 @@ export default function SessionStage(props: SessionStageProps) {
   // auto-open it on the lesson-picker nudge — popping it over the board on
   // session start was disorienting (it dimmed the whole stage). The nudge
   // picker still lives in the transcript, reachable via the Transcript button.
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Text-only mode: the transcript IS the conversation surface, so it starts
+  // open (Option C). Voice keeps the closed default.
+  const [drawerOpen, setDrawerOpen] = useState(sessionMode === 'text');
   // R42 (2026-08-10, session portal-cb2addf5): one debug event per
   // open/close, with the triggering surface — added to diagnose the
   // header-icon "two taps to open" bug (the icon used to be OPEN-only, so
@@ -425,6 +427,18 @@ export default function SessionStage(props: SessionStageProps) {
   // repeatedly, so it needs a standing exemption. dockRef marks the dock's
   // always-visible controls as never "outside" for this dismiss.
   const dockRef = useRef<HTMLDivElement>(null);
+  // Text mode: the opaque composer card sits in the dock's place and the
+  // board needs clearance equal to its live height so content isn't hidden
+  // under it.
+  const [dockHeight, setDockHeight] = useState(0);
+  useEffect(() => {
+    if (sessionMode !== 'text' || !dockRef.current) return;
+    const el = dockRef.current;
+    const ro = new ResizeObserver(() => setDockHeight(el.getBoundingClientRect().height));
+    ro.observe(el);
+    setDockHeight(el.getBoundingClientRect().height);
+    return () => ro.disconnect();
+  }, [sessionMode]);
   useEffect(() => {
     if (!toolsOpen) return;
     // R57: the whole dismiss cycle is off while always-open. Registering no
@@ -791,7 +805,10 @@ export default function SessionStage(props: SessionStageProps) {
             needed (plus clearance for the floating switcher when shown) — the
             bottom is deliberately NOT padded to clear the floating bar: ink
             may run behind it and stay readable through the 40% surface. */}
-        <div className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center`}>
+        <div
+          className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center`}
+          style={sessionMode === 'text' ? { paddingBottom: `calc(${Math.max(dockHeight, 88)}px + 1rem + env(safe-area-inset-bottom))` } : undefined}
+        >
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
               scrollbar appears (Images 2/3, 2026-06-24). Empty board stays
@@ -1095,6 +1112,9 @@ export default function SessionStage(props: SessionStageProps) {
                   `controls` timer above; showing both would double it. */}
               {headerClock && <span className="sm:hidden">{headerClock}</span>}
               {adaptiveMenu}
+              {sessionMode === 'text' && (
+                <span className="mr-2 inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Text session</span>
+              )}
               {endControl}
             </div>
           </div>

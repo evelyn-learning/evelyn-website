@@ -2982,6 +2982,10 @@ export function VoiceTutorRealtime({
   // hasStarted declaration.
   const hasStartedRef = useRef(false);
 
+  // Text mode: the OpenAI Realtime WS is a pure TTS sink; the composer must
+  // be live immediately, gated only on the brain route being reachable.
+  const [brainReachable, setBrainReachable] = useState(true);
+
   // Variable-name continuity: track declared functions across the session.
   // When the tutor silently renames f→g without redeclaring, we rewrite the
   // incoming equation back to the declared name before rendering.
@@ -11210,6 +11214,10 @@ export function VoiceTutorRealtime({
           // fallback's modality split (typed ⇒ text bubble, voice ⇒ spoken).
           onDebugEvent?.('brain_http_error', `status=${res.status}`);
           if (currentTurnTypedRef.current) {
+            // Text mode: the composer gates on this — a typed turn that
+            // couldn't reach the brain over HTTP means the route is down,
+            // not that the student needs to try speaking again.
+            setBrainReachable(false);
             const msg = "I'm having trouble reaching my brain right now — give me a moment and try again.";
             transcriptRef.current = [
               ...transcriptRef.current,
@@ -11240,6 +11248,8 @@ export function VoiceTutorRealtime({
           objectiveCorrectThisTurnRef.current = null;
           return;
         }
+        // The fetch succeeded — the brain route is reachable again.
+        setBrainReachable(true);
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -21854,7 +21864,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
 
               Pre-start is UNTOUCHED: that is still the real start button and
               must keep every button affordance. */}
-          {TUTOR_DOCK_STATE_ONLY && hasStarted ? (
+          {sessionMode !== 'text' && (TUTOR_DOCK_STATE_ONLY && hasStarted ? (
             <div
               aria-hidden
               data-testid="tutor-mic-state"
@@ -21887,7 +21897,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           >
             {stateUI.icon}
           </button>
-          )}
+          ))}
 
           {/* R34 T4: Manual mic send affordance — a companion button beside
               the mic rather than rewiring the mic's own state machine (the
@@ -22151,16 +22161,17 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           spellCheck={false}
           data-1p-ignore
           data-lpignore="true"
-          placeholder="Type here if you can't speak..."
+          placeholder={sessionMode === 'text' ? 'Type your answer… Enter to send' : "Type here if you can't speak..."}
           // 16px font-size on mobile — anything smaller triggers iOS Safari's
           // auto-zoom on focus, which makes the entire page appear zoomed in
           // and pushes the send button off-screen. text-base = 16px.
           className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
-          disabled={!realtime.isConnected}
+          autoFocus={sessionMode === 'text'}
+          disabled={sessionMode === 'text' ? !brainReachable : !realtime.isConnected}
           onFocus={() => {
             studentTypingRef.current = true;
             // Mute mic while typing to prevent it picking up speech
-            if (!isMicMuted && realtime.isConnected) {
+            if (sessionMode !== 'text' && !isMicMuted && realtime.isConnected) {
               realtime.muteInput();
             }
           }}
@@ -22171,7 +22182,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             // the session starts there is no mic to resume — startListening
             // here pushed the relay into 'listening' pre-start, arming the
             // dead-Start-tap bug.
-            if (!isMicMuted && realtime.isConnected && hasStartedRef.current) {
+            if (sessionMode !== 'text' && !isMicMuted && realtime.isConnected && hasStartedRef.current) {
               realtime.startListening();
             }
           }}
@@ -22179,7 +22190,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         <button
           type="submit"
           className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30"
-          disabled={!realtime.isConnected}
+          disabled={sessionMode === 'text' ? !brainReachable : !realtime.isConnected}
         >
           <Send className="w-4 h-4" />
         </button>
@@ -22193,7 +22204,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
             "dual microphone icons / choice paralysis"). Mute-BEFORE-start is
             still honored end-to-end for anyone already muted — handleMicClick's
             `if (!isMicMuted)` guard is untouched. */}
-        {showsDockMuteButton({ hasStarted, isPaused }) && (
+        {sessionMode !== 'text' && showsDockMuteButton({ hasStarted, isPaused }) && (
           <button
             onClick={toggleMicMute}
             className={`p-2 rounded-lg text-sm ${isMicMuted ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
