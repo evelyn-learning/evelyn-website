@@ -430,7 +430,13 @@ export default function SessionStage(props: SessionStageProps) {
   const dockRef = useRef<HTMLDivElement>(null);
   // Text mode: the opaque composer card sits in the dock's place and the
   // board needs clearance equal to its live height so content isn't hidden
-  // under it.
+  // under it. The floor was 88px (a generic "leave room" guess); the geometry
+  // probe (owner re-review) showed the actual single-line composer renders
+  // ~50px tall, so the floor alone — not the measured height — was driving
+  // both the board's paddingBottom and the panel's `bottom`, adding 32px of
+  // unwanted extra clearance. One shared constant so the two expressions
+  // (below, and at the panel's `bottom` style) cannot diverge again.
+  const TEXT_DOCK_MIN_PX = 56;
   const [dockHeight, setDockHeight] = useState(0);
   useEffect(() => {
     if (sessionMode !== 'text' || !dockRef.current) return;
@@ -817,7 +823,7 @@ export default function SessionStage(props: SessionStageProps) {
           // literals only — no runtime interpolation inside `[...]` (that
           // silently fails to compile; see the panel `bottom` fix below).
           className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
-          style={sessionMode === 'text' ? { paddingBottom: `calc(${Math.max(dockHeight, 88)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
+          style={sessionMode === 'text' ? { paddingBottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
         >
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
@@ -1547,7 +1553,7 @@ export default function SessionStage(props: SessionStageProps) {
         // inline style at ALL widths (the composer floats at the bottom on
         // phones too) sidesteps Tailwind's static-analysis requirement
         // entirely. Voice keeps its static `bottom-0` class, untouched.
-        style={sessionMode === 'text' ? { bottom: `calc(${Math.max(dockHeight, 88)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
+        style={sessionMode === 'text' ? { bottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
       >
         <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
