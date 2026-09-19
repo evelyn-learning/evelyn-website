@@ -1000,8 +1000,17 @@ export default function SessionStage(props: SessionStageProps) {
           // mode centers within the now-correctly-sized box; voice keeps
           // its original `pt-14`/`pb-32`/scroll-from-top `m-auto` behavior
           // for a tall (mock-review agenda) cluster, untouched.
+          // pr-14 (<md, text mode): the same tools-rail clearance the card's
+          // own content wrapper got (Addendum 9) — without it, this
+          // overlay's box was the full card width, so its centered
+          // heading could paint under the rail (owner ruling, re-review
+          // 2026-09-19). No `md:pr-0` reset needed: the already-present
+          // `md:pr-[388px]` (the panel-gutter reservation) is itself an
+          // md:-scoped override of the same property, so it naturally
+          // wins over the base `pr-14` at md+ — same mobile-first
+          // cascade every other breakpoint swap in this file relies on.
           <div
-            className={`absolute inset-0 z-[5] flex flex-col px-6 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? `${boardColumnTopPadClass} md:pl-4 md:pr-[388px] justify-center` : 'pt-14 pb-32'}`}
+            className={`absolute inset-0 z-[5] flex flex-col px-6 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? `${boardColumnTopPadClass} pr-14 md:pl-4 md:pr-[388px] justify-center` : 'pt-14 pb-32'}`}
             style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
           >
           <div className={sessionMode === 'text' ? 'w-full flex flex-col items-center' : 'm-auto w-full flex flex-col items-center'}>
