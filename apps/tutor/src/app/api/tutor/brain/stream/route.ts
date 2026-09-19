@@ -401,6 +401,7 @@ export async function POST(req: NextRequest) {
   // header the orchestrator now threads onto this fetch.
   const deniedResponse = await denyIfNoDemoAccess(req, 'brain-stream');
   if (deniedResponse) return deniedResponse;
+  const isPartnerEmbed = Boolean(req.headers.get('x-embed-token'));
 
   let body: BrainStreamRequestBody;
   try {
@@ -706,6 +707,10 @@ export async function POST(req: NextRequest) {
       // Task X10: the turn input is pure, byte-stable data (no per-attempt
       // mutation), so the SAME object is safely reused on every retry.
       const turnInput = {
+          // Partner embeds (x-embed-token) never fail over to the fallback
+          // provider: their DPA lists the primary only. TUTOR_PARTNER_BRAIN_FALLBACK=on
+          // re-enables it deployment-wide (Praveen ruling 2026-09-19).
+          allowFallback: !isPartnerEmbed || process.env.TUTOR_PARTNER_BRAIN_FALLBACK === 'on',
           systemPrompt: body.systemPrompt,
           conversationHistory: body.conversationHistory,
           studentTranscript: body.studentTranscript,

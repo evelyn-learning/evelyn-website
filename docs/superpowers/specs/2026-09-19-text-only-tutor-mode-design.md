@@ -69,6 +69,8 @@ Files: `session/SessionStage.tsx`, `session/TutorSession.tsx`, `VoiceTutorRealti
 
 ## 11. Risks and decisions taken
 
+- Partner-embed brain turns no longer fail over to the DeepSeek fallback (`allowFallback`, 2026-09-19); text mode inherits this since it is partner-only.
+
 - Silent TTS needs an unlocked AudioContext (iOS): covered by keeping `unlockAudio()` on the first Enter.
 - Reading pace vs speech pace: 0.35 s/word chosen; tunable by env.
 - Honouring the claim changes behaviour for anyone already signing `'text'`: verified none in 30 days except our QA probes.

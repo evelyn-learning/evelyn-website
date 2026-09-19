@@ -87,9 +87,10 @@ const FALLBACK_BREAKER_MS =
   Number(process.env.TUTOR_BRAIN_FALLBACK_BREAKER_SECONDS || 300) * 1000;
 let brainFallbackLatchedUntil = 0;
 
-function brainCallTargets(modelOverride?: string): RoleClient[] {
+/** Exported for test:brain-fallback-permission only. */
+export function brainCallTargets(modelOverride?: string, allowFallback = true): RoleClient[] {
   if (modelOverride) return [{ ...brainModel, model: modelOverride }];
-  if (!brainFallbackModel) return [brainModel];
+  if (!brainFallbackModel || !allowFallback) return [brainModel];
   return Date.now() < brainFallbackLatchedUntil
     ? [brainFallbackModel, brainModel]
     : [brainModel, brainFallbackModel];
@@ -124,12 +125,13 @@ function paramsForTarget<T extends { model: string }>(target: RoleClient, params
 async function openBrainStream(
   buildParams: (target: RoleClient) => Parameters<Anthropic['messages']['stream']>[0],
   modelOverride?: string,
+  allowFallback = true,
 ): Promise<{
   events: AsyncGenerator<Anthropic.MessageStreamEvent>;
   finalMessage: () => Promise<Anthropic.Message>;
   target: RoleClient;
 }> {
-  const targets = brainCallTargets(modelOverride);
+  const targets = brainCallTargets(modelOverride, allowFallback);
   let lastErr: unknown;
   for (let i = 0; i < targets.length; i++) {
     const target = targets[i];
@@ -162,8 +164,9 @@ async function openBrainStream(
 async function createBrainMessage(
   params: Anthropic.MessageCreateParamsNonStreaming,
   modelOverride?: string,
+  allowFallback = true,
 ): Promise<{ response: Anthropic.Message; target: RoleClient }> {
-  const targets = brainCallTargets(modelOverride);
+  const targets = brainCallTargets(modelOverride, allowFallback);
   let lastErr: unknown;
   for (let i = 0; i < targets.length; i++) {
     const target = targets[i];
@@ -398,6 +401,11 @@ export interface BrainTurnInput {
   };
   /** Optional override (defaults to claude-sonnet-4-6). */
   model?: string;
+  /** Provider failover permission for THIS turn (2026-09-19). Default true.
+   *  Partner-embed turns pass false so a student's session data never
+   *  reaches the fallback provider (a non-US sub-processor) — the partner's
+   *  DPA lists only the primary. Retail /tutor keeps the fallback. */
+  allowFallback?: boolean;
   /** Optional override (defaults to 1500). */
   maxTokens?: number;
   /** Optional async resolver for tool_result content. Default behavior
@@ -1726,7 +1734,7 @@ export async function runBrainTurn(input: BrainTurnInput): Promise<BrainTurnOutp
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    }, input.model);
+    }, input.model, input.allowFallback !== false);
     totalUsage.model = servedBy.model;
 
     totalUsage.inputTokens += response.usage.input_tokens;
@@ -1940,7 +1948,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
       ],
       tools: toAnthropicTools(input.tools),
       messages,
-    }), input.model);
+    }), input.model, input.allowFallback !== false);
     totalUsage.model = opened.target.model;
 
     for await (const event of opened.events) {
@@ -2131,7 +2139,7 @@ export async function* streamBrainTurn(input: BrainTurnInput): AsyncGenerator<Br
           },
         ],
         messages,
-      }), input.model);
+      }), input.model, input.allowFallback !== false);
       const rescueBuffer = new SentenceBuffer();
       for await (const event of rescueOpened.events) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {

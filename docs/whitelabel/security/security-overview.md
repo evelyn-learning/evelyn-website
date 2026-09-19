@@ -40,7 +40,7 @@ Student data is shared with the following providers only to deliver the service.
 | Provider | Function | Data it sees |
 |---|---|---|
 | Anthropic | AI tutoring model (primary) | Session transcript, whiteboard state, homework images, student first name if provided |
-| DeepSeek | AI tutoring model (automatic fallback used only when the primary provider fails) | Same as above during a fallback turn `[DECISION: DeepSeek is a PRC-based provider. Options: (a) disclose as-is; (b) disable the fallback for partner tenants that require it (env `TUTOR_MODEL_BRAIN_FALLBACK` is per deployment); (c) replace with a US-based fallback. Recommend (b) or (c) before sending to a US K-12 buyer.]` |
+| DeepSeek | AI tutoring model fallback — **not used for partner (embedded / white-label) sessions** as of 2026-09-19; applies only to Evelyn Learning's own public demo | None for partner sessions |
 | OpenAI | Speech pipeline components / fallback transcription `[VERIFY exact current use]` | Audio / transcript segments |
 | Cartesia | Text-to-speech and speech-to-text | Tutor text to voice; student audio to text |
 | Deepgram | Speech-to-text (fallback path) | Student audio |

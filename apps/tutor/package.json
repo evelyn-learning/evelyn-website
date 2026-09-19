@@ -115,6 +115,7 @@
     "test:pcm-stream": "npx tsx scripts/test-pcm-stream.ts",
     "test:sonic-ws": "npx tsx scripts/test-sonic-ws.ts",
     "test:verdict-guard": "npx tsx scripts/test-verdict-guard.ts",
+    "test:brain-fallback-permission": "npx tsx scripts/test-brain-fallback-permission.ts",
     "test:judge-prompt": "npx tsx scripts/test-judge-question-context.ts",
     "test:judge-authored-solution": "npx tsx scripts/test-judge-authored-solution.ts",
     "test:rule8-repair": "npx tsx scripts/test-rule8-repair.ts",

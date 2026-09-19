@@ -92,7 +92,6 @@ Transport encryption (TLS 1.2/1.3); signed short-lived session tokens and per-pa
 | Resend | Transactional email (Academy) | United States |
 | Cloudflare | Bot protection (Academy) | United States |
 | Stripe | Payments (Academy, Partner-configured) | United States |
-| `[DeepSeek — include only if the fallback stays enabled for this Partner]` | AI model fallback | China |
 
 **Signatures**
 

@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     const output = await runBrainTurn({
+      allowFallback: !req.headers.get('x-embed-token') || process.env.TUTOR_PARTNER_BRAIN_FALLBACK === 'on',
       systemPrompt: body.systemPrompt,
       conversationHistory: body.conversationHistory,
       studentTranscript: body.studentTranscript,
