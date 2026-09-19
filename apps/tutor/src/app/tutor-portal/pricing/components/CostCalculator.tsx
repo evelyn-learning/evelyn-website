@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { pricing, estimateMonthlyCost } from '../../data/pricing';
+import { pricing, estimateMonthlyCost, type SessionMode } from '../../data/pricing';
 
 const money = (n: number) =>
   n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -10,8 +10,9 @@ export function CostCalculator() {
   const [students, setStudents] = useState(500);
   const [sessionsPerStudent, setSessionsPerStudent] = useState(4);
   const [avgMinutes, setAvgMinutes] = useState(25);
+  const [mode, setMode] = useState<SessionMode>('voice');
 
-  const result = estimateMonthlyCost(students, sessionsPerStudent, avgMinutes);
+  const result = estimateMonthlyCost(students, sessionsPerStudent, avgMinutes, mode);
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -81,6 +82,19 @@ export function CostCalculator() {
         />
       </div>
 
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <label className="text-sm font-medium text-slate-700" htmlFor="cost-calc-mode">Session mode</label>
+        <select
+          id="cost-calc-mode"
+          value={mode}
+          onChange={(e) => setMode(e.target.value as SessionMode)}
+          className="rounded-md border border-slate-200 px-3 py-1.5 text-sm"
+        >
+          <option value="voice">Voice (${pricing.perMinuteUsd.toFixed(2)}/min)</option>
+          <option value="text">Text-only (${pricing.textPerMinuteUsd.toFixed(2)}/min)</option>
+        </select>
+      </div>
+
       {/* Results */}
       <div className="rounded-xl bg-slate-50 p-5">
         <div className="mb-4 grid grid-cols-2 gap-4">
@@ -90,7 +104,7 @@ export function CostCalculator() {
           </div>
           <div>
             <p className="text-xs text-slate-500">Rate</p>
-            <p className="text-lg font-bold text-slate-900">${pricing.perMinuteUsd.toFixed(2)}/min</p>
+            <p className="text-lg font-bold text-slate-900">${result.rate.toFixed(2)}/min</p>
           </div>
         </div>
 

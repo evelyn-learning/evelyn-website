@@ -10,8 +10,14 @@
 
 export const pricing = {
   productName: 'Voice Tutor',
-  /** Partner list price, USD per tutoring minute (voice or text, whiteboard included). */
+  /** Partner list price, USD per VOICE tutoring minute (whiteboard included). */
   perMinuteUsd: 0.15,
+  /**
+   * Text-only sessions (same tutor, same whiteboard, typed instead of spoken).
+   * Cheaper because the speech layer (TTS + STT) is what the difference pays for
+   * (Praveen ruling 2026-09-19).
+   */
+  textPerMinuteUsd: 0.12,
   tagline: 'One product. One rate. No fixed fees.',
   description:
     'Voice + interactive-whiteboard AI tutor, embedded in your platform under your brand. ' +
@@ -41,14 +47,22 @@ export const sandboxLimits = {
 };
 
 /** A 30-minute session at list price — used wherever we quote "per session". */
-export const perSessionUsd = (minutes: number) => minutes * pricing.perMinuteUsd;
+export type SessionMode = 'voice' | 'text';
+
+/** Per-minute list rate for a session mode. */
+export const rateFor = (mode: SessionMode = 'voice') =>
+  mode === 'text' ? pricing.textPerMinuteUsd : pricing.perMinuteUsd;
+
+export const perSessionUsd = (minutes: number, mode: SessionMode = 'voice') => minutes * rateFor(mode);
 
 export function estimateMonthlyCost(
   studentsPerMonth: number,
   sessionsPerStudent: number,
   avgSessionMinutes: number,
-): { totalMinutes: number; cost: number; perStudent: number } {
+  mode: SessionMode = 'voice',
+): { totalMinutes: number; cost: number; perStudent: number; rate: number } {
   const totalMinutes = studentsPerMonth * sessionsPerStudent * avgSessionMinutes;
-  const cost = totalMinutes * pricing.perMinuteUsd;
-  return { totalMinutes, cost, perStudent: studentsPerMonth > 0 ? cost / studentsPerMonth : 0 };
+  const rate = rateFor(mode);
+  const cost = totalMinutes * rate;
+  return { totalMinutes, cost, perStudent: studentsPerMonth > 0 ? cost / studentsPerMonth : 0, rate };
 }

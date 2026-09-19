@@ -27,6 +27,9 @@ export default function PricingPage() {
             <p className="mt-2 text-sm text-slate-500">
               A 30-minute session costs ${perSessionUsd(30).toFixed(2)}. An hour costs ${perSessionUsd(60).toFixed(2)}.
             </p>
+            <p className="mt-1 text-sm text-slate-500">
+              Text-only sessions: ${pricing.textPerMinuteUsd.toFixed(2)} / minute.
+            </p>
           </div>
           <div>
             <p className="mb-3 text-sm text-slate-600">{pricing.description}</p>
@@ -54,7 +57,8 @@ export default function PricingPage() {
           ))}
         </ul>
         <p className="mt-4 text-sm text-slate-500">
-          Voice and text sessions are billed at the same rate. There are no tiers, add-ons or per-seat fees.
+          Voice sessions are billed at ${pricing.perMinuteUsd.toFixed(2)}/min and text-only sessions at $
+          {pricing.textPerMinuteUsd.toFixed(2)}/min. There are no tiers, add-ons or per-seat fees.
         </p>
       </div>
 

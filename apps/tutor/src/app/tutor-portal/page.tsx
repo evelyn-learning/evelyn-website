@@ -318,7 +318,9 @@ function PricingSection() {
           >
             See what&apos;s included
           </Link>
-          <p className="mt-3 text-xs text-slate-400">Voice and text billed at the same rate. Volume pricing on request.</p>
+          <p className="mt-3 text-xs text-slate-400">
+            Text-only sessions ${pricing.textPerMinuteUsd.toFixed(2)}/min. Volume pricing on request.
+          </p>
         </div>
       </div>
     </section>

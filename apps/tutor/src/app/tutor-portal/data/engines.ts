@@ -1,3 +1,5 @@
+import { pricing } from './pricing';
+
 export interface VoiceEngine {
   id: string;
   name: string;
@@ -22,9 +24,11 @@ export const voiceEngines: VoiceEngine[] = [
     description:
       'Conversational voice tutor with a structured pedagogy engine. Low-latency turn-taking, full whiteboard (equations, diagrams, tables, problems, concept maps), multi-language support, and per-student adaptive pacing.',
     latency: '<400ms',
-    costPerMinute: 0.1,
-    // Rough all-in estimate (Sonnet 5 brain + Cartesia TTS/STT), not measured.
-    ourCostPerMinute: 0.06,
+    // Single source of truth for the list price is pricing.ts — never hardcode it here
+    // (a hardcoded 0.10 outlived the 2026-09-18 price change on the landing card).
+    costPerMinute: pricing.perMinuteUsd,
+    // Measured 2026-09-17: brain ≈ $0.10–0.12/active-min (LLM only) + ≈ $0.025 voice.
+    ourCostPerMinute: 0.125,
     features: [
       'Sub-400ms response latency with natural interruptions',
       'Structured pedagogy engine (Socratic-first, adaptive pacing)',
