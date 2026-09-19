@@ -807,7 +807,7 @@ export default function SessionStage(props: SessionStageProps) {
             bottom is deliberately NOT padded to clear the floating bar: ink
             may run behind it and stay readable through the 40% surface. */}
         <div
-          className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center`}
+          className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pr-[384px]' : ''}`}
           style={sessionMode === 'text' ? { paddingBottom: `calc(${Math.max(dockHeight, 88)}px + 1rem + env(safe-area-inset-bottom))` } : undefined}
         >
           {/* Once there's content, frame the board as a bounded white "sheet"
@@ -839,96 +839,120 @@ export default function SessionStage(props: SessionStageProps) {
                 started it reverts to the presence indicator it has always
                 been — orbIsStartButton also refuses while an agenda pick is
                 in flight, so the brain never gets a duplicate kickoff. */}
-            {orbStarts ? (
-              <>
-                <button
-                  type="button"
-                  onClick={onOrbStart}
-                  data-testid="tutor-orb-start"
-                  aria-label="Start the lesson"
-                  className="relative mb-3 grid place-items-center pointer-events-auto rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
-                >
-                  {/* Ring pulse invites the tap. */}
-                  <span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
-                  <span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
-                  <div className="ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br from-blue-400 to-blue-600">
-                    <Sparkles className="w-12 h-12 drop-shadow" />
-                  </div>
-                </button>
-                {/* The instruction now sits ON the action instead of pointing
-                    at the far edge of the frame. aria-hidden + tabIndex -1:
-                    the orb button above is the accessible control, and this
-                    is its visible label — exposing both would present the
-                    same action twice to a screen reader. */}
-                <button
-                  type="button"
-                  onClick={onOrbStart}
-                  tabIndex={-1}
-                  aria-hidden
-                  className="mb-5 pointer-events-auto rounded-full bg-blue-600 px-5 py-1.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
-                >
-                  Tap to start
-                </button>
-              </>
-            ) : (
-              <div className="relative mb-6 grid place-items-center">
-                {animate && <><span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /><span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /></>}
-                <div
-                  className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}
-                  // While the student speaks, the orb swells with their voice — a
-                  // direct "I'm hearing you" signal.
-                  style={reactsToMic ? { transform: `scale(${1 + micLevel * 0.18})` } : undefined}
-                >
-                  <Sparkles className="w-12 h-12 drop-shadow" />
-                </div>
-              </div>
-            )}
-            {/* The VU meter has nothing to show before the mic opens — and a
-                dead meter under a "Tap to start" orb reads as a broken
-                control. */}
-            {!orbStarts && <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>}
-            {listeningHint === 'didnt-catch' ? (
-              <p className="ss-cap text-sm font-medium text-amber-600 mb-2">Didn’t catch that — mind repeating?</p>
-            ) : (
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
-                {started ? STATE_LABEL[voiceState] : 'Voice tutor'}
-              </p>
-            )}
-            {/* Once started, the tutor's WORDS live in the small Caption Strip
-                at the bottom — NOT as a wall of big text here. The center stays
-                calm: orb + waveform + state. Pre-start shows the lesson + CTA. */}
-            {agendaEngaged ? (
-              // Agenda round 4: a pick has fired; hold a calm placeholder until
-              // the board content arrives (which hides this whole overlay).
-              <p className="ss-cap max-w-xl text-center text-base text-slate-400">
-                Starting… — the tutor is pulling up your question.
-              </p>
-            ) : started ? (
-              isFreePractice && !liveCaption ? (
-                <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
-              ) : null
-            ) : (
-              <>
-                {/* What are we learning today — the top-bar title is small, so
-                    surface the lesson here at the start as the focal context. */}
-                {hasPlan && (
-                  <p className="mb-2 text-sm sm:text-base text-slate-500">
-                    Today’s lesson: <span className="font-semibold text-slate-700">{lessonTitle}</span>
-                  </p>
-                )}
-                {/* The old "Tap the mic below to start" heading and its ↓
-                    arrow are gone: the instruction lives on the orb button
-                    above now, and repeating it here would point at a control
-                    that is no longer the primary one. When no orb start path
-                    is wired the heading still has a job, so it stays. */}
-                {!orbStarts && (
-                  <p className="max-w-xl text-center text-2xl sm:text-3xl font-semibold leading-snug text-slate-800">
-                    Tap the mic below to start
-                  </p>
-                )}
-                <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-400">
-                  Just talk — I&apos;ll listen and teach on the board {!orbStarts && <ArrowDown className="w-4 h-4" />}
+            {/* Text mode (Option C, product review 2026-09-19): no orb, no
+                "Tap to start", no "VOICE TUTOR" presence label, no
+                "Just talk" — there is no mic. The composer at the bottom is
+                the start control, so the pre-start cluster just names that.
+                Voice's whole cluster below is untouched, byte-identical. */}
+            {sessionMode === 'text' ? (
+              agendaEngaged ? (
+                <p className="ss-cap max-w-xl text-center text-base text-slate-400">
+                  Starting… — the tutor is pulling up your question.
                 </p>
+              ) : started ? (
+                isFreePractice && !liveCaption ? (
+                  <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
+                ) : null
+              ) : (
+                <>
+                  <p className="text-lg font-semibold text-slate-800">Type your question below to start</p>
+                  <p className="mt-2 text-sm text-slate-500">I&apos;ll teach on the board as we go</p>
+                </>
+              )
+            ) : (
+              <>
+                {orbStarts ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={onOrbStart}
+                      data-testid="tutor-orb-start"
+                      aria-label="Start the lesson"
+                      className="relative mb-3 grid place-items-center pointer-events-auto rounded-full transition-transform hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-500"
+                    >
+                      {/* Ring pulse invites the tap. */}
+                      <span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
+                      <span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" />
+                      <div className="ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br from-blue-400 to-blue-600">
+                        <Sparkles className="w-12 h-12 drop-shadow" />
+                      </div>
+                    </button>
+                    {/* The instruction now sits ON the action instead of pointing
+                        at the far edge of the frame. aria-hidden + tabIndex -1:
+                        the orb button above is the accessible control, and this
+                        is its visible label — exposing both would present the
+                        same action twice to a screen reader. */}
+                    <button
+                      type="button"
+                      onClick={onOrbStart}
+                      tabIndex={-1}
+                      aria-hidden
+                      className="mb-5 pointer-events-auto rounded-full bg-blue-600 px-5 py-1.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/30 hover:bg-blue-700"
+                    >
+                      Tap to start
+                    </button>
+                  </>
+                ) : (
+                  <div className="relative mb-6 grid place-items-center">
+                    {animate && <><span className="ss-pulse absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /><span className="ss-pulse d absolute inset-0 m-auto w-28 h-28 rounded-full bg-blue-400/30" /></>}
+                    <div
+                      className={`ss-breathe relative w-28 h-28 rounded-full grid place-items-center text-white shadow-xl bg-gradient-to-br ${ORB_STYLE[voiceState]}`}
+                      // While the student speaks, the orb swells with their voice — a
+                      // direct "I'm hearing you" signal.
+                      style={reactsToMic ? { transform: `scale(${1 + micLevel * 0.18})` } : undefined}
+                    >
+                      <Sparkles className="w-12 h-12 drop-shadow" />
+                    </div>
+                  </div>
+                )}
+                {/* The VU meter has nothing to show before the mic opens — and a
+                    dead meter under a "Tap to start" orb reads as a broken
+                    control. */}
+                {!orbStarts && <div className="mb-6"><MicMeter level={micLevel} speaking={voiceState === 'speaking'} large /></div>}
+                {listeningHint === 'didnt-catch' ? (
+                  <p className="ss-cap text-sm font-medium text-amber-600 mb-2">Didn’t catch that — mind repeating?</p>
+                ) : (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-2">
+                    {started ? STATE_LABEL[voiceState] : 'Voice tutor'}
+                  </p>
+                )}
+                {/* Once started, the tutor's WORDS live in the small Caption Strip
+                    at the bottom — NOT as a wall of big text here. The center stays
+                    calm: orb + waveform + state. Pre-start shows the lesson + CTA. */}
+                {agendaEngaged ? (
+                  // Agenda round 4: a pick has fired; hold a calm placeholder until
+                  // the board content arrives (which hides this whole overlay).
+                  <p className="ss-cap max-w-xl text-center text-base text-slate-400">
+                    Starting… — the tutor is pulling up your question.
+                  </p>
+                ) : started ? (
+                  isFreePractice && !liveCaption ? (
+                    <p className="max-w-xl text-center text-xl font-semibold text-slate-700">What would you like to work on?</p>
+                  ) : null
+                ) : (
+                  <>
+                    {/* What are we learning today — the top-bar title is small, so
+                        surface the lesson here at the start as the focal context. */}
+                    {hasPlan && (
+                      <p className="mb-2 text-sm sm:text-base text-slate-500">
+                        Today’s lesson: <span className="font-semibold text-slate-700">{lessonTitle}</span>
+                      </p>
+                    )}
+                    {/* The old "Tap the mic below to start" heading and its ↓
+                        arrow are gone: the instruction lives on the orb button
+                        above now, and repeating it here would point at a control
+                        that is no longer the primary one. When no orb start path
+                        is wired the heading still has a job, so it stays. */}
+                    {!orbStarts && (
+                      <p className="max-w-xl text-center text-2xl sm:text-3xl font-semibold leading-snug text-slate-800">
+                        Tap the mic below to start
+                      </p>
+                    )}
+                    <p className="mt-2 flex items-center gap-1.5 text-sm text-slate-400">
+                      Just talk — I&apos;ll listen and teach on the board {!orbStarts && <ArrowDown className="w-4 h-4" />}
+                    </p>
+                  </>
+                )}
               </>
             )}
             {/* Mock-review "review agenda" (replaces the generic starters when a
@@ -1361,7 +1385,7 @@ export default function SessionStage(props: SessionStageProps) {
               stays readable through the 40%-white surface. Deliberately
               translucent at ALL times (product call, 2026-07-14) — no
               idle-fade behavior. Honors the bottom safe-area inset. ===== */}
-      <div className="absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none">
+      <div className={`absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pr-[384px]' : ''}`}>
         <div className="w-[min(96vw,640px)] px-2 pointer-events-auto">
           {/* ONE-LINE slim bar (R1 2026-07-14): [mic][caption][input][send]
               [mute] — the caption rides inside the dock as VTR's captionSlot
@@ -1469,7 +1493,12 @@ export default function SessionStage(props: SessionStageProps) {
       )}
 
       {/* ===== Transcript drawer ===== */}
-      {drawerOpen && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} />}
+      {/* Text mode (Option C, product review 2026-09-19): the panel floats
+          BESIDE the board rather than over it, so there is no dim/blur
+          backdrop and no click-outside-to-close — the panel is pinned open
+          for the whole text session. Voice keeps the original overlay
+          drawer + backdrop byte-identical. */}
+      {drawerOpen && sessionMode !== 'text' && <div className="absolute inset-0 z-40 bg-slate-900/20 backdrop-blur-[2px]" onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} />}
       {/* On phones the CLOSED drawer is display:none, NOT just translated
           off-canvas. iOS Safari does not reliably clip a translated-off-screen
           child of a `fixed overflow-hidden` ancestor, so a translateY(100%)
@@ -1477,11 +1506,22 @@ export default function SessionStage(props: SessionStageProps) {
           bar scrolled away), and couldn't be dismissed (it was already in the
           "closed" state). `hidden` removes it from layout entirely. Desktop
           keeps the slide-in-from-right via translate-x. */}
-      <div className={`absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'flex translate-y-0 md:translate-x-0' : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'}`}>
+      <div
+        className={
+          sessionMode === 'text'
+            ? `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[42dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-[calc(3.5rem_+_12px)] md:left-auto md:right-3 md:bottom-[calc(${Math.max(dockHeight, 88)}px_+_1rem_+_env(safe-area-inset-bottom))] md:w-[360px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl flex translate-y-0 md:translate-x-0`
+            : `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'flex translate-y-0 md:translate-x-0' : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'}`
+        }
+      >
         <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> Transcript</h2>
-          <button onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} className="grid place-items-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
+          {/* Text mode: the panel is pinned open beside the board (Option C) —
+              there is no "close" state to return to, so the X is dropped.
+              Voice keeps the original close control byte-identical. */}
+          {sessionMode !== 'text' && (
+            <button onClick={() => { setDrawerOpen(false); fireTranscriptDrawerEvent('close', 'icon'); }} className="grid place-items-center w-8 h-8 rounded-full hover:bg-slate-100 text-slate-500"><X className="w-4 h-4" /></button>
+          )}
         </div>
         {/* TranscriptView is `h-full overflow-y-auto`. A flex-1 parent's
             percentage-height doesn't always resolve (flexbox gotcha), which

@@ -51,6 +51,11 @@ interface TranscriptViewProps {
    *  Default false; the host wires `true` when the PACING_V2_BUTTONS
    *  flag is on. */
   enablePacingChips?: boolean;
+  /** Empty-state second line. Voice's "Start speaking to begin!" assumes a
+   *  mic — text mode has no mic, so the host overrides this with a typing
+   *  hint. Defaults to the original voice copy so every other caller (and
+   *  every existing snapshot) stays byte-identical. */
+  emptyHint?: string;
 }
 
 /** Round-20 (2026-07-17): bubbles now render inline $…$ math via KaTeX.
@@ -196,7 +201,7 @@ export function classifyQuestionForQuickAnswer(question: string): QuickAnswerKin
   return 'open';
 }
 
-export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips }: TranscriptViewProps) {
+export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorIndex, onQuickAnswer, enablePacingChips, emptyHint = 'Start speaking to begin!' }: TranscriptViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages arrive (or when the picker
@@ -299,7 +304,7 @@ export function TranscriptView({ transcript, isProcessing, picker, pickerAnchorI
         <p className="text-center">
           Your conversation will appear here.
           <br />
-          Start speaking to begin!
+          {emptyHint}
         </p>
       </div>
     );

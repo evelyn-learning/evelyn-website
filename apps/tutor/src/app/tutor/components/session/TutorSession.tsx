@@ -712,6 +712,7 @@ export default function TutorSession(props: TutorSessionProps) {
     <TranscriptView
       transcript={transcript}
       isProcessing={isProcessing}
+      emptyHint={sessionMode === 'text' ? 'Type below to begin!' : undefined}
       onQuickAnswer={(text) => {
         realtimeHandleRef.current?.stopSpeaking();
         realtimeHandleRef.current?.sendTextMessage(text);
