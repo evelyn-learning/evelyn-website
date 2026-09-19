@@ -292,11 +292,12 @@ export default function SessionStage(props: SessionStageProps) {
     return () => clearInterval(id);
   }, [micLevelRef, reactsToMic]);
 
-  // The transcript drawer is CLOSED by default and only opens on explicit
-  // user action (Transcript button / caption tap). We deliberately do NOT
-  // auto-open it on the lesson-picker nudge — popping it over the board on
-  // session start was disorienting (it dimmed the whole stage). The nudge
-  // picker still lives in the transcript, reachable via the Transcript button.
+  // The transcript drawer is closed by default in voice; open in text mode
+  // (see below), and in voice only opens on explicit user action (Transcript
+  // button / caption tap). We deliberately do NOT auto-open it on the
+  // lesson-picker nudge — popping it over the board on session start was
+  // disorienting (it dimmed the whole stage). The nudge picker still lives
+  // in the transcript, reachable via the Transcript button.
   // Text-only mode: the transcript IS the conversation surface, so it starts
   // open (Option C). Voice keeps the closed default.
   const [drawerOpen, setDrawerOpen] = useState(sessionMode === 'text');

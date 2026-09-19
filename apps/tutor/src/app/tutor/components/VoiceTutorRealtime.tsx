@@ -11216,8 +11216,10 @@ export function VoiceTutorRealtime({
           if (currentTurnTypedRef.current) {
             // Text mode: the composer gates on this — a typed turn that
             // couldn't reach the brain over HTTP means the route is down,
-            // not that the student needs to try speaking again.
-            setBrainReachable(false);
+            // not that the student needs to try speaking again. Guarded on
+            // sessionMode so a voice session's in-session text fallback
+            // (also a typed turn) never fires an extra state update.
+            if (sessionMode === 'text') setBrainReachable(false);
             const msg = "I'm having trouble reaching my brain right now — give me a moment and try again.";
             transcriptRef.current = [
               ...transcriptRef.current,
@@ -11249,7 +11251,7 @@ export function VoiceTutorRealtime({
           return;
         }
         // The fetch succeeded — the brain route is reachable again.
-        setBrainReachable(true);
+        if (sessionMode === 'text') setBrainReachable(true);
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
@@ -21935,10 +21937,13 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           {/* Caption slot (one-line merged bar) replaces the state text when
               provided; otherwise the legacy state text, hidden on mobile to
               free room for the input. The mic button's color/pulse conveys
-              state either way. */}
+              state either way. Text mode: captionSlot is always null (TutorSession
+              gates dockCaptionEl on sessionMode), and there is no mic to have a
+              state — render nothing rather than fall through to the mic-state
+              text, so the composer row carries no mic-state text at all. */}
           {captionSlot ? (
             <div className="flex-1 min-w-0">{captionSlot}</div>
-          ) : (
+          ) : sessionMode === 'text' ? null : (
             <div className="hidden md:block min-w-0">
               <p className="text-sm font-medium text-gray-700 truncate">{stateUI.text}</p>
               {stateUI.subtext && (
