@@ -1085,8 +1085,14 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     ttsProviderRef.current = relayMode?.ttsProvider ?? 'realtime';
   }, [relayMode?.ttsProvider]);
-  const silentSecondsPerWordRef = useRef<number>(relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD);
-  silentSecondsPerWordRef.current = relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD;
+  // Mirrored via a ref + effect like ttsProviderRef so a mid-session prop
+  // change would take effect on the next dispatch.
+  const silentSecondsPerWordRef = useRef<number>(
+    relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD,
+  );
+  useEffect(() => {
+    silentSecondsPerWordRef.current = relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD;
+  }, [relayMode?.silentSecondsPerWord]);
   // Cartesia migration Phase 2, Task 3: voiceId for /api/tutor/tts-cartesia
   // requests. Session-static in practice (one teacher persona per session),
   // but mirrored via a ref + effect like ttsProviderRef so a mid-session
