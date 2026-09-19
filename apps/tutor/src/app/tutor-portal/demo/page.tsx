@@ -9,16 +9,27 @@ export default function DemoPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
       <h1 className="mb-2 text-3xl font-bold text-slate-900">Live Demo</h1>
+      <p className="mb-8 text-sm text-slate-400">
+        Each demo start below (voice or text) counts toward the free demo allowance.
+      </p>
+
+      <h2 className="mb-2 text-2xl font-bold text-slate-900">AI Voice Tutor</h2>
       <p className="mb-2 text-lg text-slate-600">
         Try the AI Voice Tutor. Click the microphone to start a voice session,
-        or switch to text mode.
+        or scroll down for the text-only demo.
       </p>
       <p className="mb-8 text-sm text-slate-400">
         Your browser will ask for microphone permission. The demo uses the same engine your students
         would experience.
       </p>
-
       <EngineSelector />
+
+      <h2 className="mb-2 mt-14 text-2xl font-bold text-slate-900">AI Text Tutor</h2>
+      <p className="mb-8 text-sm text-slate-500">
+        The same tutor as a typed chat: the student types, the tutor replies in text and draws on
+        the whiteboard. Built for classrooms and partners that can&apos;t use a microphone.
+      </p>
+      <EngineSelector mode="text" />
     </div>
   );
 }

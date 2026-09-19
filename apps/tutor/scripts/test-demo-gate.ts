@@ -175,6 +175,37 @@ async function main() {
       assert.ok((verdict.payload.exp as number) * 1000 > Date.now() + 60_000);
     }
   });
+  // ── portal demo page: voice vs text-only mode (2026-09-19) ──────────────
+  await test('mintDemoEmbedToken: text-mode config carries input_mode=text through unchanged', () => {
+    const { token } = mintDemoEmbedToken(
+      { input_mode: 'text', metadata: { source: 'tutor-portal-demo-text' } },
+      'Riley',
+    );
+    const verdict = verifyEmbedToken(token);
+    assert.ok(verdict.ok, `expected verify ok, got ${JSON.stringify(verdict)}`);
+    if (verdict.ok) {
+      assert.strictEqual(verdict.payload.input_mode, 'text');
+      assert.strictEqual(
+        (verdict.payload.metadata as Record<string, unknown> | undefined)?.source,
+        'tutor-portal-demo-text',
+      );
+    }
+  });
+  await test('mintDemoEmbedToken: voice-mode config still carries input_mode=voice', () => {
+    const { token } = mintDemoEmbedToken(
+      { input_mode: 'voice', metadata: { source: 'tutor-portal-demo' } },
+      'Riley',
+    );
+    const verdict = verifyEmbedToken(token);
+    assert.ok(verdict.ok, `expected verify ok, got ${JSON.stringify(verdict)}`);
+    if (verdict.ok) {
+      assert.strictEqual(verdict.payload.input_mode, 'voice');
+      assert.strictEqual(
+        (verdict.payload.metadata as Record<string, unknown> | undefined)?.source,
+        'tutor-portal-demo',
+      );
+    }
+  });
   await test('enforce contract: evelyn-marketing token without demo_gate is refused shape', () => {
     // The enforce.ts rule is `partner_id !== 'evelyn-marketing' || demo_gate`.
     // Assert both halves against real minted payloads.

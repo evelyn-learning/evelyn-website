@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { voiceEngines } from '../../data/engines';
+import { pricing } from '../../data/pricing';
 
 /**
  * Portal live demo (tutor.evelynlearning.com/demo).
@@ -26,7 +27,7 @@ const DEMO_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_KEY = 'evelyn:demo:studentName';
 const EMAIL_KEY = 'evelyn:demo:studentEmail';
 
-function buildDemoConfig(studentName: string) {
+function buildDemoConfig(studentName: string, mode: 'voice' | 'text' = 'voice') {
   return {
     subject: 'cs',
     level: 'ap',
@@ -37,13 +38,13 @@ function buildDemoConfig(studentName: string) {
     curriculum_module: 'evelyn.ap.csp.algorithms-abstraction.v1',
     student_name: studentName,
     session_goal: 'practice',
-    input_mode: 'voice',
+    input_mode: mode,
     max_duration_minutes: 10,
     wrap_at_minutes: 8,
     // Showcase, not an enrolled lesson — let the visitor steer it anywhere.
     open_scope: true,
     features: { voice_mode: true, text_mode: true, homework_upload: false },
-    metadata: { source: 'tutor-portal-demo' },
+    metadata: { source: mode === 'text' ? 'tutor-portal-demo-text' : 'tutor-portal-demo' },
   };
 }
 
@@ -52,12 +53,12 @@ type StartResult =
   | { ok: false; kind: 'limited'; reason: string }
   | { ok: false; kind: 'error' };
 
-async function startGatedDemo(name: string, email: string): Promise<StartResult> {
+async function startGatedDemo(name: string, email: string, mode: 'voice' | 'text'): Promise<StartResult> {
   try {
     const res = await fetch('/api/tutor/demo-start', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, config: buildDemoConfig(name) }),
+      body: JSON.stringify({ name, email, config: buildDemoConfig(name, mode) }),
     });
     if (res.status === 429) {
       const d = (await res.json().catch(() => ({}))) as { reason?: string };
@@ -78,8 +79,15 @@ const LIMIT_COPY: Record<string, string> = {
   demo_busy: 'The demo is at capacity right now — please try again later.',
 };
 
-export function EngineSelector() {
+const VOICE_ONLY_FEATURE_RE = /voice|\bmic\b|microphone|latency|interruption|language/i;
+
+export function EngineSelector({ mode = 'voice' }: { mode?: 'voice' | 'text' }) {
   const engine = voiceEngines[0]!;
+  const isText = mode === 'text';
+  const chipFeatures = isText
+    ? engine.features.filter((f) => !VOICE_ONLY_FEATURE_RE.test(f))
+    : engine.features;
+  const frameMinHeightClass = isText ? 'min-h-[640px]' : 'min-h-[420px]';
   const [studentName, setStudentName] = useState('');
   const [studentEmail, setStudentEmail] = useState('');
   const [starting, setStarting] = useState(false);
@@ -109,7 +117,7 @@ export function EngineSelector() {
     setStarting(true);
     setStartError(false);
     try {
-      const result = await startGatedDemo(name, email);
+      const result = await startGatedDemo(name, email, mode);
       if (!result.ok) {
         if (result.kind === 'limited') setLimited(result.reason);
         else setStartError(true);
@@ -128,14 +136,22 @@ export function EngineSelector() {
       {/* Engine description */}
       <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
         <div className="mb-3 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-          <span className="font-medium text-slate-700">{engine.name}</span>
-          <span>{engine.latency} response time</span>
-          <span>·</span>
-          <span>${engine.costPerMinute.toFixed(2)}/min</span>
+          <span className="font-medium text-slate-700">{isText ? 'Text Tutor' : engine.name}</span>
+          {!isText && (
+            <>
+              <span>{engine.latency} response time</span>
+              <span>·</span>
+            </>
+          )}
+          <span>${(isText ? pricing.textPerMinuteUsd : engine.costPerMinute).toFixed(2)}/min</span>
         </div>
-        <p className="text-sm text-slate-600">{engine.description}</p>
+        <p className="text-sm text-slate-600">
+          {isText
+            ? 'The same tutor as a typed chat with the full whiteboard: the student types, the tutor replies in text and draws as it explains. Structured pedagogy, per-student learning gaps, and the partner API — no microphone.'
+            : engine.description}
+        </p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {engine.features.slice(0, 5).map((f) => (
+          {chipFeatures.slice(0, 5).map((f) => (
             <span key={f} className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-600 shadow-sm">
               {f}
             </span>
@@ -164,10 +180,10 @@ export function EngineSelector() {
             height="760"
             allow="microphone; camera; autoplay"
             className="border-0"
-            title={`AI Voice Tutor — ${engine.name}`}
+            title={`${isText ? 'AI Text Tutor' : 'AI Voice Tutor'} — ${engine.name}`}
           />
         ) : limited ? (
-          <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 p-10 text-center">
+          <div className={`flex ${frameMinHeightClass} flex-col items-center justify-center gap-3 p-10 text-center`}>
             <p className="text-lg font-semibold text-slate-900">Free demo limit reached</p>
             <p className="max-w-md text-sm text-slate-600">
               {LIMIT_COPY[limited] || 'The free demo limit has been reached.'} To keep evaluating,
@@ -181,11 +197,19 @@ export function EngineSelector() {
             </a>
           </div>
         ) : (
-          <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 p-10 text-center">
-            <p className="text-lg font-semibold text-slate-900">Start a live voice session</p>
+          <div className={`flex ${frameMinHeightClass} flex-col items-center justify-center gap-3 p-10 text-center`}>
+            <p className="text-lg font-semibold text-slate-900">
+              {isText ? 'AI Text Tutor' : 'Start a live voice session'}
+            </p>
             <p className="max-w-md text-sm text-slate-500">
-              AP Computer Science Principles · Algorithms &amp; abstraction · 10-minute demo.
-              Ask the tutor to switch topics any time.
+              {isText ? (
+                'Type to the tutor and it writes on the board as it explains. No microphone needed.'
+              ) : (
+                <>
+                  AP Computer Science Principles · Algorithms &amp; abstraction · 10-minute demo.
+                  Ask the tutor to switch topics any time.
+                </>
+              )}
             </p>
             <input
               type="text"
@@ -214,7 +238,7 @@ export function EngineSelector() {
               aria-busy={starting}
               className="mt-2 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              {starting ? 'Starting…' : 'Start voice session'}
+              {starting ? 'Starting…' : isText ? 'Start text session' : 'Start voice session'}
             </button>
             {startError && (
               <p className="text-xs text-rose-600" role="alert">
@@ -222,7 +246,9 @@ export function EngineSelector() {
               </p>
             )}
             <p className="text-xs text-slate-400">
-              Uses your microphone · voice + whiteboard · free demo, up to 3 sessions per email
+              {isText
+                ? "No microphone needed — you'll type to the tutor. · free demo, up to 3 sessions per email"
+                : 'Uses your microphone · voice + whiteboard · free demo, up to 3 sessions per email'}
             </p>
           </div>
         )}
@@ -232,12 +258,22 @@ export function EngineSelector() {
       <div className="mt-6">
         <p className="mb-2 text-sm font-medium text-slate-700">Integration code:</p>
         <pre className="overflow-x-auto rounded-lg bg-slate-900 p-4 text-sm text-green-400">
-          <code>{`<iframe
+          <code>
+            {isText
+              ? `<!-- sign the token with input_mode: "text" for the typed experience -->
+<iframe
+  src="https://tutor.evelynlearning.com/embed?token=YOUR_JWT"
+  width="100%" height="700"
+  allow="camera"
+  frameborder="0"
+></iframe>`
+              : `<iframe
   src="https://tutor.evelynlearning.com/embed?token=YOUR_JWT"
   width="100%" height="700"
   allow="microphone; camera"
   frameborder="0"
-></iframe>`}</code>
+></iframe>`}
+          </code>
         </pre>
       </div>
     </div>
