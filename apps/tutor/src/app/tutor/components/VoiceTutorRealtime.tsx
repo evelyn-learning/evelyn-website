@@ -20788,6 +20788,9 @@ export function VoiceTutorRealtime({
           level,
           studentPreferences,
           realtimeV2: useRealtimeV2,
+          // Text-only mode (Task 6): appends the <text_mode> clause when the
+          // session prop is 'text'. Byte-identical for 'voice' (the default).
+          inputMode: sessionMode,
           // Open-scope demo (2026-09-10): appends the Rule 7(b) override.
           ...(openScope ? { openScope: true } : {}),
           // R49: withdraw the bare-board licence for the OPENING turn only.

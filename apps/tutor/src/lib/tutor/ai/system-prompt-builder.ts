@@ -189,6 +189,9 @@ export interface SystemPromptContext {
    *  flag-gated orchestrator (VoiceTutorRealtime under
    *  NEXT_PUBLIC_TUTOR_PEDAGOGY_OPENER) populates it. */
   teacherPersona?: TeacherPersonaWire;
+
+  /** Text-only session (partner claim). The student types and reads. */
+  inputMode?: 'voice' | 'text';
 }
 
 /**
@@ -1975,7 +1978,17 @@ export function buildSystemPrompt(context: SystemPromptContext): string {
     prompt += `\n\n**Never put the answer on the board for a question you are about to ask (HARD RULE).** Before you render anything, check what you are about to ASK. If the value, label, or result you are asking the student to produce would be visible on the board when the question lands, do not render it — render the setup and leave the result blank or as "?". A live session failed this: the tutor moved to a SECOND method to re-derive a balance, drew the new page with the previous method's answer already marked on it in green ("Wednesday: $3.75"), and then asked "who wins, and by how much?" — whose answer was that number. **Re-deriving by another method means the answer is unknown again for the purposes of that derivation.** The whole value of a second method is the student reaching the same place by a different route; carrying the first method's result onto the second method's board deletes the exercise. The same rule governs speech: do not state one part of an answer in the same breath as asking for the rest ("Team Plus's total pull is fifteen — what does Team Minus add up to?" hands over half the work). Give the setup, ask the question, and let the board fill in as they answer.\n`;
   }
 
-  return prompt;
+  // Text-mode clause (Task 6) — the student is typing and reading, not
+  // speaking. Additive/gated exactly like the clauses above: only appended
+  // when the caller passes inputMode: 'text' (VoiceTutorRealtime forwards
+  // its sessionMode prop). Absent/'voice' ⇒ prompt byte-identical to before.
+  const textModeClause = context.inputMode === 'text'
+    ? '\n<text_mode>\nThis student is TYPING and READING, not speaking. Write, do not narrate: no "say", "hear", "listen" phrasing. ' +
+      'Keep every turn short (one idea, then a question). Keep math in the same $…$ delimiters so the board and the chat render identically. ' +
+      'Never ask the student to speak or to use a microphone.\n</text_mode>\n'
+    : '';
+
+  return prompt + textModeClause;
 }
 
 /** Compose grade profile + voice cadence + analogies + humor into one
