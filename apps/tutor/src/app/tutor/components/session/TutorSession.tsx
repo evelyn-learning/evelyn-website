@@ -46,6 +46,7 @@ import type { SpokenCaption } from '@/lib/tutor/voice/caption-sync';
 import type { StudentMarkEvent } from '@/lib/tutor/whiteboard/student-marks';
 import { acceptWhiteboardBatch, createSeedGuard, type WhiteboardBatchMeta } from '@/lib/tutor/whiteboard/resume-seed';
 import { DEFAULT_PACE_BIAS } from '@/lib/tutor/voice/pace-preference';
+import { type SessionMode, textModeSecondsPerWord } from '@/lib/tutor/voice/resolve-session-mode';
 import { TUTOR_MANUAL_MIC, TUTOR_AGENDA_RAIL } from '@/lib/tutor/orchestrator/flags';
 import { lastQuestionSentence, stripMarkdownEmphasis } from '@/lib/tutor/question-gist-text';
 import { isQpinStaleByTurns, shouldClearQpinOnAnswer, QPIN_MAX_TUTOR_TURNS_BEHIND } from '@/lib/tutor/qpin-behavior';
@@ -113,6 +114,8 @@ export interface TutorSessionProps {
   voice: OpenAIVoice;
   voiceEngine: TutorSessionVoiceEngine;
   ttsProvider?: VTRProps['ttsProvider'];
+  /** Text-only tutor mode (partner token claim). Default 'voice'. */
+  sessionMode?: SessionMode;
   /** Cartesia voice id (Task 3). Only consumed when ttsProvider === 'cartesia'. */
   cartesiaVoiceId?: VTRProps['cartesiaVoiceId'];
   /** Per-voice Cartesia speed offset (R38 Task 6). Forwarded straight to the
@@ -234,7 +237,7 @@ interface LessonProgressState {
 export default function TutorSession(props: TutorSessionProps) {
   const {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
-    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
+    sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
     onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
@@ -1310,6 +1313,8 @@ export default function TutorSession(props: TutorSessionProps) {
         claudeBrainMode={voiceEngine === 'claude-brain'}
         useRealtimeV2={voiceEngine === 'realtime-2'}
         ttsProvider={ttsProvider}
+        sessionMode={sessionMode}
+        silentSecondsPerWord={sessionMode === 'text' ? textModeSecondsPerWord(process.env.NEXT_PUBLIC_TUTOR_TEXT_MODE_SPW) : undefined}
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         onLessonPlanProgress={(p) => { setLessonProgress(p); onLessonProgressChange?.(p); }}
@@ -1675,6 +1680,7 @@ export default function TutorSession(props: TutorSessionProps) {
         <Script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=47658ec5a4894397ae1e1a46a6174a9a" strategy="lazyOnload" />
       )}
       <SessionStage
+        sessionMode={sessionMode}
         lessonTitle={lessonProgress.plan ? lessonProgress.plan.title : topicLabel}
         subtitle={
           lessonProgress.plan

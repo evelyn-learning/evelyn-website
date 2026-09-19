@@ -35,6 +35,7 @@ import {
 import { qpinCollapseDeadline, exceedsDragThreshold, clampQpinFraction, type QpinFraction } from '@/lib/tutor/qpin-behavior';
 import { normaliseUploadedImage } from '@/lib/tutor/whiteboard/image-upload-normalise';
 import { orbIsStartButton } from './prestart-affordances';
+import type { SessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 
 // 'manual-held' (R34 T4): Manual mic mode has a buffered, unsent turn —
 // the resting state in place of 'listening' while the student owns the
@@ -47,6 +48,8 @@ export type VoiceState = 'idle' | 'listening' | 'hearing' | 'processing' | 'spea
 const SHOW_QUICK_ACTIONS = false;
 
 export interface SessionStageProps {
+  /** Text-only tutor mode (partner token claim). Default 'voice'. */
+  sessionMode?: SessionMode;
   lessonTitle: string;
   subtitle?: ReactNode;
   /** Optional partner brand lockup (logo / product name) shown at the left of
@@ -228,6 +231,7 @@ const TITLE_REVEAL_MS = 4000;
 
 export default function SessionStage(props: SessionStageProps) {
   const {
+    sessionMode = 'voice',
     lessonTitle, subtitle, headerBrand, hasPlan, isFreePractice, objective, beats, agendaRail, agendaRailVertical, controls, adaptiveMenu, headerClock, endControl, questionPin, questionPinKey, hiccupPin, actionPin,
     voiceState, warmupOverlay = false, micLevelRef, listeningHint, started = false, liveCaption, boardEmpty, board, boardPages, voiceInput, transcript, transcriptCount = 0,
     quickActions, onStudentInput, onControlMessage,

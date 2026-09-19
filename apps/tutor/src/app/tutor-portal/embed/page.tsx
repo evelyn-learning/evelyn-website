@@ -31,6 +31,8 @@ import { TUTOR_TELEMETRY_SURVIVAL, TUTOR_DEFER_SESSION_DOC, TUTOR_EMBED_CARTESIA
 import { shouldFlushEarly } from '@/lib/tutor/orchestrator/flush-policy';
 import type { TeacherPersonaWire } from '@core/ai/teacher-persona';
 import { cartesiaSpeedForVoiceId, CARTESIA_DEFAULT_VOICE_ID } from '@core/voice/cartesia-voice-registry';
+import { resolveSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
+import { resolveTtsProvider } from '@/lib/tutor/voice/resolve-tts-provider';
 
 // Opener-recency / extraction-carrier gate (mirrors the same flag read in
 // VoiceTutorRealtime.tsx and page.tsx — one env var, read per module).
@@ -480,6 +482,8 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // mode (the portal always sends the field; sandbox/QA mints may not).
   const sessionGoal: SessionGoal = config.session_goal || 'concept-review';
   const inputMode: InputMode = config.input_mode || 'voice';
+  // Text-only tutor (2026-09-19): partner-level, from the signed claim only.
+  const sessionMode = resolveSessionMode(config.input_mode, process.env.NEXT_PUBLIC_TUTOR_TEXT_MODE);
   const voiceEngine: InternalEngine = mapEngine(config.engine);
   // R38: an openai-provider teacher voice was silently discarded (only the
   // cartesia branch below read teacher.voice) — honor its voiceId ahead of
@@ -506,7 +510,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     // partner token arrives without a persona.
     console.info('[embed] tts-default-cartesia: no teacher persona in token');
   }
-  const ttsProvider: 'realtime' | 'cartesia' = useCartesiaVoice || useCartesiaDefault ? 'cartesia' : 'realtime';
+  const ttsProvider = resolveTtsProvider(null, useCartesiaVoice || useCartesiaDefault ? 'cartesia' : undefined, sessionMode);
   const cartesiaVoiceId = useCartesiaVoice
     ? teacherVoice.voiceId
     : useCartesiaDefault
@@ -1404,6 +1408,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         voice={openAIVoice}
         voiceEngine="claude-brain"
         ttsProvider={ttsProvider}
+        sessionMode={sessionMode}
         cartesiaVoiceId={cartesiaVoiceId}
         cartesiaVoiceSpeed={cartesiaVoiceSpeed}
         sessionMaxMinutes={maxDuration}

@@ -20,6 +20,10 @@ import {
   type PerceptionVerdict,
 } from '@/lib/tutor/voice/perception-classifier';
 import { pushTtsScript, applyPlaybackStamp } from '@/lib/tutor/voice/tts-script-buffer';
+// Aliased: this file already has a `SessionMode` (opening-behavior's
+// lessonNode/freestyle/diagnostic `targetKind`, unrelated concept) — the
+// text-only tutor mode is `TutorSessionMode` here to avoid the collision.
+import type { SessionMode as TutorSessionMode } from '@/lib/tutor/voice/resolve-session-mode';
 import { decideStage2TimeoutRestore, STAGE2_NO_VERDICT_RESTORE_MS } from '@/lib/tutor/voice/stage2-restore';
 import { decideStage2CancelAction, isDuplicateTranscript, type Stage2Verdict } from '@/lib/tutor/voice/stage2-cancel-policy';
 import { mapFunctionCallToCommand, WHITEBOARD_TOOLS, inkNotesEnabled } from '../hooks/toolDefinitions';
@@ -708,6 +712,11 @@ interface VoiceTutorRealtimeProps {
    *    (Crimsora v2 Phase 2E). Select via ?tts=silent or
    *    NEXT_PUBLIC_TUTOR_TTS_ENGINE=silent. */
   ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
+  /** Text-only tutor mode (2026-09-19). 'text' ⇒ no mic, no perception WS,
+   *  composer is the primary input, silent TTS clock. Default 'voice'. */
+  sessionMode?: TutorSessionMode;
+  /** Silent-clock pace; only meaningful when ttsProvider === 'silent'. */
+  silentSecondsPerWord?: number;
   /** Cartesia voice id for the persona-mapped teacher voice (Task 3).
    *  Only consumed when ttsProvider === 'cartesia'; resolved by the caller
    *  via resolveCartesiaVoice() (src/lib/tutor/voice/cartesia-voice-registry.ts). */
@@ -1071,6 +1080,8 @@ export function VoiceTutorRealtime({
   claudeBrainMode = false,
   useRealtimeV2 = false,
   ttsProvider = 'realtime',
+  sessionMode = 'voice',
+  silentSecondsPerWord,
   cartesiaVoiceId,
   cartesiaVoiceSpeed,
   onLessonPlanProgress,
@@ -17891,6 +17902,7 @@ export function VoiceTutorRealtime({
           instructions: RELAY_MODE_PROMPT,
           onUserTranscript: handleStudentTranscriptForBrain,
           ttsProvider,
+          silentSecondsPerWord,
           cartesiaVoiceId,
           cartesiaVoiceSpeed,
           speakingRate,
