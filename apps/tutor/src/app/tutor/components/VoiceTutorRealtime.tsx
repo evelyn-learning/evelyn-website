@@ -10925,7 +10925,7 @@ export function VoiceTutorRealtime({
               // Text mode has no mic and no "quiet spot" — that's voice
               // advice. Same one-shot latch/debug event, typed-reply wording.
               const tipText = sessionMode === 'text'
-                ? ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to appear and that they can type at any time.'
+                ? ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to appear. Do not mention talking, speaking, listening or a microphone.'
                 : ' FIRST-SESSION TIP: this is this student\'s very first session here. Right after your opening line, add ONE short, warm sentence letting them know your replies take a few seconds to arrive, and that a quiet spot helps you hear them clearly. Once, briefly, then never mention it again.';
               openingDirective += tipText;
               try {
