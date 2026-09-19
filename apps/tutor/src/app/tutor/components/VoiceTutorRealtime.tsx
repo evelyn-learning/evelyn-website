@@ -1125,6 +1125,9 @@ export function VoiceTutorRealtime({
   // so a transcript can arrive well after the mute click).
   const isMicMutedRef = useRef(false);
   isMicMutedRef.current = isMicMuted;
+  // Task 5: text mode has no mic at all — read as muted from the start so
+  // any mic-state UI (and the startListening guards below) agree with reality.
+  useEffect(() => { if (sessionMode === 'text') setIsMicMuted(true); }, [sessionMode]);
   // R34 T4: per-device "Manual mic" mode — opt-in (localStorage), gated by
   // TUTOR_MANUAL_MIC. Finalized transcripts buffer instead of dispatching;
   // the student taps a ✓ send affordance to submit the combined turn.
@@ -2417,6 +2420,12 @@ export function VoiceTutorRealtime({
   // handleMicClick is declared, so it reads through this ref — same idiom as
   // gestureSessionStartRef immediately above.
   const micClickRef = useRef<(() => void) | null>(null);
+
+  // Task 5: text mode's composer <input> ref, so a stray orb tap (the
+  // pre-start center orb is not sessionMode-aware — see handleMicClick's
+  // text-mode branch) can be routed to the typed-submit start gesture
+  // instead of the voice mic-kickoff sequence.
+  const studentTextInputRef = useRef<HTMLInputElement | null>(null);
 
   // R32 T9: warmup watchdog. A stalled [start lesson] / [Session-resumed…] /
   // typed-first kickoff used to pin isWarmingUp (and the DISABLED mic) forever
@@ -9180,6 +9189,11 @@ export function VoiceTutorRealtime({
       // lands during the opener's own audio. Gate those instead of
       // alarming a student who was never given a chance to speak.
       if (error.name === 'MicSilentWarning') {
+        // Task 5: text mode never opens a mic, so this warning is never
+        // meaningful there — suppress it outright rather than let a stray/
+        // late-arriving probe surface a "mic looks silent" nag to a student
+        // who was never asked to use one.
+        if (sessionMode === 'text') return;
         const bannerText = "I can't hear you — your mic looks silent. Check the mic permission or volume, or type below.";
         const trulyDead = /peak=-Infinity/.test(error.message);
         if (trulyDead) {
@@ -9221,7 +9235,7 @@ export function VoiceTutorRealtime({
     setErrorMessage(error.message);
     onDebugEvent?.('error', error.message);
     onError?.(error);
-  }, [onError, onDebugEvent]);
+  }, [onError, onDebugEvent, sessionMode]);
 
   // Listen for molecule changes from the Ketcher editor
   // Use a ref to access sendTextMessage without re-creating the listener
@@ -18082,7 +18096,9 @@ export function VoiceTutorRealtime({
   // resolved stage to derive inputAuthority).
   // Only open the perception WS once the production WS is connected — this
   // avoids issuing a mic-permission prompt before the user clicks Start.
-  const perceptionEnabled = perceptionStage >= 0 && realtime.isConnected;
+  // Text mode (Task 5): never opens perception at all — no mic, no
+  // getUserMedia prompt, ever.
+  const perceptionEnabled = sessionMode !== 'text' && perceptionStage >= 0 && realtime.isConnected;
 
   // Keep production WS state in a ref so the perception onTranscript callback
   // can tag every log with what the production WS was doing at the moment
@@ -18339,6 +18355,9 @@ export function VoiceTutorRealtime({
       if (micNoticeGateTimerRef.current) clearTimeout(micNoticeGateTimerRef.current);
       micNoticeGateTimerRef.current = setTimeout(() => {
         micNoticeGateTimerRef.current = null;
+        // Task 5: no mic in text mode — never surface the deferred
+        // "quiet but finite" noise-floor nag there.
+        if (sessionMode === 'text') { pendingMicNoticeRef.current = null; return; }
         if (micEverHeardRef.current) {
           pendingMicNoticeRef.current = null;
           return;
@@ -20187,7 +20206,7 @@ export function VoiceTutorRealtime({
       perceptionWS.disconnect();
       perceptionWS.connect();
     }
-    if (hasStartedRef.current && !isMicMutedRef.current) {
+    if (sessionMode !== 'text' && hasStartedRef.current && !isMicMutedRef.current) {
       realtime.stopListening();
       realtime.startListening();
     }
@@ -20195,7 +20214,7 @@ export function VoiceTutorRealtime({
     setMicNotice(`Switched to ${label.slice(0, 40)} — say something to test it.`);
     if (micNoticeTimerRef.current) clearTimeout(micNoticeTimerRef.current);
     micNoticeTimerRef.current = setTimeout(() => setMicNotice(null), 12000);
-  }, [micSwitchOffer, perceptionInk2, perceptionWS, realtime, onDebugEvent]);
+  }, [micSwitchOffer, perceptionInk2, perceptionWS, realtime, onDebugEvent, sessionMode]);
 
   // ── Stage 2 dev-only test triggers ────────────────────────────────
   // window.__tutorForceFalseBargein() — fully synthetic cancel+restore
@@ -20963,6 +20982,22 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   const pendingGestureStartRef = useRef(false);
 
   const handleMicClick = useCallback(() => {
+    // Task 5: text mode has no mic-start path at all. The pre-start center
+    // orb (SessionStage) isn't sessionMode-aware and calls straight into
+    // this handler via onOrbStart/startSession — in text mode route that
+    // tap to focus the composer instead of running the voice mic-kickoff
+    // sequence (warmup overlay, brain greet-kickoff, startListening). The
+    // real start gesture in text mode is the first typed submit (parity
+    // logic lives at the composer's onSubmit, which stamps
+    // voiceSessionStartedAtMsRef / calls onSessionStartedRef.current?.() /
+    // realtime.unlockAudio() itself). unlockAudio() still runs here so the
+    // tap's own gesture stack keeps iOS's audio-unlock requirement satisfied
+    // even though this tap isn't the one that starts the session.
+    if (sessionMode === 'text') {
+      realtime.unlockAudio();
+      studentTextInputRef.current?.focus();
+      return;
+    }
     // 2026-08-17 triage (portal-96a436f0): the old if/else-if chain here let a
     // PRE-START tap resolve to the stop-listening toggle whenever the relay
     // had reached 'listening' on its own (pre-start blur/unmute leaks used to
@@ -20998,6 +21033,9 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     } else if (tapAction === 'interrupt') {
       realtime.interrupt();
       // Respect the student's muted state even when interrupting the tutor.
+      // (sessionMode is 'text' never reaches here — the text-mode branch at
+      // the top of this callback returns before tapAction is resolved; TS
+      // narrows sessionMode to 'voice' for the rest of this function.)
       if (!isMicMuted) realtime.startListening();
     } else if (tapAction === 'start') {
       // On first click, send context-aware greeting to get tutor's introduction.
@@ -21026,7 +21064,11 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         // NOT this overlay — see onWarmupOverlayChange's doc comment). Only
         // this branch shows the full-stage "joining" overlay; it's cleared
         // by the effect near isWarmingUp's declaration the moment audio
-        // actually starts (or the watchdog gives up).
+        // actually starts (or the watchdog gives up). Text sessions start
+        // from the typed-submit path and never reach this branch —
+        // handleMicClick returns early for sessionMode 'text' above (TS
+        // narrows sessionMode to 'voice' for the rest of this function), so
+        // this overlay can never show in text mode.
         setShowWarmupOverlay(true);
         // R32 T9: arm the watchdog. Stashed below per-branch only where the
         // kickoff is a known literal string safely re-sendable through
@@ -21128,7 +21170,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // If the student hit the Mute button BEFORE clicking Start, honour that
       // the whole way through — send the greeting but do not open the mic.
       // They can unmute whenever they're ready; startListening fires from
-      // toggleMicMute's unmute branch.
+      // toggleMicMute's unmute branch. (sessionMode 'text' never reaches
+      // here — see the early return at the top of this callback.)
       if (!isMicMuted) {
         realtime.startListening();
       } else {
@@ -21151,7 +21194,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
     // tapAction === 'none' (mid-session, relay down): nothing actionable —
     // the start_tap event above is the whole point, so the tap is no longer
     // an invisible no-op.
-  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent, targetKind]);
+  }, [realtime, sessionGoal, topic, hasStarted, isMicMuted, claudeBrainMode, handleStudentTranscriptForBrain, onSessionStarted, resumeState, resumeContinue, onDebugEvent, targetKind, sessionMode]);
 
   // Keep the handle's startSession pointed at the CURRENT handleMicClick
   // closure — it reads hasStarted / isMicMuted / realtime.state, so a stale
@@ -21182,8 +21225,8 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
   // Resume conversation
   const handleResume = useCallback(() => {
     setIsPaused(false);
-    realtime.startListening();
-  }, [realtime]);
+    if (sessionMode !== 'text') realtime.startListening();
+  }, [realtime, sessionMode]);
 
   // Toggle mute student mic. Side effects run OUTSIDE a setState updater (which
   // runs during render) — calling other setStates there throws "update during
@@ -21248,7 +21291,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       // before the session began, which is the state the dead-session tap
       // bug fed on. The pre-start mute is still honoured the original way:
       // the Start tap's own branch checks isMicMuted and startListening()s.
-      if (hasStartedRef.current) {
+      if (sessionMode !== 'text' && hasStartedRef.current) {
         realtime.startListening();
       } else {
         console.log('[VoiceTutorRealtime] Unmute before Start — mic opens with the Start tap');
@@ -21257,7 +21300,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
       onDebugEvent?.('mic_unmute', 'Student unmuted mic');
     }
     setIsMicMuted(newMuted);
-  }, [realtime, onDebugEvent]);
+  }, [realtime, onDebugEvent, sessionMode]);
 
   // ===== Start-gate: keep the perception mic MUTED until explicit Start =====
   // The perception WS connects warm on mount (perceptionEnabled, above) so
@@ -22154,6 +22197,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         }}
       >
         <input
+          ref={studentTextInputRef}
           name="studentText"
           type="text"
           // Suppress the browser's autofill/history dropdown (it surfaced prior
@@ -22180,6 +22224,7 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               realtime.muteInput();
             }
           }}
+          onChange={() => { if (sessionMode === 'text') armIdleNudge(); }}
           onBlur={() => {
             studentTypingRef.current = false;
             // Resume mic when done typing (only if student hasn't manually
