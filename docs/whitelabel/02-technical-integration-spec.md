@@ -309,7 +309,18 @@ All endpoints require the `X-API-Key` header with your partner API key.
 | `GET` | `/sessions/:id/transcript` | Get full transcript with timestamps |
 | `GET` | `/sessions/:id/whiteboard` | Get whiteboard command history |
 | `GET` | `/sessions/:id/replay` | Get session replay data (transcript + whiteboard + timing) |
+| `GET` | `/sessions/summary` | Get summarized session data for display and analytics |
 | `DELETE` | `/sessions/:id` | Delete a session and all associated data |
+
+#### Sessions Summary Response Fields
+
+The `/sessions/summary` endpoint returns a list of session summaries with the following fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `sessionId` | string | Yes | Unique session identifier |
+| `durationSec` | number | Yes | Total session duration in seconds |
+| `mode` | string | Optional | "voice" or "text"; text sessions bill at the text rate |
 
 ### Students
 
