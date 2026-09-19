@@ -8,7 +8,8 @@ interface DemoTrackerProps {
   productId: string;
   productTitle: string;
   children: React.ReactNode;
-  /** Input mode the wrapped demo uses. Defaults to 'voice' for existing callers. */
+  /** Input mode the wrapped demo uses. Omit for callers that don't distinguish
+   *  a mode (no mode metadata is sent, and no mode tag is shown). */
   mode?: 'voice' | 'text';
 }
 
@@ -26,7 +27,7 @@ interface DemoTrackerProps {
  * </DemoTracker>
  * ```
  */
-export function DemoTracker({ productId, productTitle, children, mode = 'voice' }: DemoTrackerProps) {
+export function DemoTracker({ productId, productTitle, children, mode }: DemoTrackerProps) {
   const { trackView, trackTry, trackInteraction } = useDemoTracking({ productId, productTitle });
   const containerRef = useRef<HTMLDivElement>(null);
   const hasTrackedView = useRef(false);
@@ -57,7 +58,7 @@ export function DemoTracker({ productId, productTitle, children, mode = 'voice' 
   const handleInteraction = useCallback(() => {
     if (!hasTrackedTry.current) {
       hasTrackedTry.current = true;
-      trackTry({ mode });
+      trackTry(mode ? { mode } : undefined);
     }
   }, [trackTry, mode]);
 

@@ -481,9 +481,12 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   // accidental missing field must NOT silently flip lessons into practice
   // mode (the portal always sends the field; sandbox/QA mints may not).
   const sessionGoal: SessionGoal = config.session_goal || 'concept-review';
-  const inputMode: InputMode = config.input_mode || 'voice';
   // Text-only tutor (2026-09-19): partner-level, from the signed claim only.
   const sessionMode = resolveSessionMode(config.input_mode, process.env.NEXT_PUBLIC_TUTOR_TEXT_MODE);
+  // Persisted/reported inputMode must be the RESOLVED mode, not the raw
+  // claim: with the kill switch off, a text-claim token runs as voice, and
+  // billing/reporting must reflect what actually ran, not what was asked for.
+  const inputMode: InputMode = sessionMode;
   const voiceEngine: InternalEngine = mapEngine(config.engine);
   // R38: an openai-provider teacher voice was silently discarded (only the
   // cartesia branch below read teacher.voice) — honor its voiceId ahead of
@@ -1468,7 +1471,14 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         goalNote={config.goal_note}
         onOpenerRecord={handleOpenerRecord}
         onBrainUsage={handleBrainUsage}
-        onBrainBusyChange={setBrainBusy}
+        // Dev/test only: the __tutorTestState hook above (already
+        // NODE_ENV-guarded) is the only reader of `brainBusy`, and the e2e
+        // harness's waitForTurn() polls it for BOTH voice and text bundles
+        // (scripts/tutor-e2e/run.ts, hero-capture.ts) — so this cannot be
+        // gated on sessionMode without breaking voice e2e runs. Gating on
+        // NODE_ENV instead keeps production (voice AND text) byte-identical
+        // to before this task: no extra state update wired in prod either way.
+        onBrainBusyChange={process.env.NODE_ENV !== 'production' ? setBrainBusy : undefined}
         onDebugEvent={addDebugEvent}
         handleRef={sessionHandleRef}
         isTrial={config.is_trial === true}

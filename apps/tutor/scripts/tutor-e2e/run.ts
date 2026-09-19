@@ -238,7 +238,12 @@ async function main() {
     const url = EMBED_TOKEN
       ? `${BASE_URL}/tutor-portal/embed?token=${encodeURIComponent(EMBED_TOKEN)}`
       : `${BASE_URL}/tutor?tts=${TTS_PARAM}`;
-    log(`navigating to ${url}`);
+    // Redact the signed token from the log — it's a full session credential,
+    // not just an opaque id. The real url (with token) still goes to page.goto.
+    const loggedUrl = EMBED_TOKEN
+      ? `${BASE_URL}/tutor-portal/embed?token=<redacted>`
+      : url;
+    log(`navigating to ${loggedUrl}`);
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
     if (EMBED_TOKEN) {

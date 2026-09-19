@@ -22193,6 +22193,18 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
               onSessionStartedRef.current?.();
               realtime.unlockAudio();
             }
+            // Text-only tutor (2026-09-19): this path stamped the timer/audio
+            // parity above but never flipped hasStarted, unlike the handle's
+            // sendTextMessage (runGestureSessionStart, ~line 20401) — the
+            // harness's first typed submit in text mode landed with
+            // hasStarted still false. Reuse that exact latch here. Text-mode
+            // only: voice-typed-first never flipped hasStarted before this
+            // fix (only the mic tap / handle path did), so gating on
+            // sessionMode keeps voice behavior unchanged.
+            if (sessionMode === 'text' && !hasStartedRef.current && !resumeState) {
+              hasStartedRef.current = true;
+              setHasStarted(true);
+            }
             // Send to AI. input.value was already cleared at the top of
             // this handler before the plan-from-text await so the box
             // empties immediately on submit, not at end of flow.
@@ -22222,7 +22234,12 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
           // and pushes the send button off-screen. text-base = 16px.
           className="flex-1 min-w-0 text-base sm:text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
           autoFocus={sessionMode === 'text'}
-          disabled={sessionMode === 'text' ? !brainReachable : !realtime.isConnected}
+          // Text mode: the composer must never brick. A brain-fetch failure
+          // used to disable this input via brainReachable, and the only
+          // re-enable path was another brain fetch — which a disabled input
+          // can never trigger (one-way door). brainReachable now drives only
+          // the inline hint below, never the disabled state.
+          disabled={sessionMode === 'text' ? false : !realtime.isConnected}
           onFocus={() => {
             studentTypingRef.current = true;
             // Mute mic while typing to prevent it picking up speech
@@ -22246,11 +22263,21 @@ Open with "Hey [name]!" — three words. Wait for the student.`;
         <button
           type="submit"
           className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-30"
-          disabled={sessionMode === 'text' ? !brainReachable : !realtime.isConnected}
+          disabled={sessionMode === 'text' ? false : !realtime.isConnected}
         >
           <Send className="w-4 h-4" />
         </button>
       </form>
+
+      {/* Brain-hiccup hint (text mode only) — the composer stays live through
+          a brain-fetch failure now, so this is advisory only, not a gate.
+          Clears itself on the next successful brain fetch (setBrainReachable(true)
+          in the brain-orchestrator's HTTP-success path). */}
+      {sessionMode === 'text' && !brainReachable && (
+        <span className="order-last w-full md:w-auto text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded flex-shrink-0">
+          Connection hiccup — try sending again
+        </span>
+      )}
 
       {/* Controls on the right */}
       <div className="flex items-center gap-2 flex-shrink-0">

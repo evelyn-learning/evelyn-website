@@ -319,7 +319,7 @@ The `/sessions/summary` endpoint returns a list of session summaries with the fo
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `sessionId` | string | Yes | Unique session identifier |
-| `durationSec` | number | Yes | Total session duration in seconds |
+| `durationSec` | number | Optional | Total session duration in seconds; absent when the session has no transcript |
 | `mode` | string | Optional | "voice" or "text"; text sessions bill at the text rate |
 
 ### Students

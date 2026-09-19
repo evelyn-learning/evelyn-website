@@ -327,7 +327,7 @@ export function DemoAnalyticsDashboard() {
                         </span>
                       </td>
                       <td className="py-3 text-right text-gray-700">
-                        {demo.tries ? Math.round(100 * (demo.textTries ?? 0) / demo.tries) + '%' : '–'}
+                        {demo.textTries ? Math.round(100 * demo.textTries / demo.tries) + '%' : '–'}
                       </td>
                     </tr>
                   ))}

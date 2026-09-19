@@ -90,7 +90,7 @@ function DemoSection() {
 
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Live demo — real embed behind a click-to-start cover */}
-          <DemoTracker productId="voice-tutor" productTitle="AI Voice Tutor">
+          <DemoTracker productId="voice-tutor" productTitle="AI Voice Tutor" mode="voice">
             <VoiceTutorLiveDemo />
           </DemoTracker>
 
