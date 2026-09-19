@@ -446,6 +446,46 @@ export default function SessionStage(props: SessionStageProps) {
     setDockHeight(el.getBoundingClientRect().height);
     return () => ro.disconnect();
   }, [sessionMode]);
+  // Text mode, <md: the transcript sheet starts at `top-[42dvh]` (Addendum
+  // 2) instead of floating beside the board, so the board column's bottom
+  // clearance can no longer be the composer-height expression used on
+  // md+ (owner mobile test, re-review 2026-09-19: the board ran BEHIND the
+  // sheet the whole time, since that expression is only ~70-90px, nowhere
+  // near enough to clear a sheet that starts 58% up the screen). Track the
+  // breakpoint the same way `dockHeight` is tracked (an effect + listener,
+  // not a CSS class — this value feeds an inline-style `calc()`, and a
+  // runtime-interpolated Tailwind arbitrary class doesn't compile, per the
+  // panel `bottom` fix earlier in this file).
+  // SSR-safe default (`true`, matching the server's `window`-less render)
+  // rather than reading `matchMedia` in the initializer: a lazy initializer
+  // that reads `window` runs identically on the client's FIRST render, so
+  // it already lands on the correct value (e.g. `false` on a 390px phone)
+  // before hydration — but React's hydration diffing does NOT patch a
+  // mismatched attribute on that first pass ("won't be patched up"), and
+  // since the state was already correct, the effect below's `setIsMdUp`
+  // call was a no-op (same value in, same value out) that never triggered
+  // the re-render needed to fix the stuck, wrong DOM (caught live: the
+  // mobile board kept the desktop dockHeight-based padding forever).
+  // Starting from the SSR value and correcting it via a genuine state
+  // change in the effect (a real transition, not a no-op) forces the
+  // needed update. One-frame flash of the desktop value on mobile is the
+  // accepted tradeoff — same pattern `dockHeight` already uses (starts 0).
+  const [isMdUp, setIsMdUp] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onChange = () => setIsMdUp(mq.matches);
+    onChange();
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  // md+: same composer-clearance expression as the panel's `bottom` (they
+  // must match — Addendum 4/5). <md: the sheet's own top (`42dvh` ⇒
+  // `100dvh - 42dvh = 58dvh` of board-column height is behind it) plus an
+  // 8px gap, per the owner's spec.
+  const boardBottomClearanceText = isMdUp
+    ? `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))`
+    : `calc(58dvh + 8px)`;
   useEffect(() => {
     if (!toolsOpen) return;
     // R57: the whole dismiss cycle is off while always-open. Registering no
@@ -823,7 +863,7 @@ export default function SessionStage(props: SessionStageProps) {
           // literals only — no runtime interpolation inside `[...]` (that
           // silently fails to compile; see the panel `bottom` fix below).
           className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
-          style={sessionMode === 'text' ? { paddingBottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
+          style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
         >
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
@@ -847,7 +887,17 @@ export default function SessionStage(props: SessionStageProps) {
               symmetric margins instead of the 16px left gap; that's
               intended once the card is no longer flush against the panel
               gutter. */}
-          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
+          {/* pr-14 (<md, text mode only): the floating tools rail (~48px,
+              wrench/pen/Aa/camera/expand) sits at `right-2` over the
+              board's top-right corner — on the full-width phone column
+              (unlike md+, where the rail lands over the panel gutter, a
+              separate pre-existing issue not in this pass's scope) that
+              corner IS board content, so it covered whatever rendered
+              there (owner mobile test, re-review 2026-09-19). Padding
+              inside the card (not a width change) keeps the card's own
+              border/background full-width while narrowing what
+              WhiteboardCanvas actually renders into, clearing the rail. */}
+          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${sessionMode === 'text' ? 'pr-14 md:pr-0' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
         </div>
 
         {/* presence overlay when the board is empty. pb clears the floating
@@ -1173,8 +1223,12 @@ export default function SessionStage(props: SessionStageProps) {
                   `controls` timer above; showing both would double it. */}
               {headerClock && <span className="sm:hidden">{headerClock}</span>}
               {adaptiveMenu}
+              {/* hidden below md (owner mobile test, re-review 2026-09-19):
+                  the phone header is already tight with the transcript
+                  icon, clock, pace pill/⋯, and End control — this chip is
+                  purely informational and was pushing End off-screen. */}
               {sessionMode === 'text' && (
-                <span className="mr-2 inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Text session</span>
+                <span className="hidden md:inline-flex mr-2 items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-600">Text session</span>
               )}
               {endControl}
             </div>
@@ -1571,7 +1625,12 @@ export default function SessionStage(props: SessionStageProps) {
         // entirely. Voice keeps its static `bottom-0` class, untouched.
         style={sessionMode === 'text' ? { bottom: `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
       >
-        <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
+        {/* Text mode: the sheet is pinned open, not a draggable bottom
+            sheet — the grab handle implies an affordance that isn't there
+            (owner mobile test, re-review 2026-09-19). Voice: unchanged. */}
+        {sessionMode !== 'text' && (
+          <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
+        )}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
           <h2 className="text-sm font-semibold text-slate-900 flex items-center gap-2"><MessageSquareText className="w-4 h-4 text-slate-400" /> Transcript</h2>
           {/* Text mode: the panel is pinned open beside the board (Option C) —

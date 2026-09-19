@@ -684,6 +684,7 @@ export default function TutorSession(props: TutorSessionProps) {
         onTryYourselfAnswer={handleTryYourselfAnswer}
         suppressEmptyState
         chrome="minimal"
+        allowHorizontalScroll={sessionMode === 'text'}
         onNavChange={setBoardNav}
         openOnLastPage={!!resumeState}
         onStudentMark={studentMarksOn ? handleStudentMark : undefined}

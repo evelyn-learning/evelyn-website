@@ -227,6 +227,16 @@ interface WhiteboardCanvasProps {
    *  footgun with no place in playback. (Flag-gated host; default keeps every
    *  legacy caller identical.) */
   chrome?: 'full' | 'minimal' | 'replay';
+  /** 'minimal' chrome normally clips horizontal overflow (`overflow-x-hidden`)
+   *  — the board column has always been wide enough that a KaTeX/table
+   *  blowout was rare and the renderers' own inner `overflow-x-auto`
+   *  (HScrollFade etc.) usually caught it. The text-mode phone layout
+   *  narrows that column a lot more (owner mobile test, re-review
+   *  2026-09-19), so this lets the SCROLLER itself pan horizontally too —
+   *  a second line of defense, not a replacement for the renderers' own
+   *  scroll wrappers. Default false: every existing 'minimal' caller
+   *  (voice) stays byte-identical. */
+  allowHorizontalScroll?: boolean;
   /** Surfaces the internal page navigation state so a host (the SessionStage)
    *  can render its own switcher in 'minimal' chrome. Fires whenever the page
    *  count / current index / titles change. `goTo` is stable.
@@ -331,6 +341,7 @@ export function WhiteboardCanvas({
   tutorBusy = false,
   suppressEmptyState = false,
   chrome = 'full',
+  allowHorizontalScroll = false,
   onNavChange,
   openOnLastPage = false,
   onStudentMark,
@@ -1670,7 +1681,12 @@ export function WhiteboardCanvas({
         // bar's height + margin, so the last board item can always be
         // scrolled fully ABOVE the bar and read 100% clearly (2026-07-14
         // live test: bottom ink was permanently stuck under the dock).
-        className={`relative flex-1 ${chrome === 'minimal' ? 'overflow-y-auto overflow-x-hidden pb-32' : 'lg:overflow-y-auto lg:overflow-x-hidden'}`}
+        // allowHorizontalScroll (text-mode phone layout only): the column
+        // is narrower there than it's ever been, so a second line of
+        // defense — the scroller itself pans — keeps wide KaTeX reachable
+        // instead of clipped, on top of (not instead of) the renderers'
+        // own inner overflow-x-auto wrappers.
+        className={`relative flex-1 ${chrome === 'minimal' ? `overflow-y-auto ${allowHorizontalScroll ? 'overflow-x-auto' : 'overflow-x-hidden'} pb-32` : 'lg:overflow-y-auto lg:overflow-x-hidden'}`}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {/* p-4 padding lives HERE (moved off the scroll container) so this
