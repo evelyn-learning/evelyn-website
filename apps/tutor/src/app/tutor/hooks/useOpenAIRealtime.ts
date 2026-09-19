@@ -157,6 +157,19 @@ export interface RealtimeConfig {
    *  response.create the GA gpt-realtime path uses. Default false ⇒
    *  byte-identical to the existing gpt-realtime behavior. */
   useRealtimeV2?: boolean;
+  /** Text-only tutor mode (2026-09-19, Task 10 e2e finding). When true,
+   *  sendTextMessage must NOT arm shouldListenRef — the "mic should
+   *  auto-start after AI responds" intent below is voice-mode-only. Without
+   *  this gate, playNextAudio's drain branch (which fires even for the
+   *  'silent' TTS provider's zero-filled buffers, since text mode still
+   *  drives sentence-start/drain for render-sync) called startListening()
+   *  after EVERY typed turn, opening a real getUserMedia capture in a
+   *  session that is supposed to never touch the mic — caught by the
+   *  tutor-e2e harness's text-mode assertion (a live "shared_mic: opened…
+   *  device=…" event on an embed session driven entirely through
+   *  __tutorSendText, no mic gesture at all). Default false ⇒
+   *  byte-identical to prior behavior for voice sessions. */
+  textMode?: boolean;
   /** Override the whiteboard tools registered in the realtime session.
    *  When omitted the hook registers the full WHITEBOARD_TOOLS; realtime-2
    *  passes a subject-filtered subset so an off-subject session doesn't
@@ -700,6 +713,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     vadThreshold = 0.9, vadSilenceDurationMs = 2500, vadPrefixPaddingMs = 500,
     reconnectEnabled = false,
     useRealtimeV2 = false,
+    textMode = false,
     embedToken,
     tools: toolDefs,
     onTranscriptUpdate, onWhiteboardCommand, onQueryFeatures, onResponseDone, onError, onTranscriptionStatus, onStateChange,
@@ -2879,8 +2893,12 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
       return;
     }
 
-    // Mark session as active — mic should auto-start after AI responds
-    shouldListenRef.current = true;
+    // Mark session as active — mic should auto-start after AI responds.
+    // Text mode (Task 10 finding): never arm this — it made playNextAudio's
+    // drain branch call startListening() after every typed turn, opening a
+    // real mic capture in a mode that must never touch it (see textMode's
+    // doc comment on RealtimeConfig).
+    if (!textMode) shouldListenRef.current = true;
     lastUserInputRef.current = Date.now();
     consecutiveRejectionsRef.current = 0; // Fresh student input breaks the rejection cascade
 
@@ -2935,7 +2953,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     }));
 
     updateState('processing');
-  }, [updateState]);
+  }, [updateState, textMode]);
   // Latest-fn-in-a-ref idiom (cf. startListeningRef) — connect's onopen
   // (defined earlier in the file) flushes pendingTypedRef through this ref
   // so it always calls the current sendTextMessage, not a stale closure.

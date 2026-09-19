@@ -579,6 +579,11 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
   const resumeSeedGuardRef = useRef(createSeedGuard());
   const [error, setError] = useState<string | null>(null);
   const [sessionEnded, setSessionEnded] = useState(false);
+  // Task 10 (tutor-e2e, text-only mode): mirrors TutorSession's internal
+  // brain-busy signal (onBrainBusyChange) so the dev-only __tutorTestState
+  // hook below can expose it — the e2e harness's waitForTurn() polls this to
+  // know when a brain turn has started/settled.
+  const [brainBusy, setBrainBusy] = useState(false);
   const sessionStartRef = useRef(new Date());
   // Phase-0 instrumentation (humanlike-latency plan): the embed surface never
   // wired onDebugEvent, so portal sessions persisted ZERO debug events and
@@ -1340,6 +1345,47 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
     [subject, level, topic, openScope, addDebugEvent],
   );
 
+  // ── Dev-only e2e test hooks (Playwright harness) ──────────────────────────
+  // Task 10 (text-only tutor mode): mirrors the NODE_ENV-guarded window hooks
+  // /tutor defines at page.tsx:1575-1601, so scripts/tutor-e2e/run.ts can
+  // drive an embed session the same way — window.__tutorSendText(text) to
+  // dispatch a typed student turn, window.__tutorTestState() to poll
+  // observable state. Embed sessions have no picker/start step (the config
+  // comes straight from the token), so there is no __tutorTestStart
+  // counterpart here: TutorSession is already mounted and connecting by the
+  // time this effect runs. HOOK ORDER: must sit above the sessionEnded /
+  // !resumeReady early returns (see the HOOK ORDER comment on
+  // handleProposePlanSwap above) — kept directly below it for that reason.
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    w.__tutorSendText = (text: string) => {
+      if (!sessionHandleRef.current) { console.warn('[tutor-e2e] __tutorSendText: handle not ready'); return; }
+      console.warn('[tutor-e2e] __tutorSendText', JSON.stringify(text).slice(0, 120));
+      sessionHandleRef.current.sendTextMessage(text);
+    };
+    w.__tutorTestState = () => ({
+      brainBusy,
+      connected: !!sessionHandleRef.current,
+      error,
+      // e2e telemetry: full debug-event stream, same shape /tutor exposes —
+      // the assertion block in run.ts (active only when
+      // TUTOR_E2E_EMBED_TOKEN is set) scans this for mic/getUserMedia/
+      // warmup_overlay events, which text mode must never emit.
+      debugEvents: debugEventsRef.current,
+      // e2e: full per-turn transcript (untruncated), same shape /tutor
+      // exposes via transcriptStateRef.
+      transcript: transcript.map((e) => ({ role: e.role, text: e.text, streaming: e.streaming === true, revising: e.revising === true })),
+      // e2e: board-render count for the text-mode assertion (fail if 0).
+      // Not part of /tutor's __tutorTestState shape — embed already tracks
+      // this mirror locally (onWhiteboardCommand above), so exposing it here
+      // needs no new plumbing.
+      whiteboardCommandCount: whiteboardCommands.length,
+    });
+    return () => { delete w.__tutorSendText; delete w.__tutorTestState; };
+  }, [brainBusy, error, transcript, whiteboardCommands]);
+
   // Session ended view
   if (sessionEnded) {
     return (
@@ -1422,6 +1468,7 @@ function EmbedSessionInner({ config, embedToken }: { config: EmbedConfig; embedT
         goalNote={config.goal_note}
         onOpenerRecord={handleOpenerRecord}
         onBrainUsage={handleBrainUsage}
+        onBrainBusyChange={setBrainBusy}
         onDebugEvent={addDebugEvent}
         handleRef={sessionHandleRef}
         isTrial={config.is_trial === true}

@@ -17918,6 +17918,9 @@ export function VoiceTutorRealtime({
     vadPrefixPaddingMs,
     reconnectEnabled,
     useRealtimeV2,
+    // Task 10 e2e finding (2026-09-19): text mode must never auto-arm the
+    // mic — see textMode's doc comment on RealtimeConfig.
+    textMode: sessionMode === 'text',
     // Demo gate (2026-08-29): partner embeds authenticate the gated
     // realtime-token route via their embed token (cross-origin iframes
     // can't rely on the demo-grant cookie).

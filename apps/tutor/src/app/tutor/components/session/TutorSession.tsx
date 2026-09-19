@@ -210,6 +210,14 @@ export interface TutorSessionProps {
   onUsageUpdate?: VTRProps['onUsageUpdate'];
   /** A1: per-attempt claude-brain token usage (see VoiceTutorRealtime). */
   onBrainUsage?: VTRProps['onBrainUsage'];
+  /** Task 10 (tutor-e2e, text-only mode): mirrors the brain-busy signal
+   *  (VoiceTutorRealtime's onTutorBusy) out to the parent. TutorSession
+   *  already tracks this internally (handleTutorBusy → isProcessing, used
+   *  only for the ink-fade/board-active-turn bookkeeping below) but never
+   *  surfaced it — the embed page has no other way to know a turn is in
+   *  flight, which the e2e harness's waitForTurn() quiescence poll needs.
+   *  Optional; omitting it is byte-identical to before this prop existed. */
+  onBrainBusyChange?: (busy: boolean) => void;
   onDebugEvent?: VTRProps['onDebugEvent'];
   onTrackInteraction?: VTRProps['onTrackInteraction'];
   onTranscriptionStatus?: VTRProps['onTranscriptionStatus'];
@@ -239,7 +247,7 @@ export default function TutorSession(props: TutorSessionProps) {
     subject, topic, level, studentName, studentId, embedToken, sessionId, sessionStartedAtMs,
     sessionGoal, mockReview, refetchMockReview, lessonPlanId, voice, voiceEngine, ttsProvider, sessionMode = 'voice', cartesiaVoiceId, cartesiaVoiceSpeed, sessionMaxMinutes,
     topicDisplayName, headerBrand, loadDesmos = true, onEndSession, embedded, onMilestone, onTranscriptUpdate,
-    onWhiteboardCommand, onUsageUpdate, onBrainUsage, onDebugEvent, onTrackInteraction,
+    onWhiteboardCommand, onUsageUpdate, onBrainUsage, onBrainBusyChange, onDebugEvent, onTrackInteraction,
     onTranscriptionStatus, onProposePlanSwap, onConfirmPlanLos, onBeforeTypedSubmit,
     onUploadHomework, onLessonPlanIdChange, onLessonProgressChange,
     onCompletedSegmentsChange, availableLessonPlans, resumeState,
@@ -471,7 +479,8 @@ export default function TutorSession(props: TutorSessionProps) {
     if (!busy && prevBusyRef.current) setInkEpoch((e) => e + 1);
     prevBusyRef.current = busy;
     setIsProcessing(busy);
-  }, []);
+    onBrainBusyChange?.(busy);
+  }, [onBrainBusyChange]);
 
   const handleTranscriptionStatus = useCallback<NonNullable<VTRProps['onTranscriptionStatus']>>((status, errorType) => {
     setVoiceTrouble(status === 'failed'
