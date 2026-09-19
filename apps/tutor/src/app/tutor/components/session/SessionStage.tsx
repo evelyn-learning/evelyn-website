@@ -833,10 +833,21 @@ export default function SessionStage(props: SessionStageProps) {
               from the floating transcript panel even before any content
               exists — an unframed empty board next to a framed panel looked
               lopsided. Voice keeps the original "frame only once there's
-              content" behavior byte-identical. `max-w-3xl` is dropped in
-              text mode (`max-w-none`) so the card fills the column instead
-              of leaving dead space beside the reserved panel gutter. */}
-          <div className={`w-full ${sessionMode === 'text' ? 'max-w-none' : 'max-w-3xl'} h-full ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
+              content" behavior byte-identical. `max-w-3xl` (768px, voice)
+              becomes `max-w-4xl` (896px, matching the composer's 880px cap)
+              in text mode — NOT `max-w-none`: a diagram SVG is `w-full`
+              with a viewBox, so its rendered height scales with the card's
+              width, and on a wide column (`max-w-none` let the card reach
+              ~1400px) a fixed-aspect drawing got proportionally far taller
+              than in voice, leaving a large empty gap below it (owner live
+              test, re-review 2026-09-19). The column's `flex justify-center`
+              already centers a max-width-clamped child with no extra
+              `mx-auto` needed (same technique voice's `max-w-3xl` already
+              relied on) — so on a column wider than 896px the card gets
+              symmetric margins instead of the 16px left gap; that's
+              intended once the card is no longer flush against the panel
+              gutter. */}
+          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
         </div>
 
         {/* presence overlay when the board is empty. pb clears the floating
