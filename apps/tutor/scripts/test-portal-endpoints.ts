@@ -276,6 +276,13 @@ const ctxBody = (studentId: string) => ({
     assert.strictEqual(isCostVisiblePartner('kanzoo', {}), false);
     assert.strictEqual(isCostVisiblePartner('kanzoo', { PORTAL_SESSION_COST_PARTNERS: 'kanzoo, crimsora' }), true);
     assert.strictEqual(isCostVisiblePartner('crimsora', { PORTAL_SESSION_COST_PARTNERS: 'kanzoo' }), false);
+    // v1.18.0: mode carries TutorSession.inputMode; absent when the row predates it.
+    const textMode = summarizeTutorSession({ sessionId: 'portal-e', status: 'completed', startedAt: '2026-09-19T06:50:00.000Z', inputMode: 'text' });
+    assert.strictEqual(textMode.mode, 'text');
+    assert.ok(SessionSummarySchema.safeParse(textMode).success);
+    const noMode = summarizeTutorSession({ sessionId: 'portal-f', status: 'completed', startedAt: '2026-09-19T06:50:00.000Z' });
+    assert.ok(!('mode' in noMode));
+    assert.ok(SessionSummarySchema.safeParse(noMode).success);
   });
 
   console.log('\nReview-plan (auth + validation only — 200 path composes via an LLM-backed expander):\n');

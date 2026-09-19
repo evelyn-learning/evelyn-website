@@ -1,6 +1,6 @@
 /**
  * GET /api/portal/v1/sessions/summary?ids=a,b,c — engine-side session facts
- * for a partner's admin dashboard (contract v1.16.0, additive).
+ * for a partner's admin dashboard (contract v1.18.0, additive).
  *
  *   → 200 { sessions: SessionSummary[] }
  *   → 400 { error: 'bad_request', reason }   ids missing / empty / > 50
@@ -39,8 +39,9 @@ export const GET = withPortalAuth(async (req, auth) => {
       whiteboardItemCount: 1,
       estimatedCost: 1,
       location: 1,
+      inputMode: 1,
     })
-    .lean<Pick<ITutorSession, 'sessionId' | 'status' | 'startedAt' | 'endedAt' | 'duration' | 'transcript' | 'whiteboardItemCount' | 'estimatedCost' | 'location'>[]>();
+    .lean<Pick<ITutorSession, 'sessionId' | 'status' | 'startedAt' | 'endedAt' | 'duration' | 'transcript' | 'whiteboardItemCount' | 'estimatedCost' | 'location' | 'inputMode'>[]>();
 
   // `estimatedCostUsd` is the engine's INTERNAL cost estimate — first-party
   // tenants only (contract v1.17.0 made it optional for this).

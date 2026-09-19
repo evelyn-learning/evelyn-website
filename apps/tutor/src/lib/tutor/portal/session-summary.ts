@@ -1,5 +1,5 @@
 /**
- * Portal session summary (contract v1.16.0) — pure helpers for
+ * Portal session summary (contract v1.18.0) — pure helpers for
  * GET /api/portal/v1/sessions/summary.
  *
  * A partner's admin dashboard cannot compute turn counts, board items, brain
@@ -21,6 +21,10 @@ export interface SummarizableSession {
   whiteboardCommands?: unknown[] | null;
   estimatedCost?: number | null;
   location?: { city?: string; region?: string; country?: string } | null;
+  /** v1.18.0: input mode; older rows written before inputMode was tracked
+   *  may lack it, so this stays optional here even though the model field
+   *  is required going forward. */
+  inputMode?: 'text' | 'voice' | null;
 }
 
 /** Parse the `ids` query param: comma-separated, trimmed, de-duplicated.
@@ -101,6 +105,7 @@ export function summarizeTutorSession(
   return {
     sessionId: s.sessionId,
     status: s.status,
+    ...(s.inputMode === 'text' || s.inputMode === 'voice' ? { mode: s.inputMode } : {}),
     startedAt: iso(s.startedAt),
     ...(s.endedAt ? { endedAt: iso(s.endedAt) } : {}),
     // durationSec = ACTIVE seconds from the transcript when it has ≥ 2 stamped
