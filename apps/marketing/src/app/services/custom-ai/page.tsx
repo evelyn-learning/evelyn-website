@@ -45,7 +45,7 @@ const capabilities = [
   {
     icon: Shield,
     title: 'Enterprise Security',
-    description: 'SOC 2 compliant infrastructure with data privacy controls for sensitive educational data.',
+    description: 'Data privacy controls for sensitive educational data, documented in our security overview.',
   },
 ];
 

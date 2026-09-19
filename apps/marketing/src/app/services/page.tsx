@@ -149,7 +149,7 @@ export default function ServicesPage() {
                   },
                   {
                     title: 'Enterprise-Grade Security',
-                    description: 'FERPA, COPPA, SOC 2 compliant infrastructure built for sensitive student data.',
+                    description: 'Built for FERPA and COPPA requirements, with a security overview and DPA available for review.',
                   },
                   {
                     title: 'Proven Track Record',

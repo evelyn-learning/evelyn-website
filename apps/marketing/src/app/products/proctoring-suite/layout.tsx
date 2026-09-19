@@ -33,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           'Real-time anomaly detection',
           'Session recording with AI indexing',
           'Human review queue',
-          'FERPA/COPPA/SOC 2/GDPR compliant',
+          'Designed for FERPA, COPPA and GDPR requirements',
         ]}
       />
       <FAQPageJsonLd faqs={faqs} />
