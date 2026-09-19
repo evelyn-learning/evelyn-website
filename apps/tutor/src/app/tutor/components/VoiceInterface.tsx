@@ -18,6 +18,10 @@ interface VoiceInterfaceProps {
   isListening: boolean;
   isSpeaking: boolean;
   isProcessing: boolean;
+  // LEGACY pre-brain text path — NOT the partner text-only mode. The real text
+  // mode is resolveSessionMode() + sessionMode==='text' in the embed session
+  // (docs/superpowers/specs/2026-09-19-text-only-tutor-mode-design.md). Do not
+  // extend this branch; it bypasses the brain and the whiteboard.
   useTextMode: boolean;
   voiceId: VoiceId;
   currentTranscript: string;

@@ -20,7 +20,7 @@ Unlike text-only AI chatbots, the Voice Tutor replicates the experience of sitti
 Students interact through natural speech. The AI tutor listens, understands, and responds conversationally — no typing required. One voice engine powers every deployment:
 
 - **Voice Tutor** — Sub-400ms response time, natural turn-taking with interruptions, structured pedagogy engine with adaptive pacing, full whiteboard, 50+ languages. **$0.15 per voice tutoring minute** ($0.12 for text-only sessions), with no setup or platform fees.
-- **Text-only mode** — Students type, tutor responds in text. Full whiteboard support. **$0.02/minute.**
+- **Text-only mode** — Students type, tutor responds in text. Full whiteboard support. **$0.12/minute.**
 
 Both voice engines support 50+ languages, natural turn-taking, and multiple voice options.
 

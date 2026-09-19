@@ -88,6 +88,10 @@ https://tutor.evelynlearning.com/embed?token={SESSION_TOKEN}
 }
 ```
 
+### 2.2a Text-Only Sessions
+
+When `input_mode: "text"` is set, the tutor operates as a typed chat interface with full whiteboard support. The transcript panel stays open beside the board, the student types messages in a composer at the bottom, and the tutor's replies appear sentence by sentence as the board renders visuals in real time. Text sessions bill at $0.12/min, lower than voice at $0.15/min.
+
 ### 2.3 Configuration Parameters
 
 | Parameter | Type | Required | Description |
@@ -100,7 +104,7 @@ https://tutor.evelynlearning.com/embed?token={SESSION_TOKEN}
 | `level` | string | Yes | Grade level (K-2, 3-5, 6-8, 9-10, 11-12, AP, college) |
 | `session_goal` | string | No | practice, homework-help, concept-review, test-prep, catch-up, challenge |
 | `locale` | string | No | BCP 47 locale code for voice language (default: en-US) |
-| `input_mode` | string | No | "voice" (default) or "text" |
+| `input_mode` | string | No | "voice" (default) or "text" — honoured since 2026-09: "text" runs the tutor as a typed chat with the whiteboard, no microphone |
 | `voice` | string | No | Voice selection (coral, shimmer, alloy, ash, ballad, echo, sage, verse) |
 | `curriculum_module` | string | No | ID of custom knowledge module to load |
 | `branding` | object | No | Visual customization (colors, logo, product name) |
@@ -118,11 +122,11 @@ Evelyn sends event data to your configured webhook endpoint in real-time.
 
 | Event | Trigger | Key Payload Fields |
 |-------|---------|-------------------|
-| `session.started` | Student begins tutoring | session_id, student_id, subject, topic, level, input_mode, timestamp |
+| `session.started` | Student begins tutoring | session_id, student_id, subject, topic, level, input_mode, mode, timestamp |
 | `session.active` | First student message sent | session_id, student_id, timestamp |
 | `session.paused` | Student pauses session | session_id, pause_reason, elapsed_seconds |
 | `session.resumed` | Student resumes session | session_id, pause_duration_seconds |
-| `session.ended` | Session completes or times out | session_id, duration, message_count, whiteboard_items, token_usage, end_reason |
+| `session.ended` | Session completes or times out | session_id, duration, message_count, whiteboard_items, mode, token_usage, end_reason |
 | `session.abandoned` | Student leaves without ending | session_id, last_activity_timestamp, duration |
 | `session.transcript` | Full transcript available (post-session) | session_id, transcript[], whiteboard_commands[] |
 | `usage.summary` | End-of-session cost breakdown | session_id, input_tokens, output_tokens, audio_tokens, estimated_cost |
@@ -147,6 +151,7 @@ Evelyn sends event data to your configured webhook endpoint in real-time.
     "subject": "math",
     "topic": "quadratic-functions",
     "level": "11-12",
+    "mode": "voice",
     "duration_seconds": 1847,
     "message_count": 24,
     "whiteboard_items": 8,
