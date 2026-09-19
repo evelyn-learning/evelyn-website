@@ -479,13 +479,29 @@ export default function SessionStage(props: SessionStageProps) {
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
   }, []);
+  // Text mode, <md: the sheet's top offset as one dvh number, shared by
+  // both the sheet's own (necessarily static-literal) Tailwind class and
+  // the board column's inline-style bottom-clearance `calc()` below — a
+  // class string and a JS arithmetic expression can't read from the same
+  // template, so THESE TWO MUST BE KEPT IN SYNC BY HAND if either changes.
+  // Owner mobile-split ruling (re-review 2026-09-19): 50/50 (was 42/58).
+  const TEXT_SHEET_TOP_DVH = 50;
+  const TEXT_SHEET_TOP_CLASS = 'top-[50dvh]'; // must equal `top-[${TEXT_SHEET_TOP_DVH}dvh]`
   // md+: same composer-clearance expression as the panel's `bottom` (they
-  // must match — Addendum 4/5). <md: the sheet's own top (`42dvh` ⇒
-  // `100dvh - 42dvh = 58dvh` of board-column height is behind it) plus an
-  // 8px gap, per the owner's spec.
+  // must match — Addendum 4/5). <md: the board column's remaining share is
+  // `100dvh - TEXT_SHEET_TOP_DVH` of the column's height, plus an 8px gap.
   const boardBottomClearanceText = isMdUp
     ? `calc(${Math.max(dockHeight, TEXT_DOCK_MIN_PX)}px + 0.75rem + env(safe-area-inset-bottom))`
-    : `calc(58dvh + 8px)`;
+    : `calc(${100 - TEXT_SHEET_TOP_DVH}dvh + 8px)`;
+  // Text mode, <md: the board pager (page pill with ‹ › arrows) moves
+  // INSIDE the board card as a compact row instead of floating above it
+  // (owner mobile-split ruling, same pass) — no floating pill, no extra
+  // vertical row between the header and the card; the card just gains
+  // that row's height. md+ text mode and every voice case keep the
+  // floating placement untouched. `boardPages` stays the same prop shape
+  // (no `pagerPlacement` added to the public interface) — this is purely
+  // an internal SessionStage render branch.
+  const pagerInCard = sessionMode === 'text' && !isMdUp;
   useEffect(() => {
     if (!toolsOpen) return;
     // R57: the whole dismiss cycle is off while always-open. Registering no
@@ -862,7 +878,9 @@ export default function SessionStage(props: SessionStageProps) {
           // (board card, transcript panel, composer) line up. Static Tailwind
           // literals only — no runtime interpolation inside `[...]` (that
           // silently fails to compile; see the panel `bottom` fix below).
-          className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
+          // `showSwitcher && !pagerInCard`: no floating-pager clearance to
+          // reserve above the card when the pager has moved INSIDE it.
+          className={`absolute inset-0 ${(showSwitcher && !pagerInCard) ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
           style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
         >
           {/* Once there's content, frame the board as a bounded white "sheet"
@@ -897,7 +915,49 @@ export default function SessionStage(props: SessionStageProps) {
               inside the card (not a width change) keeps the card's own
               border/background full-width while narrowing what
               WhiteboardCanvas actually renders into, clearing the rail. */}
-          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${sessionMode === 'text' ? 'pr-14 md:pr-0' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
+          <div className={`w-full ${sessionMode === 'text' ? 'max-w-4xl' : 'max-w-3xl'} h-full ${sessionMode === 'text' ? 'pr-14 md:pr-0' : ''} ${pagerInCard ? 'flex flex-col' : ''} ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>
+            {/* Text mode, <md: the pager moves IN the card (compact row, no
+                floating pill, no extra vertical row) — owner mobile-split
+                ruling, re-review 2026-09-19. Mirrors the floating version's
+                controls (prev/label/next, "new content" dot) at a smaller
+                scale that fits a single header-like row. */}
+            {pagerInCard && showSwitcher && boardPages && (
+              <div className="flex items-center gap-1 px-2 py-1.5 border-b border-slate-100 shrink-0">
+                <button
+                  onClick={() => boardPages.goTo(boardPages.index - 1)}
+                  disabled={boardPages.index === 0}
+                  className="shrink-0 grid place-items-center w-6 h-6 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                  title="Previous board"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <span className="flex-1 min-w-0 flex items-center justify-center gap-1 truncate text-center text-xs font-medium text-slate-700">
+                  <span className="truncate">{formatBoardTitle(boardPages.titles[boardPages.index]) || `Board ${boardPages.index + 1}`}</span>
+                  <span className="shrink-0 text-[10px] font-semibold tabular-nums text-slate-400">{boardPages.index + 1}/{boardPages.count}</span>
+                </span>
+                <button
+                  onClick={() => boardPages.goTo(boardPages.index + 1)}
+                  disabled={boardPages.index >= boardPages.count - 1}
+                  className="relative shrink-0 grid place-items-center w-6 h-6 rounded-full hover:bg-slate-100 text-slate-600 disabled:opacity-30"
+                  title="Next board"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  {boardPages.pendingIndex != null && boardPages.pendingIndex !== boardPages.index && (
+                    <span className="absolute top-0 right-0 w-1.5 h-1.5 rounded-full bg-blue-500" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
+            )}
+            {pagerInCard ? (
+              // Same "absolute inset-0 inside a relative flex-1 min-h-0"
+              // trick TranscriptView's panel uses — a flex-1 parent's
+              // percentage height doesn't always resolve, and
+              // WhiteboardCanvas's own root is `h-full`.
+              <div className="relative flex-1 min-h-0">
+                <div className="absolute inset-0">{board}</div>
+              </div>
+            ) : board}
+          </div>
         </div>
 
         {/* presence overlay when the board is empty. pb clears the floating
@@ -1336,8 +1396,10 @@ export default function SessionStage(props: SessionStageProps) {
       {/* ===== Slim board page switcher (top-center) — only when the
               chromeless board has >1 page. Shows the current board's title +
               "n / N" with prev/next; the WhiteboardCanvas's own page bar is
-              suppressed (chrome="minimal"). ===== */}
-      {showSwitcher && boardPages && (
+              suppressed (chrome="minimal"). Text mode <md: this floating
+              placement is suppressed — the compact in-card row above
+              renders instead (`pagerInCard`, owner mobile-split ruling). ===== */}
+      {showSwitcher && boardPages && !pagerInCard && (
         <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}>
           {/* FIXED-width pill so it never jitters as titles change on page
               turns. The middle label is a button → opens a jump-to-page list. */}
@@ -1608,7 +1670,7 @@ export default function SessionStage(props: SessionStageProps) {
       <div
         className={
           sessionMode === 'text'
-            ? `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[42dvh] pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-[calc(3.5rem_+_12px)] md:left-auto md:right-3 md:w-[360px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl flex translate-y-0 md:translate-x-0`
+            ? `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 ${TEXT_SHEET_TOP_CLASS} pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-[calc(3.5rem_+_12px)] md:left-auto md:right-3 md:w-[360px] md:rounded-2xl md:border md:border-slate-200 md:shadow-xl flex translate-y-0 md:translate-x-0`
             : `absolute z-50 bg-white shadow-2xl flex-col transition-transform duration-300 inset-x-0 top-[16dvh] bottom-0 pb-[env(safe-area-inset-bottom)] rounded-t-3xl md:top-0 md:left-auto md:right-0 md:w-[380px] md:rounded-none md:rounded-l-3xl ${drawerOpen ? 'flex translate-y-0 md:translate-x-0' : 'hidden md:flex translate-y-full md:translate-y-0 md:translate-x-full'}`
         }
         // Text mode: `bottom` must clear the floating composer bar (z-30) —
