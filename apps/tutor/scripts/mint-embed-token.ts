@@ -11,16 +11,19 @@
  * NOT a comma-separated `id:secret` list.
  *
  * The 'evelyn-marketing' partner (the production embed default) has no
- * local secret in this repo's .env.local — only 'academy' and 'crimsora' do.
- * Both work identically for embed-token verification (getPartnerSecret finds
- * either in the env map) and neither is subject to the evelyn-marketing-only
- * demo gate (checkDemoAccess allows any non-'evelyn-marketing' partner
- * token unconditionally — see demo-gate/enforce.ts). Pass --partner
- * explicitly; there is no usable default in a fresh checkout.
+ * local secret in this repo's .env.local — only 'academy' and 'crimsora' do,
+ * so --partner defaults to 'academy' (the one this file's own examples and
+ * Task 10's e2e runs use). Both 'academy' and 'crimsora' work identically
+ * for embed-token verification (getPartnerSecret finds either in the env
+ * map) and neither is subject to the evelyn-marketing-only demo gate
+ * (checkDemoAccess allows any non-'evelyn-marketing' partner token
+ * unconditionally — see demo-gate/enforce.ts). Override with --partner for
+ * a different local secret (e.g. 'crimsora', or 'evelyn-marketing' itself
+ * once it's added to PORTAL_PARTNER_SECRETS).
  *
  * Usage:
- *   npx tsx scripts/mint-embed-token.ts --partner academy --mode text --student qa-text-1
- *   npx tsx scripts/mint-embed-token.ts --partner academy --student qa-voice-1 \
+ *   npx tsx scripts/mint-embed-token.ts --mode text --student qa-text-1
+ *   npx tsx scripts/mint-embed-token.ts --student qa-voice-1 \
  *     --subject math --level Elementary --topic g4-math --plan evelyn.g4.math.long-division.v1
  */
 import * as dotenv from 'dotenv';
@@ -32,7 +35,7 @@ import { createHmac } from 'node:crypto';
 const arg = (k: string, d?: string) =>
   process.argv.includes(`--${k}`) ? process.argv[process.argv.indexOf(`--${k}`) + 1] : d;
 
-const partner = arg('partner', 'evelyn-marketing')!;
+const partner = arg('partner', 'academy')!;
 
 // PORTAL_PARTNER_SECRETS is a JSON map — `{"academy":"...","crimsora":"..."}`
 // — matching getPartnerSecret (auth.ts) / resolveEnvSecret (registry.ts)

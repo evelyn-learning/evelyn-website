@@ -52,7 +52,7 @@ const EMBED_TOKEN = process.env.TUTOR_E2E_EMBED_TOKEN;
  *  text mode's real start gesture is the first typed message (see
  *  VoiceTutorRealtime's handleMicClick text-mode early-return and its
  *  handleRef.sendTextMessage runGestureSessionStart parity comment); (2)
- *  scope the mic/getUserMedia/warmup_overlay debug-event assertion to
+ *  scope the mic/warmup-kickoff debug-event assertion to
  *  text-mode runs only, so the voice-mode embed regression run
  *  (arith-long-division) — which legitimately fires those events — isn't
  *  spuriously failed by a check meant for text mode. */
@@ -90,6 +90,22 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function main() {
   if (!scenarioName) { console.error('Usage: npm run test:tutor-e2e -- <scenario-name> [--headed]'); process.exit(1); }
+
+  // Task 10 fix round 1: a mis-minted or garbled TUTOR_E2E_EMBED_TOKEN must
+  // not silently skip the text-mode assertions — EMBED_TEXT_MODE would just
+  // read false and the run would look like an ordinary passing voice-mode
+  // run instead of surfacing the bad token. Log the decoded claim and fail
+  // fast on anything that isn't 'text', 'voice', or absent (a voice-mode
+  // mint correctly omits input_mode — see mint-embed-token.ts).
+  if (EMBED_TOKEN) {
+    log(`embed token input_mode=${EMBED_INPUT_MODE ?? '(absent → voice)'}`);
+    if (EMBED_INPUT_MODE !== undefined && EMBED_INPUT_MODE !== 'text' && EMBED_INPUT_MODE !== 'voice') {
+      console.error(
+        `FATAL: TUTOR_E2E_EMBED_TOKEN decodes to input_mode=${JSON.stringify(EMBED_INPUT_MODE)} — expected 'text', 'voice', or absent. Check --mode on mint-embed-token.ts (or the token payload itself).`,
+      );
+      process.exit(1);
+    }
+  }
 
   // Load scenario.
   let scenario: Scenario;
@@ -399,7 +415,7 @@ async function main() {
 
     // Task 10 — text-mode assertions. Gated on EMBED_TEXT_MODE (not merely
     // EMBED_TOKEN): the voice-mode embed regression run (arith-long-division)
-    // ALSO sets TUTOR_E2E_EMBED_TOKEN, and legitimately fires mic/warmup_overlay
+    // ALSO sets TUTOR_E2E_EMBED_TOKEN, and legitimately fires mic/warmup-kickoff
     // events — a check meant to catch text mode leaking voice machinery must
     // not fail that run. A failure here sets a non-zero exit code (distinct
     // from the general `anomalies` list, which never affects exit status).
@@ -411,9 +427,36 @@ async function main() {
           whiteboardCommandCount?: number;
         };
         const failures: string[] = [];
-        const badEvent = (finalState.debugEvents ?? []).find((e) => /mic|getUserMedia|warmup_overlay/i.test(e.type));
+        // Event names checked against what the engine actually emits
+        // (VoiceTutorRealtime.tsx onDebugEvent call sites), not the
+        // brief's original guess — 'getUserMedia' and 'warmup_overlay' are
+        // not real event names and never matched anything:
+        //   mic            — shared_mic (the real getUserMedia mic-open/close
+        //                    lifecycle — this is the event Task 10's first
+        //                    run actually caught) plus the mic_* family
+        //                    (mic_mute/mic_unmute/mic_device_switch) and
+        //                    MicSilentWarning; all voice-only, gated on
+        //                    sessionMode !== 'text' at every call site.
+        //   warmup_(rekick|failed) — the voice-only mic-kickoff retry/failure
+        //                    family (warmup_rekick, warmup_rekick_skipped_busy
+        //                    — substring match — warmup_failed), fired only
+        //                    from handleMicClick's 'start' branch / the R32 T9
+        //                    watchdog, both unreachable in text mode
+        //                    (handleMicClick returns early for sessionMode
+        //                    'text'). Both families already reach the embed's
+        //                    debugEvents — EMBED_DEBUG_EVENT_PREFIXES
+        //                    (embed/page.tsx) already lists 'mic_', 'shared_mic',
+        //                    and 'warmup_', so no allowlist change was needed.
+        const badEvent = (finalState.debugEvents ?? []).find((e) => /mic|warmup_(rekick|failed)/i.test(e.type));
         if (badEvent) {
-          failures.push(`text-mode assertion: forbidden debug event "${badEvent.type}" (mic/getUserMedia/warmup_overlay must never fire in text mode)`);
+          failures.push(`text-mode assertion: forbidden debug event "${badEvent.type}" (mic/warmup-kickoff events must never fire in text mode)`);
+        }
+        // Liveness: an empty/missing debugEvents array would pass the check
+        // above vacuously (no event to find is not the same as "no mic
+        // activity, verified") — fail loudly instead of silently.
+        const eventCount = (finalState.debugEvents ?? []).length;
+        if (eventCount === 0) {
+          failures.push('text-mode assertion: debugEvents is empty — the hook or state capture is not working, not a real pass');
         }
         const tutorTurns = (finalState.transcript ?? []).filter((t) => t.role === 'tutor').length;
         if (tutorTurns < 2) {
@@ -427,7 +470,7 @@ async function main() {
           failures.forEach((f) => { anomalies.push(f); log(`FAIL ${f}`); });
           process.exitCode = 1;
         } else {
-          log(`text-mode assertions PASSED (tutor turns=${tutorTurns}, board commands=${boardCommands}, no mic/getUserMedia/warmup_overlay events)`);
+          log(`text-mode assertions PASSED (tutor turns=${tutorTurns}, board commands=${boardCommands}, debugEvents=${eventCount}, no mic/warmup-kickoff events)`);
         }
       } catch (e) {
         anomalies.push(`text-mode assertion check failed: ${(e as Error).message}`);
