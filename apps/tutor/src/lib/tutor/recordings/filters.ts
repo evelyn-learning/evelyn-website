@@ -22,6 +22,7 @@ export interface SessionFilterParams {
   host?: string;
   audio?: string;
   range?: string;
+  mode?: string;
   /** Free-text search: student name, subject, topic, lesson name, grade,
    *  session id, location, or an approximate date (±3 days). */
   q?: string;
@@ -113,6 +114,7 @@ export function buildSessionFilter(
   }
   if (params.partner) filter.sourcePartnerId = params.partner;
   if (params.host) filter.sourceHost = params.host;
+  if (params.mode === 'text' || params.mode === 'voice') filter.inputMode = params.mode;
   if (params.audio === '1') filter.hasAudio = true;
   if (params.range && RANGE_MS[params.range]) {
     filter.startedAt = { $gte: new Date(now.getTime() - RANGE_MS[params.range]) };

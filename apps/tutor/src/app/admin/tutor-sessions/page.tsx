@@ -149,13 +149,14 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
     host: param(sp, 'host'),
     audio: param(sp, 'audio'),
     range: param(sp, 'range'),
+    mode: param(sp, 'mode'),
     q: param(sp, 'q'),
   };
   const page = Math.max(1, parseInt(param(sp, 'page') || '1', 10) || 1);
   const { sessions, total, partners, hosts, lessonTitles } = await getSessions(filters, page);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const now = new Date();
-  const hasActiveFilters = Boolean(filters.src || filters.partner || filters.host || filters.audio || filters.range || filters.q);
+  const hasActiveFilters = Boolean(filters.src || filters.partner || filters.host || filters.audio || filters.range || filters.mode || filters.q);
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -176,7 +177,7 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
       <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8 space-y-2">
         <form method="get" action="/admin/tutor-sessions" className="flex items-center gap-2">
           {Object.entries(filters)
-            .filter(([k, v]) => k !== 'q' && v)
+            .filter(([k, v]) => k !== 'q' && k !== 'mode' && v)
             .map(([k, v]) => (
               <input key={k} type="hidden" name={k} value={v as string} />
             ))}
@@ -196,6 +197,11 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
           >
             Search
           </button>
+          <select name="mode" defaultValue={filters.mode || ''} className="rounded-md border border-gray-300 px-2 py-1.5 text-sm">
+            <option value="">Voice + text</option>
+            <option value="voice">Voice</option>
+            <option value="text">Text</option>
+          </select>
           {filters.q && (
             <Link
               href={filterHref(filters, { q: undefined })}
@@ -377,6 +383,9 @@ export default async function TutorSessionsPage({ searchParams }: PageProps) {
                         </span>
                         {s.voiceEngine ? (
                           <div className="text-[10px] text-gray-400 mt-0.5">{String(s.voiceEngine)}</div>
+                        ) : null}
+                        {s.inputMode ? (
+                          <div className={`text-[10px] mt-0.5 ${s.inputMode === 'text' ? 'text-indigo-600 font-medium' : 'text-gray-400'}`}>{String(s.inputMode)}</div>
                         ) : null}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-500" title={new Date(s.startedAt as string).toLocaleString('en-US')}>
