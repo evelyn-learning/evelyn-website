@@ -615,6 +615,16 @@ export default function SessionStage(props: SessionStageProps) {
     };
   }, []);
 
+  // Shared with the board column's own top padding AND (text mode only)
+  // the presence overlay below — the overlay is a SIBLING of the column,
+  // not a descendant, so without this it used a static `pt-14` that
+  // didn't match the column's actual top offset, and centering a box
+  // whose top is off (independently of the bottom clearance fix below it)
+  // shifts its MIDPOINT down by half that difference — measured a
+  // consistent 24px-low offset at every width (owner phone re-review,
+  // 2026-09-19) until this was shared too.
+  const boardColumnTopPadClass = (showSwitcher && !pagerInCard) ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2');
+
   const [qpinAutoTop, setQpinAutoTop] = useState<number | null>(null);
   useEffect(() => {
     if (!questionPin || qpinMode !== 'expanded' || qpinCustomPos) {
@@ -878,9 +888,12 @@ export default function SessionStage(props: SessionStageProps) {
           // (board card, transcript panel, composer) line up. Static Tailwind
           // literals only — no runtime interpolation inside `[...]` (that
           // silently fails to compile; see the panel `bottom` fix below).
-          // `showSwitcher && !pagerInCard`: no floating-pager clearance to
-          // reserve above the card when the pager has moved INSIDE it.
-          className={`absolute inset-0 ${(showSwitcher && !pagerInCard) ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
+          // `boardColumnTopPadClass`: no floating-pager clearance to
+          // reserve above the card when the pager has moved INSIDE it
+          // (`showSwitcher && !pagerInCard`) — shared with the presence
+          // overlay below so their tops (and therefore vertical centers)
+          // agree.
+          className={`absolute inset-0 ${boardColumnTopPadClass} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
           style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
         >
           {/* Once there's content, frame the board as a bounded white "sheet"
@@ -971,9 +984,27 @@ export default function SessionStage(props: SessionStageProps) {
           // top clear of the floating header even at the scroll origin.
           // Text mode: same md:pl-4/md:pr-[388px] column reservation as the
           // board column above, so the cluster centers over the CARD, not
-          // the full stage.
-          <div className={`absolute inset-0 z-[5] flex flex-col px-6 pt-14 pb-32 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
-          <div className="m-auto w-full flex flex-col items-center">
+          // the full stage. Text mode ALSO needs the same top AND bottom
+          // padding the board column applies (`boardColumnTopPadClass` /
+          // `boardBottomClearanceText` — sheet-based bottom on <md,
+          // composer-based on md+): this overlay is a SIBLING of the board
+          // column, not a descendant, so it doesn't inherit that padding.
+          // The static `pt-14`/`pb-32` it used instead didn't match the
+          // column's real top/bottom offsets — the box's top and bottom
+          // edges both differed from the card's, so its centered content
+          // landed well off the card's real middle (owner phone re-review,
+          // same 2026-09-19 pass: measured a consistent ~24px-low offset at
+          // EVERY width, tracing to the top mismatch alone — fixing only
+          // the bottom clearance wasn't sufficient). Swapping to
+          // `justify-center` (from `m-auto` on the inner wrapper) for text
+          // mode centers within the now-correctly-sized box; voice keeps
+          // its original `pt-14`/`pb-32`/scroll-from-top `m-auto` behavior
+          // for a tall (mock-review agenda) cluster, untouched.
+          <div
+            className={`absolute inset-0 z-[5] flex flex-col px-6 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? `${boardColumnTopPadClass} md:pl-4 md:pr-[388px] justify-center` : 'pt-14 pb-32'}`}
+            style={sessionMode === 'text' ? { paddingBottom: boardBottomClearanceText } : undefined}
+          >
+          <div className={sessionMode === 'text' ? 'w-full flex flex-col items-center' : 'm-auto w-full flex flex-col items-center'}>
             {objective && !isFreePractice && (
               <span className="ss-cap mb-7 inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
                 <Target className="w-4 h-4" /> {objective}
