@@ -13,6 +13,8 @@ async function main() {
     ['spw env parsed', textModeSecondsPerWord('0.5') === 0.5],
     ['spw env garbage → default', textModeSecondsPerWord('fast') === TEXT_MODE_SECONDS_PER_WORD],
     ['spw env non-positive → default', textModeSecondsPerWord('0') === TEXT_MODE_SECONDS_PER_WORD],
+    ["tts: text mode → 'silent' even with ?tts=cartesia", (await import('@/lib/tutor/voice/resolve-tts-provider')).resolveTtsProvider('cartesia', 'cartesia', 'text') === 'silent'],
+    ["tts: voice mode unchanged", (await import('@/lib/tutor/voice/resolve-tts-provider')).resolveTtsProvider(undefined, 'cartesia', 'voice') === 'cartesia'],
   ];
   let fail = 0;
   for (const [name, ok] of checks) { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}`); if (!ok) fail++; }

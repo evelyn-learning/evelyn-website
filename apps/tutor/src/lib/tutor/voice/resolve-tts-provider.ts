@@ -13,12 +13,16 @@
  * Pure module: zero imports from React/Next — server- and client-safe.
  */
 
+import type { SessionMode } from './resolve-session-mode';
+
 export type TtsProvider = 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
 
 /**
  * Resolve the effective TTS provider.
  *
- * Priority: the URL param always wins over the env flag — `?tts=mini` →
+ * Priority: `mode === 'text'` wins over everything else — text-only tutor
+ * mode (2026-09-19) never calls a TTS API, regardless of `?tts=`/env flag.
+ * Otherwise the URL param wins over the env flag — `?tts=mini` →
  * 'openai-mini', `?tts=silent` → 'silent' (test mode: no TTS API calls,
  * zero-filled audio buffers client-side), `?tts=cartesia` → 'cartesia'
  * (explicit opt-back-in for live ear-tests when the env default is
@@ -29,7 +33,11 @@ export type TtsProvider = 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
 export function resolveTtsProvider(
   urlParam: string | null | undefined,
   envFlag: string | undefined,
+  mode: SessionMode = 'voice',
 ): TtsProvider {
+  // Text-only mode (2026-09-19): never call a TTS API. The 'silent' provider
+  // plays zero-filled buffers so sentence-start/drain/render-sync keep firing.
+  if (mode === 'text') return 'silent';
   if (urlParam === 'mini') return 'openai-mini';
   if (urlParam === 'silent') return 'silent';
   if (urlParam === 'cartesia') return 'cartesia';

@@ -318,6 +318,9 @@ export interface RealtimeConfig {
      *    (sentence-start, drain, AudioBufferSource 'ended') fires with
      *    plausible timing. Automated harnesses only. */
     ttsProvider?: 'realtime' | 'openai-mini' | 'cartesia' | 'silent';
+    /** Seconds of silence fabricated per word when ttsProvider === 'silent'.
+     *  Harness default 0.15 (fast); text-only sessions pass a reading pace. */
+    silentSecondsPerWord?: number;
     /** Cartesia voice id to send with each /api/tutor/tts-cartesia request
      *  (Task 3). Ignored unless ttsProvider === 'cartesia'. Resolved by the
      *  caller via resolveCartesiaVoice() (src/lib/tutor/voice/
@@ -1082,6 +1085,8 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
   useEffect(() => {
     ttsProviderRef.current = relayMode?.ttsProvider ?? 'realtime';
   }, [relayMode?.ttsProvider]);
+  const silentSecondsPerWordRef = useRef<number>(relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD);
+  silentSecondsPerWordRef.current = relayMode?.silentSecondsPerWord ?? SILENT_TTS_SECONDS_PER_WORD;
   // Cartesia migration Phase 2, Task 3: voiceId for /api/tutor/tts-cartesia
   // requests. Session-static in practice (one teacher persona per session),
   // but mirrored via a ref + effect like ttsProviderRef so a mid-session
@@ -3048,7 +3053,7 @@ export function useOpenAIRealtime(config: RealtimeConfig): RealtimeResult {
     if (ttsProviderRef.current === 'silent') {
       const words = trimmed.split(/\s+/).filter(Boolean).length || 1;
       const samples = Math.max(
-        Math.round(words * SILENT_TTS_SECONDS_PER_WORD * 24000),
+        Math.round(words * silentSecondsPerWordRef.current * 24000),
         Math.round(0.1 * 24000), // ≥100ms floor so 'ended' timing stays sane
       );
       const promise = Promise.resolve(new Float32Array(samples));
