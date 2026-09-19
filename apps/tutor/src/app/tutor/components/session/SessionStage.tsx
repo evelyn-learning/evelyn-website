@@ -807,8 +807,17 @@ export default function SessionStage(props: SessionStageProps) {
             bottom is deliberately NOT padded to clear the floating bar: ink
             may run behind it and stay readable through the 40% surface. */}
         <div
-          className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pr-[384px]' : ''}`}
-          style={sessionMode === 'text' ? { paddingBottom: `calc(${Math.max(dockHeight, 88)}px + 1rem + env(safe-area-inset-bottom))` } : undefined}
+          // Text mode shared column geometry (owner re-review, tight-gaps
+          // pass): PANEL_W=360, PANEL_RIGHT=12, GAP=16 ⇒ the column reserves
+          // 360+12+16=388px on the right for the panel, and 16px (`pl-4`) on
+          // the left so the card's left margin matches the card↔panel gap.
+          // Every text-mode overlay below (presence cluster, Q-pin/pager/
+          // pins, composer) shares these exact numbers so all three surfaces
+          // (board card, transcript panel, composer) line up. Static Tailwind
+          // literals only — no runtime interpolation inside `[...]` (that
+          // silently fails to compile; see the panel `bottom` fix below).
+          className={`absolute inset-0 ${showSwitcher ? 'pt-12' : (agendaRail && !isFullscreen ? 'pt-1' : 'pt-2')} pb-2 px-2 sm:px-0 flex justify-center ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}
+          style={sessionMode === 'text' ? { paddingBottom: `calc(${Math.max(dockHeight, 88)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
         >
           {/* Once there's content, frame the board as a bounded white "sheet"
               on the grid so the student can see the content boundary BEFORE a
@@ -818,8 +827,10 @@ export default function SessionStage(props: SessionStageProps) {
               from the floating transcript panel even before any content
               exists — an unframed empty board next to a framed panel looked
               lopsided. Voice keeps the original "frame only once there's
-              content" behavior byte-identical. */}
-          <div className={`w-full max-w-3xl h-full ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
+              content" behavior byte-identical. `max-w-3xl` is dropped in
+              text mode (`max-w-none`) so the card fills the column instead
+              of leaving dead space beside the reserved panel gutter. */}
+          <div className={`w-full ${sessionMode === 'text' ? 'max-w-none' : 'max-w-3xl'} h-full ${(boardEmpty && sessionMode !== 'text') ? '' : 'rounded-2xl bg-white/85 border border-slate-200 shadow-sm overflow-hidden'}`}>{board}</div>
         </div>
 
         {/* presence overlay when the board is empty. pb clears the floating
@@ -831,7 +842,10 @@ export default function SessionStage(props: SessionStageProps) {
           // centering and clipping the hero under the header (live-test #1);
           // a short cluster (orb-only presence) still centers. pt-14 keeps the
           // top clear of the floating header even at the scroll origin.
-          <div className="absolute inset-0 z-[5] flex flex-col px-6 pt-14 pb-32 overflow-y-auto pointer-events-none">
+          // Text mode: same md:pl-4/md:pr-[388px] column reservation as the
+          // board column above, so the cluster centers over the CARD, not
+          // the full stage.
+          <div className={`absolute inset-0 z-[5] flex flex-col px-6 pt-14 pb-32 overflow-y-auto pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
           <div className="m-auto w-full flex flex-col items-center">
             {objective && !isFreePractice && (
               <span className="ss-cap mb-7 inline-flex items-center gap-2 rounded-full bg-blue-50 border border-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
@@ -1248,7 +1262,7 @@ export default function SessionStage(props: SessionStageProps) {
               "n / N" with prev/next; the WhiteboardCanvas's own page bar is
               suppressed (chrome="minimal"). ===== */}
       {showSwitcher && boardPages && (
-        <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_192px)]' : ''}`}>
+        <div ref={switcherRef} className={`absolute ${agendaRail && !isFullscreen ? 'top-[98px]' : 'top-[58px]'} left-1/2 -translate-x-1/2 z-30 pointer-events-auto ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}>
           {/* FIXED-width pill so it never jitters as titles change on page
               turns. The middle label is a button → opens a jump-to-page list. */}
           <div className="flex items-center gap-0.5 rounded-full bg-white/95 backdrop-blur border border-slate-200 shadow-md pl-1 pr-1 py-1 w-[min(86vw,360px)]">
@@ -1357,7 +1371,7 @@ export default function SessionStage(props: SessionStageProps) {
             agendaRail && !isFullscreen
               ? (showSwitcher ? 'top-[140px]' : 'top-[104px]')
               : (showSwitcher ? 'top-[100px]' : 'top-16')
-          } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing ${sessionMode === 'text' ? 'md:left-[calc(50%_-_192px)]' : ''}`}
+          } inset-x-2 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-20 sm:max-w-[min(88vw,560px)] touch-none cursor-grab active:cursor-grabbing ${sessionMode === 'text' ? 'md:left-[calc(50%_-_186px)]' : ''}`}
         >
           {questionPin}
         </div>
@@ -1374,7 +1388,7 @@ export default function SessionStage(props: SessionStageProps) {
               fix, live-check-3 addendum: both rendered at the same absolute
               bottom offset). ===== */}
       {(hiccupPin || actionPin) && (
-        <div className={`absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pr-[384px]' : ''}`}>
+        <div className={`absolute inset-x-0 bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] z-20 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
           <div className="max-w-[min(88vw,560px)] pointer-events-auto flex flex-col items-center gap-2">
             {hiccupPin}
             {actionPin}
@@ -1390,8 +1404,12 @@ export default function SessionStage(props: SessionStageProps) {
               stays readable through the 40%-white surface. Deliberately
               translucent at ALL times (product call, 2026-07-14) — no
               idle-fade behavior. Honors the bottom safe-area inset. ===== */}
-      <div className={`absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pr-[384px]' : ''}`}>
-        <div className="w-[min(96vw,640px)] px-2 pointer-events-auto">
+      <div className={`absolute inset-x-0 bottom-[calc(0.5rem_+_env(safe-area-inset-bottom))] z-30 flex justify-center pointer-events-none ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
+        {/* Text mode: span the card's width (up to 880px) instead of the
+            voice dock's fixed min(96vw,640px) puck, so the composer visually
+            centers on the board CARD, not on a narrow strip in the middle of
+            the (now wider, panel-cleared) column. Voice: no class change. */}
+        <div className={`${sessionMode === 'text' ? 'md:w-full md:max-w-[880px]' : ''} w-[min(96vw,640px)] px-2 pointer-events-auto`}>
           {/* ONE-LINE slim bar (R1 2026-07-14): [mic][caption][input][send]
               [mute] — the caption rides inside the dock as VTR's captionSlot
               (composed in TutorSession; it doubles as the mic-state line when
@@ -1425,7 +1443,7 @@ export default function SessionStage(props: SessionStageProps) {
               floating tutor bar (z-30) right above, below the Agenda/
               transcript drawers (z-40) in case one is somehow still open. ===== */}
       {warmupOverlay && (
-        <div className={`absolute inset-x-0 top-14 bottom-0 z-[35] flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px] ${sessionMode === 'text' ? 'md:pr-[384px]' : ''}`}>
+        <div className={`absolute inset-x-0 top-14 bottom-0 z-[35] flex flex-col items-center justify-center gap-3 bg-white/60 backdrop-blur-[2px] ${sessionMode === 'text' ? 'md:pl-4 md:pr-[388px]' : ''}`}>
           <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
           <p className="text-base font-semibold text-slate-700">Your tutor is joining…</p>
           <p className="text-sm text-slate-500">hang tight — this takes a few seconds</p>
@@ -1529,7 +1547,7 @@ export default function SessionStage(props: SessionStageProps) {
         // inline style at ALL widths (the composer floats at the bottom on
         // phones too) sidesteps Tailwind's static-analysis requirement
         // entirely. Voice keeps its static `bottom-0` class, untouched.
-        style={sessionMode === 'text' ? { bottom: `calc(${Math.max(dockHeight, 88)}px + 1rem + env(safe-area-inset-bottom))` } : undefined}
+        style={sessionMode === 'text' ? { bottom: `calc(${Math.max(dockHeight, 88)}px + 0.75rem + env(safe-area-inset-bottom))` } : undefined}
       >
         <div className="md:hidden flex justify-center pt-2.5 shrink-0"><span className="w-10 h-1.5 rounded-full bg-slate-300" /></div>
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 shrink-0">
