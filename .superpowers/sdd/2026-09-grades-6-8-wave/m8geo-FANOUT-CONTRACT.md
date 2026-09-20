@@ -415,9 +415,9 @@ The standards this course uses, with the wording to put in your description:
 | NGS 5 | that people create regions to interpret Earth's complexity |
 | NGS 7 | the physical processes that shape the patterns of Earth's surface |
 | NGS 9 | the characteristics, distribution and migration of human populations on Earth surface |
-| NGS 11 | the patterns and networks of economic interdependence on Earth's surface |
+| NGS 11 | the patterns and networks of economic interdependence on Earth surface |
 | NGS 12 | the processes, patterns and functions of human settlement |
-| NGS 13 | how the forces of cooperation and conflict among people influence the division and control of Earth's surface |
+| NGS 13 | how the forces of cooperation and conflict among people influence the division and control of Earth surface |
 
 > **Wording note (measured 2026-09-19, after two batch-2 agents found this table disagreeing with
 > the `los[0].description` instruction above):** the shipped `m6geo`/`m7geo`/`m8geo` seeds cite
@@ -426,7 +426,7 @@ The standards this course uses, with the wording to put in your description:
 > later on 2026-09-19 with the seeds' escaped apostrophes `\'` normalized -- the first count
 > missed them and called NGS 7 "split"; a batch-3 agent caught it). **Use the shipped precedent for
 > your standard: NGS 9/11/13 = "on Earth surface"; NGS 7 = "Earth's surface" (the table's form).**
-> The table's NGS 9 row was corrected to match. Re-measure in your own subject before asserting
+> The table's NGS 9, 11 and 13 rows were corrected to match. Re-measure in your own subject before asserting
 > (ruling 24), and normalize `\'` when you grep a seed.
 | NGS 14 | how human actions modify the physical environment |
 | NGS 15 | how physical systems affect human systems |
