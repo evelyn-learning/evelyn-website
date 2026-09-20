@@ -192,3 +192,24 @@ m8geo exemplars 7.1, 1.1 (chains 6.4→7.1→7.2 and 1.1→1.2), expected lint *
 ⚠️ Rulings 16-31 live in the m8ela contract; 16-20 were copied into all four, **21-31 were not**. Copy the
 ones that generalise before fanning out sci/geo, and re-derive per subject anything measured on ELA —
 ruling 24 in particular is ELA-specific and its science/math answer is the opposite.
+
+## m8sci COMPLETE 2026-09-19 (Fable session; worktree `demo-gate`)
+
+`lint-ms-plans: 442 plans OK` (predicted). tsc clean; `g8-seed-audit` clean over 40 plans / 120 MCQs; DF-3 40/120 = 33%
+keyed-longest (at chance, healthy); `check-course-consistency` 40 rows / 40 files, no orphans (DESCRIPTION lines are the
+documented false-positive class — m8ela control trips 39/40). 30 rows authored across four batches (8/8/8/6) of Opus
+agents; ONE controller content edit in the whole course (four British spellings in batch 2). Exemplar chains hand-wired.
+
+**Rulings 33–40** appended (33–39 to sci AND geo; 40 sci-only): cells have UP TO three parts; ruling 17's example is
+ELA-origin; ledger exempt from the 25-line cap; ruling 32 burns cell examples (key-lengthening allowed, reported);
+5.1 on the arithmetic-risk list; apparatus ban = never require the student to HAVE equipment; required quantities in
+words, no symbol; formula rule yields to the formula-reading row. Prompt now asks agents to run tsc.
+
+**For Praveen at review (cell wording, science):** 6.2 objective says "breaking particles apart" (rule-12-shaped,
+disarmed in-file); 8.3 names an instant COLD PACK as a reaction (real packs dissolve); 9.1 carries "slinky" (trade
+name) into a student-facing objective. **Shipped-G6 defect:** `g6-sci-atoms-elements.ts` says oxygen is flammable.
+**Spot-read (keys lengthened under ruling 36):** 3.3 i1, 3.4 i1, 7.1 i1+i2, 9.3 i1. Salvage pointers were wrong
+three times (7.3, 7.4, 10.1) because ruling 32 burns what part (i) names — the salvage column predates ruling 32.
+Ruling 21's dual-code list (1.1/6.4/7.1/9.3/9.4/10.3) is ELA-ported; only 9.3 and 10.2 were genuinely dual.
+
+Next: m8geo (2/40, exemplars 7.1 + 1.1; chains 6.4→7.1→7.2 and 1.1→1.2; lint **480**). Same procedure.
