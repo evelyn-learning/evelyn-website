@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-amplitude-wave-energy-001",
+    "loId": "m8sci.amplitude-and-wave-energy",
+    "cedCode": "M8SCI-9.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Amplitude is the distance a material is pushed away from its rest position as a wave passes through it. A rope is tied between two posts and shaken to make waves. What does a larger amplitude mean in terms of how far the rope moves?",
+    "choices": [
+      "The waves are arriving more times each second, so the rest position shifts downward",
+      "The rope travels along the ground faster toward the other post, carrying the knot with it",
+      "The rope is pushed further up and down from the flat line where it hangs still",
+      "The rope is tighter between the two posts, which prevents it from moving as much"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what 'pushed away from its rest position' means.",
+      "Rest position is where the rope hangs when nothing is shaking it."
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wave-energy-002",
+    "loId": "m8sci.amplitude-and-wave-energy",
+    "cedCode": "M8SCI-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A fire alarm produces a loud sound with large air movements each time it goes off, and a watch alarm produces a quiet sound with small air movements. Both alarms make the same note, so the air is pushed back and forth the same number of times each second in both cases. Which alarm's sound wave carries more energy to your ear?",
+    "choices": [
+      "The fire alarm's, because the sound arrives at your ear in less time due to the device being louder",
+      "The watch alarm's, because the same note means both devices vibrate at a frequency that transfers energy equally well to all sound waves regardless of amplitude",
+      "Both carry the same energy, because they produce the same note and frequency determines all the energy in a wave independent of how far the air moves",
+      "The fire alarm's, because the air is pushed much further from its rest position with each vibration while arriving at the same rate"
+    ],
+    "answer": "D",
+    "hints": [
+      "Same note means what about the frequency of the waves?",
+      "What differs between the fire alarm and the watch alarm — how far the air moves, or how often it moves?"
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wave-energy-003",
+    "loId": "m8sci.amplitude-and-wave-energy",
+    "cedCode": "M8SCI-9.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two identical speakers stand the same distance from a solar panel. The speakers play the same tone at the same frequency. When the first speaker plays at low volume, the solar panel produces very little electricity. When the second speaker plays at high volume, the solar panel produces much more electricity. The panel converts sound energy into electrical energy. What can you conclude about the energy the two sound waves carry?",
+    "choices": [
+      "The high-volume wave carries more energy because it pushes the air further from rest position while vibrating at the same rate, and the panel proves it by producing more electricity",
+      "The low-volume wave carries more energy because sound energy decreases over distance and the panel would malfunction if it received too much power at once",
+      "Both waves carry the same energy, but the high-volume wave's faster vibrations cause the panel to produce electricity more quickly without changing the total energy delivered",
+      "The high-volume wave carries more energy because the speaker cone moves more forcefully, and louder sounds always travel greater distances than quieter ones due to their increased speed"
+    ],
+    "answer": "A",
+    "hints": [
+      "What stays the same between the two speakers, and what differs?",
+      "What observation at the far end — the panel — tells you about the energy in each wave?"
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wave-energy-004",
+    "loId": "m8sci.amplitude-and-wave-energy",
+    "cedCode": "M8SCI-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student sends waves along a stretched spring twice. In trial one, the spring is shaken at 3 complete waves per second, with humps 4 centimeters above the rest position. In trial two, the spring is shaken at 3 complete waves per second again, with humps 12 centimeters above the rest position. A light object rests on the spring near the far end. The object barely wobbles in trial one but is knocked clear off in trial two. The student also notices her arm gets tired much faster in trial two. Which trial sent more energy along the spring, and what evidence shows it?",
+    "choices": [
+      "Trial one sent more energy; smaller amplitude waves concentrate their energy in a narrower space and therefore hit the object harder than larger waves spread across a wider region",
+      "Trial two sent more energy; the amplitude is three times larger while the frequency stays the same, the object is knocked off instead of wobbling, and the student's arm tires faster because she is putting more energy into each wave",
+      "Both trials sent the same energy; frequency is the only property that determines how much energy a wave carries, and both trials vibrate at 3 waves per second with no other factor mattering",
+      "Trial one sent more energy; the student's arm tires faster when shaking at lower amplitudes because the spring provides more resistance to smaller movements and requires greater effort overall"
+    ],
+    "answer": "B",
+    "hints": [
+      "What is held the same in both trials, and what changes?",
+      "Look for observations at three places: the far end, the source, and the material in between."
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wave-energy-005",
+    "loId": "m8sci.amplitude-and-wave-energy",
+    "cedCode": "M8SCI-9.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two identical ponds have identical floating markers. On pond A, wind creates waves with humps 10 centimeters above the rest water level, and a new hump reaches the marker every 4 seconds. On pond B, calmer wind creates waves with humps 5 centimeters above the rest water level, and a new hump reaches the marker every 2 seconds. A student says the waves on pond B carry more energy because they arrive twice as often. Why is this reasoning incomplete, and what would need to change to make the comparison fair?",
+    "choices": [
+      "The reasoning is incomplete because the student should have measured the speed of the waves instead of counting how often they arrive, which would reveal that pond B's waves are actually slower and therefore carry less energy",
+      "The reasoning is incomplete because waves always carry the same amount of energy no matter how often they arrive, so the student should ignore the arrival rate entirely and compare only the humps to make any energy comparison",
+      "The reasoning is incomplete because both the amplitude and frequency changed, so you cannot tell which change caused any difference in what the marker does; to make the comparison fair, either keep the arrival rate the same and compare amplitudes, or keep the amplitude the same and compare arrival rates",
+      "The reasoning is incomplete because smaller amplitude waves carry energy more efficiently through water due to reduced friction, making the arrival rate the most important factor to consider when comparing wave energy"
+    ],
+    "answer": "C",
+    "hints": [
+      "Wave energy depends on both amplitude and frequency. When both properties change at the same time, you cannot isolate which one is responsible for a change in energy — what needs to be held constant to test one variable?",
+      "To test whether amplitude alone controls energy, what property must stay the same? To test whether frequency alone controls energy, what property must stay the same?"
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wave-energy-006",
+    "loId": "m8sci.amplitude-and-wave-energy",
+    "cedCode": "M8SCI-9.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student sets up an experiment to test whether a wave with a bigger amplitude carries more energy when the frequency is held fixed. She uses a single stretched string with a small ball attached loosely at the far end. She shakes one end of the string at 2 whole waves per second for 5 seconds, producing humps 2 centimeters above the rest position; the ball bounces slightly but stays attached. She then shakes the same end at 2 whole waves per second for 5 seconds again, but this time with humps 8 centimeters above the rest position; the ball is knocked clean off and lands 30 centimeters away. She also notes that the string and the ball are made of the same materials and in the same configuration in both trials, and that both waves travel the distance to the ball in about the same amount of time. Later, a classmate argues that the ball came off in the second trial not because the wave had more energy, but because the bigger wave was moving faster. Which observation from the student's experiment directly contradicts the classmate's claim, and why?",
+    "choices": [
+      "The student's arm tires faster during the second trial; this shows that the energy must come from amplitude and not from the wave's speed, since speed does not depend on how hard the source is pushed",
+      "The frequency is the same in both trials (2 whole waves per second); because both waves arrive at the same rate, they must be moving at the same speed, which proves the classmate is wrong about speed being the deciding factor",
+      "The ball is knocked off in the second trial but not the first; the distance the ball lands away from the string proves that speed has nothing to do with energy transfer and amplitude is what matters most",
+      "The time it takes for both waves to reach the ball is the same in both trials; because the wave speed is set by the string material and how tightly it is pulled, not by the amplitude, a bigger wave does not travel faster — so the bigger wave must have knocked the ball off by carrying more energy, not by arriving sooner"
+    ],
+    "answer": "D",
+    "hints": [
+      "What does the student directly measure or observe about the time it takes each wave to reach the ball?",
+      "If the travel time is the same, what does that tell you about whether one wave is faster than the other?"
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wavelength-frequency-001",
+    "loId": "m8sci.amplitude-wavelength-and-frequency",
+    "cedCode": "M8SCI-9.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A wave traveling along a string has a rest position that is the straight line the string makes when nothing disturbs it. A crest of this wave rises 3 centimeters above the rest position. What is the amplitude of this wave?",
+    "choices": [
+      "1.5 centimeters",
+      "6 centimeters",
+      "3 hertz",
+      "3 centimeters"
+    ],
+    "answer": "D",
+    "hints": [
+      "Amplitude is measured from the rest position to one extreme—either a crest or a trough.",
+      "Look at the units in your answer: amplitude is always a distance, never a count."
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wavelength-frequency-002",
+    "loId": "m8sci.amplitude-wavelength-and-frequency",
+    "cedCode": "M8SCI-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student observes a wave on the surface of water in a tank. She measures the distance from the top of one crest to the top of the next crest and finds it to be 40 centimeters. The student records this measurement and labels it as the wavelength. Is her label correct, and why or why not?",
+    "choices": [
+      "Yes, because crest-to-crest distance is the definition of one complete wavelength.",
+      "No, because she measured a distance and wavelength must be measured in hertz.",
+      "No, because the wavelength should be twice this distance.",
+      "Yes, but only if the crests are the same height above the water surface."
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall what 'one whole repeat of a wave' means and which two points define it.",
+      "Think about whether measuring from crest to crest gives you a full repeat or only part of one."
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wavelength-frequency-003",
+    "loId": "m8sci.amplitude-wavelength-and-frequency",
+    "cedCode": "M8SCI-9.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sound wave passes through a doorway, and someone counts 10 complete waves moving through the doorway in 2 seconds at a steady rate. What is the frequency of this sound wave?",
+    "choices": [
+      "10 hertz",
+      "5 hertz",
+      "2 hertz",
+      "20 hertz"
+    ],
+    "answer": "B",
+    "hints": [
+      "Frequency is the number of whole waves passing a fixed point in one second; you may need to divide if the counting took longer than one second.",
+      "Check your answer's unit: frequency must be in hertz, not centimeters or any distance unit."
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wavelength-frequency-004",
+    "loId": "m8sci.amplitude-wavelength-and-frequency",
+    "cedCode": "M8SCI-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A rope is held straight between two students as its rest position. One student shakes the rope, sending humps and dips along it. A person watching the rope notes that the bottom of each dip falls 6 centimeters below the straight line, and the top of each hump rises 6 centimeters above it. When measured along the floor, the distance from the top of one hump to the top of the next hump is 80 centimeters. What is the amplitude and the wavelength of this wave?",
+    "choices": [
+      "Amplitude 6 centimeters, wavelength 160 centimeters",
+      "Amplitude 12 centimeters, wavelength 80 centimeters",
+      "Amplitude 6 centimeters, wavelength 80 centimeters",
+      "Amplitude 3 centimeters, wavelength 40 centimeters"
+    ],
+    "answer": "C",
+    "hints": [
+      "Start by finding the rest position and naming it aloud: it is the straight line the rope makes when nothing disturbs it.",
+      "Amplitude measures from rest position to one extreme, and wavelength measures from one crest to the next crest along the length of the rope."
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wavelength-frequency-005",
+    "loId": "m8sci.amplitude-wavelength-and-frequency",
+    "cedCode": "M8SCI-9.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A stretched rubber band is plucked and vibrates steadily. When a point on the band is watched, it is pushed 4 millimeters away from its rest position at the extreme of each swing. Meanwhile, 24 complete vibrations of the band are counted in 6 seconds. What are the amplitude and frequency of this vibration, and what do these two numbers tell you about each other?",
+    "choices": [
+      "Amplitude 4 millimeters and frequency 6 hertz; the frequency depends on the amplitude size because a larger swing always causes faster oscillations.",
+      "Amplitude 4 millimeters and frequency 4 hertz; they are the same because the numerical values must match in all physical systems.",
+      "Amplitude 8 millimeters and frequency 24 hertz; amplitude always equals the number of swings per second.",
+      "Amplitude 4 millimeters and frequency 4 hertz; they are independent—changing the size of the swing does not change how often it swings."
+    ],
+    "answer": "D",
+    "hints": [
+      "Amplitude is measured from rest position to one extreme; frequency is a count of whole waves in one second and may need dividing.",
+      "Think about what happens if the band is plucked harder (swinging further) but at the same rate—does the frequency change?"
+    ]
+  },
+  {
+    "id": "m8sci-amplitude-wavelength-frequency-006",
+    "loId": "m8sci.amplitude-wavelength-and-frequency",
+    "cedCode": "M8SCI-9.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A water wave and a sound wave are both traveling through a room. The water wave (traveling in a tank) has a trough-to-crest height of 14 centimeters, and the air pressure wave (the sound) pushes the air 7 centimeters away from its rest position. A marking line on the tank shows 3 water-wave crests passing it each second, while a fixed point in the air has 600 sound-wave crests passing it each second. Which statement correctly compares the two waves in terms of what you would perceive?",
+    "choices": [
+      "The sound is much higher in pitch and quieter in loudness than the water wave.",
+      "The sound is much higher in pitch and much louder in loudness than the water wave.",
+      "The sound is much lower in pitch and louder in loudness than the water wave.",
+      "The sound and water wave have the same pitch and loudness because they are both traveling through matter."
+    ],
+    "answer": "A",
+    "hints": [
+      "For water waves, amplitude is half the trough-to-crest distance; for sound, amplitude is the air displacement from rest. For pitch, count whole waves per second. For loudness, compare the distance from rest position.",
+      "You hear pitch from frequency and loudness from amplitude. Neither wave is actually heard as itself—one is in water, one is in air—so compare their wave properties directly."
+    ]
+  },
+  {
+    "id": "m8sci-wave-speed-frequency-wavelength-001",
+    "loId": "m8sci.wave-speed-frequency-and-wavelength",
+    "cedCode": "M8SCI-9.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Sound travels through air at about 340 meters per second. The speed at which a sound wave travels depends on the medium—the material it passes through. If the same sound were sent through water instead, what would change about the sound's speed?",
+    "choices": [
+      "The speed would increase, because water is denser than air and sets a faster speed for sound.",
+      "The speed would stay at 340 meters per second, because the sound itself does not change.",
+      "The speed would decrease, because sound travels more slowly in liquids than in gases.",
+      "The speed would disappear entirely, because sound needs air to travel."
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that the medium—the material the wave travels through—is what sets the speed.",
+      "Sound travels faster in water than in air."
+    ]
+  },
+  {
+    "id": "m8sci-wave-speed-frequency-wavelength-002",
+    "loId": "m8sci.wave-speed-frequency-and-wavelength",
+    "cedCode": "M8SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A vibrating tuning fork creates a sound wave in air. The same fork, vibrating at the same rate, creates a sound wave in water. The fork shakes back and forth the same number of times per second in both cases. The frequency of a sound is set by the source (the object producing the vibration), while the wavelength and speed depend on the medium (the material the sound travels through). Which statement is correct?",
+    "choices": [
+      "The frequency of the sound is higher in water than in air, because water is a denser medium and compresses the vibrations together.",
+      "The frequency of the sound is the same in both water and air, because the fork sets the frequency, not the medium.",
+      "The wavelength is the same in both water and air, because the fork vibrates at the same rate and does not change its period.",
+      "The speed is the same in both water and air, because the fork vibrates at the same rate in both materials."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what the source (the tuning fork) controls and what the medium controls.",
+      "The source sets the frequency, which does not change when the material the sound travels through changes."
+    ]
+  },
+  {
+    "id": "m8sci-wave-speed-frequency-wavelength-003",
+    "loId": "m8sci.wave-speed-frequency-and-wavelength",
+    "cedCode": "M8SCI-9.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two sound waves travel through the same still air at about 340 meters per second. Wave A has a frequency of 100 hertz and Wave B has a frequency of 200 hertz. Which statement correctly compares how long one complete wave is for each?",
+    "choices": [
+      "Both waves have the same wavelength, because they travel through the same medium at the same speed.",
+      "Wave B's wavelength is twice as long as Wave A's wavelength, because it travels twice as fast.",
+      "Wave A's wavelength is twice as long as Wave B's wavelength, because its frequency is half.",
+      "Wave A's wavelength is shorter because higher-frequency waves always have shorter wavelengths in any medium."
+    ],
+    "answer": "C",
+    "hints": [
+      "Use the relationship: speed equals frequency times wavelength.",
+      "In one medium at a fixed speed, if one frequency is twice the other, what must be true about the wavelengths?"
+    ]
+  },
+  {
+    "id": "m8sci-wave-speed-frequency-wavelength-004",
+    "loId": "m8sci.wave-speed-frequency-and-wavelength",
+    "cedCode": "M8SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A whale calls underwater in a region where sound travels at about 1,500 meters per second. The whale's call is a low-frequency sound at 50 hertz. The same whale call travels through air in a different location where sound travels at about 340 meters per second. The whale's body is not in the air, so the call still originates at 50 hertz. How much longer is one wavelength of the whale call in water than in air?",
+    "choices": [
+      "30 meters longer, because 1,500 divided by 50 equals 30 and 340 divided by 50 equals 6.8.",
+      "1,160 meters longer, because 1,500 minus 340 equals 1,160.",
+      "The wavelengths are the same length, because the frequency does not change.",
+      "23.2 meters longer, because 30 minus 6.8 equals 23.2."
+    ],
+    "answer": "D",
+    "hints": [
+      "Calculate the wavelength in water using speed equals frequency times wavelength, then calculate the wavelength in air the same way.",
+      "The difference between two numbers means you subtract them after you find each one."
+    ]
+  },
+  {
+    "id": "m8sci-wave-speed-frequency-wavelength-005",
+    "loId": "m8sci.wave-speed-frequency-and-wavelength",
+    "cedCode": "M8SCI-9.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You stand in front of a large building and shout. Your shout echoes off the building's wall and returns to you 3 seconds later. Sound travels through the surrounding air at about 340 meters per second. Before you calculate the distance to the wall, you must first decide what question will determine whether you halve your final answer or leave it alone.",
+    "choices": [
+      "Did the sound travel the distance once from your mouth to the wall, or round trip out and back?",
+      "How loud was your shout when it left your mouth compared to when it hit the wall?",
+      "How many times did the sound wave reflect off the building before it returned to you?",
+      "How much time passed between when you shouted and when you heard the sound start to return?"
+    ],
+    "answer": "A",
+    "hints": [
+      "When an echo occurs, the sound has traveled from your mouth to the wall and back again—a round trip. You must account for whether your time measurement includes only the one-way distance or both directions.",
+      "Getting this one question wrong puts your final distance answer out by a factor of two."
+    ]
+  },
+  {
+    "id": "m8sci-wave-speed-frequency-wavelength-006",
+    "loId": "m8sci.wave-speed-frequency-and-wavelength",
+    "cedCode": "M8SCI-9.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A vibrating tuning fork is held above the water in a swimming pool and sends a sound wave into the water. At the same instant, an identical tuning fork is held in the air beside the pool and sends a sound wave into the air. Both forks vibrate 512 times per second. Sound travels at about 340 meters per second in air and about 1,500 meters per second in water. A student calculates the wavelength in air and gets about 0.66 meters. Then the student makes a claim: 'The wavelength in water must be about 2.94 meters, because the water's wavelength is longer by a factor of 4.4.' Show whether this claim is correct, and explain why.",
+    "choices": [
+      "The claim is incorrect. The wavelength is actually shorter in water at about 0.23 meters, because denser media compress sound waves and reduce their wavelength by a factor of nearly 3.",
+      "The claim is incorrect. The water's wavelength should be about 2.93 meters, which is longer by a factor of 4.4, but the student's reasoning is backwards—the wavelength is longer because the medium is faster, not because the frequency increased.",
+      "The claim is incorrect. The wavelength in water stays the same at 0.66 meters because wavelength depends only on the vibration rate of the source tuning fork, which does not change between air and water.",
+      "The claim is correct. The tuning fork's frequency of 512 hertz is much higher in water than in air, so the sound wave expands and the wavelength increases to 2.94 meters."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check the student's arithmetic first: does 1,500 divided by 512 equal about 2.93?",
+      "When a wave goes from one medium to another, the frequency stays the same (the source sets it), but what does change?"
+    ]
+  },
+  {
+    "id": "m8sci-what-a-wave-is-001",
+    "loId": "m8sci.what-a-wave-is",
+    "cedCode": "M8SCI-9.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is asked to describe what a wave actually is, using the idea of a repeating disturbance traveling through a material.",
+    "choices": [
+      "A stream of matter that moves steadily from one location to another, carrying energy along with it.",
+      "A repeating disturbance that carries energy from place to place without carrying matter along with it.",
+      "A single push that transfers matter permanently from the source to the receiver.",
+      "A vibration that stays fixed in one spot and never moves through the surrounding material."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what happens to a floating duck as ripples pass beneath it.",
+      "Ask whether the material itself ends up somewhere new, or just the disturbance does."
+    ]
+  },
+  {
+    "id": "m8sci-what-a-wave-is-002",
+    "loId": "m8sci.what-a-wave-is",
+    "cedCode": "M8SCI-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student watches a floating cork bob up and down as ripples pass by on a lake, while the ripples themselves travel across the surface toward the shore.",
+    "choices": [
+      "Longitudinal, because the cork squeezes and stretches back and forth along the same direction that the ripples travel across the water's surface.",
+      "Transverse, because the cork moves back and forth in the exact same direction that the ripples travel as they spread out across the surface.",
+      "Transverse, because the cork moves up and down while the ripples travel across the surface, which is across the direction of travel.",
+      "Longitudinal, because the cork moves back and forth along the same straight line that the ripples travel as they spread across the surface."
+    ],
+    "answer": "C",
+    "hints": [
+      "Identify the direction the ripple travels across the water, then identify the direction the cork moves.",
+      "Compare whether these two directions match up or cross each other."
+    ]
+  },
+  {
+    "id": "m8sci-what-a-wave-is-003",
+    "loId": "m8sci.what-a-wave-is",
+    "cedCode": "M8SCI-9.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A row of standing dominoes is packed closely together in a line. When the first domino is pushed forward, it bumps the next one, and bunched-up and spread-out regions travel along the row while each domino rocks back and forth along the same line as the row.",
+    "choices": [
+      "Transverse, because each domino moves forward and backward, along the direction the bunching travels.",
+      "Longitudinal, because each domino moves side to side, across the line the bunching travels.",
+      "Transverse, because each domino moves up and down, across the direction the bunching travels.",
+      "Longitudinal, because each domino moves back and forth along the same line the bunching travels."
+    ],
+    "answer": "D",
+    "hints": [
+      "Find the direction the bunched-up region travels down the row.",
+      "Compare that direction to the direction each single domino rocks."
+    ]
+  },
+  {
+    "id": "m8sci-what-a-wave-is-004",
+    "loId": "m8sci.what-a-wave-is",
+    "cedCode": "M8SCI-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A ringing bell is placed inside a large glass jar connected to a vacuum pump. At first, with air inside the jar, an observer standing beside the jar hears the bell clearly. As the pump removes more and more air from the jar, the sound grows fainter and fainter, even though the bell can still be seen shaking through the glass. Once nearly all the air has been pumped out, no sound can be heard at all, though the bell is still visibly vibrating.",
+    "choices": [
+      "Sound is a mechanical wave that needs matter to hand the disturbance along, so removing the air removes the medium that could carry it to the observer's ear.",
+      "The bell's vibrations become too weak to be seen or heard once most of the air pressure inside the jar has dropped, since lower air pressure directly saps the bell's vibrating energy.",
+      "Sound waves need light to travel through empty space, so pumping out the air blocks the light rays that would otherwise carry the vibrations to the observer's ear.",
+      "The glass jar itself absorbs all of the sound energy before it can reach the outside once the air pressure drops, acting like a barrier that blocks vibrations from escaping."
+    ],
+    "answer": "A",
+    "hints": [
+      "Consider what mechanical waves require in order to travel from a source to a listener.",
+      "Notice that the bell is still visibly vibrating, so its energy source hasn't stopped."
+    ]
+  },
+  {
+    "id": "m8sci-what-a-wave-is-005",
+    "loId": "m8sci.what-a-wave-is",
+    "cedCode": "M8SCI-9.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A swimmer floats in a calm pool. When a passing motorboat's wake reaches her, she bobs up and down several times but stays in the same spot near the pool's edge. Later, the same swimmer floats near a pool drain that has been switched on, and the moving water there drags her steadily across the pool toward the drain.",
+    "choices": [
+      "The boat's wake is a current that carries the water itself toward the swimmer, while the drain's flow is instead a wave that only moves energy through the pool.",
+      "The boat's wake is a wave that carries energy without carrying water, while the drain's flow is a current that carries the water itself.",
+      "Both situations are waves, because in each case the swimmer ends up moving away from her starting position as the water pushes past her.",
+      "Both situations are currents, because in each case matter is being pushed steadily from one place to another as the water carries her along."
+    ],
+    "answer": "B",
+    "hints": [
+      "Track whether the swimmer returns to about the same spot or steadily drifts away in each case.",
+      "Recall the difference between something carrying energy only and something carrying matter along with it."
+    ]
+  },
+  {
+    "id": "m8sci-what-a-wave-is-006",
+    "loId": "m8sci.what-a-wave-is",
+    "cedCode": "M8SCI-9.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Outside a space station, one astronaut taps a metal wrench firmly and repeatedly against the station's metal hull. A second astronaut floats nearby without touching anything, surrounded only by vacuum, and hears nothing. A third astronaut, also outside, presses her gloved hand firmly against the same hull while the tapping continues.",
+    "choices": [
+      "She hears the taps as sound waves traveling directly through the surrounding vacuum from the wrench to her ear, since sound can move through empty space in space.",
+      "She feels nothing at all, because any vacuum nearby blocks mechanical waves from traveling through metal as well as through air, since a nearby vacuum stops all vibrations.",
+      "She can feel the taps as vibrations through her glove and the hull's metal, because the metal provides a continuous solid medium even though the surrounding space is a vacuum.",
+      "She feels the taps only if her glove happens to contain trapped air, because sound needs a gas to travel through even when her hand is touching the metal."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about which materials are actually touching the third astronaut's glove.",
+      "Remember that a vacuum blocks a mechanical wave only in the region where there is no matter."
+    ]
+  }
+]

@@ -1,0 +1,439 @@
+[
+  {
+    "id": "m8sci-inside-the-atom-protons-neutrons-electrons-001",
+    "loId": "m8sci.inside-the-atom",
+    "cedCode": "M8SCI-7.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "An atom's nucleus contains protons and neutrons packed tightly together. Electrons are located somewhere else in the atom. Where do electrons move?",
+    "choices": [
+      "Packed inside the nucleus along with the protons and neutrons, held tightly by the strong nuclear force that binds all nuclear particles together",
+      "Through the space around the nucleus, held there by the attraction between their negative charge and the nucleus's positive charge",
+      "On the surface of the nucleus, forming a shell that never moves or changes position because they are locked in place by electromagnetic forces",
+      "In orbits that are always exactly the same distance from the nucleus at all times, maintaining a fixed and unchanging path around the core"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall that electrons carry negative charge and protons carry positive charge.",
+      "Think about what opposite charges do to each other."
+    ]
+  },
+  {
+    "id": "m8sci-inside-the-atom-protons-neutrons-electrons-002",
+    "loId": "m8sci.inside-the-atom",
+    "cedCode": "M8SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "An atom is neutral, meaning it has no overall electric charge. You count 13 electrons moving in the space around its nucleus. How many protons must be packed inside the nucleus?",
+    "choices": [
+      "Fewer than 13 protons, because electrons and protons cancel out differently",
+      "26 protons, because protons are twice as heavy as electrons",
+      "13 protons, because a neutral atom has one proton for every electron",
+      "Cannot be determined from the electron count alone, because electrons do not determine the proton number"
+    ],
+    "answer": "C",
+    "hints": [
+      "A neutral atom has equal counts of what two types of particle?",
+      "Does each electron's negative charge cancel with exactly one proton's positive charge?"
+    ]
+  },
+  {
+    "id": "m8sci-inside-the-atom-protons-neutrons-electrons-003",
+    "loId": "m8sci.inside-the-atom",
+    "cedCode": "M8SCI-7.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two atoms are described. Atom X has 8 protons, 8 neutrons, and 8 electrons. Atom Y has 8 protons, 10 neutrons, and 8 electrons. What can you say about whether these atoms are the same element or different elements?",
+    "choices": [
+      "They are the same element, because density is determined by how tightly atoms are packed together, and Atom Y has more neutrons compressed into the same space",
+      "They are different elements, because they have different numbers of neutrons and neutrons determine elemental identity",
+      "They are different elements, because they have different total masses and mass is the primary property that distinguishes one element from another",
+      "They are the same element, because both have 8 protons, and it is the number of protons that decides the element"
+    ],
+    "answer": "D",
+    "hints": [
+      "Which number defines what element an atom is?",
+      "Does changing the neutron count change which element the atom is?"
+    ]
+  },
+  {
+    "id": "m8sci-inside-the-atom-protons-neutrons-electrons-004",
+    "loId": "m8sci.inside-the-atom",
+    "cedCode": "M8SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An atom has 6 protons and 6 neutrons packed into its nucleus. A student says, 'Most of this atom is empty space, so most of its mass must be out in that empty space where the electrons move.' Use the fact that one electron is nearly two thousand times lighter than a proton to explain what has gone wrong with that reasoning.",
+    "choices": [
+      "The student confused room with mass. The nucleus takes up almost no space but holds almost all the mass, because protons and neutrons are heavy and the 6 electrons together are far too light to hold much mass no matter how much space they spread through",
+      "The student incorrectly measured the actual mass of each electron. Electrons are much heavier than the student thought, so even though they occupy empty space, the 6 electrons together add up to a significant portion of the atom's total mass",
+      "The student failed to consider the combined effect of all particles. Even though individual electrons are light, the 12 neutrons in the nucleus are very light too, so most of the atom's mass actually comes from the 6 protons and is distributed throughout the empty space",
+      "The student did not properly apply the mass ratio in the calculation. Although electrons are lighter than protons, the fact that there are 6 electrons means their combined mass exceeds that of the protons, so most of the mass is indeed in the outer space"
+    ],
+    "answer": "A",
+    "hints": [
+      "Does more space mean more stuff in it? Think about what empty space actually contains.",
+      "If a proton is about two thousand times heavier than an electron, can 6 electrons add up to the mass of even one proton?"
+    ]
+  },
+  {
+    "id": "m8sci-inside-the-atom-protons-neutrons-electrons-005",
+    "loId": "m8sci.inside-the-atom",
+    "cedCode": "M8SCI-7.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A scientist discovers an atom with 11 protons and 12 neutrons in its nucleus. She observes that the atom is neutral. Based on this information, identify the element and the number of electrons, and explain which piece of information (the proton count, the neutron count, or the electron count) told you the element.",
+    "choices": [
+      "The element is chlorine, the atom has 12 electrons, and the neutron count told you the element, because different numbers of neutrons always produce different elements with unique properties",
+      "The element is sodium, the atom has 11 electrons, and the proton count told you the element, because atomic number is the number of protons and that alone names which element it is",
+      "The element is magnesium, the atom has 11 electrons, and the electron count told you the element, because counting the electrons in a neutral atom directly identifies which element is present",
+      "The element is aluminum, the atom has 23 electrons, and the mass number told you the element, because the sum of protons and neutrons uniquely determines the elemental identity"
+    ],
+    "answer": "B",
+    "hints": [
+      "Which number, by itself, always names the element?",
+      "If the atom is neutral, how does the electron count relate to the proton count?"
+    ]
+  },
+  {
+    "id": "m8sci-inside-the-atom-protons-neutrons-electrons-006",
+    "loId": "m8sci.inside-the-atom",
+    "cedCode": "M8SCI-7.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An atom has a nucleus with 26 protons and 30 neutrons. The atom is not described as neutral, so you do not know its electron count from the given information. However, you can still answer this question: if someone removed one proton from the nucleus, would the atom still be the same element, and would the mass change by a lot or a little? Pick the answer that gives both the correct reasoning statements.",
+    "choices": [
+      "No, it would not be the same element, because you changed the number of neutrons and neutrons are part of what makes each element unique; and the mass would change by a little, because a single neutron is negligible compared to the total",
+      "Yes, it would still be the same element, because only the electron count defines the element and electrons were not removed; and the mass would change by a lot, because a proton carries significant mass and removing it substantially reduces the nucleus",
+      "No, it would not be the same element, because the number of protons defines the element and you have changed it; and the mass would change by a lot, because protons are among the heavy particles that make up almost all of the atom's mass",
+      "Yes, it would still be the same element, because the proton-to-neutron ratio is stable enough to keep the same elemental properties; and the mass would change by a little, because one particle is small relative to fifty-six total particles"
+    ],
+    "answer": "C",
+    "hints": [
+      "What decides which element an atom is?",
+      "A proton and a neutron have almost equal mass. If you remove one of them, what fraction of the nucleus's mass goes away?"
+    ]
+  },
+  {
+    "id": "m8sci-molecules-formulas-extended-structures-001",
+    "loId": "m8sci.molecules-formulas-and-extended-structures",
+    "cedCode": "M8SCI-7.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A chemical formula is a parts list for a substance. When you read a formula, a number written just after a symbol counts only the atoms of that element. The formula for nitrogen gas is written N two (N2). How many nitrogen atoms are in one molecule of nitrogen gas?",
+    "choices": [
+      "Four nitrogen atoms",
+      "One nitrogen atom",
+      "Two nitrogen atoms",
+      "Two atoms of two different elements"
+    ],
+    "answer": "C",
+    "hints": [
+      "The number two is written just after the N symbol, so it counts nitrogen atoms.",
+      "A number in a formula never counts atoms of any element except the one whose symbol it follows."
+    ]
+  },
+  {
+    "id": "m8sci-molecules-formulas-extended-structures-002",
+    "loId": "m8sci.molecules-formulas-and-extended-structures",
+    "cedCode": "M8SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Phosphorus trichloride is a substance made of separate molecules. Its formula is written P Cl three (PCl₃), with the three written just after the Cl. Use the four-step reading routine to read this formula. First, name the kinds of atom. Then count each kind. Then add the counts to find the total number of atoms in one molecule.",
+    "choices": [
+      "Three phosphorus atoms and one chlorine atom; four atoms in all",
+      "Three phosphorus atoms and three chlorine atoms; six atoms in all",
+      "One phosphorus atom and one chlorine atom; two atoms in all",
+      "One phosphorus atom and three chlorine atoms; four atoms in all"
+    ],
+    "answer": "D",
+    "hints": [
+      "The three sits just after Cl, so it counts chlorine atoms only. The P has no number after it.",
+      "When a symbol has no number written after it, that means exactly one atom of that element."
+    ]
+  },
+  {
+    "id": "m8sci-molecules-formulas-extended-structures-003",
+    "loId": "m8sci.molecules-formulas-and-extended-structures",
+    "cedCode": "M8SCI-7.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student looks at two diagrams of substances at the particle level. Diagram 1 shows separate groups of atoms with clear spaces between the groups. Diagram 2 shows atoms arranged in a repeating pattern that continues all the way across the diagram with no group standing apart. Which diagram shows a substance made of molecules, and which shows an extended structure?",
+    "choices": [
+      "Diagram 1 shows molecules because the atoms are gathered into separate groups with gaps between them; Diagram 2 shows an extended structure because the pattern repeats with no separate groups",
+      "Diagram 1 shows an extended structure because atoms form groups bonded together throughout with no gaps, while Diagram 2 shows molecules because the repeating pattern consists of separate identical groups with clear boundaries between them",
+      "Both diagrams show molecules because in Diagram 1 atoms bond into groups and in Diagram 2 the repeating pattern creates molecules that stack together in an organized way",
+      "Both diagrams show extended structures because atoms are bonded in patterns in both cases, and any substance where atoms join together in an organized repeating pattern counts as an extended structure"
+    ],
+    "answer": "A",
+    "hints": [
+      "A molecule is defined as a group of joined atoms that stands apart from its neighbors with a gap around it.",
+      "An extended structure has atoms joined on and on with no separate group that you can point to and say 'that particle ends here and the next one begins there'."
+    ]
+  },
+  {
+    "id": "m8sci-molecules-formulas-extended-structures-004",
+    "loId": "m8sci.molecules-formulas-and-extended-structures",
+    "cedCode": "M8SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A science textbook shows a formula N H three (NH₃) and states that ammonia is made of separate molecules. A student claims the formula means there are three nitrogen atoms and one hydrogen atom in each ammonia molecule. Explain why that reading is wrong and what the correct reading is. Use what you know about where numbers sit in a formula and what they count.",
+    "choices": [
+      "The student reversed the atoms by putting nitrogen last when it should be first, so the correct reading should be H three N instead, which is three hydrogen atoms and one nitrogen atom per molecule",
+      "The three sits just after H, not after N, so it counts three hydrogen atoms, not three nitrogen atoms. The correct reading is one nitrogen atom and three hydrogen atoms in each molecule.",
+      "The formula N H three actually means three separate ammonia molecules bonded together, so it contains three molecules of nitrogen and three molecules of hydrogen in a compound form",
+      "The number three in the formula counts only the hydrogen atoms, but the student must also count any implied atoms, so there are really more than three atoms total in the ammonia molecule"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the position rule: a number belongs only to the symbol it is written right after.",
+      "The symbol N has no number written after it, so how many nitrogen atoms does that mean?"
+    ]
+  },
+  {
+    "id": "m8sci-molecules-formulas-extended-structures-005",
+    "loId": "m8sci.molecules-formulas-and-extended-structures",
+    "cedCode": "M8SCI-7.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two solid substances are examined closely. Substance X is built from atoms joined in a repeating pattern that goes on and on in every direction through the entire sample with no separate group of atoms standing apart. Substance Y is built from separate identical groups of atoms, each group held together, with a gap between one group and the next group. A scientist writes a formula for each substance. For Substance X the scientist reports a ratio of elements, and for Substance Y the scientist reports a count of atoms. Explain why the formula means something different for each substance.",
+    "choices": [
+      "Substance X must be an element and Substance Y must be a compound, and element formulas show ratios while compound formulas show molecular counts of atoms",
+      "Substance X requires a ratio formula because atoms are bonded too strongly to identify individual molecules, while Substance Y uses atomic counts because its molecules are bonded more weakly together",
+      "For Substance X, there is no way to point to where one molecule ends and the next begins, so the formula gives the ratio of atoms that holds throughout the structure. For Substance Y, you can see where each separate molecule starts and ends, so the formula counts the atoms inside one complete molecule.",
+      "Scientists prefer to write ratios for solid extended structures and counts for substances made of separate particles simply by convention and scientific tradition"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about the definition of a molecule: it is a group of joined atoms that stands apart from the groups around it, with a gap between one group and the next.",
+      "If there is no separate particle you can point to, what does the formula tell you instead of counting atoms in one particle?"
+    ]
+  },
+  {
+    "id": "m8sci-molecules-formulas-extended-structures-006",
+    "loId": "m8sci.molecules-formulas-and-extended-structures",
+    "cedCode": "M8SCI-7.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Diamond and dry ice are both solids that are examined under magnification. In diamond, carbon atoms are joined to their neighbors in a pattern that repeats throughout the entire stone with no separate group of atoms standing apart. In dry ice, carbon dioxide molecules are stacked close together with small gaps between the separate molecules. Both substances have formulas that include carbon. When you read the formula for dry ice as C O two (CO₂) and count three atoms, that count means one thing. When you read a formula for diamond as just C and count one atom, that count means something very different. Why does the same act of counting atoms in a formula mean two completely different things for these two substances?",
+    "choices": [
+      "When a formula shows two different elements it describes a molecule, but when it shows one element it describes just that single element as a whole, so the counting method must change",
+      "Dry ice contains two elements while diamond contains only one element, and therefore formulas for multipart substances count atoms in molecules but formulas for single-element substances count total atoms",
+      "The formula for dry ice counts atoms because it is made of molecules, while the formula for diamond counts a ratio because diamond is harder and denser than dry ice.",
+      "For dry ice, the three atoms are grouped into one complete molecule with a gap around it, so the count describes what is in one separate particle. For diamond, there are no separate molecules in the structure, so a single C does not mean one particle—the formula gives the ratio, and the actual diamond is one enormous joined structure."
+    ],
+    "answer": "D",
+    "hints": [
+      "Step 4 of the reading routine asks: does this substance come in separate particles, or is it built as one joined structure that goes on and on?",
+      "If you can see where one particle ends and the next one begins, the formula counts a molecule. If you cannot see that boundary anywhere, the formula gives a ratio that holds everywhere in the structure."
+    ]
+  },
+  {
+    "id": "m8sci-reading-the-periodic-table-001",
+    "loId": "m8sci.reading-the-periodic-table",
+    "cedCode": "M8SCI-7.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A square on the periodic table shows the symbol Na above the name sodium, with the number 11 printed in its corner. When you count down from the top, sodium sits in the third row. When you count across from the left, it sits in the first column. Which statement correctly reads this square?",
+    "choices": [
+      "Sodium is in period 3, group 11, and 11 is the number of neutrons in one sodium atom.",
+      "Sodium is in period 1, group 3, and 11 is the total number of electrons distributed across all shells of the atom.",
+      "Sodium is in group 3, period 1, and 11 is the total count of all particles found inside the nucleus of one sodium atom.",
+      "Sodium is in period 3, group 1, and 11 is its atomic number, the number of protons in one sodium atom."
+    ],
+    "answer": "D",
+    "hints": [
+      "Period is the row number you count down to; group is the column number you count across to. Say period first.",
+      "Atomic number is the proton count—the number that appears in the corner of the square."
+    ]
+  },
+  {
+    "id": "m8sci-reading-the-periodic-table-002",
+    "loId": "m8sci.reading-the-periodic-table",
+    "cedCode": "M8SCI-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Neon is a gas that sits in the fifth column from the right side of the periodic table, in the second row. Based on its position in the table, which property should neon have?",
+    "choices": [
+      "It should conduct an electric current poorly or not at all, because it sits in the upper right block where the nonmetals are.",
+      "It should be shiny and bend easily when struck, because it sits on the left side of the table where the metals are.",
+      "It should snap into pieces when struck and conduct current better than a metal, because it sits on the staircase line between metals and nonmetals.",
+      "It should be dull and conduct electricity well, because it is a light element with a low atomic number."
+    ],
+    "answer": "A",
+    "hints": [
+      "The upper right block of the table holds the nonmetals; the left and middle hold the metals.",
+      "A nonmetal is dull, brittle, and a poor conductor of electricity."
+    ]
+  },
+  {
+    "id": "m8sci-reading-the-periodic-table-003",
+    "loId": "m8sci.reading-the-periodic-table",
+    "cedCode": "M8SCI-7.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Iron has the symbol Fe and sits in the fourth row of the table, in the eighth column. When you hold a piece of iron, it is cold and heavy, it shines in the light, and you can bend an iron rod without it breaking. Based on its position and these properties, how should iron be classified?",
+    "choices": [
+      "Metalloid, because it displays a shiny surface and also has the ability to conduct electricity very well through its structure.",
+      "Metal, because its position in the left-middle part of the table matches the properties of shiny, bendable, and conducting.",
+      "Nonmetal, because it is a heavy substance and its location in the middle columns of the periodic table indicates nonmetallic character.",
+      "Noble gas, because all elements in its group behave identically to each other and iron demonstrates very high strength and stability."
+    ],
+    "answer": "B",
+    "hints": [
+      "Position and properties must agree: check whether the column location matches what you know about metals, nonmetals and metalloids.",
+      "The properties given—shiny, bendable, and conducting thermal energy—are all part of the metal set."
+    ]
+  },
+  {
+    "id": "m8sci-reading-the-periodic-table-004",
+    "loId": "m8sci.reading-the-periodic-table",
+    "cedCode": "M8SCI-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three elements sit on the periodic table: fluorine in period 2, group 17; chlorine in period 3, group 17; and chlorine's neighbor bromine, which sits one row below it in the same column. A student says that fluorine and chlorine should behave similarly because they are close together on the table, and a different student says that chlorine and bromine should behave similarly for a different reason. Which student is right, and why?",
+    "choices": [
+      "The first student is right, because fluorine and chlorine are positioned near each other horizontally and elements that are close together on the periodic table will always exhibit similar behavior in chemical reactions.",
+      "Neither student is right, because the position and distance of elements on the table is unrelated to their behavior, which depends entirely on their atomic number and electron arrangement.",
+      "The second student is right, because chlorine and bromine share the same group, and elements in the same column are a family whose members behave alike in their reactions.",
+      "Both students are right, because proximity on the table is just as important as column membership for determining and predicting the chemical and physical behavior of elements."
+    ],
+    "answer": "C",
+    "hints": [
+      "The rule states that the COLUMN is the family—same group means alike behavior, same period does not.",
+      "Being next door horizontally (in the same period) means the properties change gradually, not that they match."
+    ]
+  },
+  {
+    "id": "m8sci-reading-the-periodic-table-005",
+    "loId": "m8sci.reading-the-periodic-table",
+    "cedCode": "M8SCI-7.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Boron sits in period 2, group 13, right at the edge of the staircase line. A sample of boron is dark and shiny like a metal, but when struck with a hammer it cracks and crumbles. A boron wire conducts electricity, but only about one-tenth as well as a copper wire of the same thickness. First identify what boron is, then explain which two properties told you this and why they matter.",
+    "choices": [
+      "Boron is a metal because it is shiny and conducts electricity, and these two properties are the defining characteristics of all elements in the metal family.",
+      "Boron is a nonmetal because it cracks when struck and lacks shininess, and nonmetals are defined by brittleness, low luster, and very poor electrical conductivity compared to metals.",
+      "Boron is a metalloid only because it sits on the staircase line of the periodic table, and the position alone on that dividing boundary is sufficient to classify an element without considering any of its chemical or physical properties.",
+      "Boron is a metalloid because its position on the staircase matches properties that fall between the two sets: a metal shine, nonmetal brittleness, and a current far less free than a metal but far more than a nonmetal."
+    ],
+    "answer": "D",
+    "hints": [
+      "Position on the staircase is one clue, but the four-step routine says you must also check whether the described properties agree with that position.",
+      "A metalloid has some metal traits and some nonmetal traits; look for a property that is intermediate, not fully one or the other."
+    ]
+  },
+  {
+    "id": "m8sci-elements-compounds-mixtures-001",
+    "loId": "m8sci.elements-compounds-and-mixtures",
+    "cedCode": "M8SCI-7.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Scientists magnify a small metal sample until individual atoms are visible. Every particle in the sample is a single sphere, and every sphere is exactly the same size and color as every other sphere in the sample. Based only on this, how should the sample be classified?",
+    "choices": [
+      "An element, because only one kind of atom is present in the sample",
+      "A compound, because the spheres are packed closely together in the sample",
+      "A mixture, because many separate spheres are visible drifting in the sample",
+      "A compound, because every sphere in the sample looks identical to the others"
+    ],
+    "answer": "A",
+    "hints": [
+      "Start with question one: how many different kinds of atom are shown?",
+      "A compound or a mixture both require two or more kinds of atom to be present first."
+    ]
+  },
+  {
+    "id": "m8sci-elements-compounds-mixtures-002",
+    "loId": "m8sci.elements-compounds-and-mixtures",
+    "cedCode": "M8SCI-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Nitrogen gas makes up most of the air people breathe. In nitrogen gas, every particle is made of two nitrogen atoms joined tightly together, and there is no other kind of atom anywhere in the sample. How should nitrogen gas be classified?",
+    "choices": [
+      "A compound, because two atoms are joined together within each particle",
+      "An element, because both atoms joined in each pair are the same kind of atom",
+      "A mixture, because the joined pairs drift among one another in the gas",
+      "A compound, because the two atoms in each pair are held together in a fixed way"
+    ],
+    "answer": "B",
+    "hints": [
+      "Joining only creates a compound when the atoms joined are of different elements.",
+      "Check how many different kinds of atom are present before worrying about the joining."
+    ]
+  },
+  {
+    "id": "m8sci-elements-compounds-mixtures-003",
+    "loId": "m8sci.elements-compounds-and-mixtures",
+    "cedCode": "M8SCI-7.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student stirs iron filings and sulfur powder together in a dish. Under a powerful microscope, the iron atoms and sulfur atoms are simply touching and drifting among one another; no iron atom is joined to any sulfur atom anywhere in the dish. Each material can still be picked out from the dish and still behaves exactly the way it always does on its own. How should the contents of this dish be classified?",
+    "choices": [
+      "An element, because both iron and sulfur are solids at room temperature",
+      "A compound, because two kinds of atom are present together in the dish",
+      "A mixture, because the iron and sulfur atoms are side by side and not joined",
+      "A compound, because the iron and sulfur particles are touching one another"
+    ],
+    "answer": "C",
+    "hints": [
+      "Two kinds of atom being present only answers question one, not question two.",
+      "Check whether the unlike atoms are joined into single particles or merely touching."
+    ]
+  },
+  {
+    "id": "m8sci-elements-compounds-mixtures-004",
+    "loId": "m8sci.elements-compounds-and-mixtures",
+    "cedCode": "M8SCI-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student examines Sample P, which contains only hydrogen atoms and oxygen atoms. In Sample P, every particle is exactly two hydrogen atoms joined to one oxygen atom, and every particle is built the same way. Sample P is a colorless liquid at room temperature that does not burn. The student claims, \"Since hydrogen is a flammable gas and oxygen is the gas that supports burning, Sample P must be flammable too, because it is made of those atoms.\" Which response correctly evaluates this claim and correctly classifies Sample P?",
+    "choices": [
+      "The claim is correct; Sample P is a compound, and compounds always keep the flammability of any hydrogen atoms joined inside them, since combining atoms cannot erase existing properties",
+      "The claim is correct; Sample P is a mixture, so it should show the separate properties of both hydrogen and oxygen at once, since mixing substances keeps each one's original properties unchanged",
+      "The claim is wrong; Sample P is an element, so its properties depend only on the single kind of atom present, and elements never show behavior belonging to any other substance",
+      "The claim is wrong; Sample P is a compound, and a compound's properties are new and do not have to match the properties of the elements that joined to form it"
+    ],
+    "answer": "D",
+    "hints": [
+      "Sample P has two kinds of atom joined into one particle, which decides which category it falls into.",
+      "A compound's properties have to be found out; they are not simply added up from the elements inside it."
+    ]
+  },
+  {
+    "id": "m8sci-elements-compounds-mixtures-005",
+    "loId": "m8sci.elements-compounds-and-mixtures",
+    "cedCode": "M8SCI-7.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A sealed sample contains a compound in which every particle is exactly one atom of element X joined to one atom of element Y. A student divides the sample into smaller and smaller pieces, far beyond what any real tool allows, until reaching a single particle made of one X atom joined to one Y atom that cannot be divided further without breaking that joined pair apart. Which statement correctly describes this smallest particle?",
+    "choices": [
+      "It is the smallest particle of the compound, not an atom, because an atom is the smallest piece of an element, not of a compound",
+      "It is an atom of element X, because atoms are always the smallest possible unit of any pure substance, including compounds",
+      "It is an atom of element Y, because the second-listed element in a joined pair determines the smallest unit",
+      "It cannot be identified as anything specific, because compounds cannot be broken down into individual particles at all"
+    ],
+    "answer": "A",
+    "hints": [
+      "The definition of an atom given applies specifically to a single element, not to a compound.",
+      "Ask whether splitting this particle further would still leave the compound's fixed joined arrangement intact."
+    ]
+  },
+  {
+    "id": "m8sci-elements-compounds-mixtures-006",
+    "loId": "m8sci.elements-compounds-and-mixtures",
+    "cedCode": "M8SCI-7.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Sample H is magnified until individual atoms are visible. Some particles are pairs made of two atoms of the same kind joined together. The rest of the particles are pairs made of one atom of that same kind joined to one atom of a different kind. The two types of particle are never joined to each other, and they simply drift among one another within the same container. Which statement correctly classifies what Sample H contains?",
+    "choices": [
+      "Sample H is a single compound, because every particle in the sample contains atoms joined together, and any sample where atoms are joined must be one uniform compound throughout",
+      "Sample H is a mixture of an element and a compound, because one type of particle has only one kind of atom joined together and the other has two different kinds joined together",
+      "Sample H is a single element, because one of the two kinds of atom appears in both types of particle, and any atom shared between particle types makes the whole sample one element",
+      "Sample H is a mixture of two elements, because both types of particle in the sample contain atoms joined together, and joined atoms of any kind always indicate separate elements mixing"
+    ],
+    "answer": "B",
+    "hints": [
+      "Look at each type of particle separately and ask how many kinds of atom are joined within it.",
+      "A substance is still an element when its atoms travel joined in pairs, as long as both atoms in the pair are the same kind."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-analog-digital-signals-001",
+    "loId": "m8sci.analog-and-digital-signals",
+    "cedCode": "M8SCI-10.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A radio station encodes music into a wave whose amplitude (height) changes smoothly, copying the sound wave from the recording studio moment by moment, with no breaks or steps. What type of signal is the radio station sending?",
+    "choices": [
+      "A digital signal, because the wave height varies up and down",
+      "A digital signal, because radio waves can travel long distances",
+      "An analog signal, because radio stations have been around for a long time",
+      "An analog signal, because the wave's shape copies the original continuously"
+    ],
+    "answer": "D",
+    "hints": [
+      "The key is whether the wave can take any value in between or only two settings.",
+      "Look for the word 'continuously' or 'smoothly' — that points to the type of signal."
+    ]
+  },
+  {
+    "id": "m8sci-analog-digital-signals-002",
+    "loId": "m8sci.analog-and-digital-signals",
+    "cedCode": "M8SCI-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A person sends a text message by encoding each letter as a short burst pattern: different patterns of short and long pulses (on and off in agreed time slots) stand for different letters, the way Morse code works. What type of signal carries this text message, and why does the information lie in which pulses are on and off rather than in how bright they are?",
+    "choices": [
+      "A digital signal; the receiver only needs to tell which slots are on and which are off, not measure the brightness of each one",
+      "An analog signal; the information depends on measuring the exact strength of each pulse rather than just deciding between two states",
+      "A digital signal; text messages travel faster than voice calls because they use shorter pulses",
+      "An analog signal; the pulses change smoothly over time instead of switching sharply between on and off"
+    ],
+    "answer": "A",
+    "hints": [
+      "Does the receiver need to measure an exact value, or just decide between two choices?",
+      "Think about what information the agreed code depends on: the pattern of on-or-off slots."
+    ]
+  },
+  {
+    "id": "m8sci-analog-digital-signals-003",
+    "loId": "m8sci.analog-and-digital-signals",
+    "cedCode": "M8SCI-10.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two hiking teams in different valleys use the same bright flare gun to send emergency signals. Team A makes the brightness rise and fall smoothly to match the exact strength of their signal. Team B shoots the flare fully on for three seconds, then fully off for two seconds, repeating that pattern to spell out a message they agreed on beforehand. Static electrical noise from a nearby lightning storm adds a faint hiss to everything transmitted. Which team's signal carries its information in a way that the hiss could damage?",
+    "choices": [
+      "Team B, because the receiver only has to decide fully on or fully off, so noise cannot change which decision is made",
+      "Team A, because the brightness itself is the message, so noise added to the brightness becomes part of the message",
+      "Both teams equally, because electrical noise from lightning affects all transmitted signals with the same strength regardless of type",
+      "Team B, because the pattern of on-off pulses is more vulnerable to atmospheric interference than smooth brightness changes"
+    ],
+    "answer": "B",
+    "hints": [
+      "In which signal type is the exact value of something (like brightness) the information?",
+      "What can the receiver do: measure a exact brightness, or just decide whether something is fully on or fully off?"
+    ]
+  },
+  {
+    "id": "m8sci-analog-digital-signals-004",
+    "loId": "m8sci.analog-and-digital-signals",
+    "cedCode": "M8SCI-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A data center sends a digital signal down a fiber optic cable to a distant server, encoding data as a series of on-off pulses in equal time slots. The receiver compares each slot to a decision line set at halfway between full strength and nothing. On the first section of cable, a small amount of signal blur adds roughness to the edges of the pulses, but every pulse that was sent as on still arrives above the halfway line, and every pulse sent as off still arrives below it. The receiver then re-sends a fresh, clean set of pulses down the next section. Later, a construction crew accidentally damages the cable, and heavy signal noise now adds up to four tenths of full strength to some slots. At this point, an off-pulse that was barely on the safe side of halfway is now pulled above the halfway line and read as on. What does this tell you about the claim that digital signals are transmitted more reliably?",
+    "choices": [
+      "The claim is correct, because the first section proved that small noise can be handled by re-sending clean pulses at relay stations",
+      "The claim is wrong, because even with small noise, the signal was degraded before being re-sent at each relay point",
+      "The claim holds only when noise stays small enough not to drag a slot across the halfway line; large noise defeats the advantage",
+      "The claim is wrong, because the halfway-line test cannot distinguish between pulses that were barely safe and those with a large margin"
+    ],
+    "answer": "C",
+    "hints": [
+      "The worked example with the storm shows what happens when fuzz grows large — trace through that logic here.",
+      "Ask yourself: what condition has to be true for the receiver's decision to stay correct?"
+    ]
+  },
+  {
+    "id": "m8sci-analog-digital-signals-005",
+    "loId": "m8sci.analog-and-digital-signals",
+    "cedCode": "M8SCI-10.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A museum uses two different systems to record paintings for archive storage. System X encodes each painting as a continuous wave whose brightness at every pixel copies the original artwork's colors exactly as they are. System Y divides the painting into a grid of small squares and records each square as either full color (on) or no color (off), using an agreed code to stand for different hues. Both recordings are stored on the same aging storage medium, and over decades both pick up small defects — tiny bits of data corruption scattered throughout. For System X, those corruptions change the brightness values randomly, and when the painting is read back, small fuzzy spots appear in places where the corruption happened. For System Y, the defects land on the on-off pattern, but every square still comes back clearly as either on or off because the defects are smaller than the gap between those two states, so the pattern is read exactly as it was stored. Which statement correctly explains why System Y recovers the original better than System X?",
+    "choices": [
+      "System Y recovers better because it uses a code to represent colors, making the storage medium unable to introduce any defects at all during the decades of aging",
+      "System Y does not pick up defects the way System X does, because digital storage uses on-off patterns that are fundamentally protected from any form of degradation over time",
+      "System Y recovers better because it uses a code; System X fails because it tries to copy continuous brightness",
+      "System Y only has to decide on or off for each square, and the defects are too small to change that decision, while System X has to read an exact brightness that the defects have altered"
+    ],
+    "answer": "D",
+    "hints": [
+      "The key difference is not whether defects land on the signal — they do — but what the receiver has to determine from the signal.",
+      "In one system the defect changes the information directly; in the other, the defect lands on the signal but the decision stays the same."
+    ]
+  },
+  {
+    "id": "m8sci-analog-digital-signals-006",
+    "loId": "m8sci.analog-and-digital-signals",
+    "cedCode": "M8SCI-10.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An undersea research station sends temperature readings to the surface using two methods tested on identical cables. Method 1 sends a smooth analog wave that copies the water temperature at each moment: warmer water makes the wave taller by the same share. Method 2 sends the same temperature as a sequence of on-off slots, where each slot is either full strength or nothing, and an agreed pattern stands for each temperature reading. Engineers test both by sending them down a cable with relay stations spaced along the path. At each relay point, Method 1 receives the (slightly degraded) signal and sends it onward with the exact same degradation intact. At each relay point, Method 2 receives the (also degraded) pulses, but the receiver applies a simple rule: any slot above halfway is on, any slot below is off; it then sends onward fresh full-strength pulses for the pattern it decoded. After five relay stages, they compare what arrived at the end. The Method 1 signal is so faint and fuzzy that readings are uncertain by several degrees. The Method 2 signal arrives with the exact pattern of on and off slots that started five stages back. Both signals suffered the same total loss of strength from the cable, so the difference is not in how much damage the cable did. Why does this evidence tell you that digital signals are copied more reliably along long paths with intermediate relay stations?",
+    "choices": [
+      "Because Method 2 receivers only read which side of a decision line each slot sits on, not an exact brightness, so each relay discards old noise and sends fresh clean pulses, while Method 1 receivers copy the shape (which the noise has joined), adding new noise each time",
+      "Because digital signals were invented to work better in cables, and analog signals are known to degrade naturally no matter how much signal refreshing or relay amplification is applied at intermediate stations",
+      "Because Method 2 uses pulses that stay at full strength after each relay decision, while Method 1 must preserve and forward the exact degraded wave shape that arrived, so noise compounds at every stage of relay transmission",
+      "Because Method 1 had to travel through more relay stations before reaching the end, giving the cable more opportunities to add noise and blur the signal with each passing stage"
+    ],
+    "answer": "A",
+    "hints": [
+      "The cable damage was the same for both — so the difference is in what each receiver does with what arrives, not in what the cable did to the signal.",
+      "What does each receiver have to determine: an exact value, or a yes-or-no choice? What can each one do before sending onward?"
+    ]
+  },
+  {
+    "id": "m8sci-refraction-bending-light-at-a-boundary-001",
+    "loId": "m8sci.refraction-bending-light-at-a-boundary",
+    "cedCode": "M8SCI-10.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Light travels in a straight line through a piece of clear glass. Then it reaches the bottom surface of the glass and crosses into the air below. Which statement correctly describes what refraction is?",
+    "choices": [
+      "The gradual slowing of light as it passes through any material, which causes the light rays to curve their path slowly over a long distance through the material.",
+      "The bending of light caused by the glass becoming thinner at the point where the light hits it, which reduces the amount of material the light must pass through.",
+      "The change in direction of light where it crosses at a slant from one transparent material into another, caused by the change in its speed at that boundary.",
+      "The scattering of light in many directions when it meets a surface that is not perfectly smooth, spreading the beam out so it no longer travels as a single path."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for the definition that mentions a boundary between two materials.",
+      "The key word is 'speed change' — nothing else is doing the bending."
+    ]
+  },
+  {
+    "id": "m8sci-refraction-bending-light-at-a-boundary-002",
+    "loId": "m8sci.refraction-bending-light-at-a-boundary",
+    "cedCode": "M8SCI-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A narrow beam of light travels straight down through the air and hits the flat surface of a still lake at a steep angle, nearly straight down. The light then enters the water. In which direction does the light bend, and why does it bend that way?",
+    "choices": [
+      "It bends sideways along the water surface, because the water is moving the light parallel to its own motion.",
+      "It bends away from the normal line, because light speeds up when entering water.",
+      "It does not bend at all, because light travels at the same speed in water as in air.",
+      "It bends toward the normal line, because light is slowing down as it enters the slower material."
+    ],
+    "answer": "D",
+    "hints": [
+      "Light is moving from air (faster) into water (slower) — which direction does that rule say it bends?",
+      "The normal line is the imaginary line standing straight up out of the water surface at the point where light hits it."
+    ]
+  },
+  {
+    "id": "m8sci-refraction-bending-light-at-a-boundary-003",
+    "loId": "m8sci.refraction-bending-light-at-a-boundary",
+    "cedCode": "M8SCI-10.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A straight vertical rod stands half in the air above a pool and half underwater, with the water line at its middle. You look at the rod from the side of the pool. The underwater half appears to be shifted sideways compared to where the upper half points. A student says the water must be pushing the rod out of shape. Explain what is really happening and how you would test whether the rod is actually bent.",
+    "choices": [
+      "The rod is straight; light from underwater is refracting at the water surface as it leaves the water, bending away from the normal line, so your eye traces it back to a position shifted from where the rod really is. You could pull the rod out and show it is straight, or run your finger along it underwater to feel that it is still straight.",
+      "The rod is actually bent by the pressure of the water pushing inward on all sides, which deforms the plastic material until you remove it from the water. You could test this by measuring the rod's length both underwater and in air to see if it changes when exposed to water pressure.",
+      "The water is heavier than air and exerts a downward force on the lower part of the rod, pulling it slightly out of alignment with the upper part. You could test this by comparing how much the rod appears to shift in fresh water versus salt water, since salt water is denser and should pull harder.",
+      "The rod looks bent because light travels more slowly in water than in air, and this difference in speed causes the light waves to compress and spread out sideways as they travel through the water. You could test this by shining a brighter light on the rod to see if more light intensity helps your eye see through the compression effect."
+    ],
+    "answer": "A",
+    "hints": [
+      "Nothing is touching or pushing the rod — the effect is about how the light travels, not about the rod's material.",
+      "Light from below the water bends when it exits into air; trace where that bent light appears to come from."
+    ]
+  },
+  {
+    "id": "m8sci-refraction-bending-light-at-a-boundary-004",
+    "loId": "m8sci.refraction-bending-light-at-a-boundary",
+    "cedCode": "M8SCI-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two identical beams of light, each traveling parallel to one another in the air, approach a flat sheet of window glass from above. Beam 1 hits the top surface at a slant. Beam 2 hits the top surface square-on, traveling exactly along the normal line. Both beams carry straight through the glass and then exit through the bottom surface. Describe the path of each beam after it has exited the glass, and explain why the two beams end up different.",
+    "choices": [
+      "Beam 1 exits the glass traveling in a different direction from its starting direction, because it bent toward the normal at the top surface and away from it at the bottom, with the bends not fully canceling out. Beam 2 exits traveling in its original direction, because it never bent at either surface.",
+      "Beam 1 exits traveling parallel to Beam 2, because the two refractions in a parallel-sided glass block cancel each other out. Beam 2 exits traveling in its original direction, because it never bent at either surface.",
+      "Both beams exit traveling in their original directions, because glass does not refract light at all — it only slows the light down.",
+      "Beam 1 exits traveling away from Beam 2, because the glass makes the beams spread apart. Beam 2 continues straight, but shifts to the side because of the thickness of the glass."
+    ],
+    "answer": "B",
+    "hints": [
+      "At the top surface, Beam 1 bends toward the normal (air into slower glass); at the bottom, it bends away from the normal (glass into faster air). Track what happens to the direction.",
+      "Beam 2 arrives square-on, so no bend occurs at either surface — what does that tell you about its final direction?"
+    ]
+  },
+  {
+    "id": "m8sci-refraction-bending-light-at-a-boundary-005",
+    "loId": "m8sci.refraction-bending-light-at-a-boundary",
+    "cedCode": "M8SCI-10.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A curved lens made of clear plastic is thicker in the middle than at the edges. A wide beam of light, whose rays all travel parallel to one another, passes through the lens. After exiting the lens, all the rays come together at a single point. Explain how the lens accomplishes this by applying the refraction rule at each surface.",
+    "choices": [
+      "At the top surface, light bends away from the normal as it enters the plastic because it is slowing down. At the bottom surface, light bends away from the normal again as it exits back into air because it is speeding up. These two outward bends both point the rays toward the center of the lens, converging them at one point.",
+      "The curved plastic acts like a magnet and pulls all the light rays toward the center of the lens with an attractive force. The plastic is denser at the middle, which creates a gravitational effect that draws the rays together into a single point.",
+      "At the top surface, light bends toward the thick middle as it enters the slower plastic. At the bottom surface, light bends toward the thick middle again as it exits back into air. Every ray is turned inward, so the rays that entered across the whole width of the lens all converge at one point.",
+      "Light does not actually bend inside the lens; instead, the curved surface directs the rays geometrically toward a focus point by reflecting the light off the curved interface, the same way a curved mirror would concentrate light to a single spot."
+    ],
+    "answer": "C",
+    "hints": [
+      "At each surface, light bends toward the thicker part of the material wedge it is crossing — in this lens, which part is thickest?",
+      "Count the surfaces: the light crosses the boundary twice (in and out). Does each bend push the rays inward or outward?"
+    ]
+  },
+  {
+    "id": "m8sci-refraction-bending-light-at-a-boundary-006",
+    "loId": "m8sci.refraction-bending-light-at-a-boundary",
+    "cedCode": "M8SCI-10.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A narrow beam of light enters a rectangular glass block from the top surface at a slant, travels through the glass, exits through the side wall of the block, and continues into the air. A student traces the path and sees a sharp bend at the top surface and another sharp bend where the light exits the side wall. The student concludes that the light must have curved continuously inside the glass. Identify the error in the student's reasoning, and explain what actually happens inside the glass.",
+    "choices": [
+      "The student is correct; light does curve inside dense materials because the slow speed of light in the material causes it to follow a curved path. The two sharp bends the student sees are just the places where the curvature changes most rapidly.",
+      "The student is wrong because light does not bend at all inside a transparent material; it travels in a straight line the entire way through the glass, and the bends occur only where light crosses the boundary between air and glass, so the student has misidentified where refraction happens.",
+      "The student is wrong because there are actually three bends, not two — one at the top surface where light enters the glass, one in the middle where the light bounces off an internal surface, and one at the side wall where light exits the glass. The student missed the middle bend caused by an internal reflection.",
+      "The student is wrong because light travels in a straight line inside one transparent material. There are two bends — one at the top surface where light enters the glass, and one at the side wall where light exits into air — but the light travels in a single straight path between those two boundaries. Inside the glass, the path is straight."
+    ],
+    "answer": "D",
+    "hints": [
+      "Refraction happens only at a boundary between two different materials. How many boundaries are on this light path?",
+      "Inside the glass block, the light is in one material the whole way. Light travels in a straight line while it is moving through a single uniform material."
+    ]
+  },
+  {
+    "id": "m8sci-light-versus-sound-the-electromagnetic-spectrum-001",
+    "loId": "m8sci.light-versus-sound-and-the-electromagnetic-spectrum",
+    "cedCode": "M8SCI-10.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Astronauts working outside the International Space Station cannot hear each other if they shout, but they can talk to each other using radio equipment built into their helmets.",
+    "choices": [
+      "Sound is a mechanical wave that needs matter to travel, while radio waves are electromagnetic waves that can cross a vacuum.",
+      "Radio waves travel far slower than sound, so a shout would arrive too late for anyone to hear it.",
+      "Sound waves are electromagnetic while radio waves are mechanical, so only radio waves can survive outside the atmosphere.",
+      "Shouting produces light rather than sound in a vacuum, so the radio must convert that light back into sound."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what each type of wave needs in order to travel.",
+      "Consider which of the two waves involved is described as electromagnetic."
+    ]
+  },
+  {
+    "id": "m8sci-light-versus-sound-the-electromagnetic-spectrum-002",
+    "loId": "m8sci.light-versus-sound-and-the-electromagnetic-spectrum",
+    "cedCode": "M8SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A television broadcast antenna sends out signals classified as radio waves, and a tanning bed emits light classified as ultraviolet waves.",
+    "choices": [
+      "The ultraviolet waves from the tanning bed have a longer wavelength than the radio waves from the antenna.",
+      "The radio waves from the antenna have a longer wavelength than the ultraviolet waves from the tanning bed.",
+      "The radio waves and the ultraviolet waves have exactly the same wavelength because both are electromagnetic waves.",
+      "The wavelength of each wave cannot be compared because radio waves travel through air and ultraviolet waves travel through a vacuum."
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall that the electromagnetic spectrum is ordered from radio at one end to gamma at the other.",
+      "Radio sits at the long-wavelength end of the spectrum, far from ultraviolet."
+    ]
+  },
+  {
+    "id": "m8sci-light-versus-sound-the-electromagnetic-spectrum-003",
+    "loId": "m8sci.light-versus-sound-and-the-electromagnetic-spectrum",
+    "cedCode": "M8SCI-10.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A diver underwater can hear the low hum of a boat engine and can also see sunlight filtering down from the surface. Compared with how these two waves would travel through open air, one of them speeds up when it enters the water and the other slows down.",
+    "choices": [
+      "The engine's sound slows down in the water while the sunlight speeds up in the water.",
+      "Both the engine's sound and the sunlight speed up by the same amount in the water.",
+      "The engine's sound speeds up in the water while the sunlight slows down in the water.",
+      "Both the engine's sound and the sunlight slow down by the same amount in the water."
+    ],
+    "answer": "C",
+    "hints": [
+      "Sound travels through matter, and closely packed particles can pass the disturbance along sooner.",
+      "Light bends and slows whenever it enters a transparent material like water, regardless of what happens to sound there."
+    ]
+  },
+  {
+    "id": "m8sci-light-versus-sound-the-electromagnetic-spectrum-004",
+    "loId": "m8sci.light-versus-sound-and-the-electromagnetic-spectrum",
+    "cedCode": "M8SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A satellite in orbit beams a microwave signal down to a ground station, while at the same moment a space telescope receives X-rays that traveled from a distant star through empty space. Both signals must cross regions of empty space before reaching their detectors.",
+    "choices": [
+      "The X-rays have a shorter wavelength than the microwaves, and travel faster because a shorter wavelength means greater speed.",
+      "The microwaves have a shorter wavelength than the X-rays, but both travel at the same speed through empty space.",
+      "The microwaves travel faster through empty space than the X-rays because longer-wavelength waves always travel faster than shorter ones.",
+      "The X-rays have a shorter wavelength than the microwaves, but both travel at the same speed through empty space."
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall where microwaves and X-rays each sit in the electromagnetic spectrum's wavelength order.",
+      "Wavelength order and speed in a vacuum are two separate facts about electromagnetic waves."
+    ]
+  },
+  {
+    "id": "m8sci-light-versus-sound-the-electromagnetic-spectrum-005",
+    "loId": "m8sci.light-versus-sound-and-the-electromagnetic-spectrum",
+    "cedCode": "M8SCI-10.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "In a science-fiction movie, a spaceship explodes far out in space, and the scene shows a bright fireball along with a loud boom that viewers hear through the movie's speakers.",
+    "choices": [
+      "The bright fireball is realistic because light can cross the vacuum of space, but the loud boom is not realistic because sound cannot travel where there is no matter.",
+      "Both the fireball and the boom are realistic because light and sound are both electromagnetic waves that can travel through empty space without needing any particles of matter to carry their energy.",
+      "Neither the fireball nor the boom is realistic because no wave, whether it is light or sound, can travel through the vacuum of space since a vacuum contains no matter at all.",
+      "The loud boom is realistic because sound waves travel faster than light waves in a vacuum, but the bright fireball is not realistic because light cannot travel through empty space."
+    ],
+    "answer": "A",
+    "hints": [
+      "Identify which of the two effects, light or sound, is a mechanical wave that needs matter.",
+      "A vacuum stops one of these two waves completely but has no effect on the other."
+    ]
+  },
+  {
+    "id": "m8sci-light-versus-sound-the-electromagnetic-spectrum-006",
+    "loId": "m8sci.light-versus-sound-and-the-electromagnetic-spectrum",
+    "cedCode": "M8SCI-10.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A weather radar station sends out microwave pulses to track storms, and a fiber-optic internet cable carries information as pulses of visible light traveling through a long strand of solid glass instead of through open air.",
+    "choices": [
+      "The microwave has a shorter wavelength than the visible light, and the visible light travels faster through the glass than it would through open air.",
+      "The microwave has a longer wavelength than the visible light, and the visible light travels slower through the glass than it would through open air.",
+      "The microwave has a shorter wavelength than the visible light, and the visible light travels slower through the glass than it would through open air.",
+      "The microwave has a longer wavelength than the visible light, and the visible light travels faster through the glass than it would through open air."
+    ],
+    "answer": "B",
+    "hints": [
+      "Microwave sits earlier than visible light in the wavelength order of the electromagnetic spectrum.",
+      "Light always slows down when it crosses from air into a transparent solid like glass."
+    ]
+  },
+  {
+    "id": "m8sci-reflection-absorption-transmission-001",
+    "loId": "m8sci.reflection-absorption-and-transmission",
+    "cedCode": "M8SCI-10.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student shines a flashlight directly at a solid wooden door in a dim hallway. Some of the light bounces back toward the student's eyes, the door feels slightly warmer afterward, and no light appears on the far side of the door in the next room. Which statement correctly describes what happened to the light energy that reached the door?",
+    "choices": [
+      "All of it was absorbed, since none was transmitted through the door.",
+      "Some was reflected, some was absorbed, and none was transmitted.",
+      "All of it was reflected, since the student saw light bounce back.",
+      "All of it was transmitted very slowly through the door's wood fibers."
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider all three possible destinations for arriving light energy, not just one.",
+      "Warming a surface is evidence for one specific share of the energy, not for all of it."
+    ]
+  },
+  {
+    "id": "m8sci-reflection-absorption-transmission-002",
+    "loId": "m8sci.reflection-absorption-and-transmission",
+    "cedCode": "M8SCI-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hiker shouts toward a canyon wall made of solid rock and hears a clear echo return a couple of seconds later. Later, the same hiker shouts with the same loudness toward a nearby hillside covered in thick moss and soil, and almost no echo comes back. What is the best explanation for the difference between how the rock wall and the mossy hillside respond to the shout?",
+    "choices": [
+      "The shout's sound energy is destroyed when it strikes the soft moss and soil, so none of it can return as an echo.",
+      "The rock wall transmits the sound energy through to the other side, while the moss reflects it back too quietly to hear.",
+      "The rock wall reflects most of the sound energy back, while the moss and soil absorb most of it into their soft material.",
+      "The moss and soil produce their own sound that cancels out the returning echo before it reaches the listener."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about which surface lets sound bounce back and which one lets it soak in instead.",
+      "An echo is evidence for one particular share of a sound wave's energy."
+    ]
+  },
+  {
+    "id": "m8sci-reflection-absorption-transmission-003",
+    "loId": "m8sci.reflection-absorption-and-transmission",
+    "cedCode": "M8SCI-10.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A greenhouse has walls made entirely of glass. Sunlight passes through the glass easily, giving the plants inside plenty of light, but only a small fraction of the noise from a nearby street makes it through that same glass wall. Which statement correctly explains this pattern?",
+    "choices": [
+      "The share of a wave that is reflected and the share that is transmitted must always be equal, no matter what material or wave is involved.",
+      "The glass must be a different thickness for sunlight than it is for sound waves passing through the same wall.",
+      "Since the glass lets light through so easily, the street noise must be sneaking in through small gaps rather than through the glass itself.",
+      "The glass transmits most of the light reaching it but only a small share of the sound, since a material can treat light and sound very differently."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare how the glass treats light versus how it treats sound as two separate questions.",
+      "A single material's behavior can change completely depending on which kind of wave is arriving."
+    ]
+  },
+  {
+    "id": "m8sci-reflection-absorption-transmission-004",
+    "loId": "m8sci.reflection-absorption-and-transmission",
+    "cedCode": "M8SCI-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "On a sunny afternoon, one hiker wears a white cotton shirt and another wears a black cotton shirt of the same thickness and style. After walking for an hour in full sun, the hiker in black feels noticeably hotter, and touching the two shirts confirms that the black one is warmer than the white one. Which explanation best accounts for the temperature difference between the two shirts?",
+    "choices": [
+      "White cotton reflects most of the colors in sunlight, while black cotton absorbs nearly all of them, and that absorbed energy becomes thermal energy that warms the fabric.",
+      "White cotton transmits nearly all of the sunlight straight through the fabric, while black cotton reflects it away, so neither shirt should warm up at all.",
+      "Black cotton fibers generate extra heat energy of their own through some internal process, and this heat production happens completely independent of however much sunlight is falling on the shirt that day.",
+      "White cotton and black cotton absorb exactly the same total amount of sunlight energy, but the black fabric simply releases its absorbed share of that energy faster as heat."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about which colors of light each shirt reflects and which ones it absorbs instead.",
+      "Absorbed light energy doesn't disappear; it turns into a different form of energy in the material."
+    ]
+  },
+  {
+    "id": "m8sci-reflection-absorption-transmission-005",
+    "loId": "m8sci.reflection-absorption-and-transmission",
+    "cedCode": "M8SCI-10.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A recording studio installs thick foam panels on its walls. Before the panels were installed, clapping in the room produced a sharp echo. After installation, clapping produces almost no echo, and the foam panels feel very slightly warmer after a loud song has played in the room for an hour. A student claims that the vanished echo proves the sound energy was completely destroyed by the foam. What is the best correction to this claim?",
+    "choices": [
+      "The foam actually reflected the sound waves straight back toward their original source, and the room only seems silent because that reflected sound travels in a direction outside normal hearing range.",
+      "The foam absorbed most of the sound energy, and that energy became a very small amount of thermal energy in the foam, so it was transformed rather than destroyed.",
+      "The foam actually transmitted nearly all of the sound energy straight into the next room, so that energy is still traveling somewhere else in the building rather than being destroyed.",
+      "Sound energy really is destroyed completely once it enters any soft absorbing material, unlike light energy, which can only ever change into a different color instead of disappearing."
+    ],
+    "answer": "B",
+    "hints": [
+      "Consider what the word 'absorbed' actually means for a wave's energy.",
+      "Rule out any explanation that would make energy simply vanish, since that never happens."
+    ]
+  },
+  {
+    "id": "m8sci-reflection-absorption-transmission-006",
+    "loId": "m8sci.reflection-absorption-and-transmission",
+    "cedCode": "M8SCI-10.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A sealed room contains a blue plastic ball and a red plastic ball, and the only light source in the room is a strip of LEDs that emit red light and no other color at all. In ordinary daylight, the blue ball reflects blue light and absorbs the rest, while the red ball reflects red light and absorbs the rest. What will each ball look like under only the red LED light, and why?",
+    "choices": [
+      "The blue ball will still look blue no matter what light shines on it, because its color is a fixed property that is permanently stored in the plastic material itself.",
+      "Both balls will look red under this light, because red light reflects equally off every surface it strikes regardless of what color the object normally appears to be in daylight.",
+      "The red ball will look red because it reflects the red light present, while the blue ball will look almost black because there is no blue light available for it to reflect.",
+      "Both balls will look completely black under this light, since a single color of light can never actually be reflected by any object and can only ever be absorbed."
+    ],
+    "answer": "C",
+    "hints": [
+      "Recall that an object can only reflect colors that are actually present in the light shining on it.",
+      "A ball whose own color isn't in the light source has almost nothing left to reflect."
+    ]
+  }
+]

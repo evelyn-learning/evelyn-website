@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-motion-reference-points-speed-001",
+    "loId": "m8sci.motion-reference-points-and-speed",
+    "cedCode": "M8SCI-1.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A cat sleeps on a cushion in your living room. You are sitting at a table in the same room, 3 meters away from the cat. The cat does not move for an hour. Is the cat moving or at rest? Your answer must name the reference point.",
+    "choices": [
+      "The cat is moving compared with the cushion because the Earth is always moving through space.",
+      "The cat is moving because it is in the same room as me, and rooms are not stationary.",
+      "The cat is at rest because it is not running or jumping, no matter what reference point is used.",
+      "The cat is at rest compared with the cushion, because its distance from the cushion does not change."
+    ],
+    "answer": "D",
+    "hints": [
+      "Remember: every answer to a motion question must name the reference point it is measured from.",
+      "Check whether the cat's distance from the cushion changes over time."
+    ]
+  },
+  {
+    "id": "m8sci-motion-reference-points-speed-002",
+    "loId": "m8sci.motion-reference-points-and-speed",
+    "cedCode": "M8SCI-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A swimmer swims the length of a pool in 40 seconds. The pool is 80 meters long and she stays in a straight line the whole way. What is her average speed for that swim?",
+    "choices": [
+      "2 meters per second, because 80 meters divided by 40 seconds equals 2, and the unit comes from the two measurements divided.",
+      "120 meters per second, because you add the distance and time together to get the total amount the swimmer moved overall.",
+      "40 meters per second, because that is how many seconds the swim took times 2 to find the final speed.",
+      "0.5 meters per second, because the pool is very long compared with the time, so dividing in reverse gives the true speed."
+    ],
+    "answer": "A",
+    "hints": [
+      "Average speed uses the formula speed = distance ÷ time; use the swimmer's two numbers in that order.",
+      "The unit for speed comes from dividing meters by seconds—say what that unit is."
+    ]
+  },
+  {
+    "id": "m8sci-motion-reference-points-speed-003",
+    "loId": "m8sci.motion-reference-points-and-speed",
+    "cedCode": "M8SCI-1.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two delivery trucks drive along the same straight road. Truck A travels 180 meters in 60 seconds. Truck B travels 140 meters in 40 seconds. You want to know which truck is faster, so you decide to compare their distances: Truck A went 180 meters and Truck B went only 140 meters, so Truck A must be faster. Is your reasoning correct, and why?",
+    "choices": [
+      "Yes, because 180 is greater than 140, and comparing distances directly is the proper way to find which truck is faster.",
+      "No, because distance alone is not enough to find speed; you must divide each truck's distance by its own time before you can compare them.",
+      "No, because when two objects travel for the same amount of time, the one covering more distance must be moving faster, so you only need to compare their distances without calculating speed.",
+      "Yes, because Truck A traveled a greater distance than Truck B, and greater distance automatically means greater speed regardless of the time each truck spent moving."
+    ],
+    "answer": "B",
+    "hints": [
+      "Speed depends on both distance traveled and the time it took. Comparing distances alone ignores how long each truck was moving. Why does time matter?",
+      "Think about two travelers: one covers 10 meters in 2 seconds, the other covers 10 meters in 5 seconds. Both traveled the same distance, but did they move at the same speed?"
+    ]
+  },
+  {
+    "id": "m8sci-motion-reference-points-speed-004",
+    "loId": "m8sci.motion-reference-points-and-speed",
+    "cedCode": "M8SCI-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A car leaves a gas station and drives for 90 seconds, covering 450 meters at a steady speed. After the 90 seconds, it continues at a steady speed again and covers 300 meters in the next 60 seconds. Use the formula speed = distance ÷ time to find the average speed for the entire trip—both the first stretch and the second stretch together—and explain why you cannot find it by simply averaging the two speeds.",
+    "choices": [
+      "The average speed is 5.5 meters per second, found by adding the speed of the first stretch (5 m/s) and the speed of the second stretch (5 m/s) and dividing by 2, because adding and dividing gives a fair middle value for the whole trip.",
+      "The average speed is 5 meters per second, found by adding both speeds and dividing by 2, because the car travels at steady speeds on both stretches of the trip.",
+      "The average speed for the whole trip is 5 meters per second, found by dividing the total distance of 750 meters by the total time of 150 seconds. You cannot average the two speeds because the car spent different amounts of time at each speed, so each one has a different weight in the whole trip.",
+      "The average speed is 4.8 meters per second, found by dividing the total distance by the sum of the individual speeds, because this method accounts for the different time intervals."
+    ],
+    "answer": "C",
+    "hints": [
+      "Average speed for a whole trip uses TOTAL distance divided by TOTAL time. Add up all the distances and all the times first.",
+      "The car spent 90 seconds at one speed and 60 seconds at another—those are not equal amounts of time, so you cannot just average the speeds themselves."
+    ]
+  },
+  {
+    "id": "m8sci-motion-reference-points-speed-005",
+    "loId": "m8sci.motion-reference-points-and-speed",
+    "cedCode": "M8SCI-1.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "You are standing on a sidewalk beside a straight train track. A passenger sits in a train car as the train pulls away from the station. From your point of view on the sidewalk, describe whether the passenger is moving or at rest, using a reference point. Then describe what the passenger would say about their own motion if they used their seat as the reference point. Finally, explain how both answers can be true at the same time.",
+    "choices": [
+      "The passenger is moving compared with the station, but at rest compared with me because we are both watching the same train from the ground, and reference points do not affect whether an object is truly moving or at rest in an absolute sense.",
+      "The passenger is moving no matter what reference point you use, because motion is absolute and independent of the observer's location or perspective.",
+      "From my point of view, the passenger is at rest because I am standing still and observing them. From the passenger's point of view, they are moving because they are on a moving train. Both answers are true because motion depends on who is looking.",
+      "From my point of view, the passenger is moving compared with me, because the distance between us grows. From the passenger's point of view, they are at rest compared with their seat, because they stay in the same spot on it. Both are true because each answer is measured from a different reference point—the passenger has not moved at all relative to the seat, but has moved relative to me."
+    ],
+    "answer": "D",
+    "hints": [
+      "An object can be in motion with respect to one reference point and at rest with respect to another—at the very same moment. Neither answer cancels the other.",
+      "When describing motion, always name the object you are comparing the passenger with: Is the passenger's distance from [that object] changing?"
+    ]
+  },
+  {
+    "id": "m8sci-motion-reference-points-speed-006",
+    "loId": "m8sci.motion-reference-points-and-speed",
+    "cedCode": "M8SCI-1.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A pedestrian walks along a straight sidewalk. In the first 30 seconds, she walks 60 meters. In the next 30 seconds, she walks only 45 meters because she slows down near a busy intersection. You want to check your calculated average speed for the entire walk by using the formula turned around: distance = speed × time. Explain what the correct total distance and total time are for this check, calculate the average speed, and describe what would go wrong if someone mistakenly used only the second stretch (45 meters in 30 seconds) to check their answer instead of using the whole trip.",
+    "choices": [
+      "The correct total distance is 105 meters and total time is 60 seconds, giving an average speed of 1.75 meters per second. The check works because 1.75 × 60 = 105. If you used only the second stretch, you would check against 45 meters in 30 seconds, which gives 1.5 meters per second, and that speed does not match 1.75, so you would wrongly think the calculation was incorrect even though it was right.",
+      "The correct total distance is 60 meters and total time is 30 seconds, using only the first stretch when the pedestrian walked at a constant speed without slowing down near the intersection, because the first stretch has more reliable data.",
+      "The correct average speed is 1.5 meters per second, found by using only the second 30-second interval where the pedestrian covered 45 meters, because the slowing down is the most important part to check and represents the true average.",
+      "The correct total is 45 meters in 30 seconds because you must use the distance and time from whichever stretch represents the actual average speed of the entire walk."
+    ],
+    "answer": "A",
+    "hints": [
+      "Average speed comes from the total distance and total time for the entire trip. Add up all the distance and all the time first, then divide.",
+      "When you check by turning the formula around, use the speed you calculated and the total time and distance from the whole trip, not from just one part of it."
+    ]
+  },
+  {
+    "id": "m8sci-forces-net-force-balanced-forces-001",
+    "loId": "m8sci.forces-and-net-force",
+    "cedCode": "M8SCI-1.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that saying 'a force of 12 newtons' completely describes a pull on a wagon. Is the student correct?",
+    "choices": [
+      "Yes, because a force's size in newtons is a complete description on its own.",
+      "No, because it leaves out how fast the wagon was already moving before the pull started.",
+      "No, because it leaves out the direction, and 12 newtons could pull the wagon in either direction.",
+      "No, because it leaves out how long the pull lasted before it stopped."
+    ],
+    "answer": "C",
+    "hints": [
+      "Consider what makes 20 newtons to the right different from 20 newtons to the left.",
+      "A full force description needs more than just how big the push or pull is."
+    ]
+  },
+  {
+    "id": "m8sci-forces-net-force-balanced-forces-002",
+    "loId": "m8sci.forces-and-net-force",
+    "cedCode": "M8SCI-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two tugboats pull a barge along a straight canal in the same direction. One tugboat pulls with a force of 250 newtons east, and the other pulls with a force of 175 newtons east. No other force acts on the barge along that line. What is the net force on the barge?",
+    "choices": [
+      "425 newtons, no direction needed",
+      "75 newtons east",
+      "250 newtons east",
+      "425 newtons east"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check whether both forces point the same way before deciding how to combine them.",
+      "When two forces point in the same direction, their sizes add together."
+    ]
+  },
+  {
+    "id": "m8sci-forces-net-force-balanced-forces-003",
+    "loId": "m8sci.forces-and-net-force",
+    "cedCode": "M8SCI-1.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A river current pulls a small boat downstream with a force of 40 newtons. At the same moment, a person on the shore pulls the boat upstream with a rope, applying a force of 65 newtons. No other force acts on the boat along that line. What is the net force on the boat?",
+    "choices": [
+      "25 newtons upstream",
+      "25 newtons downstream",
+      "105 newtons upstream",
+      "40 newtons upstream"
+    ],
+    "answer": "A",
+    "hints": [
+      "The two forces point in opposite directions, so think about which one is larger.",
+      "Subtract the smaller size from the larger size, and keep the larger one's direction."
+    ]
+  },
+  {
+    "id": "m8sci-forces-net-force-balanced-forces-004",
+    "loId": "m8sci.forces-and-net-force",
+    "cedCode": "M8SCI-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A tow truck uses a cable to pull a stalled car forward along a flat road, applying a force of 800 newtons. As the car moves, friction between its tires and the road pushes backward on the car with a force of 300 newtons. The car also pulls back on the cable with a force of 800 newtons as the cable drags it. Considering only the forces that act on the car itself, what is the net force on the car?",
+    "choices": [
+      "800 newtons forward",
+      "500 newtons forward",
+      "1,600 newtons forward",
+      "500 newtons backward"
+    ],
+    "answer": "B",
+    "hints": [
+      "Only count forces that act on the car itself, not forces the car exerts on something else.",
+      "Once you have the correct list, combine the forward and backward forces."
+    ]
+  },
+  {
+    "id": "m8sci-forces-net-force-balanced-forces-005",
+    "loId": "m8sci.forces-and-net-force",
+    "cedCode": "M8SCI-1.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A skateboarder rolls along a flat sidewalk at a constant speed. Friction pushes backward on the skateboard with a force of 45 newtons, and the push from the skateboarder's feet against the ground provides an average forward force of 45 newtons along the same line. A classmate argues, 'Since two forces are acting on the skateboard, its speed must be changing.' Which statement correctly evaluates this claim and gives the net force?",
+    "choices": [
+      "The classmate is correct: the net force is 90 newtons forward, so the skateboarder speeds up.",
+      "The classmate is correct: the net force is 0 newtons, but the forces are still unbalanced because two separate forces are present.",
+      "The classmate is incorrect: the net force is 0 newtons, the forces are balanced, and the skateboarder's speed stays the same.",
+      "The classmate is incorrect: the net force is 45 newtons backward, so the skateboarder slows down."
+    ],
+    "answer": "C",
+    "hints": [
+      "Remember that unbalanced forces cause a change in speed or direction, not just any push or pull.",
+      "Compare the size of the forward push to the size of the backward friction."
+    ]
+  },
+  {
+    "id": "m8sci-forces-net-force-balanced-forces-006",
+    "loId": "m8sci.forces-and-net-force",
+    "cedCode": "M8SCI-1.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A rescue drone hovers perfectly still in the air while carrying a hanging rescue line. Gravity pulls the drone downward with a force of 90 newtons, and the hanging line pulls down on the drone with an additional force of 10 newtons. The drone's rotors push upward on the drone with some unknown force. Because the drone is holding still without any change in its motion, what must be true about the net force on the drone, and how strong is the rotors' upward push?",
+    "choices": [
+      "The net force must be 90 newtons upward, so the rotors push upward with 100 newtons.",
+      "The net force must be 0 newtons, so the rotors push upward with 80 newtons.",
+      "The net force must be 10 newtons upward, so the rotors push upward with 100 newtons.",
+      "The net force must be 0 newtons, so the rotors push upward with 100 newtons."
+    ],
+    "answer": "D",
+    "hints": [
+      "An object that is not changing its motion has a net force of a specific size.",
+      "Add up everything pulling the drone down before figuring out what the rotors must supply."
+    ]
+  },
+  {
+    "id": "m8sci-reading-distance-time-graphs-001",
+    "loId": "m8sci.reading-distance-time-graphs",
+    "cedCode": "M8SCI-1.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A hiker's distance from her tent is recorded as she walks along a trail. Between 6 seconds and 14 seconds, her distance from the tent stays at 18 meters the whole time. What does this flat stretch of the record tell you about her motion during those 8 seconds?",
+    "choices": [
+      "She is at rest, since her distance from the tent did not change at all during that time",
+      "She is moving very slowly, since flat stretches represent the smallest possible speed rather than zero speed",
+      "She is moving at a steady speed, since the record shows the same steady pattern for the whole stretch",
+      "She is moving back toward the tent, since the distance holding steady means she has stopped moving away"
+    ],
+    "answer": "A",
+    "hints": [
+      "Steady speed and a flat stretch are not the same thing on a distance-time record.",
+      "Work out how many meters she covered in those 8 seconds by subtracting the start distance from the end distance."
+    ]
+  },
+  {
+    "id": "m8sci-reading-distance-time-graphs-002",
+    "loId": "m8sci.reading-distance-time-graphs",
+    "cedCode": "M8SCI-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A toy train's distance from its starting point rises steadily from 15 meters to 55 meters between 5 seconds and 15 seconds. What is the train's speed during that stretch?",
+    "choices": [
+      "3 meters per second, from the 15 meters start distance divided by the 5 seconds start time",
+      "4 meters per second, from the 40 meters covered divided by the 10 seconds it took",
+      "3.7 meters per second, from the 55 meters end distance divided by the 15 seconds end time",
+      "2.7 meters per second, from the 40 meters covered divided by the 15 seconds end time"
+    ],
+    "answer": "B",
+    "hints": [
+      "Speed for a stretch uses only the distance covered and the time taken during that stretch.",
+      "Subtract the start distance from the end distance, and the start time from the end time, before dividing."
+    ]
+  },
+  {
+    "id": "m8sci-reading-distance-time-graphs-003",
+    "loId": "m8sci.reading-distance-time-graphs",
+    "cedCode": "M8SCI-1.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A go-kart's distance-time record has two stretches that each last 8 seconds. In the first stretch, the distance rises from 0 meters to 24 meters. In the second stretch, the distance rises from 24 meters to 64 meters. Which stretch shows the go-kart moving faster, and why?",
+    "choices": [
+      "The second stretch, because its ending distance of 64 meters is larger than the first stretch's ending distance of 24 meters",
+      "The first stretch, because it starts from 0 meters, which is always the fastest part of any record",
+      "The second stretch, because it covers 40 meters while the first covers 24 meters, in the same 8 seconds",
+      "Neither stretch is faster, because both stretches last the same 8 seconds so their speeds must be equal"
+    ],
+    "answer": "C",
+    "hints": [
+      "When two stretches take the same amount of time, compare how much distance each one covers, not how high the line has climbed.",
+      "Find the distance covered in the second stretch by subtracting its start distance from its end distance."
+    ]
+  },
+  {
+    "id": "m8sci-reading-distance-time-graphs-004",
+    "loId": "m8sci.reading-distance-time-graphs",
+    "cedCode": "M8SCI-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A drone's distance from its launch pad is recorded during a test flight. From 0 seconds to 10 seconds it rises steadily from 0 meters to 30 meters. From 10 seconds to 20 seconds it stays at 30 meters while the drone hovers. From 20 seconds to 30 seconds it rises steadily from 30 meters to 90 meters. What is the drone's average speed for the entire 30-second flight?",
+    "choices": [
+      "2 meters per second, from the 60 meters covered after the hover divided by the total 30 seconds",
+      "4.5 meters per second, from averaging the 3 meters per second and 6 meters per second speeds of the two moving stretches",
+      "6 meters per second, using only the speed of the last, steepest stretch as the speed for the whole flight",
+      "3 meters per second, from the total 90 meters covered divided by the total 30 seconds, including the 10 seconds spent hovering"
+    ],
+    "answer": "D",
+    "hints": [
+      "Average speed comes from the total distance divided by the total time, and the hovering seconds still count in that total time.",
+      "Averaging two separate stretch speeds directly is not the same as dividing the total distance by the total time."
+    ]
+  },
+  {
+    "id": "m8sci-reading-distance-time-graphs-005",
+    "loId": "m8sci.reading-distance-time-graphs",
+    "cedCode": "M8SCI-1.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two cyclists start from the same point on a straight bike path at the same moment, and their distances from that point are recorded on the same clock. Cyclist A's distance rises steadily from 0 meters at 0 seconds to 100 meters at 20 seconds, with no stops. Cyclist B's distance rises steadily from 0 meters to 20 meters between 0 seconds and 10 seconds, then rises steadily from 20 meters to 90 meters between 10 seconds and 20 seconds. Which cyclist is ahead at 10 seconds, and which cyclist has the higher average speed over the full 20 seconds?",
+    "choices": [
+      "Cyclist A is ahead at 10 seconds, and Cyclist A also has the higher average speed over the full 20 seconds",
+      "Cyclist B is ahead at 10 seconds, and Cyclist A has the higher average speed over the full 20 seconds",
+      "Cyclist A is ahead at 10 seconds, and Cyclist B has the higher average speed over the full 20 seconds",
+      "Cyclist B is ahead at 10 seconds, and Cyclist B also has the higher average speed over the full 20 seconds"
+    ],
+    "answer": "A",
+    "hints": [
+      "Being ahead at a moment is about which record has the higher distance right then, which is a different question from overall average speed.",
+      "Work out each cyclist's distance at 10 seconds separately from each cyclist's total distance divided by total time over the full 20 seconds."
+    ]
+  },
+  {
+    "id": "m8sci-reading-distance-time-graphs-006",
+    "loId": "m8sci.reading-distance-time-graphs",
+    "cedCode": "M8SCI-1.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A skateboarder and a scooter rider start from the same point on a straight path at the same moment, and their distances are recorded on the same clock for 20 seconds. The skateboarder's distance rises steadily from 0 meters to 40 meters between 0 and 8 seconds, stays at 40 meters between 8 and 14 seconds while she balances, then rises steadily from 40 meters to 100 meters between 14 and 20 seconds. The scooter rider's distance rises steadily from 0 meters to 100 meters across the entire 20 seconds with no stops at all. Which statement correctly compares the two riders over the full 20 seconds?",
+    "choices": [
+      "The scooter rider has a higher average speed, because moving the full 100 meters in 20 seconds without stopping produces a faster rate than the skateboarder achieved overall.",
+      "They have the same average speed of 5 meters per second, even though the skateboarder rested for part of the trip and the scooter rider never stopped",
+      "The skateboarder has a higher average speed, because her final segment climbs more steeply than any part of the scooter rider's steady climb, indicating she moved fastest overall.",
+      "They cannot be compared using a single average speed because the skateboarder's distance-time graph has three different sections while the scooter rider's graph is just one straight line the whole time."
+    ],
+    "answer": "B",
+    "hints": [
+      "Work out each rider's total distance and total time first, including any seconds spent resting.",
+      "The steepness of one stretch tells you about that stretch only, not about the whole trip's average speed."
+    ]
+  },
+  {
+    "id": "m8sci-velocity-acceleration-001",
+    "loId": "m8sci.velocity-and-acceleration",
+    "cedCode": "M8SCI-1.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A cyclist rides along a straight bike path heading due west, and her speedometer reads a steady 6 meters per second the whole time. A friend asks whether this speedometer reading, all by itself, is enough to know the cyclist's velocity. Which statement correctly answers the friend's question?",
+    "choices": [
+      "Yes, because velocity is just another word for speed, so the reading is enough by itself",
+      "No, because velocity also requires knowing the direction she is traveling, not just the number on the speedometer",
+      "Yes, because the speedometer number already includes the direction she is heading as part of that single reading",
+      "No, because velocity can only be found by dividing distance by time, which the speedometer does not do"
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about what two pieces of information make up a velocity.",
+      "A speedometer only reports one kind of information about motion."
+    ]
+  },
+  {
+    "id": "m8sci-velocity-acceleration-002",
+    "loId": "m8sci.velocity-and-acceleration",
+    "cedCode": "M8SCI-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Hiker A walks 80 meters due north in 20 seconds. Hiker B walks 80 meters due south in the same 20 seconds. Both hikers move at a steady rate the whole way. Which statement correctly compares their speeds and velocities?",
+    "choices": [
+      "They have the same speed and the same velocity, since both hikers covered 80 meters in exactly 20 seconds each",
+      "They have different speeds, since walking north and walking south are not the same kind of motion at all",
+      "They have the same speed but different velocities, since their directions are opposite even though the numbers match exactly",
+      "They have different speeds and different velocities, since neither the distance nor the direction actually matched between them"
+    ],
+    "answer": "C",
+    "hints": [
+      "Calculate each hiker's speed using distance divided by time first.",
+      "Then check whether both parts of velocity, not just the number, are the same for each hiker."
+    ]
+  },
+  {
+    "id": "m8sci-velocity-acceleration-003",
+    "loId": "m8sci.velocity-and-acceleration",
+    "cedCode": "M8SCI-1.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A toy car rolls along a flat, straight track. Over 5 seconds, its speed rises steadily from 2 meters per second to 6 meters per second, and it never changes direction the whole time. Which statement correctly describes the toy car's motion?",
+    "choices": [
+      "The car is accelerating only if its direction also changes at some point during the same 5 seconds",
+      "The car is not accelerating, because it never changes direction during the 5 seconds",
+      "The car is not accelerating, because it stays on a flat, straight track the whole time",
+      "The car is accelerating, because its speed is increasing while its direction stays the same"
+    ],
+    "answer": "D",
+    "hints": [
+      "Acceleration is any change in velocity, not only a change in direction.",
+      "Check whether either the speed number or the direction changed between the start and the end."
+    ]
+  },
+  {
+    "id": "m8sci-velocity-acceleration-004",
+    "loId": "m8sci.velocity-and-acceleration",
+    "cedCode": "M8SCI-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A remote-control boat crosses a pond in two parts. For the first 10 seconds, it speeds up steadily from 0 meters per second to 4 meters per second while heading due east. For the next 15 seconds, it holds a steady 4 meters per second while curving around a buoy, ending the curve heading due south. Which statement correctly identifies when the boat is accelerating?",
+    "choices": [
+      "During both parts, since the first part changes the speed number and the second part changes the direction instead",
+      "Only during the first 10 seconds, because that is the only part where the speed number actually changes",
+      "Only during the curve, because turning around the buoy is the only true form of acceleration in this situation",
+      "During neither part, because the boat never speeds up and slows down at the same time during the trip"
+    ],
+    "answer": "A",
+    "hints": [
+      "Check the speed and direction separately for each of the two parts of the trip.",
+      "Remember that a direction change counts as acceleration even if the speed number never moves."
+    ]
+  },
+  {
+    "id": "m8sci-velocity-acceleration-005",
+    "loId": "m8sci.velocity-and-acceleration",
+    "cedCode": "M8SCI-1.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student watches a subway train slow from 12 meters per second to 3 meters per second as it approaches a station platform, moving in a straight line the whole time. The student says, \"The train was decelerating, so it was not accelerating.\" Which response correctly evaluates the student's claim?",
+    "choices": [
+      "The student is correct, because deceleration is the opposite of acceleration and cancels it out",
+      "The student is incorrect, because the train's velocity changed as its speed fell, which means it was still accelerating",
+      "The student is correct, because the train stayed in a straight line, so its velocity could not have changed",
+      "The student is incorrect, because the train's direction changed as it slowed down, which is what made it accelerate"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall that deceleration is one of the three kinds of acceleration, not its opposite.",
+      "Check whether the speed number changed between the start and the end of this motion."
+    ]
+  },
+  {
+    "id": "m8sci-velocity-acceleration-006",
+    "loId": "m8sci.velocity-and-acceleration",
+    "cedCode": "M8SCI-1.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A ball bounces on a hard floor over and over. Right before each bounce, it is moving straight downward at 5 meters per second, and right after each bounce, it is moving straight upward at 5 meters per second. The speed number is exactly the same right before and right after every bounce. Is the ball accelerating during the moment of each bounce?",
+    "choices": [
+      "No, because velocity only changes when the speed number changes, and here the speed stayed exactly the same before and after",
+      "No, because acceleration only happens while the ball is touching the floor, and its velocity stays constant before and after contact",
+      "Yes, because the direction changed from downward to upward even though the speed stayed the same, so the velocity changed",
+      "Yes, but only because the ball was moving fast at five meters per second, and fast motion always counts as acceleration"
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the direction of motion just before and just after the bounce, not just the speed number.",
+      "Remember that a direction change by itself is enough to count as a change in velocity."
+    ]
+  }
+]

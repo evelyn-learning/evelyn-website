@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-collisions-designing-for-safety-001",
+    "loId": "m8sci.collisions-and-designing-for-safety",
+    "cedCode": "M8SCI-2.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "During a collision between two objects, the third law says that the two objects push on each other with forces that are equal in size and opposite in direction. What is true about where these two forces act?",
+    "choices": [
+      "They act on the same object, so they cancel out and the object does not move.",
+      "They act on different objects, and one is always much stronger than the other depending on the material.",
+      "They act on different objects, but only the larger force has any effect on the motion.",
+      "They act on two different objects, so they cannot cancel no matter how equal they are in size."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what 'act on' means — which object is each force pushing? Remember that a force pushes ONE object.",
+      "In a collision, both the bat and the ball are pushed. Can both be pushed by the same force?"
+    ]
+  },
+  {
+    "id": "m8sci-collisions-designing-for-safety-002",
+    "loId": "m8sci.collisions-and-designing-for-safety",
+    "cedCode": "M8SCI-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A bicycle rider is moving forward at 8 meters per second when she squeezes the brakes and comes to rest. The brakes apply a stopping force to her and her bicycle (total mass 60 kilograms) over a time period of 2 seconds. Using the rule that force equals mass times acceleration, calculate the force needed to stop her. Remember that acceleration is how fast the speed is changing, measured in meters per second each second.",
+    "choices": [
+      "240 newtons, because the speed drops 8 meters per second in 2 seconds, which is 4 meters per second each second, and 60 kilograms times 4 meters per second each second equals 240 newtons.",
+      "8 newtons, because the initial speed of 8 meters per second is the acceleration, and multiplying 60 kilograms by 8 gives a force that when divided by 2 seconds yields the answer.",
+      "30 newtons, because the acceleration is found by dividing the mass of 60 kilograms by the time of 2 seconds to get 30 meters per second each second, then multiplying by 1 gives 30 newtons.",
+      "480 newtons, because you add the mass of 60 kilograms to the initial speed of 8 meters per second to get 68, then multiply by the time of 2 seconds to get 136, then multiply by 2 again to get 480 newtons."
+    ],
+    "answer": "A",
+    "hints": [
+      "What speed is being lost, and how long does it take to lose it? That tells you the acceleration.",
+      "Once you have the acceleration in meters per second each second, use F equals m times a."
+    ]
+  },
+  {
+    "id": "m8sci-collisions-designing-for-safety-003",
+    "loId": "m8sci.collisions-and-designing-for-safety",
+    "cedCode": "M8SCI-2.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A basketball (mass 0.6 kilograms) is thrown hard at a wall and hits it at 15 meters per second, then bounces straight back at 15 meters per second in the opposite direction. A volleyball (mass 0.3 kilograms) is thrown at the same wall at the same speed and bounces back at the same speed. Both collisions with the wall take the same amount of time. Which statement correctly compares the forces the two balls experience during their collisions?",
+    "choices": [
+      "The volleyball experiences twice the force because it has less mass and the same force changes its motion more.",
+      "The basketball experiences twice the force because it has twice the mass, even though both stop in the same time.",
+      "The basketball and volleyball experience equal forces because they lose the same speed in the same time, and force equals mass times acceleration.",
+      "The basketball experiences a smaller force because it is heavier and resists changes in motion more strongly."
+    ],
+    "answer": "B",
+    "hints": [
+      "Both balls change speed by the same amount in the same time. What does that tell you about their accelerations?",
+      "The basketball has twice the mass of the volleyball. If their accelerations are equal, how do their forces compare using F equals m times a?"
+    ]
+  },
+  {
+    "id": "m8sci-collisions-designing-for-safety-004",
+    "loId": "m8sci.collisions-and-designing-for-safety",
+    "cedCode": "M8SCI-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A test car (mass 1000 kilograms) crashes into a rigid concrete barrier at 20 meters per second. Engineers want to add padding to the barrier to lower the force on the car. They are deciding between two padding designs. Design 1 is a soft sponge that squashes completely flat the instant the car touches it, so the car then stops against the hard barrier behind the sponge in 0.1 seconds. Design 2 is a firm foam 20 centimeters thick that crushes gradually and keeps crushing while the car is still slowing down, taking a total of 0.5 seconds to stop the car. Calculate the force on the car in each design and explain which design actually makes the force smaller and why.",
+    "choices": [
+      "Design 1 produces 200,000 newtons and design 2 produces 40,000 newtons; design 2 is better because it spreads the force over a larger area of the car's front.",
+      "Both designs produce the same force because the car loses the same 20 meters per second no matter what is in front of it, and softness does not change the force.",
+      "Design 1 produces 200,000 newtons and design 2 produces 40,000 newtons; design 2 is better because it stretches the stopping time longer, so the acceleration is smaller and the force is smaller.",
+      "Design 1 produces 40,000 newtons because the sponge absorbs most of the energy, while design 2 produces 200,000 newtons because it is firmer and resists more."
+    ],
+    "answer": "C",
+    "hints": [
+      "Find the acceleration in each design: how much speed is lost, and over how many seconds? Acceleration = change in speed ÷ time.",
+      "Once you have each acceleration, use F equals mass times acceleration. Which design has the smaller acceleration?"
+    ]
+  },
+  {
+    "id": "m8sci-collisions-designing-for-safety-005",
+    "loId": "m8sci.collisions-and-designing-for-safety",
+    "cedCode": "M8SCI-2.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A skateboarder falls and her head strikes the pavement at a speed of 5 meters per second. Her helmet has a hard outer shell (which keeps its shape and does not crush) and a thick inner liner of crushable foam. Without the helmet, the back of her head would hit the pavement directly and come to rest in 0.05 seconds. With the helmet on, the crushable liner compresses gradually and keeps compressing while her head is still slowing, so her head comes to rest in 0.25 seconds (five times longer). The mass of her head is 5 kilograms. Calculate the force on her head both with and without the helmet, and then explain what rule of safety design each part of the helmet follows.",
+    "choices": [
+      "Without helmet: 500 newtons; with helmet: 100 newtons. The foam and shell together absorb the force so that less of it reaches the head, lowering the total force below what the rule of force equals mass times acceleration allows.",
+      "Without helmet: 500 newtons; with helmet: 100 newtons. The foam reduces force by spreading it over a larger area, and the shell reduces force by crushing and giving way.",
+      "Without helmet: 100 newtons; with helmet: 500 newtons. The helmet makes the force larger because the materials inside are softer and do not resist as much.",
+      "Without helmet: 500 newtons; with helmet: 100 newtons. The shell reduces force by spreading it over a larger area, and the foam reduces force by lengthening the stopping time."
+    ],
+    "answer": "D",
+    "hints": [
+      "Find acceleration in each case: 5 m/s lost divided by the stopping time gives you meters per second each second.",
+      "After calculating force with F equals 5 kilograms times acceleration, match each part of the helmet to the rule it follows: longer time, or larger area?"
+    ]
+  },
+  {
+    "id": "m8sci-collisions-designing-for-safety-006",
+    "loId": "m8sci.collisions-and-designing-for-safety",
+    "cedCode": "M8SCI-2.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "An egg-drop container holds a 0.1 kilogram egg in a cushion of packing material. The container is dropped from a height that gives the egg a speed of 10 meters per second when it hits the ground. In test A, the container has a thick cushion that is not yet compressed and gives way gradually for the entire 0.2 seconds it takes the egg to come to rest. In test B, the same container was already dropped once and the cushion is now compressed flat (bottomed out), so the egg comes to rest in 0.05 seconds against the hard container floor. A student argues: 'Test B is safer because the compressed cushion from test A is still there and will protect the egg a second time.' A bottomed-out cushion is one that has been crushed completely and can no longer compress further or give way. Use the idea that force equals mass times acceleration to explain whether this argument is correct or incorrect.",
+    "choices": [
+      "The argument is incorrect. In test A the cushion keeps giving way for 0.2 seconds, producing a force of 50 newtons. In test B the cushion is flat, so the egg stops in 0.05 seconds against the floor with a force of 200 newtons—four times larger. A bottomed-out cushion does nothing because it has already crushed and no longer gives way.",
+      "The argument is correct because the existing packing material still occupies space between the egg and the hard container floor, which provides physical protection even though it cannot deform any further on a second impact.",
+      "The argument is incorrect because in test B the egg must decelerate to zero in only 0.05 seconds instead of 0.2 seconds, which requires an acceleration four times greater and produces a force of 200 newtons compared to test A's 50 newtons.",
+      "The argument is correct because a cushion that has already been compressed will be more effective at absorbing impact on the second drop since the material has been pre-broken and will distribute force more evenly around the egg."
+    ],
+    "answer": "A",
+    "hints": [
+      "In test A, how much speed must the egg lose, and over how many seconds? What is the acceleration, and what is the force (using 0.1 kg)?",
+      "In test B, the cushion has bottomed out and cannot compress further. What does that mean about how long the egg takes to stop, and what force does that produce?"
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-first-law-inertia-friction-001",
+    "loId": "m8sci.newtons-first-law-inertia-and-friction",
+    "cedCode": "M8SCI-2.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "According to Newton's first law, what happens to an object at rest if no net force acts on it?",
+    "choices": [
+      "It stays at rest",
+      "It begins to move slowly",
+      "It accelerates gradually",
+      "It moves unless something holds it in place"
+    ],
+    "answer": "A",
+    "hints": [
+      "The first law has two halves that say the same rule: with no net force, motion does not change.",
+      "At rest means zero motion — what does the law say happens to zero motion with zero net force?"
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-first-law-inertia-friction-002",
+    "loId": "m8sci.newtons-first-law-inertia-and-friction",
+    "cedCode": "M8SCI-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A book lies flat on a table and does not move. Earth pulls down on the book with a gravitational force, and the table pushes up on the book with an equal force. Is the net force on the book zero or nonzero? Does the book's motion change?",
+    "choices": [
+      "Net force is zero; motion changes downward slowly",
+      "Net force is zero; motion does not change",
+      "Net force is nonzero upward; motion does not change",
+      "Net force is nonzero downward; motion stays the same"
+    ],
+    "answer": "B",
+    "hints": [
+      "When two forces point in opposite directions and are the same size, what do they add to?",
+      "The book is not accelerating up or down — what does that tell you about the net force?"
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-first-law-inertia-friction-003",
+    "loId": "m8sci.newtons-first-law-inertia-and-friction",
+    "cedCode": "M8SCI-2.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A marble rolls across a wooden floor in a straight line, slowing down until it stops. A student claims that the marble stops because the push from the hand that rolled it wears out over time. Is this reasoning correct? Explain what actually causes the marble to slow down.",
+    "choices": [
+      "Yes. The push from the hand is still inside the marble and gradually gets used up.",
+      "No. The push from the hand is gone immediately, but the marble still has inertia pushing it forward until the inertia runs out.",
+      "No. The push from the hand is gone immediately. Friction and air resistance push backward on the marble and cause it to slow.",
+      "Yes. The marble has inertia that lets it move, and this inertia fades as the marble travels."
+    ],
+    "answer": "C",
+    "hints": [
+      "A force is a push or pull between two objects while they interact. Once contact ends, can the hand still push?",
+      "What forces are actually touching the marble while it rolls? Do they point forward or backward?"
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-first-law-inertia-friction-004",
+    "loId": "m8sci.newtons-first-law-inertia-and-friction",
+    "cedCode": "M8SCI-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two identical boxes sit side by side on a smooth floor. One is empty; the other is filled with sand. A student pushes both boxes with the same strength of push for the same amount of time. The empty box moves faster and farther than the filled box. The student says: 'The filled box must have lost its push faster than the empty one.' Explain what actually happened, using the idea of inertia.",
+    "choices": [
+      "The empty box kept its push longer because it has less mass, so the sand box lost contact with the hand first and stopped accelerating sooner.",
+      "The filled box is harder to move because it has more inertia, and inertia resists acceleration in the same way that a larger mass requires a larger force to produce the same change in motion.",
+      "The filled box used up more of the push energy during the contact time, converting more of the applied force into heat and sound rather than motion.",
+      "Both boxes received the same push, but the filled box has more mass and more inertia, so a bigger force is needed to change its motion as much. The push did not last longer on one box than the other."
+    ],
+    "answer": "D",
+    "hints": [
+      "Inertia is not a force and does not fade. What does inertia measure — what is harder to change about the filled box?",
+      "Both boxes get the same push for the same time. Why would one box's motion change by a different amount if the forces on it are the same?"
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-first-law-inertia-friction-005",
+    "loId": "m8sci.newtons-first-law-inertia-and-friction",
+    "cedCode": "M8SCI-2.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hockey puck slides across smooth ice in a straight line at a steady speed. The ice has almost no friction, and air resistance is very small. Suddenly, the puck enters a rough concrete surface where friction is much larger. What happens to the direction and speed of the puck, and why? (Assume the puck stays in contact with the surface and does not flip.)",
+    "choices": [
+      "The puck slows down but keeps moving in the same straight-line direction, because friction now points backward along the line of motion.",
+      "The puck speeds up because the concrete surface provides a stronger grip that pushes the puck forward more effectively than the frictionless ice did.",
+      "The puck turns to the side because friction acts perpendicular to the motion when surfaces transition from smooth to rough.",
+      "The puck continues at the same speed and direction because it already has inertia and the floor beneath it does not change the puck's original path."
+    ],
+    "answer": "A",
+    "hints": [
+      "When the puck moves into a new surface, which force on the puck gets larger? Which direction does that force point?",
+      "The net force on the puck is now nonzero. In which direction does a nonzero net force change the puck's motion?"
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-first-law-inertia-friction-006",
+    "loId": "m8sci.newtons-first-law-inertia-and-friction",
+    "cedCode": "M8SCI-2.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A car is traveling down a straight highway at a steady speed. A coffee cup sits on the dashboard with a small amount of coffee inside. The road ahead curves to the right, and the car follows the curve at the same steady speed (not speeding up or slowing down). From the point of view of a person standing still on the ground, which direction does the coffee move relative to the cup, and why? Use the first law to explain your reasoning.",
+    "choices": [
+      "The coffee slides to the right side of the cup because the turn accelerates the coffee to the right, just as it does the car and every object inside it.",
+      "The coffee slides to the left side of the cup because the car turns right under the coffee while the coffee keeps moving straight ahead in its original direction.",
+      "The coffee does not move relative to the cup because both the car and the coffee are traveling at the same steady speed and experience the same turning forces.",
+      "The coffee slides backward toward the passenger because the car's forward motion slows down as it navigates the curve at constant speed."
+    ],
+    "answer": "B",
+    "hints": [
+      "The car is touching the road, and the road pushes the car into a turn. Is the road pushing the coffee? What does the coffee do if no net force acts on it?",
+      "The car changes direction, but the coffee keeps its original motion unchanged — which way is that?"
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-second-law-force-mass-acceleration-001",
+    "loId": "m8sci.newtons-second-law-force-mass-and-acceleration",
+    "cedCode": "M8SCI-2.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Newton's second law states a relationship between three quantities. Which of the following correctly identifies what the net force on an object equals, using only the quantities named in the rule?",
+    "choices": [
+      "The net force equals the mass divided by the acceleration.",
+      "The net force equals the mass multiplied by the acceleration.",
+      "The net force equals the acceleration divided by the mass.",
+      "The net force equals the mass plus the acceleration."
+    ],
+    "answer": "B",
+    "hints": [
+      "The rule is F = m × a. Look at what the force equals on one side of this equation.",
+      "When you multiply two quantities, you use the × symbol, not ÷ or +."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-second-law-force-mass-acceleration-002",
+    "loId": "m8sci.newtons-second-law-force-mass-and-acceleration",
+    "cedCode": "M8SCI-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A 5 kilogram block rests on a level table. A single horizontal force of 20 newtons pushes the block forward. The friction from the table is negligible. What is the block's acceleration in response to this push?",
+    "choices": [
+      "100 meters per second each second, because 20 times 5 is 100.",
+      "4 meters per second, because the block is moving forward at 4 meters per second.",
+      "4 meters per second each second, because 20 divided by 5 is 4.",
+      "0.25 meters per second each second, because 5 divided by 20 is 0.25."
+    ],
+    "answer": "C",
+    "hints": [
+      "Use the missing-factor routine: what number times the mass gives the net force?",
+      "Acceleration is measured in meters per second each second, not meters per second. The unit tells you how much speed changes in every single second."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-second-law-force-mass-acceleration-003",
+    "loId": "m8sci.newtons-second-law-force-mass-and-acceleration",
+    "cedCode": "M8SCI-2.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two identical shopping carts sit on a smooth floor. Cart A receives a steady net force of 24 newtons. Cart B receives a steady net force of 6 newtons. How does Cart A's acceleration compare to Cart B's acceleration?",
+    "choices": [
+      "Cart A accelerates 30 times more each second because 24 plus 6 equals 30.",
+      "Cart A accelerates 4 times less each second because the larger force slows it down more quickly.",
+      "Cart A accelerates at the same rate because the two carts have the same mass.",
+      "Cart A accelerates 4 times as much each second because it has 4 times the net force acting on it."
+    ],
+    "answer": "D",
+    "hints": [
+      "Use the comparison-by-times routine. The mass stays the same, so only the net force changes. How many times bigger is 24 newtons compared to 6 newtons?",
+      "When the net force increases and the mass stays the same, acceleration increases by the same factor."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-second-law-force-mass-acceleration-004",
+    "loId": "m8sci.newtons-second-law-force-mass-and-acceleration",
+    "cedCode": "M8SCI-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A delivery person wants to move a 10 kilogram package along a level floor by pushing it with a steady net force of 30 newtons. She asks herself: if I want to reduce the package's acceleration to one third of what it is now, which of these changes would work, keeping the package the same mass?",
+    "choices": [
+      "Apply a net force of 10 newtons instead, because that is one third of 30 newtons.",
+      "Apply a net force of 90 newtons instead, because that is three times the original push.",
+      "Apply a net force of 20 newtons instead, because that is the closest whole number to one third the original push.",
+      "Apply a net force of 60 newtons instead, because doubling the force reverses the effect."
+    ],
+    "answer": "A",
+    "hints": [
+      "The mass does not change. According to the rule, if you want acceleration to become one third as large, what must happen to the net force?",
+      "Test your answer: if F = m × a, then a = F divided by m. For a to become one third as large when m stays the same, F must become one third as large."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-second-law-force-mass-acceleration-005",
+    "loId": "m8sci.newtons-second-law-force-mass-and-acceleration",
+    "cedCode": "M8SCI-2.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A 15 kilogram box sits on a warehouse floor. A worker applies a forward push of 75 newtons, but the floor exerts a backward friction force of 15 newtons. Another worker claims the box's acceleration is 5 meters per second each second. Is this claim correct? Explain why or why not using the rule.",
+    "choices": [
+      "Yes, because 75 divided by 15 equals 5, and that is the number you get from the rule.",
+      "No, because the net force is only 60 newtons after both forces are counted, so the acceleration is 4 meters per second each second.",
+      "No, because a friction force of 15 newtons is too small to matter; the acceleration is still 5 meters per second each second.",
+      "Yes, because the forward push of 75 newtons is the force in the rule, regardless of the friction."
+    ],
+    "answer": "B",
+    "hints": [
+      "The rule uses the net force, which is the single force left over after all pushes and pulls have been added together, taking direction into account.",
+      "One force pushes forward; one force pushes backward. The net force is 75 minus 15. Then use this net force in the rule."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-second-law-force-mass-acceleration-006",
+    "loId": "m8sci.newtons-second-law-force-mass-and-acceleration",
+    "cedCode": "M8SCI-2.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student plans to test Newton's second law by measuring how a cart's acceleration changes as the mass of the cart increases. For each trial, the student will add a box of known mass to the cart and pull the cart forward with a steady force. The student plans to measure the cart's acceleration by recording the time it takes to travel a fixed distance along a level floor, with no friction. The student plans to change the pull force between trials to keep the cart moving at a more similar speed each time. Why is this plan flawed for testing the rule, and what should the student change?",
+    "choices": [
+      "The plan adds boxes to the cart, which makes the cart heavier and harder to pull, so the friction increases automatically. The student should move to a frictionless surface between trials.",
+      "The plan measures distance and time instead of directly measuring acceleration, which makes the results unreliable. The student should use a sensor to measure acceleration directly.",
+      "The plan changes both the mass and the net force in each trial, so when the acceleration changes you cannot tell which change caused it. The student should use the same pull force every trial.",
+      "The plan keeps the cart's speed more similar across trials, which hides the true relationship between mass and acceleration. The student should allow the speed to change freely with no control."
+    ],
+    "answer": "C",
+    "hints": [
+      "For a fair test of how mass changes acceleration, what variable must stay the same across all trials? What variable must be the only one that changes?",
+      "When you change two things at once and the result comes out different, you cannot say which of the two changes produced the difference."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-third-law-action-reaction-pairs-001",
+    "loId": "m8sci.newtons-third-law-action-reaction-pairs",
+    "cedCode": "M8SCI-2.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Newton's third law describes what happens when one object pushes or pulls on a second object. Which statement correctly completes the law?",
+    "choices": [
+      "The second object pushes back on the first object at the same instant, but only if the second object is heavier than the first object.",
+      "The second object pushes back on the first object a moment later, with a force that is smaller because the second object resists the push.",
+      "The second object pushes back on the first object at the same instant, with a force of the same size in the opposite direction.",
+      "The second object pushes back on the first object at the same instant, with a force of the same size in the same direction."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about whether the two forces happen at the same time or one after the other.",
+      "Consider whether the sizes have to be equal no matter how the masses compare."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-third-law-action-reaction-pairs-002",
+    "loId": "m8sci.newtons-third-law-action-reaction-pairs",
+    "cedCode": "M8SCI-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A canoeist dips a paddle into calm water and pushes the paddle backward through the water to make the canoe move forward. Which pair of forces is the correct action-reaction pair for this push?",
+    "choices": [
+      "The water pushes the canoe forward, and the canoe pushes the paddle backward.",
+      "The paddle pushes the water backward, and the canoe also pushes the water backward.",
+      "The paddle pushes the water backward, and the canoe moves forward because the paddle is stronger than the water.",
+      "The paddle pushes the water backward, and the water pushes the paddle forward."
+    ],
+    "answer": "D",
+    "hints": [
+      "An action-reaction pair always involves exactly two objects interacting with each other.",
+      "Ask which two things are actually touching and pushing on each other in this scenario."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-third-law-action-reaction-pairs-003",
+    "loId": "m8sci.newtons-third-law-action-reaction-pairs",
+    "cedCode": "M8SCI-2.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A helium balloon floats motionless in the air, neither rising nor falling. Gravity pulls the balloon downward, and the surrounding air pushes the balloon upward, and these two forces are equal in size and opposite in direction. Which statement correctly describes these two forces?",
+    "choices": [
+      "They are balanced forces, because both forces act on the balloon, which is one single object.",
+      "They are an action-reaction pair, because they are equal in size and opposite in direction.",
+      "They are an action-reaction pair, because gravity and air pressure are two different types of force.",
+      "They are balanced forces, because the balloon does not move at all."
+    ],
+    "answer": "A",
+    "hints": [
+      "Being equal and opposite is true of both balanced forces and action-reaction pairs, so that alone can't decide it.",
+      "Check what single object each of the two forces is acting on."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-third-law-action-reaction-pairs-004",
+    "loId": "m8sci.newtons-third-law-action-reaction-pairs",
+    "cedCode": "M8SCI-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student pushes a crate forward with a force of 60 newtons. At the same instant, the crate pushes back on the student with a force of 60 newtons, and friction from the floor pushes backward on the crate with a force of 20 newtons. Which statement correctly identifies the net force on the crate and explains how it was found?",
+    "choices": [
+      "The net force on the crate is 0 newtons, because the student's 60-newton push and the crate's 60-newton push back on the student cancel.",
+      "The net force on the crate is 40 newtons forward, found from the student's 60-newton push and the floor's 20-newton friction, because both forces act on the crate.",
+      "The net force on the crate is 40 newtons forward, found from the crate's push on the student and the floor's friction, because both forces act on the student.",
+      "The net force on the crate is 80 newtons forward, found by adding the student's push and the crate's push back, because the two forces are equal."
+    ],
+    "answer": "B",
+    "hints": [
+      "Net force is only found by adding forces that act on the same single object.",
+      "Decide which object you're asking about, then list only the forces acting on that one object before adding."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-third-law-action-reaction-pairs-005",
+    "loId": "m8sci.newtons-third-law-action-reaction-pairs",
+    "cedCode": "M8SCI-2.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two ice skaters stand facing each other at rest on frictionless ice. Skater X has much more mass than Skater Y. They push off each other, and each skater exerts a force of 100 newtons on the other at the same instant. Which statement correctly describes what happens?",
+    "choices": [
+      "Skater X pushes Skater Y with 100 newtons and Skater Y pushes Skater X with 100 newtons, but Skater Y moves away faster only because Skater Y pushed off first, not because of any difference in mass or inertia.",
+      "Skater X pushes Skater Y with 100 newtons, but Skater Y pushes Skater X with only 50 newtons, because Skater X has more mass and therefore pushes harder, making the forces on each skater unequal.",
+      "Skater X pushes Skater Y with 100 newtons and Skater Y pushes Skater X with 100 newtons; Skater Y moves away faster because Skater Y has less mass and therefore less inertia to change.",
+      "Skater X pushes Skater Y with 100 newtons and Skater Y pushes Skater X with 100 newtons, and both skaters move away at the same speed because equal forces always produce equal speeds regardless of mass."
+    ],
+    "answer": "C",
+    "hints": [
+      "The two forces of a pair are always equal in size, no matter how the masses compare.",
+      "Equal forces do not produce equal changes in motion when the masses of the two objects are different."
+    ]
+  },
+  {
+    "id": "m8sci-newton-s-third-law-action-reaction-pairs-006",
+    "loId": "m8sci.newtons-third-law-action-reaction-pairs",
+    "cedCode": "M8SCI-2.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A wagon is being pulled forward across flat ground by a rope with a force of 80 newtons. At the same instant, the wagon pulls back on the rope with a force of 80 newtons, friction from the ground pushes backward on the wagon's wheels with a force of 30 newtons, and the wagon presses down on the ground with a force equal to its weight while the ground pushes up on the wagon with a force of the same size. The wagon travels in a straight horizontal line without lifting off the ground. Which statement correctly names the action-reaction pair for the rope's pull and correctly gives the net force on the wagon along its direction of motion?",
+    "choices": [
+      "The rope pulling the wagon forward with 80 newtons and the friction pushing backward with 30 newtons is the pair; the net force on the wagon is 50 newtons forward.",
+      "The ground pushing up on the wagon and the wagon pressing down on the ground is the pair for the rope's pull; the net force on the wagon is 50 newtons forward.",
+      "The rope pulling the wagon forward with 80 newtons and the wagon pulling the rope backward with 80 newtons is the pair; the net force on the wagon is 0 newtons, because the pair cancels along with the friction.",
+      "The rope pulling the wagon forward with 80 newtons and the wagon pulling the rope backward with 80 newtons is the pair; the net force on the wagon is 50 newtons forward, from the rope's pull and the ground's friction."
+    ],
+    "answer": "D",
+    "hints": [
+      "An action-reaction pair always involves the same two objects, in this case the rope and the wagon.",
+      "To find the net force on the wagon, list only the forces that act on the wagon itself and add them, leaving out any force that acts on the rope or the ground."
+    ]
+  }
+]

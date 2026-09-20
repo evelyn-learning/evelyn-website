@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-insulators-conductors-thermal-design-001",
+    "loId": "m8sci.insulators-conductors-and-thermal-design",
+    "cedCode": "M8SCI-5.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A thermal insulator is a material that thermal energy crosses slowly. Which of these is an example of a thermal insulator?",
+    "choices": [
+      "Steel",
+      "Copper",
+      "Aluminum",
+      "Foam"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think of a material used to keep hot food hot or cold food cold.",
+      "Metals conduct quickly, so they are not insulators."
+    ]
+  },
+  {
+    "id": "m8sci-insulators-conductors-thermal-design-002",
+    "loId": "m8sci.insulators-conductors-and-thermal-design",
+    "cedCode": "M8SCI-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A person holds a wooden bench and a metal handrail that have both been sitting outside in cold air overnight. The bench and the rail are at the same temperature, yet the rail feels much colder to the touch. Why does the metal rail feel colder even though it is actually the same temperature as the wood?",
+    "choices": [
+      "Metal is a conductor, so it carries thermal energy away from the hand quickly, and what the hand feels is how fast it is losing energy.",
+      "The rail feels colder because metal absorbs the coldness from the air more effectively than wood does during the night.",
+      "Metal transfers thermal energy away from the hand more slowly than wood, so the hand loses heat at a lower rate and detects this as colder.",
+      "The hand feels colder on metal because the metal is denser and spreads the temperature change across a larger area of the skin."
+    ],
+    "answer": "A",
+    "hints": [
+      "The hand reports the speed at which it loses thermal energy, not the actual temperature.",
+      "If both materials are at the same temperature, the difference in how cold they feel must be about how fast energy moves across them."
+    ]
+  },
+  {
+    "id": "m8sci-insulators-conductors-thermal-design-003",
+    "loId": "m8sci.insulators-conductors-and-thermal-design",
+    "cedCode": "M8SCI-5.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A puffy jacket keeps a person warm on a cold day. The jacket is made of fibers that hold many tiny pockets of trapped air. If the same jacket is squashed flat under a heavy backpack strap so that the pockets collapse, what happens to the insulation at that spot?",
+    "choices": [
+      "It insulates better because the material is now compressed and denser.",
+      "It stops insulating because the air pockets are gone and the trapped air cannot do its job.",
+      "It still insulates the same way because the fibers themselves, not the air, provide the insulation.",
+      "It insulates better because the trapped air is forced closer together."
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall that most good insulators work by holding still air in tiny pockets.",
+      "What happens to those pockets when the jacket is squashed flat?"
+    ]
+  },
+  {
+    "id": "m8sci-insulators-conductors-thermal-design-004",
+    "loId": "m8sci.insulators-conductors-and-thermal-design",
+    "cedCode": "M8SCI-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A wide hollow gap is left inside a wall between two sheets of drywall. A student claims this gap will insulate the house because the air inside it does not conduct heat well. However, in winter the inside of the wall stays warm and the outside stays cold, and thermal energy still crosses the gap faster than it should. What mechanism is the student failing to account for, and why does it make the wide gap fail as an insulator?",
+    "choices": [
+      "Radiation; the empty space allows infrared waves to travel straight across without any material to block them, and drywall surfaces easily emit and absorb this radiation.",
+      "Conduction through the drywall itself; the drywall on both sides conducts thermal energy faster than the air in the gap does, so the pathway through the solid material dominates.",
+      "Convection; warm air near the inside wall rises, cools at the outside wall, sinks, and circulates around and around, carrying thermal energy across the gap continuously.",
+      "Evaporation of moisture in the wall; water in the air gap evaporates at the warm side and condenses at the cold side, releasing thermal energy that flows toward the cold surface."
+    ],
+    "answer": "C",
+    "hints": [
+      "Moving air carries thermal energy from one place to another. When air in a gap is free to move, what happens to warm air near the hot surface and cool air near the cold surface?",
+      "Compare a wide gap where air can move easily to small foam pockets where air is trapped and cannot circulate."
+    ]
+  },
+  {
+    "id": "m8sci-insulators-conductors-thermal-design-005",
+    "loId": "m8sci.insulators-conductors-and-thermal-design",
+    "cedCode": "M8SCI-5.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A food delivery service wants to keep meals hot for customers. A designer proposes two insulated boxes. Box X has walls of thick foam with tiny sealed pockets of trapped air, and the lid seals tight. Box Y has walls of the same thickness but made of loosely woven cloth with air gaps between the threads that let air flow in and out, and the lid is left open. Both boxes are used to carry the same hot meal in the same room. Which box keeps the food hotter, and name one mechanism and the feature that blocks it in the better design.",
+    "choices": [
+      "Box Y keeps the food hotter; the cloth is a better insulator than foam because it is a plant material.",
+      "Box Y keeps the food hotter; the open weave in the cloth allows heat to escape quickly so the customer receives the meal at a safe temperature.",
+      "Box X and Box Y keep food equally hot; the thickness of the walls is what matters, not whether the lid is sealed.",
+      "Box X keeps the food hotter; the sealed lid blocks convection by preventing warm air from rising out of the box and cooler air from sinking in."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what sealing the lid does to prevent warm air and cooler air from exchanging places.",
+      "Which mechanism involves a moving fluid carrying thermal energy from place to place?"
+    ]
+  },
+  {
+    "id": "m8sci-insulators-conductors-thermal-design-006",
+    "loId": "m8sci.insulators-conductors-and-thermal-design",
+    "cedCode": "M8SCI-5.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A vacuum thermos works by pumping almost all of the air out of the space between two containers and coating the facing surfaces with mirror-shiny polish. A student reasons: 'A vacuum removes all the particles, so thermal energy cannot cross it at all. Therefore, the shiny surfaces are just decoration and do not do any real job.' Use the three mechanisms of thermal energy transfer to show why this reasoning is wrong, and explain which mechanism the student is overlooking.",
+    "choices": [
+      "The student overlooks radiation. Conduction and convection both need matter, so the vacuum stops them, but radiation crosses empty space without needing any particles at all. The shiny surfaces are the only feature in the design that reflects radiation back, so without them the thermos leaks thermal energy. If the surfaces were dull instead of shiny, the drink would cool much faster.",
+      "The student overlooks radiation because conduction requires matter to transfer heat through direct contact and convection requires matter to circulate, but radiation travels as electromagnetic waves through vacuum. However, the shiny surfaces prevent radiation by absorbing all incoming thermal energy rather than allowing it to pass through to the outer container.",
+      "The student overlooks convection in the remaining trace amounts of gas still present in the vacuum space. Although most air particles are removed, some molecules remain and can move between the warm and cool surfaces. The shiny surfaces work by blocking convection currents and preventing these remaining particles from carrying thermal energy across the gap.",
+      "The student overlooks conduction through the vacuum itself because thermal energy can be conducted through empty space by the movement of residual gas molecules. The shiny surfaces absorb the thermal energy that would otherwise be conducted across the vacuum, preventing it from reaching the outer container and keeping the drink cooler for longer."
+    ],
+    "answer": "A",
+    "hints": [
+      "Which one of the three mechanisms does not need any matter or particles to cross a space?",
+      "Test your answer by imagining the surfaces painted dull black instead of mirror-shiny. Would that change anything about how the thermos works?"
+    ]
+  },
+  {
+    "id": "m8sci-temperature-thermal-energy-001",
+    "loId": "m8sci.temperature-and-thermal-energy",
+    "cedCode": "M8SCI-5.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A thermometer is dipped into a cup of tea and reads 65 degrees Celsius. What is the thermometer actually measuring about the water particles in the tea?",
+    "choices": [
+      "The total kinetic energy of every particle in the tea",
+      "The average kinetic energy of the particles in the tea",
+      "The number of water particles in the tea",
+      "How much thermal energy the tea holds compared to other liquids"
+    ],
+    "answer": "B",
+    "hints": [
+      "A thermometer reading tells you about a typical particle, not about the whole sample.",
+      "Think about what happens when you pour half the tea into another cup—does the thermometer reading change?"
+    ]
+  },
+  {
+    "id": "m8sci-temperature-thermal-energy-002",
+    "loId": "m8sci.temperature-and-thermal-energy",
+    "cedCode": "M8SCI-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two identical steel balls are made of the same material. Ball X is at 50 degrees Celsius and Ball Y is at 75 degrees Celsius. Both are the same size and mass. Which ball has particles moving faster on average, and how do you know?",
+    "choices": [
+      "Ball X, because it was mentioned first in the problem and objects discussed early in a question tend to have higher thermal properties than those mentioned later",
+      "They are the same, because they are made of the same material and the material composition of an object is the primary factor that determines how fast its particles move",
+      "Ball Y, because temperature measures the average kinetic energy per particle and a thermometer would read higher for Ball Y",
+      "Ball X, because cooler objects have slower-moving particles that remain stationary for longer periods of time compared to warmer objects"
+    ],
+    "answer": "C",
+    "hints": [
+      "Temperature is about how fast a typical particle moves, not about the size or amount of the object.",
+      "What would a thermometer read if you touched it to each ball?"
+    ]
+  },
+  {
+    "id": "m8sci-temperature-thermal-energy-003",
+    "loId": "m8sci.temperature-and-thermal-energy",
+    "cedCode": "M8SCI-5.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A small glass holds 100 grams of water at 40 degrees Celsius. A bucket holds 100 grams of water at 40 degrees Celsius—wait, the problem says the amounts are the same and the temperatures are the same. One student says the bucket must hold more thermal energy because it looks bigger. Why is that student wrong?",
+    "choices": [
+      "The student confused container size with thermal energy storage capacity, but the volume of a container does not determine how much energy the water inside holds",
+      "Temperature is what matters for thermal energy, and both samples have the same temperature, so appearance does not affect the result",
+      "Buckets always hold less thermal energy than glasses because they are open to the air and lose energy to their surroundings more quickly",
+      "Thermal energy depends on both temperature and the amount of matter, and when the amounts are equal, the equal temperatures mean the equal thermal energies"
+    ],
+    "answer": "D",
+    "hints": [
+      "Thermal energy is the total kinetic energy of all the particles. If you have the same number of particles moving at the same average speed, what does that tell you about the totals?",
+      "Look at the two numbers given in the problem—the amount of water and the temperature reading."
+    ]
+  },
+  {
+    "id": "m8sci-temperature-thermal-energy-004",
+    "loId": "m8sci.temperature-and-thermal-energy",
+    "cedCode": "M8SCI-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Three samples of the same liquid are prepared. Sample 1 is 500 grams at 20 degrees Celsius. Sample 2 is 500 grams at 50 degrees Celsius. Sample 3 is 2,500 grams at 20 degrees Celsius. Rank these three samples by thermal energy from largest to smallest, and explain why the sample with the highest temperature does not hold the most thermal energy.",
+    "choices": [
+      "Sample 3, Sample 2, Sample 1. Sample 3 holds five times as much matter as Sample 2, and although Sample 2's particles move faster, they do not move five times faster, so the larger sample holds more total energy.",
+      "Sample 2, Sample 1, Sample 3. Sample 2 has the highest temperature and higher temperature is the most important factor in determining thermal energy, so it must have the most total thermal energy regardless of mass",
+      "Sample 1 and Sample 3 are tied, then Sample 2. Since Samples 1 and 3 are at the same temperature, their thermal energies must be equal because temperature is the only variable that affects how much thermal energy a sample contains",
+      "Sample 2, Sample 3, Sample 1. The sample with the highest temperature always contains the most thermal energy because temperature directly measures the total amount of kinetic energy in the sample"
+    ],
+    "answer": "A",
+    "hints": [
+      "Thermal energy is a total—it depends on both how fast the particles move and how many particles there are to add up.",
+      "For two samples at the same temperature but different amounts, which one has more thermal energy? Then compare that result to Sample 2."
+    ]
+  },
+  {
+    "id": "m8sci-temperature-thermal-energy-005",
+    "loId": "m8sci.temperature-and-thermal-energy",
+    "cedCode": "M8SCI-5.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A pot of soup is heated on a stove. A student measures the temperature of the soup and finds it has risen from 25 degrees Celsius to 75 degrees Celsius. The student says, 'The soup's thermal energy tripled because the temperature tripled from 25 to 75.' Is this reasoning correct? Explain using the particle-motion picture.",
+    "choices": [
+      "Yes, the reasoning is correct because the temperature ratio of 75 to 25 equals three, which means the thermal energy must also increase by the same factor of three",
+      "No. Temperature is the average kinetic energy per particle, and the amount of soup did not change, so the thermal energy increased, but you cannot say it tripled just from the Celsius readings. The Celsius scale does not measure three times as much kinetic energy at 75 as at 25 degrees.",
+      "No. The soup actually lost thermal energy overall because when objects are heated by an external source like a stove, the stove's energy comes from the soup itself, creating a net loss of energy in the soup",
+      "Yes, but only if the amount of soup was also multiplied by three at the same time, making both the temperature and mass increase by proportional amounts"
+    ],
+    "answer": "B",
+    "hints": [
+      "A Celsius thermometer measures temperature as an average per particle. Can you say that 75 degrees Celsius means 'three times the average kinetic energy' compared to 25 degrees Celsius just from the number on the scale?",
+      "Thermal energy did increase in this situation, but what determines how much it increased?"
+    ]
+  },
+  {
+    "id": "m8sci-temperature-thermal-energy-006",
+    "loId": "m8sci.temperature-and-thermal-energy",
+    "cedCode": "M8SCI-5.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "You are given this piece of information: Sample A holds more thermal energy than Sample B. You are not told the temperature of either sample and you are not told the mass of either sample. A friend claims that you can definitely say that the particles in Sample A are moving faster on average than the particles in Sample B. Is your friend correct? Prove your answer by describing two different scenarios that are consistent with 'Sample A holds more thermal energy than Sample B' but have different temperature relationships.",
+    "choices": [
+      "The friend is correct. Thermal energy depends only on temperature, so if Sample A holds more thermal energy, the particles in Sample A must definitely be moving faster on average than those in Sample B",
+      "The friend is correct only if both samples are made of the same substance and have the same volume, because in that case higher thermal energy will always correspond to a higher temperature reading for identical materials and volumes",
+      "The friend is not correct. Sample A could be hotter than Sample B, cooler than Sample B, or exactly the same temperature. For example, a large pot of cool water can hold more thermal energy than a small cup of hot water; or a small cup of water at 80 degrees Celsius can hold more thermal energy than a large pot at 50 degrees Celsius if the small cup is made of a different substance.",
+      "The friend is not correct, but only because you would need to know the density and volume of each sample in order to calculate their temperatures and compare their average kinetic energies accurately"
+    ],
+    "answer": "C",
+    "hints": [
+      "Thermal energy is the total for all particles—it depends on both temperature and the amount of matter. If you know only the total, what can you say about the average per particle?",
+      "Think of a small sample that is very hot versus a large sample that is cool. Which could hold more thermal energy?"
+    ]
+  },
+  {
+    "id": "m8sci-conduction-convection-radiation-001",
+    "loId": "m8sci.conduction-convection-and-radiation",
+    "cedCode": "M8SCI-5.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student touches a freezing metal railing outdoors and says, \"Cold rushed into my fingers from the railing.\" Using the rule that thermal energy always moves from warmer objects to cooler ones, which statement correctly describes what actually happened?",
+    "choices": [
+      "Thermal energy moved from the cooler railing into the warmer hand, balancing out the two temperatures.",
+      "Cold energy moved from the railing into the student's hand, which is why the hand feels cold.",
+      "Thermal energy moved from the student's warmer hand into the cooler railing, so the hand feels cold because it lost energy.",
+      "Both the hand and the railing sent energy toward each other at the same time, and the energy canceled out at the surface."
+    ],
+    "answer": "C",
+    "hints": [
+      "Coldness is not a substance that can travel from one object to another.",
+      "Ask which object—the hand or the railing—started out with more thermal energy."
+    ]
+  },
+  {
+    "id": "m8sci-conduction-convection-radiation-002",
+    "loId": "m8sci.conduction-convection-and-radiation",
+    "cedCode": "M8SCI-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A metal spoon and a plastic spoon are both left resting in the same pot of hot soup, one end of each spoon in the soup and the other end sticking out into the air. After several minutes, the exposed end of the metal spoon is noticeably warmer than the exposed end of the plastic spoon, even though both are touching the same hot soup. Which explanation correctly accounts for this difference in terms of conduction?",
+    "choices": [
+      "Soup evaporates onto the metal surface, and that rising vapor carries thermal energy up along the length of the spoon to the exposed end sitting in the air.",
+      "Metal spoons contain more stored heat inside their particles than plastic spoons do, so that extra stored heat escapes into the surrounding air faster at the exposed end.",
+      "Near the heat source, the metal particles become loose and liquid-like, letting them flow upward and carry thermal energy the way a fluid does during convection.",
+      "Metal particles bump their neighboring particles more effectively than plastic particles do, so energy is handed along the metal faster while every particle stays in place."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what particles in a solid actually do during conduction—do they travel anywhere?",
+      "The difference is about how well particles pass motion to their neighbors, not about how much a material 'holds.'"
+    ]
+  },
+  {
+    "id": "m8sci-conduction-convection-radiation-003",
+    "loId": "m8sci.conduction-convection-and-radiation",
+    "cedCode": "M8SCI-5.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A campfire burns in an open field with no wind. A person standing three meters to the side of the fire, at the same height as the flames, feels warmth on the side of their body facing the fire almost immediately, even though no air is blowing from the fire toward them. Which mechanism is delivering this warmth, and why?",
+    "choices": [
+      "Radiation, because waves carrying energy travel outward from the fire in straight lines and need no moving air to reach the person.",
+      "Convection, because warm air always rises and then spreads outward in every direction, eventually reaching anyone standing nearby.",
+      "Conduction, because the person's body is in contact with air that is itself in contact with the fire.",
+      "Convection, because the person happens to be standing in the path of a rising loop of heated air from the fire."
+    ],
+    "answer": "A",
+    "hints": [
+      "Immediate warmth with no air moving toward the person is a strong clue about which mechanism is at work.",
+      "Recall which of the three mechanisms is the only one that can cross empty space or still air without matter moving."
+    ]
+  },
+  {
+    "id": "m8sci-conduction-convection-radiation-004",
+    "loId": "m8sci.conduction-convection-and-radiation",
+    "cedCode": "M8SCI-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "An aquarium heater is submerged near the bottom of a fish tank filled with still water. A thermometer placed near the water's surface, far from the heater, shows the water there getting warmer within a few minutes. Tiny suspended particles in the tank can be seen drifting upward above the heater, spreading across the surface, and sinking back down near the tank walls. Which statement correctly identifies both the direction of energy transfer and the mechanism carrying it to the surface?",
+    "choices": [
+      "Thermal energy moves from the warmer heater to the cooler water above it, carried by conduction as particles vibrate in place and pass energy upward through the water.",
+      "Thermal energy moves from the warmer heater to the cooler water above it, carried by convection as warmed water rises and cooler water sinks to push it up.",
+      "Thermal energy moves from the cooler surface water down to the warmer heater, carried by convection as the water works to cool the heater down.",
+      "Thermal energy moves from the warmer heater to the cooler water above it, carried by radiation as waves travel upward through the water without the water needing to move."
+    ],
+    "answer": "B",
+    "hints": [
+      "Notice that the water itself is described as moving in a loop, not staying in place.",
+      "Fix the direction of energy transfer first by identifying which object—the heater or the surface water—is warmer."
+    ]
+  },
+  {
+    "id": "m8sci-conduction-convection-radiation-005",
+    "loId": "m8sci.conduction-convection-and-radiation",
+    "cedCode": "M8SCI-5.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student is asked why the air near the ceiling of a room feels warmer than the air near the floor, even though the room's only heat source is a radiator mounted against the wall at floor level. The student explains: \"The air right next to the radiator gets warmed, becomes less dense than the cooler air around it, and the cooler, denser air sinks beneath it and pushes the warmed air upward toward the ceiling.\" Is this explanation correct, and why?",
+    "choices": [
+      "No, because this describes conduction instead, since the radiator's warm metal surface is directly touching the air particles right next to it.",
+      "No, because warm air simply rises by itself to escape the surrounding cooler air, without any cooler air pushing it from below.",
+      "Yes, because it correctly describes convection: the moving air itself carries its thermal energy upward as cooler, denser air sinks and pushes it up.",
+      "Yes, because heat itself is a lighter substance than cold air, so it naturally floats upward through the room all on its own."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether the explanation says warm air rises by itself or because something pushes it from beneath.",
+      "Contact with the radiator alone doesn't decide the mechanism—ask whether matter is actually traveling to the ceiling."
+    ]
+  },
+  {
+    "id": "m8sci-conduction-convection-radiation-006",
+    "loId": "m8sci.conduction-convection-and-radiation",
+    "cedCode": "M8SCI-5.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A metal radiator is bolted to a wall in a closed room and is hot to the touch. A person sitting in a chair across the room, not touching the radiator or its wall, feels warmth almost immediately on the side of their body facing the radiator. Separately, that same person notices that the air near the ceiling has become noticeably warmer than the air near the floor, but only after several minutes have passed. Considering two separate paths—Path 1: the warmth reaching the person's facing side almost immediately, and Path 2: the warmer air building up near the ceiling over several minutes—which pair of mechanisms correctly matches each path?",
+    "choices": [
+      "Both paths are convection, because the radiator only warms the room by moving heated air throughout the entire space in one large loop.",
+      "Path 1 is convection, because the air itself carries warmth quickly to the person; Path 2 is radiation, because waves gradually build up warmth near the ceiling.",
+      "Path 1 is conduction, because the person's skin is in contact with air that touches the radiator; Path 2 is convection, because the warm air keeps rising afterward.",
+      "Path 1 is radiation, because it arrives immediately across the gap with nothing flowing; Path 2 is convection, because warmed air rises in a loop over time."
+    ],
+    "answer": "D",
+    "hints": [
+      "Match the immediate, direction-facing warmth to the mechanism that needs no matter at all to travel.",
+      "Match the slow buildup of warm air near the ceiling to the mechanism where the matter itself physically travels."
+    ]
+  },
+  {
+    "id": "m8sci-mass-material-temperature-change-001",
+    "loId": "m8sci.mass-material-and-temperature-change",
+    "cedCode": "M8SCI-5.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A sample of water starts at 15 degrees Celsius and ends at 55 degrees Celsius after being heated by an electric heater. A different sample of water starts at 60 degrees Celsius and ends at 100 degrees Celsius after being heated by an identical heater for the same amount of time. Which statement correctly compares the two samples?",
+    "choices": [
+      "Both samples experienced the same temperature change, since each rose by 40 degrees Celsius.",
+      "The second sample changed more, since it ended at the higher final temperature of 100 degrees Celsius.",
+      "The second sample changed less, since it started already at the higher temperature of 60 degrees Celsius.",
+      "The first sample changed more, since it started at the lower temperature of 15 degrees Celsius."
+    ],
+    "answer": "A",
+    "hints": [
+      "Focus on how much each temperature moved, not where it ended up.",
+      "Subtract the starting reading from the ending reading for each sample."
+    ]
+  },
+  {
+    "id": "m8sci-mass-material-temperature-change-002",
+    "loId": "m8sci.mass-material-and-temperature-change",
+    "cedCode": "M8SCI-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two identical heaters are used to warm two blocks made of the same metal. Block M has a mass of 100 grams and Block N has a mass of 300 grams. Both heaters are switched on for the same amount of time, so each block receives about the same amount of energy. Both blocks start at 22 degrees Celsius, and Block M's temperature rises by 18 degrees Celsius. Which is the best prediction for how much Block N's temperature rises?",
+    "choices": [
+      "About 54 degrees Celsius, because a block with three times the mass absorbs three times as much thermal energy and reaches a proportionally larger temperature rise.",
+      "About 6 degrees Celsius, because the same energy is now shared among three times as many particles, so each particle's average gain is a third as large.",
+      "About 18 degrees Celsius, because both blocks receive the same amount of energy from their heaters, so their temperature changes should be identical.",
+      "About 9 degrees Celsius, because tripling the mass of a sample always cuts its temperature change exactly in half, no matter how much the mass increases."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about how the same energy is spread among the particles in a bigger sample.",
+      "Tripling the mass affects the temperature change by the same factor, but in the opposite direction."
+    ]
+  },
+  {
+    "id": "m8sci-mass-material-temperature-change-003",
+    "loId": "m8sci.mass-material-and-temperature-change",
+    "cedCode": "M8SCI-5.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two 50-gram samples, Sample R and Sample S, are made of different materials. Each sits in its own identical heater, switched on for the same amount of time, so both receive about the same amount of energy. Both start at 20 degrees Celsius, and neither one changes state. Sample R ends at 50 degrees Celsius, while Sample S ends at 80 degrees Celsius. Which statement correctly explains why Sample S reached a higher temperature?",
+    "choices": [
+      "Sample S has more mass than Sample R, which allowed it to absorb a greater amount of total thermal energy and therefore reach a higher final temperature after heating.",
+      "Sample S was given more thermal energy than Sample R by its heater during the heating process, which is why its final temperature ended up higher than Sample R's did.",
+      "Sample S's material needs less energy per gram to raise its temperature by one degree than Sample R's material does, even though both received the same energy.",
+      "Sample S conducts thermal energy away from its heater more quickly than Sample R does, which caused its thermometer reading to climb to a higher final value than Sample R's."
+    ],
+    "answer": "C",
+    "hints": [
+      "The mass and the energy transferred were the same for both samples.",
+      "Ask what property of the material itself could make one climb farther than the other for the same energy."
+    ]
+  },
+  {
+    "id": "m8sci-mass-material-temperature-change-004",
+    "loId": "m8sci.mass-material-and-temperature-change",
+    "cedCode": "M8SCI-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wants to find out whether the mass of a liquid changes how far its temperature rises for a given amount of energy transferred. She runs two trials with identical heaters switched on for the same 5 minutes. Trial 1 uses 100 grams of Liquid A, starting at 20 degrees Celsius and ending at 45 degrees Celsius. Trial 2 uses 200 grams of Liquid B, starting at 20 degrees Celsius and ending at 33 degrees Celsius. She concludes that doubling the mass cut the temperature change roughly in half, since the change dropped from 25 degrees Celsius to 13 degrees Celsius. Which statement best describes the flaw in her conclusion?",
+    "choices": [
+      "The trials cannot show anything about mass, because identical heaters cannot be trusted to transfer equal amounts of energy across separate trials.",
+      "The conclusion is correct, because the ratio of the temperature changes closely matches the ratio of the two masses used.",
+      "The trials cannot show anything about mass, because the two liquids were not started at exactly the same temperature.",
+      "The trials cannot show whether mass alone caused the difference, because the material was also changed between Liquid A and Liquid B."
+    ],
+    "answer": "D",
+    "hints": [
+      "List everything that was held fixed and everything that changed between the two trials.",
+      "A valid comparison about one factor requires that factor to be the only thing that differs."
+    ]
+  },
+  {
+    "id": "m8sci-mass-material-temperature-change-005",
+    "loId": "m8sci.mass-material-and-temperature-change",
+    "cedCode": "M8SCI-5.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wants to determine whether the amount of energy transferred to a sample changes how far its temperature rises, using samples of the same type of clay and identical heaters. Each option below describes a pair of trials, with both samples in a pair starting at the same temperature and neither one changing state. Which pair of trials would correctly test whether the energy transferred changes the temperature rise?",
+    "choices": [
+      "150 grams of clay heated by Heater 1 for 3 minutes, and 150 grams of the same clay heated by Heater 2 for 6 minutes.",
+      "150 grams of clay heated by Heater 1 for 3 minutes, and 300 grams of the same clay heated by Heater 2 for 6 minutes.",
+      "150 grams of clay heated by Heater 1 for 3 minutes, and 150 grams of a different material heated by Heater 2 for 3 minutes.",
+      "150 grams of clay heated by Heater 1 for 3 minutes, and 300 grams of clay heated by Heater 2 for 3 minutes."
+    ],
+    "answer": "A",
+    "hints": [
+      "To test one factor, only that factor should differ between the two trials.",
+      "Check each option for whether mass, material, or time also changes along with the intended factor."
+    ]
+  },
+  {
+    "id": "m8sci-mass-material-temperature-change-006",
+    "loId": "m8sci.mass-material-and-temperature-change",
+    "cedCode": "M8SCI-5.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two bricks made of the same material are warmed by identical heaters, and neither one melts. Brick 1 has a mass of 200 grams, is heated for 4 minutes, and rises from 18 degrees Celsius to 38 degrees Celsius. Brick 2 has a mass of 400 grams and is heated for 8 minutes, starting at the same 18 degrees Celsius. Which of these best predicts Brick 2's final temperature and explains why this pair of trials still cannot serve as clean evidence about either mass or energy alone?",
+    "choices": [
+      "About 58 degrees Celsius, because doubling the heating time doubles the temperature change and the extra mass has no effect on how far the temperature climbs.",
+      "About 38 degrees Celsius, because doubling the time doubles the energy, and doubling the mass halves the temperature change for that energy, so the effects cancel.",
+      "About 28 degrees Celsius, because doubling the mass halves the temperature change and the extra heating time has no effect on how far the temperature climbs.",
+      "About 98 degrees Celsius, because doubling both the mass and the heating time multiplies the temperature change by four instead of leaving it unchanged."
+    ],
+    "answer": "B",
+    "hints": [
+      "Work out what doubling the heating time alone would do, then what doubling the mass alone would do.",
+      "Two things changed between the two bricks, not just one."
+    ]
+  }
+]

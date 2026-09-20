@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-when-motion-changes-energy-is-transferred-001",
+    "loId": "m8sci.energy-transfer-when-motion-changes",
+    "cedCode": "M8SCI-4.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A skateboard is sitting still on a flat sidewalk. Nothing is pushing or pulling on it. According to the rule taught about kinetic energy, what will happen to the skateboard's kinetic energy if no other object touches it?",
+    "choices": [
+      "It will slowly decrease even without any push or pull.",
+      "It will stay at zero because no other object is transferring energy to it.",
+      "It will increase because skateboard wheels are designed to roll.",
+      "It will become thermal energy without any interaction."
+    ],
+    "answer": "B",
+    "hints": [
+      "The rule states kinetic energy never changes on its own.",
+      "Kinetic energy changes only when another object pushes or pulls."
+    ]
+  },
+  {
+    "id": "m8sci-when-motion-changes-energy-is-transferred-002",
+    "loId": "m8sci.energy-transfer-when-motion-changes",
+    "cedCode": "M8SCI-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A hockey puck slides across ice and gradually slows to a stop. The ice surface where the puck slid is slightly warmer afterward than the ice on either side of that path. Based on this description, which object received the kinetic energy that the puck lost?",
+    "choices": [
+      "The friction force itself absorbed the kinetic energy and stored it.",
+      "The puck's motion transferred to the edges of the rink.",
+      "The ice surface and the air next to it received the energy as thermal energy.",
+      "Another unseen puck on the ice must have received the motion."
+    ],
+    "answer": "C",
+    "hints": [
+      "Energy that leaves a slowing object goes somewhere—it does not vanish.",
+      "Look for evidence of where thermal energy appeared."
+    ]
+  },
+  {
+    "id": "m8sci-when-motion-changes-energy-is-transferred-003",
+    "loId": "m8sci.energy-transfer-when-motion-changes",
+    "cedCode": "M8SCI-4.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student pushes a toy car across a smooth, level table, giving it a shove and then removing their hand. The car rolls away at steady speed and does not slow down noticeably during the short push or right after the push ends. Which statement correctly describes the force and the energy during the moment the student's hand was touching the car?",
+    "choices": [
+      "The force remained stored in the car's wheels even after the hand separated from it, and the wheels released this stored force gradually to keep the car rolling.",
+      "The student's hand gave its force to the car, which stored it as potential energy in the wheels and then released it bit by bit as the car moved forward.",
+      "Energy was transferred from the student's hand to the car, but the transfer happened only after the hand stopped touching the car and did not occur during contact.",
+      "The student's hand pushed the car forward, and during that push energy moved from the student's hand to the car."
+    ],
+    "answer": "D",
+    "hints": [
+      "Force is an interaction that exists only while the two objects are in contact.",
+      "Energy moves along the push while they are touching."
+    ]
+  },
+  {
+    "id": "m8sci-when-motion-changes-energy-is-transferred-004",
+    "loId": "m8sci.energy-transfer-when-motion-changes",
+    "cedCode": "M8SCI-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A book rests on a shelf. A student picks up the book and throws it horizontally across the room. The book leaves the student's hand moving fast, passes through the air at a constant height and speed, then lands on a soft cushion and comes to rest. Consider the moment when the book is in the air, flying at constant speed. At that moment, is the book's kinetic energy changing, and if so, which object is responsible for the change?",
+    "choices": [
+      "The kinetic energy is not changing because the book is moving at steady speed, so no object is transferring energy to or away from it at that moment.",
+      "The kinetic energy is increasing because the Earth's gravity is constantly pulling the book downward and doing work on it throughout its flight.",
+      "The kinetic energy is decreasing because air friction is continuously acting against the book's horizontal motion and removing energy from it.",
+      "The kinetic energy is changing because the floor is transferring energy to the book through the air to keep it moving forward at constant speed."
+    ],
+    "answer": "A",
+    "hints": [
+      "Kinetic energy depends on how fast an object is moving and how much mass it has.",
+      "A steady speed means the kinetic energy is not growing or shrinking."
+    ]
+  },
+  {
+    "id": "m8sci-when-motion-changes-energy-is-transferred-005",
+    "loId": "m8sci.energy-transfer-when-motion-changes",
+    "cedCode": "M8SCI-4.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A tennis ball is dropped from waist height onto a hard gym floor and bounces back up, but not as high as it started. A student argues: 'The ball gave energy to the floor, and the floor gave some back, but not all of it.' To test whether this argument is correct, which observation would be the strongest evidence that energy really did move to the floor?",
+    "choices": [
+      "The ball bounces to noticeably different heights depending on whether the day is cold or warm, showing that temperature affects the ball's stored energy.",
+      "The spot on the floor where the ball hit is very slightly warmer than the rest of the floor, and that warmth is greatest where the impact happened.",
+      "A very soft mat absorbs significantly more of the ball's kinetic energy than a hard floor does, which means the floor material determines how much energy the ball loses on impact.",
+      "The ball makes a loud sound when it hits the floor, which proves that energy left the ball and entered the floor as sound waves."
+    ],
+    "answer": "B",
+    "hints": [
+      "Energy that leaves an object ends up somewhere—usually in motion or as warmth.",
+      "Look for a change that happens at the place where the two objects interacted."
+    ]
+  },
+  {
+    "id": "m8sci-when-motion-changes-energy-is-transferred-006",
+    "loId": "m8sci.energy-transfer-when-motion-changes",
+    "cedCode": "M8SCI-4.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A baseball traveling at high speed hits a stationary wooden fence post. After the collision, the baseball is barely moving and falls straight down. The fence post is firmly set in the ground and does not visibly move, but the wood around the impact is slightly splintered and the temperature of the wood at that spot rises noticeably. A student makes two claims: (1) The baseball gave most of its kinetic energy to the fence post, and (2) The fence post received the energy as motion. Which claim is correct and why?",
+    "choices": [
+      "Claim 1 is wrong because the baseball's kinetic energy must still be contained in the baseball, as shown by the fact that the baseball fell straight down after the collision.",
+      "Both claims are correct because the baseball transferred all of its kinetic energy to the fence post, and the post's motion appears as splintering and heat generation.",
+      "Claim 1 is correct but Claim 2 is wrong: the fence post did receive energy, but not as kinetic energy—most of it appeared as thermal energy and as the energy that broke the wood fibers.",
+      "Both claims are wrong because the baseball's kinetic energy was destroyed in the collision, which explains why neither the baseball nor the fence post showed any signs of motion afterward."
+    ],
+    "answer": "C",
+    "hints": [
+      "An object that receives kinetic energy does not have to move visibly or at all.",
+      "Energy takes different forms—when surfaces rub or break, thermal energy and work appear instead of motion."
+    ]
+  },
+  {
+    "id": "m8sci-potential-energy-stored-by-position-001",
+    "loId": "m8sci.potential-energy-and-position",
+    "cedCode": "M8SCI-4.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Potential energy is stored in a system, which is a group of two or more objects that push or pull on each other. Which of the following is a correct example of a system in which energy is stored?",
+    "choices": [
+      "A stretched rubber band and the hand holding it stretched",
+      "A book sitting alone on a table with no other objects interacting with it",
+      "A single magnet lying flat on a desk by itself",
+      "A ball rolling across a floor without any forces acting to compress or stretch it"
+    ],
+    "answer": "A",
+    "hints": [
+      "Potential energy requires at least two objects that interact with each other.",
+      "Look for a situation where two things are pushing or pulling on each other."
+    ]
+  },
+  {
+    "id": "m8sci-potential-energy-stored-by-position-002",
+    "loId": "m8sci.potential-energy-and-position",
+    "cedCode": "M8SCI-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student lifts an identical box from a shelf that is 2 meters above the ground to a shelf that is 5 meters above the ground. The box has not changed—it still has the same mass and the same contents. Based on how the arrangement has changed, what should happen to the stored potential energy?",
+    "choices": [
+      "It decreases because the box is now farther from where it started.",
+      "It increases because Earth pulls the box downward and the lift moved it upward against that pull.",
+      "It stays the same because the box itself has not changed.",
+      "It decreases because lifting requires energy and that energy must come from the stored energy."
+    ],
+    "answer": "B",
+    "hints": [
+      "Think about the force between the box and Earth. Which way does that force point?",
+      "When you move an object against the force pulling it, what happens to the stored energy?"
+    ]
+  },
+  {
+    "id": "m8sci-potential-energy-stored-by-position-003",
+    "loId": "m8sci.potential-energy-and-position",
+    "cedCode": "M8SCI-4.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two identical springs are held in compressed form. The first spring is squeezed to a length 1 centimeter shorter than its relaxed length. The second spring is squeezed to a length 3 centimeters shorter than its relaxed length. No other changes have been made. Which arrangement stores more elastic potential energy and why?",
+    "choices": [
+      "The first spring stores more because the smaller compression distance means the internal spring forces work less to resist the squeeze, storing more energy.",
+      "They store the same amount because they are the same type of spring and compress at the same rate regardless of distance.",
+      "The second spring stores more because it is held farther from its relaxed shape, and more of the squeeze moved against the spring's push.",
+      "The first spring stores more because squeezing by 1 centimeter requires less force to be applied, which makes the stored energy larger than a 3-centimeter squeeze."
+    ],
+    "answer": "C",
+    "hints": [
+      "The relaxed shape is the shape the spring takes when nothing is squeezing or stretching it.",
+      "Does the spring push back harder the more you squeeze it?"
+    ]
+  },
+  {
+    "id": "m8sci-potential-energy-stored-by-position-004",
+    "loId": "m8sci.potential-energy-and-position",
+    "cedCode": "M8SCI-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student has two identical flowerpots, each filled with the same soil and plant. One pot sits on a windowsill 3 meters above the ground. The other pot sits on a shelf 1 meter above the ground, but this pot contains twice as much soil. The student wants to rank the two arrangements by stored gravitational potential energy. When checking whether this comparison can be ranked by reasoning alone, what should the student conclude?",
+    "choices": [
+      "The higher pot stores more because height is the dominant factor and matters more than mass in determining gravitational potential energy.",
+      "The heavier pot stores more because the extra soil doubles the total mass of the system, which increases the gravitational potential energy stored.",
+      "The pot on the 3-meter sill stores exactly three times as much as the pot on the 1-meter sill because the ratio of heights determines the energy ratio in all cases.",
+      "The comparison cannot be ranked by reasoning alone because two different quantities have changed in opposite directions."
+    ],
+    "answer": "D",
+    "hints": [
+      "Count how many different quantities are different between the two arrangements.",
+      "For each quantity that differs, ask whether it would raise or lower the stored energy."
+    ]
+  },
+  {
+    "id": "m8sci-potential-energy-stored-by-position-005",
+    "loId": "m8sci.potential-energy-and-position",
+    "cedCode": "M8SCI-4.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two bar magnets are held with their south poles facing each other. South poles push each other apart. In arrangement A, the magnets are held 2 centimeters apart. In arrangement B, the same magnets are held 6 centimeters apart. Both are held still and neither magnet has been changed. Describe which arrangement stores more magnetic potential energy and explain your reasoning using the rule about forces.",
+    "choices": [
+      "Arrangement A stores more because the magnets are held closer together against the push that drives them apart, moving them farther against that force.",
+      "Arrangement B stores more because the magnets are farther apart and farther apart always means more stored energy.",
+      "Arrangement A stores more because the magnets are closer together and closeness always means more stored energy.",
+      "Arrangement B stores more because the magnets are held farther apart against the push that drives them apart, moving them less against that force."
+    ],
+    "answer": "A",
+    "hints": [
+      "The magnets push apart. Which direction is the force pointing?",
+      "If the magnets are pushed closer together, are they being moved with the force or against it?"
+    ]
+  },
+  {
+    "id": "m8sci-potential-energy-stored-by-position-006",
+    "loId": "m8sci.potential-energy-and-position",
+    "cedCode": "M8SCI-4.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student observes four arrangements and tries to rank them by stored potential energy. Arrangement 1: a book on a shelf 2 meters high. Arrangement 2: the same book on a shelf 5 meters high. Arrangement 3: a spring compressed 4 centimeters from its relaxed length. Arrangement 4: two magnets with opposite poles facing, held 3 centimeters apart (they pull toward each other). To rank two arrangements by reasoning alone, only one quantity should differ between them, and the systems should involve the same type of stored energy. Which pair of arrangements can be ranked this way, and which pair cannot?",
+    "choices": [
+      "Arrangements 1 and 2 can be ranked because the book has not changed; arrangements 3 and 4 cannot be ranked because springs and magnets store energy differently.",
+      "Arrangements 1 and 2 can be ranked because only height differs; arrangements 3 and 4 cannot be ranked because they involve completely different types of stored energy.",
+      "Arrangements 3 and 4 can be ranked because both store more energy when objects are moved farther against their respective forces; arrangements 1 and 2 cannot be ranked because gravity changes with height.",
+      "Arrangements 1 and 2 can be ranked because only the height has changed and the book itself is identical; arrangements 3 and 4 cannot be ranked because a spring and two magnets are different systems with no connection to each other."
+    ],
+    "answer": "B",
+    "hints": [
+      "To rank two arrangements by reasoning, only one quantity should differ between them.",
+      "Think about what would have to be true to compare the stored energy in a spring with the stored energy in a magnetic system. Without knowing the specific constants or formulas for each type, what makes comparing them difficult?"
+    ]
+  },
+  {
+    "id": "m8sci-energy-transformations-conservation-001",
+    "loId": "m8sci.energy-transformations-and-conservation",
+    "cedCode": "M8SCI-4.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student says, \"The wind-up toy's spring energy was used up as it ran across the table and stopped.\" Which statement corrects this using the rule that energy is conserved?",
+    "choices": [
+      "The spring's elastic potential energy left the toy entirely and stopped being energy once the toy came to rest.",
+      "The spring's elastic potential energy was gradually destroyed as friction from the table wore away at the toy's mechanism.",
+      "The spring's elastic potential energy became kinetic energy of the toy, then thermal energy and sound in the toy, table and air, so none of it was destroyed.",
+      "The spring's elastic potential energy converted into kinetic energy and then disappeared once the toy stopped moving, since nothing was left to power it."
+    ],
+    "answer": "C",
+    "hints": [
+      "Ask where each bit of energy ended up, and name both a form and an object holding it.",
+      "Energy is never destroyed, only transformed into new forms and spread out."
+    ]
+  },
+  {
+    "id": "m8sci-energy-transformations-conservation-002",
+    "loId": "m8sci.energy-transformations-and-conservation",
+    "cedCode": "M8SCI-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A child on a swing is pulled back and released from rest at shoulder height, then swings down and reaches its lowest point moving fastest before rising up the other side. As the swing moves from its highest starting point down to its lowest point, what happens to its energy?",
+    "choices": [
+      "Gravitational potential energy converts completely into sound energy as the swing falls, so no kinetic energy exists at the lowest point.",
+      "Gravitational potential energy is entirely used up as the swing falls, leaving the swing with only kinetic energy and nothing else.",
+      "Kinetic energy is newly created at the lowest point, adding extra energy to the swing that did not exist before it started.",
+      "Gravitational potential energy decreases while kinetic energy increases, with the total energy of the swing and surroundings staying constant."
+    ],
+    "answer": "D",
+    "hints": [
+      "Height and speed are changing together in a predictable way.",
+      "One stored form is decreasing exactly as a moving form increases."
+    ]
+  },
+  {
+    "id": "m8sci-energy-transformations-conservation-003",
+    "loId": "m8sci.energy-transformations-and-conservation",
+    "cedCode": "M8SCI-4.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "When an electric toaster is switched on, its heating wires quickly turn bright orange and give off heat that toasts the bread, and you can hear a faint hum from the toaster while it runs. Which sequence correctly traces the energy transformation happening inside the toaster?",
+    "choices": [
+      "Electrical energy carried through the wires becomes thermal energy and light in the heating coils, with a small amount becoming sound.",
+      "Electrical energy carried through the wires becomes chemical potential energy stored in the coils, which is later released as heat.",
+      "Thermal energy stored in the wires becomes electrical energy, which then powers the toasting process.",
+      "Electrical energy becomes kinetic energy in the wires, which then rubs against the bread to produce heat."
+    ],
+    "answer": "A",
+    "hints": [
+      "Electrical energy is carried by wires from a source to a device, where it turns into other forms.",
+      "The orange glow and heat are two of the forms produced, along with the sound you hear."
+    ]
+  },
+  {
+    "id": "m8sci-energy-transformations-conservation-004",
+    "loId": "m8sci.energy-transformations-and-conservation",
+    "cedCode": "M8SCI-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A battery-powered toy car is switched on and drives across a carpeted floor. It moves fastest right after starting, gradually slows as it goes, and eventually stops on its own after crossing the room, even though the batteries still have some charge left inside them. A student claims the car stopped because \"the car used up its energy.\" Which explanation correctly accounts for why the car slows and stops, without treating energy as used up?",
+    "choices": [
+      "The batteries stop supplying electrical energy once the car begins moving, so the chemical potential energy inside them stays trapped and unused, and the car gradually slows down because there is no more electrical energy being converted into motion to replace what is lost.",
+      "Chemical potential energy in the batteries becomes electrical energy, then kinetic energy of the car, and friction between the wheels and carpet steadily turns some of that kinetic energy into thermal energy and sound, so the car has less kinetic energy left as it goes.",
+      "Kinetic energy in the car is completely destroyed by friction between the wheels and the carpet, which removes energy from the total amount available in the system, so eventually none of that original energy is left anywhere to keep the car moving forward.",
+      "The chemical potential energy in the batteries converts entirely into thermal energy inside the batteries themselves, without ever becoming electrical or kinetic energy, so the car has no way to convert stored chemical energy into motion in the first place."
+    ],
+    "answer": "B",
+    "hints": [
+      "Follow the chain all the way through the wheels and carpet, not just to the motor.",
+      "Friction always produces thermal energy and sound, but it never destroys energy."
+    ]
+  },
+  {
+    "id": "m8sci-energy-transformations-conservation-005",
+    "loId": "m8sci.energy-transformations-and-conservation",
+    "cedCode": "M8SCI-4.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A skateboarder starts at the top of one side of a U-shaped ramp and pushes off. Each time she crosses from one side to the other, she reaches a slightly lower height than on the previous pass, and after many passes she coasts along the bottom without climbing high on either side anymore. The wheels and ramp surface feel warm afterward, and the ramp makes a soft rolling sound as she rides. Which statement correctly explains this pattern in terms of energy forms and conservation?",
+    "choices": [
+      "Gravitational potential energy at the top converts completely into kinetic energy as she goes down the ramp, but that kinetic energy is not converted back into potential energy on the way up because kinetic energy cannot be turned back into gravitational potential energy, so each pass leaves less energy available to lift her than the pass before.",
+      "Each time she crosses the ramp, friction and air resistance actually destroy a portion of her total energy completely, converting it into nothing measurable, so the overall amount of energy in the system keeps decreasing permanently, which explains why the height she reaches keeps dropping with every additional pass she makes across the ramp.",
+      "Gravitational potential energy converts to kinetic energy going down and back to gravitational potential energy going up, but friction between wheels and ramp and pushing through air steadily convert part of that energy into thermal energy and sound, so less is left to lift her each time, even though the total energy is unchanged.",
+      "The warmth and sound are evidence that new energy is being created by the friction between the wheels and the ramp surface, adding extra thermal and sound energy into the system that did not exist before and is completely separate from the skateboarder's original gravitational potential energy at the very top of the ramp."
+    ],
+    "answer": "C",
+    "hints": [
+      "The warmth and sound are two different clues pointing to where part of the energy is going.",
+      "Getting lower each time does not mean the total energy is shrinking; ask what can no longer lift her."
+    ]
+  },
+  {
+    "id": "m8sci-energy-transformations-conservation-006",
+    "loId": "m8sci.energy-transformations-and-conservation",
+    "cedCode": "M8SCI-4.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two identical pendulums are released from the same height at the same time. Pendulum X swings in normal air with a metal pivot that has some friction, while pendulum Y is placed inside a sealed chamber with nearly all the air removed and swings on a nearly frictionless pivot. After ten minutes, pendulum X has visibly lost height on each swing, but pendulum Y is still swinging almost as high as when it started. Which conclusion best fits conservation of energy and the way real energy chains end?",
+    "choices": [
+      "Pendulum Y keeps swinging high because some outside energy source inside the sealed, nearly airless chamber continuously feeds new energy into the pendulum, replacing any kinetic and gravitational potential energy that friction at the pivot and any remaining air resistance would otherwise take away as it swings.",
+      "Pendulum Y's energy is actually not being conserved at all, because it keeps almost all of its original energy while that energy simply stays as gravitational potential energy at the top of each swing and never actually converts into kinetic energy as the pendulum moves back and forth.",
+      "Pendulum X loses height only because it started with a smaller total amount of energy than pendulum Y did, since the metal pivot with friction already used up some of the pendulum's original gravitational potential energy before it was even released and began swinging.",
+      "Pendulum Y still swings high because almost no thermal energy is being produced by air resistance or pivot friction, so nearly all its energy stays as kinetic and gravitational potential energy trading back and forth, while pendulum X's energy is steadily converting to thermal energy in the air and pivot."
+    ],
+    "answer": "D",
+    "hints": [
+      "Compare what is different between the two setups: air and pivot friction, not the starting energy.",
+      "Less rubbing and less air pushing means less energy turning into thermal energy, not less total energy to begin with."
+    ]
+  },
+  {
+    "id": "m8sci-kinetic-energy-mass-speed-001",
+    "loId": "m8sci.kinetic-energy-mass-and-speed",
+    "cedCode": "M8SCI-4.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A delivery van is parked in a lot with its engine turned off. A student claims the van still has some kinetic energy because it has a large mass. Which statement correctly evaluates the student's claim?",
+    "choices": [
+      "The claim is correct; a heavier object keeps some kinetic energy even without moving, the way a heavier object always weighs more.",
+      "The claim is correct; since mass is one of the two factors that determine kinetic energy, having mass means having kinetic energy.",
+      "The claim is wrong, but only because the engine is off; if the engine were running while the van stayed parked, it would have kinetic energy from the engine alone.",
+      "The claim is wrong; the van has zero kinetic energy because kinetic energy requires motion, and mass alone does not create energy."
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall that kinetic energy depends on two things — check whether both are present here.",
+      "Mass is only one of the two factors; ask whether the object is actually moving."
+    ]
+  },
+  {
+    "id": "m8sci-kinetic-energy-mass-speed-002",
+    "loId": "m8sci.kinetic-energy-mass-and-speed",
+    "cedCode": "M8SCI-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two shopping carts roll across a flat store floor at the same steady speed. Cart A has a total mass of 12 kilograms. Cart B has a total mass of 36 kilograms. Which statement correctly compares their kinetic energies?",
+    "choices": [
+      "Cart B has three times as much kinetic energy as Cart A, because its mass is three times as large and both carts move at the same speed.",
+      "Cart B has nine times as much kinetic energy as Cart A, because the mass factor must be multiplied by itself just as the speed factor is.",
+      "Cart B has 24 kilograms more kinetic energy than Cart A, matching the difference between their masses.",
+      "Cart B has the same kinetic energy as Cart A, because kinetic energy depends only on speed when two carts share a floor."
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the factor by dividing the larger mass by the smaller mass, not by subtracting.",
+      "Only the speed factor gets multiplied by itself; the mass factor does not."
+    ]
+  },
+  {
+    "id": "m8sci-kinetic-energy-mass-speed-003",
+    "loId": "m8sci.kinetic-energy-mass-and-speed",
+    "cedCode": "M8SCI-4.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cyclist increases her speed on a flat road from 3 meters per second to 9 meters per second, while her mass and her bike's mass stay exactly the same. Which statement correctly compares her kinetic energy at 9 meters per second to her kinetic energy at 3 meters per second?",
+    "choices": [
+      "Her kinetic energy at 9 meters per second is three times as large, because kinetic energy increases in direct proportion to speed, so tripling the speed simply triples the energy.",
+      "Her kinetic energy at 9 meters per second is nine times as large, because the speed is three times as large and the speed factor is multiplied by itself.",
+      "Her kinetic energy at 9 meters per second is six units larger than before, because kinetic energy increases by the same amount as the increase in speed, and the speed increased by six meters per second.",
+      "Her kinetic energy at 9 meters per second is twice as large, because kinetic energy roughly doubles whenever speed increases by any large amount, regardless of the exact factor involved."
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide 9 by 3 to find the speed factor before doing anything else.",
+      "Remember that a speed factor is multiplied by itself to get the energy factor."
+    ]
+  },
+  {
+    "id": "m8sci-kinetic-energy-mass-speed-004",
+    "loId": "m8sci.kinetic-energy-mass-and-speed",
+    "cedCode": "M8SCI-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student records three trials of a toy car crossing a marked line on a table. Trial 1: mass 2 kilograms, speed 2 meters per second, used as the baseline. Trial 2: mass 4 kilograms, speed 2 meters per second, kinetic energy twice Trial 1's. Trial 3: mass 4 kilograms, speed 4 meters per second, kinetic energy eight times Trial 1's. Which statement correctly uses two of these trials to describe how kinetic energy depends on speed alone?",
+    "choices": [
+      "Trials 1 and 2 show the speed effect alone, since the speed stays at 2 meters per second in both trials, and the doubling of kinetic energy from Trial 1 to Trial 2 must therefore be caused entirely by the change in speed rather than by any other factor.",
+      "Trials 1 and 3 show the speed effect alone, since the kinetic energy in Trial 3 is eight times Trial 1's, and this eightfold increase matches what would be expected simply from doubling the speed and squaring that factor.",
+      "Trials 2 and 3 show the speed effect alone, since both have a mass of 4 kilograms: the speed doubles and the kinetic energy becomes four times as large, going from twice the baseline to eight times the baseline.",
+      "Trials 2 and 3 show the speed effect alone, since the mass increased from Trial 1 to Trial 3 along with the speed, and this extra mass increase together with the higher speed explains why Trial 3's kinetic energy is so much larger than Trial 1's."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for two trials where only the speed differs and the mass stays the same.",
+      "Check the mass values carefully in the pair you pick before comparing the speeds."
+    ]
+  },
+  {
+    "id": "m8sci-kinetic-energy-mass-speed-005",
+    "loId": "m8sci.kinetic-energy-mass-and-speed",
+    "cedCode": "M8SCI-4.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A drone with a mass of 2 kilograms flies at 3 meters per second. A second, heavier drone has a mass of 8 kilograms and flies at 6 meters per second. How many times as much kinetic energy does the second drone have compared to the first drone?",
+    "choices": [
+      "Eight times as much, because the mass factor of 4 and the speed factor of 2 multiply directly without squaring the speed, giving 4 times 2 equals 8.",
+      "Six times as much, because the mass factor of 4 and the speed factor of 2 combine by adding, giving a total change of about six times the energy.",
+      "Four times as much, because only the larger of the two factors, the mass factor of 4, determines the overall change in kinetic energy.",
+      "Sixteen times as much, because the mass factor of 4 stays the same while the speed factor of 2 is squared to 4, and 4 times 4 is 16."
+    ],
+    "answer": "D",
+    "hints": [
+      "Work out the mass factor and the speed factor separately before combining them.",
+      "Only the speed factor gets multiplied by itself; then multiply that result by the mass factor."
+    ]
+  },
+  {
+    "id": "m8sci-kinetic-energy-mass-speed-006",
+    "loId": "m8sci.kinetic-energy-mass-and-speed",
+    "cedCode": "M8SCI-4.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Three model rockets are launched, and each rocket's kinetic energy is measured as it passes a marker. Rocket X has a mass of 1 kilogram and a speed of 4 meters per second, and its kinetic energy is used as the baseline. Rocket Z has a mass of 4 kilograms and a speed of 4 meters per second, and its kinetic energy is 4 times Rocket X's. Rocket Y has a mass of 4 kilograms and a speed of 8 meters per second, and its kinetic energy is 16 times Rocket X's. A student says, 'Since Rocket Y's speed is twice Rocket X's, and Rocket Y's kinetic energy is 16 times as large, doubling the speed alone must cause 16 times the energy.' Which statement correctly evaluates the student's claim?",
+    "choices": [
+      "The claim is incorrect; Rocket X and Rocket Y differ in both mass and speed, so the 16-times increase cannot be credited to speed alone. Comparing Rocket Z and Rocket Y, which share the same mass, shows that doubling the speed there gives four times the energy.",
+      "The claim is correct; when two objects' kinetic energies differ by a certain factor, that factor can be credited to whichever single quantity, mass or speed, appears to have changed by the largest amount between them, and in this comparison between Rocket X and Rocket Y that quantity is clearly the speed.",
+      "The claim is incorrect; the true speed effect is sixteen times the energy, and comparing Rocket X and Rocket Y directly already isolates that effect, since Rocket X and Rocket Y differ only in speed and any difference in mass between them does not matter for this comparison.",
+      "The claim is incorrect; kinetic energy comparisons can only be made between objects that share the exact same mass, so no valid conclusion about the speed effect can be drawn from any of these three rockets, since Rocket X's mass differs from both Rocket Y's and Rocket Z's mass."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether the two rockets being compared differ in only one quantity before crediting an effect to it.",
+      "Look for a different pair among the three rockets that holds the mass constant."
+    ]
+  }
+]

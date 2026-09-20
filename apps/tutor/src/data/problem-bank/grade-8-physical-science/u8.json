@@ -1,0 +1,420 @@
+[
+  {
+    "id": "m8sci-evidence-of-a-chemical-reaction-001",
+    "loId": "m8sci.evidence-of-a-chemical-reaction",
+    "cedCode": "M8SCI-8.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "Every substance has its own set of characteristic properties — such as color, melting point, whether it dissolves in water, or what state it is at room temperature. These properties are how you tell one substance from another. When you decide whether a change is physical or chemical, what is the one question you are asking?",
+    "choices": [
+      "Did the change happen in a measurable amount of time, or did it occur instantaneously without any time passing?",
+      "Is the substance still the same, or has a new substance formed?",
+      "Did the substance change its appearance by altering its shape, size, color, or state of matter?",
+      "Can the change be undone by applying heat, cold, or other simple treatments without breaking chemical bonds?"
+    ],
+    "answer": "B",
+    "hints": [
+      "Since characteristic properties define what a substance is, the core question is whether those properties have changed to something a new substance would have.",
+      "The only way to tell if a change is physical or chemical is to check whether the identity of the substance itself has changed."
+    ]
+  },
+  {
+    "id": "m8sci-evidence-of-a-chemical-reaction-002",
+    "loId": "m8sci.evidence-of-a-chemical-reaction",
+    "cedCode": "M8SCI-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A piece of paper is cut in half with scissors. Before the cut, the paper is white, flat, and tears easily. After the cut, there are now two pieces, each white, flat, and tearing easily. Is this a physical change or a chemical reaction? Why?",
+    "choices": [
+      "Physical change: because paper is white both before and after the cut.",
+      "Chemical reaction: a new substance formed because there are now two pieces instead of one.",
+      "Physical change: the size changed but no new substance formed, because both pieces are still paper.",
+      "Chemical reaction: because the change is not reversible — the cut pieces do not grow back together."
+    ],
+    "answer": "C",
+    "hints": [
+      "Look for a property in the 'after' list that the starting substance did not have. Does either piece have a property that one whole sheet of paper never had?",
+      "Size changes such as cutting, crushing, or grinding are physical changes because the material remains the same substance. A crushed sugar cube is still sugar."
+    ]
+  },
+  {
+    "id": "m8sci-evidence-of-a-chemical-reaction-003",
+    "loId": "m8sci.evidence-of-a-chemical-reaction",
+    "cedCode": "M8SCI-8.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two clear, colorless liquids are mixed together at room temperature. Within seconds, the mixture turns bright blue, and a thermometer placed in the cup shows the temperature dropped by 5 degrees. No heat source and no cooler are near the cup. Run through the routine: list at least one property that appeared after mixing that neither starting liquid had before they met.",
+    "choices": [
+      "The mixture is still a liquid, so the state did not change, meaning it is physical.",
+      "The mixture turned blue, but that could happen if a dye from one liquid colored the other without a reaction occurring.",
+      "The temperature dropped, which proves only that one of the starting liquids was colder than the cup itself.",
+      "The color blue and a lower temperature both appeared, and neither starting liquid had either of these properties."
+    ],
+    "answer": "D",
+    "hints": [
+      "When two substances mix, look for signs of a new substance: unexpected color, gas appearing, light or heat releasing, solid forming, or large temperature shifts without external heating or cooling.",
+      "The blue color was absent from both starting liquids. A temperature drop without heating or cooling applied to the cup is a sign of energy being released during the reaction itself."
+    ]
+  },
+  {
+    "id": "m8sci-evidence-of-a-chemical-reaction-004",
+    "loId": "m8sci.evidence-of-a-chemical-reaction",
+    "cedCode": "M8SCI-8.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A clear, colorless liquid dissolves in another clear, colorless liquid. The mixture stays clear, colorless, and at room temperature. Later, the mixture is poured into a shallow dish and left in the sun for three days. A white solid appears on the bottom and sides of the dish. Explain how this observation helps you decide whether the first change (the dissolving) was physical or chemical, using the four-step routine.",
+    "choices": [
+      "The dissolving was physical because the white solid that formed later came from the water evaporating, not from the mixing. By testing the reverse condition (evaporating the water), the starting substances came back, showing they were always the same.",
+      "The dissolving was chemical because the two colorless liquids mixed together to form a white solid immediately, which shows they reacted to create a brand new substance with different properties than either starting liquid had.",
+      "The dissolving was chemical because the mixture eventually produced a solid that did not appear at the moment of mixing, which proves the two liquids underwent a reaction that created a new substance during the evaporation process.",
+      "The dissolving was physical because the white solid appeared only after sunlight and evaporation occurred over several days, meaning the initial mixing at room temperature did not produce any new substance or property that the original liquids lacked."
+    ],
+    "answer": "A",
+    "hints": [
+      "Step 3 says to look for a property in the 'after' list that nothing in the 'before' list had. When the two liquids first mixed, did anything new appear, or did the solid come from the evaporation?",
+      "Step 4 tells you to reverse the condition. When you reverse the dissolving by evaporating the water, what comes back? Does that show the substance was the same all along?"
+    ]
+  },
+  {
+    "id": "m8sci-reactions-that-release-or-absorb-thermal-energy-001",
+    "loId": "m8sci.reactions-that-release-or-absorb-thermal-energy",
+    "cedCode": "M8SCI-8.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student stirs baking soda into vinegar in a cup. The mixture bubbles and gives off gas. The thermometer in the cup shows 20°C before the baking soda is added and 16°C after the reaction finishes. Nothing outside the cup is cooling it — no freezer, no ice, no cold pack underneath. What is this reaction doing to thermal energy?",
+    "choices": [
+      "The reaction is not moving thermal energy at all; the cup is simply cooling on its own.",
+      "The reaction is releasing thermal energy, moving it out into the mixture and the cup.",
+      "The reaction is absorbing thermal energy, pulling it out of the mixture and the cup.",
+      "The reaction is creating new thermal energy inside the mixture."
+    ],
+    "answer": "C",
+    "hints": [
+      "The thermometer fell from 20°C to 16°C. Is the mixture getting warmer or colder?",
+      "Remember: absorbing means the mixture gets colder; releasing means it gets warmer."
+    ]
+  },
+  {
+    "id": "m8sci-reactions-that-release-or-absorb-thermal-energy-002",
+    "loId": "m8sci.reactions-that-release-or-absorb-thermal-energy",
+    "cedCode": "M8SCI-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A metal strip is dropped into a clear liquid in a plastic cup sitting on a table at room temperature. Gas bubbles stream off the strip and it slowly shrinks. The room stays at 20°C. After two minutes, the thermometer in the liquid reads 31°C. No flame, heater, freezer or sunlight is near the cup. Classify what the reaction is doing and explain how you know, using both the thermometer reading and the room temperature.",
+    "choices": [
+      "The reaction is absorbing thermal energy because the metal strip is disappearing and shrinking means particles are being broken apart.",
+      "The reaction is absorbing thermal energy because the temperature rose from 20°C to 31°C, showing the mixture pulled in thermal energy from the surroundings.",
+      "The reaction is releasing thermal energy because something outside must be heating it, since the room temperature stayed at 20°C the whole time.",
+      "The reaction is releasing thermal energy because the liquid is now 11°C warmer than the room, and the room cannot heat anything above its own temperature."
+    ],
+    "answer": "D",
+    "hints": [
+      "Thermal energy always moves from warmer to cooler. If the liquid is warmer than the room around it, what must have happened?",
+      "Check whether anything outside the cup is doing the heating. Could the room at 20°C have raised the liquid to 31°C?"
+    ]
+  },
+  {
+    "id": "m8sci-reactions-that-release-or-absorb-thermal-energy-003",
+    "loId": "m8sci.reactions-that-release-or-absorb-thermal-energy",
+    "cedCode": "M8SCI-8.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two reactions are done side by side in a room that stays at 25°C. Reaction X: a powder is stirred into water in a sealed cup, and after one minute the cup reads 25°C and feels cool to the touch. Reaction Y: a different powder is stirred into water in an identical sealed cup, and after one minute the cup reads 38°C and feels warm to the touch. Nothing outside either cup is heating or cooling it. For each reaction, decide whether it is releasing or absorbing thermal energy, and state what evidence tells you.",
+    "choices": [
+      "Reaction X is absorbing (the cup feels cool and is at room temperature, so thermal energy left the mixture) and Reaction Y is releasing (the cup is warmer than the room, so thermal energy moved out into the surroundings).",
+      "Reaction X is releasing thermal energy because the cup feels cool to the touch, meaning heat flowed out of the mixture, and Reaction Y is absorbing thermal energy because the cup reached 38°C, indicating it pulled in heat from outside the sealed system.",
+      "Both reactions are releasing because powders mixed with water always produce the same type of energy change, so both must have followed the same thermal direction.",
+      "Both reactions are absorbing thermal energy because sealed cups prevent any thermal energy from escaping to the surrounding room, so all observed temperature changes must come from the environment."
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember the four-step routine: check what is outside, write down the before and after temperatures, compare them to each other and to the room, then decide.",
+      "A mixture that ends up warmer than its room cannot have gotten that way from the room. Where did the extra thermal energy come from?"
+    ]
+  },
+  {
+    "id": "m8sci-reactions-that-release-or-absorb-thermal-energy-004",
+    "loId": "m8sci.reactions-that-release-or-absorb-thermal-energy",
+    "cedCode": "M8SCI-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A product designer is making a hand warmer pouch that construction workers hold while working in winter. The design brief states: the pouch must be warm enough to heat a worker's hand from 10°C up to at least 35°C, it must stay warm for at least 2 hours of work, and the outside surface must never exceed 60°C so the skin does not burn. Two reaction mixtures are tested. Mixture A releases thermal energy, reaches 50°C in three minutes, and stays between 48°C and 52°C for about 90 minutes before cooling down. Mixture B releases thermal energy, reaches 70°C in one minute, and stays at about 68°C for about 3 hours. Using the design brief's three criteria — direction, how much, and how fast — explain which mixture meets the brief and which does not.",
+    "choices": [
+      "Mixture B meets the brief: it releases thermal energy and lasts for 3 hours, which exceeds the 2-hour requirement by a wide margin, making it superior despite reaching a higher surface temperature.",
+      "Mixture A meets the brief: it releases thermal energy in the right direction, reaches 50°C which exceeds the 35°C floor, stays warm for 90 minutes which covers the 2 hours needed but is close, and stays at 48–52°C which is under the 60°C burn limit. Mixture B fails because it reaches 68°C, which exceeds the 60°C surface limit even though it lasts longer.",
+      "Mixture A meets the brief because it releases thermal energy and reaches 50°C, which is sufficient to heat the hand, while Mixture B fails due to excessive temperature that would risk skin damage from the high heat output.",
+      "Mixture B meets the brief because it releases thermal energy, reaches a significantly higher temperature than Mixture A, and sustains warmth for 3 hours instead of 90 minutes, so the longer duration and greater heating power make it the best choice."
+    ],
+    "answer": "B",
+    "hints": [
+      "The brief asks for three things in this order: direction (release or absorb), how much (temperature floor and ceiling), and how fast (time to warm up and time to stay warm). Check all three for each mixture.",
+      "A design brief is a contract. If it sets a limit — like 'never exceed 60°C' — then exceeding it means the mixture fails the brief, no matter what else it does well."
+    ]
+  },
+  {
+    "id": "m8sci-reactions-that-release-or-absorb-thermal-energy-005",
+    "loId": "m8sci.reactions-that-release-or-absorb-thermal-energy",
+    "cedCode": "M8SCI-8.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A company designs a cooling vest for outdoor workers in summer heat. The brief: the vest must pull thermal energy out of the wearer's skin, reach 15°C within 20 seconds of being activated, stay between 10°C and 18°C for at least 4 hours, and never drop below 5°C (to avoid damaging skin). Two cooling mixtures are tested in a room at 25°C. Mixture P absorbs thermal energy, reaches 12°C in 15 seconds, and over the next 4 hours gradually warms from 12°C to 17°C before the reaction stops. Mixture Q absorbs thermal energy, reaches 8°C in 25 seconds, and stays at about 8°C for 6 hours. For each mixture, state whether it passes or fails the brief and name at least one reason why.",
+    "choices": [
+      "Both mixtures fail because absorbing reactions cannot maintain cold temperatures for extended periods in a warm room, so neither can meet the 4-hour duration requirement.",
+      "Mixture Q passes all criteria because it absorbs thermal energy as required and maintains coldness for 6 hours, which exceeds the 4-hour minimum, while Mixture P fails because it gradually warms to 17°C instead of staying consistently cold throughout.",
+      "Mixture P passes all criteria: it absorbs thermal energy (right direction), reaches 12°C in 15 seconds (within the 20-second window), stays between 10°C and 18°C throughout (within the range), and never goes below 5°C. Mixture Q fails because it reaches only 8°C in 25 seconds, missing the 20-second deadline, and stays at 8°C which approaches the 5°C floor too closely.",
+      "Mixture P fails because it reaches temperature in 15 seconds rather than exactly 20 seconds, while Mixture Q passes because it maintains a lower temperature for a longer duration."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check direction first — both absorb, so both pass that. Then check 'how much': does it reach the target in the time allowed, and does it stay in the safe range (10–18°C) without going below 5°C?",
+      "Mixture Q reaches 8°C and stays there. Is 8°C inside the safe range of 10–18°C, or is it outside it?"
+    ]
+  },
+  {
+    "id": "m8sci-reactions-that-release-or-absorb-thermal-energy-006",
+    "loId": "m8sci.reactions-that-release-or-absorb-thermal-energy",
+    "cedCode": "M8SCI-8.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A camping company offers two reusable thermal packs: one uses a reaction that releases thermal energy and one uses a reaction that absorbs it. Each pack costs the same and is the same physical size. Pack R releases 50 joules of thermal energy total and gets hot in 2 seconds, but then cools back to room temperature in 30 seconds. Pack A absorbs 50 joules of thermal energy total, takes 60 seconds to get cold, and then stays cold for 8 hours. The customer says, 'Pack R is better because 50 joules is the same as Pack A, and it gets hot way faster, so it moves more thermal energy per second.' Identify the flaw in this reasoning and explain why the customer's conclusion might be wrong depending on what the pack will be used for.",
+    "choices": [
+      "The customer is wrong about the speed but right about the total. Pack R is better in every way because it gets hot faster, and speed always matters more than how long something lasts.",
+      "The customer is correct that Pack R moves 50 joules in 2 seconds (25 joules per second) while Pack A moves 50 joules in 60 seconds (about 0.8 joules per second), so Pack R is objectively superior because faster thermal transfer is always preferable.",
+      "The customer is wrong because Pack A absorbs thermal energy and Pack R releases it, making them fundamentally incomparable since they move energy in opposite directions and cannot both be useful.",
+      "The customer confuses 'how much total thermal energy' with 'how fast it is released.' Two reactions can move the same total amount of thermal energy while one finishes in seconds and the other lasts for hours. Which pack is better depends on the job: a hand warmer for a 30-second task needs Pack R, but a cooler for an 8-hour camping trip needs Pack A because it has to work the whole time."
+    ],
+    "answer": "D",
+    "hints": [
+      "To judge any thermal device, consider three factors: the direction of energy transfer, the total amount of energy transferred, and how fast the transfer happens. The customer counted the total thermal energy but ignored how long each pack stays useful. Are those the same thing?",
+      "Think of a real job for each pack. If you need to warm your hands for 30 seconds at a bus stop, which pack works? If you need to keep a food cooler cold for 8 hours at the beach, which one works?"
+    ]
+  },
+  {
+    "id": "m8sci-rearranging-atoms-conservation-of-mass-001",
+    "loId": "m8sci.rearranging-atoms-and-conservation-of-mass",
+    "cedCode": "M8SCI-8.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In a chemical reaction, the substances present before the reaction starts are called reactants, and the substances left afterward are called products. Which statement correctly describes what happens to the atoms as reactants turn into products?",
+    "choices": [
+      "The atoms in the reactants stay bonded exactly as they were, while entirely new atoms are added to form the products.",
+      "The atoms in the reactants are destroyed and new atoms of different elements are created to form the products.",
+      "The atoms in the reactants combine with the container walls, which is why the products have fewer atoms than the reactants.",
+      "The atoms in the reactants separate from their original partners and join together in new arrangements to form the products."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what happens to an atom's old bonding partners during a reaction.",
+      "Consider whether the total number of atoms present could ever change overall."
+    ]
+  },
+  {
+    "id": "m8sci-rearranging-atoms-conservation-of-mass-002",
+    "loId": "m8sci.rearranging-atoms-and-conservation-of-mass",
+    "cedCode": "M8SCI-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "One molecule of nitrogen gas (N2, two nitrogen atoms joined together) reacts with three molecules of hydrogen gas (H2, two hydrogen atoms joined together in each) to form two molecules of ammonia (NH3, one nitrogen atom and three hydrogen atoms in each). How many nitrogen atoms and hydrogen atoms are on the reactant side of this reaction?",
+    "choices": [
+      "Two nitrogen atoms and six hydrogen atoms",
+      "One nitrogen atom and six hydrogen atoms",
+      "Two nitrogen atoms and three hydrogen atoms",
+      "Six nitrogen atoms and two hydrogen atoms"
+    ],
+    "answer": "A",
+    "hints": [
+      "Remember that a molecule of an element like N2 already holds more than one atom.",
+      "Multiply the number of molecules by the atoms inside each one, for both nitrogen and hydrogen separately."
+    ]
+  },
+  {
+    "id": "m8sci-rearranging-atoms-conservation-of-mass-003",
+    "loId": "m8sci.rearranging-atoms-and-conservation-of-mass",
+    "cedCode": "M8SCI-8.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A lit candle is placed inside a glass jar, and the lid is sealed tightly before the jar is set on a balance. The candle burns for a few minutes, producing gases that stay trapped inside the jar because the lid cannot open. What will the balance reading show after the candle has burned for a while, compared to before it was lit?",
+    "choices": [
+      "The reading falls by a small amount, because burning gas can still slip through the sealed lid over time.",
+      "The reading stays exactly the same, because the sealed jar keeps every atom involved in the reaction on the balance pan.",
+      "The reading rises by a small amount, because oxygen already inside the jar joins with the candle's wax as it burns.",
+      "The reading falls by a small amount, because part of the wax's mass is destroyed as it changes into light and heat."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask whether anything can actually cross the boundary of a sealed jar.",
+      "A sealed container reading never changes, no matter what reaction happens inside it."
+    ]
+  },
+  {
+    "id": "m8sci-rearranging-atoms-conservation-of-mass-004",
+    "loId": "m8sci.rearranging-atoms-and-conservation-of-mass",
+    "cedCode": "M8SCI-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A strip of magnesium metal with a mass of 12 grams is burned completely on an open balance pan. As it burns, magnesium atoms join with oxygen atoms pulled from the surrounding air to form magnesium oxide, a white powder that stays on the pan. After the burning finishes, the balance reads 20 grams. What mass of oxygen joined the magnesium, and why does the reading increase instead of decrease the way it does when wood burns?",
+    "choices": [
+      "20 grams of oxygen atoms joined the magnesium, since that whole amount is what the balance showed after burning.",
+      "12 grams of oxygen atoms joined the magnesium, matching the original mass of the magnesium strip before it was burned.",
+      "8 grams of oxygen atoms from the air joined the magnesium atoms on the pan, so the reading rose by exactly that mass.",
+      "No oxygen was involved; the extra 8 grams appeared because the magnesium atoms rearranged into a denser solid form."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the final reading to the starting mass to find how much mass was added, not lost.",
+      "In an open container, a rising reading means matter crossed onto the pan rather than off of it."
+    ]
+  },
+  {
+    "id": "m8sci-rearranging-atoms-conservation-of-mass-005",
+    "loId": "m8sci.rearranging-atoms-and-conservation-of-mass",
+    "cedCode": "M8SCI-8.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student mixes baking soda solution with vinegar in an open plastic cup sitting on a balance, and the mixture fizzes as carbon dioxide gas is released into the air. Before mixing, the cup and its contents have a total mass of 200 grams. Once the fizzing completely stops, the balance reads 197 grams. What accounts for the 3-gram drop in the reading?",
+    "choices": [
+      "3 grams of carbon dioxide gas formed but remained dissolved in the liquid, so the mass drop must actually be caused by water evaporating into the air.",
+      "3 grams of atoms were destroyed during the chemical reaction, meaning the law of conservation of mass fails whenever a reaction occurs in an open container.",
+      "3 grams of matter spontaneously appeared and then vanished during the fizzing, causing the balance to briefly misread the true mass of the cup.",
+      "3 grams of carbon dioxide gas escaped into the air, carrying away exactly the atoms responsible for the mass drop, since the cup was open."
+    ],
+    "answer": "D",
+    "hints": [
+      "The cup was open, so ask what kind of matter could have crossed its boundary during the fizzing.",
+      "The gas produced by the reaction is the same substance you should expect to leave through the open top."
+    ]
+  },
+  {
+    "id": "m8sci-rearranging-atoms-conservation-of-mass-006",
+    "loId": "m8sci.rearranging-atoms-and-conservation-of-mass",
+    "cedCode": "M8SCI-8.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A paper towel with a mass of 5 grams is burned completely on an open balance pan. Only 1 gram of ash remains afterward, and the balance reads 1 gram. A classmate argues that this proves mass was destroyed, since 5 grams became 1 gram with nothing added to the pan. Is the classmate's reasoning correct?",
+    "choices": [
+      "No, the classmate is incorrect; the missing four grams left as invisible gases when the paper's atoms joined oxygen from the air.",
+      "Yes, the classmate is correct; since the pan was open, some of the paper's atoms were destroyed by the flame during burning.",
+      "No, the classmate is incorrect; burning always produces the same amount of gas as ash, no matter what is burned.",
+      "Yes, the classmate is correct, because an open balance cannot detect matter once it turns into a gas and drifts away."
+    ],
+    "answer": "A",
+    "hints": [
+      "An open pan losing mass means matter left the pan, not that matter stopped existing.",
+      "Think about where the carbon and hydrogen atoms from the paper could have gone once they combined with oxygen."
+    ]
+  },
+  {
+    "id": "m8sci-synthetic-materials-from-natural-resources-001",
+    "loId": "m8sci.synthetic-materials-from-natural-resources",
+    "cedCode": "M8SCI-8.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is sorting four items into two bins labeled \"Natural Resource\" and \"Synthetic Material.\" She has crude oil, a plastic bottle, quarried rock, and aspirin tablets. The plastic bottle and aspirin go in the \"Synthetic Material\" bin, while the crude oil and rock go in the \"Natural Resource\" bin. Which reasoning correctly explains this sorting?",
+    "choices": [
+      "The plastic bottle and aspirin were each made by a chemical reaction that rearranged atoms from a starting resource into a new substance, while the crude oil and rock are taken from the Earth roughly as found.",
+      "The plastic bottle and aspirin are solid objects that people can hold and shape by hand, while the crude oil and rock are loose, runny, or crumbly substances that cannot hold any shape on their own, so solids belong in the synthetic bin.",
+      "The plastic bottle and aspirin were manufactured inside a factory using specialized machines and workers, while the crude oil and rock were simply found outdoors in nature without any factory or machine ever being involved in producing them.",
+      "The plastic bottle and aspirin are products that cost money for a customer to purchase in a store, while the crude oil and rock can be taken for free directly from the ground without paying anyone."
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what separates a chemical reaction from simply gathering a resource.",
+      "Consider whether atoms were rearranged into a new substance or the resource was just taken as it is."
+    ]
+  },
+  {
+    "id": "m8sci-synthetic-materials-from-natural-resources-002",
+    "loId": "m8sci.synthetic-materials-from-natural-resources",
+    "cedCode": "M8SCI-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A factory takes loose, bendy cotton fibers and spins and weaves them tightly into a stiff sheet used for tents. The stiff sheet holds its shape, but if it is soaked in water and unwoven, the fibers return to the same loose, bendy cotton fluff they started as. Using the reversal test for telling a physical change from a chemical one, is the stiff tent sheet a synthetic material?",
+    "choices": [
+      "Yes, because the stiff woven sheet has a new property, holding its shape under tension, that the loose, bendy cotton fluff never displayed before it was processed.",
+      "No, because soaking and unweaving brings back the original loose cotton, showing that only the form changed while the substance stayed cotton.",
+      "Yes, because weaving must involve a chemical reaction that joins individual cotton molecules together into larger, stronger molecules, forming an entirely new synthetic substance.",
+      "No, because cotton is classified as a natural resource, and by definition natural resources can never be turned into synthetic materials no matter what process is used."
+    ],
+    "answer": "B",
+    "hints": [
+      "Check whether reversing the physical process (soaking, unweaving) brings back the original substance.",
+      "Spinning and weaving change the form of a substance; only a reaction changes the substance itself."
+    ]
+  },
+  {
+    "id": "m8sci-synthetic-materials-from-natural-resources-003",
+    "loId": "m8sci.synthetic-materials-from-natural-resources",
+    "cedCode": "M8SCI-8.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student writes this trace for a synthetic fiber: \"The fiber comes from crude oil. A reaction turns small molecules from the oil into long, thin threads.\" Judged against the three-step trace, is this explanation complete, and if not, what step is missing?",
+    "choices": [
+      "No, it is missing the natural resource step, since the trace never clearly names the starting material the fiber actually came from before any reaction occurred.",
+      "No, it is missing the chemical reaction step, since the trace never explains what specific change happened to the oil molecules to turn them into fiber.",
+      "No, it is missing the property comparison, since it never states what property the threads have that the oil did not.",
+      "Yes, it is complete, since the trace clearly names both the starting resource and describes the reaction that changed the small molecules into threads."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check whether all three required parts -- resource, change, and property comparison -- are present.",
+      "A trace naming only a resource and a reaction has not yet shown a new substance was actually made."
+    ]
+  },
+  {
+    "id": "m8sci-synthetic-materials-from-natural-resources-004",
+    "loId": "m8sci.synthetic-materials-from-natural-resources",
+    "cedCode": "M8SCI-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A company makes concrete blocks by roasting quarried rock and clay in a kiln to produce cement powder, then mixing the powder with water and stones so it hardens into solid blocks that can be poured into any shape. Uncut quarried rock does not hold a poured shape, while a finished block holds any poured shape and resists cracking under heavy loads. The company states its purpose plainly: building foundations that must support heavy weight and keep a specific shape. Roasting the rock and clay in the kiln each day does use a large amount of fuel. Which weighing of benefit against cost correctly matches the company's stated purpose?",
+    "choices": [
+      "The cost of the fuel burned in roasting the rock and clay every day outweighs any benefit concrete offers, so the company should use uncut quarried rock directly for foundations instead of manufacturing concrete.",
+      "The benefit is that concrete is a solid material, and the cost is that quarrying disturbs a hillside during extraction, so these two unrelated facts simply cancel each other out, meaning neither material should be used for foundations at all.",
+      "The benefit is that concrete counts as synthetic, and synthetic materials are always inherently stronger than any natural material, so concrete is automatically the better foundation choice regardless of what the company actually needs.",
+      "The benefit is that concrete can be poured into any shape and holds heavy loads, which directly answers the foundation purpose, and the fuel use is a real cost that does not outweigh a benefit matching the stated purpose."
+    ],
+    "answer": "D",
+    "hints": [
+      "Match the benefit to what the company actually said it needs, not to a property left unstated.",
+      "A stated cost is a fact to weigh, not automatically a reason to reject the material."
+    ]
+  },
+  {
+    "id": "m8sci-synthetic-materials-from-natural-resources-005",
+    "loId": "m8sci.synthetic-materials-from-natural-resources",
+    "cedCode": "M8SCI-8.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A hospital is choosing a pain reliever for patients recovering from minor surgery who need something gentle on the stomach. Willow bark, chewed directly, eases pain but often upsets the stomach. Aspirin is made by reacting a substance from willow bark with a second substance, producing a related compound that still eases pain but is easier on the stomach. Aspirin tablets must simply be kept away from moisture during storage. Which statement correctly weighs a benefit against a cost for this hospital's stated purpose, using only the facts given?",
+    "choices": [
+      "The benefit is that aspirin still eases pain while being easier on the stomach than willow bark, which matches the hospital's stated need, and no stated cost of aspirin outweighs this for that purpose.",
+      "The benefit is that aspirin counts as synthetic, and synthetic medicines are always faster acting than natural remedies made directly from plants, so aspirin is obviously the correct choice for this hospital's patients.",
+      "The cost is that aspirin bottles must be kept away from moisture during storage, and since providing dry storage takes ongoing effort and space, willow bark is actually the safer overall choice regardless of stomach effects.",
+      "The benefit is that willow bark is a completely natural remedy and is therefore gentler on the body overall, so it should be preferred over aspirin even though it upsets the stomach more."
+    ],
+    "answer": "A",
+    "hints": [
+      "Identify which given fact actually matches the hospital's stated need of being gentle on the stomach.",
+      "Remember that being 'natural' or 'synthetic' by itself is never a stated benefit or cost."
+    ]
+  },
+  {
+    "id": "m8sci-synthetic-materials-from-natural-resources-006",
+    "loId": "m8sci.synthetic-materials-from-natural-resources",
+    "cedCode": "M8SCI-8.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A recycling plant melts down used glass bottles, which were originally made by reacting sand, soda ash, and limestone together in a furnace, and pours the melted glass into new bottle molds. A worker claims, \"Since the new bottles have a different shape and were made by heating and pouring, melting recycled glass counts as making another synthetic material.\" Using the reshaping-versus-making test, evaluate this claim.",
+    "choices": [
+      "The claim is correct: because the new bottles have a different shape and were produced through heating and pouring molten glass, a new synthetic material must have formed, just as sand and other raw materials originally became glass.",
+      "The claim is wrong: melting and pouring glass into a new mold is reshaping, not a new reaction, so the recycled bottles are the same glass substance as before, and no new synthetic material is made in this step.",
+      "The claim is wrong: glass should actually be classified as a natural resource rather than a synthetic material, so nothing about melting or reshaping it in a furnace could ever count as making anything new.",
+      "The claim is correct: any process that involves heating a substance until it melts and then pouring it into a mold is, by definition, a chemical reaction that always produces a brand-new synthetic material."
+    ],
+    "answer": "B",
+    "hints": [
+      "Ask whether the melting-and-pouring step is a chemical reaction or simply a change in form.",
+      "Reversing a physical change, such as reheating and cooling, brings back the same substance, showing no new substance formed."
+    ]
+  }
+]

@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-fields-forces-without-contact-001",
+    "loId": "m8sci.fields-forces-without-contact",
+    "cedCode": "M8SCI-3.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A magnetic force acts between a magnet and a steel object that are separated by several centimeters of air. What fills the space between them that allows the force to act?",
+    "choices": [
+      "Invisible magnetic particles moving from the magnet to the steel",
+      "A magnetic field",
+      "A thin layer of material the magnet shoots out",
+      "An electric field created by the motion of the air"
+    ],
+    "answer": "B",
+    "hints": [
+      "A field is a condition of the space, not a substance moving through it.",
+      "A field is what surrounds a magnet and fills the space around it."
+    ]
+  },
+  {
+    "id": "m8sci-fields-forces-without-contact-002",
+    "loId": "m8sci.fields-forces-without-contact",
+    "cedCode": "M8SCI-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student rubs a plastic rod on wool to charge it, then holds it 3 centimeters away from a stream of water flowing from a tap. The water bends toward the rod without the rod ever touching it. The student then holds an uncharged plastic rod at the same distance from the water, and the water does not bend. What does the result demonstrate about the electric field?",
+    "choices": [
+      "The electric field from the charged rod reached across the gap and caused the water to bend, and the field only existed because the charged rod was present",
+      "The electric field is a substance that flowed from the rod to the water and caused the bending",
+      "The electric field is a condition of the space around the charged rod that acts across empty space without contact",
+      "The charged rod created the electric field and the water created it as well, which is why both objects were needed"
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about when the effect depended on the source—what happened when the rod was uncharged?",
+      "A field is not a substance that comes out of the source; it is already there whether or not anything is there to feel it."
+    ]
+  },
+  {
+    "id": "m8sci-fields-forces-without-contact-003",
+    "loId": "m8sci.fields-forces-without-contact",
+    "cedCode": "M8SCI-3.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A compass needle is placed on a table and points north. A bar magnet is then held 2 centimeters above the compass, and the needle immediately swings to point toward the magnet instead. When the magnet is lifted away, the needle swings back to point north. What role did the compass needle play in this investigation?",
+    "choices": [
+      "It created the magnetic field around the magnet so the force could act",
+      "It proved that the magnet shoots out material that the needle caught and lined up with",
+      "It showed that the magnetic field travels through the air in invisible waves from the magnet to the compass",
+      "It was a test object that revealed the magnetic field at the place where it sat by responding to that field"
+    ],
+    "answer": "D",
+    "hints": [
+      "A test object is a small object placed on purpose to find out if a force acts at that spot.",
+      "When you remove a test object and put it in a drawer, does the field disappear from that spot?"
+    ]
+  },
+  {
+    "id": "m8sci-fields-forces-without-contact-004",
+    "loId": "m8sci.fields-forces-without-contact",
+    "cedCode": "M8SCI-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Iron filings are sprinkled on a card resting on top of a bar magnet, and the card is tapped. The filings arrange themselves in curved lines that are crowded tightly near the ends of the magnet and spread far apart at the corners of the card. None of the filings touch the magnet. A student claims that the pattern shows the magnetic force is stronger far from the magnet. Evaluate this claim by identifying what the crowding of the filings actually tells us about the field.",
+    "choices": [
+      "The claim is backwards; the crowding near the magnet's ends shows the field is stronger there, and the spread-out filings far away show the field is weaker",
+      "The claim is correct because filings are pulled hardest toward the corners of the card where they spread out, proving the magnetic force increases with distance from the magnet",
+      "The claim cannot be evaluated since the crowding of filings tells us only about the direction of the field at each location, not the strength of the field at different distances",
+      "The claim is incorrect because the pattern shows the field changes direction between the crowded and spread regions, but filings do not respond to changes in field strength"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about how a filing behaves: it becomes a small magnet and lines up with the field at its own spot.",
+      "Near the source of a magnet the field is strong enough to lift filings against their weight, while far from the source they barely move—what does that tell you about field strength and distance?"
+    ]
+  },
+  {
+    "id": "m8sci-fields-forces-without-contact-005",
+    "loId": "m8sci.fields-forces-without-contact",
+    "cedCode": "M8SCI-3.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student wants to test whether a gravitational field exists in the space directly above a basketball resting on the ground. She plans to drop a small metal ball from different heights above the basketball and record how far it falls and how fast it moves. Before she starts, she should ask herself three questions to judge whether her investigation will be good evidence for a gravitational field. Which of the following is NOT one of the three essential questions she should ask?",
+    "choices": [
+      "Is there a real gap between the falling ball and the basketball when the force acts on the falling ball?",
+      "Is the falling ball the same size and mass as the basketball being used as the source?",
+      "Does the effect change depending on where the falling ball sits before it drops?",
+      "Does the effect depend on the presence of the basketball as the source?"
+    ],
+    "answer": "B",
+    "hints": [
+      "Three key questions are: Is there a gap? Does it depend on the source? Does it depend on location?",
+      "Whether two objects are the same size or mass is not one of the ways to test whether a field exists."
+    ]
+  },
+  {
+    "id": "m8sci-fields-forces-without-contact-006",
+    "loId": "m8sci.fields-forces-without-contact",
+    "cedCode": "M8SCI-3.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student sets up an investigation with a strong permanent magnet sitting still on a table. At point P, 5 centimeters from the magnet's surface, a steel washer is pulled toward the magnet with great force. At point Q, 15 centimeters from the magnet, the same washer is pulled with much less force. The student then places the magnet in a sealed box and slides it across the room. She places point P and point Q on the table in their original positions relative to where the magnet was before she moved it. At each point, she sets down the same washer and observes that it no longer moves. What does this result show about the nature of the field, and what error would a student make if they concluded that the washer at points P and Q had destroyed the field when she picked it up earlier?",
+    "choices": [
+      "The field belongs to the space around the magnet and does not exist if the source is not there to create it, and the student would be correct that the washer destroyed it by being removed",
+      "The field exists only when a test object is present to feel it, and the student would be mistaken because the washer at those points cannot create or destroy a field; the field ceased to exist once the magnet moved away from the region",
+      "The field is a condition of the space around the source, and the student would be wrong to think the washer could destroy the field by being taken away; the field was already gone because the source magnet had moved",
+      "The field is restored only when the magnet returns to that spot, and the student would be right that removing and returning the washer each time rebuilds the field strength at those points"
+    ],
+    "answer": "C",
+    "hints": [
+      "A test object reveals the field and does not create it or destroy it by being removed.",
+      "Why did the effect disappear at P and Q after the magnet moved? Was it the washer that disappeared, or something else?"
+    ]
+  },
+  {
+    "id": "m8sci-electric-forces-charge-001",
+    "loId": "m8sci.electric-forces-and-charge",
+    "cedCode": "M8SCI-3.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student picks up a plastic ruler that has never been rubbed or brought near anything charged. Which statement correctly describes the charge on the ruler?",
+    "choices": [
+      "The ruler is neutral because it holds equal amounts of positive and negative charge.",
+      "The ruler is neutral because it holds no electric charge of any kind.",
+      "The ruler is positively charged because protons outnumber electrons on its surface.",
+      "The ruler is negatively charged because electrons outnumber protons on its surface."
+    ],
+    "answer": "A",
+    "hints": [
+      "Neutral does not mean charge-free — think about what 'balanced' means.",
+      "No rubbing or transfer has happened to this ruler yet."
+    ]
+  },
+  {
+    "id": "m8sci-electric-forces-charge-002",
+    "loId": "m8sci.electric-forces-and-charge",
+    "cedCode": "M8SCI-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student rubs a rubber balloon against a wool sweater. During the rubbing, electrons move from the sweater onto the balloon, and both objects were neutral before the rubbing began. What charge does each object have immediately after the rubbing stops?",
+    "choices": [
+      "The balloon is positive and the sweater is negative, because rubbing always leaves the object that moved the most strongly charged positive.",
+      "The balloon is negative and the sweater is positive, because the balloon gained electrons and the sweater lost the same number.",
+      "Both the balloon and the sweater become negatively charged, because rubbing creates new negative charge on any surface it touches.",
+      "The balloon stays neutral and only the sweater becomes charged, because charge only builds up on the softer material."
+    ],
+    "answer": "B",
+    "hints": [
+      "Electrons carry negative charge — whichever object gains them becomes negative.",
+      "The object that loses electrons ends up with an equal but opposite charge, not no charge."
+    ]
+  },
+  {
+    "id": "m8sci-electric-forces-charge-003",
+    "loId": "m8sci.electric-forces-and-charge",
+    "cedCode": "M8SCI-3.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two identical balloons are each rubbed on the same wool sweater and then hung close together on strings. Both balloons picked up negative charge from the rubbing. When released near each other, what happens to the two balloons?",
+    "choices": [
+      "They swing toward each other, because both were charged by the same material.",
+      "They hang straight down with no force acting between them, because identical charges cannot interact at all.",
+      "They swing away from each other, because they carry the same kind of charge.",
+      "They swing toward each other, because opposite charges were created on each balloon during rubbing."
+    ],
+    "answer": "C",
+    "hints": [
+      "Same kind of charge on two objects does what to them?",
+      "Rubbing two objects on the same material usually leaves both with the same sign of charge, not opposite signs."
+    ]
+  },
+  {
+    "id": "m8sci-electric-forces-charge-004",
+    "loId": "m8sci.electric-forces-and-charge",
+    "cedCode": "M8SCI-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A plastic comb is rubbed with a cotton cloth, and during the rubbing electrons move from the cloth onto the comb. Afterward, the comb is held close to two separate objects: the same cotton cloth it was rubbed with, and a small paper scrap that has never been touched by anything charged. Which statement correctly compares how the comb interacts with each object?",
+    "choices": [
+      "The comb has no effect on either object at all, since an electric force only acts on objects that have themselves been rubbed beforehand.",
+      "The comb attracts the cloth because their charges are opposite, but it has no effect on the paper since paper carries no charge.",
+      "The comb repels the cloth because both ended up negatively charged, and it attracts the paper because paper is naturally positively charged.",
+      "The comb attracts the cloth because their charges are opposite, and it also attracts the paper because the paper's charges shift slightly nearby."
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what charge the cloth ends up with after losing electrons to the comb.",
+      "A neutral object's charges can rearrange in place without the object gaining any overall charge."
+    ]
+  },
+  {
+    "id": "m8sci-electric-forces-charge-005",
+    "loId": "m8sci.electric-forces-and-charge",
+    "cedCode": "M8SCI-3.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A charged rod is held near a hanging pith ball, and the angle the ball swings away from straight down measures how strong the push between them is. Trial 1: the rod is rubbed 8 times and held 4 centimeters away, and the ball swings 2 degrees. Trial 2: the rod is rubbed 24 times and held 4 centimeters away, and the ball swings 6 degrees. Trial 3: the rod is rubbed 24 times and held 8 centimeters away, and the ball swings 3 degrees. Which conclusion is properly supported by comparing Trial 1 with Trial 2?",
+    "choices": [
+      "More charge on the rod produces a stronger push, since only the amount of rubbing changed between these two trials.",
+      "Greater distance produces a stronger push, since the rod was held farther away in the trial with the larger swing.",
+      "Neither charge nor distance affects the push, since the swings differ even though both trials used the same distance.",
+      "Both charge and distance were changed between these two trials, so no conclusion can be drawn from comparing them."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check what actually differs between Trial 1 and Trial 2 — is the distance the same?",
+      "A valid conclusion about one factor needs a pair of trials that differ in only that one thing."
+    ]
+  },
+  {
+    "id": "m8sci-electric-forces-charge-006",
+    "loId": "m8sci.electric-forces-and-charge",
+    "cedCode": "M8SCI-3.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A foam ball hangs on a thread and has never been touched by anything charged, so it remains neutral throughout. In Trial 1, a rod rubbed 6 times is held 10 centimeters from the ball, and the ball swings 2 centimeters toward the rod. In Trial 2, a different rod rubbed 18 times is held 20 centimeters from the ball, and the ball also swings 2 centimeters toward the rod. A student claims, \"Since both trials produced the same swing, the amount of charge on the rod must not matter, only distance matters.\" Is this reasoning valid, and if not, why?",
+    "choices": [
+      "The reasoning is valid, because equal swings show that a bigger increase in distance always cancels out a bigger increase in charge.",
+      "The reasoning is invalid, because both the charge and the distance changed between the trials, so this pair cannot isolate either factor.",
+      "The reasoning is invalid, because the ball is neutral, and a neutral object can never be attracted by any charged rod at all.",
+      "The reasoning is valid, because the trials never state which kind of charge either rod carried, so charge cannot be judged at all."
+    ],
+    "answer": "B",
+    "hints": [
+      "List everything that differs between Trial 1 and Trial 2 — is it really just distance?",
+      "Remember that a neutral object can still be attracted by a nearby charged object, so that is not the flaw here."
+    ]
+  },
+  {
+    "id": "m8sci-gravity-mass-distance-weight-001",
+    "loId": "m8sci.gravity-mass-distance-and-weight",
+    "cedCode": "M8SCI-3.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student claims that gravity can sometimes push two objects apart instead of pulling them together, as long as the objects are far enough apart from each other. Which statement correctly evaluates this claim?",
+    "choices": [
+      "The claim is correct; gravity pushes objects apart, but only when the objects involved have very large masses such as planets.",
+      "The claim is correct; gravity pushes objects apart when they are farther than a few hundred kilometers from each other.",
+      "The claim is incorrect; gravity between any two masses is always attractive and never pushes objects apart, regardless of distance.",
+      "The claim is incorrect; gravity switches from pulling to pushing once an object leaves Earth's atmosphere and enters open space."
+    ],
+    "answer": "C",
+    "hints": [
+      "Think about what direction gravity acts in, no matter how far apart the objects are.",
+      "Consider whether distance changes the direction of the pull or only its strength."
+    ]
+  },
+  {
+    "id": "m8sci-gravity-mass-distance-weight-002",
+    "loId": "m8sci.gravity-mass-distance-and-weight",
+    "cedCode": "M8SCI-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A textbook has a mass of 2 kilograms while sitting on a shelf on Earth. The same textbook is later carried to a station drifting far away from every planet, moon, and star, with nothing added to or removed from it. What happens to its mass and its weight?",
+    "choices": [
+      "Its mass would stay 2 kilograms, and its weight would also stay the same, since weight only depends on the object itself.",
+      "Its mass would drop to nearly zero kilograms, but its weight would stay the same because weight doesn't depend on location.",
+      "Both its mass and its weight would drop to nearly zero, since without any gravity nearby there is nothing left to measure.",
+      "Its mass would remain 2 kilograms, while its weight would drop to nearly zero newtons because no large mass is nearby."
+    ],
+    "answer": "D",
+    "hints": [
+      "Mass counts the matter in the book; weight counts the pull on it.",
+      "Ask whether removing nearby large masses changes how much matter is in the book."
+    ]
+  },
+  {
+    "id": "m8sci-gravity-mass-distance-weight-003",
+    "loId": "m8sci.gravity-mass-distance-and-weight",
+    "cedCode": "M8SCI-3.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Two identical satellites have exactly the same mass. Satellite A orbits close to Earth, while Satellite B orbits much farther away from Earth. Compare the strength of Earth's gravitational pull on each satellite.",
+    "choices": [
+      "Earth pulls more strongly on Satellite A than on Satellite B, because A is closer even though both have the same mass.",
+      "Earth pulls equally on both satellites, because gravity does not depend on distance once an object is above the atmosphere.",
+      "Earth pulls more strongly on Satellite B than on Satellite A, because farther objects build up gravitational force over distance.",
+      "Earth exerts no pull on either satellite, because both are far enough away to be outside Earth's gravitational reach."
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall how the strength of the pull changes as distance increases.",
+      "There is no boundary where Earth's pull suddenly drops to zero."
+    ]
+  },
+  {
+    "id": "m8sci-gravity-mass-distance-weight-004",
+    "loId": "m8sci.gravity-mass-distance-and-weight",
+    "cedCode": "M8SCI-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A crate has a mass of 8 kilograms on Earth, where each kilogram of mass weighs about 10 newtons. The crate is transported, sealed and unopened, to a small asteroid whose gravitational pull on each kilogram of mass is only one tenth as strong as Earth's. What are the crate's mass and weight on the asteroid?",
+    "choices": [
+      "Mass becomes about 0.8 kilograms; weight stays 80 newtons, since matter decreases as the surface's gravitational pull weakens.",
+      "Mass stays 8 kilograms; weight becomes about 8 newtons, since each kilogram weighs one tenth as much on the asteroid.",
+      "Mass stays 8 kilograms; weight stays 80 newtons, since the crate itself has not changed in any way.",
+      "Mass becomes about 0.8 kilograms; weight becomes about 8 newtons, since both quantities shrink together on a smaller body."
+    ],
+    "answer": "B",
+    "hints": [
+      "Separate what changed (location and pull) from what didn't (the matter itself).",
+      "Find the crate's weight on Earth first, then apply the fraction for the asteroid."
+    ]
+  },
+  {
+    "id": "m8sci-gravity-mass-distance-weight-005",
+    "loId": "m8sci.gravity-mass-distance-and-weight",
+    "cedCode": "M8SCI-3.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A weather balloon carries a 5-kilogram instrument package from the ground up to a height of 30 kilometers, which is far less than Earth's radius of thousands of kilometers. A scientist claims that at this height, Earth's pull on the package becomes essentially zero and the package's weight drops to zero newtons. Evaluate this claim.",
+    "choices": [
+      "Incorrect; the package's weight actually increases at that height because it is closer to the outer edge of Earth's gravitational field.",
+      "Correct; once an object rises above the ground, Earth's pull drops immediately to zero since it is no longer touching the surface.",
+      "Incorrect; 30 kilometers is tiny compared to Earth's radius of thousands of kilometers, so the weight is still nearly the same as at the ground.",
+      "Correct; Earth's gravity has a maximum reach of only a few kilometers, so anything beyond that floats completely free of any pull."
+    ],
+    "answer": "C",
+    "hints": [
+      "Compare the extra distance climbed with Earth's overall radius.",
+      "Remember that gravity weakens gradually with distance and never reaches exactly zero."
+    ]
+  },
+  {
+    "id": "m8sci-gravity-mass-distance-weight-006",
+    "loId": "m8sci.gravity-mass-distance-and-weight",
+    "cedCode": "M8SCI-3.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "Two identical spacecraft, each with a mass of 500 kilograms, are compared. Spacecraft X orbits close to a large planet, while Spacecraft Y orbits at that same close distance from a much smaller moon. A student argues that since both spacecraft are the same distance from the surface of the body they orbit, the gravitational pull on each spacecraft must be equal. Evaluate this reasoning.",
+    "choices": [
+      "The student is right; because gravitational force depends only on the distance between objects, equal distances always produce equal gravitational pulls regardless of mass.",
+      "The student is right; since both spacecraft have equal mass and are the same distance away, the pull on each must be identical.",
+      "The student is wrong; the moon actually pulls harder on Spacecraft Y because smaller bodies have less mass spread over a smaller volume, concentrating their gravity.",
+      "The student is wrong; even at the same distance, the planet pulls harder on Spacecraft X because the planet has far more mass than the moon."
+    ],
+    "answer": "D",
+    "hints": [
+      "Two separate factors control gravity's strength: check both, not just one.",
+      "Ask whether making the central body more massive changes the pull even if distance is unchanged."
+    ]
+  },
+  {
+    "id": "m8sci-magnetic-forces-electromagnets-001",
+    "loId": "m8sci.magnetic-forces-and-electromagnets",
+    "cedCode": "M8SCI-3.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student holds two bar magnets so that the south pole of the first magnet directly faces the south pole of the second magnet, and then lets go of both magnets on a smooth table. Predict what happens to the magnets and why.",
+    "choices": [
+      "They push apart, because two unlike poles repel each other.",
+      "They pull together, because opposite poles always attract each other.",
+      "They pull together, because two south poles attract each other.",
+      "They push apart, because two like poles repel each other."
+    ],
+    "answer": "D",
+    "hints": [
+      "Look at which two poles are actually facing each other in this setup.",
+      "Like poles behave the same way toward each other no matter which pole it is."
+    ]
+  },
+  {
+    "id": "m8sci-magnetic-forces-electromagnets-002",
+    "loId": "m8sci.magnetic-forces-and-electromagnets",
+    "cedCode": "M8SCI-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A steel paperclip and a copper coin rest side by side on a wooden table. A student slowly brings the south pole of a magnet close to each object in turn, without touching either one. Predict what happens to the paperclip and to the coin.",
+    "choices": [
+      "The paperclip is pulled toward the magnet, but the coin is not, because the magnet attracts steel and not copper.",
+      "The paperclip is pulled toward the magnet, and the coin is also pulled, because both are metal objects.",
+      "The coin is pulled toward the magnet, but the paperclip is not, because copper is attracted to a south pole.",
+      "Neither object moves, because a single magnetic pole by itself cannot attract anything at all."
+    ],
+    "answer": "A",
+    "hints": [
+      "Recall which everyday metals a magnet actually pulls on.",
+      "Steel is mostly made of one particular metal that magnets attract."
+    ]
+  },
+  {
+    "id": "m8sci-magnetic-forces-electromagnets-003",
+    "loId": "m8sci.magnetic-forces-and-electromagnets",
+    "cedCode": "M8SCI-3.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A coil of insulated wire is wrapped around a hollow plastic tube and connected to a battery, forming a weak electromagnet that barely lifts a few paperclips. A student wants to make the electromagnet stronger without changing the number of turns of wire or the current supplied. Identify a change that would make the electromagnet stronger.",
+    "choices": [
+      "Move the paperclips farther away from the coil, since a bigger gap makes the pull stronger.",
+      "Replace the plastic tube with an iron rod, since placing iron inside the coil increases the magnetic strength.",
+      "Wrap the wire more loosely around the tube, since looser turns produce a stronger magnetic field.",
+      "Switch the current on and off repeatedly, since cycling the current increases the electromagnet's strength."
+    ],
+    "answer": "B",
+    "hints": [
+      "Turns and current are already fixed, so think about what else affects an electromagnet's strength.",
+      "Consider what filling the center of the coil with a certain material does to the field."
+    ]
+  },
+  {
+    "id": "m8sci-magnetic-forces-electromagnets-004",
+    "loId": "m8sci.magnetic-forces-and-electromagnets",
+    "cedCode": "M8SCI-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student tests how many paperclips different magnets can pick up across different gaps. Trial 1: Magnet X, a 3-centimeter gap, picks up 2 paperclips. Trial 2: Magnet X, a 1-centimeter gap, picks up 5 paperclips. Trial 3: Magnet Y, a 1-centimeter gap, picks up 8 paperclips. The same paperclips and table are used in every trial. Identify the conclusion that is properly supported by comparing trial 2 and trial 3.",
+    "choices": [
+      "Magnet Y is stronger than Magnet X, because trial 3 picked up more paperclips than trial 1 did.",
+      "The gap size matters more than the magnet's strength, because trial 3 picked up the most paperclips of all three trials.",
+      "Magnet Y is stronger than Magnet X, because trials 2 and 3 use the same gap and differ only in the magnet used.",
+      "No conclusion can be drawn from trials 2 and 3, because both trials picked up more than one paperclip."
+    ],
+    "answer": "C",
+    "hints": [
+      "Check what stayed the same and what changed between trials 2 and 3 specifically.",
+      "A valid comparison needs exactly one condition to differ between the two trials."
+    ]
+  },
+  {
+    "id": "m8sci-magnetic-forces-electromagnets-005",
+    "loId": "m8sci.magnetic-forces-and-electromagnets",
+    "cedCode": "M8SCI-3.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A student builds electromagnets by winding wire around an iron rod and supplying current, then counts how many steel washers each one holds. Trial A: 25 turns of wire, the lower current setting, iron rod inside, holds 6 washers. Trial B: 50 turns of wire, the same lower current setting, iron rod inside, holds 10 washers. The student now wants to find out whether increasing the current makes the electromagnet stronger. Identify the next trial that would properly test this.",
+    "choices": [
+      "Repeat trial B exactly, but remove the iron rod, keeping the turns and the current unchanged.",
+      "Repeat trial A exactly, but supply twice the current, and also increase the turns to fifty.",
+      "Build a new coil with seventy-five turns and twice the current, with no iron rod, then compare it to trial B.",
+      "Repeat trial B exactly, but supply twice the current, keeping the fifty turns and the iron rod unchanged."
+    ],
+    "answer": "D",
+    "hints": [
+      "The new trial should change only the current, nothing else.",
+      "Keep every condition identical to the trial you are extending except the one factor being tested."
+    ]
+  },
+  {
+    "id": "m8sci-magnetic-forces-electromagnets-006",
+    "loId": "m8sci.magnetic-forces-and-electromagnets",
+    "cedCode": "M8SCI-3.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student runs four trials with an electromagnet, counting how many paperclips it holds. Trial 1: 10 turns of wire, the lower current, no iron rod inside, holds 2 paperclips. Trial 2: 20 turns of wire, the same lower current, no iron rod inside, holds 4 paperclips. Trial 3: 20 turns of wire, the same lower current, an iron rod inside, holds 7 paperclips. Trial 4: 20 turns of wire, the higher current, an iron rod inside, holds 11 paperclips. A classmate looks only at trials 1 and 2 and claims, 'Doubling the turns from 10 to 20 doubled the paperclip count from 2 to 4, so doubling the turns will always double the electromagnet's strength.' Identify the statement that correctly evaluates this claim.",
+    "choices": [
+      "Trials 1 and 2 show only that more turns produced a stronger pull; the paperclip counts show direction only, so no general doubling rule can be claimed.",
+      "The claim is correct, since trials 1 and 2 differ only in the number of turns, and because the paperclip count doubled exactly as predicted, this pattern proves that doubling turns always doubles an electromagnet's strength.",
+      "The claim is wrong, because trials 3 and 4 show that adding an iron rod and raising the current produced the largest strength increases, proving that current and core material, not turns, control the electromagnet's strength.",
+      "The claim cannot be evaluated, because trials 1 and 2 differ in the current supplied as well as in the turns, so any change in paperclip count could be caused by either variable rather than turns alone."
+    ],
+    "answer": "A",
+    "hints": [
+      "Check whether trials 1 and 2 really differ in only one condition before judging the claim.",
+      "Trial data reveal whether a result got stronger or weaker, not an exact multiple."
+    ]
+  }
+]

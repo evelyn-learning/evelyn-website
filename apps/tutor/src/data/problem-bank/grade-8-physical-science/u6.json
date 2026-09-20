@@ -1,0 +1,458 @@
+[
+  {
+    "id": "m8sci-the-particle-model-states-of-matter-001",
+    "loId": "m8sci.the-particle-model-and-states-of-matter",
+    "cedCode": "M8SCI-6.4",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "In the particle model of matter, two key factors determine how a substance behaves: the spacing between particles and the strength of the attractive forces between them. Which pair of these factors best explains the observable properties of a substance?",
+    "choices": [
+      "How many particles there are and what container holds them",
+      "How big the particles are and how fast they are vibrating",
+      "How far apart the particles are and how strongly they attract each other",
+      "How old the particles are and what color they appear under a microscope"
+    ],
+    "answer": "C",
+    "hints": [
+      "The particle model identifies spacing and attractive force as the main causes of a substance's properties.",
+      "Think about the distance between particles and the strength of the pulls between them."
+    ]
+  },
+  {
+    "id": "m8sci-the-particle-model-states-of-matter-002",
+    "loId": "m8sci.the-particle-model-and-states-of-matter",
+    "cedCode": "M8SCI-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A rubber ball is squeezed hard in your hand, then released and returns to its original shape and size. Using the particle model, explain why the ball returns to its shape instead of staying squeezed.",
+    "choices": [
+      "The particles in the rubber are not touching, so they can spread apart again when released",
+      "Squeezing compressed the particles closer together temporarily, but they lack the internal energy needed to move back apart on their own without external help",
+      "The rubber particles are held by weak bonds that allow them to shift position easily, but only in one direction toward the hand and not back outward",
+      "The particles are touching and held in place by strong pulls, so when you stop squeezing, they move back to their original positions"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about whether the particles changed size or moved closer together and then apart again.",
+      "Remember that particles do not decide or choose what to do; the pulls between them determine their behavior."
+    ]
+  },
+  {
+    "id": "m8sci-the-particle-model-states-of-matter-003",
+    "loId": "m8sci.the-particle-model-and-states-of-matter",
+    "cedCode": "M8SCI-6.4",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A student observes that particles in a solid vibrate in place rather than stay completely still. Which statement best explains why we know this must be true?",
+    "choices": [
+      "A solid has a temperature, and temperature measures the average motion energy of particles, so they must be moving",
+      "The fact that solids eventually break apart into smaller pieces proves that internal motion is occurring and weakening the bonds between particles",
+      "Solids conduct heat from hot places to cold places, and this transfer only works if the particles inside are vibrating and bumping into one another",
+      "A solid takes up space and maintains its shape, which is only possible if the particles are locked in fixed positions and cannot move at all"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what temperature tells us about the energy of particles.",
+      "If a solid has temperature, and all moving things have energy, what must be true about the particles?"
+    ]
+  },
+  {
+    "id": "m8sci-the-particle-model-states-of-matter-004",
+    "loId": "m8sci.the-particle-model-and-states-of-matter",
+    "cedCode": "M8SCI-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two identical containers hold the same volume of substance: one holds mercury (a liquid metal) and one holds oxygen gas, both sealed so nothing escapes. When each container is squeezed as hard as possible, the mercury's volume barely changes, but the oxygen's volume shrinks to one-tenth of what it was. Using the particle model, explain why these two substances respond so differently to squeezing.",
+    "choices": [
+      "Mercury particles are larger than oxygen particles, so there is less room to push them together even though they are farther apart initially",
+      "Mercury particles are touching with almost no empty space between them, while oxygen particles are far apart with much empty space, so squeezing removes far more space from the oxygen",
+      "Mercury is denser than oxygen because its particles are heavier, and heavier particles resist compression more strongly than lighter particles do",
+      "Oxygen particles are spread out over a larger total distance between them, so compressing them requires overcoming greater distances than compressing mercury particles does"
+    ],
+    "answer": "B",
+    "hints": [
+      "Remember that pushing a sample into a smaller volume means removing empty space between particles.",
+      "In a liquid the particles touch; in a gas they are far apart. Which has more empty space to remove?"
+    ]
+  },
+  {
+    "id": "m8sci-the-particle-model-states-of-matter-005",
+    "loId": "m8sci.the-particle-model-and-states-of-matter",
+    "cedCode": "M8SCI-6.4",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A substance is described as follows: it has no shape of its own and takes the shape of its container; it has no volume of its own and fills whatever container holds it; and it spreads easily throughout a large space. Which statement correctly identifies what this substance is and explains all three observations using the particle model?",
+    "choices": [
+      "It is a liquid, because its particles are moving quickly enough to fill the entire container and spread throughout any space available to them",
+      "It is a liquid, because its particles are touching and sliding past one another, allowing the substance to change shape while keeping the same volume",
+      "It is a gas, because its particles are far apart and free to move throughout the entire space until they collide with walls or other particles",
+      "It is a gas, because its particles are extremely small and light compared to those in solids and liquids, which makes them float upward rather than settle downward"
+    ],
+    "answer": "C",
+    "hints": [
+      "A substance that fills the entire container and spreads through a large space must have particles that are free to go anywhere.",
+      "Only one state has particles far enough apart that they can fill a whole large space and move throughout it."
+    ]
+  },
+  {
+    "id": "m8sci-the-particle-model-states-of-matter-006",
+    "loId": "m8sci.the-particle-model-and-states-of-matter",
+    "cedCode": "M8SCI-6.4",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A student watches a block of ice melt into water, then watches the water boil into steam. During both changes, the student notices that the substance always occupies the same volume right up until it becomes a gas. She hypothesizes: 'Solids and liquids must have their particles packed exactly the same way, because they take up the same volume. Gases are different only because the particles are moving much faster.' Using the particle model, identify what is correct and what is wrong in this hypothesis, then explain what actually changes when ice melts into water and when water boils into steam.",
+    "choices": [
+      "She is right that gas particles move faster, but wrong that solids and liquids are packed the same way; liquids have space between particles where solids do not, and this space is why liquids flow and solids do not",
+      "She is right that solids and liquids have the same particle spacing and density because both have touching particles that resist volume change, but wrong that gases differ only in speed; gas particles are far apart with huge empty spaces between them",
+      "She is wrong because solids and liquids differ in temperature and energy, not in particle arrangement, and gases are different simply because their particles move in straight lines instead of vibrating in place",
+      "She is right that the volume stays the same until a gas forms, but wrong about the cause; solids and liquids both have touching particles which is why their volume barely changes, while the volume of a gas changes easily because its particles are far apart"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about whether the question 'Are the particles touching?' is answered the same way for a solid and a liquid.",
+      "Solids and liquids both take up nearly the same volume, but solids keep their shape while liquids do not. What must be different about whether each particle can change neighbors?"
+    ]
+  },
+  {
+    "id": "m8sci-changes-of-state-thermal-energy-001",
+    "loId": "m8sci.changes-of-state-and-thermal-energy",
+    "cedCode": "M8SCI-6.1",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A pure substance is being heated and has already reached its boiling point. Energy keeps entering the pot at a steady rate, the liquid keeps turning to gas, but the thermometer reading stays exactly the same the whole time. Which statement correctly explains why the reading does not change.",
+    "choices": [
+      "The substance has reached the highest temperature it is physically capable of reaching, so any additional energy simply has nowhere left to go and raises nothing",
+      "The heater has stopped supplying energy to the pot even though it is still switched on, so no additional energy remains available to raise the reading further",
+      "The particles inside the liquid have completely stopped moving once boiling begins, so there is no more particle motion left for a thermometer to measure",
+      "The arriving energy is pulling particles apart from their neighbors instead of speeding them up, and a thermometer cannot detect energy spent that way"
+    ],
+    "answer": "D",
+    "hints": [
+      "Think about what quantity a thermometer actually detects.",
+      "The heater's output was described as steady the whole time -- has anything about it changed?"
+    ]
+  },
+  {
+    "id": "m8sci-changes-of-state-thermal-energy-002",
+    "loId": "m8sci.changes-of-state-and-thermal-energy",
+    "cedCode": "M8SCI-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A shallow bowl of water sits on a kitchen counter in a room that never gets warmer than 22 degrees Celsius. No bubbles ever appear anywhere in the bowl, yet over several hours the water level slowly drops until the bowl is empty. Which explanation correctly accounts for the water disappearing.",
+    "choices": [
+      "Particles at the surface that happened to be moving faster than average escaped into the gas state, which can happen well below the boiling point",
+      "The water was boiling the whole time, with bubbles too small to see forming throughout the liquid even though the temperature never reached 100 degrees Celsius",
+      "The water condensed into gas as quickly as room air replaced it above the bowl, so the surface never had a chance to build up any visible vapor",
+      "Particles near the surface shrank until they were small enough to pass between the gaps in the surrounding air, which is how liquids evaporate at room temperature"
+    ],
+    "answer": "A",
+    "hints": [
+      "The room never got anywhere close to 100 degrees Celsius.",
+      "Consider a change of state that happens only at the surface of a liquid, not all through it."
+    ]
+  },
+  {
+    "id": "m8sci-changes-of-state-thermal-energy-003",
+    "loId": "m8sci.changes-of-state-and-thermal-energy",
+    "cedCode": "M8SCI-6.1",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sample of a pure substance is heated slowly and is observed to melt at exactly 55 degrees Celsius. The resulting liquid is later cooled back down under the same conditions until it becomes solid again. At what temperature will the sample freeze, and why.",
+    "choices": [
+      "It will freeze somewhat below 55 degrees Celsius, because cooling a substance always removes more thermal energy overall than heating the same substance ever added to it",
+      "It will freeze at 55 degrees Celsius, because melting and freezing are the same change happening at the same temperature for a pure substance",
+      "It will freeze somewhat above 55 degrees Celsius, because removing thermal energy from a substance always happens faster than adding thermal energy to that same substance",
+      "The freezing temperature cannot be predicted from the melting temperature at all, because freezing point depends on the cooling rate rather than on the substance's identity"
+    ],
+    "answer": "B",
+    "hints": [
+      "Melting and freezing are described as the same change running in opposite directions.",
+      "For a pure substance, is there any reason the two temperatures should differ?"
+    ]
+  },
+  {
+    "id": "m8sci-changes-of-state-thermal-energy-004",
+    "loId": "m8sci.changes-of-state-and-thermal-energy",
+    "cedCode": "M8SCI-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two identical containers hold the same pure substance, both starting as a solid at the same temperature. Container X is heated with a low-power heater and Container Y is heated with a high-power heater, both switched on at the same moment and left on continuously without adjustment. Both containers eventually begin melting at the same temperature. Which statement correctly describes what happens while each container is melting.",
+    "choices": [
+      "Both containers finish melting at exactly the same time, because melting time depends only on the substance and not on the heater",
+      "Container Y plateaus at a higher temperature than Container X because more energy is being delivered to it every second",
+      "Both containers plateau at the same melting-point temperature, but Container Y finishes melting sooner because its energy is arriving faster",
+      "Container X plateaus at a lower temperature than Container Y because slower heating produces a lower melting point for the same substance"
+    ],
+    "answer": "C",
+    "hints": [
+      "The melting-point temperature is a property of the substance itself, not of the heater.",
+      "Turning up the energy supply changes how fast a change of state finishes, not the reading during it."
+    ]
+  },
+  {
+    "id": "m8sci-changes-of-state-thermal-energy-005",
+    "loId": "m8sci.changes-of-state-and-thermal-energy",
+    "cedCode": "M8SCI-6.1",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A container of pure water and a container of salt water, both starting as liquids at 5 degrees Celsius, are placed in the same freezer and cooled at the same steady rate. The pure water's thermometer reading drops steadily to 0 degrees Celsius, then holds at exactly 0 degrees Celsius for twenty minutes while ice forms, then drops again. The salt water's reading drops steadily below 0 degrees Celsius without ever holding at one single exact temperature while it turns to ice. Which explanation accounts for the difference between the two containers.",
+    "choices": [
+      "The freezer removes thermal energy from salt water at a much different rate than it removes energy from pure water, which erases the plateau entirely",
+      "Salt water freezes much faster than pure water does, so there is simply not enough time for a plateau to ever show up on the thermometer reading",
+      "Dissolved salt makes the water's particles move faster on average than in pure water, so the freezing point becomes too unstable for a thermometer to detect",
+      "The steady-temperature plateau during a change of state belongs only to a pure substance, and salt water is a mixture rather than a pure substance"
+    ],
+    "answer": "D",
+    "hints": [
+      "Recall the one condition attached to the flat-temperature rule.",
+      "Both containers were cooled at the same rate in the same freezer -- the difference must be about the substance, not the freezer."
+    ]
+  },
+  {
+    "id": "m8sci-changes-of-state-thermal-energy-006",
+    "loId": "m8sci.changes-of-state-and-thermal-energy",
+    "cedCode": "M8SCI-6.1",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A pure substance is exactly halfway through melting: equal amounts of solid and liquid are both sitting at the substance's melting point. At this exact moment, the heater is switched off and the container is sealed so that absolutely no thermal energy can enter or leave the sample. Which statement correctly describes the sample a few minutes later.",
+    "choices": [
+      "The temperature will remain at the melting point and the sample will stay a mixture of solid and liquid, because melting needs energy to keep arriving in order to continue",
+      "The temperature will keep climbing slowly past the melting point, because once melting has begun the process always continues on its own until every bit of solid is gone",
+      "The remaining solid will finish melting entirely on its own, because particles that have already reached the melting point always finish separating from their neighbors without needing more energy",
+      "The temperature will drop back down toward the freezing point, because with no more energy arriving from the heater the plateau at the melting point cannot possibly be maintained"
+    ],
+    "answer": "A",
+    "hints": [
+      "Melting is one of the two jobs energy can do -- what happens to that job if no more energy is arriving at all?",
+      "With zero energy flow in either direction, ask whether anything has a reason to change."
+    ]
+  },
+  {
+    "id": "m8sci-characteristic-properties-identify-a-substance-001",
+    "loId": "m8sci.characteristic-properties-identify-a-substance",
+    "cedCode": "M8SCI-6.2",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A student is trying to figure out which of four measurements will help identify an unknown block of metal, no matter how big or small the block turns out to be. Which measurement is a characteristic property that will not change if the student saws the block into smaller pieces?",
+    "choices": [
+      "The temperature at which the metal melts",
+      "The total mass of the block in grams",
+      "The length of the block in centimeters",
+      "The volume the block takes up on a shelf"
+    ],
+    "answer": "A",
+    "hints": [
+      "Think about what happens to each measurement if you cut the block in half.",
+      "Only one of these four stays exactly the same value no matter the size of the piece."
+    ]
+  },
+  {
+    "id": "m8sci-characteristic-properties-identify-a-substance-002",
+    "loId": "m8sci.characteristic-properties-identify-a-substance",
+    "cedCode": "M8SCI-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A cube of an unknown solid has a mass of 45 grams and a volume of 9 cubic centimeters. A second, larger block of the same substance has a mass of 90 grams and a volume of 18 cubic centimeters. A student claims that because the second block has twice the mass, it must be a denser substance than the first block. What is the best evaluation of this claim?",
+    "choices": [
+      "The claim is correct because the second block's mass, 90 grams, is twice the first block's mass, 45 grams, so it must be twice as dense",
+      "The claim is wrong because both blocks have the same density, 5 grams per cubic centimeter, since density does not change with sample size",
+      "The claim is wrong because mass is itself a characteristic property, so identical materials must always show identical masses no matter their size",
+      "The claim is correct because a larger block always packs more mass into each cubic centimeter than a smaller block, since size increases how tightly particles are packed"
+    ],
+    "answer": "B",
+    "hints": [
+      "Divide the mass by the volume for each block separately before comparing them.",
+      "Density is a ratio between two measurements, not the same thing as mass alone."
+    ]
+  },
+  {
+    "id": "m8sci-characteristic-properties-identify-a-substance-003",
+    "loId": "m8sci.characteristic-properties-identify-a-substance",
+    "cedCode": "M8SCI-6.2",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A solid sample is slowly heated while its temperature is recorded every minute. The temperature rises steadily until it reaches 45 degrees Celsius, then stays exactly at 45 degrees Celsius while the sample turns from solid to liquid, and only starts rising again once the last bit of solid has melted. Based on this heating pattern, what can be concluded about the sample?",
+    "choices": [
+      "It is a mixture, because the melting temperature of 45 degrees Celsius does not match water's known boiling point",
+      "It is a mixture, because the temperature only paused briefly before climbing again once the melting had finished",
+      "It is a pure substance, because every particle in it came away from its neighbors at the same fixed temperature",
+      "It is a pure substance, because the sample took several minutes to finish melting completely before its temperature rose again"
+    ],
+    "answer": "C",
+    "hints": [
+      "Focus on whether the melting happened at one fixed temperature or drifted across a range.",
+      "A mixture's melting temperature drifts because it has no fixed melting point of its own."
+    ]
+  },
+  {
+    "id": "m8sci-characteristic-properties-identify-a-substance-004",
+    "loId": "m8sci.characteristic-properties-identify-a-substance",
+    "cedCode": "M8SCI-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A reference card lists two candidate substances. Substance J melts at 150 degrees Celsius and has a density of 2 grams per cubic centimeter. Substance K melts at 150 degrees Celsius and has a density of 6 grams per cubic centimeter. An unknown block has a mass of 48 grams, a volume of 8 cubic centimeters, and begins to melt sharply at 150 degrees Celsius. Which candidate is the unknown block made of?",
+    "choices": [
+      "Substance J, because the block's volume of 8 cubic centimeters matches the volume typically listed for Substance J, and volume alone is enough to identify a substance",
+      "Substance J, because both substances share the same melting point of 150 degrees Celsius, and melting point is the single most reliable property for identifying an unknown substance",
+      "Substance K, because the block has a mass of 48 grams, which is larger than Substance J's typical mass, and larger masses always indicate the denser substance K",
+      "Substance K, because the block's density works out to 6 grams per cubic centimeter, matching Substance K and ruling out Substance J's density of 2"
+    ],
+    "answer": "D",
+    "hints": [
+      "Calculate the block's density by dividing its mass by its volume before comparing it to the card.",
+      "A single mismatched property is enough to rule a candidate out, even if another property matches perfectly."
+    ]
+  },
+  {
+    "id": "m8sci-characteristic-properties-identify-a-substance-005",
+    "loId": "m8sci.characteristic-properties-identify-a-substance",
+    "cedCode": "M8SCI-6.2",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "Two white powders, Sample M and Sample N, look identical: same white color, same fine texture, and each is one full spoonful. A student stirs a spoonful of Sample M into a glass of water and it disappears completely, leaving a clear liquid. A spoonful of Sample N is stirred into a separate glass of water, but grains of it are still visible at the bottom after five minutes of stirring. Both samples are also touched to a flame, and neither one catches fire. Which piece of evidence actually shows that Sample M and Sample N are different substances?",
+    "choices": [
+      "Sample M dissolved completely in water while Sample N did not, which is a difference in solubility",
+      "Both samples are white and have the same fine texture, which shows they are made of the same substance",
+      "Neither sample caught fire when touched to a flame, which shows they are both the same substance",
+      "Both samples were measured as one full spoonful, so any difference between them must come from the amount used"
+    ],
+    "answer": "A",
+    "hints": [
+      "Ask which properties are characteristic and then look for a difference only among those.",
+      "Matching on a property, like flammability here, tells you nothing was found different there."
+    ]
+  },
+  {
+    "id": "m8sci-characteristic-properties-identify-a-substance-006",
+    "loId": "m8sci.characteristic-properties-identify-a-substance",
+    "cedCode": "M8SCI-6.2",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A reference card lists only one property for Substance S: it melts at 180 degrees Celsius. An unknown block is warmed slowly and also begins to melt sharply at 180 degrees Celsius, holding there until it is fully liquid. A student announces that the block must be made of Substance S. What is the problem with this announcement, if any?",
+    "choices": [
+      "The announcement is correct because melting point alone always identifies a pure substance without needing any other property",
+      "The announcement is premature because only one characteristic property, melting point, has been compared, and a single match can be a coincidence",
+      "The announcement is wrong because melting point depends on the size of the piece, so it cannot be used to identify anything",
+      "The announcement is premature because the block's mass and volume were never measured, and those are the properties that identify a substance"
+    ],
+    "answer": "B",
+    "hints": [
+      "Recall how many properties of different kinds are usually needed before accepting a match with confidence.",
+      "Melting point is a valid characteristic property; the concern here is about how many different properties were actually checked."
+    ]
+  },
+  {
+    "id": "m8sci-density-thermal-expansion-why-warm-fluids-rise-001",
+    "loId": "m8sci.density-thermal-expansion-and-why-warm-fluids-rise",
+    "cedCode": "M8SCI-6.3",
+    "difficulty": 1,
+    "responseFormat": "mcq",
+    "problemText": "A block of clean copper has a mass of 60 grams and takes up 12 cubic centimeters. A student wants to know how many grams of copper are packed into each cubic centimeter of the block. What is the density of the copper block?",
+    "choices": [
+      "12 grams per cubic centimeter",
+      "5 grams per cubic centimeter",
+      "0.2 grams per cubic centimeter",
+      "72 grams per cubic centimeter"
+    ],
+    "answer": "B",
+    "hints": [
+      "Density is mass divided by volume, not the other way around.",
+      "Divide the grams by the cubic centimeters to find grams per cubic centimeter."
+    ]
+  },
+  {
+    "id": "m8sci-density-thermal-expansion-why-warm-fluids-rise-002",
+    "loId": "m8sci.density-thermal-expansion-and-why-warm-fluids-rise",
+    "cedCode": "M8SCI-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "Sample X has a mass of 84 grams and takes up 21 cubic centimeters. Sample Y has a mass of 54 grams and takes up 18 cubic centimeters. Both samples are at the same temperature. Which sample is denser, and why?",
+    "choices": [
+      "Sample Y, because Sample Y takes up less room than Sample X, so it must be packed more tightly",
+      "Sample X, because Sample X has a bigger mass than Sample Y, so it must be packed more tightly",
+      "Sample X, because every cubic centimeter of Sample X holds 4 grams while every cubic centimeter of Sample Y holds only 3 grams",
+      "Sample Y, because every cubic centimeter of Sample Y holds 3 grams while every cubic centimeter of Sample X holds only 2 grams"
+    ],
+    "answer": "C",
+    "hints": [
+      "Work out the grams-per-cubic-centimeter for each sample separately before comparing them.",
+      "A bigger mass or a smaller volume alone does not tell you which sample is denser — you need both numbers together."
+    ]
+  },
+  {
+    "id": "m8sci-density-thermal-expansion-why-warm-fluids-rise-003",
+    "loId": "m8sci.density-thermal-expansion-and-why-warm-fluids-rise",
+    "cedCode": "M8SCI-6.3",
+    "difficulty": 2,
+    "responseFormat": "mcq",
+    "problemText": "A sealed metal canister holds a fixed amount of gas. Nothing is added to the canister and nothing leaks out of it. When the gas inside is cooled, its particles slow down and crowd closer together, so its volume shrinks from 50 cubic centimeters to 40 cubic centimeters while its mass stays at 100 grams. What happens to the density of the gas as it cools?",
+    "choices": [
+      "The density rises, because cooling adds extra mass to the gas",
+      "The density falls, because cooling always spreads the particles farther apart",
+      "The density stays the same, because the mass of the gas never changed",
+      "The density rises, because the same 100 grams of gas now occupies less volume"
+    ],
+    "answer": "D",
+    "hints": [
+      "Check what happens to the mass and to the volume separately before deciding what happens to the density.",
+      "A sealed canister keeps the same mass, so any change in density must come from the volume."
+    ]
+  },
+  {
+    "id": "m8sci-density-thermal-expansion-why-warm-fluids-rise-004",
+    "loId": "m8sci.density-thermal-expansion-and-why-warm-fluids-rise",
+    "cedCode": "M8SCI-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A large tank is filled with a fluid that has a density of 4 grams per cubic centimeter throughout. A parcel of that same fluid is warmed until 250 grams of it takes up 75 cubic centimeters. If this warmed parcel were released gently in the middle of the tank, what would happen to it, and why?",
+    "choices": [
+      "It would rise, because at about 3.3 grams per cubic centimeter it is less dense than the 4-grams-per-cubic-centimeter fluid around it, which sinks under it",
+      "It would sink, because at 250 grams its total mass is greater than that of a typical parcel in the surrounding fluid, and heavier parcels always sink",
+      "It would stay in place, because its mass of 250 grams never changed even though its volume grew larger, so nothing about it could make it move",
+      "It would rise, because warmed fluid always moves upward through any surrounding fluid on its own, without needing any difference in their densities to make it happen"
+    ],
+    "answer": "A",
+    "hints": [
+      "Find the parcel's density first, then compare it to the tank fluid's density.",
+      "The fluid with more grams in every cubic centimeter sinks and pushes the other fluid up."
+    ]
+  },
+  {
+    "id": "m8sci-density-thermal-expansion-why-warm-fluids-rise-005",
+    "loId": "m8sci.density-thermal-expansion-and-why-warm-fluids-rise",
+    "cedCode": "M8SCI-6.3",
+    "difficulty": 3,
+    "responseFormat": "mcq",
+    "problemText": "A block of wax has a mass of 200 grams and a volume of 250 cubic centimeters at room temperature. A student cuts the block exactly in half, leaving two equal pieces sitting side by side. She then warms one of the halves until its volume grows to 150 cubic centimeters while its mass stays at 100 grams, and leaves the other half untouched at room temperature. Which statement correctly compares the density of the warmed half to the density of the untouched half, and explains what caused any difference?",
+    "choices": [
+      "The warmed half is less dense, because cutting the block in half lowered its mass but its volume remained at 125 cubic centimeters",
+      "The warmed half is less dense, because warming spread its particles apart, growing its volume while its mass stayed fixed",
+      "The two halves are equally dense, because cutting a sample in half keeps its mass and volume in the same ratio to each other",
+      "The warmed half is denser, because warming packs its particles closer together, raising its mass while its volume stays the same"
+    ],
+    "answer": "B",
+    "hints": [
+      "Cutting a sample in half changes its mass and volume together, but warming changes only its volume.",
+      "Work out the density of each half separately using its own mass and its own volume."
+    ]
+  },
+  {
+    "id": "m8sci-density-thermal-expansion-why-warm-fluids-rise-006",
+    "loId": "m8sci.density-thermal-expansion-and-why-warm-fluids-rise",
+    "cedCode": "M8SCI-6.3",
+    "difficulty": 4,
+    "responseFormat": "mcq",
+    "problemText": "A pond's surface water cools through the fall, becomes denser than the water below it, and sinks, stirring the pond as it goes. Once winter arrives, that same surface water freezes solid into a layer of ice, but the ice stays floating at the top instead of sinking the way the cold water did before it froze. Which statement correctly explains why the ice does not sink?",
+    "choices": [
+      "Ice is exactly as dense as the liquid water below it, but wind currents push it up to the surface and hold it there",
+      "Ice has less total mass than the water below it, and having less mass automatically makes anything float to the top",
+      "Ice is an exception: freezing grows its volume while its mass stays fixed, so the ice ends up less dense than the water below it",
+      "Ice is denser than the liquid water below it, but it floats anyway because solids always float freely on top of their own liquid"
+    ],
+    "answer": "C",
+    "hints": [
+      "Water is an exception: freezing does not shrink it the way cooling shrinks most other things.",
+      "Think about what happens to the volume of water when it turns to ice, even though no mass is added or lost."
+    ]
+  }
+]
