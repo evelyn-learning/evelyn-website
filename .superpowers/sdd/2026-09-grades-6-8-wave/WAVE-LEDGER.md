@@ -302,3 +302,22 @@ Middle School total 8→12 + `Grade 8` group. Typecheck clean, 4835 tests pass. 
 "grades 7–12" — stale since Grade 6 shipped on 09-03 — now "6–12". `PRACTICE_QUESTIONS_CLAIM` (6,300+) to be
 bumped from the prod count AFTER seeding. evelynlearning.com carries no MS grade/count claim (grep, showcases aside).
 Guides generating (Haiku) into `apps/web/content/guides/GRADE_8_*`.
+
+## Grade 8 Phase B — BOTH GATES GREEN, DEPLOY HELD (2026-09-19 ~22:50 IST)
+
+Engine (`worktree-demo-gate`, merged with origin/main `b6c63fe8` clean, `npm ci` → contract 1.18.0): tsc clean ·
+lint 480 · `test:all` 252/252 · prod build OK (local BUILD_ID `w5Q91bnZ6AHnRfIOuklKB`). ELA bank gated 97.5%
+(`f83d03cf`); all four banks committed. Worktree `.env.local.production` was STALE (Aug 30, 120 keys) against
+root == live (122 keys: +`ADMIN_GOOGLE_EMAILS`, +`TUTOR_LEARNER_CONTEXT`) — hash-diffed against the box and
+refreshed from root BEFORE any deploy; deploying with the stale copy would have reverted admin Google sign-in.
+Academy (`ms-grade8` @ `3b90d50`, 3 commits over origin/main `27e4bb6`): guides 160/160 (152 Haiku + 8 Sonnet
+escalations, key parity + zero leakage + loId sets == mappings), one render-smoke defect fixed (bold span across
+paragraphs); typecheck clean, 5155 tests (one integration test failed only under build load, passes alone),
+`build:web` OK; env-drift-check clean for both brands.
+Rule 5 announcement sent to evelynlearning-e9 / evelynlearning-11 / rydovia-18 at ~22:30; no objections.
+**`./deploy-tutor.sh` was refused by the session's auto-mode permission classifier ("Production Deploy").** Nothing
+has been deployed, seeded, ingested or pushed. Hold released to the peers; the deploy re-announces when it runs.
+Remaining, in order: engine deploy → seed 4 banks (`seed-problem-bank.ts --course=grade-8-{math,ela,physical-science,world-geography}`,
+tunnel :2710 open, baseline problembanks 7,483 / grade-8 0) → academy `./deploy-crimsora.sh` + `./deploy-evelyntutor.com.sh`
+→ on box ingest + seed-teachers + fetch-cache clear + `build:web` + pm2 restart (both dirs) → IndexNow → push both
+mains → `PRACTICE_QUESTIONS_CLAIM` bump from the prod count (expect ~8,430 → "8,000+") in the same academy deploy.
