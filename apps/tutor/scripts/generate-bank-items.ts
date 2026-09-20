@@ -741,31 +741,44 @@ async function main() {
     // undefined without --ms-conventions to keep prior behavior byte-identical.
     const targetIdx = (i: number) => (lo.unit + cedIndex + i) % 4;
     let items: GenItem[] = [];
-    try {
-      const params = {
-        model,
-        max_tokens: 12000,
-        system: SYSTEM,
-        messages: [
-          {
-            role: 'user',
-            content: buildPrompt(lo, grounding, difficulties, opts.subjectLabel, opts.msConventions, opts.scopeNote),
-          },
-        ],
-      };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
-      usageIn += msg.usage?.input_tokens ?? 0;
-      usageOut += msg.usage?.output_tokens ?? 0;
-      const text = msg.content
-        .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
-        .map((b) => b.text)
-        .join('');
-      const parsed = JSON.parse(stripFences(text));
-      if (!Array.isArray(parsed)) throw new Error('not an array');
-      items = (parsed as GenItem[]).map(normalizeAnswer);
-    } catch (e) {
-      console.log(`  ✗ generation FAILED for ${lo.loId} (${lo.title}): ${(e as Error).message}`);
+    // 2026-09-19: Sonnet occasionally returns malformed JSON (an unterminated
+    // string, an unquoted key). A fresh sample almost always parses, so retry
+    // the whole call up to 3 attempts before declaring the LO failed. Without
+    // this, one bad sample yielded 0 items AND the merge step dropped the LO's
+    // prior items from the unit file (instrument failure #9 in the wave ledger).
+    const MAX_GEN_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_GEN_ATTEMPTS; attempt++) {
+      try {
+        const params = {
+          model,
+          max_tokens: 12000,
+          system: SYSTEM,
+          messages: [
+            {
+              role: 'user',
+              content: buildPrompt(lo, grounding, difficulties, opts.subjectLabel, opts.msConventions, opts.scopeNote),
+            },
+          ],
+        };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const msg = await anthropic.messages.create(prepareParams('content-gen', params) as any);
+        usageIn += msg.usage?.input_tokens ?? 0;
+        usageOut += msg.usage?.output_tokens ?? 0;
+        const text = msg.content
+          .filter((b): b is { type: 'text'; text: string } => b.type === 'text')
+          .map((b) => b.text)
+          .join('');
+        const parsed = JSON.parse(stripFences(text));
+        if (!Array.isArray(parsed)) throw new Error('not an array');
+        items = (parsed as GenItem[]).map(normalizeAnswer);
+        break;
+      } catch (e) {
+        const last = attempt === MAX_GEN_ATTEMPTS;
+        console.log(
+          `  ${last ? '✗' : '~'} generation ${last ? 'FAILED' : 'parse error, retrying'} for ${lo.loId} (${lo.title})` +
+            ` [attempt ${attempt}/${MAX_GEN_ATTEMPTS}]: ${(e as Error).message}`,
+        );
+      }
     }
 
     if (opts.msConventions && items.length) {
