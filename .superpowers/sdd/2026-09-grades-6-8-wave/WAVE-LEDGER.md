@@ -266,3 +266,17 @@ the session scratchpad. Praveen's Haiku-gen ruling was on cost; the per-course e
 ELA's `establishing-point-of-view-and-shifting-time-in-a-narrative` yields 0/6 under BOTH models — capturing its
 per-item FAIL reasons on the Sonnet pass; likely a validation rule tripping on the LO's own wording.
 Regen runs in flight for all four; re-verify follows each.
+
+### Instrument failure #9 (2026-09-19) — Sonnet generation returned 0 items for EVERY LO and the generator OVERWROTE the bank with empty arrays
+
+The first Sonnet geography run "succeeded" (exit 0) with `160000` output tokens exactly = 40 LOs × the generator's
+`max_tokens: 4000`; every response was truncated mid-JSON ("Unexpected end of JSON input"), parsed to 0 items, and the
+merge step then WROTE `u1..u10.json` as `[]` — the whole Haiku bank gone from disk. The three per-LO Sonnet regens
+(sci/math/ela) were doing the same, one LO at a time, until stopped. Only the scratchpad backups saved it.
+Fix: `max_tokens` 4000→12000 (repairs 3000→8000), commit `de45f367`; one Sonnet LO then returned 6/6 at ~22k output
+tokens (≈$0.24/LO; Sonnet 5 writes ~5× Haiku's length). **Two rules for the next wave:** (1) the generator must REFUSE
+to write a unit file when a regenerated LO yields 0 items (it currently drops the LO's prior items and appends nothing);
+(2) `cp -r` the bank dir to the scratchpad BEFORE every regen, and check the "Token usage … out" figure — a round
+multiple of the limit means truncation, whatever the exit code. **Near-miss on the restore:** a zsh loop with
+`set -- $pair` did not word-split, `cp` got an empty source, and three bank dirs sat EMPTY for one turn after I had
+already `rm`'d them; recovered from the same backups. Never `rm` a target before the copy has been verified.
