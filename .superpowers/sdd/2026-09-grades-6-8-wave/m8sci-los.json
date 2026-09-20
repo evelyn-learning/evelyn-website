@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m8sci.forces-and-net-force",
+    "planId": "evelyn.ms.m8sci.forces-and-net-force.v1",
+    "title": "Forces, Net Force & Balanced Forces",
+    "description": "Describe a force as a push or pull with a size (newtons) and a direction, add two forces along one line to find the net force (5 newtons to the left and 3 newtons to the right give a net force of 2 newtons to the left), and classify the forces on an object as balanced (no change in motion) or unbalanced (motion changes) (NGSS DCI PS2.A).",
+    "unit": 1
+  },
+  {
+    "loId": "m8sci.motion-reference-points-and-speed",
+    "planId": "evelyn.ms.m8sci.motion-reference-points-and-speed.v1",
+    "title": "Motion, Reference Points & Speed",
+    "description": "Decide whether an object is moving by comparing its position to a chosen reference point (a passenger is still relative to the bus, moving relative to the road), then compute and compare average speeds with speed = distance ÷ time using small whole numbers (60 meters in 20 seconds gives 3 meters per second) (NGSS DCI PS2.A).",
+    "unit": 1
+  },
+  {
+    "loId": "m8sci.reading-distance-time-graphs",
+    "planId": "evelyn.ms.m8sci.reading-distance-time-graphs.v1",
+    "title": "Reading Distance-Time Graphs",
+    "description": "Read a distance-time record: a flat stretch means at rest, a steeper stretch means faster, and the total distance ÷ total time gives average speed; compare two objects' speeds from their graphs (NGSS DCI PS2.A).",
+    "unit": 1
+  },
+  {
+    "loId": "m8sci.velocity-and-acceleration",
+    "planId": "evelyn.ms.m8sci.velocity-and-acceleration.v1",
+    "title": "Velocity & Acceleration",
+    "description": "Distinguish speed from velocity (speed plus a direction) and identify acceleration as ANY change in velocity -- speeding up, slowing down, or turning -- from a situation (a car rounding a bend at steady speed IS accelerating) (NGSS DCI PS2.A).",
+    "unit": 1
+  },
+  {
+    "loId": "m8sci.collisions-and-designing-for-safety",
+    "planId": "evelyn.ms.m8sci.collisions-and-designing-for-safety.v1",
+    "title": "Collisions & Designing for Safety",
+    "description": "Apply the third law and the force-mass-acceleration idea to a collision between two objects (a cart hitting a wall, two skaters pushing off, a ball and a bat) and evaluate a proposed safety design -- helmet padding, crumple zone, airbag, egg-drop cushion -- by whether it spreads the stopping force over a longer time or larger area (NGSS MS-PS2-1).",
+    "unit": 2
+  },
+  {
+    "loId": "m8sci.newtons-first-law-inertia-and-friction",
+    "planId": "evelyn.ms.m8sci.newtons-first-law-inertia-and-friction.v1",
+    "title": "Newton's First Law: Inertia & Friction",
+    "description": "Explain that an object keeps its motion (at rest, or moving in a straight line at constant speed) unless a net force acts on it, that inertia grows with mass, and that friction and air resistance are the everyday forces that make moving things stop -- so the first law is not contradicted by a rolling ball slowing down (NGSS MS-PS2-2).",
+    "unit": 2
+  },
+  {
+    "loId": "m8sci.newtons-second-law-force-mass-and-acceleration",
+    "planId": "evelyn.ms.m8sci.newtons-second-law-force-mass-and-acceleration.v1",
+    "title": "Newton's Second Law: Force, Mass & Acceleration",
+    "description": "Predict how an object's acceleration changes when the net force or the mass changes (more force means more acceleration; more mass means less acceleration for the same force), apply force equals mass times acceleration (F = m × a) with small whole numbers (10 newtons on 2 kilograms gives 5 meters per second each second), and plan a fair-test investigation of the relationship -- which variable to change, which to hold fixed (NGSS MS-PS2-2).",
+    "unit": 2
+  },
+  {
+    "loId": "m8sci.newtons-third-law-action-reaction-pairs",
+    "planId": "evelyn.ms.m8sci.newtons-third-law-action-reaction-pairs.v1",
+    "title": "Newton's Third Law: Action-Reaction Pairs",
+    "description": "Identify the action-reaction pair in an interaction (you push the wall, the wall pushes you; a swimmer pushes water back, water pushes the swimmer forward), state that the two forces are equal in size, opposite in direction, and act on DIFFERENT objects, and explain why they therefore never cancel (NGSS MS-PS2-1).",
+    "unit": 2
+  },
+  {
+    "loId": "m8sci.electric-forces-and-charge",
+    "planId": "evelyn.ms.m8sci.electric-forces-and-charge.v1",
+    "title": "Electric Forces & Charge",
+    "description": "Explain that objects carry positive or negative charge, that like charges repel and opposite charges attract, that rubbing transfers charge (the balloon on the wall), and identify from data which factors change the strength of an electric force -- amount of charge and distance apart (NGSS MS-PS2-3).",
+    "unit": 3
+  },
+  {
+    "loId": "m8sci.fields-forces-without-contact",
+    "planId": "evelyn.ms.m8sci.fields-forces-without-contact.v1",
+    "title": "Fields: Forces Without Contact",
+    "description": "Explain that gravitational, electric and magnetic forces act across empty space through a FIELD that fills the space around a mass, charge or magnet, evaluate an investigation as evidence that the field exists even where the objects do not touch (a compass needle turning near a magnet, iron filings, a charged rod bending a stream of water), and state that a field is stronger nearer its source (NGSS MS-PS2-5).",
+    "unit": 3
+  },
+  {
+    "loId": "m8sci.gravity-mass-distance-and-weight",
+    "planId": "evelyn.ms.m8sci.gravity-mass-distance-and-weight.v1",
+    "title": "Gravity: Mass, Distance & Weight",
+    "description": "Argue from evidence that gravity is always attractive and grows with the masses involved and weakens with distance, and distinguish mass (amount of matter, the same everywhere) from weight (the gravitational force on that mass, smaller on the Moon) (NGSS MS-PS2-4).",
+    "unit": 3
+  },
+  {
+    "loId": "m8sci.magnetic-forces-and-electromagnets",
+    "planId": "evelyn.ms.m8sci.magnetic-forces-and-electromagnets.v1",
+    "title": "Magnetic Forces & Electromagnets",
+    "description": "Describe magnetic poles (like poles repel, opposite attract), predict which factors change a magnetic force's strength from investigation data -- distance, magnet strength, and for an electromagnet the number of coil turns and the current supplied -- and pick a valid question or next trial for such an investigation (NGSS MS-PS2-3).",
+    "unit": 3
+  },
+  {
+    "loId": "m8sci.energy-transfer-when-motion-changes",
+    "planId": "evelyn.ms.m8sci.energy-transfer-when-motion-changes.v1",
+    "title": "When Motion Changes, Energy Is Transferred",
+    "description": "Construct an argument from described evidence that when an object's kinetic energy changes, energy was transferred to it or away from it by another object -- a cue ball stops as the struck ball starts moving; a bicycle's brakes get hot as it slows; a bat sends a ball off faster -- and identify the object that gave and the object that received the energy (NGSS MS-PS3-5).",
+    "unit": 4
+  },
+  {
+    "loId": "m8sci.energy-transformations-and-conservation",
+    "planId": "evelyn.ms.m8sci.energy-transformations-and-conservation.v1",
+    "title": "Energy Transformations & Conservation",
+    "description": "Trace energy through a chain (battery to flashlight, roller coaster hill to hill, a pendulum) naming each form (kinetic, gravitational/elastic/chemical potential, thermal, light, sound), state that the total is conserved while some always ends up as thermal energy spread into the surroundings, and correct \"the energy was used up\" (NGSS DCI PS3.B).",
+    "unit": 4
+  },
+  {
+    "loId": "m8sci.kinetic-energy-mass-and-speed",
+    "planId": "evelyn.ms.m8sci.kinetic-energy-mass-and-speed.v1",
+    "title": "Kinetic Energy: Mass & Speed",
+    "description": "Interpret a data table to describe how kinetic energy depends on mass (double the mass gives double the energy) and on speed (double the speed gives FOUR times the energy), and choose the correct comparison for objects (a tennis ball versus a wiffle ball at the same speed; a bike at 2 meters per second versus 4 meters per second) (NGSS MS-PS3-1).",
+    "unit": 4
+  },
+  {
+    "loId": "m8sci.potential-energy-and-position",
+    "planId": "evelyn.ms.m8sci.potential-energy-and-position.v1",
+    "title": "Potential Energy: Stored by Position",
+    "description": "Model how the potential energy stored in a system changes when the arrangement of interacting objects changes -- a book lifted higher, a spring stretched further, two magnets pushed closer with like poles facing -- and rank arrangements by stored energy (NGSS MS-PS3-2).",
+    "unit": 4
+  },
+  {
+    "loId": "m8sci.conduction-convection-and-radiation",
+    "planId": "evelyn.ms.m8sci.conduction-convection-and-radiation.v1",
+    "title": "Conduction, Convection & Radiation",
+    "description": "Explain the MECHANISM of each way thermal energy moves -- conduction as faster-moving particles bumping neighbors through contact, convection as warmer fluid rising and cooler fluid sinking in a loop, radiation as energy carried by waves needing no matter -- and classify a situation; state that energy always moves from warmer to cooler, never \"cold flowing in\" (NGSS DCI PS3.A, PS3.B).",
+    "unit": 5
+  },
+  {
+    "loId": "m8sci.insulators-conductors-and-thermal-design",
+    "planId": "evelyn.ms.m8sci.insulators-conductors-and-thermal-design.v1",
+    "title": "Insulators, Conductors & Thermal Design",
+    "description": "Evaluate a proposed device that maximizes or minimizes thermal energy transfer (a lunch cooler, a thermos, a solar oven, a house wall) by naming which transfer mechanism each material or feature blocks or boosts, and choose the better of two designs with the reason (NGSS MS-PS3-3).",
+    "unit": 5
+  },
+  {
+    "loId": "m8sci.mass-material-and-temperature-change",
+    "planId": "evelyn.ms.m8sci.mass-material-and-temperature-change.v1",
+    "title": "Mass, Material & Temperature Change",
+    "description": "Use investigation data to relate the energy transferred to a sample, its mass, and what it is made of, to how much its temperature changes (the same burner warms a small pan faster than a large one; beach sand is hot while the sea is cool on the same afternoon), and plan such an investigation (what to change, what to hold fixed) (NGSS MS-PS3-4).",
+    "unit": 5
+  },
+  {
+    "loId": "m8sci.temperature-and-thermal-energy",
+    "planId": "evelyn.ms.m8sci.temperature-and-thermal-energy.v1",
+    "title": "Temperature & Thermal Energy",
+    "description": "Distinguish temperature (a measure of the AVERAGE kinetic energy of a sample's particles) from thermal energy (the TOTAL, which also depends on how much matter there is -- a bathtub of warm water holds more thermal energy than a cup of boiling water), using the particle-motion picture (NGSS DCI PS3.A).",
+    "unit": 5
+  },
+  {
+    "loId": "m8sci.changes-of-state-and-thermal-energy",
+    "planId": "evelyn.ms.m8sci.changes-of-state-and-thermal-energy.v1",
+    "title": "Changes of State & Thermal Energy",
+    "description": "Predict and describe what happens to particle motion, temperature and state of a pure substance as thermal energy is added or removed -- melting, freezing, evaporation, boiling, condensation -- including that the temperature STAYS CONSTANT while a change of state is under way because the energy is going into breaking particles apart, not into speeding them up (NGSS MS-PS1-4).",
+    "unit": 6
+  },
+  {
+    "loId": "m8sci.characteristic-properties-identify-a-substance",
+    "planId": "evelyn.ms.m8sci.characteristic-properties-identify-a-substance.v1",
+    "title": "Characteristic Properties Identify a Substance",
+    "description": "Use characteristic properties that do not depend on sample size -- melting point, boiling point, density, solubility, conductivity, flammability -- to identify a pure substance or to tell two look-alike substances apart, and distinguish a pure substance (one kind of particle, sharp melting point) from a mixture (NGSS DCI PS1.A).",
+    "unit": 6
+  },
+  {
+    "loId": "m8sci.density-thermal-expansion-and-why-warm-fluids-rise",
+    "planId": "evelyn.ms.m8sci.density-thermal-expansion-and-why-warm-fluids-rise.v1",
+    "title": "Density, Thermal Expansion & Why Warm Fluids Rise",
+    "description": "Explain density as how much mass is packed into a given volume (compare samples: 10 grams in 5 cubic centimeters is denser than 10 grams in 20 cubic centimeters), explain that warming a fluid makes its particles move faster and spread apart so the same mass takes more volume and the fluid becomes LESS dense, and use that to explain why warm air, warm water and warm mantle rock rise while cooler material sinks (NGSS MS-PS1-4).",
+    "unit": 6
+  },
+  {
+    "loId": "m8sci.the-particle-model-and-states-of-matter",
+    "planId": "evelyn.ms.m8sci.the-particle-model-and-states-of-matter.v1",
+    "title": "The Particle Model & States of Matter",
+    "description": "Explain the properties of solids, liquids and gases (fixed or changing shape and volume, compressibility, flow) by how their particles are spaced, how strongly they attract, and how freely they move -- vibrating in place, sliding past each other, or flying apart between collisions (NGSS DCI PS1.A).",
+    "unit": 6
+  },
+  {
+    "loId": "m8sci.elements-compounds-and-mixtures",
+    "planId": "evelyn.ms.m8sci.elements-compounds-and-mixtures.v1",
+    "title": "Elements, Compounds & Mixtures",
+    "description": "Classify a particle picture as an element (all atoms the same kind), a compound (atoms of two or more elements joined in a fixed way, with properties unlike its elements -- table salt versus sodium metal and chlorine gas), or a mixture (different substances side by side, not joined, each keeping its properties), and state that an atom is the smallest unit of an element (NGSS MS-PS1-1).",
+    "unit": 7
+  },
+  {
+    "loId": "m8sci.inside-the-atom",
+    "planId": "evelyn.ms.m8sci.inside-the-atom.v1",
+    "title": "Inside the Atom: Protons, Neutrons & Electrons",
+    "description": "Describe the atom as a tiny, dense nucleus of protons (positive) and neutrons (no charge) with much lighter electrons (negative) moving around it, explain that the number of protons -- the atomic number -- is what makes an atom a particular element, and that a neutral atom has equal protons and electrons (NGSS DCI PS1.A).",
+    "unit": 7
+  },
+  {
+    "loId": "m8sci.molecules-formulas-and-extended-structures",
+    "planId": "evelyn.ms.m8sci.molecules-formulas-and-extended-structures.v1",
+    "title": "Molecules, Formulas & Extended Structures",
+    "description": "Read a simple chemical formula -- H two O (H2O) is two hydrogen atoms and one oxygen atom; C O two (CO2) is one carbon atom and two oxygen atoms; O two (O2) is a molecule of one element, two oxygen atoms joined to each other -- match a formula to a particle model, and distinguish substances made of separate molecules (water, carbon dioxide) from extended structures with no separate molecules (table salt, diamond, metals) (NGSS MS-PS1-1).",
+    "unit": 7
+  },
+  {
+    "loId": "m8sci.reading-the-periodic-table",
+    "planId": "evelyn.ms.m8sci.reading-the-periodic-table.v1",
+    "title": "Reading the Periodic Table",
+    "description": "Locate an element by period (row) and group (column), read its symbol and atomic number, tell metals from nonmetals and metalloids by position and by properties (shiny, conducts, bends versus dull, brittle, insulates), and predict that elements in the same group behave alike (the alkali metals all react with water; the noble gases barely react at all) (NGSS DCI PS1.A).",
+    "unit": 7
+  },
+  {
+    "loId": "m8sci.evidence-of-a-chemical-reaction",
+    "planId": "evelyn.ms.m8sci.evidence-of-a-chemical-reaction.v1",
+    "title": "Evidence of a Chemical Reaction",
+    "description": "Compare described properties of substances before and after they interact to decide whether a new substance formed (a chemical reaction: unexpected color change, gas given off without boiling, a solid forming from two liquids, temperature or light change, a changed melting point) or whether only a physical change occurred (state, shape, size, dissolving -- the same substance in a different form), using the idea that each substance has its own characteristic properties (NGSS MS-PS1-2).",
+    "unit": 8
+  },
+  {
+    "loId": "m8sci.reactions-that-release-or-absorb-thermal-energy",
+    "planId": "evelyn.ms.m8sci.reactions-that-release-or-absorb-thermal-energy.v1",
+    "title": "Reactions That Release or Absorb Thermal Energy",
+    "description": "Classify a reaction as releasing thermal energy (the mixture gets warmer -- a hand warmer, burning, cement setting) or absorbing it (the mixture gets colder -- an instant cold pack, baking soda and vinegar), and evaluate a proposed device design that uses such a reaction by whether it releases or absorbs energy as required and how much, how fast (NGSS MS-PS1-6).",
+    "unit": 8
+  },
+  {
+    "loId": "m8sci.rearranging-atoms-and-conservation-of-mass",
+    "planId": "evelyn.ms.m8sci.rearranging-atoms-and-conservation-of-mass.v1",
+    "title": "Rearranging Atoms & Conservation of Mass",
+    "description": "Model a chemical reaction as reactants whose atoms are regrouped into products, count atoms of each kind before and after (two hydrogen molecules plus one oxygen molecule gives two water molecules: four hydrogen atoms and two oxygen atoms on each side), conclude that total mass is conserved, and explain \"lost\" mass in an open container as gas that escaped versus the unchanged reading in a sealed one (NGSS MS-PS1-5).",
+    "unit": 8
+  },
+  {
+    "loId": "m8sci.synthetic-materials-from-natural-resources",
+    "planId": "evelyn.ms.m8sci.synthetic-materials-from-natural-resources.v1",
+    "title": "Synthetic Materials from Natural Resources",
+    "description": "Trace a synthetic material (a plastic from crude oil, a synthetic fiber, a medicine, concrete) back to the natural resource it came from and the chemical reaction that changed it, compare the new material's properties with its source, and weigh one benefit and one cost to society or the environment (NGSS MS-PS1-3).",
+    "unit": 8
+  },
+  {
+    "loId": "m8sci.amplitude-and-wave-energy",
+    "planId": "evelyn.ms.m8sci.amplitude-and-wave-energy.v1",
+    "title": "Amplitude & Wave Energy",
+    "description": "Argue from observations that the energy a wave carries grows with its amplitude -- a bigger ocean wave moves more sand, a louder sound shakes a window, a brighter light warms a surface more -- and compare the energy of two waves of the same frequency by amplitude (NGSS MS-PS4-1).",
+    "unit": 9
+  },
+  {
+    "loId": "m8sci.amplitude-wavelength-and-frequency",
+    "planId": "evelyn.ms.m8sci.amplitude-wavelength-and-frequency.v1",
+    "title": "Amplitude, Wavelength & Frequency",
+    "description": "Read the three measures of a simple wave -- amplitude (height from rest position to crest), wavelength (crest to crest), frequency (waves passing per second, in hertz) -- and map them onto sound: frequency is heard as pitch, amplitude as loudness, and the two are independent (a quiet high note; a loud low one) (NGSS MS-PS4-1).",
+    "unit": 9
+  },
+  {
+    "loId": "m8sci.wave-speed-frequency-and-wavelength",
+    "planId": "evelyn.ms.m8sci.wave-speed-frequency-and-wavelength.v1",
+    "title": "Wave Speed, Frequency & Wavelength",
+    "description": "Explain that a wave's speed is set by the medium it travels in (sound is faster in water than air, and does not travel through a vacuum), so that for waves in the SAME medium a higher frequency goes with a shorter wavelength (speed equals frequency times wavelength, as a relationship), and apply distance equals speed times time with small whole numbers to an echo or to counting seconds between lightning and thunder (NGSS DCI PS4.A, MS-PS4-1).",
+    "unit": 9
+  },
+  {
+    "loId": "m8sci.what-a-wave-is",
+    "planId": "evelyn.ms.m8sci.what-a-wave-is.v1",
+    "title": "What a Wave Is",
+    "description": "Describe a wave as a repeating disturbance that carries energy from place to place WITHOUT carrying the matter along (a floating duck bobs but does not travel with the ripple), classify a wave as transverse (the medium moves across the direction of travel -- rope, water surface) or longitudinal (the medium squeezes and stretches along it -- sound, a pushed slinky), and state that mechanical waves need a medium (NGSS DCI PS4.A).",
+    "unit": 9
+  },
+  {
+    "loId": "m8sci.analog-and-digital-signals",
+    "planId": "evelyn.ms.m8sci.analog-and-digital-signals.v1",
+    "title": "Analog & Digital Signals",
+    "description": "Explain that waves can carry information (a voice on a phone, a picture over wifi), distinguish an analog signal (a wave whose shape copies the original continuously) from a digital one (the information encoded as a pattern of on/off pulses -- 1s and 0s), and use given information to argue that digital signals are more reliably copied and transmitted because small distortions do not change which pulses are \"on\" and \"off\" (NGSS MS-PS4-3).",
+    "unit": 10
+  },
+  {
+    "loId": "m8sci.light-versus-sound-and-the-electromagnetic-spectrum",
+    "planId": "evelyn.ms.m8sci.light-versus-sound-and-the-electromagnetic-spectrum.v1",
+    "title": "Light versus Sound & the Electromagnetic Spectrum",
+    "description": "Contrast sound (a mechanical wave that needs a medium and is silent in the vacuum of space) with light (a wave that crosses empty space -- sunlight reaches Earth through nothing), and place the members of the electromagnetic spectrum in order of wavelength -- radio, microwave, infrared, visible (red to violet), ultraviolet, X-ray, gamma -- with one everyday use each (NGSS DCI PS4.B).",
+    "unit": 10
+  },
+  {
+    "loId": "m8sci.reflection-absorption-and-transmission",
+    "planId": "evelyn.ms.m8sci.reflection-absorption-and-transmission.v1",
+    "title": "Reflection, Absorption & Transmission",
+    "description": "Model what happens when a light or sound wave meets a material -- reflected (mirror, echo), absorbed (a black curtain, acoustic foam), transmitted (window glass, a thin wall) -- usually some of each, explain that we see an object because light reflects off it into the eye and that a red object reflects red light and absorbs the rest, and predict the outcome for a material (NGSS MS-PS4-2).",
+    "unit": 10
+  },
+  {
+    "loId": "m8sci.refraction-bending-light-at-a-boundary",
+    "planId": "evelyn.ms.m8sci.refraction-bending-light-at-a-boundary.v1",
+    "title": "Refraction: Bending Light at a Boundary",
+    "description": "Explain that light travels in straight lines except where it crosses from one transparent material into another, where its path bends (refracts) because its speed changes -- why a straw looks broken in a glass, why a pool looks shallower than it is -- and describe qualitatively how a lens uses refraction to bring light together or spread it out (NGSS MS-PS4-2, DCI PS4.B).",
+    "unit": 10
+  }
+]

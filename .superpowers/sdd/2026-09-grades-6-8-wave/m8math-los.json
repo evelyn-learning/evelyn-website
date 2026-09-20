@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m8math.estimating-and-locating-irrational-numbers",
+    "planId": "evelyn.ms.m8math.estimating-and-locating-irrational-numbers.v1",
+    "title": "Estimating & Locating Irrational Numbers",
+    "description": "Trap √n between consecutive perfect squares, refine to one decimal place by squaring candidates (√50 ≈ 7.1), place irrational numbers on a number line, and compare/order mixed sets (√2, 1.5, π, 3.2); use truncations to estimate expressions like π² ≈ 9.8 (CCSS 8.NS.A.2).",
+    "unit": 1
+  },
+  {
+    "loId": "m8math.rational-and-irrational-numbers",
+    "planId": "evelyn.ms.m8math.rational-and-irrational-numbers.v1",
+    "title": "Rational & Irrational Numbers",
+    "description": "Define an irrational number as one whose decimal neither terminates nor repeats; classify π, √2, √9, 22/7, 0.101001000…; know √n is irrational whenever n is not a perfect square and rational when it is (CCSS 8.NS.A.1).",
+    "unit": 1
+  },
+  {
+    "loId": "m8math.repeating-decimals-to-fractions",
+    "planId": "evelyn.ms.m8math.repeating-decimals-to-fractions.v1",
+    "title": "Repeating Decimals to Fractions",
+    "description": "Know that every rational number has a decimal expansion that terminates or repeats; convert a repeating decimal to a fraction by the x = 0.3636…, 100x = 36.36…, subtract-and-divide method, including one-digit and two-digit repeats and a non-repeating lead digit (0.8333…) (CCSS 8.NS.A.1).",
+    "unit": 1
+  },
+  {
+    "loId": "m8math.square-roots-and-cube-roots",
+    "planId": "evelyn.ms.m8math.square-roots-and-cube-roots.v1",
+    "title": "Square Roots & Cube Roots",
+    "description": "Evaluate square roots of perfect squares to 225 and cube roots of perfect cubes to 1000; solve x² = p and x³ = p for those p, keeping both signs for the square case and the single real cube root; know √2 is irrational (CCSS 8.EE.A.2).",
+    "unit": 1
+  },
+  {
+    "loId": "m8math.operations-in-scientific-notation",
+    "planId": "evelyn.ms.m8math.operations-in-scientific-notation.v1",
+    "title": "Operations in Scientific Notation",
+    "description": "Multiply and divide numbers in scientific notation (multiply/divide the coefficients, add/subtract the exponents, renormalize when the coefficient leaves [1, 10)), add and subtract after matching exponents, choose sensible units for the result (seconds vs years), and read calculator \"E\" notation (CCSS 8.EE.A.4).",
+    "unit": 2
+  },
+  {
+    "loId": "m8math.product-quotient-and-power-of-a-power-rules",
+    "planId": "evelyn.ms.m8math.product-quotient-and-power-of-a-power-rules.v1",
+    "title": "Product, Quotient & Power-of-a-Power Rules",
+    "description": "Derive aᵐ·aⁿ = aᵐ⁺ⁿ, aᵐ ÷ aⁿ = aᵐ⁻ⁿ and (aᵐ)ⁿ = aᵐⁿ from expanded form with numerical bases (2, 3, 10) and at most a single variable base; write equivalent expressions (3² × 3⁵ = 3⁷; 5⁶ ÷ 5² = 5⁴; (2³)² = 2⁶); positive exponents only (CCSS 8.EE.A.1).",
+    "unit": 2
+  },
+  {
+    "loId": "m8math.scientific-notation",
+    "planId": "evelyn.ms.m8math.scientific-notation.v1",
+    "title": "Writing & Comparing Numbers in Scientific Notation",
+    "description": "Write very large and very small numbers as a × 10ⁿ with 1 ≤ a < 10 (negative n for small), convert back to standard form, estimate a quantity as a single digit times a power of 10, and compare two such numbers by \"how many times as large\" (3 × 10⁸ is 5 × 10³ times as large as 6 × 10⁴) (CCSS 8.EE.A.3).",
+    "unit": 2
+  },
+  {
+    "loId": "m8math.zero-and-negative-exponents",
+    "planId": "evelyn.ms.m8math.zero-and-negative-exponents.v1",
+    "title": "Zero & Negative Exponents",
+    "description": "Extend the quotient rule (a³ ÷ a³, a² ÷ a⁵) to show a⁰ = 1 and a⁻ⁿ = 1/aⁿ; evaluate 2⁻³, (1/2)⁻², 3² × 3⁻⁵ = 3⁻³ = 1/27; and correct the belief that \"a negative exponent makes a negative number\" (CCSS 8.EE.A.1).",
+    "unit": 2
+  },
+  {
+    "loId": "m8math.comparing-proportional-relationships",
+    "planId": "evelyn.ms.m8math.comparing-proportional-relationships.v1",
+    "title": "Comparing Proportional Relationships",
+    "description": "Compare two proportional relationships presented in different ways (one as a graph, one as an equation, a table, or a stated rate) by extracting each unit rate/slope and deciding which is faster, cheaper, or steeper (CCSS 8.EE.B.5).",
+    "unit": 3
+  },
+  {
+    "loId": "m8math.deriving-y-equals-mx-plus-b",
+    "planId": "evelyn.ms.m8math.deriving-y-equals-mx-plus-b.v1",
+    "title": "Deriving y = mx & y = mx + b",
+    "description": "Derive y = mx for a line through the origin and y = mx + b for a line crossing the y-axis at (0, b); read m and b from a graph that shows the intercept and write the line's equation (CCSS 8.EE.B.6).",
+    "unit": 3
+  },
+  {
+    "loId": "m8math.slope-from-similar-triangles",
+    "planId": "evelyn.ms.m8math.slope-from-similar-triangles.v1",
+    "title": "Slope & Similar Triangles",
+    "description": "Draw two slope triangles on the same non-vertical line and argue informally (similar triangles, so equal rise:run ratios) that the slope is the same between any two points; then compute slope from a graph or from two given points by counting rise over run, including negative slopes (CCSS 8.EE.B.6).",
+    "unit": 3
+  },
+  {
+    "loId": "m8math.unit-rate-as-slope",
+    "planId": "evelyn.ms.m8math.unit-rate-as-slope.v1",
+    "title": "Unit Rate as Slope",
+    "description": "Graph a proportional relationship from a table or from y = kx, name the line's steepness \"slope\", and show that slope = rise per 1 unit of run = the unit rate = k (CCSS 8.EE.B.5).",
+    "unit": 3
+  },
+  {
+    "loId": "m8math.equations-with-distribution-and-like-terms",
+    "planId": "evelyn.ms.m8math.equations-with-distribution-and-like-terms.v1",
+    "title": "Equations with Distribution & Like Terms",
+    "description": "Solve equations that need the distributive property and combining like terms before the variable can be isolated, e.g. 3(x - 4) + 2x = 2(x + 5) - 1, including negative multipliers -2(x - 3) (CCSS 8.EE.C.7b).",
+    "unit": 4
+  },
+  {
+    "loId": "m8math.equations-with-rational-coefficients",
+    "planId": "evelyn.ms.m8math.equations-with-rational-coefficients.v1",
+    "title": "Equations with Rational Coefficients",
+    "description": "Solve linear equations whose coefficients are fractions or decimals -- clear fractions by multiplying EVERY term by the LCD ((2/3)x + 1/2 = (1/6)x - 2) or work directly with decimals (0.5x + 1.2 = 0.2x + 3) -- and check by substitution (CCSS 8.EE.C.7b).",
+    "unit": 4
+  },
+  {
+    "loId": "m8math.equations-with-variables-on-both-sides",
+    "planId": "evelyn.ms.m8math.equations-with-variables-on-both-sides.v1",
+    "title": "Equations with Variables on Both Sides",
+    "description": "Solve ax + b = cx + d with integer coefficients by collecting variable terms on one side and constants on the other, finishing as a two-step equation and checking by substitution (CCSS 8.EE.C.7b).",
+    "unit": 4
+  },
+  {
+    "loId": "m8math.one-none-or-infinitely-many-solutions",
+    "planId": "evelyn.ms.m8math.one-none-or-infinitely-many-solutions.v1",
+    "title": "One, None or Infinitely Many Solutions",
+    "description": "Transform an equation until it reads x = a, a = a, or a = b, and conclude one solution, infinitely many, or none; explain why 2x + 6 = 2(x + 3) is always true and 2x + 6 = 2x + 5 never (CCSS 8.EE.C.7a).",
+    "unit": 4
+  },
+  {
+    "loId": "m8math.solutions-of-systems-as-intersection-points",
+    "planId": "evelyn.ms.m8math.solutions-of-systems-as-intersection-points.v1",
+    "title": "Solutions of Systems as Intersection Points",
+    "description": "Understand a solution of a system of two linear equations as the (x, y) pair that satisfies BOTH equations, check a candidate pair in both, and see the solution as the point where the two graphs cross (CCSS 8.EE.C.8a).",
+    "unit": 5
+  },
+  {
+    "loId": "m8math.solving-systems-by-graphing",
+    "planId": "evelyn.ms.m8math.solving-systems-by-graphing.v1",
+    "title": "Solving Systems by Graphing",
+    "description": "Graph two lines given in (or easily put into) y = mx + b form, read the intersection, estimate it when it is not a lattice point, and recognize by inspection that parallel lines (same slope, different intercept; 3x + 2y = 5 vs 3x + 2y = 6) give no solution and coincident lines infinitely many (CCSS 8.EE.C.8b).",
+    "unit": 5
+  },
+  {
+    "loId": "m8math.solving-systems-by-substitution",
+    "planId": "evelyn.ms.m8math.solving-systems-by-substitution.v1",
+    "title": "Solving Simple Systems by Substitution",
+    "description": "Solve algebraically when one or both equations are already solved for y -- set y = 2x + 1 equal to y = -x + 7, or substitute y = 3x into 2x + y = 10 -- then back-substitute to get both coordinates, and note the answer is exact where graphing only estimated (CCSS 8.EE.C.8b).",
+    "unit": 5
+  },
+  {
+    "loId": "m8math.systems-word-problems",
+    "planId": "evelyn.ms.m8math.systems-word-problems.v1",
+    "title": "Systems Word Problems",
+    "description": "Translate a real situation into two linear equations in two variables (two phone plans; adult and child tickets with a count and a total cost), solve by graphing or simple substitution, and interpret the pair in context (CCSS 8.EE.C.8c).",
+    "unit": 5
+  },
+  {
+    "loId": "m8math.comparing-functions-in-different-representations",
+    "planId": "evelyn.ms.m8math.comparing-functions-in-different-representations.v1",
+    "title": "Comparing Functions in Different Representations",
+    "description": "Compare two linear functions given as a table, a graph, an equation, and a verbal description by extracting each rate of change AND initial value (which grows faster, which starts higher, where they meet) (CCSS 8.F.A.2).",
+    "unit": 6
+  },
+  {
+    "loId": "m8math.identifying-functions",
+    "planId": "evelyn.ms.m8math.identifying-functions.v1",
+    "title": "Identifying Functions",
+    "description": "Define a function as a rule that assigns exactly one output to each input; test tables, mapping diagrams, sets of ordered pairs, and a plotted set of points for a repeated input with different outputs; the graph of a function is its set of (input, output) pairs (CCSS 8.F.A.1).",
+    "unit": 6
+  },
+  {
+    "loId": "m8math.linear-vs-nonlinear-functions",
+    "planId": "evelyn.ms.m8math.linear-vs-nonlinear-functions.v1",
+    "title": "Linear vs Nonlinear Functions",
+    "description": "Recognize y = mx + b as the linear family whose graph is a straight line; test a table for a constant rate of change; produce and plot nonlinear counter-examples (A = s² with (1,1), (2,4), (3,9); y = x³) (CCSS 8.F.A.3).",
+    "unit": 6
+  },
+  {
+    "loId": "m8math.volume-of-cylinders-cones-and-spheres",
+    "planId": "evelyn.ms.m8math.volume-of-cylinders-cones-and-spheres.v1",
+    "title": "Volume of Cylinders, Cones & Spheres",
+    "description": "Extend V = Bh to cylinders using A = πr², then V = (1/3)πr²h for cones and V = (4/3)πr³ for spheres; solve real-world problems and work backwards to a radius or height (CCSS 8.G.C.9).",
+    "unit": 6
+  },
+  {
+    "loId": "m8math.constructing-linear-models-from-descriptions",
+    "planId": "evelyn.ms.m8math.constructing-linear-models-from-descriptions.v1",
+    "title": "Constructing Linear Models from Descriptions",
+    "description": "Translate a verbal situation with a starting amount and a constant rate (a $20 sign-up fee plus $5 per class; a 12 cm candle burning 0.5 cm per hour) into y = mx + b, deciding which quantity is m and which is b, including negative rates (CCSS 8.F.B.4).",
+    "unit": 7
+  },
+  {
+    "loId": "m8math.describing-and-sketching-qualitative-graphs",
+    "planId": "evelyn.ms.m8math.describing-and-sketching-qualitative-graphs.v1",
+    "title": "Describing & Sketching Qualitative Graphs",
+    "description": "Read a function's graph in words -- increasing/decreasing, constant, linear/nonlinear intervals (a bike ride with a stop; a bathtub filling, sitting, draining) -- and sketch a graph from a verbal story with no equation (CCSS 8.F.B.5).",
+    "unit": 7
+  },
+  {
+    "loId": "m8math.interpreting-and-using-linear-models",
+    "planId": "evelyn.ms.m8math.interpreting-and-using-linear-models.v1",
+    "title": "Interpreting & Using Linear Models",
+    "description": "Given a linear model in any representation, state what the rate of change and the initial value mean in the situation and where they show on the graph/table (with units), predict an output, and solve for the input that gives a target output (when is the candle 4 cm tall?) (CCSS 8.F.B.4).",
+    "unit": 7
+  },
+  {
+    "loId": "m8math.rate-of-change-and-initial-value-from-tables-and-graphs",
+    "planId": "evelyn.ms.m8math.rate-of-change-and-initial-value-from-tables-and-graphs.v1",
+    "title": "Rate of Change & Initial Value from Tables & Graphs",
+    "description": "Determine m (Δy/Δx from any two rows or points) and b (read at x = 0, or back it out as b = y - mx when x = 0 is absent) from a table, a graph, or two given (x, y) values, and write y = mx + b (CCSS 8.F.B.4).",
+    "unit": 7
+  },
+  {
+    "loId": "m8math.congruence-through-rigid-motions",
+    "planId": "evelyn.ms.m8math.congruence-through-rigid-motions.v1",
+    "title": "Congruence Through Rigid Motions",
+    "description": "Two figures are congruent exactly when a sequence of translations, reflections and rotations maps one onto the other; describe such a sequence between two given figures, apply it to coordinates, and decide congruence from coordinates (CCSS 8.G.A.2).",
+    "unit": 8
+  },
+  {
+    "loId": "m8math.dilations-and-similarity",
+    "planId": "evelyn.ms.m8math.dilations-and-similarity.v1",
+    "title": "Dilations & Similarity",
+    "description": "Dilate a figure from the origin by scale factor k ((x, y) → (kx, ky), including 0 < k < 1), find k from a pair of figures, and define similar figures as those connected by a dilation followed by rigid motions; describe such a sequence (CCSS 8.G.A.3, 8.G.A.4).",
+    "unit": 8
+  },
+  {
+    "loId": "m8math.rotations-about-the-origin",
+    "planId": "evelyn.ms.m8math.rotations-about-the-origin.v1",
+    "title": "Rotations About the Origin",
+    "description": "Rotate figures 90°, 180° and 270° about the origin (counterclockwise convention) with coordinate rules ((x, y) → (-y, x), (-x, -y), (y, -x)), verify the preserved properties, and identify a rotation from a preimage/image pair (CCSS 8.G.A.1, 8.G.A.3).",
+    "unit": 8
+  },
+  {
+    "loId": "m8math.translations-and-reflections",
+    "planId": "evelyn.ms.m8math.translations-and-reflections.v1",
+    "title": "Translations & Reflections",
+    "description": "Translate and reflect whole figures on the coordinate plane with coordinate rules ((x, y) → (x + a, y + b); reflection across the x-axis or the y-axis) and verify that lines map to lines, lengths and angle measures are preserved, and parallel lines stay parallel (CCSS 8.G.A.1, 8.G.A.3).",
+    "unit": 8
+  },
+  {
+    "loId": "m8math.parallel-lines-cut-by-a-transversal",
+    "planId": "evelyn.ms.m8math.parallel-lines-cut-by-a-transversal.v1",
+    "title": "Parallel Lines Cut by a Transversal",
+    "description": "Identify corresponding, alternate interior, alternate exterior and same-side interior angle pairs, argue informally (a translation along the transversal) why corresponding and alternate interior angles are equal, and solve for unknown angles (CCSS 8.G.A.5).",
+    "unit": 9
+  },
+  {
+    "loId": "m8math.pythagorean-applications-and-distance-between-points",
+    "planId": "evelyn.ms.m8math.pythagorean-applications-and-distance-between-points.v1",
+    "title": "Pythagorean Applications & Distance Between Points",
+    "description": "Apply the Pythagorean theorem in real-world 2-D problems (ladder against a wall, TV diagonal), in 3-D (a box's space diagonal via two right triangles), and to find the distance between two points on the coordinate plane by drawing the right triangle with legs Δx and Δy (CCSS 8.G.B.7, 8.G.B.8).",
+    "unit": 9
+  },
+  {
+    "loId": "m8math.the-pythagorean-theorem-and-its-converse",
+    "planId": "evelyn.ms.m8math.the-pythagorean-theorem-and-its-converse.v1",
+    "title": "The Pythagorean Theorem & Its Converse",
+    "description": "State a² + b² = c², explain an area-rearrangement proof, find a hypotenuse or a leg in a right triangle (perfect squares, then √ estimates), and use the converse to decide whether three given lengths make a right triangle (CCSS 8.G.B.6, 8.G.B.7).",
+    "unit": 9
+  },
+  {
+    "loId": "m8math.triangle-angle-sum-exterior-angles-and-aa-similarity",
+    "planId": "evelyn.ms.m8math.triangle-angle-sum-exterior-angles-and-aa-similarity.v1",
+    "title": "Triangle Angle Sum, Exterior Angles & AA Similarity",
+    "description": "Give the informal argument (a parallel line through a vertex) that a triangle's angles sum to 180°, derive that an exterior angle equals the sum of the two remote interior angles, and the angle-angle criterion for similar triangles (two equal angles force the third); solve for unknown angles (CCSS 8.G.A.5).",
+    "unit": 9
+  },
+  {
+    "loId": "m8math.fitting-a-line-to-a-scatter-plot",
+    "planId": "evelyn.ms.m8math.fitting-a-line-to-a-scatter-plot.v1",
+    "title": "Fitting a Line to a Scatter Plot",
+    "description": "Informally fit a straight line to a linear-looking scatter plot by eye, judge the fit (about as many points above as below, small vertical gaps), and write the line's equation from two points on the drawn line (CCSS 8.SP.A.2).",
+    "unit": 10
+  },
+  {
+    "loId": "m8math.scatter-plots-and-association",
+    "planId": "evelyn.ms.m8math.scatter-plots-and-association.v1",
+    "title": "Scatter Plots & Association",
+    "description": "Construct a scatter plot from bivariate measurement data and describe clustering, outliers, positive/negative/no association and linear vs nonlinear pattern (CCSS 8.SP.A.1).",
+    "unit": 10
+  },
+  {
+    "loId": "m8math.two-way-tables-and-relative-frequencies",
+    "planId": "evelyn.ms.m8math.two-way-tables-and-relative-frequencies.v1",
+    "title": "Two-Way Tables & Relative Frequencies",
+    "description": "Organize bivariate categorical data in a two-way frequency table, compute row and column relative frequencies, and use them to describe a possible association (do students with a curfew tend to have chores?) (CCSS 8.SP.A.4).",
+    "unit": 10
+  },
+  {
+    "loId": "m8math.using-a-linear-model-with-bivariate-data",
+    "planId": "evelyn.ms.m8math.using-a-linear-model-with-bivariate-data.v1",
+    "title": "Using a Linear Model with Bivariate Data",
+    "description": "Given a linear model fitted to data (the standard's example: an additional hour of sunlight ≈ 1.5 cm more plant height), interpret the slope as a per-unit change and the intercept in context, predict a value, and flag predictions that extrapolate beyond the data (CCSS 8.SP.A.3).",
+    "unit": 10
+  }
+]

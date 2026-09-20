@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m8ela.comparing-the-structure-of-two-texts",
+    "planId": "evelyn.ms.m8ela.comparing-the-structure-of-two-texts.v1",
+    "title": "Comparing the Structure of Two Texts",
+    "description": "Compare and contrast the structure of two short texts on a similar subject (e.g., a chronological prose paragraph vs. one that opens at the end and looks back; a prose paragraph vs. a short free-verse stanza) and explain how the differing structure changes meaning or style (CCSS RL.8.5).",
+    "unit": 1
+  },
+  {
+    "loId": "m8ela.how-an-incident-provokes-a-decision",
+    "planId": "evelyn.ms.m8ela.how-an-incident-provokes-a-decision.v1",
+    "title": "How an Incident Provokes a Decision",
+    "description": "Analyze how one specific incident in a short excerpt provokes a character's decision and what that decision reveals about the character — a cause-to-choice chain traced through a single event, not a map of the whole plot (CCSS RL.8.3).",
+    "unit": 1
+  },
+  {
+    "loId": "m8ela.how-dialogue-propels-action-and-reveals-character",
+    "planId": "evelyn.ms.m8ela.how-dialogue-propels-action-and-reveals-character.v1",
+    "title": "How Dialogue Propels Action & Reveals Character",
+    "description": "Analyze how a particular line of dialogue in a short excerpt does two jobs at once — moves the plot forward (a decision made, a secret exposed, a plan changed) and reveals the speaker or listener — and cite the line (CCSS RL.8.3).",
+    "unit": 1
+  },
+  {
+    "loId": "m8ela.strongest-textual-evidence",
+    "planId": "evelyn.ms.m8ela.strongest-textual-evidence.v1",
+    "title": "Strongest Textual Evidence",
+    "description": "Given several true details from a short excerpt, rank them and choose the one that MOST STRONGLY supports an inference or analysis — the escalation from \"cite evidence that supports\" to \"cite the evidence that supports best\" (CCSS RL.8.1, RI.8.1).",
+    "unit": 1
+  },
+  {
+    "loId": "m8ela.allusions-and-analogies-in-literature",
+    "planId": "evelyn.ms.m8ela.allusions-and-analogies-in-literature.v1",
+    "title": "Allusions & Analogies in Literature",
+    "description": "Analyze the impact of an allusion (a reference to another story, myth, or well-known event) or an extended analogy on the meaning and tone of a short excerpt: what the comparison imports and why the writer reached for it (CCSS RL.8.4).",
+    "unit": 2
+  },
+  {
+    "loId": "m8ela.dramatic-irony-suspense-and-humor",
+    "planId": "evelyn.ms.m8ela.dramatic-irony-suspense-and-humor.v1",
+    "title": "Dramatic Irony, Suspense & Humor",
+    "description": "Analyze how a difference between what the reader knows and what a character knows (dramatic irony) creates suspense or humor in a short excerpt, and name which of the two effects it creates and why (CCSS RL.8.6).",
+    "unit": 2
+  },
+  {
+    "loId": "m8ela.how-a-theme-develops-through-character-and-setting",
+    "planId": "evelyn.ms.m8ela.how-a-theme-develops-through-character-and-setting.v1",
+    "title": "How a Theme Develops Through Character & Setting",
+    "description": "Analyze how a theme develops over a short excerpt by locating the moment a change in a character or in the setting turns the theme — i.e., the theme's RELATIONSHIP to character, setting, and plot (CCSS RL.8.2).",
+    "unit": 2
+  },
+  {
+    "loId": "m8ela.modern-stories-and-traditional-patterns",
+    "planId": "evelyn.ms.m8ela.modern-stories-and-traditional-patterns.v1",
+    "title": "Modern Stories & Traditional Patterns",
+    "description": "Recognize when a short modern excerpt draws on a pattern of events or a character type from myths and traditional stories — the three trials, the trickster outwitted, the warning ignored, the humble helper who proves decisive — and explain how the modern telling renders that pattern new (a changed setting, a reversed outcome, a swapped role) (CCSS RL.8.9).",
+    "unit": 2
+  },
+  {
+    "loId": "m8ela.connections-and-distinctions-among-ideas",
+    "planId": "evelyn.ms.m8ela.connections-and-distinctions-among-ideas.v1",
+    "title": "Connections & Distinctions Among Ideas",
+    "description": "Analyze how an informational excerpt connects or distinguishes two individuals, ideas, or events — through a comparison, an analogy, or a category — and say what the connection lets the reader understand that the two facts alone would not (CCSS RI.8.3).",
+    "unit": 3
+  },
+  {
+    "loId": "m8ela.how-a-central-idea-develops",
+    "planId": "evelyn.ms.m8ela.how-a-central-idea-develops.v1",
+    "title": "How a Central Idea Develops",
+    "description": "Trace how a central idea is introduced, then refined or extended, across the sentences of a short informational excerpt, and explain how each supporting idea relates to it (an example of it, a limit on it, a cause behind it) — development and relationship (CCSS RI.8.2).",
+    "unit": 3
+  },
+  {
+    "loId": "m8ela.the-role-of-a-sentence-in-a-paragraph",
+    "planId": "evelyn.ms.m8ela.the-role-of-a-sentence-in-a-paragraph.v1",
+    "title": "The Role of a Sentence in a Paragraph",
+    "description": "Analyze the structure of ONE specific paragraph: name the job each sentence does (states the key concept, defines a term, gives an example, adds a limit or exception, bridges to the next idea) and explain how a particular sentence develops or refines the key concept (CCSS RI.8.5).",
+    "unit": 3
+  },
+  {
+    "loId": "m8ela.word-choice-and-analogy-in-informational-text",
+    "planId": "evelyn.ms.m8ela.word-choice-and-analogy-in-informational-text.v1",
+    "title": "Word Choice & Analogy in Informational Text",
+    "description": "Analyze how a specific word choice — a connotative or figurative word, or an explanatory analogy — shapes the meaning and TONE of a short informational excerpt (a newsletter notice, a field-guide entry), naming the tone with a precise adjective and the words that carry it (CCSS RI.8.4).",
+    "unit": 3
+  },
+  {
+    "loId": "m8ela.choosing-the-medium-for-an-idea",
+    "planId": "evelyn.ms.m8ela.choosing-the-medium-for-an-idea.v1",
+    "title": "Choosing the Medium for an Idea",
+    "description": "Evaluate the advantages and disadvantages of presenting one idea as a paragraph of text, a table or diagram, an audio recording, or a video, for a stated purpose (show a trend, teach a procedure, convey a mood, allow re-reading) (CCSS RI.8.7).",
+    "unit": 4
+  },
+  {
+    "loId": "m8ela.how-an-author-responds-to-opposing-views",
+    "planId": "evelyn.ms.m8ela.how-an-author-responds-to-opposing-views.v1",
+    "title": "How an Author Responds to Opposing Views",
+    "description": "Determine an author's point of view in a short excerpt and analyze how the author ACKNOWLEDGES and RESPONDS to conflicting evidence or an opposing viewpoint — concedes it, limits it, or refutes it (CCSS RI.8.6).",
+    "unit": 4
+  },
+  {
+    "loId": "m8ela.is-the-reasoning-sound",
+    "planId": "evelyn.ms.m8ela.is-the-reasoning-sound.v1",
+    "title": "Is the Reasoning Sound?",
+    "description": "Evaluate whether the REASONING in a short argument is sound — whether the reason actually leads to the claim, and whether the evidence proves what is claimed rather than something nearby (a bigger claim, a different group, a different time) — and recognize evidence introduced to distract from a weak link (CCSS RI.8.8).",
+    "unit": 4
+  },
+  {
+    "loId": "m8ela.where-two-texts-disagree-fact-or-interpretation",
+    "planId": "evelyn.ms.m8ela.where-two-texts-disagree-fact-or-interpretation.v1",
+    "title": "Where Two Texts Disagree: Fact or Interpretation",
+    "description": "Given two short texts on the same topic that CONFLICT, identify exactly where they disagree and classify the disagreement as a matter of FACT (a number, a date, what happened — checkable) or of INTERPRETATION (the same fact read two ways), and say what a reader should do next in each case (CCSS RI.8.9).",
+    "unit": 4
+  },
+  {
+    "loId": "m8ela.active-and-passive-voice",
+    "planId": "evelyn.ms.m8ela.active-and-passive-voice.v1",
+    "title": "Active & Passive Voice",
+    "description": "Form and identify the active and passive voice: find the doer, check whether the subject IS the doer (active) or RECEIVES the action (passive: a form of \"be\" + past participle, doer optional in a \"by\" phrase), and convert a sentence each way (CCSS L.8.1b).",
+    "unit": 5
+  },
+  {
+    "loId": "m8ela.gerunds-and-participles",
+    "planId": "evelyn.ms.m8ela.gerunds-and-participles.v1",
+    "title": "Gerunds & Participles",
+    "description": "Explain the function of a gerund (an -ing verb form doing a NOUN's job: \"Swimming is my favorite\") and a participle (an -ing or -ed verb form doing an ADJECTIVE's job: \"the rattling window\", \"the broken chain\") in a particular sentence, and tell the two apart by the job test (CCSS L.8.1a).",
+    "unit": 5
+  },
+  {
+    "loId": "m8ela.infinitives-and-verbal-phrases",
+    "planId": "evelyn.ms.m8ela.infinitives-and-verbal-phrases.v1",
+    "title": "Infinitives & Verbal Phrases",
+    "description": "Explain the function of an infinitive (\"to\" + verb) as a noun, adjective, or adverb in a particular sentence, and identify a complete verbal phrase (gerund, participial, or infinitive phrase with its objects and modifiers) and the single job the whole phrase does (CCSS L.8.1a).",
+    "unit": 5
+  },
+  {
+    "loId": "m8ela.verb-moods",
+    "planId": "evelyn.ms.m8ela.verb-moods.v1",
+    "title": "Verb Moods",
+    "description": "Form and identify verbs in the indicative (states), imperative (commands), interrogative (asks), conditional (would/could/might + verb; \"if\" clauses), and subjunctive (wishes and contrary-to-fact: \"if I were\", \"I suggest that he be\") mood, sorting sentences by the job the verb form signals (CCSS L.8.1c).",
+    "unit": 5
+  },
+  {
+    "loId": "m8ela.dashes-and-commas-for-a-break",
+    "planId": "evelyn.ms.m8ela.dashes-and-commas-for-a-break.v1",
+    "title": "Dashes & Commas for a Break",
+    "description": "Use a single dash for an abrupt break or a sharp emphasis after a complete thought, and a comma for a softer pause, and choose between them by the effect wanted — punctuation for a PAUSE or BREAK (CCSS L.8.2a).",
+    "unit": 6
+  },
+  {
+    "loId": "m8ela.ellipsis-for-a-pause-or-an-omission",
+    "planId": "evelyn.ms.m8ela.ellipsis-for-a-pause-or-an-omission.v1",
+    "title": "Ellipsis for a Pause or an Omission",
+    "description": "Use an ellipsis for two jobs and keep them apart: inside dialogue or narration to show a trailing-off or hesitation, and inside a quotation to show that words were omitted without changing the source's meaning — including recognizing an omission that DOES change the meaning, which is dishonest (CCSS L.8.2a, L.8.2b).",
+    "unit": 6
+  },
+  {
+    "loId": "m8ela.shifts-in-voice-and-mood",
+    "planId": "evelyn.ms.m8ela.shifts-in-voice-and-mood.v1",
+    "title": "Shifts in Voice & Mood",
+    "description": "Recognize and correct an inappropriate shift in verb voice (active to passive mid-sentence with no reason: \"Maya washed the dishes and then the floor was mopped\") or in verb mood (a command sliding into a statement in a list of steps; a wish that drops out of the subjunctive) within a sentence or short passage (CCSS L.8.1d).",
+    "unit": 6
+  },
+  {
+    "loId": "m8ela.voice-and-mood-for-effect",
+    "planId": "evelyn.ms.m8ela.voice-and-mood-for-effect.v1",
+    "title": "Voice & Mood for Effect",
+    "description": "Choose active voice to emphasize the actor and passive voice to emphasize the action or its receiver (or to hide an unknown doer), and choose the conditional or subjunctive to express uncertainty or a state contrary to fact (CCSS L.8.3a).",
+    "unit": 6
+  },
+  {
+    "loId": "m8ela.shades-of-meaning-degree-and-formality",
+    "planId": "evelyn.ms.m8ela.shades-of-meaning-degree-and-formality.v1",
+    "title": "Shades of Meaning: Degree & Formality",
+    "description": "Distinguish among words with the same denotation AND the same polarity by degree and formality (firm / persistent / resolute / bullheaded / willful), order them on an intensity scale, and pick the one whose degree and formality fit a context and audience (CCSS L.8.5c).",
+    "unit": 7
+  },
+  {
+    "loId": "m8ela.verbal-irony-and-puns",
+    "planId": "evelyn.ms.m8ela.verbal-irony-and-puns.v1",
+    "title": "Verbal Irony & Puns",
+    "description": "Interpret verbal irony (saying the opposite of what is meant, signaled by a gap between the words and the situation) and puns (a word or sound carrying two meanings at once) in a short excerpt, and explain the meaning each creates and the attitude it shows (CCSS L.8.5a).",
+    "unit": 7
+  },
+  {
+    "loId": "m8ela.verifying-word-meaning-with-context-and-a-dictionary",
+    "planId": "evelyn.ms.m8ela.verifying-word-meaning-with-context-and-a-dictionary.v1",
+    "title": "Verifying Word Meaning with Context & a Dictionary",
+    "description": "Given a word with several dictionary senses, use the sentence's context AND the word's part of speech in that sentence to select the one sense that fits, then verify the choice by substituting it back — the reference-and-verify step (CCSS L.8.4c, L.8.4d).",
+    "unit": 7
+  },
+  {
+    "loId": "m8ela.word-families-from-a-shared-root",
+    "planId": "evelyn.ms.m8ela.word-families-from-a-shared-root.v1",
+    "title": "Word Families from a Shared Root",
+    "description": "Use a known Greek or Latin root to decode a whole family of words and to tell apart family members that differ only by prefix (precede / recede / secede / proceed; eject / reject / inject / project), reading the prefix as the change in direction or meaning (CCSS L.8.4b).",
+    "unit": 7
+  },
+  {
+    "loId": "m8ela.a-claim-that-answers-the-opposing-claim",
+    "planId": "evelyn.ms.m8ela.a-claim-that-answers-the-opposing-claim.v1",
+    "title": "A Claim That Answers the Opposing Claim",
+    "description": "Write a claim sentence that DISTINGUISHES itself from the opposing claim in the same breath — the \"Although some students want X, the school should Y because Z\" shape — and recognize the failures: a claim that ignores the other side, a claim that is only the other side negated, and a claim whose \"although\" clause is not the strongest opposing point (CCSS W.8.1a).",
+    "unit": 8
+  },
+  {
+    "loId": "m8ela.cohesion-among-claim-counterclaim-and-evidence",
+    "planId": "evelyn.ms.m8ela.cohesion-among-claim-counterclaim-and-evidence.v1",
+    "title": "Cohesion Among Claim, Counterclaim & Evidence",
+    "description": "Use words, phrases, and CLAUSES to make clear, at every sentence, whose side the reader is hearing and how this part relates to the last — concessive clauses (\"While it is true that..., ...\"), turn-back phrases (\"Even so\", \"That figure leaves out\"), and evidence-to-reason links (\"which shows that\") — across a claim, a counterclaim, its rebuttal, and the evidence (CCSS W.8.1c).",
+    "unit": 8
+  },
+  {
+    "loId": "m8ela.formal-style-in-argument",
+    "planId": "evelyn.ms.m8ela.formal-style-in-argument.v1",
+    "title": "Formal Style in Argument",
+    "description": "Establish and maintain a formal style in an argument: replace slang, contractions in explanatory prose, second-person \"you\", exclamation, and emotional overstatement with precise, measured wording, while keeping the meaning and the force of the point (CCSS W.8.1d).",
+    "unit": 8
+  },
+  {
+    "loId": "m8ela.rebutting-with-evidence-from-credible-sources",
+    "planId": "evelyn.ms.m8ela.rebutting-with-evidence-from-credible-sources.v1",
+    "title": "Rebutting with Evidence from Credible Sources",
+    "description": "Answer a counterclaim with EVIDENCE — a fact, a figure, an observation — drawn from a source identified as accurate and credible, presented accurately (no rounding a figure up, no dropping a limit), and recognize a rebuttal that leans on an unreliable or misquoted source (CCSS W.8.1b).",
+    "unit": 8
+  },
+  {
+    "loId": "m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative",
+    "planId": "evelyn.ms.m8ela.establishing-point-of-view-and-shifting-time-in-a-narrative.v1",
+    "title": "Establishing Point of View & Shifting Time in a Narrative",
+    "description": "Choose and hold a narrative point of view from the opening sentence (first person or third person limited, matching what the story needs the reader to know), and use transition words, phrases, and clauses to signal a shift in TIME or SETTING (a jump forward, a look back, a change of place) so the reader is never lost (CCSS W.8.3a, W.8.3c).",
+    "unit": 9
+  },
+  {
+    "loId": "m8ela.organizing-information-into-broader-categories",
+    "planId": "evelyn.ms.m8ela.organizing-information-into-broader-categories.v1",
+    "title": "Organizing Information into Broader Categories",
+    "description": "Sort a set of facts about one topic into BROADER categories and sub-categories, decide the order of the categories, and choose where a heading or a simple table would help a reader (CCSS W.8.2a).",
+    "unit": 9
+  },
+  {
+    "loId": "m8ela.precise-language-and-domain-vocabulary",
+    "planId": "evelyn.ms.m8ela.precise-language-and-domain-vocabulary.v1",
+    "title": "Precise Language & Domain Vocabulary",
+    "description": "Revise vague, general wording in an informative sentence into precise language and the domain-specific term the topic uses (\"the thing that pumps blood\" becomes \"the heart's left ventricle\"; \"got bigger\" becomes \"expanded by a third\"), without importing a term the reader has not been given (CCSS W.8.2d).",
+    "unit": 9
+  },
+  {
+    "loId": "m8ela.reflection-and-a-narrative-conclusion",
+    "planId": "evelyn.ms.m8ela.reflection-and-a-narrative-conclusion.v1",
+    "title": "Reflection & a Narrative Conclusion",
+    "description": "Use REFLECTION — a narrator pausing to weigh what an event meant, then or now — as a narrative technique alongside dialogue, pacing, and description, and write a conclusion that follows from the events and reflects on them rather than stopping, moralizing, or summarizing (CCSS W.8.3b, W.8.3e).",
+    "unit": 9
+  },
+  {
+    "loId": "m8ela.blending-a-quotation-into-your-own-sentence",
+    "planId": "evelyn.ms.m8ela.blending-a-quotation-into-your-own-sentence.v1",
+    "title": "Blending a Quotation into Your Own Sentence",
+    "description": "Integrate a short quotation from a source or a literary text into your OWN sentence so that it fits grammatically, is introduced by a phrase that names who said it, and is followed by the point the quotation supports — and recognize the dropped quotation (a quote standing alone as its own sentence) and the quotation that does not fit its frame (CCSS W.8.8, W.8.9).",
+    "unit": 10
+  },
+  {
+    "loId": "m8ela.following-a-standard-citation-format",
+    "planId": "evelyn.ms.m8ela.following-a-standard-citation-format.v1",
+    "title": "Following a Standard Citation Format",
+    "description": "Follow a standard citation format: put the pieces of a citation in the standard order with the standard punctuation for a works-cited entry (author, title, container or site, publisher, date, location) for a web page, an article, and a book, and pair each with a matching short in-text reference (CCSS W.8.8).",
+    "unit": 10
+  },
+  {
+    "loId": "m8ela.generating-related-research-questions",
+    "planId": "evelyn.ms.m8ela.generating-related-research-questions.v1",
+    "title": "Generating Related Research Questions",
+    "description": "From a self-generated research question, GENERATE several related, focused sub-questions that open different avenues of exploration (cause, effect, comparison, change over time), and sort a set of candidate sub-questions into ones that advance the main question and ones that wander off it (CCSS W.8.7).",
+    "unit": 10
+  },
+  {
+    "loId": "m8ela.using-search-terms-effectively",
+    "planId": "evelyn.ms.m8ela.using-search-terms-effectively.v1",
+    "title": "Using Search Terms Effectively",
+    "description": "Turn a research sub-question into effective search terms — pull the key nouns, drop the question words, add a quoted phrase for an exact wording, add a limiting term (a place, a year, a source type) — and read a set of results to tell a sponsored or sales result from an informational one (CCSS W.8.8).",
+    "unit": 10
+  }
+]

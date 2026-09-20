@@ -1,0 +1,282 @@
+[
+  {
+    "loId": "m8geo.counts-rates-and-fair-comparison",
+    "planId": "evelyn.ms.m8geo.counts-rates-and-fair-comparison.v1",
+    "title": "Counts, Rates & Fair Comparison",
+    "description": "Given a table of counts and land areas or populations for several places, convert counts into rates (per square kilometer, per 1,000 people, per capita) and decide which comparison a stated claim actually needs, identifying when a raw count misleads (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 1
+  },
+  {
+    "loId": "m8geo.evaluating-a-choropleth",
+    "planId": "evelyn.ms.m8geo.evaluating-a-choropleth.v1",
+    "title": "Evaluating a Choropleth Map",
+    "description": "Given a choropleth (its classes, their break values, and the value of each region), determine which regions share a class, explain how re-drawing the class breaks or mapping a count instead of a rate changes the pattern shown, and judge whether the map supports a stated conclusion (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 1
+  },
+  {
+    "loId": "m8geo.maps-as-arguments",
+    "planId": "evelyn.ms.m8geo.maps-as-arguments.v1",
+    "title": "Maps as Arguments",
+    "description": "Given two maps of the same data that differ in projection, symbol sizing, color ordering, title wording or what they leave out, identify which design choice produces a different impression and evaluate whether a stated claim is supported by the data or only by the design (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 1
+  },
+  {
+    "loId": "m8geo.scale-of-analysis-and-hidden-patterns",
+    "planId": "evelyn.ms.m8geo.scale-of-analysis-and-hidden-patterns.v1",
+    "title": "Scale of Analysis & Hidden Patterns",
+    "description": "Given the same data aggregated at national, regional and local scale, compute or compare the figures at each scale and state which claims each scale can and cannot support: a national average that is high while every district but one is low, or a regional pattern that vanishes when districts are merged (National Geography Standard 3: how to analyze the spatial organization of people, places and environments).",
+    "unit": 1
+  },
+  {
+    "loId": "m8geo.buffers-and-proximity",
+    "planId": "evelyn.ms.m8geo.buffers-and-proximity.v1",
+    "title": "Buffers & Proximity Analysis",
+    "description": "Apply a buffer of a stated distance around a feature (a river, a school, a highway) to decide which locations fall inside or outside it, and evaluate how changing the buffer distance changes the answer and which distance a stated rule (a setback, a service radius) requires (National Geography Standard 3: how to analyze the spatial organization of people, places and environments).",
+    "unit": 2
+  },
+  {
+    "loId": "m8geo.change-detection-from-satellite-data",
+    "planId": "evelyn.ms.m8geo.change-detection-from-satellite-data.v1",
+    "title": "Change Detection from Satellite Data",
+    "description": "Given land-cover data for one area at two dates (hectares of forest, farmland, built-up land and water at each date), compute the change in each class, identify the most likely conversion (forest to farmland, farmland to built-up), and state the limits of the evidence: image resolution, cloud, and the gap between the dates (National Geography Standard 14: how human actions modify the physical environment).",
+    "unit": 2
+  },
+  {
+    "loId": "m8geo.gis-layers-and-overlay",
+    "planId": "evelyn.ms.m8geo.gis-layers-and-overlay.v1",
+    "title": "GIS Layers & Overlay Reasoning",
+    "description": "Explain a geographic information system as separate data layers (parcels, roads, flood zone, land use) each tied to the same locations, and use an overlay of two or three layers to answer a where-question, such as which parcels are inside the flood zone AND next to a road (National Geography Standard 1: how to use maps and other geographic representations to acquire, process and report information).",
+    "unit": 2
+  },
+  {
+    "loId": "m8geo.site-selection-with-weighted-criteria",
+    "planId": "evelyn.ms.m8geo.site-selection-with-weighted-criteria.v1",
+    "title": "Site Selection with Weighted Criteria",
+    "description": "Given several candidate sites and a set of criteria split into must-haves and weighted preferences, eliminate sites that fail a must-have, score the rest, and justify the choice -- then evaluate how a change in one weight changes the winner (National Geography Standard 3: how to analyze the spatial organization of people, places and environments).",
+    "unit": 2
+  },
+  {
+    "loId": "m8geo.north-america-climate-controls-in-action",
+    "planId": "evelyn.ms.m8geo.north-america-climate-controls-in-action.v1",
+    "title": "North America: Climate Controls in Action",
+    "description": "Given climate data for several North American stations (a wet mild Pacific coast, a dry basin east of a mountain range, a continental interior with extreme seasons, a humid Gulf coast, a subarctic north), match each station to its position and name the control that produces it (rain shadow, maritime versus continental, latitude, Gulf moisture), and predict the climate of a new position (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 3
+  },
+  {
+    "loId": "m8geo.north-america-hazard-regions",
+    "planId": "evelyn.ms.m8geo.north-america-hazard-regions.v1",
+    "title": "North America: Hazard Regions",
+    "description": "Explain why each major hazard clusters in a particular part of North America -- earthquakes and volcanoes on the Pacific margin, hurricanes on the Atlantic and Gulf coasts, tornadoes where warm Gulf air meets cold dry air over the Plains, wildfire in the dry West, blizzards and permafrost in the North -- and, given an event with its location and the number of people and buildings exposed, classify it as a hazard or a disaster and say what would change the classification (National Geography Standard 15: how physical systems affect human systems).",
+    "unit": 3
+  },
+  {
+    "loId": "m8geo.north-america-landform-regions",
+    "planId": "evelyn.ms.m8geo.north-america-landform-regions.v1",
+    "title": "North America: Landform Regions",
+    "description": "Given a west-to-east transect of the United States and Canada (Pacific coastal ranges, Western Cordillera including the Rocky Mountains, Interior Plains and Great Plains, Canadian Shield, Appalachians, Atlantic and Gulf coastal plain), identify which physical region a location lies in and explain the contrast between the young, high western ranges at an active plate margin and the old, eroded Appalachians far from any boundary (National Geography Standard 4: the physical and human characteristics of places).",
+    "unit": 3
+  },
+  {
+    "loId": "m8geo.north-america-river-systems-and-watersheds",
+    "planId": "evelyn.ms.m8geo.north-america-river-systems-and-watersheds.v1",
+    "title": "North America: River Systems & Watersheds",
+    "description": "Given a continental divide and tributary networks, determine which ocean a drop of water from a location reaches (Mississippi-Missouri-Ohio system to the Gulf of Mexico; Great Lakes-St. Lawrence to the Atlantic; Columbia and Colorado to the Pacific; Mackenzie to the Arctic), and explain why the largest inland settlements and ports sit at confluences, lake outlets and river mouths (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 3
+  },
+  {
+    "loId": "m8geo.north-america-economic-regions-and-trade",
+    "planId": "evelyn.ms.m8geo.north-america-economic-regions-and-trade.v1",
+    "title": "North America: Economic Regions & Trade",
+    "description": "Given data on what several North American regions produce (grain and livestock on the interior plains, irrigated fruit and vegetables in dry western valleys, oil and gas in the western interior and along the Gulf, manufacturing in the Great Lakes region, services and technology clustered in large metropolitan areas), classify each into primary through quaternary activity, explain the location of each from physical and locational factors, and read a two-way trade table between the United States and Canada to show interdependence in both directions (National Geography Standard 11: the patterns and networks of economic interdependence on Earth's surface).",
+    "unit": 4
+  },
+  {
+    "loId": "m8geo.north-america-metropolitan-regions",
+    "planId": "evelyn.ms.m8geo.north-america-metropolitan-regions.v1",
+    "title": "North America: Metropolitan Regions & Urban Form",
+    "description": "Given data on a metropolitan area (core population, suburban population, land area at two dates, share of trips by car versus transit), compute how built-up area grew relative to population, distinguish a dense core from low-density suburban form, explain why the United States has a multi-centered urban system (many large metropolitan areas including the northeastern corridor) rather than one dominant city, and evaluate a growth-management proposal by its trade-offs (National Geography Standard 12: the processes, patterns and functions of human settlement).",
+    "unit": 4
+  },
+  {
+    "loId": "m8geo.north-america-migration-flows",
+    "planId": "evelyn.ms.m8geo.north-america-migration-flows.v1",
+    "title": "North America: Migration Flows",
+    "description": "Given an origin-destination table of moves between North American regions and a set of conditions in each region, identify net sending and net receiving regions, sort the stated reasons into push and pull, and evaluate which explanation the data supports for the long-running interior-to-South-and-West shift and for rural-to-metropolitan movement; treat immigration to the United States and Canada as flows read from data, never as a story (National Geography Standard 9: the characteristics, distribution and migration of human populations on Earth surface).",
+    "unit": 4
+  },
+  {
+    "loId": "m8geo.north-america-population-patterns",
+    "planId": "evelyn.ms.m8geo.north-america-population-patterns.v1",
+    "title": "North America: Population Patterns",
+    "description": "Given population and area figures for several North American regions, compute and compare densities, explain the distribution -- the eastern half and the coasts of the United States settled most densely, Canada's population concentrated in a band near its southern border with a sparse North -- using physical controls (climate, arable land, water, access) and long-standing settlement, and show why Canada's low national density figure misdescribes where Canadians live (National Geography Standard 9: the characteristics, distribution and migration of human populations on Earth surface).",
+    "unit": 4
+  },
+  {
+    "loId": "m8geo.evaluating-population-projections",
+    "planId": "evelyn.ms.m8geo.evaluating-population-projections.v1",
+    "title": "Evaluating Population Projections",
+    "description": "Given a growth rate, estimate doubling time with the rule of 70, compare two projections built on different assumptions (constant versus falling birth rate; with versus without net migration), and explain why a projection is a conditional statement rather than a prediction and which assumption a stated headline depends on (National Geography Standard 9: the characteristics, distribution and migration of human populations on Earth surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m8geo.migration-flows-and-their-effects",
+    "planId": "evelyn.ms.m8geo.migration-flows-and-their-effects.v1",
+    "title": "Migration Flows & Their Effects",
+    "description": "Given a flow table between several countries with their wage levels, job openings and existing migrant communities, identify net senders and receivers, explain the pattern using push and pull plus intervening obstacles (cost, distance, borders) and chain migration, and evaluate the effects on both origin (money sent home, loss of trained workers) and destination (labor supply, pressure on housing) without characterizing any group (National Geography Standard 9: the characteristics, distribution and migration of human populations on Earth surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m8geo.population-pyramids-and-dependency",
+    "planId": "evelyn.ms.m8geo.population-pyramids-and-dependency.v1",
+    "title": "Population Pyramids & Dependency",
+    "description": "Given an age structure as percentages in age bands for a country, describe whether the pyramid is wide-based, column-shaped or top-heavy, compute a dependency ratio (under-15 plus over-64 per 100 working-age people), and predict what the place must provide in ten years such as schools, jobs and care for older people (National Geography Standard 9: the characteristics, distribution and migration of human populations on Earth surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m8geo.refugees-and-displacement",
+    "planId": "evelyn.ms.m8geo.refugees-and-displacement.v1",
+    "title": "Refugees & Displacement",
+    "description": "Distinguish a refugee, an asylum seeker and an internally displaced person by the standard definitions (crossed an international border or not; recognized status or claim pending), classify people in a scenario correctly, explain from distance and border data why most displaced people remain in their own or a neighboring country, and evaluate two responses (a camp near the border versus settlement in towns) by stated criteria (National Geography Standard 13: how the forces of cooperation and conflict among people influence the division and control of Earth surface).",
+    "unit": 5
+  },
+  {
+    "loId": "m8geo.carrying-capacity-and-ecological-footprint",
+    "planId": "evelyn.ms.m8geo.carrying-capacity-and-ecological-footprint.v1",
+    "title": "Carrying Capacity & Ecological Footprint",
+    "description": "Given per-person footprint and available productive land for several places, compute whether each is within or beyond its own capacity, explain why carrying capacity is not fixed (technology, trade, and imports move it), and evaluate a stated overshoot claim for what it counts and what it leaves out (National Geography Standard 14: how human actions modify the physical environment).",
+    "unit": 6
+  },
+  {
+    "loId": "m8geo.comparing-energy-sources",
+    "planId": "evelyn.ms.m8geo.comparing-energy-sources.v1",
+    "title": "Comparing Energy Sources",
+    "description": "Given a table comparing energy sources (fuel cost, whether output varies with weather, emissions, land needed, whether the source must be near a particular resource), evaluate which mix suits a place with a stated goal, and explain why the best source for one place fails another (National Geography Standard 16: the changes that occur in the meaning, use, distribution and importance of resources).",
+    "unit": 6
+  },
+  {
+    "loId": "m8geo.food-systems-and-food-security",
+    "planId": "evelyn.ms.m8geo.food-systems-and-food-security.v1",
+    "title": "Food Systems & Food Security",
+    "description": "Given data on two farming systems (small mixed farms feeding a local area versus large single-crop farms selling to distant markets: yield per hectare, inputs, water use, labor), compare them on output and on the trade-offs they carry (irrigation and salt build-up, fertilizer runoff, dependence on one crop's price), and evaluate a region's food security by availability, access and stability rather than by total output alone (National Geography Standard 16: the changes that occur in the meaning, use, distribution and importance of resources).",
+    "unit": 6
+  },
+  {
+    "loId": "m8geo.water-scarcity-and-allocation",
+    "planId": "evelyn.ms.m8geo.water-scarcity-and-allocation.v1",
+    "title": "Water Scarcity & Allocation",
+    "description": "Given a river basin with upstream and downstream users, annual flow, and each user's stated demand, compute whether demand exceeds supply, distinguish physical scarcity (not enough water) from economic scarcity (water exists but cannot be reached or paid for), and evaluate allocation rules (fixed shares, priority by first use, proportional cuts in dry years) by who bears a shortage (National Geography Standard 16: the changes that occur in the meaning, use, distribution and importance of resources).",
+    "unit": 6
+  },
+  {
+    "loId": "m8geo.coastal-risk-and-sea-level",
+    "planId": "evelyn.ms.m8geo.coastal-risk-and-sea-level.v1",
+    "title": "Coastal Risk & Sea-Level Change",
+    "description": "Given a coastal area with elevation bands, population per band and a stated rise or storm-surge height, identify which zones flood, estimate how many people are exposed, and evaluate the three response families -- protect (walls, dunes), accommodate (raised buildings, zoning), retreat (relocation) -- by cost, permanence and who is affected (National Geography Standard 15: how physical systems affect human systems).",
+    "unit": 7
+  },
+  {
+    "loId": "m8geo.hazard-risk-exposure-and-vulnerability",
+    "planId": "evelyn.ms.m8geo.hazard-risk-exposure-and-vulnerability.v1",
+    "title": "Hazard Risk: Exposure & Vulnerability",
+    "description": "Using risk as the combination of hazard (how strong and how often), exposure (who and what is in the way) and vulnerability (how much harm the exposed can absorb: building quality, warning systems, savings), explain from the data why two places struck by the same-strength event had very different outcomes, and rank places by risk when the components are given (National Geography Standard 15: how physical systems affect human systems).",
+    "unit": 7
+  },
+  {
+    "loId": "m8geo.mitigation-adaptation-and-resilience",
+    "planId": "evelyn.ms.m8geo.mitigation-adaptation-and-resilience.v1",
+    "title": "Mitigation, Adaptation & Resilience Planning",
+    "description": "Distinguish mitigation (reducing the hazard's cause or size) from adaptation (reducing harm when it happens), classify actions correctly, and evaluate a community resilience plan (early warning, building codes, land-use zoning, relocation help) by cost, by which action helps which residents, and by the trade-off it makes (National Geography Standard 18: how to apply geography to interpret the present and plan for the future).",
+    "unit": 7
+  },
+  {
+    "loId": "m8geo.reading-climate-trend-data",
+    "planId": "evelyn.ms.m8geo.reading-climate-trend-data.v1",
+    "title": "Reading Climate Trend Data",
+    "description": "Given a multi-decade series (annual temperature departures, sea level, ice extent, frost-free days), distinguish a long-run trend from year-to-year variability, explain why one cold year does not reverse a warming trend and why climate is defined over decades, describe from regional data how impacts fall unevenly (coasts, dry regions, the Arctic), and explain in one paragraph how sunlight warms the surface, the surface gives off heat, certain gases in the air (carbon dioxide, water vapor and methane) hold some of that heat in, and more of those gases hold in more heat (National Geography Standard 7: the physical processes that shape the patterns of Earth's surface).",
+    "unit": 7
+  },
+  {
+    "loId": "m8geo.composite-indicators-and-inequality",
+    "planId": "evelyn.ms.m8geo.composite-indicators-and-inequality.v1",
+    "title": "Composite Indicators & Inequality",
+    "description": "Given a table of four indicators for several countries, build a simple composite (rank each indicator, average the ranks), show how the result changes when an indicator is added or dropped, and interpret an inequality measure (the share of income held by the top fifth versus the bottom fifth) to explain why two countries with equal averages can differ (National Geography Standard 11: the patterns and networks of economic interdependence on Earth surface).",
+    "unit": 8
+  },
+  {
+    "loId": "m8geo.connectivity-and-the-digital-divide",
+    "planId": "evelyn.ms.m8geo.connectivity-and-the-digital-divide.v1",
+    "title": "Connectivity & the Digital Divide",
+    "description": "Given data on internet and mobile access by place and by income group, identify where access gaps lie (rural versus urban, high- versus low-income households), explain why a newer technology can spread where an older network never reached, and evaluate what improved connectivity changes for schooling, banking and markets in a place (National Geography Standard 11: the patterns and networks of economic interdependence on Earth surface).",
+    "unit": 8
+  },
+  {
+    "loId": "m8geo.specialization-and-supply-chain-risk",
+    "planId": "evelyn.ms.m8geo.specialization-and-supply-chain-risk.v1",
+    "title": "Specialization & Supply-Chain Risk",
+    "description": "Given a two-country, two-good table of what each can produce with the same effort, show why both gain when each specializes in what it produces relatively better and trades, then evaluate a multi-country supply chain for its single points of failure (one supplier, one strait, one port) and the cost of a backup (National Geography Standard 11: the patterns and networks of economic interdependence on Earth surface).",
+    "unit": 8
+  },
+  {
+    "loId": "m8geo.where-factories-locate",
+    "planId": "evelyn.ms.m8geo.where-factories-locate.v1",
+    "title": "Where Factories Locate",
+    "description": "Given location factors for several candidate sites (labor cost, transport to market, port access, nearby suppliers, reliable power, land cost), predict where a firm locates and why, explain clustering of similar firms, and evaluate the effects on the place gained and the place left (National Geography Standard 11: the patterns and networks of economic interdependence on Earth surface).",
+    "unit": 8
+  },
+  {
+    "loId": "m8geo.analyzing-a-boundary-dispute",
+    "planId": "evelyn.ms.m8geo.analyzing-a-boundary-dispute.v1",
+    "title": "Analyzing a Boundary Dispute",
+    "description": "Given a case (a river that shifted channel, a straight-line boundary drawn through a valley, a resource straddling the line, two differing historical accounts), identify which of the predictable causes the evidence supports, classify the boundary type, and evaluate which resolution mechanism fits -- a joint survey commission, a treaty, arbitration or a court (National Geography Standard 13: how the forces of cooperation and conflict among people influence the division and control of Earth surface).",
+    "unit": 9
+  },
+  {
+    "loId": "m8geo.chokepoints-and-strategic-location",
+    "planId": "evelyn.ms.m8geo.chokepoints-and-strategic-location.v1",
+    "title": "Chokepoints & Strategic Location",
+    "description": "Given shipping data (share of a good passing through a strait or canal; distance and days added by the alternative route), quantify what a closure costs, explain why narrow passages carry strategic weight, and evaluate options for reducing dependence (a pipeline, a second route, stockpiles) by cost and reliability (National Geography Standard 13: how the forces of cooperation and conflict among people influence the division and control of Earth surface).",
+    "unit": 9
+  },
+  {
+    "loId": "m8geo.maritime-zones-and-ocean-boundaries",
+    "planId": "evelyn.ms.m8geo.maritime-zones-and-ocean-boundaries.v1",
+    "title": "Maritime Zones & Ocean Boundaries",
+    "description": "Given a coastline geometry with distances, apply the standard zones (a 12-nautical-mile territorial sea; a 200-nautical-mile exclusive economic zone in which the coastal state controls fishing and seabed resources; the high seas beyond), decide which activity falls in which zone, explain why a small island can extend a zone greatly, and reason how two overlapping zones are split by a median line (National Geography Standard 13: how the forces of cooperation and conflict among people influence the division and control of Earth surface).",
+    "unit": 9
+  },
+  {
+    "loId": "m8geo.transboundary-problems-and-cooperation",
+    "planId": "evelyn.ms.m8geo.transboundary-problems-and-cooperation.v1",
+    "title": "Transboundary Problems & Cooperation",
+    "description": "Given a shared problem (overfishing of a shared stock, pollution carried downwind, a shared aquifer), explain why each state acting alone leaves everyone worse off, and evaluate agreement designs by whether they include monitoring, enforcement and a way to stop free riding, using the outcome data (National Geography Standard 13: how the forces of cooperation and conflict among people influence the division and control of Earth surface).",
+    "unit": 9
+  },
+  {
+    "loId": "m8geo.building-a-geographic-argument",
+    "planId": "evelyn.ms.m8geo.building-a-geographic-argument.v1",
+    "title": "Building a Geographic Argument from Data",
+    "description": "Given a dataset and a stated question, construct a claim, select the evidence that supports it, write the reasoning that connects them, and identify the one added piece of data that would most strengthen or overturn the claim; distinguish a supported claim from an overreach (National Geography Standard 18: how to apply geography to interpret the present and plan for the future).",
+    "unit": 10
+  },
+  {
+    "loId": "m8geo.comparing-two-regions-with-indicators",
+    "planId": "evelyn.ms.m8geo.comparing-two-regions-with-indicators.v1",
+    "title": "Comparing Two Regions with Indicators",
+    "description": "Given indicator tables for two regions across physical (climate, water, hazards), population (density, age structure, migration), economic (activity mix, export concentration) and connectivity dimensions, compare them on a stated criterion, decide which faces the greater challenge on that criterion and why the answer flips on a different criterion, and explain why a region is a tool geographers make rather than a fact of nature (National Geography Standard 5: that people create regions to interpret the complexity of Earth).",
+    "unit": 10
+  },
+  {
+    "loId": "m8geo.evaluating-a-land-use-plan",
+    "planId": "evelyn.ms.m8geo.evaluating-a-land-use-plan.v1",
+    "title": "Evaluating a Land-Use Plan",
+    "description": "Given a town with parcels, a flood zone, a road network and three stakeholder groups, evaluate two zoning plans using buffer and overlay reasoning, hazard exposure and urban form, and state which plan better meets a stated criterion and which group bears its cost (National Geography Standard 18: how to apply geography to interpret the present and plan for the future).",
+    "unit": 10
+  },
+  {
+    "loId": "m8geo.scenario-analysis-for-a-changing-place",
+    "planId": "evelyn.ms.m8geo.scenario-analysis-for-a-changing-place.v1",
+    "title": "Scenario Analysis for a Changing Place",
+    "description": "Given a place and three trends (a growth rate, a climate-risk change, an economic shift), project each forward, identify which assumption each projection rests on, and evaluate a plan by how it performs if the assumption is wrong (National Geography Standard 18: how to apply geography to interpret the present and plan for the future).",
+    "unit": 10
+  }
+]
