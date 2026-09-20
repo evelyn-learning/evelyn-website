@@ -1325,3 +1325,10 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
     centimeter", with the division written out in words and digits; no symbolic formula, no
     `=` in a spoken string, no conversion-factor use. Same rule for any other required
     quantity: words and worked digits, never a symbol.
+
+40. **(science only, after 7.4) The chemical-formula rule ("spoken form and atom count in the same
+    sentence") yields to a row whose ASSESSED SKILL is producing the count.** In 7.4 the spoken form
+    ("N H three (NH3)") is present in every stem, no subscript glyph appears anywhere, and the atom
+    count is withheld ONLY in item stems and the problem statement of a worked example. The rule's
+    mechanism (a subscript reads unpredictably aloud) is fully served; the item survives. Say so in
+    the guard.

@@ -10,7 +10,7 @@ Read IN FULL, in this order, before writing anything:
 3. Your lesson brief (path in your task). Its field values are authoritative; use them verbatim,
    INCLUDING the real `prerequisites` / `followUps` loIds it gives — do NOT copy the exemplars' empty arrays.
 
-Then write ONLY your seed file. Do not run tsc (the controller runs it per batch), do not touch
+Then write ONLY your seed file. Run `npx tsc --noEmit` from `apps/tutor` once your file is final (the contract requires it; the controller re-runs it per batch), do not touch
 `store.ts`, do not commit, do not create any other file, do not dispatch subagents.
 
 Before you report, run the contract's "Before you finish" checklist on your own file, including:
