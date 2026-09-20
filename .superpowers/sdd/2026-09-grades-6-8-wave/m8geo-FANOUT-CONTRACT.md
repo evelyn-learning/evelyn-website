@@ -691,3 +691,17 @@ agent's own checklist, not by a gate. They bind you exactly as the numbered list
     batch-2 agents also had to LENGTHEN a key with a load-bearing clause to escape a
     strictly-shortest tell — that is allowed when the clause is genuinely required for the
     key to be correct; say so in the report.
+
+38. **(after batch 3, four agents converged independently) "Never assume an apparatus" means:
+    never require the student to HAVE, OPERATE or OBSERVE equipment.** It does not forbid
+    describing an investigation that uses one. Rows whose performance expectation IS an
+    investigation (a burner and thermometer, a syringe, a compass, a heated tank) describe the
+    whole setup and every reading in words inside the segment that uses it, and no item asks
+    for an observation the student must make themselves. This is the reading 3.4, 5.3, 6.1
+    and the exemplars all used; it is now the ruling.
+
+39. **The "three formulas only" ceiling does not forbid a quantity the row REQUIRES, taught in
+    words.** Density in 6.3/6.4 is "divide the mass by the volume -- the grams in every cubic
+    centimeter", with the division written out in words and digits; no symbolic formula, no
+    `=` in a spoken string, no conversion-factor use. Same rule for any other required
+    quantity: words and worked digits, never a symbol.
