@@ -213,3 +213,34 @@ three times (7.3, 7.4, 10.1) because ruling 32 burns what part (i) names — the
 Ruling 21's dual-code list (1.1/6.4/7.1/9.3/9.4/10.3) is ELA-ported; only 9.3 and 10.2 were genuinely dual.
 
 Next: m8geo (2/40, exemplars 7.1 + 1.1; chains 6.4→7.1→7.2 and 1.1→1.2; lint **480**). Same procedure.
+
+## m8geo COMPLETE 2026-09-19 (same Fable session as m8sci) — GRADE 8 PLANS DONE, lint 480
+
+`lint-ms-plans: 480 plans OK` (predicted). tsc clean; `g8-seed-audit` clean over 40 plans / 120 MCQs; DF-3 28/120 = 23%
+(at chance); consistency 40/40, no orphans. 38 rows authored across five batches (8/8/8/8/6) of Opus agents; controller
+content edits for the whole course: cancelled→canceled ×3 files and one NGS-11 citation string. Exemplar chains wired.
+
+**Geo contract/curriculum defects found by agents and FIXED in this session:** ruling 32 never ported (`d037ef51`);
+checklist item 14 banned "already know" against ruling 18 (`fd32a2db`); the cross-reference warning block carried
+science's item numbers (`f72c59a8`); NGS 9/11/13 table rows disagreed with the shipped precedent and my first count
+missed escaped apostrophes — measured with `\'` normalized: NGS 7 "Earth's surface" 13/2, NGS 9 "on Earth surface"
+9/0, NGS 11 7/1, NGS 13 5/0 (`eb37e0a5`, `bf2d5484`, `4906223b`); curriculum "Explicitly excluded" line 162 contradicted
+the 7.2 greenhouse-absorb ruling (`bf2d5484`).
+
+**Not fixed — for Praveen at review (student-facing objectives carry the cell verbatim):** 3.1 western ranges "at an
+active plate margin" (Rockies are inland); 3.3 "Colorado to the Pacific" (no regular flow to the sea since 1960);
+3.4 cross-ref "m6sci 6.3" should be 6.4; 5.1 has no course-wide pyramid-shape criterion (agent used "one outer band
+≥ 2× the other"); 6.4 names three food-security dimensions vs FAO's four; 9.3 "each state acting alone" (US student
+may hear a US state); NGS 5 table says "Earth's complexity", corpus says "the complexity of Earth"; contract line 74's
+exemplar list mislabels 7.3/8.3/10.2 as "scoring" rows and its depth-floor table omits 9.1's classify step.
+**Spot-read (keys edited under ruling 36):** 2.1 i1, 3.4 i3, 4.4 i3, 6.1 i1, 7.3 i1–i3, 8.4 i2, 10.2 i1–i2; 4.2 i2 was
+SHORTENED (non-load-bearing spec removed). **Sixth depth-floor test worth writing as a ruling:** stipulation-
+consistency (9.1 found its own case self-contradictory; no gate sees it), plus the sideways-neighbour headline check
+for synthesis rows (10.2).
+
+**Next (Phase B of the Grade 8 drop):** banks → notes → guides per the standing command block; then ingest
+(crimsora + evelyntutor per the Grade 7 recipe), catalog/nav (the academy `catalog-nav` exact-count test WILL break —
+move Middle School to the capped test if not already), merge origin/main → gate → deploy → push, marketing stats sync.
+Also fold into the merge: amend `docs/superpowers/plans/2026-09-20-next-sessions-content-and-partner-portal.md`
+(Praveen's 2026-09-19 decision: partner console at partners.evelynlearning.com + api.evelynlearning.com, not
+/tutor-portal/app/*; memory `partner-platform-domains-decision`).
