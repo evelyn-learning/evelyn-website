@@ -69,7 +69,7 @@ Written 2026-09-19 for fresh sessions. Two independent threads; run them as sepa
 2. Self-serve production keys on card-on-file, or manual approval of every partner (recommended for the first 10)?
 3. Billing model defaults: per-minute metered (US/EU) + bundles (India) as above? Prepaid credits required before production, or postpaid with a cap?
 4. Multi-tenant Academy (row) vs deploy-per-tenant — a real architecture call; needed only for Phase 3.
-5. Where the portal lives: inside `apps/tutor` under `/tutor-portal/app/*` (recommended: shares the registry, auth via the existing Google OAuth admin plumbing generalized to partner accounts) or a new app.
+5. Where the portal lives — **DECIDED 2026-09-19 (Praveen):** partners will use other products too (virtual lab, AI co-pilot, Academy), so the console is NOT tutor-scoped. Structure: `partners.evelynlearning.com` = the ONE partner console (served by `apps/tutor` behind an nginx alias for now; extractable later); `api.evelynlearning.com` = one API host, path-namespaced `/v1/tutor|academy|labs|copilot`; one subdomain per product (`tutor.`, `academy.`, …); `evelynlearning.com` stays marketing-only. Rules: no cross-subdomain cookies (signed tokens only); ONE `PartnerUsage (partnerId, product, unit, qty, date)` rollup feeds billing for every product; one Stripe customer per partner. Memory: `partner-platform-domains-decision`.
 6. Kill the 4 aspirational docs pages now (Phase 0 is one session and removes a live liability).
 
 ### Start-here for the portal session
