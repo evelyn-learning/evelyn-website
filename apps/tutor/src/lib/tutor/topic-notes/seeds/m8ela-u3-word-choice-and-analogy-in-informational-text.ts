@@ -1,0 +1,79 @@
+/**
+ * Grade 8 English Language Arts — Unit 3 CED 3.3: Word Choice & Analogy in Informational Text.
+ *
+ * Auto-extracted from the corresponding lesson plan
+ * (evelyn.ms.m8ela.word-choice-and-analogy-in-informational-text.v1). Hand-edit freely after extraction; bump
+ * baselineVersion when you make material changes.
+ *
+ * Pointer-gen pass (scripts/gen-topic-notes-pointers.ts) enriches the
+ * pointers section via Opus when run on this baseline.
+ */
+
+import type { TopicNotesBaseline } from '../types';
+
+export const BASELINE_M8ELA_U3_WORD_CHOICE_AND_ANALOGY_IN_INFORMATIONAL_TEXT: TopicNotesBaseline = {
+  baselineId: 'evelyn.ms.m8ela.word-choice-and-analogy-in-informational-text.v1',
+  course: 'Grade 8 English Language Arts',
+  cedUnit: 3,
+  cedTopic: '3.3',
+  cedTitle: 'Word Choice & Analogy in Informational Text',
+  planId: 'evelyn.ms.m8ela.word-choice-and-analogy-in-informational-text.v1',
+  baselineVersion: 1,
+  lastUpdatedAt: '2026-09-20',
+  sources: [{ type: 'plan', planId: 'evelyn.ms.m8ela.word-choice-and-analogy-in-informational-text.v1' }],
+  theory: [
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', content: `INFORMATIONAL TEXT HAS A TONE, BECAUSE SOMEBODY CHOSE THE WORDS. A notice, a field guide and a museum sign are written by people, and a person choosing between two words that mean almost the same thing is choosing an attitude. "The raccoons got into the compost" and "The raccoons raided the compost" report one event; only the second has an opinion about the raccoons. Tone is the writer's attitude toward the subject, exactly as it was in stories, and it lives in nonfiction wherever a writer had a plainer word available and did not use it.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', content: `THREE KINDS OF CHOICE CARRY TONE, AND EACH HAS A NAME. A CONNOTATIVE WORD carries a feeling on top of its plain meaning: "raided" means got into, plus a charge of outrage or mock outrage. A FIGURATIVE WORD is used for a comparison rather than in its literal sense: "the parking lot became a lake after the storm" is not reporting a lake, it is picking a picture. An EXPLANATORY ANALOGY is a whole comparison between the thing being explained and something familiar, put there to show how the thing works: "a plant's cell wall is like a fence around a yard, a firm boundary that holds the cell's shape." All three are choices, and a choice is where attitude shows.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', content: `AN EXPLANATORY ANALOGY DOES TWO JOBS AT ONCE, SO ASK TWO QUESTIONS. First, what does it make clear? A fence has a job you already understand, so the comparison carries that job over to the cell wall; that is the MEANING job, and it is why the writer reached for a comparison at all. Second, why THIS familiar thing and not another? "The heart is a pump" and "The heart is a worker that never takes a break" both explain that the heart moves blood without stopping, but the pump is matter-of-fact and the worker is admiring. The pick is the TONE job. An analogy read only for its picture misses the meaning; an analogy read only for its meaning misses the attitude.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', content: `THE SWAP TEST TELLS YOU WHAT A WORD WAS CARRYING. Replace the chosen word with the plainest word that keeps the facts, then read both versions. If the facts hold and the feeling shifts, the word was carrying tone. If the plain version also loses part of how the thing works, the word was carrying meaning as well. "The lid was balanced on the fence like a trophy" swaps to "The lid was on the fence": the facts hold, and the raccoon stops looking proud of itself. What disappeared in the swap is your evidence, and you should be able to say it out loud.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', content: `NAME THE TONE WITH A PRECISE ADJECTIVE, AND SAY WHICH WORDS EARNED IT. "Positive", "negative" and "informative" are not tone names: the first two are only a direction, and the third says what the text does, not how the writer feels about the subject. Reach for brisk, urgent, wry, exasperated, reassuring, admiring, cautionary, stern, affectionate, awed. You already know the rule that two or three words pointing the same way make a tone and one word does not; it holds in a field guide exactly as it held in a story.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', content: `THE TONE COMES FROM THE WORDS, NEVER FROM THE TOPIC. A notice about a flooded gym can be calm and a field-guide entry about a butterfly can be stern, because the attitude belongs to the writer, not to the subject. If you catch yourself naming a tone before you have found a single chosen word, you are describing the topic. Go back and find the words.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', kind: 'definition', title: 'connotative word', content: `a word that carries a feeling on top of its plain meaning, chosen over a plainer word that would have reported the same fact.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', kind: 'definition', title: 'figurative word', content: `a word used to make a comparison rather than in its literal sense, such as "lake" for a flooded parking lot.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', kind: 'definition', title: 'explanatory analogy', content: `an extended comparison between the thing being explained and something familiar, put into an informational text to show how the thing works.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', kind: 'definition', title: 'swap test', content: `replacing a chosen word with the plainest word that keeps the facts, then naming what the passage lost.` },
+    { loId: 'm8ela.word-choice-and-analogy-in-informational-text', kind: 'definition', title: 'tone', content: `in this lesson, the attitude an informational writer takes toward the subject, carried by the words the writer chose when plainer ones were available.` },
+  ],
+  methods: [
+    {
+      title: 'Worked name the tone of a notice',
+      steps: [
+        `Find the words a plainer writer would not have used. The words "regrets to report" are the phrasing of a formal announcement, borrowed for a raccoon problem. Then "raided" instead of got into, and "strewed" instead of left. There is also "like a trophy", and "more of a suggestion" for latches that did not hold. Five choices in three sentences, and none of them was required by the facts.`,
+        `Run the swap test on the loudest one. The line "they raided both compost bins" becomes "they got into both compost bins." The facts are identical, so "raided" was not carrying meaning. What it was carrying is the feeling that the raccoons are a raiding party and the compost is a fort, which is a joke the writer is making at the raccoons' expense and slightly at the club's.`,
+        `Check the figurative word. The phrase "like a trophy" is not reporting a trophy; it is a comparison, and it hands the raccoon a feeling it cannot have, pride in a job well done. Swap it out and the lid is simply on the fence. The comparison is where the writer's amusement shows most clearly.`,
+        `Ask what the choices have in common, because two or three pointing the same way make a tone. The borrowed "regrets to report" is mock-serious. Both "raided" and "like a trophy" treat the raccoons as a small victorious army. The line "more of a suggestion" admits, with a straight face, that the club's own latches failed. Every choice is doing the same thing: turning an annoying weekend into a joke told dry.`,
+        `Name it precisely. Not "funny", which describes the effect rather than the attitude, and not "negative", which is only a direction. The writer is annoyed and amused at the same time, and says so without ever raising the voice. That is WRY. "Exasperated" would need more heat than these words have; "cheerful" would miss the annoyance inside "regrets to report".`,
+        `Say the whole answer: the tone is wry, carried by "regrets to report", "raided", "like a trophy" and "more of a suggestion", each of which replaces a plainer word that would have reported the same weekend with no attitude at all.`,
+      ],
+      example: { problem: `Name the tone of this notice with a precise adjective, and say which words carry it.
+
+"The garden club regrets to report that the raccoons are back. Over the weekend they raided both compost bins, strewed eggshells the length of the path, and left the lid of the second bin balanced on the fence like a trophy. Volunteers are asked to clip the new latches shut every evening, since the old ones were apparently more of a suggestion."`, solution: `The tone is wry: the notice is annoyed and amused at once, and it says so through chosen words rather than plain ones, "regrets to report", "raided", "strewed", "like a trophy" and "more of a suggestion", none of which the facts required.` },
+      relatedLoIds: ['m8ela.word-choice-and-analogy-in-informational-text'],
+    },
+    {
+      title: 'Worked two jobs of an analogy',
+      steps: [
+        `Find the analogy and mark its two ends. The thing being explained is the dam and what it does to the stream. The familiar thing is "a plug in a bathtub drain". A field guide could have said that a dam blocks the stream and forms a pond; it reached for the plug instead, so ask what the plug is for.`,
+        `Ask the meaning question: what does the comparison make clear? You know what a plug does. It does not stop water from arriving; it stops water from leaving, so the water "has nowhere to go but up". That is exactly how a dam makes a pond, and the plug carries it over in a picture of a bathtub filling, which the reader has watched happen. The analogy is doing real explaining, not decorating.`,
+        `Now the second comparison, which is where the tone lives: the pond is the beaver's "front yard, moat and pantry all at once". Each of those three words is a human thing. A front yard is a home's open ground; a moat is a defense a castle digs on purpose; a pantry is a room where a household stores food. The entry then proves each one: doorways underwater "where a coyote cannot follow" is the moat, and branches sunk each fall to eat in winter is the pantry.`,
+        `Run the swap test on the second comparison. "The pond gives the beaver open water, protection from predators and stored food" keeps every fact. What it loses is the beaver as a planner, a homeowner who dug a moat and stocked a pantry. That lost feeling is the tone the comparison was carrying.`,
+        `Ask why THIS familiar thing. Out of everything a pond could be compared to, the writer chose a home with defenses and a stocked pantry, which is how you describe someone whose arrangements you respect. The choice is not matter-of-fact; it invites the reader to be impressed. Name it: ADMIRING. Not "happy", not "positive"; admiring, because every human word credits the beaver with foresight.`,
+        `Say the whole answer in two parts, because the analogy did two jobs. Meaning: the plug shows that a dam stops water from leaving, so the water rises into a pond. Tone: "front yard, moat and pantry" describes the pond as a well-planned home, which makes the entry admiring toward the beaver, and "where a coyote cannot follow" and the branches "still there to eat" earn that adjective by showing the plan working.`,
+      ],
+      example: { problem: `This field-guide entry contains an explanatory analogy. Say what the analogy makes clear, then say what the choice of comparison does to the tone.
+
+"Beavers build dams of branches, mud and stones across slow streams. A finished dam works like a plug in a bathtub drain: the water behind it has nowhere to go but up, and the pond that rises is the beaver's front yard, moat and pantry all at once. The family's lodge sits in the middle of that pond with its doorways underwater, where a coyote cannot follow, and the branches the beavers sink into the mud each fall are still there to eat when the surface freezes over."`, solution: `The plug analogy explains the meaning: a dam stops water from leaving, so the water "has nowhere to go but up" and forms a pond. The comparison to a "front yard, moat and pantry" sets the tone: it describes the pond as a home planned on purpose, so the entry is admiring toward the beaver, and the doorways "where a coyote cannot follow" and the sunken branches "still there to eat" earn that adjective.` },
+      relatedLoIds: ['m8ela.word-choice-and-analogy-in-informational-text'],
+    },
+  ],
+  pointers: [
+    { content: `Students often say "A sign at a nature center just gives facts, so there is no tone here to name." — Facts have to be put into words, and somebody chose these. The word "neighbor" is a connotative word: a plainer sign would have said "animal", and "neighbor" makes the snake something that belongs near your house. Saying the snake "would rather slip into the grass than be found" hands it a preference, which is a figurative touch, and it is the preference of something shy, not something dangerous. The words "your lettuce" put the snake on the reader's side. Three choices pointing the same way make a tone, and this one is reassuring, even affectionate. The sign is still informational; it is also written by a person who likes garter snakes and wants you to.`, kind: 'common-error' },
+    { content: `Students often say "It is about a snake, so the tone is creepy." — Tone is the writer's attitude, and this writer chose "harmless", "neighbor" and "would rather slip into the grass than be found". Not one of those words is creepy; each one is picked to lower the reader's guard. Run the swap test the other way: a writer who wanted a creepy sign would have written "lurks" instead of "slip into the grass" and "hunts" instead of "eating". The fact that those words are absent is evidence. Find the chosen words first, and only then name the tone. If you name it before you have found a word, you are describing the snake, not the sign.`, kind: 'common-error' },
+    { content: `Informational text has a tone, because somebody chose its words. Wherever a plainer word was available and the writer did not use it, an attitude is showing.`, kind: 'tip' },
+    { content: `Three kinds of choice carry it: a connotative word (a feeling on top of the meaning), a figurative word (a comparison instead of the literal sense), and an explanatory analogy (a whole comparison that shows how something works).`, kind: 'tip' },
+    { content: `An explanatory analogy does two jobs. Ask what it makes clear, which is the meaning, and ask why the writer picked THIS familiar thing, which is the tone. "A pump" and "a worker that never takes a break" explain the same heart with different attitudes.`, kind: 'tip' },
+    { content: `The swap test: put the plainest word back in and name what was lost. If only the feeling changed, the word carried tone. If how the thing works also went missing, it carried meaning too.`, kind: 'tip' },
+    { content: `Name the tone with a precise adjective and say the words that earned it. "Positive", "negative" and "informative" are not tone names; wry, stern, reassuring, admiring and urgent are.`, kind: 'tip' },
+    { content: `The tone comes from the words, never from the topic. A flooded gym can be described calmly and a garter snake fondly. Find the chosen words first; if you named the tone before finding one, you named the topic.`, kind: 'tip' },
+  ],
+};

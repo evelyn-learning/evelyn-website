@@ -1,0 +1,83 @@
+/**
+ * Grade 8 English Language Arts — Unit 4 CED 4.3: Where Two Texts Disagree: Fact or Interpretation.
+ *
+ * Auto-extracted from the corresponding lesson plan
+ * (evelyn.ms.m8ela.where-two-texts-disagree-fact-or-interpretation.v1). Hand-edit freely after extraction; bump
+ * baselineVersion when you make material changes.
+ *
+ * Pointer-gen pass (scripts/gen-topic-notes-pointers.ts) enriches the
+ * pointers section via Opus when run on this baseline.
+ */
+
+import type { TopicNotesBaseline } from '../types';
+
+export const BASELINE_M8ELA_U4_WHERE_TWO_TEXTS_DISAGREE_FACT_OR_INTERPRETATION: TopicNotesBaseline = {
+  baselineId: 'evelyn.ms.m8ela.where-two-texts-disagree-fact-or-interpretation.v1',
+  course: 'Grade 8 English Language Arts',
+  cedUnit: 4,
+  cedTopic: '4.3',
+  cedTitle: 'Where Two Texts Disagree: Fact or Interpretation',
+  planId: 'evelyn.ms.m8ela.where-two-texts-disagree-fact-or-interpretation.v1',
+  baselineVersion: 1,
+  lastUpdatedAt: '2026-09-20',
+  sources: [{ type: 'plan', planId: 'evelyn.ms.m8ela.where-two-texts-disagree-fact-or-interpretation.v1' }],
+  theory: [
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', content: `FIND THE EXACT SPOT BEFORE YOU NAME ANYTHING. Put the two sentences that clash side by side and say the thing that cannot be true both ways: "Text A says the fair ran on Friday and Text B says it ran on Saturday." A conflict means one text rules the other out. Two texts that simply print different details are not in conflict at all, and you already know how to say what those two writers did instead; if you cannot point at the pair of sentences where one rules the other out, there is nothing here to sort yet.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', content: `A DISAGREEMENT OF FACT IS ABOUT SOMETHING CHECKABLE, AND AT LEAST ONE OF THE TWO TEXTS IS WRONG. A count, an amount, a date, who did what and in what order. When one text says the drive collected 200 cans and the other says it collected 300, the two writers are not reading one thing two different ways. There is a real number, something somewhere holds it, and at least one of these writers does not match it. Nobody has to be lying for this to happen; a figure gets copied wrong, a writer counts the wrong pile. You already know that "different does not mean dishonest", and that is still true here. It just does not mean that both texts can be right, because here they cannot.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', content: `A DISAGREEMENT OF INTERPRETATION IS ABOUT WHAT AN AGREED FACT MEANS, AND BOTH TEXTS CAN BE ACCURATE. The two writers print the same number and part company on what it is worth. Change the pair above so that both texts say the drive collected 200 cans: one writer calls that a strong result and the other calls it a letdown. Nothing about the count is in dispute. What is in dispute is what the count deserves to be called, and that is a judgment, not a record.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', content: `THE TEST IS ONE QUESTION: WHAT WOULD SETTLE IT? Name the thing a reader could go look at that would make one of these two texts wrong — the sign-in sheet, the receipts, the posted schedule, the minutes of the meeting, a photograph of the room. If you can name something like that, the disagreement is a matter of fact. If the only thing you can name is something both texts already state, no record is going to help, and the disagreement is a matter of interpretation.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', content: `WHAT A READER DOES NEXT DEPENDS ON WHICH KIND IT IS. For a disagreement of fact: go to the record. Until you have it, treat the number as unsettled and say so, because "the two accounts disagree on the count" is an honest sentence and repeating whichever figure you happened to read first is not. Never settle it by picking the text that sounds more official, or more sure of itself, or closer to what you already thought. For a disagreement of interpretation: checking is pointless, since both texts already agree on the fact. Weigh the reason each writer gives for reading it that way, and expect that you may end up thinking both readings are fair.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', content: `ONE PAIR OF TEXTS CAN CARRY BOTH KINDS AT ONCE, SO SORT THEM ONE AT A TIME. Two accounts of the same afternoon can disagree about how many people came, which a sign-in sheet settles, and also about whether the afternoon was worth repeating, which no sheet settles. Mark every spot where one text rules the other out, then run the test question on each spot separately. Answering "the whole thing is a matter of opinion" buries the half a reader could have checked, and answering "one of them is just wrong" buries the half that is a fair difference in judgment.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', kind: 'definition', title: 'conflict', content: `what two texts do when one rules the other out, so that they cannot both be accurate as written. Two texts that only print different details are not in conflict.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', kind: 'definition', title: 'disagreement of fact', content: `a conflict about something checkable — a count, an amount, a date, what happened — where at least one of the two texts does not match what happened.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', kind: 'definition', title: 'disagreement of interpretation', content: `a conflict about what an agreed fact means or is worth, where both texts can be accurate and no record will settle it.` },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', kind: 'definition', title: 'checkable', content: 'able to be confirmed or contradicted by a record a reader could go look at.' },
+    { loId: 'm8ela.where-two-texts-disagree-fact-or-interpretation', kind: 'definition', title: 'record', content: `the thing that would settle a checkable disagreement: the sign-in sheet, the receipts, the posted schedule, the minutes of a meeting.` },
+  ],
+  methods: [
+    {
+      title: 'Worked find the spot and classify',
+      steps: [
+        `Start with the shared ground, because a comparison needs some. Both sources are describing one event at one school: Source A has a book swap that "ran in the library for two days", and Source B calls it "Our two-day book swap". Same swap, same two days. So there is something here to compare.`,
+        `Now find the first spot where one text rules the other out. Source A says students "carried home 312 books". Source B says the swap "moved 212 books". One swap, one pile of books, two different counts. Those two sentences cannot both be accurate.`,
+        `Run the test question on that spot: what would settle it? A book swap in a library leaves something behind — a tally on a clipboard, a sign-out list, the empty crates. A reader could go look at it, and it would show one number. So this is a disagreement of FACT, and at least one of these two sources does not match what happened.`,
+        `Look for a second spot, because a pair of texts rarely stops at one. Source A says "the shelves were bare by Thursday afternoon". Source B says "Plenty of good ones were still on the shelves when we packed up on Thursday." Same shelves, same afternoon, opposite descriptions.`,
+        `Run the test question again on the second spot. Anyone who was in the library on Thursday could say what the shelves looked like, and a photograph would show it. Checkable, so this one is a disagreement of FACT too. Notice what neither spot is: at no point does one writer take a fact the other writer states and read it a different way. If Source B had printed 312 books and called that a disappointing turnout, THAT would have been a disagreement of interpretation, and no tally would have touched it.`,
+        `Say what a reader does next, and be exact about it. Go to the tally and ask somebody who packed up. Do not settle it by deciding that a school newsletter must be right because it is the newsletter; that is choosing a source, not checking a claim. And until the check is done, write that the two accounts disagree on how many books went home, rather than repeating whichever number you read first.`,
+      ],
+      example: { problem: `Two accounts of the same event conflict. Find the exact spots where they disagree, say which kind of disagreement each one is, and say what a reader should do next.
+
+Source A: the Ridge Creek Middle School newsletter. "The eighth-grade book swap ran in the library for two days. Students carried home 312 books, and the shelves were bare by Thursday afternoon."
+
+Source B: a post on the Ridge Creek library club page. "Our two-day book swap moved 212 books. Plenty of good ones were still on the shelves when we packed up on Thursday."`, solution: `The two sources conflict in two places, and both conflicts are disagreements of fact. Source A says students "carried home 312 books" and Source B says the swap "moved 212 books", and one pile of books had one true size. Source A says "the shelves were bare by Thursday afternoon" and Source B says "Plenty of good ones were still on the shelves when we packed up on Thursday." Each spot could be settled by something a reader could go look at — the library tally, a photograph of the shelves, anyone who was there — so the next step is to check rather than to trust whichever source sounds more official, and until that check is done a reader reports that the two accounts disagree on the count.` },
+      relatedLoIds: ['m8ela.where-two-texts-disagree-fact-or-interpretation'],
+    },
+    {
+      title: 'Worked same fact two verdicts',
+      steps: [
+        `Check the shared ground first, and here it is unusually tight. Both texts open with the identical sentence: "The new bike lane on Front Street took away eleven parking spaces". Same street, same lane, same eleven spaces. Neither writer disputes the figure, so the number is not where they part company.`,
+        `Find the spot where one text rules the other out. Source A says it "was a trade worth making". Source B says it "was not a trade worth making". Those two verdicts cannot both stand, so this pair really is in conflict, even though every fact in it is agreed.`,
+        `Run the test question: what would settle it? Try to name the record. A count of parking spaces will not do it, because both texts already print eleven. A count of riders in the lane, or of shoppers at the plaza, would tell a reader more about what the lane has done, but it still would not say whether eleven spaces were worth a bike lane. The word "worth" is asking what the street is for, and no clipboard in any office holds that answer. So this is a disagreement of INTERPRETATION.`,
+        `Check the second sentence of each text before you finish, because a reader can mistake it for a second conflict. Source A says riders "now have a marked lane the whole length of the street". Source B says shoppers "are driving out to the plaza instead". Those two sentences can both be accurate on the same street in the same month. That is not a conflict at all; each writer picked the evidence that fits the verdict they reached.`,
+        `Label the wrong move so you can hear it coming. WRONG: "Source B must have its facts wrong, because the lane obviously does what it was built to do." CORRECT: "Both sources print the same fact, eleven parking spaces gone, and disagree about whether that price was worth paying, which no record settles."`,
+        `Say what a reader does next. Do not go looking for a record; there is not one to find, and hunting for it only wastes the reader's time. Weigh the reason each writer gives — a marked lane for riders against shoppers going elsewhere — and ask what each writer thinks Front Street is mainly for. It is fair to end up thinking both readings have something to them. What is not fair is calling one of the writers mistaken about the facts, since the only fact in the pair is one they both printed.`,
+      ],
+      example: { problem: `These two texts agree on every number and still conflict. Find the spot, say which kind of disagreement it is, and say what a reader should do next.
+
+Source A: the Bellwood Parks Department newsletter. "The new bike lane on Front Street took away eleven parking spaces, and it was a trade worth making. Riders who used to weave between moving cars now have a marked lane the whole length of the street."
+
+Source B: a letter in the Bellwood community paper. "The new bike lane on Front Street took away eleven parking spaces, and it was not a trade worth making. Shoppers who cannot park in front of the hardware store are driving out to the plaza instead."`, solution: `This is a disagreement of interpretation. Both texts print the identical fact — "The new bike lane on Front Street took away eleven parking spaces" — and part company on what that fact is worth: Source A calls it "a trade worth making" and Source B calls it "not a trade worth making". No record settles a question about worth, because both writers already agree on everything a record could show. So the reader weighs the reason each one gives instead of trying to check the number they both state, and neither text has to be inaccurate for the two of them to conflict.` },
+      relatedLoIds: ['m8ela.where-two-texts-disagree-fact-or-interpretation'],
+    },
+  ],
+  pointers: [
+    { content: `Students often say "Pair 1: both of these can be right, because the two writers are just looking at the club two different ways." — Run the test question. Is there something a reader could go look at that would make one of these sentences wrong? Yes. A club that meets keeps a calendar, a sign-in sheet, a room reservation, and any of them shows a number of meetings. Eleven and seven cannot both be that number, so this is a disagreement of fact, at least one of the two texts does not match what happened, and the next step is to find the record instead of holding both accounts. Two texts can differ without either writer being dishonest — a figure gets copied wrong, a writer counts a meeting that was canceled — but not being dishonest is a different thing from being right.`, kind: 'common-error' },
+    { content: `Students often say "Pair 2: they cannot both be right, so one of these writers has the facts wrong about the concert." — Both texts state that the concert "ran ninety minutes". Neither one disputes it, so no record is going to settle anything here: a stopwatch would confirm exactly what both writers already wrote. What they disagree about is whether ninety minutes was worth sitting through, and that is a judgment about what a concert is for, not a number anybody wrote down. This is a disagreement of interpretation, both texts can be accurate, and the next step is to weigh the reason each writer gives rather than to hunt for a record. Two texts really can rule each other out without either one having a fact wrong.`, kind: 'common-error' },
+    { content: `Find the exact spot first: name the pair of sentences where one text rules the other out. Two texts that only print different details are not in conflict at all.`, kind: 'tip' },
+    { content: `A disagreement of FACT is about something checkable — a count, an amount, a date, what happened — and at least one of the two texts does not match what happened.`, kind: 'tip' },
+    { content: `A disagreement of INTERPRETATION is about what an agreed fact means or is worth. Both texts print the same fact, and both of them can be accurate.`, kind: 'tip' },
+    { content: `The test is one question: what would settle it? If you can name a record a reader could go look at, the disagreement is a matter of fact. If the only thing you can name is something both texts already state, it is a matter of interpretation.`, kind: 'tip' },
+    { content: `Next step for a fact: go to the record, and until you have it say that the two accounts disagree instead of repeating whichever figure you read first. Never settle it by picking the text that sounds more official or more sure of itself.`, kind: 'tip' },
+    { content: `Next step for an interpretation: checking is pointless, so weigh the reason each writer gives. And sort one spot at a time, because a single pair of texts can carry a checkable disagreement and a difference of judgment at once.`, kind: 'tip' },
+  ],
+};

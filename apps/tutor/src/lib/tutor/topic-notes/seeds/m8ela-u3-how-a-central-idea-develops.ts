@@ -1,0 +1,79 @@
+/**
+ * Grade 8 English Language Arts — Unit 3 CED 3.1: How a Central Idea Develops.
+ *
+ * Auto-extracted from the corresponding lesson plan
+ * (evelyn.ms.m8ela.how-a-central-idea-develops.v1). Hand-edit freely after extraction; bump
+ * baselineVersion when you make material changes.
+ *
+ * Pointer-gen pass (scripts/gen-topic-notes-pointers.ts) enriches the
+ * pointers section via Opus when run on this baseline.
+ */
+
+import type { TopicNotesBaseline } from '../types';
+
+export const BASELINE_M8ELA_U3_HOW_A_CENTRAL_IDEA_DEVELOPS: TopicNotesBaseline = {
+  baselineId: 'evelyn.ms.m8ela.how-a-central-idea-develops.v1',
+  course: 'Grade 8 English Language Arts',
+  cedUnit: 3,
+  cedTopic: '3.1',
+  cedTitle: 'How a Central Idea Develops',
+  planId: 'evelyn.ms.m8ela.how-a-central-idea-develops.v1',
+  baselineVersion: 1,
+  lastUpdatedAt: '2026-09-20',
+  sources: [{ type: 'plan', planId: 'evelyn.ms.m8ela.how-a-central-idea-develops.v1' }],
+  theory: [
+    { loId: 'm8ela.how-a-central-idea-develops', content: `A CENTRAL IDEA IS INTRODUCED, NOT DELIVERED FINISHED. You already know how to find the central idea and state it as a full sentence. The sentence that first states it is only the first version. A writer then spends the rest of the paragraph working on that version, making it more exact or pushing it further, so the idea you hold at the last sentence is not quite the idea you were handed at the first. Reading for development means finding the sentence that introduces the idea, then watching what every later sentence does to it.` },
+    { loId: 'm8ela.how-a-central-idea-develops', content: `EVERY SUPPORTING SENTENCE HAS A RELATIONSHIP TO THE IDEA, NOT JUST A PLACE UNDER IT. You already know to ask whether a detail backs the idea up. The question now is HOW. Three relationships cover almost every sentence you will meet: a sentence can give an EXAMPLE of the idea, put a LIMIT on the idea, or give a CAUSE behind the idea. Name the relationship and you can say exactly what the sentence did to the idea, which is the thing the flat word "supports" hides.` },
+    { loId: 'm8ela.how-a-central-idea-develops', content: `AN EXAMPLE EXTENDS THE IDEA BY SHOWING IT AT WORK IN ONE CASE. "Cats see well in dim light. A cat crossing a yard at dusk picks its way around a garden hose you can barely make out." The second sentence does not change what the idea says; it lets you see the idea reaching one real place. That is what extending means: the idea now covers a case it had only claimed before. Test: could you delete the sentence and still state the idea in the same words? If yes, and the sentence showed you the idea happening, it is an example.` },
+    { loId: 'm8ela.how-a-central-idea-develops', content: `A LIMIT REFINES THE IDEA BY DRAWING ITS EDGE. "Cats see well in dim light, but in a room with no light at all a cat is as blind as you are." Watch for the edge words: but, only, unless, except, not every, as long as. After a limit, the idea is smaller and truer than the version that introduced it. A limit is not the writer taking the idea back, and it is not a contradiction; it is the writer telling you exactly how far the idea goes. Test: after the sentence, your restatement of the idea gains a condition.` },
+    { loId: 'm8ela.how-a-central-idea-develops', content: `A CAUSE REFINES THE IDEA BY GOING BEHIND IT. "Cats see well in dim light because a mirror-like layer at the back of the eye bounces light back through the eye a second time." Watch for because, since, the reason is, this happens when. After a cause, the idea has a mechanism, so you know not only that it is true but why, and you can guess where else it would hold. Do not confuse a cause with an example. An example is one case OF the idea; a cause is the reason FOR it. A cat threading a dark yard is an example. The layer behind the eye is the cause.` },
+    { loId: 'm8ela.how-a-central-idea-develops', content: `THE RESTATE TEST TRACKS THE DEVELOPMENT. After each sentence, say the central idea again in one sentence of your own. If your sentence did not change but you can now picture the idea, that sentence was an example. If your sentence gained an "only" or an "unless", it was a limit. If it gained a "because", it was a cause. If your sentence turned into a different idea altogether, that sentence is not developing this idea; it is starting another one. Then put the first version beside the last. "Cats see well in dim light" has become "Cats see well in dim light, though not in none, because a layer behind the eye reflects light back through it." The distance between those two sentences is the development, and it is what you are being asked to trace.` },
+    { loId: 'm8ela.how-a-central-idea-develops', kind: 'definition', title: 'develop', content: `what a writer does to a central idea after introducing it: refine it (make it more exact with a limit or a cause) or extend it (show it reaching a new case).` },
+    { loId: 'm8ela.how-a-central-idea-develops', kind: 'definition', title: 'example', content: `a sentence that shows the central idea at work in one particular case; it extends the idea without changing its wording.` },
+    { loId: 'm8ela.how-a-central-idea-develops', kind: 'definition', title: 'limit', content: `a sentence that marks where the central idea stops holding, or the condition it holds under; it refines the idea by making it smaller and truer.` },
+    { loId: 'm8ela.how-a-central-idea-develops', kind: 'definition', title: 'cause', content: `a sentence that gives the reason the central idea is true; it refines the idea by adding the mechanism behind it.` },
+    { loId: 'm8ela.how-a-central-idea-develops', kind: 'definition', title: 'the restate test', content: `saying the central idea again in your own words after each sentence, and noticing whether that sentence changed it, and how.` },
+  ],
+  methods: [
+    {
+      title: 'Worked trace one paragraph',
+      steps: [
+        `Start with the version you were handed. Sentence 1 introduces the idea: "Bridges are built with gaps in their decks on purpose." Say it back in your own words, because you will be saying it again after every sentence: bridges have deliberate gaps.`,
+        `Sentence 2. Ask what it does to the idea. It tells you why the gaps are there: the steel and concrete in a deck "get slightly longer as they warm and slightly shorter as they cool," and a deck "locked tight at both ends" would strain. Restate: bridges have deliberate gaps because their decks change length with the temperature. Your sentence gained a "because," so this is a CAUSE, and the idea is refined. It has a mechanism now.`,
+        `Sentence 3. Restate again and notice that the wording does not move: bridges have deliberate gaps because their decks change length. What Sentence 3 adds is a case you have felt through a car seat, the "ridged metal strips a car bumps over near each end of a highway bridge." You can picture the idea now. This is an EXAMPLE, and it extends the idea to a real bridge without changing what the idea says.`,
+        `Sentence 4 is the one that catches people who sort by words. It contains "because," so a word-hunter calls it a cause. Ask what it does to the idea instead. "A short footbridge can often be built without any such joint" tells you the rule fades as bridges get shorter. Restate: LONG bridges have deliberate gaps because their decks change length; a short deck moves so little that it can often do without them. Your sentence gained a condition. This is a LIMIT, and it refines the idea by drawing its edge. The "because" inside Sentence 4 explains the limit, not the central idea.`,
+        `Put the first version beside the last. First: bridges are built with gaps on purpose. Last: long bridges are built with gaps on purpose, because their decks get longer and shorter with the temperature, and a short deck moves so little that it can often do without them. The distance between those two sentences is the development. Every sentence after the first moved the idea, and no two moved it the same way.`,
+        `Say the whole answer, relationship by relationship. Sentence 2 is a cause and refines the idea. Sentence 3 is an example and extends it. Sentence 4 is a limit and refines it again. And the developed idea is the last version, not the first.`,
+      ],
+      example: { problem: `The central idea of this paragraph is introduced in Sentence 1. Trace how the writer develops it: name the relationship of each later sentence to the idea, and say what each one does to it.
+
+"(1) Bridges are built with gaps in their decks on purpose. (2) The steel and concrete in a deck get slightly longer as they warm and slightly shorter as they cool, so a deck locked tight at both ends would strain against its own supports on a hot afternoon. (3) The ridged metal strips a car bumps over near each end of a highway bridge cover those gaps; they are called expansion joints. (4) A short footbridge can often be built without any such joint, because a short deck changes length by so little that its supports can absorb the movement."`, solution: `Sentence 2 gives a CAUSE (the deck changes length as it warms and cools), which refines the idea by adding why. Sentence 3 gives an EXAMPLE (the ridged strips near each end of a highway bridge), which extends the idea to a real case without changing it. Sentence 4 puts a LIMIT on it (a short footbridge can often do without a joint), which refines the idea to long bridges. Developed idea: long bridges are built with gaps on purpose, because their decks get longer and shorter with the temperature, and a short deck moves so little that it can often do without them.` },
+      relatedLoIds: ['m8ela.how-a-central-idea-develops'],
+    },
+    {
+      title: 'Worked a limit is not a contradiction',
+      steps: [
+        `Start where the student started. Sentence 1 says honey "does not spoil." Sentence 4 says it "can begin to ferment." Set side by side with nothing between them, those two phrases look like opposites, and that is as far as the student read. He never asked what Sentence 4 does to the idea; he only checked whether it matches the first version word for word.`,
+        `Run the restate test from the top instead. Sentence 1 introduces the idea: honey does not spoil. Sentence 2 gives the reason: it "holds so little water, and is so acidic," that molds and bacteria "cannot grow in it." Restate: honey does not spoil because it is too dry and too acidic for the things that spoil food to grow in it. A "because" arrived, so Sentence 2 is a CAUSE, and the idea is refined.`,
+        `Sentence 3. The restatement does not move; what arrives is a picture. A jar "left at the back of a cupboard for years" that has gone "cloudy and grainy" and is "still safe to eat." That is an EXAMPLE, and it extends the idea to one real jar.`,
+        `Sentence 4. Read its first words: "Honey keeps only while it stays dry, though." Those are edge words, "only while" and "though." Restate: honey does not spoil as long as it stays dry, because it is too dry and too acidic for molds and bacteria; let water in and it can ferment. The idea gained a condition. Sentence 4 is a LIMIT, and it refines the idea by drawing its edge.`,
+        `Now look at what the limit and the cause say together. Sentence 2 said the protection comes from how little water honey holds. Sentence 4 says that when water gets in, the protection ends. The limit is the cause seen from its edge. Far from contradicting Sentence 1, Sentence 4 is the most exact statement of it in the paragraph.`,
+        `WRONG: "Sentence 4 contradicts Sentence 1, so the paragraph has two central ideas." CORRECT: "Sentence 4 limits the idea in Sentence 1, so the paragraph has one central idea, and by the end it is more exact than when it started." A contradiction would take the idea back. A limit tells you how far it goes.`,
+      ],
+      example: { problem: `A student reads this paragraph and writes: "Sentence 4 contradicts Sentence 1. First the writer says honey does not spoil, then says it can ferment, so the paragraph does not have one central idea." Explain what went wrong, and state the central idea as the writer has developed it by the end.
+
+"(1) Honey is one of the very few foods that does not spoil. (2) It holds so little water, and is so acidic, that the molds and bacteria that ruin other foods cannot grow in it. (3) A jar left at the back of a cupboard for years may turn cloudy and grainy, but it is still safe to eat. (4) Honey keeps only while it stays dry, though: once water gets in, from a wet spoon or a lid left open in a damp kitchen, it can begin to ferment."`, solution: `The student read a limit as a contradiction. Sentence 4 does not take back Sentence 1; it draws the idea's edge, and it agrees with the cause in Sentence 2, which said the protection comes from how little water honey holds. Developed idea: honey does not spoil as long as it stays dry, because it is too dry and too acidic for molds and bacteria to grow in it, and once water gets in it can begin to ferment.` },
+      relatedLoIds: ['m8ela.how-a-central-idea-develops'],
+    },
+  ],
+  pointers: [
+    { content: `Students often say "Sentences 2 and 3 are both supporting details. They both just back up Sentence 1." — Run the restate test on each. After Sentence 2 the idea gains a "because": the dog stays warm because its underfur traps warm air against the skin. That is a cause, and the idea is now refined; it has a mechanism. After Sentence 3 the wording does not change, but you can see the idea in one case, a husky on a frozen lake with its tail over its nose. That is an example, and the idea is extended to a real night. Two sentences, two relationships. "They both back it up" was true and said almost nothing. "One explains it and one shows it" is what tracing the development means.`, kind: 'common-error' },
+    { content: `Students often say "Sentence 2 is an example, because it shows what the coat does." — Ask whether the sentence is one case OF the idea or the reason FOR it. A husky on a frozen lake is one case: delete it and the idea is stated in exactly the same words. The underfur trapping air is not a case of a dog staying warm; it is what makes the dog stay warm, and after it your restatement gains a "because." That makes it a cause. The test is never whether the sentence describes an action. It is what the sentence does to the idea: an example lets you picture it, and a cause tells you why it holds.`, kind: 'common-error' },
+    { content: `A central idea is introduced, not delivered finished. The sentence that first states it is the first version, and the rest of the paragraph works on that version.`, kind: 'tip' },
+    { content: `Every supporting sentence has a relationship to the idea, not just a place under it. Ask HOW it supports: as an example of the idea, a limit on it, or a cause behind it.`, kind: 'tip' },
+    { content: `An example extends the idea: it shows the idea at work in one case and leaves the wording alone.`, kind: 'tip' },
+    { content: `A limit refines the idea by drawing its edge (but, only, unless, except). It is not a contradiction and not the writer taking the idea back; the idea is now smaller and truer.`, kind: 'tip' },
+    { content: `A cause refines the idea by going behind it (because, since, the reason is). An example is one case OF the idea; a cause is the reason FOR it. Do not sort by the words a sentence contains; ask what it does to the idea.`, kind: 'tip' },
+    { content: `The restate test: say the idea again after each sentence and notice what changed. If it turned into a different idea, that sentence is not developing this one. Put the first version beside the last; the distance between them is the development.`, kind: 'tip' },
+  ],
+};
